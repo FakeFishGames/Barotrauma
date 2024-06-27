@@ -357,6 +357,7 @@ namespace Barotrauma
                 case EventType.Control:
                     bool myCharacter = msg.ReadBoolean();
                     byte ownerID = msg.ReadByte();
+                    bool renamingEnabled = msg.ReadBoolean();
                     ResetNetState();
                     if (myCharacter)
                     {
@@ -384,6 +385,10 @@ namespace Barotrauma
                             GameMain.Client.Character = null;
                         }
                         IsRemotePlayer = ownerID > 0;
+                    }
+                    if (info != null)
+                    {
+                        info.RenamingEnabled = renamingEnabled;
                     }
                     break;
                 case EventType.Status:

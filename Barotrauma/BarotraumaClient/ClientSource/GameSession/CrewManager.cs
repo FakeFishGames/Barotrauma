@@ -522,6 +522,11 @@ namespace Barotrauma
                 }
             }
 
+            if (GameMain.GameSession?.Campaign?.CampaignUI?.HRManagerUI is { } crewManagement)
+            {
+                crewManagement.RefreshUI();
+            }
+
             return background;
         }
 
@@ -531,6 +536,10 @@ namespace Barotrauma
             {
                 crewList.RemoveChild(component);
                 traitorButtons.RemoveAll(t => t.IsChildOf(component, recursive: true));
+            }
+            if (GameMain.GameSession?.Campaign?.CampaignUI?.HRManagerUI is { } crewManagement)
+            {
+                crewManagement.RefreshUI();
             }
         }
 

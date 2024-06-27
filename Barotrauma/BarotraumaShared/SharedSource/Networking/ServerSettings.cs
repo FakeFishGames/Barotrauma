@@ -475,6 +475,16 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+        
+        [Serialize(100f, IsPropertySaveable.Yes)]
+        /// <summary>
+        /// Percentage modifier for the cost of hiring a new character to replace a permanently killed one.
+        /// </summary>
+        public float ReplaceCostPercentage
+        {
+            get;
+            private set;
+        }
 
         [Serialize(true, IsPropertySaveable.Yes)]
         /// <summary>
@@ -647,6 +657,8 @@ namespace Barotrauma.Networking
             set
             {
                 if (respawnMode == value) { return; }
+                //can't change this when a round is running (but clients can, if the server says so, e.g. when a client joins and needs to know what it's set to despite a round being running)
+                if (GameMain.NetworkMember is { GameStarted: true, IsServer: true }) { return; }
                 respawnMode = value;
                 ServerDetailsChanged = true;
             }

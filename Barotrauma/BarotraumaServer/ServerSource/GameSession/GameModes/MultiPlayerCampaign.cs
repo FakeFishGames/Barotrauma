@@ -1231,6 +1231,10 @@ namespace Barotrauma
                 renamedIdentifier = msg.ReadUInt16();
                 newName = msg.ReadString();
                 existingCrewMember = msg.ReadBoolean();
+                if (!GameMain.Server.IsNameValid(sender, newName))
+                {
+                    renameCharacter = false;
+                }
             }
 
             bool fireCharacter = msg.ReadBoolean();
@@ -1239,10 +1243,11 @@ namespace Barotrauma
 
             Location location = map?.CurrentLocation;
             CharacterInfo firedCharacter = null;
+            (ushort id, string newName) appliedRename = (Entity.NullEntityID, string.Empty);
 
-            if (location != null && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
+            if (location != null)
             {
-                if (fireCharacter)
+                if (fireCharacter && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
                 {
                     firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == firedIdentifier);
                     if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
@@ -1258,29 +1263,45 @@ namespace Barotrauma
                 if (renameCharacter)
                 {
                     CharacterInfo characterInfo = null;
-                    if (existingCrewMember && CrewManager != null)
+                    if (AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
                     {
-                        characterInfo = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                        if (existingCrewMember && CrewManager != null)
+                        {
+                            characterInfo = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                        }
+                        else if (!existingCrewMember && location.HireManager != null)
+                        {
+                            characterInfo = location.HireManager.AvailableCharacters.FirstOrDefault(info => info.ID == renamedIdentifier);
+                        }
                     }
-                    else if(!existingCrewMember && location.HireManager != null)
+                    if (characterInfo == null && renamedIdentifier == sender.CharacterInfo?.ID)
                     {
-                        characterInfo = location.HireManager.AvailableCharacters.FirstOrDefault(info => info.ID == renamedIdentifier);
+                        characterInfo = sender.CharacterInfo;
                     }
-                    
-                    if (characterInfo != null && (characterInfo.Character?.IsBot ?? true))
+                    if (characterInfo != null &&
+                        (characterInfo.Character == null || characterInfo.Character is { IsBot: true } || (characterInfo.RenamingEnabled && characterInfo == sender.CharacterInfo)))
                     {
+                        GameServer.Log($"{sender.Name} renamed the character \"{characterInfo.Name}\" as \"{newName}\".", ServerLog.MessageType.ServerMessage);
                         if (existingCrewMember)
                         {
                             CrewManager.RenameCharacter(characterInfo, newName);
+                            if (characterInfo == sender.CharacterInfo)
+                            {
+                                //renaming is only allowed once
+                                characterInfo.RenamingEnabled = false;
+                            }
                         }
                         else
                         {
                             location.HireManager.RenameCharacter(characterInfo, newName);
                         }
+                        appliedRename = (characterInfo.ID, newName);
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Tried to rename an invalid character ({renamedIdentifier})");
+                        string errorMsg = $"Tried to rename an invalid character ({renamedIdentifier}, {characterInfo?.Name ?? "null"})";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameMain.Server?.SendConsoleMessage(errorMsg, sender, Color.Red);
                     }
                 }
 
@@ -1328,7 +1349,7 @@ namespace Barotrauma
             // bounce back
             if (renameCharacter && existingCrewMember)
             {
-                SendCrewState((renamedIdentifier, newName), firedCharacter);
+                SendCrewState(appliedRename, firedCharacter);
             }
             else
             {
@@ -1405,6 +1426,8 @@ namespace Barotrauma
             //disconnected clients can never purchase anything
             //(can happen e.g. if someone starts a vote to buy something and then disconnects)
             if (client != null && !GameMain.Server.ConnectedClients.Contains(client)) { return false; }
+
+            if (price == 0) { return true; }
 
             Wallet wallet = GetWallet(client);
             if (!AllowedToManageWallets(client))

@@ -12,6 +12,8 @@ namespace Barotrauma
         protected override float TargetUpdateTimeMultiplier => 0.2f;
         public bool TargetCharactersInOtherSubs { get; init; }
 
+        protected override bool AllowInAnySub => TargetCharactersInOtherSubs;
+
         public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier) { }
 

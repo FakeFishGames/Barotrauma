@@ -7,9 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
+
+    /// <summary>
+    /// Responsible for keeping track of the characters in the player crew, saving and loading their orders, managing the crew list UI
+    /// </summary>
     partial class CrewManager
     {
         const float ConversationIntervalMin = 100.0f;
@@ -27,7 +32,10 @@ namespace Barotrauma
         {
             return characters;
         }
-
+        /// <summary>
+        /// Note: this only returns AI characters' infos in multiplayer. The infos are used to manage hiring/firing/renaming, which only applies to AI characters.
+        /// Use <see cref="GetSessionCrewCharacters"/> to get all the characters regardless if they're player or AI controlled.
+        /// </summary>
         public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
             return characterInfos;
@@ -387,15 +395,8 @@ namespace Barotrauma
 
         public void RenameCharacter(CharacterInfo characterInfo, string newName)
         {
-            int identifier = characterInfo.GetIdentifierUsingOriginalName();
-            var match = characterInfos.FirstOrDefault(ci => ci.GetIdentifierUsingOriginalName() == identifier);
-            if (match == null)
-            {
-                DebugConsole.ThrowError($"Tried to rename an invalid crew member ({identifier})");
-                return;
-            }
-            match.Rename(newName);
-            RenameCharacterProjSpecific(match);
+            characterInfo.Rename(newName);
+            RenameCharacterProjSpecific(characterInfo);
         }
 
         partial void RenameCharacterProjSpecific(CharacterInfo characterInfo);

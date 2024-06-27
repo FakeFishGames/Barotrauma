@@ -1394,16 +1394,26 @@ namespace Barotrauma.Networking
 
             if (campaign.CurrentLocation.GetHireableCharacters().FirstOrDefault(c => c.ID == botId) is CharacterInfo hireableCharacter)
             {
-                if (campaign.TryHireCharacter(campaign.CurrentLocation, hireableCharacter, takeMoney: true, sender))
+                if (ServerSettings.ReplaceCostPercentage <= 0 || 
+                    CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageMoney) || 
+                    CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
                 {
-                    campaign.CurrentLocation.RemoveHireableCharacter(hireableCharacter);
-                    SpawnAndTakeOverBot(campaign, hireableCharacter, sender);
-                    campaign.SendCrewState(createNotification: false);
+                    if (campaign.TryHireCharacter(campaign.CurrentLocation, hireableCharacter, takeMoney: true, sender, buyingNewCharacter: true))
+                    {
+                        campaign.CurrentLocation.RemoveHireableCharacter(hireableCharacter);
+                        SpawnAndTakeOverBot(campaign, hireableCharacter, sender);
+                        campaign.SendCrewState(createNotification: false);
+                    }
+                    else
+                    {
+                        SendConsoleMessage($"Could not hire the bot {hireableCharacter.Name}.", sender, Color.Red);
+                        DebugConsole.ThrowError($"Client {sender.Name} failed to hire the bot {hireableCharacter.Name}.");                    
+                    }
                 }
                 else
                 {
-                    SendConsoleMessage($"Could not hire the bot {hireableCharacter.Name}.", sender, Color.Red);
-                    DebugConsole.ThrowError($"Client {sender.Name} failed to hire the bot {hireableCharacter.Name}.");                    
+                    SendConsoleMessage($"Could not hire the bot {hireableCharacter.Name}. No permission to manage money or hires.", sender, Color.Red);
+                    DebugConsole.ThrowError($"Client {sender.Name} failed to hire the bot {hireableCharacter.Name}. No permission to manage money or hires.");
                 }
             }
             else
@@ -1448,6 +1458,7 @@ namespace Barotrauma.Networking
                     DebugConsole.ThrowError("SpawnAndTakeOverBot: newCharacter is null somehow");
                     return;
                 }
+                // No longer show the hired character in the HR list of current hires
                 campaign.CrewManager.RemoveCharacterInfo(botInfo);
                 newCharacter.TeamID = CharacterTeamType.Team1;
                 campaign.CrewManager.InitializeCharacter(newCharacter, mainSubSpawnpoint, spawnWaypoint);
@@ -2407,7 +2418,7 @@ namespace Barotrauma.Networking
                 }
 
                 SendStartMessage(roundStartSeed, campaign.NextLevel.Seed, GameMain.GameSession, connectedClients, includesFinalize: false);
-                GameMain.GameSession.StartRound(campaign.NextLevel, mirrorLevel: campaign.MirrorLevel);
+                GameMain.GameSession.StartRound(campaign.NextLevel, startOutpost: campaign.GetPredefinedStartOutpost(), mirrorLevel: campaign.MirrorLevel);
                 SubmarineSwitchLoad = false;
                 campaign.AssignClientCharacterInfos(connectedClients);
                 Log("Game mode: " + selectedMode.Name.Value, ServerLog.MessageType.ServerMessage);
@@ -2994,7 +3005,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private bool IsNameValid(Client c, string newName)
+        public bool IsNameValid(Client c, string newName)
         {
             newName = Client.SanitizeName(newName);
 
@@ -3018,13 +3029,20 @@ namespace Barotrauma.Networking
                 }
             }
 
-            Client nameTaken = ConnectedClients.Find(c2 => c != c2 && Homoglyphs.Compare(c2.Name.ToLower(), newName.ToLower()));
-            if (nameTaken != null)
+            Client nameTakenByClient = ConnectedClients.Find(c2 => c != c2 && Homoglyphs.Compare(c2.Name.ToLower(), newName.ToLower()));
+            if (nameTakenByClient != null)
             {
-                SendDirectChatMessage($"ServerMessage.NameChangeFailedClientTooSimilar~[newname]={newName}~[takenname]={nameTaken.Name}", c, ChatMessageType.ServerMessageBox);
+                SendDirectChatMessage($"ServerMessage.NameChangeFailedClientTooSimilar~[newname]={newName}~[takenname]={nameTakenByClient.Name}", c, ChatMessageType.ServerMessageBox);
                 return false;
             }
 
+            Character nameTakenByCharacter =
+                GameSession.GetSessionCrewCharacters(CharacterType.Both).FirstOrDefault(c2 => c2 != c.Character && Homoglyphs.Compare(c2.Name.ToLower(), newName.ToLower()));
+            if (nameTakenByCharacter != null)
+            {
+                SendDirectChatMessage($"ServerMessage.NameChangeFailedClientTooSimilar~[newname]={newName}~[takenname]={nameTakenByCharacter.Name}", c, ChatMessageType.ServerMessageBox);
+                return false;
+            }
             return true;
         }
 
@@ -3767,6 +3785,7 @@ namespace Barotrauma.Networking
                 newCharacter.SetOwnerClient(client);
                 newCharacter.Enabled = true;
                 client.Character = newCharacter;
+                client.CharacterInfo = newCharacter.Info;
                 CreateEntityEvent(newCharacter, new Character.ControlEventData(client));
             }
         }

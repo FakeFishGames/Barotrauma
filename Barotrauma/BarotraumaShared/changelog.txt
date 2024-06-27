@@ -1,4 +1,17 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.5.9.1
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed outpost security being way too eager to arrest characters who attempt to escape a security inspection, to the point that getting inspected while running past a guard would immediately make them arrest you.
+- Fixed some thalamus items being hidden for no reason in some wrecks.
+- Fixed "assault enemy" order not working in abandoned/enemy outposts. 
+- Added a configurable multiplier for the cost of hiring a new character to replace a permanently killed one. Makes it possible to host permadeath servers without having to assign hiring or money permissions to clients.
+- Players are allowed to rename the character they take over in the permadeath mode.
+
+Modding: 
+- Fixed forceOutpostGenerationParamsIdentifier (which can be used to force specific outpost generation params to be used in a location type) only working in single player.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.5.8.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -427,7 +427,7 @@ internal class DeathPrompt
         var botList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), content.RectTransform));
         foreach (CharacterInfo c in GetAvailableBots())
         {
-            var characterFrame = campaign.CampaignUI?.CrewManagement.CreateCharacterFrame(c, botList, hideSalary: true);
+            var characterFrame = campaign.CampaignUI?.HRManagerUI.CreateCharacterFrame(c, botList, hideSalary: true);
             if (characterFrame != null)
             {
                 characterFrame.UserData = c;

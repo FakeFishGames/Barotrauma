@@ -313,13 +313,22 @@ namespace Barotrauma.Networking
                 GameMain.Server.SendConsoleMessage($"Permadeath: Could not take over the target character because it is not a bot.", this, Color.Red);
                 return false;
             }
-            
-            // Now that the old permanently killed character will be replaced, we can fully discard it 
-            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+
+            if (botCharacter.Info != null)
             {
-                mpCampaign.DiscardClientCharacterData(this);
+                botCharacter.Info.RenamingEnabled = true; // Grant one opportunity to rename a taken over bot
             }
+
+            // Now that the old permanently killed character will be replaced, we can fully discard it
+            var mpCampaign = GameMain.GameSession?.Campaign as MultiPlayerCampaign;
+            mpCampaign?.DiscardClientCharacterData(this);
             GameMain.Server.SetClientCharacter(this, botCharacter);
+            if (mpCampaign?.SetClientCharacterData(this) is CharacterCampaignData characterData)
+            {
+                //the bot has spawned, but the new CharacterCampaignData technically hasn't, because we just created it
+                characterData.HasSpawned = true;
+            }
+
             SpectateOnly = false;
             return true;
         }

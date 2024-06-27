@@ -1,4 +1,6 @@
 ﻿#nullable enable
+using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -117,21 +119,49 @@ namespace Barotrauma
         {
             if (inspectTimer > 0.0f)
             {
-                character.SelectCharacter(Target);
+                Vector2 diff = Target.WorldPosition - character.WorldPosition;
+                float dist = diff.Length();
+                float maxDist = ConvertUnits.ToDisplayUnits(HumanoidAnimController.BreakFromGrabDistance);
+                if (dist > maxDist)
+                {
+                    if (dist > maxDist * 2 || !character.CanSeeTarget(Target, seeThroughWindows: false))
+                    {
+                        //too far to reach by small manual movement, need to switch back to the earlier state
+                        currentState = State.GotoTarget;
+                    }
+                    //move closer horizontally if the horizontal distance is the issue
+                    else if (Math.Abs(diff.X) > Math.Abs(diff.Y) * 2.0f)
+                    {
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, new Vector2(MathF.Sign(Target.WorldPosition.X - character.WorldPosition.X), 0.0f));
+                    }
+                    else
+                    {
+                        character.AIController.SteeringManager.Reset();
+                    }
+                    return;
+                }
+                else
+                {
+                    if (dist < maxDist * 0.5f) { character.AIController.SteeringManager.Reset(); }
+                    character.SelectCharacter(Target);
+                }
+
                 inspectTimer -= deltaTime;
                 if (inspectTimer < InspectTime - 1)
                 {
-                    if (Target.AnimController.IsMovingFast)
+                    if (Math.Abs(Target.AnimController.TargetMovement.X) > 1.0f)
                     {
-                        ArrestFleeing();
-                    }
-                    else if (Math.Abs(Target.AnimController.TargetMovement.X) > 1.0f)
-                    {
-                        // If the target moves, reset the inspect timer and tell to hold still
+                        // If the target moves, tell to hold still
                         character.Speak(TextManager.Get("dialogcheckstolenitems.holdstill").Value, identifier: "holdstill".ToIdentifier(), minDurationBetweenSimilar: 3f);
-                        inspectTimer = InspectTime;
                     }   
                 }
+                return;
+            }
+
+            if (character.SelectedCharacter != Target) 
+            {
+                //target not selected -> must've escaped
+                Abandon = true;
                 return;
             }
 
@@ -155,13 +185,6 @@ namespace Barotrauma
             if (warnTimer > 0.0f)
             {
                 warnTimer -= deltaTime;
-                if (warnTimer < currentWarnDelay - 1)
-                {
-                    if (Target.AnimController.IsMovingFast)
-                    {
-                        ArrestFleeing();
-                    }
-                }
                 return;
             }
             var stolenItemsOnCharacter = stolenItems.Where(it => it.GetRootInventoryOwner() == Target);
@@ -187,14 +210,6 @@ namespace Barotrauma
             }                
             currentState = State.Done;
             IsCompleted = true;
-        }
-        
-        private void ArrestFleeing()
-        {
-            character.Speak(TextManager.Get("dialogcheckstolenitems.arrest").Value);
-            currentState = State.Done;
-            IsCompleted = true;
-            Arrest(abortWhenItemsDropped: false, allowHoldFire: false);
         }
         
         private void Arrest(bool abortWhenItemsDropped, bool allowHoldFire)

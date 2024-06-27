@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -71,7 +71,9 @@ namespace Barotrauma
         private HashSet<Identifier> selectedTalents = new HashSet<Identifier>();
 
         private readonly Queue<Identifier> showCaseClosureQueue = new();
-
+        
+        private GUITextBlock? nameBlock;
+        private GUIButton? renameButton;
         private GUIListBox? skillListBox;
         private GUITextBlock? talentPointText;
         private GUIProgressBar? experienceBar;
@@ -134,7 +136,6 @@ namespace Barotrauma
             GUILayoutGroup playerFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), containerFrame.RectTransform, Anchor.TopCenter));
             GameMain.NetLobbyScreen.CreatePlayerFrame(playerFrame, alwaysAllowEditing: true, createPendingText: false);
             
-            // TODO: What is CampaignCharacterDiscarded and can it be relevant in permadeath mode?
             if (!GameMain.NetLobbyScreen.PermadeathMode)
             {
                 GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
@@ -174,6 +175,25 @@ namespace Barotrauma
                     }
                 };
             }
+            else if (characterInfo != null)
+            {
+                renameButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
+                    text: TextManager.Get("button.RenameCharacter"), style: "GUIButtonSmall")
+                {
+                    Enabled = characterInfo.RenamingEnabled,
+                    ToolTip = TextManager.Get("permadeath.rename.description"),
+                    IgnoreLayoutGroups = false,
+                    TextBlock =
+                    {
+                        AutoScaleHorizontal = true
+                    },
+                    OnClicked = (_, _) =>
+                    {
+                        CreateRenamePopup();
+                        return true;
+                    }
+                };
+            }
 
             GUILayoutGroup characterCloseButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), characterLayout.RectTransform), childAnchor: Anchor.BottomCenter);
             new GUIButton(new RectTransform(new Vector2(0.4f, 1f), characterCloseButtonLayout.RectTransform), TextManager.Get("ApplySettingsButton")) //TODO: Is this text appropriate for this circumstance for all languages?
@@ -187,6 +207,57 @@ namespace Barotrauma
                     return true;
                 }
             };
+        }
+
+        private void CreateRenamePopup()
+        {
+            GUIMessageBox renamePopup = new(
+                TextManager.Get("button.RenameCharacter"), TextManager.Get("permadeath.rename.description"),
+                new LocalizedString[] { TextManager.Get("Confirm"), TextManager.Get("Cancel") }, minSize: new Point(0, GUI.IntScale(230)));
+            GUITextBox newNameBox = new(new(Vector2.One, renamePopup.Content.RectTransform), "")
+            {
+                OnEnterPressed = (textBox, text) =>
+                {
+                    textBox.Text = text.Trim();
+                    return true;
+                }
+            };
+            renamePopup.Buttons[0].OnClicked += (_, _) =>
+            {
+                if (newNameBox.Text?.Trim() is string newName && newName != "")
+                {
+                    if (characterInfo != null)
+                    {
+                        if (newNameBox.Text == characterInfo.Name)
+                        {
+                            renamePopup.Close();
+                            return true;
+                        }
+                        if (GameMain.GameSession?.Campaign?.CampaignUI?.HRManagerUI is { } crewManagement)
+                        {
+                            crewManagement.RenameCharacter(characterInfo, newName);
+                            if (nameBlock != null)
+                            {
+                                nameBlock.Text = newName;
+                            }
+                            if (renameButton != null)
+                            {
+                                renameButton.Enabled = false;
+                            }
+                            renamePopup.Close();
+                        }
+                        return true;
+                    }
+                    DebugConsole.ThrowError("Tried to rename character, but CharacterInfo completely missing!");
+                    return true;
+                }
+                else
+                {
+                    newNameBox.Flash();
+                    return false;
+                }
+            };
+            renamePopup.Buttons[1].OnClicked += renamePopup.Close;
         }
 
         private void CreateStatPanel(GUIComponent parent, CharacterInfo info)
@@ -206,7 +277,7 @@ namespace Barotrauma
                 CanBeFocused = true
             };
 
-            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
+            nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
 
             if (!info.OmitJobInMenus)
             {

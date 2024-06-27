@@ -1116,6 +1116,36 @@ namespace Barotrauma
             AssignComponentToServerSetting(skillLossImmediateRespawnSlider, nameof(ServerSettings.SkillLossPercentageOnImmediateRespawn));
             skillLossImmediateRespawnSlider.OnMoved(skillLossImmediateRespawnSlider, skillLossImmediateRespawnSlider.BarScroll);
 
+            var newCharacterCostSliderElement = CreateLabeledSlider(settingsContent,
+                "ServerSettings.ReplaceCostPercentage", "", "ServerSettings.ReplaceCostPercentage.tooltip",
+                out var newCharacterCostSlider, out var newCharacterCostSliderLabel,
+                range: new Vector2(0, 200), step: 10f);
+            newCharacterCostSlider.StepValue = 10f;
+            newCharacterCostSlider.OnMoved = (GUIScrollBar scrollBar, float _) =>
+            {
+                GUITextBlock textBlock = scrollBar.UserData as GUITextBlock;
+                int currentMultiplier = (int)Math.Round(scrollBar.BarScrollValue);
+                if (currentMultiplier < 1)
+                {
+                    textBlock.Text = TextManager.Get("ServerSettings.ReplaceCostPercentage.Free");
+                }
+                else
+                {
+                    textBlock.Text = TextManager.GetWithVariable("percentageformat", "[value]", currentMultiplier.ToString());
+                }
+                return true;
+            };
+            newCharacterCostSlider.OnReleased = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
+                return true;
+            };
+            clientDisabledElements.AddRange(newCharacterCostSliderElement.GetAllChildren());
+            permadeathEnabledRespawnSettings.AddRange(newCharacterCostSliderElement.GetAllChildren());
+            ironmanDisabledRespawnSettings.AddRange(newCharacterCostSliderElement.GetAllChildren());
+            AssignComponentToServerSetting(newCharacterCostSlider, nameof(ServerSettings.ReplaceCostPercentage));
+            newCharacterCostSlider.OnMoved(newCharacterCostSlider, newCharacterCostSlider.BarScroll); // initialize
+
             var allowBotTakeoverTickbox = new GUITickBox(new RectTransform(Vector2.One, settingsContent.RectTransform), TextManager.Get("AllowBotTakeover"))
             {
                 ToolTip = TextManager.Get("AllowBotTakeover.Tooltip"),
@@ -1834,7 +1864,8 @@ namespace Barotrauma
                 OverflowClip = true
             };
             
-            if (PermanentlyDead)
+            if (!allowEditing ||
+                (PermanentlyDead && !characterInfo.RenamingEnabled))
             {
                 CharacterNameBox.Readonly = true;
                 CharacterNameBox.Enabled = false;

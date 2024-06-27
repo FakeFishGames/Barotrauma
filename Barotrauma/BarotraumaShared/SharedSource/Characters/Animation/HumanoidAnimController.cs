@@ -21,6 +21,8 @@ namespace Barotrauma
         private const float MaxSpeedOnStairs = 1.7f;
         private const float SteepSlopePushMagnitude = MaxSpeedOnStairs;
 
+        public const float BreakFromGrabDistance = 1.4f;
+
         public override RagdollParams RagdollParams
         {
             get { return HumanRagdollParams; }
@@ -1839,7 +1841,7 @@ namespace Barotrauma
 
                 float dist = ConvertUnits.ToSimUnits(Vector2.Distance(target.WorldPosition, WorldPosition));
                 //let the target break free if it's moving away and gets far enough
-                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && dist > 1.4f && target.AllowInput &&
+                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && dist > BreakFromGrabDistance && target.AllowInput &&
                     Vector2.Dot(target.WorldPosition - WorldPosition, target.AnimController.TargetMovement) > 0)
                 {
                     character.DeselectCharacter();

@@ -939,7 +939,16 @@ namespace Barotrauma
                 UInt16 renamedIdentifier = msg.ReadUInt16();
                 string newName = msg.ReadString();
                 CharacterInfo renamedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
-                if (renamedCharacter != null) { CrewManager.RenameCharacter(renamedCharacter, newName); }
+                if (renamedCharacter != null)
+                {
+                    CrewManager.RenameCharacter(renamedCharacter, newName);
+                    // Since renaming can only be done once in permadeath, we can safely set this to false to disable the renaming in the UI.
+                    renamedCharacter.RenamingEnabled = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Could not find a character to rename with the ID {renamedIdentifier}.");
+                }
             }
 
             bool fireCharacter = msg.ReadBoolean();
@@ -951,15 +960,15 @@ namespace Barotrauma
                 if (firedCharacter != null) { CrewManager.FireCharacter(firedCharacter); }
             }
 
-            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.CrewManagement != null)
+            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.HRManagerUI != null)
             {
                 //can't apply until we have the latest save file
                 if (!NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
                 {
-                    CampaignUI.CrewManagement.SetHireables(map.CurrentLocation, availableHires);
-                    if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters, takeMoney: false, createNotification: createNotification); }
-                    CampaignUI.CrewManagement.SetPendingHires(pendingHires, map.CurrentLocation);
-                    if (renameCrewMember || fireCharacter) { CampaignUI.CrewManagement.UpdateCrew(); }
+                    CampaignUI.HRManagerUI.SetHireables(map.CurrentLocation, availableHires);
+                    if (hiredCharacters.Any()) { CampaignUI.HRManagerUI.ValidateHires(hiredCharacters, takeMoney: false, createNotification: createNotification); }
+                    CampaignUI.HRManagerUI.SetPendingHires(pendingHires, map.CurrentLocation);
+                    if (renameCrewMember || fireCharacter) { CampaignUI.HRManagerUI.UpdateCrew(); }
                 }
             }
             else
@@ -1007,6 +1016,11 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
+            if (price == 0)
+            {
+                return true;
+            }
+
             if (!AllowedToManageCampaign(ClientPermissions.ManageMoney))
             {
                 return PersonalWallet.TryDeduct(price);

@@ -344,18 +344,6 @@ namespace Barotrauma
             }
         }
 
-        protected SubmarineInfo GetPredefinedStartOutpost()
-        {
-            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && !parameters.OutpostFilePath.IsNullOrEmpty())
-            {
-                return new SubmarineInfo(parameters.OutpostFilePath.Value)
-                {
-                    OutpostGenerationParams = parameters
-                };
-            }
-            return null;
-        }
-
         partial void NPCInteractProjSpecific(Character npc, Character interactor)
         {
             if (npc == null || interactor == null) { return; }
@@ -370,7 +358,7 @@ namespace Barotrauma
                     UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade").Value, IsSinglePlayer, npc);
                     return;
                 case InteractionType.Crew when GameMain.NetworkMember != null:
-                    CampaignUI.CrewManagement.SendCrewState(false);
+                    CampaignUI.HRManagerUI.SendCrewState(false);
                     goto default;
                 case InteractionType.MedicalClinic:
                     CampaignUI.MedicalClinic.RequestLatestPending();

@@ -1337,7 +1337,7 @@ namespace Barotrauma.Networking
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
                     campaign.CampaignUI?.UpgradeStore?.RequestRefresh();
-                    campaign.CampaignUI?.CrewManagement?.RefreshPermissions();
+                    campaign.CampaignUI?.HRManagerUI?.RefreshUI();
                 }
             }
 
@@ -1552,7 +1552,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    GameMain.GameSession.StartRound(levelData, mirrorLevel);
+                    GameMain.GameSession.StartRound(levelData, mirrorLevel, startOutpost: campaign?.GetPredefinedStartOutpost());
                 }
                 isOutpost = levelData.Type == LevelData.LevelType.Outpost;
             }
@@ -1957,7 +1957,7 @@ namespace Barotrauma.Networking
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
                     campaign.CampaignUI?.UpgradeStore?.RequestRefresh();
-                    campaign.CampaignUI?.CrewManagement?.RefreshPermissions();
+                    campaign.CampaignUI?.HRManagerUI?.RefreshUI();
                 }
             }
         }
