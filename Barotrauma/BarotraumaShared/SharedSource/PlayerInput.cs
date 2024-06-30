@@ -5,6 +5,7 @@ namespace Barotrauma
     class Key
     {
         private bool hit, hitQueue;
+        private bool pressed;
         private bool held, heldQueue;
 
 
@@ -42,6 +43,8 @@ namespace Barotrauma
             hit = binding.IsHit() && AllowOnGUI(inputType);
             if (hit) hitQueue = true;
 
+            pressed = binding.IsPressed() && AllowOnGUI(inputType);
+
             held = binding.IsDown() && AllowOnGUI(inputType);
             if (held) heldQueue = true;
         }
@@ -56,6 +59,18 @@ namespace Barotrauma
             set
             {
                 hit = value;
+            }
+        }
+
+        public bool Pressed
+        {
+            get
+            {
+                return pressed;
+            }
+            set
+            {
+                pressed = value;
             }
         }
 
