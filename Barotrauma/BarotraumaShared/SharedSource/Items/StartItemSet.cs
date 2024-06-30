@@ -10,12 +10,20 @@ namespace Barotrauma
         public Identifier Item;
         public int Amount;
         public bool MultiPlayerOnly;
+        public int? MinAmount; // Nullable
+        public int? MaxAmount; // Nullable
+        public double SpawnProbability;
+        public bool NotCampaign;
 
         public StartItem(XElement element)
         {
             Item = element.GetAttributeIdentifier("identifier", Identifier.Empty);
             Amount = element.GetAttributeInt(nameof(Amount), 1);
             MultiPlayerOnly = element.GetAttributeBool(nameof(MultiPlayerOnly), false);
+            MinAmount = element.GetAttributeIntNullable("minamount"); // Nullable
+            MaxAmount = element.GetAttributeIntNullable("maxamount"); // Nullable
+            SpawnProbability = element.GetAttributeDouble("spawnprobability", 1.0);
+            NotCampaign = element.GetAttributeBool("notcampaign", false);
         }
     }
 
