@@ -248,6 +248,11 @@ namespace Barotrauma
             get { return ConvertUnits.ToDisplayUnits(FarseerBody.Position); }
         }
 
+        /// <summary>
+        /// Offset of the DrawPosition from the Position (i.e. how much the interpolated draw position is offset from the "actual position"). In display units.
+        /// </summary>
+        public Vector2 DrawPositionOffset => DrawPosition - Position;
+
         public Vector2 PrevPosition
         {
             get { return prevPosition; }
@@ -935,6 +940,24 @@ namespace Barotrauma
             {
                 ApplyTorque(FarseerBody.Mass * torque);
             }
+        }
+
+        /// <summary>
+        /// Wraps the angle so it has "has the same number of revolutions" as this body, i.e. that the angles are at most 180 degrees apart.
+        /// For example, if the angle of this body was 720, an angle of 5 would get wrapped to 725.
+        /// </summary>
+        public float WrapAngleToSameNumberOfRevolutions(float angle)
+        {
+            if (float.IsInfinity(angle)) { return angle; }
+            while (Rotation - angle > MathHelper.TwoPi)
+            {
+                angle += MathHelper.TwoPi;
+            }
+            while (Rotation - angle < -MathHelper.TwoPi)
+            {
+                angle -= MathHelper.TwoPi;
+            }
+            return angle;
         }
         
         public void Remove()

@@ -29,8 +29,8 @@ namespace Barotrauma
             return $"ArtifactEvent ({(itemPrefab == null ? "null" : itemPrefab.Name)})";
         }
 
-        public ArtifactEvent(EventPrefab prefab)
-            : base(prefab)
+        public ArtifactEvent(EventPrefab prefab, int seed)
+            : base(prefab, seed)
         {
             if (prefab.ConfigElement.GetAttribute("itemname") != null)
             {
@@ -55,9 +55,8 @@ namespace Barotrauma
             }
         }
 
-        public override void Init(EventSet parentSet)
+        protected override void InitEventSpecific(EventSet parentSet)
         {
-            base.Init(parentSet);
             spawnPos = Level.Loaded.GetRandomItemPos(
                 (Rand.Value(Rand.RandSync.ServerAndClient) < 0.5f) ? 
                 Level.PositionType.MainPath | Level.PositionType.SidePath : 
@@ -108,6 +107,11 @@ namespace Barotrauma
         {
             if (spawnPending)
             {
+                if (itemPrefab == null)
+                {
+                    isFinished = true;
+                    return;
+                }
                 SpawnItem();
                 spawnPending = false;
             }

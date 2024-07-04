@@ -10,10 +10,13 @@ namespace Barotrauma
 {
     partial class SalvageMission : Mission
     {
-
         private class Target
         {
             public Item Item;
+            /// <summary>
+            /// The target this item spawns inside (usually a crate for example).
+            /// </summary>
+            public Target ParentTarget;
 
             /// <summary>
             /// Note that the integer values matter here:
@@ -29,14 +32,20 @@ namespace Barotrauma
             }
 
             public readonly ItemPrefab ItemPrefab;
+            /// <summary>
+            /// Where the target can be spawned to. E.g. MainPath or Wreck.
+            /// </summary>
             public readonly Level.PositionType SpawnPositionType;
             public readonly Identifier ContainerTag;
             public readonly Identifier ExistingItemTag;
-
+            
             public readonly bool RemoveItem;
 
             public readonly LocalizedString SonarLabel;
 
+            /// <summary>
+            /// Can the mission continue before this target has been retrieved? Can be used if you want the targets to be retrieved in a specific order.
+            /// </summary>
             public readonly bool AllowContinueBeforeRetrieved;
 
             /// <summary>
@@ -51,6 +60,13 @@ namespace Barotrauma
             {
                 get
                 {
+                    //if placing the item inside the parent (e.g. some item inside a crate) failed,
+                    //consider this item retrieved (= essentially ignoring the item, it's not necessary to retrieve)
+                    if (PlacingInsideParentTargetFailed)
+                    {
+                        return true;
+                    }
+
                     return RequiredRetrievalState switch
                     {
                         RetrievalState.None => true,
@@ -78,20 +94,29 @@ namespace Barotrauma
             public bool Interacted;
 
             private readonly SalvageMission mission;
+            public readonly bool RequireInsideOriginalContainer;
+            public Item OriginalContainer;
+
+            /// <summary>
+            /// Means that the item could not be placed inside the container it was intended to spawn inside (probably meaning the mission has been misconfigured to e.g. spawn more items inside a crate than what the crate can hold).
+            /// </summary>
+            public bool PlacingInsideParentTargetFailed;
 
             /// <summary>
             /// Status effects executed on the target item when the mission starts. A random effect is chosen from each child list.
             /// </summary>
             public readonly List<List<StatusEffect>> StatusEffects = new List<List<StatusEffect>>();
 
-            public Target(ContentXElement element, SalvageMission mission)
+            public Target(ContentXElement element, SalvageMission mission, Target parentTarget)
             {
                 this.mission = mission;
+                ParentTarget = parentTarget;
                 ContainerTag = element.GetAttributeIdentifier("containertag", Identifier.Empty);
-                RequiredRetrievalState = element.GetAttributeEnum("requireretrieval", RetrievalState.RetrievedToSub);
-                AllowContinueBeforeRetrieved = element.GetAttributeBool("allowcontinuebeforeretrieved", false);
-                HideLabelAfterRetrieved = element.GetAttributeBool("hidelabelafterretrieved", false);
-
+                RequiredRetrievalState = element.GetAttributeEnum("requireretrieval", parentTarget?.RequiredRetrievalState ?? RetrievalState.RetrievedToSub);
+                AllowContinueBeforeRetrieved = element.GetAttributeBool("allowcontinuebeforeretrieved", parentTarget != null);
+                HideLabelAfterRetrieved = element.GetAttributeBool("hidelabelafterretrieved", parentTarget?.HideLabelAfterRetrieved ?? false);
+                RequireInsideOriginalContainer = element.GetAttributeBool("requireinsideoriginalcontainer", false);
+                                
                 string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
                 if (!string.IsNullOrEmpty(sonarLabelTag))
                 {
@@ -126,6 +151,7 @@ namespace Barotrauma
                     if (ItemPrefab == null)
                     {
                         string itemTag = element.GetAttributeString("itemtag", "");
+                        //NOTE: using unsynced random here is fine, the clients receive the info of what item spawned from the server
                         ItemPrefab = MapEntityPrefab.GetRandom(p => p.Tags.Contains(itemTag), Rand.RandSync.Unsynced) as ItemPrefab;
                     }
                     if (ItemPrefab == null && ExistingItemTag.IsEmpty)
@@ -135,7 +161,7 @@ namespace Barotrauma
                     }
                 }
 
-                SpawnPositionType = element.GetAttributeEnum("spawntype", Level.PositionType.Cave | Level.PositionType.Ruin);
+                SpawnPositionType = element.GetAttributeEnum("spawntype", parentTarget?.SpawnPositionType ?? (Level.PositionType.Cave | Level.PositionType.Ruin));
 
                 foreach (var subElement in element.Elements())
                 {
@@ -149,12 +175,15 @@ namespace Barotrauma
                                 break;
                             }
                         case "chooserandom":
-                            StatusEffects.Add(new List<StatusEffect>());
-                            foreach (var effectElement in subElement.Elements())
+                            if (subElement.Elements().Any(static e => e.NameAsIdentifier() == "statuseffect"))
                             {
-                                var newEffect = StatusEffect.Load(effectElement, parentDebugName: mission.Prefab.Name.Value);
-                                if (newEffect == null) { continue; }
-                                StatusEffects.Last().Add(newEffect);
+                                StatusEffects.Add(new List<StatusEffect>());
+                                foreach (var effectElement in subElement.Elements())
+                                {
+                                    var newEffect = StatusEffect.Load(effectElement, parentDebugName: mission.Prefab.Name.Value);
+                                    if (newEffect == null) { continue; }
+                                    StatusEffects.Last().Add(newEffect);
+                                }
                             }
                             break;
                     }
@@ -170,7 +199,24 @@ namespace Barotrauma
 
         private readonly List<Target> targets = new List<Target>();
 
-        public bool AnyTargetNeedsToBeRetrievedToSub => targets.Any(t => t.RequiredRetrievalState == Target.RetrievalState.RetrievedToSub && !t.Retrieved);
+        /// <summary>
+        /// What percentage of targets need to be retrieved for the mission to complete (0.0 - 1.0). Defaults to 0.98.
+        /// </summary>
+        private readonly float requiredDeliveryAmount;
+
+        /// <summary>
+        /// Message displayed when at least one of the targets is retrieved, but the mission is not complete yet.
+        /// </summary>
+        private LocalizedString partiallyRetrievedMessage;
+
+        /// <summary>
+        /// Message displayed when all targets have been retrieved.
+        /// </summary>
+        private LocalizedString allRetrievedMessage;
+
+        public bool AnyTargetNeedsToBeRetrievedToSub => targets.Any(static t => t.RequiredRetrievalState == Target.RetrievalState.RetrievedToSub && !t.Retrieved);
+
+        private readonly MTRandom rng;
 
         public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
@@ -179,8 +225,23 @@ namespace Barotrauma
                 foreach (var target in targets)
                 {
                     if (target.Retrieved && target.HideLabelAfterRetrieved) { continue; }
-                    if (target.Item != null)
+                    if (target.Item != null && !target.Item.Removed)
                     {
+                        if (target.Item.ParentInventory?.Owner is Item parentItem)
+                        {
+                            bool insideParentItem = false;
+                            foreach (var parentTarget in targets)
+                            {
+                                if (parentTarget.Item == parentItem && !parentTarget.SonarLabel.IsNullOrEmpty())
+                                {
+                                    insideParentItem = true;
+                                    break;
+                                }
+                            }
+                            //if the item is inside another target that has it's own sonar label, no need to show one on this item
+                            if (insideParentItem) { continue; }
+                        }
+
                         yield return (
                             target.SonarLabel ?? Prefab.SonarLabel, 
                             target.Item.GetRootInventoryOwner()?.WorldPosition ?? target.Item.WorldPosition);
@@ -193,17 +254,82 @@ namespace Barotrauma
         public SalvageMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
+            requiredDeliveryAmount = prefab.ConfigElement.GetAttributeFloat(nameof(requiredDeliveryAmount), 0.98f);
+
+            //LevelData may not be instantiated at this point, in that case use the name identifier of the location
+            rng = new MTRandom(ToolBox.StringToInt(
+                    locations[0].LevelData?.Seed ?? locations[0].NameIdentifier.Value +
+                    locations[1].LevelData?.Seed ?? locations[1].NameIdentifier.Value));
+
+            partiallyRetrievedMessage = GetMessage(nameof(partiallyRetrievedMessage));
+            allRetrievedMessage = GetMessage(nameof(allRetrievedMessage));
+
             foreach (ContentXElement subElement in prefab.ConfigElement.Elements())
             {
-                if (subElement.NameAsIdentifier() == "target")
+                if (subElement.NameAsIdentifier() == "target" ||
+                    subElement.NameAsIdentifier() == "chooserandom")
                 {
-                    targets.Add(new Target(subElement, this));
+                    LoadTarget(subElement, parentTarget: null);
                 }
+             
             }
             if (!targets.Any())
             {
-                targets.Add(new Target(prefab.ConfigElement, this));
+                targets.Add(new Target(prefab.ConfigElement, this, parentTarget: null));
             }
+
+            LocalizedString GetMessage(string attributeName)
+            {
+                if (prefab.ConfigElement.GetAttribute(attributeName) != null)
+                {
+                    string msgTag = prefab.ConfigElement.GetAttributeString(attributeName, string.Empty);
+                    return ReplaceVariablesInMissionMessage(TextManager.Get(msgTag).Fallback(msgTag), sub);
+                }
+                return string.Empty;
+            }
+        }
+        
+        private void LoadTarget(ContentXElement element, Target parentTarget)
+        {
+            ContentXElement chosenElement = element;
+            if (element.NameAsIdentifier() == "chooserandom")
+            {
+                /* chooserandom in this context can be used to choose either between targets or status effects to apply to the target, 
+                         ensure we don't try to load a statuseffect as a "child target" */
+                if (element.Elements().Any(static e => e.NameAsIdentifier() == "statuseffect"))
+                {
+                    return;
+                }
+                //this needs to be deterministic, use RNG with a specific seed
+                chosenElement = element.Elements().ToList().GetRandom(rng);
+            }
+
+            int amount = GetAmount(chosenElement);
+            for (int i = 0; i < amount; i++)
+            {
+                var target = new Target(chosenElement, this, parentTarget);
+                targets.Add(target);
+                foreach (ContentXElement subElement in chosenElement.Elements())
+                {
+                    LoadTarget(subElement, parentTarget: target);                    
+                }           
+            } 
+        }
+
+        private int GetAmount(ContentXElement targetElement)
+        {
+            int amount = targetElement.GetAttributeInt("amount", 1);
+            int minAmount = targetElement.GetAttributeInt("minamount", amount);
+            int maxAmount = targetElement.GetAttributeInt("maxamount", amount);
+            
+            // if the amount is a range, pick a random value between minAmount and maxAmount
+            if (minAmount < maxAmount)
+            {
+                //this needs to be deterministic, use RNG with a specific seed
+                amount = rng.Next(minAmount, maxAmount + 1);
+            }
+            
+            return amount;
         }
 
         protected override void StartMissionSpecific(Level level)
@@ -294,8 +420,16 @@ namespace Barotrauma
                             continue;
                         }
                         target.Item = new Item(target.ItemPrefab, position, null);
-                        target.Item.body.SetTransformIgnoreContacts(target.Item.body.SimPosition, target.Item.body.Rotation);
-                        target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
+#if CLIENT
+                        target.Item.HighlightColor = GUIStyle.Orange;
+                        target.Item.ExternalHighlight = true;
+#endif
+                        target.Item.UpdateTransform();
+                        if (target.Item.CurrentHull == null)
+                        {
+                            //prevent the body from moving if it spawned outside the hulls (we don't want it e.g. falling to the bottom of a cave or into the abyss)
+                            target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
+                        }
                     }
                     else if (target.RequiredRetrievalState == Target.RetrievalState.Interact)
                     {
@@ -344,6 +478,7 @@ namespace Barotrauma
                         }
                         if (validContainers.Any())
                         {
+                            //NOTE: using unsynced random here is fine, clients don't run this logic but rely on where the server places the item
                             var selectedContainer = validContainers.GetRandomUnsynced();
                             if (selectedContainer.Combine(target.Item, user: null))
                             {
@@ -362,6 +497,42 @@ namespace Barotrauma
                     new SpawnInfo(usedExistingItem, originalInventoryID, originalItemContainerIndex, originalSlotIndex, executedEffectIndices));
 #endif
             }
+
+            if (!IsClient)
+            {
+                // after spawning all the items from prefabs, need to find all targets where parentTarget is defined, and set the item inside parent target container (if applicable)
+                foreach (var target in targets)
+                {
+                    if (target.ParentTarget == null) { continue; }
+                
+                    if (target.Item == null)
+                    {
+                        DebugConsole.ThrowError("Error in salvage mission " + Prefab.Identifier + " (item was null)",
+                            contentPackage: Prefab.ContentPackage);
+                        continue;
+                    }
+                
+                    if (target.ParentTarget.Item == null)
+                    {
+                        DebugConsole.ThrowError("Error in salvage mission " + Prefab.Identifier + " (parent item was null)",
+                            contentPackage: Prefab.ContentPackage);
+                        continue;
+                    }
+
+                    target.Item.DontCleanUp = true;
+
+                    if (target.ParentTarget.Item.GetComponent<ItemContainer>() is ItemContainer container)
+                    {
+                        if (!container.Inventory.TryPutItem(target.Item, user: null))
+                        {
+                            DebugConsole.ThrowError($"Error in salvage mission {Prefab.Identifier}: failed to put the item {target.Item.Name} inside {target.ParentTarget.Item.Name}.", 
+                                contentPackage: Prefab.ContentPackage);
+                            target.PlacingInsideParentTargetFailed = true;
+                        }
+                        target.OriginalContainer = target.ParentTarget.Item;
+                    }
+                }
+            }
         }
 
         protected override void UpdateMissionSpecific(float deltaTime)
@@ -376,6 +547,7 @@ namespace Barotrauma
 
             if (IsClient) { return; }
 
+            bool atLeastOneTargetWasRetrieved = false;
             for (int i = 0; i < targets.Count; i++)
             {
                 var target = targets[i];
@@ -388,6 +560,10 @@ namespace Barotrauma
 #endif
                     return;
                 }
+
+                Entity rootInventoryOwner = target.Item.GetRootInventoryOwner();
+                Submarine parentSub = target.Item.CurrentHull?.Submarine ?? rootInventoryOwner?.Submarine;
+                bool inPlayerSub = parentSub != null && parentSub.Info.Type == SubmarineType.Player;
                 switch (target.State)
                 {
                     case Target.RetrievalState.None:
@@ -401,16 +577,16 @@ namespace Barotrauma
                             {
                                 TrySetRetrievalState(Target.RetrievalState.PickedUp);
                             }
+                            if (inPlayerSub)
+                            {
+                                TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);
+                            }
                         }
-
                         break;
                     case Target.RetrievalState.PickedUp:
                     case Target.RetrievalState.RetrievedToSub:
                         {
-                            Entity rootInventoryOwner = target.Item.GetRootInventoryOwner();
-                            Submarine parentSub = target.Item.CurrentHull?.Submarine ?? rootInventoryOwner?.Submarine;
 
-                            bool inPlayerSub = parentSub != null && parentSub.Info.Type == SubmarineType.Player;
                             bool inPlayerInventory = false;
                             bool playerInFriendlySub = false;
                             if (rootInventoryOwner is Character character && character.TeamID == CharacterTeamType.Team1)
@@ -441,32 +617,69 @@ namespace Barotrauma
                     if (retrievalState < target.State || target.State == retrievalState) { return; }
                     bool wasRetrieved = target.Retrieved;
                     target.State = retrievalState;
-                    //increment the mission state if the target became retrieved
-                    if (!wasRetrieved && target.Retrieved) { State = i + 1; }
+                    //increment the mission state if the target became retrieved               
+                    if (!wasRetrieved && target.Retrieved) 
+                    { 
+                        State = Math.Max(i + 1, State);
+                        atLeastOneTargetWasRetrieved = true;
+                    }
                 }
             }
+#if CLIENT
+            if (atLeastOneTargetWasRetrieved)
+            {
+                TryShowRetrievedMessage();
+            }
+#endif
             if (targets.All(t => t.Retrieved))
             {
                 State = targets.Count + 1;
-            }
+            }            
         }
 
         protected override bool DetermineCompleted()
         {
-            return targets.All(t => t.State >= t.RequiredRetrievalState);
+            if (requiredDeliveryAmount < 1.0f)
+            {
+                return targets.Count(t => IsTargetRetrieved(t)) / (float)targets.Count >= requiredDeliveryAmount;
+            }
+            else
+            {
+                return targets.All(IsTargetRetrieved);
+            }
+
+            static bool IsTargetRetrieved(Target target)
+            {
+                if (target.State < target.RequiredRetrievalState) { return false; }
+                if (target.RequireInsideOriginalContainer)
+                {
+                    if (target.Item.ParentInventory != target.OriginalContainer?.OwnInventory) { return false; }
+                }
+                return true;
+            }
         }
 
         protected override void EndMissionSpecific(bool completed)
         {
             //consider failed (can't attempt again) if we picked up any of the items but failed to bring them out of the level
             failed = !completed && targets.Any(t => t.State >= Target.RetrievalState.PickedUp);
+            List<Target> targetsToRemove = new List<Target>();
             foreach (var target in targets)
             {
-                if (target.RemoveItem)
+                if (target.RemoveItem ||
+                    /*remove the target if it's inside another target that's set to be removed (e.g. inside the crate it spawned in)*/
+                    targets.Any(t => t.RemoveItem && target.Item?.ParentInventory?.Owner as Item == t.Item))
                 {
-                    target.Item?.Remove();
-                    target.Reset();
+                    targetsToRemove.Add(target);
                 }
+            }
+            foreach (var target in targetsToRemove)
+            {
+                if (target.Item != null && !target.Item.Removed)
+                {
+                    target.Item.Remove();
+                }
+                target.Reset();
             }
         }
     }

@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
@@ -44,8 +44,13 @@ namespace Barotrauma
         public readonly Identifier MenuCategoryVar;
         public readonly Identifier Pronouns;
 
-        public CharacterInfoPrefab(ContentXElement headsElement, XElement varsElement, XElement menuCategoryElement, XElement pronounsElement)
+        public CharacterInfoPrefab(CharacterPrefab characterPrefab, ContentXElement headsElement, XElement varsElement, XElement menuCategoryElement, XElement pronounsElement)
         {
+            if (headsElement == null)
+            {
+                throw new Exception($"No heads configured for the character \"{characterPrefab.Identifier}\". Characters with CharacterInfo must have head sprites. Please add a <Heads> element to the character's config.");
+            }
+
             Heads = headsElement.Elements().Select(e => new CharacterInfo.HeadPreset(this, e)).ToImmutableArray();
             if (varsElement != null)
             {
@@ -82,6 +87,10 @@ namespace Barotrauma
         }
     }
 
+    /// <summary>
+    /// Stores information about the Character that is needed between rounds in the
+    /// menu etc., whereas Character itself is the object actually spawned in-game.
+    /// </summary>
     partial class CharacterInfo
     {
         public class HeadInfo
@@ -289,7 +298,10 @@ namespace Barotrauma
         public XElement HealthData;
         public XElement OrderData;
 
-        private static ushort idCounter;
+        public bool PermanentlyDead;
+        public bool RenamingEnabled = false;
+
+        private static ushort idCounter = 1;
         private const string disguiseName = "???";
 
         public bool HasNickname => Name != OriginalName;
@@ -490,10 +502,11 @@ namespace Barotrauma
 
         public ContentXElement CharacterConfigElement { get; set; }
 
-        public readonly string ragdollFileName = string.Empty;
-
         public bool StartItemsGiven;
 
+        /// <summary>
+        /// Newly hired bot that hasn't spawned yet
+        /// </summary>
         public bool IsNewHire;
 
         public CauseOfDeath CauseOfDeath;
@@ -553,12 +566,11 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    // TODO: support for variants
                     Identifier speciesName = SpeciesName;
                     bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName == CharacterPrefab.HumanSpeciesName);
                     ragdoll = isHumanoid 
-                        ? HumanRagdollParams.GetRagdollParams(speciesName, ragdollFileName)
-                        : RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName, ragdollFileName) as RagdollParams;
+                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPackage)
+                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPackage);
                 }
                 return ragdoll;
             }
@@ -645,6 +657,15 @@ namespace Barotrauma
             => element.GetAttributeBool("specifiertags",
                 element.GetAttributeBool("genders",
                     element.GetAttributeBool("races", false)));
+
+        /// <summary>
+        /// Keeps track of the last reward distribution that was set on the character's wallet.
+        /// Is used to keep salary when the character respawns since CharacterInfo is preserved between deaths.
+        /// </summary>
+        /// <remarks>
+        /// None means the salary has not been set yet, which is not always 0 if default salary is set.
+        /// </remarks>
+        public Option<int> LastRewardDistribution = Option.None;
         
         // Used for creating the data
         public CharacterInfo(
@@ -652,7 +673,6 @@ namespace Barotrauma
             string name = "",
             string originalName = "",
             Either<Job, JobPrefab> jobOrJobPrefab = null,
-            string ragdollFileName = null,
             int variant = 0,
             Rand.RandSync randSync = Rand.RandSync.Unsynced,
             Identifier npcIdentifier = default)
@@ -666,6 +686,7 @@ namespace Barotrauma
             }
             ID = idCounter;
             idCounter++;
+            if (idCounter == 0) { idCounter++; }
             SpeciesName = speciesName;
             SpriteTags = new List<Identifier>();
             CharacterConfigElement = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ConfigElement;
@@ -703,14 +724,16 @@ namespace Barotrauma
                 Salary = CalculateSalary();
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
-            if (ragdollFileName != null)
+
+            int loadedLastRewardDistribution = CharacterConfigElement.GetAttributeInt("lastrewarddistribution", -1);
+            if (loadedLastRewardDistribution >= 0)
             {
-                this.ragdollFileName = ragdollFileName;
+                LastRewardDistribution = Option.Some(loadedLastRewardDistribution);
             }
         }
 
         private void SetPersonalityTrait()
-            => PersonalityTrait = NPCPersonalityTrait.GetRandom(Name + string.Concat(Head.Preset.TagSet));
+            => PersonalityTrait = NPCPersonalityTrait.GetRandom(Name + string.Concat(Head.Preset.TagSet.OrderBy(tag => tag)));
 
         public string GetRandomName(Rand.RandSync randSync)
         {
@@ -779,6 +802,8 @@ namespace Barotrauma
             HashSet<Identifier> tags = infoElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
             LoadTagsBackwardsCompatibility(infoElement, tags);
             SpeciesName = infoElement.GetAttributeIdentifier("speciesname", "");
+            PermanentlyDead = infoElement.GetAttributeBool("permanentlydead", false);
+            RenamingEnabled = infoElement.GetAttributeBool("renamingenabled", false);
             ContentXElement element;
             if (!SpeciesName.IsEmpty)
             {
@@ -832,7 +857,6 @@ namespace Barotrauma
 
             StartItemsGiven = infoElement.GetAttributeBool("startitemsgiven", false);
             Identifier personalityName = infoElement.GetAttributeIdentifier("personality", "");
-            ragdollFileName = infoElement.GetAttributeString("ragdoll", string.Empty);
             if (personalityName != Identifier.Empty)
             {
                 if (NPCPersonalityTrait.Traits.TryGet(personalityName, out var trait) ||
@@ -960,7 +984,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns a presumably (not guaranteed) unique hash using the (current) Name, appearence, and job.
+        /// Returns a presumably (not guaranteed) unique and persistent hash using the (current) Name, appearence, and job.
         /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
         /// </summary>
         public int GetIdentifier()
@@ -969,7 +993,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns a presumably (not guaranteed) unique hash using the OriginalName, appearence, and job.
+        /// Returns a presumably (not guaranteed) unique hash and persistent using the OriginalName, appearence, and job.
         /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
         /// </summary>
         public int GetIdentifierUsingOriginalName()
@@ -1086,7 +1110,26 @@ namespace Barotrauma
 
         partial void LoadHeadSpriteProjectSpecific(ContentXElement limbElement);
         
+        private bool spriteTagsLoaded;
+        public void VerifySpriteTagsLoaded()
+        {
+            if (!spriteTagsLoaded)
+            {
+                LoadSpriteTags();
+            }
+        }
+
         private void LoadHeadSprite()
+        {
+            LoadHeadElement(loadHeadSprite: true, loadHeadSpriteTags: true);
+        }
+
+        private void LoadSpriteTags()
+        {
+            LoadHeadElement(loadHeadSprite: false, loadHeadSpriteTags: true);            
+        }
+
+        private void LoadHeadElement(bool loadHeadSprite, bool loadHeadSpriteTags)
         {
             if (Ragdoll?.MainElement == null) { return; }
             foreach (var limbElement in Ragdoll.MainElement.Elements())
@@ -1116,20 +1159,30 @@ namespace Barotrauma
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
                     if (fileWithoutTags != fileName) { continue; }
 
-                    HeadSprite = new Sprite(spriteElement, "", file);
-                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
-
-                    //extract the tags out of the filename
-                    SpriteTags = file.Split('[', ']').Skip(1).Select(id => id.ToIdentifier()).ToList();
-                    if (SpriteTags.Any())
+                    if (loadHeadSprite)
                     {
-                        SpriteTags.RemoveAt(SpriteTags.Count - 1);
+                        HeadSprite = new Sprite(spriteElement, "", file);
+                        Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+                    }
+
+                    if (loadHeadSpriteTags)
+                    {
+                        //extract the tags out of the filename
+                        SpriteTags = file.Split('[', ']').Skip(1).Select(id => id.ToIdentifier()).ToList();
+                        if (SpriteTags.Any())
+                        {
+                            SpriteTags.RemoveAt(SpriteTags.Count - 1);
+                        }
+                        spriteTagsLoaded = true;
                     }
 
                     break;
                 }
 
-                LoadHeadSpriteProjectSpecific(limbElement);
+                if (loadHeadSprite)
+                {
+                    LoadHeadSpriteProjectSpecific(limbElement);
+                }
 
                 break;
             }
@@ -1446,9 +1499,11 @@ namespace Barotrauma
                 new XAttribute("haircolor", XMLExtensions.ColorToString(Head.HairColor)),
                 new XAttribute("facialhaircolor", XMLExtensions.ColorToString(Head.FacialHairColor)),
                 new XAttribute("startitemsgiven", StartItemsGiven),
-                new XAttribute("ragdoll", ragdollFileName),
-                new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty));
-                // TODO: animations?
+                new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty),
+                new XAttribute("lastrewarddistribution", LastRewardDistribution.Match(some: value => value, none: () => -1).ToString()),
+                new XAttribute("permanentlydead", PermanentlyDead),
+                new XAttribute("renamingenabled", RenamingEnabled)
+            );
 
             if (HumanPrefabIds != default)
             {
@@ -1663,8 +1718,7 @@ namespace Barotrauma
             {
                 Order order = null;
                 string orderIdentifier = orderElement.GetAttributeString("id", "");
-                var orderPrefab = OrderPrefab.Prefabs[orderIdentifier];
-                if (orderPrefab == null)
+                if (!OrderPrefab.Prefabs.TryGet(orderIdentifier, out OrderPrefab orderPrefab))
                 {
                     DebugConsole.ThrowError($"Error loading a previously saved order - can't find an order prefab with the identifier \"{orderIdentifier}\"");
                     priorityIncrease++;
@@ -1968,6 +2022,21 @@ namespace Barotrauma
             }
             if (changed) { OnPermanentStatChanged(statType); }
         }
+
+        /// <summary>
+        /// Used to store the last known resistance against skill loss on death
+        /// when the character dies, so it can be correctly applied before
+        /// reinstantiating the Character object (if respawning).
+        /// NOTE: The resistances are handled as multipliers here, so 1.0 == 0% resistance
+        /// </summary>
+        public float LastResistanceMultiplierSkillLossDeath = 1.0f;
+        /// <summary>
+        /// Used to store the last known resistance against skill loss on respawn
+        /// when the character dies, so it can be correctly applied before
+        /// reinstantiating the Character object (if respawning).
+        /// NOTE: The resistances are handled as multipliers here, so 1.0 == 0% resistance
+        /// </summary>
+        public float LastResistanceMultiplierSkillLossRespawn = 1.0f;
     }
 
     internal sealed class SavedStatValue

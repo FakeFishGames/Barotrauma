@@ -137,6 +137,7 @@ namespace Barotrauma.Items.Components
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
                 if (!ShowDeadCharacters && c.IsDead) { continue; }
+                if (c.InDetectable) { continue; }
 
                 float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
@@ -282,12 +283,12 @@ namespace Barotrauma.Items.Components
                     texts.Add(CharacterHUD.GetCachedHudText("PlayHint", InputType.Use));
                     textColors.Add(GUIStyle.Green);
                 }
-                if (target.CharacterHealth.UseHealthWindow && !target.DisableHealthWindow && equipper?.FocusedCharacter == target && equipper.CanInteractWith(target, 160f, false))
+                if (equipper?.FocusedCharacter == target && target.CanBeHealedBy(equipper, checkFriendlyTeam: false))
                 {
                     texts.Add(CharacterHUD.GetCachedHudText("HealHint", InputType.Health));
                     textColors.Add(GUIStyle.Green);
                 }
-                if (target.CanBeDragged)
+                if (target.CanBeDraggedBy(Character.Controlled))
                 {
                     texts.Add(CharacterHUD.GetCachedHudText("GrabHint", InputType.Grab));
                     textColors.Add(GUIStyle.Green);

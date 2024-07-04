@@ -1,11 +1,14 @@
 ﻿namespace Barotrauma
 {
+    /// <summary>
+    /// Triggers another scripted event.
+    /// </summary>
     class TriggerEventAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)] 
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the event to trigger.")] 
         public Identifier Identifier { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "If set to true, the event will trigger at the beginning of the next round. Useful for e.g. triggering some scripted event in the outpost after you finish a mission.")]
         public bool NextRound { get; set; }
 
         private bool isFinished;
@@ -41,7 +44,7 @@
                     }
                     else
                     {
-                        var ev = eventPrefab.CreateInstance();
+                        var ev = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
                         if (ev != null)
                         {
                             GameMain.GameSession.EventManager.QueuedEvents.Enqueue(ev);                            

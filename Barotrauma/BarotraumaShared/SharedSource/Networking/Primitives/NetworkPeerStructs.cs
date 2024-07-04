@@ -68,6 +68,7 @@ namespace Barotrauma.Networking
     {
         public string ServerName;
         public ImmutableArray<ServerContentPackage> ContentPackages;
+        public bool AllowModDownloads;
     }
 
     [NetworkSerialize(ArrayMaxSize = ushort.MaxValue)]

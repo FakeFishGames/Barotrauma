@@ -1,19 +1,22 @@
 namespace Barotrauma;
 
+/// <summary>
+/// Teleports a specific entity to a specific spawn point.
+/// </summary>
 class TeleportAction : EventAction
 {
     public enum TeleportPosition { MainSub, Outpost }
 
-    [Serialize(TeleportPosition.MainSub, IsPropertySaveable.Yes)]
+    [Serialize(TeleportPosition.MainSub, IsPropertySaveable.Yes, description: "Should the entity be teleported to the main submarine or the outpost?")]
     public TeleportPosition Position { get; set; }
 
-    [Serialize(SpawnType.Human, IsPropertySaveable.Yes)]
+    [Serialize(SpawnType.Human, IsPropertySaveable.Yes, description: "The type of the spawnpoint to teleport the character to.")]
     public SpawnType SpawnType { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Optional tag of the spawnpoint.")]
     public string SpawnPointTag { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Tag of the target(s) to teleport.")]
     public Identifier TargetTag { get; set; }
 
     private bool isFinished;

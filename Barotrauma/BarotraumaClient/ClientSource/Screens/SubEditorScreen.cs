@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using Barotrauma.Steam;
@@ -27,38 +27,8 @@ namespace Barotrauma
             get => Submarine.MainSub;
             set => Submarine.MainSub = value;
         }
-        
-        private enum LayerVisibility
-        {
-            Visible,
-            Invisible
-        }
 
-        private enum LayerLinkage
-        {
-            Unlinked,
-            Linked
-        }
-
-        private readonly struct LayerData
-        {
-            public readonly LayerVisibility Visible;
-            public readonly LayerLinkage Linkage;
-
-            public static readonly LayerData Default = new LayerData(LayerVisibility.Visible, LayerLinkage.Unlinked);
-
-            public LayerData(LayerVisibility visible, LayerLinkage linkage)
-            {
-                Visible = visible;
-                Linkage = linkage;
-            }
-
-            public void Deconstruct(out LayerVisibility isvisible, out LayerLinkage islinked)
-            {
-                isvisible = Visible;
-                islinked = Linkage;
-            }
-        }
+        private readonly record struct LayerData(bool IsVisible = true, bool IsGrouped = false);
 
         public enum Mode
         {
@@ -81,7 +51,10 @@ namespace Barotrauma
             ItemCount,
             LightCount,
             ShadowCastingLightCount,
-            WaterInHulls
+            WaterInHulls,
+            LowOxygenOutputWarning,
+            TooLargeForEndGame,
+            NotEnoughContainers
         }
 
         public static Vector2 MouseDragStart = Vector2.Zero;
@@ -143,6 +116,7 @@ namespace Barotrauma
         private GUIButton visibilityButton;
         private GUIFrame layerPanel;
         private GUIListBox layerList;
+        private List<GUIButton> layerSpecificButtons = new List<GUIButton>();
 
         private GUIFrame undoBufferPanel;
         private GUIFrame undoBufferDisclaimer;
@@ -552,6 +526,21 @@ namespace Barotrauma
                 }
             };
 
+            spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
+
+            var selectedLayerText = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), paddedTopPanel.RectTransform),
+                string.Empty, textAlignment: Alignment.Center);
+            selectedLayerText.TextGetter = () =>
+            {
+                string selectedLayer = layerList.SelectedData as string;
+                if (selectedLayer != prevSelectedLayer)
+                {
+                    prevSelectedLayer = selectedLayer;
+                    return selectedLayer.IsNullOrEmpty() ? string.Empty : TextManager.GetWithVariable("editor.layer.editinglayer", "[layer]", selectedLayer);
+                }
+                return selectedLayerText.Text;
+            };
+
             TopPanel.RectTransform.MinSize = new Point(0, (int)(paddedTopPanel.RectTransform.Children.Max(c => c.MinSize.Y) / paddedTopPanel.RectTransform.RelativeSize.Y));
             paddedTopPanel.Recalculate();
 
@@ -581,25 +570,27 @@ namespace Barotrauma
             {
                 ScrollBarVisible = true,
                 AutoHideScrollBar = false,
-                OnSelected = (component, o) =>
+                OnSelected = (component, userdata) =>
                 {
-                    if (GUI.MouseOn is GUITickBox) { return false; } // lol
-                    if (!(o is string layer)) { return false; }
-
-                    MapEntity.SelectedList.Clear();
-                    foreach (MapEntity entity in MapEntity.MapEntityList.Where(me => !me.Removed && me.Layer == layer))
+                    //toggling selection is not how listboxes normally work, need to do that manually here
+                    SoundPlayer.PlayUISound(GUISoundType.Select);
+                    if (layerList.SelectedData == userdata)
                     {
-                        if (entity.IsSelected) { continue; }
-
-                        MapEntity.SelectedList.Add(entity);
+                        layerSpecificButtons.ForEach(btn => btn.Enabled = false);
+                        layerList.Deselect();
+                        return false;
                     }
-                    return true;
+                    else
+                    {
+                        layerSpecificButtons.ForEach(btn => btn.Enabled = true);
+                        return true;
+                    }
                 }
             };
 
             GUILayoutGroup layerButtonGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), layerGroup.RectTransform));
-
             GUILayoutGroup layerButtonTopGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), layerButtonGroup.RectTransform), isHorizontal: true);
+            GUILayoutGroup layerButtonBottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), layerButtonGroup.RectTransform), isHorizontal: true);
 
             GUIButton layerAddButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), layerButtonTopGroup.RectTransform), text: TextManager.Get("editor.layer.newlayer"), style: "GUIButtonFreeScale")
             {
@@ -612,6 +603,7 @@ namespace Barotrauma
 
             GUIButton layerDeleteButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), layerButtonTopGroup.RectTransform), text: TextManager.Get("editor.layer.deletelayer"), style: "GUIButtonFreeScale")
             {
+                Enabled = false,
                 OnClicked = (button, o) =>
                 {
                     if (layerList.SelectedData is string layer)
@@ -620,10 +612,12 @@ namespace Barotrauma
                     }
                     return true;
                 }
-            };
+            }; 
+            layerSpecificButtons.Add(layerDeleteButton);
 
-            GUIButton layerRenameButton = new GUIButton(new RectTransform(new Vector2(1f, 0.5f), layerButtonGroup.RectTransform), text: TextManager.Get("editor.layer.renamelayer"), style: "GUIButtonFreeScale")
+            GUIButton layerRenameButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), layerButtonBottomGroup.RectTransform), text: TextManager.Get("editor.layer.renamelayer"), style: "GUIButtonFreeScale")
             {
+                Enabled = false,
                 OnClicked = (button, o) =>
                 {
                     if (layerList.SelectedData is string layer)
@@ -636,9 +630,27 @@ namespace Barotrauma
                     return true;
                 }
             };
+            layerSpecificButtons.Add(layerRenameButton);
 
-            GUITextBlock.AutoScaleAndNormalize(layerAddButton.TextBlock, layerDeleteButton.TextBlock, layerRenameButton.TextBlock);
+            GUIButton selectLayerButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), layerButtonBottomGroup.RectTransform), text: TextManager.Get("editor.layer.selectlayer"), style: "GUIButtonFreeScale")
+            {
+                Enabled = false,
+                OnClicked = (button, o) =>
+                {
+                    if (layerList.SelectedData is string layer)
+                    {
+                        foreach (MapEntity entity in MapEntity.MapEntityList.Where(me => !me.Removed && me.Layer == layer))
+                        {
+                            if (entity.IsSelected) { continue; }
+                            MapEntity.SelectedList.Add(entity);
+                        }
+                    }
+                    return true;
+                }
+            };
+            layerSpecificButtons.Add(selectLayerButton);
 
+            GUITextBlock.AutoScaleAndNormalize(layerAddButton.TextBlock, layerDeleteButton.TextBlock, layerRenameButton.TextBlock, selectLayerButton.TextBlock);
 
             Vector2 subPanelSize = new Vector2(0.925f, 0.9f);
 
@@ -1063,11 +1075,22 @@ namespace Barotrauma
 
             GameSession gameSession = new GameSession(backedUpSubInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
             gameSession.StartRound(null, false);
-            (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
+            
+            foreach ((string layerName, LayerData layerData) in Layers)
             {
-                Submarine.Unload();
-                GameMain.SubEditorScreen.Select();
-            };
+                Identifier identifier = layerName.ToIdentifier();
+                bool enabled = layerData.IsVisible;
+                MainSub.SetLayerEnabled(identifier, enabled);
+            }
+            
+            if (gameSession.GameMode is TestGameMode testGameMode)
+            {
+                testGameMode.OnRoundEnd = () =>
+                {
+                    Submarine.Unload();
+                    GameMain.SubEditorScreen.Select();
+                };
+            }
 
             return true;
         }
@@ -1213,17 +1236,13 @@ namespace Barotrauma
             frame.RectTransform.MaxSize = new Point(int.MaxValue, frame.Rect.Width);
 
             LocalizedString name = legacy ? TextManager.GetWithVariable("legacyitemformat", "[name]", ep.Name) : ep.Name;
-            frame.ToolTip = $"‖color:{XMLExtensions.ToStringHex(GUIStyle.TextColorBright)}‖{name}‖color:end‖";
-            if (!ep.Description.IsNullOrEmpty())
-            {
-                frame.ToolTip += '\n' + ep.Description;
-            }
+            frame.ToolTip = ep.CreateTooltipText();
 
-            if (ep.ContentPackage != GameMain.VanillaContent && ep.ContentPackage != null)
+            if (ep.IsModded)
             {
                 frame.Color = Color.Magenta;
-                frame.ToolTip = $"{frame.ToolTip}\n‖color:{XMLExtensions.ToStringHex(Color.MediumPurple)}‖{ep.ContentPackage?.Name}‖color:end‖";
             }
+
             if (ep.HideInMenus || ep.HideInEditors)
             {
                 frame.Color = Color.Red;
@@ -1392,13 +1411,16 @@ namespace Barotrauma
                 Level.Loaded?.GenerationParams?.AmbientLightColor ??
                 new Color(3, 3, 3, 3);
 
-            UpdateEntityList();
-
             isAutoSaving = false;
+
             if (!wasSelectedBefore)
             {
                 OpenEntityMenu(null);
                 wasSelectedBefore = true;
+            }
+            else
+            {
+                OpenEntityMenu(selectedCategory);
             }
 
             if (backedUpSubInfo != null)
@@ -1428,6 +1450,7 @@ namespace Barotrauma
             {
                 var subInfo = new SubmarineInfo();
                 MainSub = new Submarine(subInfo, showErrorMessages: false);
+                ReconstructLayers();
             }
 
             MainSub.UpdateTransform(interpolate: false);
@@ -1463,7 +1486,10 @@ namespace Barotrauma
             }
 
             ImageManager.OnEditorSelected();
-            ReconstructLayers();
+            if (Layers.None())
+            {
+                ReconstructLayers();
+            }
         }
 
         public override void OnFileDropped(string filePath, string extension)
@@ -1620,7 +1646,6 @@ namespace Barotrauma
             });
 
             ClearFilter();
-            ClearLayers();
         }
 
         private void CreateDummyCharacter()
@@ -2035,10 +2060,8 @@ namespace Barotrauma
 
             saveFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "GUIBackgroundBlocker");
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.55f, 0.6f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(750, 500) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.55f, 0.65f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(750, 500) });
             var paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.02f };
-
-            //var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogHeader"), font: GUIStyle.LargeFont);
 
             var columnArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), paddedSaveFrame.RectTransform), isHorizontal: true) { RelativeSpacing = 0.02f, Stretch = true };
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), columnArea.RectTransform)) { RelativeSpacing = 0.01f, Stretch = true };
@@ -2123,6 +2146,41 @@ namespace Barotrauma
                 subTypeDropdown.AddItem(TextManager.Get(textTag), subType);
             }
 
+            if (Layers.Any())
+            {
+                var layerVisibilityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.01f), leftColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                var visibleLayers = Layers.Where(l => !MainSub.Info.LayersHiddenByDefault.Contains(l.Key.ToIdentifier()));
+                LocalizedString visibleLayersString = LocalizedString.Join(", ", visibleLayers.Select(l => TextManager.Capitalize(l.Key)) ?? ((LocalizedString)"None").ToEnumerable());
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), layerVisibilityGroup.RectTransform), TextManager.Get("editor.layer.visiblebydefault"), textAlignment: Alignment.CenterLeft);
+                var layerVisibilityDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), layerVisibilityGroup.RectTransform), text: visibleLayersString, selectMultiple: true);
+                foreach (var layer in Layers)
+                {
+                    string layerName = layer.Key;
+                    layerVisibilityDropDown.AddItem(TextManager.Capitalize(layerName), layerName);
+                    if (visibleLayers.Contains(layer))
+                    {
+                        layerVisibilityDropDown.SelectItem(layerName);
+                    }
+                }
+                layerVisibilityDropDown.OnSelected += (button, obj) =>
+                {
+                    string layerName = (string)obj;
+                    bool isVisible = layerVisibilityDropDown.SelectedDataMultiple.Contains(obj);
+                    if (isVisible)
+                    {
+                        MainSub.Info.LayersHiddenByDefault.Remove(layerName.ToIdentifier());
+                    }
+                    else
+                    {
+                        MainSub.Info.LayersHiddenByDefault.Add(layerName.ToIdentifier());
+                    }
+                    UpdateLayerPanel();
+                    layerVisibilityDropDown.Text = ToolBox.LimitString(layerVisibilityDropDown.Text.Value, layerVisibilityDropDown.Font, layerVisibilityDropDown.Rect.Width);
+                    return true;
+                };
+                layerVisibilityGroup.RectTransform.MinSize = layerVisibilityDropDown.RectTransform.MinSize = new Point(0, layerVisibilityDropDown.RectTransform.Children.Max(c => c.MinSize.Y));
+            }
+
             //---------------------------------------
 
             var subTypeDependentSettingFrame = new GUIFrame(new RectTransform((1.0f, 0.5f), leftColumn.RectTransform), style: "InnerFrame");
@@ -2154,7 +2212,7 @@ namespace Barotrauma
 
             var moduleTypeDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), outpostModuleGroup.RectTransform),
                 text: LocalizedString.Join(", ", MainSub?.Info?.OutpostModuleInfo?.ModuleFlags.Select(s => TextManager.Capitalize(s.Value)) ?? ((LocalizedString)"None").ToEnumerable()), selectMultiple: true);
-            foreach (Identifier flag in availableFlags)
+            foreach (Identifier flag in availableFlags.OrderBy(f => f.Value, StringComparer.InvariantCultureIgnoreCase))
             {
                 moduleTypeDropDown.AddItem(TextManager.Capitalize(flag.Value), flag);
                 if (MainSub?.Info?.OutpostModuleInfo == null) { continue; }
@@ -2189,7 +2247,7 @@ namespace Barotrauma
             {
                 allowAttachDropDown.SelectItem("any".ToIdentifier());
             }
-            foreach (Identifier flag in availableFlags)
+            foreach (Identifier flag in availableFlags.OrderBy(f => f.Value, StringComparer.InvariantCultureIgnoreCase))
             {
                 if (flag == "any" || flag == "none") { continue; }
                 allowAttachDropDown.AddItem(TextManager.Capitalize(flag.Value), flag);
@@ -2215,12 +2273,13 @@ namespace Barotrauma
             var locationTypeGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.1f), outpostSettingsContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), locationTypeGroup.RectTransform), TextManager.Get("outpostmoduleallowedlocationtypes"), textAlignment: Alignment.CenterLeft);
-            HashSet<Identifier> availableLocationTypes = new HashSet<Identifier> { "any".ToIdentifier() };
+            HashSet<Identifier> availableLocationTypes = new HashSet<Identifier>();
             foreach (LocationType locationType in LocationType.Prefabs) { availableLocationTypes.Add(locationType.Identifier); }
 
             var locationTypeDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), locationTypeGroup.RectTransform),
                 text: LocalizedString.Join(", ", MainSub?.Info?.OutpostModuleInfo?.AllowedLocationTypes.Select(lt => TextManager.Capitalize(lt.Value)) ?? ((LocalizedString)"any").ToEnumerable()), selectMultiple: true);
-            foreach (Identifier locationType in availableLocationTypes)
+            locationTypeDropDown.AddItem(TextManager.Capitalize("any"), "any".ToIdentifier());
+            foreach (Identifier locationType in availableLocationTypes.OrderBy(f => f.Value, StringComparer.InvariantCultureIgnoreCase))
             {
                 locationTypeDropDown.AddItem(TextManager.Capitalize(locationType.Value), locationType);
                 if (MainSub?.Info?.OutpostModuleInfo == null) { continue; }
@@ -2238,7 +2297,6 @@ namespace Barotrauma
                 return true;
             };
             locationTypeGroup.RectTransform.MinSize = new Point(0, locationTypeGroup.RectTransform.Children.Max(c => c.MinSize.Y));
-
 
             // gap positions ---------------------
 
@@ -2434,6 +2492,15 @@ namespace Barotrauma
                     return true;
                 }
             };
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), TextManager.Get("allowdamageddevices"))
+            {
+                Selected = MainSub?.Info?.BeaconStationInfo?.AllowDamagedDevices ?? true,
+                OnSelected = (tb) =>
+                {
+                    MainSub.Info.BeaconStationInfo.AllowDamagedDevices = tb.Selected;
+                    return true;
+                }
+            };
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), TextManager.Get("allowdisconnectedwires"))
             {
                 Selected = MainSub?.Info?.BeaconStationInfo?.AllowDisconnectedWires ?? true,
@@ -2472,7 +2539,7 @@ namespace Barotrauma
 
 
             int basePrice = (GameMain.DebugDraw ? 0 : MainSub?.CalculateBasePrice()) ?? 1000;
-            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), priceGroup.RectTransform), NumberType.Int, hidePlusMinusButtons: true)
+            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), priceGroup.RectTransform), NumberType.Int, buttonVisibility: GUINumberInput.ButtonVisibility.ForceHidden)
             {
                 IntValue = Math.Max(MainSub?.Info?.Price ?? basePrice, basePrice),
                 MinValueInt = basePrice,
@@ -3148,6 +3215,7 @@ namespace Barotrauma
                 }
 
                 UpdateEntityList();
+                OpenEntityMenu(selectedCategory);
             }
 
             saveFrame = null;
@@ -3208,14 +3276,18 @@ namespace Barotrauma
             SubmarineInfo.RefreshSavedSubs();
             SetMode(Mode.Default);
 
-            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
+            loadFrame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: "GUIBackgroundBlocker");
+
+            new GUIButton(new RectTransform(Vector2.One, loadFrame.RectTransform, Anchor.Center), style: null)
             {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
+                OnClicked = (_, _) =>
+                {
+                    loadFrame = null;
+                    return true;
+                }
             };
 
-            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, loadFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
-
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.75f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.53f, 0.75f), loadFrame.RectTransform, Anchor.Center, scaleBasis: ScaleBasis.Smallest) { MinSize = new Point(350, 500) });
 
             var paddedLoadFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.01f };
 
@@ -3853,15 +3925,14 @@ namespace Barotrauma
                 MapEntity.HighlightedEntities.ToList() :
                 new List<MapEntity>(MapEntity.SelectedList);
 
-            Item target = null;
-
-            var single = targets.Count == 1 ? targets.Single() : null;
-            if (single is Item item && item.Components.Any(static ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
-            {
-                // Do not offer the ability to open the inventory if the inventory should never be drawn
-                var containers = item.GetComponents<ItemContainer>();
-                if (containers.Any(static c => c.DrawInventory) || item.GetComponent<CircuitBox>() is not null) { target = item; }
-            }
+            bool allowOpening = false;
+            var targetItem = (targets.Count == 1 ? targets.Single() : null) as Item;
+            // Do not offer the ability to open the inventory if the inventory should never be drawn
+            allowOpening = targetItem is not null && targetItem.Components.Any(static ic =>
+                ic is not ConnectionPanel &&
+                ic is not Repairable &&
+                ic is not ItemContainer { DrawInventory: false } &&
+                ic.GuiFrame != null);
 
             bool hasTargets = targets.Count > 0;
 
@@ -3905,16 +3976,15 @@ namespace Barotrauma
             }
             else
             {
-                List<ContextMenuOption> availableLayerOptions = new List<ContextMenuOption>
+                List<ContextMenuOption> availableLayers = new List<ContextMenuOption>
                 {
                     new ContextMenuOption("editor.layer.nolayer", true, onSelected: () => { MoveToLayer(null, targets); })
                 };
+                availableLayers.AddRange(Layers.Select(layer => new ContextMenuOption(layer.Key, true, onSelected: () => { MoveToLayer(layer.Key, targets); })));
 
-                availableLayerOptions.AddRange(Layers.Select(layer => new ContextMenuOption(layer.Key, true, onSelected: () => { MoveToLayer(layer.Key, targets); })));
-
-                ContextMenuOption[] layerOptions =
+                List<ContextMenuOption> availableLayerOptions = new List<ContextMenuOption>
                 {
-                    new ContextMenuOption("editor.layer.movetolayer", isEnabled: hasTargets, availableLayerOptions.ToArray()),
+                    new ContextMenuOption("editor.layer.movetolayer", isEnabled: hasTargets, availableLayers.ToArray()),
                     new ContextMenuOption("editor.layer.createlayer", isEnabled: hasTargets, onSelected: () => { CreateNewLayer(null, targets); }),
                     new ContextMenuOption("editor.layer.selectall", isEnabled: hasTargets, onSelected: () =>
                     {
@@ -3924,19 +3994,11 @@ namespace Barotrauma
                             MapEntity.SelectedList.Add(match);
                         }
                     }),
-                    new ContextMenuOption("editor.layer.openlayermenu", isEnabled: true, onSelected: () =>
-                    {
-                        previouslyUsedPanel.Visible = false;
-                        undoBufferPanel.Visible = false;
-                        showEntitiesPanel.Visible = false;
-                        layerPanel.Visible = !layerPanel.Visible;
-                        layerPanel.RectTransform.AbsoluteOffset = new Point(Math.Max(Math.Max(visibilityButton.Rect.X, entityCountPanel.Rect.Right), saveAssemblyFrame.Rect.Right), TopPanel.Rect.Height);
-                    })
                 };
+                availableLayerOptions.AddRange(Layers.Select(layer => new ContextMenuOption(layer.Key, true, onSelected: () => { MoveToLayer(layer.Key, targets); })));
 
                 GUIContextMenu.CreateContextMenu(
-                    new ContextMenuOption("label.openlabel", isEnabled: target != null, onSelected: () => OpenItem(target)),
-                    new ContextMenuOption("editor.layer", isEnabled: hasTargets, layerOptions),
+                    new ContextMenuOption("label.openlabel", isEnabled: allowOpening, onSelected: () => OpenItem(targetItem)),
                     new ContextMenuOption("editor.cut", isEnabled: hasTargets, onSelected: () => MapEntity.Cut(targets)),
                     new ContextMenuOption("editor.copytoclipboard", isEnabled: hasTargets, onSelected: () => MapEntity.Copy(targets)),
                     new ContextMenuOption("editor.paste", isEnabled: MapEntity.CopiedList.Any(), onSelected: () => MapEntity.Paste(cam.ScreenToWorld(PlayerInput.MousePosition))),
@@ -3948,6 +4010,10 @@ namespace Barotrauma
                             if (!me.Removed) { me.Remove(); }
                         }
                     }),
+                    new ContextMenuOption(string.Empty, isEnabled: false, onSelected: () => { /*do nothing*/ }),
+                    new ContextMenuOption("editor.layer.movetoactivelayer", isEnabled: !(layerList?.SelectedData as string).IsNullOrEmpty(), onSelected: () => { MoveToLayer(layerList.SelectedData as string, targets); }),
+                    new ContextMenuOption("editor.layer.removefromlayer", isEnabled: targets.Any(t => t.Layer != string.Empty), onSelected: () => { targets.ForEach(t => t.Layer = string.Empty); }),
+                    new ContextMenuOption("editor.layeroptions", isEnabled: hasTargets, availableLayerOptions.ToArray()),
                     new ContextMenuOption(TextManager.GetWithVariable("editortip.shiftforextraoptions", "[button]", PlayerInput.SecondaryMouseLabel) + '\n' + TextManager.Get("editortip.altforruler"), isEnabled: false, onSelected: null));
             }
         }
@@ -3958,6 +4024,10 @@ namespace Barotrauma
 
             foreach (MapEntity entity in content)
             {
+                if (MapEntity.SelectedList.Contains(entity))
+                {
+                    MapEntity.ResetEditingHUD();
+                }
                 entity.Layer = layer;
             }
         }
@@ -3983,13 +4053,13 @@ namespace Barotrauma
                 MoveToLayer(name, content);
             }
 
-            Layers.Add(name, LayerData.Default);
+            Layers.Add(name, new LayerData());
             UpdateLayerPanel();
         }
 
         private void RenameLayer(string original, string newName)
         {
-            Layers.Remove(original);
+            Layers.Remove(original, out LayerData originalData);
 
             foreach (MapEntity entity in MapEntity.MapEntityList.Where(entity => entity.Layer == original))
             {
@@ -3998,19 +4068,19 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(newName))
             {
-                Layers.TryAdd(newName, LayerData.Default);
+                Layers.TryAdd(newName, originalData);
             }
             UpdateLayerPanel();
         }
 
-        private void ReconstructLayers()
+        public void ReconstructLayers()
         {
             ClearLayers();
             foreach (MapEntity entity in MapEntity.MapEntityList)
             {
                 if (!string.IsNullOrWhiteSpace(entity.Layer))
                 {
-                    Layers.TryAdd(entity.Layer, LayerData.Default);
+                    Layers.TryAdd(entity.Layer, new LayerData(!entity.IsLayerHidden));
                 }
             }
             UpdateLayerPanel();
@@ -4020,6 +4090,18 @@ namespace Barotrauma
         {
             Layers.Clear();
             UpdateLayerPanel();
+        }
+        
+        private static void SetLayerVisibility(string layerName, bool isVisible)
+        {
+            if (Layers.Remove(layerName, out LayerData layerData))
+            {
+                Layers.Add(layerName, layerData with { IsVisible = isVisible });
+            }
+            else
+            {
+                Layers.Add(layerName, new LayerData(isVisible));
+            }
         }
 
         private void PasteAssembly(string text = null, Vector2? pos = null)
@@ -4414,39 +4496,39 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Tries to open an item container in the submarine editor using the dummy character
+        /// Tries to open an item in the submarine editor using the dummy character
         /// </summary>
-        /// <param name="itemContainer">The item we want to open</param>
-        private void OpenItem(Item itemContainer)
+        /// <param name="item">The item we want to open</param>
+        private void OpenItem(Item item)
         {
-            if (dummyCharacter == null || itemContainer == null) { return; }
+            if (dummyCharacter == null || item == null) { return; }
 
-            if ((itemContainer.GetComponent<Holdable>() is { Attached: false } || itemContainer.GetComponent<Wearable>() != null) && itemContainer.GetComponent<ItemContainer>() != null)
+            if ((item.GetComponent<Holdable>() is { Attached: false } || item.GetComponent<Wearable>() != null) && item.GetComponent<ItemContainer>() != null)
             {
                 // We teleport our dummy character to the item so it appears as the entity stays still when in reality the dummy is holding it
-                oldItemPosition = itemContainer.SimPosition;
+                oldItemPosition = item.SimPosition;
                 TeleportDummyCharacter(oldItemPosition);
 
                 // Override this so we can be sure the container opens
-                var container = itemContainer.GetComponent<ItemContainer>();
+                var container = item.GetComponent<ItemContainer>();
                 if (container != null) { container.KeepOpenWhenEquipped = true; }
 
                 // We accept any slots except "Any" since that would take priority
                 List<InvSlotType> allowedSlots = new List<InvSlotType>();
-                itemContainer.AllowedSlots.ForEach(type =>
+                item.AllowedSlots.ForEach(type =>
                 {
                     if (type != InvSlotType.Any) { allowedSlots.Add(type); }
                 });
 
                 // Try to place the item in the dummy character's inventory
-                bool success = dummyCharacter.Inventory.TryPutItem(itemContainer, dummyCharacter, allowedSlots);
-                if (success) { OpenedItem = itemContainer; }
+                bool success = dummyCharacter.Inventory.TryPutItem(item, dummyCharacter, allowedSlots);
+                if (success) { OpenedItem = item; }
                 else { return; }
             }
             MapEntity.SelectedList.Clear();
             MapEntity.FilteredSelectedList.Clear();
-            MapEntity.SelectEntity(itemContainer);
-            dummyCharacter.SelectedItem = itemContainer;
+            MapEntity.SelectEntity(item);
+            dummyCharacter.SelectedItem = item;
             FilterEntities(entityFilterBox.Text);
             MapEntity.StopSelection();
         }
@@ -5055,6 +5137,29 @@ namespace Barotrauma
             }
 
             GameMain.SubEditorScreen.UpdateUndoHistoryPanel();
+
+            if (command is AddOrDeleteCommand addOrDelete)
+            {
+                GameMain.SubEditorScreen.EntityAddedOrDeleted(addOrDelete.Receivers);
+            }
+        }
+
+        private string prevSelectedLayer;
+        private void EntityAddedOrDeleted(IEnumerable<MapEntity> entities)
+        {
+            if (layerList?.SelectedData is string selectedLayer)
+            {
+                //add the created entities to the selected layer
+                foreach (var entity in entities)
+                {
+                    if (!entity.Removed)
+                    {
+                        entity.Layer = selectedLayer;
+                    }
+                }
+                var layerElement = layerList.Content.FindChild(selectedLayer);
+                layerElement?.Flash(GUIStyle.Green);
+            }
         }
 
         private void UpdateLayerPanel()
@@ -5064,13 +5169,18 @@ namespace Barotrauma
             layerList.Content.ClearChildren();
 
             layerList.Deselect();
+            layerSpecificButtons.ForEach(btn => btn.Enabled = false);
             GUILayoutGroup buttonHeaders = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.075f), layerList.Content.RectTransform), isHorizontal: true, childAnchor: Anchor.BottomLeft);
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headervisible"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = ForceUpperCase.Yes  };
-            new GUIButton(new RectTransform(new Vector2(0.15f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headerlink"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = ForceUpperCase.Yes  };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headervisible"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = ForceUpperCase.Yes };
+            new GUIButton(new RectTransform(new Vector2(0.15f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headerlink"), style: "GUIButtonSmallFreeScale")
+            {
+                ForceUpperCase = ForceUpperCase.Yes,
+                ToolTip = TextManager.Get("editor.layer.headerlink.tooltip")
+            };
             new GUIButton(new RectTransform(new Vector2(0.6f, 1f), buttonHeaders.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = ForceUpperCase.Yes };
 
-            foreach (var (layer, (visibility, linkage)) in Layers)
+            foreach ((string layer, (bool isVisible, bool isGrouped)) in Layers)
             {
                 GUIFrame parent = new GUIFrame(new RectTransform(new Vector2(1f, 0.1f), layerList.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -5082,7 +5192,7 @@ namespace Barotrauma
                 GUILayoutGroup layerVisibilityLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1f), layerGroup.RectTransform), childAnchor: Anchor.Center);
                 GUITickBox layerVisibleButton = new GUITickBox(new RectTransform(Vector2.One, layerVisibilityLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), string.Empty)
                 {
-                    Selected = visibility == LayerVisibility.Visible,
+                    Selected = isVisible,
                     OnSelected = box =>
                     {
                         if (!Layers.TryGetValue(layer, out LayerData data))
@@ -5090,8 +5200,15 @@ namespace Barotrauma
                             UpdateLayerPanel();
                             return false;
                         }
-
-                        Layers[layer] = new LayerData(box.Selected ? LayerVisibility.Visible : LayerVisibility.Invisible, data.Linkage);
+                        if (!box.Selected && layerList.SelectedData as string == layer)
+                        {
+                            //hiding a layer automatically deselects it (can't edit a hidden layer)
+                            if (!box.Selected)
+                            {
+                                layerList.Deselect();
+                            }
+                        }
+                        Layers[layer] = data with { IsVisible = box.Selected };
                         return true;
                     }
                 };
@@ -5099,7 +5216,7 @@ namespace Barotrauma
                 GUILayoutGroup layerChainLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1f), layerGroup.RectTransform), childAnchor: Anchor.Center);
                 GUITickBox layerChainButton = new GUITickBox(new RectTransform(Vector2.One, layerChainLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), string.Empty)
                 {
-                    Selected = linkage == LayerLinkage.Linked,
+                    Selected = isGrouped,
                     OnSelected = box =>
                     {
                         if (!Layers.TryGetValue(layer, out LayerData data))
@@ -5108,7 +5225,7 @@ namespace Barotrauma
                             return false;
                         }
 
-                        Layers[layer] = new LayerData(data.Visible, box.Selected ? LayerLinkage.Linked : LayerLinkage.Unlinked);
+                        Layers[layer] = data with { IsGrouped = box.Selected };
                         return true;
                     }
                 };
@@ -5134,12 +5251,11 @@ namespace Barotrauma
                 var btn = child as GUIButton;
                 string originalBtnText = btn.Text.Value;
                 btn.Text = ToolBox.LimitString(btn.Text, btn.Font, btn.Rect.Width);
-                if (originalBtnText != btn.Text)
+                if (originalBtnText != btn.Text && btn.ToolTip.IsNullOrEmpty())
                 {
                     btn.ToolTip = originalBtnText;
                 }
             }
-
         }
 
         public void UpdateUndoHistoryPanel()
@@ -5334,51 +5450,58 @@ namespace Barotrauma
                     }
                 }
 
-                if (PlayerInput.KeyHit(InputType.Use) && mode == Mode.Default)
+                if (mode == Mode.Default)
                 {
-                    if (dummyCharacter != null)
+                    if (PlayerInput.KeyHit(InputType.Use))
                     {
-                        if (dummyCharacter.SelectedItem == null)
+                        if (dummyCharacter != null)
                         {
-                            foreach (var entity in MapEntity.HighlightedEntities)
+                            if (dummyCharacter.SelectedItem == null)
                             {
-                                if (entity is Item item && item.Components.Any(ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
+                                foreach (var entity in MapEntity.HighlightedEntities)
                                 {
-                                    var container = item.GetComponents<ItemContainer>().ToList();
-                                    if (!container.Any() || container.Any(ic => ic?.DrawInventory ?? false))
+                                    if (entity is Item item && item.Components.Any(ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
                                     {
-                                        OpenItem(item);
-                                        break;
+                                        var container = item.GetComponents<ItemContainer>().ToList();
+                                        if (!container.Any() || container.Any(ic => ic?.DrawInventory ?? false))
+                                        {
+                                            OpenItem(item);
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
-                            CloseItem();
+                            else
+                            {
+                                CloseItem();
+                            }
                         }
                     }
-                }
 
-                // Focus to selection
-                if (PlayerInput.KeyHit(Keys.F) && mode == Mode.Default)
-                {
-                    // content warning: contains coordinate system workarounds
-                    var selected = MapEntity.SelectedList;
-                    if (selected.Count > 0)
+                    // Focus to selection
+                    if (PlayerInput.KeyHit(Keys.F))
                     {
-                        var dRect = selected.First().Rect;
-                        var rect = new Rectangle(dRect.Left, dRect.Top, dRect.Width, dRect.Height * -1);
-                        if (selected.Count > 1)
+                        // content warning: contains coordinate system workarounds
+                        var selected = MapEntity.SelectedList;
+                        if (selected.Count > 0)
                         {
-                            // Create one big rect out of our selection
-                            selected.Skip(1).ForEach(me =>
+                            var dRect = selected.First().Rect;
+                            var rect = new Rectangle(dRect.Left, dRect.Top, dRect.Width, dRect.Height * -1);
+                            if (selected.Count > 1)
                             {
-                                var wRect = me.Rect;
-                                rect = Rectangle.Union(rect, new Rectangle(wRect.Left, wRect.Top, wRect.Width, wRect.Height * -1));
-                            });
+                                // Create one big rect out of our selection
+                                selected.Skip(1).ForEach(me =>
+                                {
+                                    var wRect = me.Rect;
+                                    rect = Rectangle.Union(rect, new Rectangle(wRect.Left, wRect.Top, wRect.Width, wRect.Height * -1));
+                                });
+                            }
+                            camTargetFocus = rect.Center.ToVector2();
                         }
-                        camTargetFocus = rect.Center.ToVector2();
+                    }
+                    if (PlayerInput.KeyHit(Keys.Tab))
+                    {
+                        entityFilterBox.Select();
                     }
                 }
 
@@ -5390,11 +5513,6 @@ namespace Barotrauma
                 if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory].IsHit() && mode == Mode.Default)
                 {
                     toggleEntityMenuButton.OnClicked?.Invoke(toggleEntityMenuButton, toggleEntityMenuButton.UserData);
-                }
-
-                if (PlayerInput.KeyHit(Keys.Tab))
-                {
-                    entityFilterBox.Select();
                 }
 
                 if (PlayerInput.IsCtrlDown() && MapEntity.StartMovingPos == Vector2.Zero)
@@ -5478,8 +5596,9 @@ namespace Barotrauma
                     foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
                     {
                         lightComponent.Light.Color = 
-                            item.body == null || item.body.Enabled ||
-                            (item.ParentInventory is ItemInventory itemInventory && !itemInventory.Container.HideItems) ?
+                            (item.body == null || item.body.Enabled || item.ParentInventory is ItemInventory { Container.HideItems: true }) &&
+                            /*the light is only visible when worn -> can't be visible in the editor*/
+                            lightComponent.Parent is not Wearable ?
                                 lightComponent.LightColor :
                                 Color.Transparent;
                         lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
@@ -6190,11 +6309,11 @@ namespace Barotrauma
 
             if (!Layers.TryGetValue(entity.Layer, out LayerData data))
             {
-                Layers.TryAdd(entity.Layer, LayerData.Default);
+                Layers.TryAdd(entity.Layer, new LayerData(!entity.IsLayerHidden));
                 return true;
             }
 
-            return data.Visible == LayerVisibility.Visible;
+            return data.IsVisible;
         }
 
         public static bool IsLayerLinked(MapEntity entity)
@@ -6203,11 +6322,11 @@ namespace Barotrauma
 
             if (!Layers.TryGetValue(entity.Layer, out LayerData data))
             {
-                Layers.TryAdd(entity.Layer, LayerData.Default);
+                Layers.TryAdd(entity.Layer, new LayerData(!entity.IsLayerHidden));
                 return true;
             }
 
-            return data.Linkage == LayerLinkage.Linked;
+            return data.IsGrouped;
         }
 
         public static ImmutableHashSet<MapEntity> GetEntitiesInSameLayer(MapEntity entity)

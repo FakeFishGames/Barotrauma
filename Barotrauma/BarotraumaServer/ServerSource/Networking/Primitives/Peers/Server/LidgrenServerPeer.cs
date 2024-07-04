@@ -226,7 +226,7 @@ namespace Barotrauma.Networking
             }
             else if (!packetHeader.IsConnectionInitializationStep())
             {
-                if (connectedClients.Find(c => c.Connection.NetConnection == lidgrenMsg.SenderConnection) is not { Connection: LidgrenConnection conn })
+                if (FindConnection(lidgrenMsg.SenderConnection) is not { } conn)
                 {
                     if (pendingClient != null)
                     {
@@ -253,6 +253,15 @@ namespace Barotrauma.Networking
 
                 var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
                 callbacks.OnMessageReceived.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
+            }
+
+            LidgrenConnection? FindConnection(NetConnection ligdrenConn)
+            {
+                if (connectedClients.Find(c => c.Connection.NetConnection == ligdrenConn) is { Connection: LidgrenConnection conn })
+                {
+                    return conn;
+                }
+                return null;
             }
         }
 
@@ -449,15 +458,35 @@ namespace Barotrauma.Networking
                 RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
             }
 
+            if (authenticators is null && 
+                GameMain.Server.ServerSettings.RequireAuthentication)
+            {
+                DebugConsole.NewMessage(
+                    "The server is configured to require authentication from clients, but there are no authenticators available. " +
+                    $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.", 
+                    Microsoft.Xna.Framework.Color.Yellow);
+            }
+
             if (authenticators is null
                 || !packet.AuthTicket.TryUnwrap(out var authTicket)
                 || !authenticators.TryGetValue(authTicket.Kind, out var authenticator))
-            {
+            {                
 #if DEBUG
-                DebugConsole.NewMessage($"Debug server accepts unauthenticated connections", Microsoft.Xna.Framework.Color.Yellow);
-                acceptClient(new AccountInfo(packet.AccountId));
+                DebugConsole.NewMessage("Debug server accepts unauthenticated connections", Microsoft.Xna.Framework.Color.Yellow);
+                acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
 #else
-                rejectClient();
+                if (GameMain.Server.ServerSettings.RequireAuthentication)
+                {
+                    DebugConsole.NewMessage(
+                        "A client attempted to join without an authentication ticket, but the server is configured to require authentication. " +
+                        $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.",
+                        Microsoft.Xna.Framework.Color.Yellow);
+                    rejectClient();
+                }
+                else
+                {
+                    acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
+                }
 #endif
                 return;
             }

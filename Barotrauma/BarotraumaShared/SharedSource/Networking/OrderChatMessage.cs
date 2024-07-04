@@ -31,21 +31,32 @@ namespace Barotrauma.Networking
         /// </summary>
         public OrderChatMessage(Order order, Character targetCharacter, Character sender, bool isNewOrder = true)
             : this(order,
-                   order?.GetChatMessage(targetCharacter?.Name, (order.TargetEntity as Hull ?? sender?.CurrentHull)?.DisplayName?.Value, givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
+                   order?.GetChatMessage(targetCharacter?.Name, 
+                       (order.TargetEntity as Hull ?? sender?.CurrentHull)?.DisplayName?.Value, 
+                       givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
                    targetCharacter, sender, isNewOrder)
         {
             
         }
 
-        public OrderChatMessage(Order order, string text, Character targetCharacter, Character sender, bool isNewOrder = true)
-            : base(sender?.Name, text, ChatMessageType.Order, sender, GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == sender))
+        public OrderChatMessage(Order order, string text, Character targetCharacter, Entity sender, bool isNewOrder = true)
+            : base(NameFromEntityOrNull(sender), text, ChatMessageType.Order, sender, GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == sender))
         {
             Order = order;
             TargetCharacter = targetCharacter;
             IsNewOrder = isNewOrder;
         }
 
-        public static void WriteOrder(IWriteMessage msg, Order order, Character targetCharacter, bool isNewOrder)
+        public static string NameFromEntityOrNull(Entity entity)
+            => entity switch
+            {
+                null => null,
+                Character character => character.Name,
+                Item it => it.Name,
+                _ => throw new ArgumentException("Entity is not a character or item", nameof(entity))
+            };
+
+        public static void WriteOrder(IWriteMessage msg, Order order, Entity targetCharacter, bool isNewOrder)
         {
             msg.WriteIdentifier(order.Prefab.Identifier);
             msg.WriteUInt16(targetCharacter == null ? (UInt16)0 : targetCharacter.ID);

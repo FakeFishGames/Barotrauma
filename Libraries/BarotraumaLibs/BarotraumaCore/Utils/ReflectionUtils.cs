@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -107,6 +107,55 @@ namespace Barotrauma
             string result = t.Name[..t.Name.IndexOf('`')];
             result += $"<{string.Join(", ", t.GetGenericArguments().Select(NameWithGenerics))}>";
             return result;
+        }
+
+        /// <summary>
+        /// Gets a type by its name, with backwards compatibility for types that have been renamed.
+        /// <see cref="TypePreviouslyKnownAs"/>
+        /// </summary>
+        public static Type? GetTypeWithBackwardsCompatibility(string nameSpace, string typeName, bool throwOnError, bool ignoreCase)
+        {
+            if (Assembly.GetEntryAssembly() is not { } entryAssembly) { return null; }
+            var types = entryAssembly
+                .GetTypes()
+                .Where(t => NameMatches(t.Namespace, nameSpace, ignoreCase));
+
+            foreach (Type type in types)
+            {
+                if (NameMatches(type.Name, typeName, ignoreCase))
+                {
+                    return type;
+                }
+
+                if (type.GetCustomAttribute<TypePreviouslyKnownAs>() is { } knownAsAttribute)
+                {
+                    if (NameMatches(knownAsAttribute.PreviousName, typeName, ignoreCase))
+                    {
+                        return type;
+                    }
+                }
+            }
+
+            if (throwOnError)
+            {
+                throw new TypeLoadException($"Could not find the type {typeName} in namespace {nameSpace}");
+            }
+
+            return null;
+
+            static bool NameMatches(string? name1, string? name2, bool ignoreCase)
+                => string.Equals(name1, name2, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// The names of generic types include the arity at the end (fancy way of saying the number of parameters, e.g. GUISelectionCarousel<T> would be GUISelectionCarousel`1)
+        /// This method strips that part out.
+        /// </summary>
+        public static Identifier GetTypeNameWithoutGenericArity(Type type)
+        {
+            string name = type.Name;
+            int index = name.IndexOf('`');
+            return (index == -1 ? name : name.Substring(0, index)).ToIdentifier();
         }
     }
 }

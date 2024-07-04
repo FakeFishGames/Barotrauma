@@ -11,8 +11,8 @@ namespace Barotrauma
         public override string DebugTag => $"{Identifier} ({gearTag})";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-        public override bool AbandonWhenCannotCompleteSubjectives => false;
-        public override bool AllowWhileHandcuffed => false;
+        public override bool AbandonWhenCannotCompleteSubObjectives => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         private readonly Identifier gearTag;
 
@@ -33,22 +33,27 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            TrySetTargetItem(character.Inventory.FindItemByTag(gearTag, true));
+            TrySetTargetItem(character.Inventory.FindItem(it => it.HasTag(gearTag) && IsSuitablePressureProtection(it, gearTag, character), true));
             if (targetItem == null && gearTag == Tags.LightDivingGear)
             {
-                TrySetTargetItem(character.Inventory.FindItemByTag(Tags.HeavyDivingGear, true));
+                TrySetTargetItem(character.Inventory.FindItem(
+                    it => it.HasTag(Tags.HeavyDivingGear) && IsSuitablePressureProtection(it, Tags.HeavyDivingGear, character), recursive: true));
             }
             if (targetItem == null || 
                 !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head) && 
                 targetItem.ContainedItems.Any(it => IsSuitableContainedOxygenSource(it)))
             {
+                bool mustFindMorePressureProtection =
+                    !objectiveManager.FailedToFindDivingGearForDepth &&
+                    character.Inventory.FindItem(
+                        it => it.HasTag(Tags.HeavyDivingGear) && !IsSuitablePressureProtection(it, Tags.HeavyDivingGear, character), recursive: true) != null;
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
                     if (targetItem == null && character.IsOnPlayerTeam)
                     {
                         character.Speak(TextManager.Get("DialogGetDivingGear").Value, null, 0.0f, "getdivinggear".ToIdentifier(), 30.0f);
                     }
-                    return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true)
+                    var getItemObjective = new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true)
                     {
                         AllowStealing = HumanAIController.NeedsDivingGear(character.CurrentHull, out _),
                         AllowToFindDivingGear = false,
@@ -56,8 +61,42 @@ namespace Barotrauma
                         EquipSlotType = InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head,
                         Wear = true
                     };
+                    if (gearTag == Tags.HeavyDivingGear)
+                    {
+                        if (mustFindMorePressureProtection)
+                        {
+                            //if we're looking for a suit specifically because the current suit isn't enough, 
+                            //let's ignore unsuitable suits altogether...
+                            getItemObjective.ItemFilter = it => IsSuitablePressureProtection(it, gearTag, character);
+                        }
+                        else
+                        {
+                            //...Otherwise it's fine to give a very small priority
+                            //to inadequate suits (a suit not adequate for the depth is better than no suit)
+                            getItemObjective.GetItemPriority = it => IsSuitablePressureProtection(it, gearTag, character) ? 1000.0f : 1.0f;
+                        }
+                        getItemObjective.GetItemPriority = it =>
+                        {
+                            if (IsSuitablePressureProtection(it, gearTag, character))
+                            {
+                                return 1000.0f;
+                            }
+                            else
+                            {
+                                //if we're looking for a suit specifically because the current suit isn't enough, 
+                                //let's ignore unsuitable suits altogether. Otherwise it's fine to give a very small priority
+                                //to inadequate suits (a suit not adequate for the depth is better than no suit)
+                                return mustFindMorePressureProtection ? 0.0f : 1.0f;
+                            }
+                        };
+                    }
+                    return getItemObjective;
                 }, 
-                onAbandon: () => Abandon = true,
+                onAbandon: () =>
+                {
+                    if (mustFindMorePressureProtection) { objectiveManager.FailedToFindDivingGearForDepth = true; }
+                    Abandon = true;
+                },
                 onCompleted: () =>
                 {
                     RemoveSubObjective(ref getDivingGear);
@@ -159,6 +198,20 @@ namespace Barotrauma
                 }
             }
         }
+
+        public static bool IsSuitablePressureProtection(Item item, Identifier tag, Character character)
+        {
+            if (tag == Tags.HeavyDivingGear)
+            {
+                float realWorldDepth = Level.Loaded?.GetRealWorldDepth(character.WorldPosition.Y) ?? 0.0f;
+                if (item.GetComponent<Wearable>() is not { } wearable || wearable.PressureProtection < realWorldDepth + Steering.PressureWarningThreshold)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
 
         private bool IsSuitableContainedOxygenSource(Item item)
         {

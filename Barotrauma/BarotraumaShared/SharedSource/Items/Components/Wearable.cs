@@ -338,6 +338,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// How deep down does the item protect from pressure? Determined by status effects.
+        /// </summary>
+        public readonly float PressureProtection;
+
         public Wearable(Item item, ContentXElement element) : base(item, element)
         {
             this.item = item;
@@ -413,6 +418,12 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             WearableStatValues.TryAdd(statType, statValue);
+                        }
+                        break;
+                    case "statuseffect":
+                        if (subElement.GetAttributeString("Target", string.Empty).ToLowerInvariant().Contains("character"))
+                        {
+                            PressureProtection = Math.Max(subElement.GetAttributeFloat(nameof(PressureProtection), 0), PressureProtection);
                         }
                         break;
                 }
@@ -571,9 +582,9 @@ namespace Barotrauma.Items.Components
         }
 
         private int loadedVariant = -1;
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             loadedVariant = componentElement.GetAttributeInt("variant", -1);
         }
         public override void OnItemLoaded()

@@ -51,7 +51,7 @@ namespace Barotrauma.Sounds
                 listenerPosition = value;
                 Al.Listener3f(Al.Position,value.X,value.Y,value.Z);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener position: " + Al.GetErrorString(alError));
                 }
@@ -68,7 +68,7 @@ namespace Barotrauma.Sounds
                 listenerOrientation[0] = value.X; listenerOrientation[1] = value.Y; listenerOrientation[2] = value.Z;
                 Al.Listenerfv(Al.Orientation, listenerOrientation);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener target vector: " + Al.GetErrorString(alError));
                 }
@@ -83,7 +83,7 @@ namespace Barotrauma.Sounds
                 listenerOrientation[3] = value.X; listenerOrientation[4] = value.Y; listenerOrientation[5] = value.Z;
                 Al.Listenerfv(Al.Orientation, listenerOrientation);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener up vector: " + Al.GetErrorString(alError));
                 }
@@ -101,7 +101,7 @@ namespace Barotrauma.Sounds
                 listenerGain = value;
                 Al.Listenerf(Al.Gain, listenerGain);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener gain: " + Al.GetErrorString(alError));
                 }
@@ -860,14 +860,14 @@ namespace Barotrauma.Sounds
 
             ReleaseResources(false);
 
-            if (!Alc.MakeContextCurrent(IntPtr.Zero))
+            if (!Alc.MakeContextCurrent(IntPtr.Zero) && !GameMain.IsExiting)
             {
                 throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
             }
 
             Alc.DestroyContext(alcContext);
             
-            if (!Alc.CloseDevice(alcDevice))
+            if (!Alc.CloseDevice(alcDevice) && !GameMain.IsExiting)
             {
                 throw new Exception("Failed to close ALC device!");
             }

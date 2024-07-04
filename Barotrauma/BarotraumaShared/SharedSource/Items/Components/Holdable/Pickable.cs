@@ -82,9 +82,9 @@ namespace Barotrauma.Items.Components
                 var abilityPickingTime = new AbilityItemPickingTime(PickingTime, item.Prefab);
                 picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
 
-                if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
+                if (RequiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
                 {
-                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
+                    foreach (RelatedItem ri in RequiredItems[RelatedItem.RelationType.Equipped])
                     {
                         foreach (var heldItem in picker.HeldItems)
                         {
@@ -251,6 +251,7 @@ namespace Barotrauma.Items.Components
             
             foreach (ConnectionPanel connectionPanel in item.GetComponents<ConnectionPanel>())
             {
+                connectionPanel.DisconnectedWires.Clear();
                 foreach (Connection c in connectionPanel.Connections)
                 {
                     foreach (Wire w in c.Wires.ToArray())
@@ -260,7 +261,7 @@ namespace Barotrauma.Items.Components
                         w.Item.SetTransform(pos, 0.0f);
                     }
                 }
-            }                       
+            }
         }
         
         public override void Drop(Character dropper, bool setTransform = true)

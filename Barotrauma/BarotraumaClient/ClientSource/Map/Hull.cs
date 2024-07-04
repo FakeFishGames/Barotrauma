@@ -170,16 +170,18 @@ namespace Barotrauma
                     {
                         if (!pendingSectionUpdates.Any() && !pendingDecalUpdates.Any())
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new StatusEventData());
+                            //these are used to modify the amount water/fire in the hull with console commands
+                            //they should be usable even when not controlling a character
+                            GameMain.Client?.CreateEntityEvent(this, new StatusEventData(), requireControlledCharacter: false);
                         }
                         foreach (Decal decal in pendingDecalUpdates)
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new DecalEventData(decal));
+                            GameMain.Client?.CreateEntityEvent(this, new DecalEventData(decal));
                         }
                         pendingDecalUpdates.Clear();
                         foreach (int pendingSectionUpdate in pendingSectionUpdates)
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
+                            GameMain.Client?.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
                         }
                         pendingSectionUpdates.Clear();
                         networkUpdatePending = false;
@@ -208,7 +210,9 @@ namespace Barotrauma
         {
             bool primaryMouseButtonHeld = PlayerInput.PrimaryMouseButtonHeld();
             bool secondaryMouseButtonHeld = PlayerInput.SecondaryMouseButtonHeld();
-            if (!primaryMouseButtonHeld && !secondaryMouseButtonHeld) { return; }
+            bool doubleClicked = PlayerInput.DoubleClicked();
+            bool secondaryDoubleClicked = PlayerInput.SecondaryDoubleClicked();
+            if (!primaryMouseButtonHeld && !secondaryMouseButtonHeld && !doubleClicked && !secondaryDoubleClicked) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
             Hull hull = FindHull(position);
@@ -216,29 +220,67 @@ namespace Barotrauma
             if (hull == null || hull.IdFreed) { return; }
             if (EditWater)
             {
+                const float waterIncrement = 100000.0f;
                 if (primaryMouseButtonHeld)
                 {
-                    ShowHulls = true;
-                    hull.WaterVolume += 100000.0f * deltaTime;
-                    hull.networkUpdatePending = true;
-                    hull.serverUpdateDelay = 0.5f;
+                    SetWaterVolume(hull.WaterVolume + waterIncrement * deltaTime);
                 }
                 else if (secondaryMouseButtonHeld)
                 {
-                    hull.WaterVolume -= 100000.0f * deltaTime;
+                    SetWaterVolume(hull.WaterVolume - waterIncrement * deltaTime);
+                }
+                
+                if (doubleClicked)
+                {
+                    SetWaterVolume(hull.Volume * MaxCompress);
+                }
+                else if (secondaryDoubleClicked)
+                {
+                    SetWaterVolume(0f);
+                }
+                
+                void SetWaterVolume(float newVolume)
+                {
+                    ShowHulls = true;
+                    hull.WaterVolume = newVolume;
                     hull.networkUpdatePending = true;
                     hull.serverUpdateDelay = 0.5f;
                 }
-                
             }
             else if (EditFire)
             {
+                bool networkUpdate = false;
+                
                 if (primaryMouseButtonHeld)
                 {
                     new FireSource(position, hull, isNetworkMessage: true);
+                    networkUpdate = true;
+                }
+                else if (secondaryMouseButtonHeld || secondaryDoubleClicked)
+                {
+                    for (int index = hull.FireSources.Count - 1; index >= 0; index--)
+                    {
+                        var currentFireSource = hull.FireSources[index];
+                        
+                        if (secondaryMouseButtonHeld)
+                        {
+                            const float extinguishAmount = 120f;
+                            currentFireSource.Extinguish(deltaTime, extinguishAmount);
+                            networkUpdate = true;
+                        }
+                        else
+                        {
+                            currentFireSource.Remove();
+                            networkUpdate = true;
+                        }
+                    }
+                }
+                
+                if (networkUpdate)
+                {
                     hull.networkUpdatePending = true;
                     hull.serverUpdateDelay = 0.5f;
-                }                
+                }
             }
         }
 

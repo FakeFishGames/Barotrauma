@@ -50,6 +50,8 @@ namespace Barotrauma
         private bool editBackgroundColor;
         private Color backgroundColor = new Color(0.051f, 0.149f, 0.271f, 1.0f);
 
+        private bool ControlDown => PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl);
+
         private readonly Camera cam;
         public override Camera Cam
         {
@@ -366,7 +368,8 @@ namespace Barotrauma
                     "DecorativeSprite",
                     "BarrelSprite",
                     "RailSprite",
-                    "SchematicSprite"
+                    "SchematicSprite",
+                    "WeldedSprite"
                 };
 
                 foreach (string spriteElementName in spriteElementNames)
@@ -471,10 +474,10 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            Widget.EnableMultiSelect = PlayerInput.KeyDown(Keys.LeftControl);
+            Widget.EnableMultiSelect = ControlDown;
             spriteList.SelectMultiple = Widget.EnableMultiSelect;
             // Select rects with the mouse
-            if (Widget.selectedWidgets.None() || Widget.EnableMultiSelect)
+            if (Widget.SelectedWidgets.None() || Widget.EnableMultiSelect)
             {
                 if (SelectedTexture != null && GUI.MouseOn == null)
                 {
@@ -578,7 +581,7 @@ namespace Barotrauma
                     foreach (var sprite in selectedSprites)
                     {
                         var newRect = sprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        if (ControlDown)
                         {
                             newRect.Width--;
                         }
@@ -593,7 +596,7 @@ namespace Barotrauma
                     foreach (var sprite in selectedSprites)
                     {
                         var newRect = sprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        if (ControlDown)
                         {
                             newRect.Width++;
                         }
@@ -608,7 +611,7 @@ namespace Barotrauma
                     foreach (var sprite in selectedSprites)
                     {
                         var newRect = sprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        if (ControlDown)
                         {
                             newRect.Height++;
                         }
@@ -623,7 +626,7 @@ namespace Barotrauma
                     foreach (var sprite in selectedSprites)
                     {
                         var newRect = sprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        if (ControlDown)
                         {
                             newRect.Height--;
                         }
@@ -636,6 +639,7 @@ namespace Barotrauma
                     break;
             }
         }
+
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
@@ -691,22 +695,22 @@ namespace Barotrauma
                         Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
                         Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
                         Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
-                        var originWidget = GetWidget($"{id}_origin", sprite, widgetSize, Widget.Shape.Cross, initMethod: w =>
+                        var originWidget = GetWidget($"{id}_origin", sprite, widgetSize, WidgetShape.Cross, initMethod: w =>
                         {
-                            w.tooltip = TextManager.AddPunctuation(':', originLabel, sprite.RelativeOrigin.FormatDoubleDecimal());
+                            w.Tooltip = TextManager.AddPunctuation(':', originLabel, sprite.RelativeOrigin.FormatDoubleDecimal());
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = PlayerInput.MousePosition.Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
                                 sprite.Origin = (w.DrawPos - textureRect.Location.ToVector2() - sprite.SourceRect.Location.ToVector2() * zoom) / zoom;
-                                w.tooltip = TextManager.AddPunctuation(':', originLabel, sprite.RelativeOrigin.FormatDoubleDecimal());
+                                w.Tooltip = TextManager.AddPunctuation(':', originLabel, sprite.RelativeOrigin.FormatDoubleDecimal());
                             };
-                            w.refresh = () =>
+                            w.Refresh = () =>
                                 w.DrawPos = (textureRect.Location.ToVector2() + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * zoom)
                                     .Clamp(textureRect.Location.ToVector2() + GetTopLeft() * zoom, textureRect.Location.ToVector2() + GetBottomRight() * zoom);
                         });
-                        var positionWidget = GetWidget($"{id}_position", sprite, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var positionWidget = GetWidget($"{id}_position", sprite, widgetSize, WidgetShape.Rectangle, initMethod: w =>
                         {
-                            w.tooltip = positionLabel + sprite.SourceRect.Location;
+                            w.Tooltip = positionLabel + sprite.SourceRect.Location;
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = (drawGrid && snapToGrid) ?
@@ -719,13 +723,13 @@ namespace Barotrauma
                                     // TODO: cache the sprite name?
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
-                                w.tooltip = positionLabel + sprite.SourceRect.Location;
+                                w.Tooltip = positionLabel + sprite.SourceRect.Location;
                             };
-                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom;
+                            w.Refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom;
                         });
-                        var sizeWidget = GetWidget($"{id}_size", sprite, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
+                        var sizeWidget = GetWidget($"{id}_size", sprite, widgetSize, WidgetShape.Rectangle, initMethod: w =>
                         {
-                            w.tooltip = TextManager.AddPunctuation(':', sizeLabel, sprite.SourceRect.Size.ToString());
+                            w.Tooltip = TextManager.AddPunctuation(':', sizeLabel, sprite.SourceRect.Size.ToString());
                             w.MouseHeld += dTime =>
                             {
                                 w.DrawPos = (drawGrid && snapToGrid) ?
@@ -740,9 +744,9 @@ namespace Barotrauma
                                     // TODO: cache the sprite name?
                                     textBox.Text = GetSpriteName(sprite) + " " + sprite.SourceRect;
                                 }
-                                w.tooltip = TextManager.AddPunctuation(':', sizeLabel, sprite.SourceRect.Size.ToString());
+                                w.Tooltip = TextManager.AddPunctuation(':', sizeLabel, sprite.SourceRect.Size.ToString());
                             };
-                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom;
+                            w.Refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom;
                         });
                         originWidget.MouseDown += () => GUI.KeyboardDispatcher.Subscriber = null;
                         positionWidget.MouseDown += () => GUI.KeyboardDispatcher.Subscriber = null;
@@ -1027,31 +1031,31 @@ namespace Barotrauma
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
 
-        private Widget GetWidget(string id, Sprite sprite, int size = 5, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
+        private Widget GetWidget(string id, Sprite sprite, int size = 5, WidgetShape shape = WidgetShape.Rectangle, Action<Widget> initMethod = null)
         {
             if (!widgets.TryGetValue(id, out Widget widget))
             {
                 int selectedSize = (int)Math.Round(size * 1.5f);
                 widget = new Widget(id, size, shape)
                 {
-                    data = sprite,
-                    color = Color.Yellow,
-                    secondaryColor = Color.Gray,
-                    tooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
+                    Data = sprite,
+                    Color = Color.Yellow,
+                    SecondaryColor = Color.Gray,
+                    TooltipOffset = new Vector2(selectedSize / 2 + 5, -10)
                 };
                 widget.PreDraw += (sp, dTime) =>
                 {
                     if (!widget.IsControlled)
                     {
-                        widget.refresh();
+                        widget.Refresh();
                     }
                 };
                 widget.PreUpdate += dTime => widget.Enabled = selectedSprites.Contains(sprite);
                 widget.PostUpdate += dTime =>
                 {
-                    widget.inputAreaMargin = widget.IsControlled ? 1000 : 0;
-                    widget.size = widget.IsSelected ? selectedSize : size;
-                    widget.isFilled = widget.IsControlled;
+                    widget.InputAreaMargin = widget.IsControlled ? 1000 : 0;
+                    widget.Size = widget.IsSelected ? selectedSize : size;
+                    widget.IsFilled = widget.IsControlled;
                 };
                 widgets.Add(id, widget);
                 initMethod?.Invoke(widget);
@@ -1062,7 +1066,7 @@ namespace Barotrauma
         private void ResetWidgets()
         {
             widgets.Clear();
-            Widget.selectedWidgets.Clear();
+            Widget.SelectedWidgets.Clear();
         }
 #endregion
     }

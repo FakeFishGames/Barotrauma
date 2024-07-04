@@ -7,6 +7,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
@@ -188,7 +189,6 @@ namespace Barotrauma
                 }
                 return realWorldCrushDepth.Value;
             }
-            set { realWorldCrushDepth = value; }
         }
 
         /// <summary>
@@ -676,7 +676,7 @@ namespace Barotrauma
                     if (item.GetComponent<Turret>() != null) { return false; }
                     if (item.body != null && !item.body.Enabled) { return true; }
                 }
-                if (e.HiddenInGame) { return true; }
+                if (e.IsHidden) { return true; }
                 return false;
             });
 
@@ -976,7 +976,7 @@ namespace Barotrauma
                 if (ignoreLevel && fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)
                     && !fixture.CollisionCategories.HasFlag(Physics.CollisionWall)
-                    && !fixture.CollisionCategories.HasFlag(Physics.CollisionRepair)) { return -1; }
+                    && !fixture.CollisionCategories.HasFlag(Physics.CollisionRepairableWall)) { return -1; }
                 if (ignoreSubs && fixture.Body.UserData is Submarine) { return -1; }
                 if (ignoreBranches && fixture.Body.UserData is VineTile) { return -1; }
                 if (fixture.Body.UserData as string == "ruinroom") { return -1; }
@@ -1102,6 +1102,11 @@ namespace Barotrauma
                         continue;
                     }
                     item.FlipX(true);
+
+                    if (!item.Prefab.CanFlipX && item.Prefab.AllowRotatingInEditor)
+                    {
+                        item.Rotation = -item.Rotation;
+                    }
                 }
             }
 
@@ -1114,18 +1119,64 @@ namespace Barotrauma
 
         public void EnableFactionSpecificEntities(Identifier factionIdentifier)
         {
+            foreach (var faction in FactionPrefab.Prefabs)
+            {
+                SetLayerEnabled(faction.Identifier, faction.Identifier == factionIdentifier);
+            }
+        }
+
+        public static bool LayerExistsInAnySub(Identifier layer)
+        {
             foreach (MapEntity me in MapEntity.MapEntityList)
             {
-                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != this) { continue; }
+                if (me.Layer == layer) { return true; }
+            }
+            return false;
+        }
 
-                var layerAsIdentifier = me.Layer.ToIdentifier();
-                if (FactionPrefab.Prefabs.ContainsKey(layerAsIdentifier))
+        public bool LayerExists(Identifier layer)
+        {
+            foreach (MapEntity me in MapEntity.MapEntityList)
+            {
+                if (me.Submarine == this || me.Layer == layer) { return true; }
+            }
+            return false;
+        }
+
+        public void SetLayerEnabled(Identifier layer, bool enabled, bool sendNetworkEvent = false)
+        {
+            foreach (MapEntity entity in MapEntity.MapEntityList)
+            {
+                if (string.IsNullOrEmpty(entity.Layer) || entity.Submarine != this || entity.Layer != layer) { continue; }
+                entity.IsLayerHidden = !enabled;
+
+                if (entity is WayPoint wp)
                 {
-                    me.HiddenInGame = factionIdentifier != layerAsIdentifier;
-#if CLIENT
-                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
-                    if (me.HiddenInGame && me is Item item)
+                    if (enabled)
                     {
+                        wp.SpawnType = wp.SpawnType.RemoveFlag(SpawnType.Disabled);
+                    }
+                    else
+                    {
+                        wp.SpawnType = wp.SpawnType.AddFlag(SpawnType.Disabled);
+                    }
+                }
+                else if (entity is Item item)
+                {
+                    foreach (var connectionPanel in item.GetComponents<ConnectionPanel>())
+                    {
+                        foreach (var connection in connectionPanel.Connections)
+                        {
+                            foreach (var wire in connection.Wires)
+                            {
+                                wire.Item.IsLayerHidden = entity.IsLayerHidden;
+                            }
+                        }
+                    }
+#if CLIENT
+                    if (entity.IsLayerHidden)
+                    {
+                        //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
                         foreach (var lightComponent in item.GetComponents<LightComponent>())
                         {
                             lightComponent.Light.Enabled = false;
@@ -1134,6 +1185,12 @@ namespace Barotrauma
 #endif
                 }
             }
+#if SERVER
+            if (sendNetworkEvent)
+            {
+                GameMain.Server.CreateEntityEvent(this, new SetLayerEnabledEventData(layer, enabled));
+            }
+#endif
         }
 
         public void Update(float deltaTime)
@@ -1230,6 +1287,8 @@ namespace Barotrauma
 
         public void NeutralizeBallast()
         {
+            if (PhysicsBody.BodyType != BodyType.Dynamic) { return; }
+
             float neutralBallastLevel = 0.5f;
             int selectedSteeringValue = 0;
             foreach (Item item in Item.ItemList)
@@ -1240,8 +1299,8 @@ namespace Barotrauma
 
                 //find how many pumps/engines in this sub the steering item is connected to
                 int steeringValue = 1;
-                Connection connectionX = item.GetComponent<ConnectionPanel>()?.Connections.Find(c => c.Name == "velocity_x_out");
-                Connection connectionY = item.GetComponent<ConnectionPanel>()?.Connections.Find(c => c.Name == "velocity_y_out");
+                Connection connectionX = item.GetComponent<ConnectionPanel>()?.Connections.Find(static c => c.Name == "velocity_x_out");
+                Connection connectionY = item.GetComponent<ConnectionPanel>()?.Connections.Find(static c => c.Name == "velocity_y_out");
                 if (connectionX != null)
                 {
                     foreach (Engine engine in steering.Item.GetConnectedComponentsRecursive<Engine>(connectionX))
@@ -1371,7 +1430,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns true if the sub is same as the other.
+        /// Returns true if the sub is same as the other, or connected to it via docking ports.
         /// </summary>
         public bool IsConnectedTo(Submarine otherSub) => this == otherSub || GetConnectedSubs().Contains(otherSub);
 
@@ -1394,7 +1453,8 @@ namespace Barotrauma
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
                 if (!item.HasTag(Tags.CargoContainer)) { continue; }
-                if (item.NonInteractable || item.HiddenInGame) { continue; }
+                if (item.HasTag(Tags.DisallowCargo)) { continue; }
+                if (item.NonInteractable || item.IsHidden) { continue; }
                 var itemContainer = item.GetComponent<ItemContainer>();
                 if (itemContainer == null) { continue; }
                 int emptySlots = 0;
@@ -1459,22 +1519,39 @@ namespace Barotrauma
 
         public static Rectangle GetBorders(XElement submarineElement)
         {
-            Vector4 bounds = Vector4.Zero;
+            Vector4 bounds = new Vector4(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue);
             foreach (XElement element in submarineElement.Elements())
             {
-                if (element.Name != "Structure") { continue; }
+                if (element.Name == "Structure") 
+                {
+                    string name = element.GetAttributeString("name", "");
+                    Identifier identifier = element.GetAttributeIdentifier("identifier", "");
+                    StructurePrefab prefab = Structure.FindPrefab(name, identifier);
+                    if (prefab == null || !prefab.Body) { continue; }
 
-                string name = element.GetAttributeString("name", "");
-                Identifier identifier = element.GetAttributeIdentifier("identifier", "");
-                StructurePrefab prefab = Structure.FindPrefab(name, identifier);
-                if (prefab == null || !prefab.Body) { continue; }
+                    var rect = element.GetAttributeRect("rect", Rectangle.Empty);
+                    bounds = new Vector4(
+                        Math.Min(rect.X, bounds.X),
+                        Math.Max(rect.Y, bounds.Y),
+                        Math.Max(rect.Right, bounds.Z),
+                        Math.Min(rect.Y - rect.Height, bounds.W));
+                }
+                else if (element.Name == "LinkedSubmarine")
+                {
+                    Point dimensions = element.GetAttributePoint("dimensions", Point.Zero);
+                    Point pos = element.GetAttributeVector2("pos", Vector2.Zero).ToPoint();
+                    bounds = new Vector4(
+                        Math.Min(pos.X - dimensions.X / 2, bounds.X),
+                        Math.Max(pos.Y + dimensions.Y / 2, bounds.Y),
+                        Math.Max(pos.X + dimensions.X / 2, bounds.Z),
+                        Math.Min(pos.Y - dimensions.Y / 2, bounds.W));
+                }
+            }
 
-                var rect = element.GetAttributeRect("rect", Rectangle.Empty);
-                bounds = new Vector4(
-                    Math.Min(rect.X, bounds.X),
-                    Math.Max(rect.Y, bounds.Y),
-                    Math.Max(rect.Right, bounds.Z),
-                    Math.Min(rect.Y - rect.Height, bounds.W));
+            if (bounds.X == float.MaxValue || bounds.Y == float.MinValue || bounds.Z == float.MinValue || bounds.W == float.MaxValue)
+            {
+                //no bounds found
+                return Rectangle.Empty;
             }
 
             return new Rectangle((int)bounds.X, (int)bounds.Y, (int)(bounds.Z - bounds.X), (int)(bounds.Y - bounds.W));
@@ -1667,6 +1744,14 @@ namespace Barotrauma
                     }
                 }
 
+                if (Screen.Selected is { IsEditor : false })
+                {
+                    foreach (Identifier layer in Info.LayersHiddenByDefault)
+                    {
+                        SetLayerEnabled(layer, enabled: false);
+                    }
+                }
+
                 GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged.Register(upgradeEventIdentifier, _ => ResetCrushDepth());
 
 #if CLIENT
@@ -1719,6 +1804,22 @@ namespace Barotrauma
         private void ResetCrushDepth()
         {
             realWorldCrushDepth = null;
+        }
+
+        /// <summary>
+        /// Normally crush depth is determined by the crush depths of the walls and upgrades applied on them. 
+        /// This method forces the crush depths of all the walls to the specified value.
+        /// </summary>
+        /// </summary>
+        /// <param name="realWorldCrushDepth">Depth in "real world" units (meters from the surface of Europa, the value you see on the nav terminal).</param>
+        public void SetCrushDepth(float realWorldCrushDepth)
+        {
+            foreach (Structure structure in Structure.WallList)
+            {
+                if (structure.Submarine != this || !structure.HasBody || structure.Indestructible) { continue; }
+                structure.CrushDepth = realWorldCrushDepth;
+            }
+            this.realWorldCrushDepth = realWorldCrushDepth;
         }
 
         public static void RepositionEntities(Vector2 moveAmount, IEnumerable<MapEntity> entities)
@@ -1777,10 +1878,41 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience.ToString()));
             element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", Info.RequiredContentPackages)));
+            if (Info.LayersHiddenByDefault.Any())
+            {
+                element.Add(new XAttribute("layerhiddenbydefault", string.Join(", ", Info.LayersHiddenByDefault)));
+            }
+
+            if (Info.WreckInfo != null)
+            {
+                bool hasThalamus = false;
+
+                var wreckAiEntities = WreckAIConfig.Prefabs.Select(p => p.Entity).ToImmutableHashSet();
+                var prefabsOnSub = GetItems(true).Select(i => i.Prefab).Distinct().ToImmutableHashSet();
+
+                foreach (ItemPrefab prefab in prefabsOnSub)
+                {
+                    foreach (Identifier entity in wreckAiEntities)
+                    {
+                        if (WreckAI.IsThalamus(prefab, entity))
+                        {
+                            hasThalamus = true;
+                            break;
+                        }
+                    }
+                    if (hasThalamus) { break; }
+                }
+
+                element.Add(new XAttribute(nameof(WreckInfo.WreckContainsThalamus), hasThalamus ? WreckInfo.HasThalamus.Yes : WreckInfo.HasThalamus.No));
+            }
 
             if (Info.Type == SubmarineType.OutpostModule)
             {
                 Info.OutpostModuleInfo?.Save(element);
+            }
+            if (Info.GetExtraSubmarineInfo is { } extraSubInfo)
+            {
+                extraSubInfo.Save(element);
             }
 
             foreach (Item item in Item.ItemList)
@@ -2125,7 +2257,7 @@ namespace Barotrauma
             {
                 if (potentialContainer.Removed) { continue; }
                 if (potentialContainer.NonInteractable) { continue; }
-                if (potentialContainer.HiddenInGame) { continue; }
+                if (potentialContainer.IsHidden) { continue; }
                 if (allowConnectedSubs)
                 {
                     if (!connectedSubs.Contains(potentialContainer.Submarine)) { continue; }

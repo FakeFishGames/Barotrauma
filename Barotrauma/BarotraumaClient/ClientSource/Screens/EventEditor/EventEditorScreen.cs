@@ -457,7 +457,14 @@ namespace Barotrauma
                                     }
                                     else
                                     {
-                                        connection.OverrideValue = ChangeType(attribute.Value, connection.ValueType);
+                                        try
+                                        {
+                                            connection.OverrideValue = ChangeType(attribute.Value, connection.ValueType);
+                                        }
+                                        catch
+                                        {
+                                            DebugConsole.ThrowError($"Failed to convert the value {attribute.Value} of the attribute {attribute.Name} to {connection.ValueType}.");
+                                        }
                                     }
                                 }
                             }
@@ -813,7 +820,6 @@ namespace Barotrauma
             Vector2 size = type == typeof(string) ? new Vector2(0.2f, 0.3f) : new Vector2(0.2f, 0.175f);
             var msgBox = new GUIMessageBox(TextManager.Get("EventEditor.Edit"), "", new[] { TextManager.Get("Cancel"), TextManager.Get("OK") }, size, minSize: new Point(300, 175));
 
-
             Vector2 layoutSize = type == typeof(string) ? new Vector2(1f, 0.5f) : new Vector2(1f, 0.25f);
             var layout = new GUILayoutGroup(new RectTransform(layoutSize, msgBox.Content.RectTransform), isHorizontal: true);
 
@@ -838,7 +844,7 @@ namespace Barotrauma
                     valueInput.OnTextChanged += (component, o) =>
                     {
                         Vector2 textSize = valueInput.Font.MeasureString(valueInput.WrappedText);
-                        valueInput.RectTransform.NonScaledSize = new Point(valueInput.RectTransform.NonScaledSize.X, (int) textSize.Y + 10);
+                        valueInput.RectTransform.NonScaledSize = new Point(valueInput.RectTransform.NonScaledSize.X, (int)textSize.Y + 10);
                         listBox.UpdateScrollBarSize();
                         listBox.BarScroll = 1.0f;
                         newValue = o;
@@ -855,14 +861,31 @@ namespace Barotrauma
                         return true;
                     };
                 }
-                else if (type == typeof(float) || type == typeof(int))
+                else if (type == typeof(float))
                 {
-                    GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), NumberType.Float) { FloatValue = (float) (newValue ?? 0.0f) };
+                    GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), NumberType.Float);
+                    if (newValue is float floatVal)
+                    {
+                        valueInput.FloatValue = floatVal;
+                    }
                     valueInput.OnValueChanged += component => { newValue = component.FloatValue; };
+                }
+                else if (type == typeof(int))
+                {
+                    GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), NumberType.Int);
+                    if (newValue is int intVal)
+                    {
+                        valueInput.IntValue = intVal;
+                    }
+                    valueInput.OnValueChanged += component => { newValue = component.IntValue; };
                 }
                 else if (type == typeof(bool))
                 {
-                    GUITickBox valueInput = new GUITickBox(new RectTransform(Vector2.One, layout.RectTransform), "Value") { Selected = (bool) (newValue ?? false) };
+                    GUITickBox valueInput = new GUITickBox(new RectTransform(Vector2.One, layout.RectTransform), "Value");
+                    if (newValue is bool val)
+                    {
+                        valueInput.Selected = val;
+                    }
                     valueInput.OnSelected += component =>
                     {
                         newValue = component.Selected;

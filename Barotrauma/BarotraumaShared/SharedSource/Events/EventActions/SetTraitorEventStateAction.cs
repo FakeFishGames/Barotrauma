@@ -2,6 +2,9 @@
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Sets the state of the traitor event. Only valid in traitor events.
+    /// </summary>
     class SetTraitorEventStateAction : EventAction
     {
         private readonly TraitorEvent? traitorEvent;
@@ -19,7 +22,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(TraitorEvent.State.Completed, IsPropertySaveable.Yes)]
+        [Serialize(TraitorEvent.State.Completed, IsPropertySaveable.Yes, description: "The state to set the traitor event to (Incomplete, Completed or Failed).")]
         public TraitorEvent.State State { get; set; }
 
         private bool isFinished;

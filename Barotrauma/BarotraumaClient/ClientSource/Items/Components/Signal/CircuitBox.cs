@@ -129,6 +129,7 @@ namespace Barotrauma.Items.Components
 
         public void RemoveComponents(IReadOnlyCollection<CircuitBoxComponent> node)
         {
+            if (Locked) { return; }
             var ids = node.Select(static n => n.ID).ToImmutableArray();
 
             if (GameMain.NetworkMember is null)
@@ -145,6 +146,7 @@ namespace Barotrauma.Items.Components
 
         public void AddWire(CircuitBoxConnection one, CircuitBoxConnection two)
         {
+            if (Locked) { return; }
             if (GameMain.NetworkMember is null)
             {
                 Connect(one, two, static delegate { }, CircuitBoxWire.SelectedWirePrefab);
@@ -158,6 +160,7 @@ namespace Barotrauma.Items.Components
 
         public void RemoveWires(IReadOnlyCollection<CircuitBoxWire> wires)
         {
+            if (Locked) { return; }
             var ids = wires.Select(static w => w.ID).ToImmutableArray();
             if (GameMain.NetworkMember is null)
             {
@@ -175,6 +178,7 @@ namespace Barotrauma.Items.Components
 
             var ids = ImmutableArray.CreateBuilder<ushort>();
             var ios = ImmutableArray.CreateBuilder<CircuitBoxInputOutputNode.Type>();
+            var labelIds = ImmutableArray.CreateBuilder<ushort>();
 
             foreach (var moveable in moveables)
             {
@@ -188,6 +192,9 @@ namespace Barotrauma.Items.Components
                     case CircuitBoxInputOutputNode io:
                         ios.Add(io.NodeType);
                         break;
+                    case CircuitBoxLabelNode label:
+                        labelIds.Add(label.ID);
+                        break;
                 }
             }
 
@@ -195,12 +202,13 @@ namespace Barotrauma.Items.Components
             {
                 SelectComponentsInternal(ids, controlledId, overwrite);
                 SelectInputOutputInternal(ios, controlledId, overwrite);
+                SelectLabelsInternal(labelIds, controlledId, overwrite);
                 return;
             }
 
-            if ((!ids.Any() && !ios.Any()) && !overwrite) { return; }
+            if (!ids.Any() && !ios.Any() && !labelIds.Any() && !overwrite) { return; }
 
-            CreateClientEvent(new CircuitBoxSelectNodesEvent(ids.ToImmutable(), ios.ToImmutable(), overwrite, controlledId));
+            CreateClientEvent(new CircuitBoxSelectNodesEvent(ids.ToImmutable(), ios.ToImmutable(), labelIds.ToImmutable(), overwrite, controlledId));
         }
 
         public void SelectWires(IReadOnlyCollection<CircuitBoxWire> wires, bool overwrite)
@@ -222,8 +230,10 @@ namespace Barotrauma.Items.Components
 
         public void MoveComponent(Vector2 moveAmount, IReadOnlyCollection<CircuitBoxNode> moveables)
         {
+            if (Locked) { return; }
             var ids = ImmutableArray.CreateBuilder<ushort>();
             var ios = ImmutableArray.CreateBuilder<CircuitBoxInputOutputNode.Type>();
+            var labelIds = ImmutableArray.CreateBuilder<ushort>();
 
             foreach (CircuitBoxNode move in moveables)
             {
@@ -235,23 +245,27 @@ namespace Barotrauma.Items.Components
                     case CircuitBoxInputOutputNode io:
                         ios.Add(io.NodeType);
                         break;
+                    case CircuitBoxLabelNode label:
+                        labelIds.Add(label.ID);
+                        break;
                 }
             }
 
             if (GameMain.NetworkMember is null)
             {
-                MoveNodesInternal(ids, ios, moveAmount);
+                MoveNodesInternal(ids, ios, labelIds, moveAmount);
                 return;
             }
 
-            if (!ids.Any() && !ios.Any()) { return; }
+            if (!ids.Any() && !ios.Any() && !labelIds.Any()) { return; }
 
 
-            CreateClientEvent(new CircuitBoxMoveComponentEvent(ids.ToImmutable(), ios.ToImmutable(), moveAmount));
+            CreateClientEvent(new CircuitBoxMoveComponentEvent(ids.ToImmutable(), ios.ToImmutable(), labelIds.ToImmutable(), moveAmount));
         }
 
         public void AddComponent(ItemPrefab prefab, Vector2 pos)
         {
+            if (Locked) { return; }
             if (GameMain.NetworkMember is null)
             {
                 ItemPrefab resource;
@@ -274,6 +288,83 @@ namespace Barotrauma.Items.Components
             }
 
             CreateClientEvent(new CircuitBoxAddComponentEvent(prefab.UintIdentifier, pos));
+        }
+
+        public void RenameLabel(CircuitBoxLabelNode label, Color color, NetLimitedString header, NetLimitedString body)
+        {
+            if (Locked) { return; }
+            if (GameMain.NetworkMember is null)
+            {
+                label.EditText(header, body);
+                label.Color = color;
+                return;
+            }
+
+            CreateClientEvent(new CircuitBoxRenameLabelEvent(label.ID, color, header, body));
+        }
+
+        public void SetConnectionLabelOverrides(CircuitBoxInputOutputNode node, Dictionary<string, string> newOverrides)
+        {
+            if (GameMain.NetworkMember is null)
+            {
+                node.ReplaceAllConnectionLabelOverrides(newOverrides);
+                return;
+            }
+
+            CreateClientEvent(new CircuitBoxRenameConnectionLabelsEvent(node.NodeType, newOverrides.ToNetDictionary()));
+        }
+
+        public void ResizeNode(CircuitBoxNode node, CircuitBoxResizeDirection dir, Vector2 amount)
+        {
+            if (Locked) { return; }
+            var resize = node.ResizeBy(dir, amount);
+            if (GameMain.NetworkMember is null)
+            {
+                node.ApplyResize(resize.Size, resize.Pos);
+                return;
+            }
+
+            // TODO this needs to be refactored at some point, probably not now
+            // the problem here is that the circuit  box supports resizing all nodes
+            // but we limit the resizing to only labels on the client
+            // and on the server we only have a network message that targets labels
+            // so if we ever want the ability to resize other nodes (could be useful) the network message
+            // needs to know what type of ID it's targeting
+            if (node is not ICircuitBoxIdentifiable identifiable)
+            {
+                DebugConsole.ThrowError("Tried to resize a node that doesn't have an ID.");
+                return;
+            }
+
+            CreateClientEvent(new CircuitBoxResizeLabelEvent(identifiable.ID, resize.Pos, resize.Size));
+        }
+
+        public void AddLabel(Vector2 pos)
+        {
+            if (Locked) { return; }
+            if (GameMain.NetworkMember is null)
+            {
+                AddLabelInternal(ICircuitBoxIdentifiable.FindFreeID(Labels), GUIStyle.Blue, pos, CircuitBoxLabelNode.DefaultHeaderText, NetLimitedString.Empty);
+                return;
+            }
+
+            CreateClientEvent(new CircuitBoxAddLabelEvent(pos, GUIStyle.Blue, CircuitBoxLabelNode.DefaultHeaderText, NetLimitedString.Empty));
+        }
+
+        public void RemoveLabel(IReadOnlyCollection<CircuitBoxLabelNode> labels)
+        {
+            if (Locked) { return; }
+            if (!labels.Any()) { return; }
+
+            var ids = labels.Select(static n => n.ID).ToImmutableArray();
+
+            if (GameMain.NetworkMember is null)
+            {
+                RemoveLabelInternal(ids);
+                return;
+            }
+
+            CreateClientEvent(new CircuitBoxRemoveLabelEvent(ids));
         }
 
         public partial void OnViewUpdateProjSpecific()
@@ -396,7 +487,7 @@ namespace Barotrauma.Items.Components
                 case CircuitBoxOpcode.MoveComponent:
                 {
                     var data = INetSerializableStruct.Read<CircuitBoxMoveComponentEvent>(msg);
-                    MoveNodesInternal(data.TargetIDs, data.IOs, data.MoveAmount);
+                    MoveNodesInternal(data.TargetIDs, data.IOs, data.LabelIDs, data.MoveAmount);
                     break;
                 }
                 case CircuitBoxOpcode.UpdateSelection:
@@ -406,8 +497,9 @@ namespace Barotrauma.Items.Components
                     var nodeDict = data.ComponentIds.ToImmutableDictionary(static s => s.ID, static s => s.SelectedBy);
                     var wireDict = data.WireIds.ToImmutableDictionary(static s => s.ID, static s => s.SelectedBy);
                     var ioDict = data.InputOutputs.ToImmutableDictionary(static s => s.Type, static s => s.SelectedBy);
+                    var labelDict = data.LabelIds.ToImmutableDictionary(static s => s.ID, static s => s.SelectedBy);
 
-                    UpdateSelections(nodeDict, wireDict, ioDict);
+                    UpdateSelections(nodeDict, wireDict, ioDict, labelDict);
                     break;
                 }
                 case CircuitBoxOpcode.AddWire:
@@ -426,10 +518,17 @@ namespace Barotrauma.Items.Components
                 {
                     Components.Clear();
                     Wires.Clear();
+                    Labels.Clear();
 
                     var data = INetSerializableStruct.Read<CircuitBoxInitializeStateFromServerEvent>(msg);
                     foreach (var compData in data.Components) { AddComponentFromData(compData); }
                     foreach (var wireData in data.Wires) { AddWireFromData(wireData); }
+
+                    foreach (var labelData in data.Labels)
+                    {
+                        AddLabelInternal(labelData.ID, labelData.Color, labelData.Position, labelData.Header, labelData.Body);
+                        ResizeLabelInternal(labelData.ID, labelData.Position, labelData.Size);
+                    }
 
                     foreach (var node in InputOutputNodes)
                     {
@@ -440,7 +539,44 @@ namespace Barotrauma.Items.Components
                             _ => node.Position
                         };
                     }
+
+                    foreach (var labelOverride in data.LabelOverrides)
+                    {
+                        RenameConnectionLabelsInternal(labelOverride.Type, labelOverride.Override.ToDictionary());
+                    }
+
                     wasInitializedByServer = true;
+                    break;
+                }
+                case CircuitBoxOpcode.RenameLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRenameLabelEvent>(msg);
+                    RenameLabelInternal(data.LabelId, data.Color, data.NewHeader, data.NewBody);
+                    break;
+                }
+                case CircuitBoxOpcode.AddLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxServerAddLabelEvent>(msg);
+                    AddLabelInternal(data.ID, data.Color, data.Position, data.Header, data.Body);
+                    ResizeLabelInternal(data.ID, data.Position, data.Size);
+                    break;
+                }
+                case CircuitBoxOpcode.RemoveLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRemoveLabelEvent>(msg);
+                    RemoveLabelInternal(data.TargetIDs);
+                    break;
+                }
+                case CircuitBoxOpcode.ResizeLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxResizeLabelEvent>(msg);
+                    ResizeLabelInternal(data.ID, data.Position, data.Size);
+                    break;
+                }
+                case CircuitBoxOpcode.RenameConnections:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRenameConnectionLabelsEvent>(msg);
+                    RenameConnectionLabelsInternal(data.Type, data.Override.ToDictionary());
                     break;
                 }
                 default:

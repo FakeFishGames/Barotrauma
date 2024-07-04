@@ -188,18 +188,7 @@ namespace Barotrauma
 
             public static PurchasedItem CreateInitialStockItem(ItemPrefab itemPrefab, PriceInfo priceInfo)
             {
-                int quantity = PriceInfo.DefaultAmount;
-                if (priceInfo.MaxAvailableAmount > 0)
-                {
-                    quantity =
-                    priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount ?
-                    Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1) :
-                        priceInfo.MaxAvailableAmount;
-                }
-                else if (priceInfo.MinAvailableAmount > 0)
-                {
-                    quantity = priceInfo.MinAvailableAmount;
-                }
+                int quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
                 return new PurchasedItem(itemPrefab, quantity, buyer: null);
             }
 
@@ -256,7 +245,7 @@ namespace Barotrauma
                     if (stockItem.ItemPrefab.GetPriceInfo(this) is PriceInfo priceInfo)
                     {
                         if (!priceInfo.CanBeSpecial) { continue; }
-                        var baseQuantity = priceInfo.MinAvailableAmount > 0 ? priceInfo.MinAvailableAmount : PriceInfo.DefaultAmount;
+                        var baseQuantity = priceInfo.MinAvailableAmount;
                         weight += (float)(stockItem.Quantity - baseQuantity) / baseQuantity;
                         if (weight < 0.0f) { continue; }
                     }
@@ -306,6 +295,12 @@ namespace Barotrauma
                 }
                 // Adjust by current reputation
                 price *= GetReputationModifier(true);
+
+                // Adjust by campaign difficulty settings
+                if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+                {
+                    price *= campaign.Settings.ShopPriceMultiplier;
+                }
 
                 var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
                 if (characters.Any())
@@ -768,27 +763,22 @@ namespace Barotrauma
             else
             {
                 DebugConsole.Log($"Location {DisplayName.Value} changed it's type from {Type} to {newType}");
-                DisplayName = 
-                    Type.NameFormats == null || !Type.NameFormats.Any() ? 
-                    TextManager.Get(nameIdentifier) : 
+                DisplayName =
+                    Type.NameFormats == null || !Type.NameFormats.Any() ?
+                    TextManager.Get(nameIdentifier) :
                     Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", TextManager.Get(nameIdentifier).Value);
             }
 
+            TryAssignFactionBasedOnLocationType(campaign);
             if (Type.HasOutpost && Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
             {
-                if (Faction == null)
-                {
-                    Faction = campaign.GetRandomFaction(Rand.RandSync.Unsynced);
-                }
-                if (SecondaryFaction == null)
-                {
-                    SecondaryFaction = campaign.GetRandomSecondaryFaction(Rand.RandSync.Unsynced);
-                }
+                if (Type.Faction == Identifier.Empty) { Faction ??= campaign.GetRandomFaction(Rand.RandSync.Unsynced); }
+                if (Type.SecondaryFaction == Identifier.Empty) { SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.Unsynced); }
             }
             else
             {
-                Faction = null;
-                SecondaryFaction = null;
+                if (Type.Faction == Identifier.Empty) { Faction = null; }
+                if (Type.SecondaryFaction == Identifier.Empty) { SecondaryFaction = null; }
             }
 
             UnlockInitialMissions(Rand.RandSync.Unsynced);
@@ -796,6 +786,30 @@ namespace Barotrauma
             if (createStores)
             {
                 CreateStores(force: true);
+            }
+        }
+
+        public void TryAssignFactionBasedOnLocationType(CampaignMode campaign)
+        {
+            if (campaign == null) { return; }
+            if (Type.Faction != Identifier.Empty)
+            {
+                Faction = Type.Faction == "None" ? null : TryFindFaction(Type.Faction);
+            }
+            if (Type.SecondaryFaction != Identifier.Empty)
+            {
+                SecondaryFaction = Type.SecondaryFaction == "None" ? null : TryFindFaction(Type.SecondaryFaction);
+            }
+
+            Faction TryFindFaction(Identifier identifier)
+            {
+                var faction = campaign.GetFaction(identifier);
+                if (faction == null)
+                {
+                    DebugConsole.ThrowError($"Error in location type \"{Type.Identifier}\": failed to find a faction with the identifier \"{identifier}\".",
+                        contentPackage: Type.ContentPackage);
+                }
+                return faction;
             }
         }
 
@@ -881,8 +895,8 @@ namespace Barotrauma
                     }
                     MissionPrefab missionPrefab = 
                         random != null ? 
-                        ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, random) :
-                        ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, Rand.RandSync.Unsynced);
+                        ToolBox.SelectWeightedRandom(suitableMissions, m => m.Commonness, random) :
+                        ToolBox.SelectWeightedRandom(suitableMissions, m => m.Commonness, Rand.RandSync.Unsynced);
 
                     var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
                     //don't allow duplicate missions in the same connection
@@ -1116,6 +1130,12 @@ namespace Barotrauma
             return HireManager.AvailableCharacters;
         }
 
+        public void ForceHireableCharacters(IEnumerable<CharacterInfo> hireableCharacters)
+        {
+            HireManager ??= new HireManager();
+            HireManager.AvailableCharacters = hireableCharacters.ToList();
+        }
+
         private void CreateRandomName(LocationType type, Random rand, IEnumerable<Location> existingLocations)
         {
             if (!type.ForceLocationName.IsEmpty)
@@ -1127,6 +1147,7 @@ namespace Barotrauma
             nameIdentifier = type.GetRandomNameId(rand, existingLocations);
             if (nameIdentifier.IsEmpty)
             {
+                //backwards compatibility
                 rawName = type.GetRandomRawName(rand, existingLocations);
                 if (rawName.IsNullOrEmpty())
                 {
@@ -1134,7 +1155,15 @@ namespace Barotrauma
                     rawName = "none";
                 }
                 nameIdentifier = rawName.ToIdentifier();
-                DisplayName = rawName;
+                if (type.NameFormats == null || !type.NameFormats.Any())
+                {
+                    DisplayName = rawName;
+                }
+                else
+                {
+                    nameFormatIndex = rand.Next() % type.NameFormats.Count;
+                    DisplayName = type.NameFormats[nameFormatIndex].Replace("[name]", rawName);
+                }
             }
             else
             {
@@ -1368,12 +1397,12 @@ namespace Barotrauma
                             existingStock.Quantity =
                                 Math.Min(
                                     existingStock.Quantity + 1, 
-                                    priceInfo.MaxAvailableAmount > 0 ? priceInfo.MaxAvailableAmount : CargoManager.MaxQuantity);
+                                    priceInfo.MaxAvailableAmount);
                         }
                     }
                     else if (existingStock != null)
                     {
-                        stockToRemove.Add(existingStock);                        
+                        stockToRemove.Add(existingStock);
                     }
                 }
 

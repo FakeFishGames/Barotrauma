@@ -279,9 +279,23 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Used for purchasing upgrades from outside the upgrade store.
+        /// Doesn't deduct the credit, adds the upgrade to the pending list and performs a level sanity check.
+        /// </summary>
+        public void AddUpgradeExternally(UpgradePrefab prefab, UpgradeCategory category, int level)
+        {
+            int maxLevel = prefab.GetMaxLevelForCurrentSub();
+            int currentLevel = GetUpgradeLevel(prefab, category);
+            if (currentLevel + 1 > maxLevel) { return; }
+
+            PendingUpgrades.Add(new PurchasedUpgrade(prefab, category, level));
+            OnUpgradesChanged?.Invoke(this);
+        }
+
+        /// <summary>
         /// Purchases an item swap and handles logic for deducting the credit.
         /// </summary>
-        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool force = false, Client? client = null)
+        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool isNetworkMessage = false, Client? client = null)
         {
             if (!CanUpgradeSub())
             {
@@ -329,12 +343,14 @@ namespace Barotrauma
                 price = itemToInstall.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count;
             }
 
-            if (force)
+            if (isNetworkMessage)
             {
                 price = 0;
             }
 
-            if (Campaign.TryPurchase(client, price))
+            //do not try to purchase if this is a network message (if the server is telling us that an item swap was purchased)
+            //we want to do the purchase no matter what, and the server handles deducting the money
+            if (isNetworkMessage || Campaign.TryPurchase(client, price))
             {
                 PurchasedItemSwaps.RemoveAll(p => linkedItems.Contains(p.ItemToRemove));
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -419,8 +435,7 @@ namespace Barotrauma
             {
                 if (itemToCancel.PendingItemSwap == null)
                 {
-                    var replacement = MapEntityPrefab.Find("", swappableItem.ReplacementOnUninstall) as ItemPrefab;
-                    if (replacement == null)
+                    if (MapEntityPrefab.FindByIdentifier(swappableItem.ReplacementOnUninstall) is not ItemPrefab replacement)
                     {
                         DebugConsole.ThrowError($"Failed to uninstall item \"{itemToCancel.Name}\". Could not find the replacement item \"{swappableItem.ReplacementOnUninstall}\".");
                         return;
@@ -772,11 +787,10 @@ namespace Barotrauma
 
         private void LoadPendingUpgrades(XElement? element, bool isSingleplayer = true)
         {
-            if (!(element is { HasElements: true })) { return; }
+            if (element is not { HasElements: true }) { return; }
 
             List<PurchasedUpgrade> pendingUpgrades = new List<PurchasedUpgrade>();
-
-            // ReSharper disable once LoopCanBeConvertedToQuery
+            
             foreach (XElement upgrade in element.Elements())
             {
                 Identifier categoryIdentifier = upgrade.GetAttributeIdentifier("category", Identifier.Empty);

@@ -31,6 +31,7 @@ namespace Barotrauma.Sounds
                 return;
             }
 
+            Loading = true;
             TaskPool.Add(
                 $"LoadSamples {filename}",
                 LoadSamples(reader),
@@ -46,6 +47,7 @@ namespace Barotrauma.Sounds
                     playbackAmplitude = result.PlaybackAmplitude;
                     Owner.KillChannels(this); // prevents INVALID_OPERATION error
                     buffers?.Dispose(); buffers = null;
+                    Loading = false;
                 });
         }
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.MapCreatures.Behavior;
+﻿using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
+using System;
 
 namespace Barotrauma
 {

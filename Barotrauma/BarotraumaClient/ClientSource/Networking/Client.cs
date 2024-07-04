@@ -14,6 +14,17 @@ namespace Barotrauma.Networking
             set;
         }
 
+        // Players can boost per-user volume by 200%
+        public const float MaxVoiceChatBoost = 2.0f;
+
+        private float voiceVolume = 1f;
+
+        public float VoiceVolume
+        {
+            get => voiceVolume; 
+            set => voiceVolume = Math.Clamp(value, 0f, MaxVoiceChatBoost);
+        }
+
         private SoundChannel radioNoiseChannel;
         private float radioNoise;
 
@@ -22,7 +33,6 @@ namespace Barotrauma.Networking
             get { return radioNoise; }
             set { radioNoise = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
-
 
         private bool mutedLocally;
         public bool MutedLocally
@@ -85,6 +95,17 @@ namespace Barotrauma.Networking
                 {
                     float dist = Vector3.Distance(new Vector3(character.WorldPosition, 0.0f), GameMain.SoundManager.ListenerPosition);
                     gain = 1.0f - MathUtils.InverseLerp(VoipSound.Near, VoipSound.Far, dist);
+                }
+                if (!VoipSound.UsingRadio)
+                {
+                    //emulate the "garbling" of the text chat
+                    //this in a sense means the volume diminishes exponentially when close to the maximum range of the sound
+                    //(diminished by both the garbling and the distance attenuation)
+
+                    //which is good, because we want the voice chat to become unintelligible close to the max range,
+                    //and we need to heavily reduce the volume to do that (otherwise it's just quiet, but still intelligible)
+                    float garbleAmount = ChatMessage.GetGarbleAmount(Character.Controlled, character, ChatMessage.SpeakRangeVOIP);
+                    gain *= 1.0f - garbleAmount;
                 }
                 if (RadioNoise > 0.0f)
                 {

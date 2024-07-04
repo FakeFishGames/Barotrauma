@@ -214,7 +214,7 @@ namespace Barotrauma
                     Bar.HoverCursor = CursorState.Default;
                     break;
                 case "GUISlider":
-                    HoverCursor = CursorState.Default;
+                    HoverCursor = CursorState.Hand;
                     Bar.HoverCursor = CursorState.Hand;
                     break;
                 default:

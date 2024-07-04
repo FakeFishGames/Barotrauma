@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -15,7 +16,17 @@ namespace Barotrauma
     /// </summary>
     internal sealed class CircuitBoxMouseDragSnapshotHandler
     {
-        public IEnumerable<CircuitBoxNode> Nodes => circuitBoxUi.CircuitBox.Components.Union<CircuitBoxNode>(circuitBoxUi.CircuitBox.InputOutputNodes);
+        public IEnumerable<CircuitBoxNode> Nodes
+        {
+            get
+            {
+                var cb = circuitBoxUi.CircuitBox;
+
+                foreach (var label in cb.Labels) { yield return label; }
+                foreach (var component in cb.Components) { yield return component; }
+                foreach (var node in cb.InputOutputNodes) { yield return node; }
+            }
+        }
 
         private IReadOnlyList<CircuitBoxWire> Wires => circuitBoxUi.CircuitBox.Wires;
 
@@ -28,6 +39,8 @@ namespace Barotrauma
                                                  lastSelectedComponents = ImmutableHashSet<CircuitBoxNode>.Empty,
                                                  // Nodes that should be moved when dragging
                                                  moveAffectedComponents = ImmutableHashSet<CircuitBoxNode>.Empty;
+
+        public Option<(CircuitBoxResizeDirection, CircuitBoxNode)> LastResizeAffectedNode = Option.None;
 
         public ImmutableHashSet<CircuitBoxNode> GetLastComponentsUnderCursor() => lastNodesUnderCursor;
         public ImmutableHashSet<CircuitBoxNode> GetMoveAffectedComponents() => moveAffectedComponents;
@@ -44,6 +57,11 @@ namespace Barotrauma
         /// If the user is currently dragging a wire
         /// </summary>
         public bool IsWiring { get; private set; }
+
+        /// <summary>
+        /// If the user grabbed a side of a node and is resizing a node
+        /// </summary>
+        public bool IsResizing { get; private set; }
 
         private Vector2 startClick = Vector2.Zero;
         private readonly CircuitBoxUI circuitBoxUi;
@@ -68,6 +86,16 @@ namespace Barotrauma
             SnapshotSelectedNodes();
             SnapshotMoveAffectedNodes();
             startClick = cursorPos;
+        }
+        
+        public void ClearSnapshot()
+        {
+            lastNodesUnderCursor = ImmutableHashSet<CircuitBoxNode>.Empty;
+            lastSelectedComponents = ImmutableHashSet<CircuitBoxNode>.Empty;
+            moveAffectedComponents = ImmutableHashSet<CircuitBoxNode>.Empty;
+            LastConnectorUnderCursor = Option.None;
+            LastWireUnderCursor = Option.None;
+            LastResizeAffectedNode = Option.None;
         }
 
         /// <summary>
@@ -147,6 +175,39 @@ namespace Barotrauma
             lastNodesUnderCursor = FindNodesUnderCursor(cursorPos);
             LastConnectorUnderCursor = FindConnectorUnderCursor(cursorPos);
             LastWireUnderCursor = FindWireUnderCursor(cursorPos);
+            LastResizeAffectedNode = FindResizeBorderUnderCursor(lastNodesUnderCursor, cursorPos);
+        }
+
+        private Option<(CircuitBoxResizeDirection, CircuitBoxNode)> FindResizeBorderUnderCursor(ImmutableHashSet<CircuitBoxNode> nodes, Vector2 cursorPos)
+        {
+            if (!nodes.Any()) { return Option.None; }
+
+            var node = circuitBoxUi.GetTopmostNode(nodes);
+            if (node is null || !node.IsResizable) { return Option.None; }
+
+            const float borderSize = 32f;
+
+            var rect = node.Rect;
+            RectangleF bottomBorder = new(rect.X, rect.Top, rect.Width, borderSize);
+            RectangleF rightBorder = new(rect.Right - borderSize, rect.Y, borderSize, rect.Height);
+            RectangleF leftBorder = new(rect.X, rect.Y, borderSize, rect.Height);
+
+            bool hoverBottom = bottomBorder.Contains(cursorPos),
+                 hoverRight = rightBorder.Contains(cursorPos),
+                 hoverLeft = leftBorder.Contains(cursorPos);
+
+            var dir = CircuitBoxResizeDirection.None;
+
+            if (hoverBottom) { dir |= CircuitBoxResizeDirection.Down; }
+            if (hoverRight) { dir |= CircuitBoxResizeDirection.Right; }
+            if (hoverLeft) { dir |= CircuitBoxResizeDirection.Left; }
+
+            if (dir is CircuitBoxResizeDirection.None)
+            {
+                return Option.None;
+            }
+
+            return Option.Some((dir, node));
         }
 
         /// <summary>
@@ -193,6 +254,7 @@ namespace Barotrauma
             startClick = Vector2.Zero;
             IsDragging = false;
             IsWiring = false;
+            IsResizing = false;
             lastNodesUnderCursor = ImmutableHashSet<CircuitBoxNode>.Empty;
         }
 
@@ -210,23 +272,34 @@ namespace Barotrauma
                 IsDragging = false;
             }
 
+            if (LastResizeAffectedNode.IsNone())
+            {
+                IsResizing = false;
+            }
+
             // startClick is set to zero when the user releases the mouse button, so we should be neither dragging nor wiring in this state
             if (startClick == Vector2.Zero)
             {
                 IsDragging = false;
                 IsWiring = false;
+                IsResizing = false;
                 return;
             }
 
-            bool isDragTresholdExceeded = Vector2.DistanceSquared(startClick, cursorPos) > dragTreshold * dragTreshold;
+            if (circuitBoxUi.Locked) { return; }
+            bool isDragThresholdExceeded = Vector2.DistanceSquared(startClick, cursorPos) > dragTreshold * dragTreshold;
 
-            if (LastConnectorUnderCursor.IsNone())
+            if (LastConnectorUnderCursor.IsSome())
             {
-                IsDragging |= isDragTresholdExceeded;
+                IsWiring |= isDragThresholdExceeded;
+            }
+            else if (LastResizeAffectedNode.IsSome())
+            {
+                IsResizing |= isDragThresholdExceeded;
             }
             else
             {
-                IsWiring |= isDragTresholdExceeded;
+                IsDragging |= isDragThresholdExceeded;
             }
         }
     }

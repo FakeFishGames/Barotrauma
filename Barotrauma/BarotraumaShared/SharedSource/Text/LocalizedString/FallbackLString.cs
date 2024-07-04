@@ -8,8 +8,12 @@ namespace Barotrauma
 
         public bool PrimaryIsLoaded { get; private set; }
 
-        public FallbackLString(LocalizedString primary, LocalizedString fallback)
+        private readonly bool useDefaultLanguageIfFound;
+
+        /// <param name="useDefaultLanguageIfFound">If the text is available in the default language (English), should it be used instead of this fallback?</param>
+        public FallbackLString(LocalizedString primary, LocalizedString fallback, bool useDefaultLanguageIfFound = true)
         {
+            this.useDefaultLanguageIfFound = useDefaultLanguageIfFound;
             if (primary is FallbackLString { primary: { } innerPrimary, fallback: { } innerFallback })
             {
                 this.primary = innerPrimary;
@@ -35,7 +39,11 @@ namespace Barotrauma
         {
             cachedValue = primary.Value;
             PrimaryIsLoaded = primary.Loaded;
-            if (!primary.Loaded)
+
+            bool defaultLanguageFallbackAvailable = primary is TagLString { UsingDefaultLanguageAsFallback: true };
+
+            if (!primary.Loaded && 
+                (!defaultLanguageFallbackAvailable || !useDefaultLanguageIfFound))
             {
                 cachedValue = fallback.Value;
             }

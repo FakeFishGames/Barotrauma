@@ -632,7 +632,8 @@ namespace Barotrauma
                 }
 
                 IEnumerable<BackgroundMusic> suitableIntensityMusic = Enumerable.Empty<BackgroundMusic>();
-                if (targetMusic[mainTrackIndex] is { MuteIntensityTracks: false } mainTrack && Screen.Selected == GameMain.GameScreen)
+                BackgroundMusic mainTrack = targetMusic[mainTrackIndex];
+                if (mainTrack is not { MuteIntensityTracks: true } && Screen.Selected == GameMain.GameScreen)
                 {
                     float intensity = currentIntensity;
                     if (mainTrack?.ForceIntensityTrack != null)
@@ -770,11 +771,16 @@ namespace Barotrauma
         
         private static IEnumerable<BackgroundMusic> GetSuitableMusicClips(Identifier musicType, float currentIntensity)
         {
-            return musicClips.Where(music => 
-                music != null && 
-                music.Type == musicType && 
+            return musicClips.Where(music => IsSuitableMusicClip(music, musicType, currentIntensity));
+        }
+
+        private static bool IsSuitableMusicClip(BackgroundMusic music, Identifier musicType, float currentIntensity)
+        {
+            return
+                music != null &&
+                music.Type == musicType &&
                 currentIntensity >= music.IntensityRange.X &&
-                currentIntensity <= music.IntensityRange.Y);
+                currentIntensity <= music.IntensityRange.Y;
         }
 
         private static Identifier GetCurrentMusicType()
@@ -858,34 +864,41 @@ namespace Barotrauma
 
                 if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded".ToIdentifier(); }        
             }
-            
-            float enemyDistThreshold = 5000.0f;
 
-            if (targetSubmarine != null)
+            float intensity = (GameMain.GameSession?.EventManager?.MusicIntensity ?? 0) * 100.0f;
+            bool anyMonsterMusicAvailable =
+                musicClips.Any(m => IsSuitableMusicClip(m, "monster".ToIdentifier(), intensity) || IsSuitableMusicClip(m, "monsterambience".ToIdentifier(), intensity));
+
+            if (anyMonsterMusicAvailable)
             {
-                enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
-            }
-
-            foreach (Character character in Character.CharacterList)
-            {
-                if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || !enemyAI.Enabled || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
-
+                float enemyDistThreshold = 5000.0f;
                 if (targetSubmarine != null)
                 {
-                    if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
-                    {
-                        return "monster".ToIdentifier();
-                    }
+                    enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
                 }
-                else if (Character.Controlled != null)
+                foreach (Character character in Character.CharacterList)
                 {
-                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                    if (character.IsDead || !character.Enabled) { continue; }
+                    if (character.AIController is not EnemyAIController { Enabled: true } enemyAI) { continue; }
+                    if (!enemyAI.AttackHumans && !enemyAI.AttackRooms) { continue; }
+
+                    if (targetSubmarine != null)
                     {
-                        return "monster".ToIdentifier();
+                        if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                        {
+                            return "monster".ToIdentifier();
+                        }
+                    }
+                    else if (Character.Controlled != null)
+                    {
+                        if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                        {
+                            return "monster".ToIdentifier();
+                        }
                     }
                 }
             }
+
 
             if (GameMain.GameSession != null)
             {

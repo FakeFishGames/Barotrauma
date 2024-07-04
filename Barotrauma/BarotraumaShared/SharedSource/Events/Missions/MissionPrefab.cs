@@ -23,9 +23,9 @@ namespace Barotrauma
         Pirate = 0x200,
         GoTo = 0x400,
         ScanAlienRuins = 0x800,
-        ClearAlienRuins = 0x1000,
+        EliminateTargets = 0x1000,
         End = 0x2000,
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | ClearAlienRuins | End
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | EliminateTargets | End
     }
 
     partial class MissionPrefab : PrefabWithUintIdentifier
@@ -45,7 +45,7 @@ namespace Barotrauma
             { MissionType.Pirate, typeof(PirateMission) },
             { MissionType.GoTo, typeof(GoToMission) },
             { MissionType.ScanAlienRuins, typeof(ScanMission) },
-            { MissionType.ClearAlienRuins, typeof(AlienRuinMission) },
+            { MissionType.EliminateTargets, typeof(EliminateTargetsMission) },
             { MissionType.End, typeof(EndMission) }
         };
         public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
@@ -110,6 +110,7 @@ namespace Barotrauma
 
         public readonly int Reward;
 
+        // The titles and bodies of the popup messages during the mission, shown when the state of the mission changes. The order matters.
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
 
@@ -121,7 +122,7 @@ namespace Barotrauma
 
         public readonly bool AllowOtherMissionsInLevel;
 
-        public readonly bool RequireWreck, RequireRuin;
+        public readonly bool RequireWreck, RequireRuin, RequireThalamusWreck;
 
         /// <summary>
         /// If enabled, locations this mission takes place in cannot change their type
@@ -187,23 +188,25 @@ namespace Barotrauma
 
             Tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet();
 
-            string nameTag = element.GetAttributeString("name", "");
-            Name = TextManager.Get($"MissionName.{TextIdentifier}");
-            if (!string.IsNullOrEmpty(nameTag))
-            {
-                Name = Name
-                    .Fallback(TextManager.Get(nameTag))
-                    .Fallback(nameTag);
-            }
+            Name = GetText(element.GetAttributeString("name", ""), "MissionName");
+            Description = GetText(element.GetAttributeString("description", ""), "MissionDescription");
 
-            string descriptionTag = element.GetAttributeString("description", "");
-            Description =
-                TextManager.Get($"MissionDescription.{TextIdentifier}"); 
-            if (!string.IsNullOrEmpty(descriptionTag))
+            LocalizedString GetText(string textTag, string textTagPrefix)
             {
-                Description = Description
-                    .Fallback(TextManager.Get(descriptionTag))
-                    .Fallback(descriptionTag);
+                if (string.IsNullOrEmpty(textTag))
+                {
+                    return TextManager.Get($"{textTagPrefix}.{TextIdentifier}");
+                }
+                else
+                {
+                    return
+                        //prefer finding a text based on the specific text tag defined in the mission config
+                        TextManager.Get(textTag)
+                        //2nd option: the "default" format (MissionName.SomeMission)
+                        .Fallback(TextManager.Get($"{textTagPrefix}.{TextIdentifier}"))
+                        //last option: use the text in the xml as-is with no localization
+                        .Fallback(textTag);
+                }
             }
 
             Reward      = element.GetAttributeInt("reward", 1);
@@ -213,6 +216,10 @@ namespace Barotrauma
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
             RequireWreck = element.GetAttributeBool("requirewreck", false);
             RequireRuin = element.GetAttributeBool("requireruin", false);
+            RequireThalamusWreck = element.GetAttributeBool("requirethalamuswreck", false);
+
+            if (RequireThalamusWreck) { RequireWreck = true; }
+
             BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
             RequiredLocationFaction = element.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
             Commonness  = element.GetAttributeInt("commonness", 1);
@@ -357,11 +364,16 @@ namespace Barotrauma
 
             Identifier missionTypeName = element.GetAttributeIdentifier("type", Identifier.Empty);
             //backwards compatibility
-            if (missionTypeName == "outpostdestroy" || missionTypeName == "outpostrescue") 
-            {
-                missionTypeName = "AbandonedOutpost".ToIdentifier();
-            }
 
+            if (missionTypeName == "outpostdestroy" || missionTypeName == "outpostrescue")
+            {
+                missionTypeName = nameof(MissionType.AbandonedOutpost).ToIdentifier();
+            }
+            else if (missionTypeName == "clearalienruins")
+            {
+                missionTypeName = nameof(MissionType.EliminateTargets).ToIdentifier();
+            }
+            
             if (!Enum.TryParse(missionTypeName.Value, true, out Type))
             {
                 DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
@@ -372,6 +384,12 @@ namespace Barotrauma
                 DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
                 return;
             }
+#if DEBUG
+            if (Type == MissionType.Monster && SonarLabel.IsNullOrEmpty())
+            {
+                DebugConsole.AddWarning($"Potential error in mission prefab \"{Identifier}\" - sonar label not set.");
+            }
+#endif
 
             if (CoOpMissionClasses.ContainsKey(Type))
             {
@@ -425,19 +443,13 @@ namespace Barotrauma
                 }
             }
 
-            if (Type == MissionType.Beacon)
-            {
-                var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
-                if (connection?.LevelData == null || !connection.LevelData.HasBeaconStation || connection.LevelData.IsBeaconActive) { return false; }
-            }
-            else if (Type == MissionType.ScanAlienRuins || Type == MissionType.ClearAlienRuins)
-            {
-                var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
-                if (connection?.LevelData == null || connection.LevelData.GenerationParams.GetMaxRuinCount() < 1) { return false; }
-            }
-
             return false;
         }
+        
+        /// <summary>
+        /// Inclusive (matching the min an max values is accepted).
+        /// </summary>
+        public bool IsAllowedDifficulty(float difficulty) => difficulty >= MinLevelDifficulty && difficulty <= MaxLevelDifficulty;
 
         public Mission Instantiate(Location[] locations, Submarine sub)
         {

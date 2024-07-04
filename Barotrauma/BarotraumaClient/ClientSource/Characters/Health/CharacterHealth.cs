@@ -152,8 +152,7 @@ namespace Barotrauma
 
                 if (value == null &&
                     Character.Controlled?.SelectedCharacter?.CharacterHealth != null &&
-                    Character.Controlled.SelectedCharacter.CharacterHealth == prevOpenHealthWindow/* &&
-                    !Character.Controlled.SelectedCharacter.CanInventoryBeAccessed*/)
+                    Character.Controlled.SelectedCharacter.CharacterHealth == prevOpenHealthWindow)
                 {
                     Character.Controlled.DeselectCharacter();
                 }
@@ -858,8 +857,8 @@ namespace Barotrauma
                 foreach (GUIComponent component in recommendedTreatmentContainer.Content.Children)
                 {
                     var treatmentButton = component.GetChild<GUIButton>();
-                    if (!(treatmentButton?.UserData is ItemPrefab itemPrefab)) { continue; }
-                    var matchingItem = Character.Controlled.Inventory.FindItem(it => it.Prefab == itemPrefab, recursive: true);
+                    if (treatmentButton?.UserData is not ItemPrefab itemPrefab) { continue; }
+                    var matchingItem = AIObjectiveRescue.FindMedicalItem(Character.Controlled.Inventory, itemPrefab.Identifier);
                     treatmentButton.Enabled = matchingItem != null;  
                     if (treatmentButton.Enabled && treatmentButton.State == GUIComponent.ComponentState.Hover)
                     {
@@ -1387,7 +1386,6 @@ namespace Barotrauma
             //float = suitability
             Dictionary<Identifier, float> treatmentSuitability = new Dictionary<Identifier, float>();
             GetSuitableTreatments(treatmentSuitability,
-                normalize: true,
                 user: Character.Controlled,
                 ignoreHiddenAfflictions: true,
                 limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex));
@@ -1421,9 +1419,12 @@ namespace Barotrauma
             int count = 0;
             foreach (KeyValuePair<Identifier, float> treatment in treatmentSuitabilities)
             {
+                //don't list negative treatments
+                if (treatment.Value < 0) { continue; }
+
                 count++;
                 if (count > 5) { break; }
-                if (!(MapEntityPrefab.Find(name: null, identifier: treatment.Key, showErrorMessages: false) is ItemPrefab item)) { continue; }
+                if (MapEntityPrefab.FindByIdentifier(treatment.Key) is not ItemPrefab item) { continue; }
 
                 var itemSlot = new GUIFrame(new RectTransform(new Vector2(1.0f / 6.0f, 1.0f), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopLeft),
                     style: null)
@@ -1439,7 +1440,7 @@ namespace Barotrauma
                     OnClicked = (btn, userdata) =>
                     {
                         if (userdata is not ItemPrefab itemPrefab) { return false; }
-                        var item = Character.Controlled.Inventory.FindItem(it => it.Prefab == itemPrefab, recursive: true);
+                        var item = AIObjectiveRescue.FindMedicalItem(Character.Controlled.Inventory, it => it.Prefab == itemPrefab);
                         if (item == null) { return false; }
                         Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
                         item.ApplyTreatment(Character.Controlled, Character, targetLimb);

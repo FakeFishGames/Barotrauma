@@ -57,15 +57,14 @@ namespace Barotrauma
         };
         protected override IEnumerable<Identifier> NonActionChildElementNames => nonActionChildElementNames;
 
-        public TraitorEvent(TraitorEventPrefab prefab) : base(prefab)
+        public TraitorEvent(TraitorEventPrefab prefab, int seed) : base(prefab, seed)
         {
             this.prefab = prefab;
             codeWord = string.Empty;
         }
 
-        public override void Init(EventSet? parentSet = null)
+        protected override void InitEventSpecific(EventSet? parentSet = null)
         {
-            base.Init(parentSet);
             if (traitor == null)
             {
                 DebugConsole.ThrowError($"Error when initializing event \"{prefab.Identifier}\": traitor not set.\n" + Environment.StackTrace);

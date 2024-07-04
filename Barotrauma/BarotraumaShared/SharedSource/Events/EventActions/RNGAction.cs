@@ -1,12 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
-
 namespace Barotrauma
 {
+    /// <summary>
+    /// Randomly executes either of the child actions (Success or Failure).
+    /// </summary>
     class RNGAction : BinaryOptionAction
     {
-        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The probability of executing the Success actions. A value between 0-1.")]
         public float Chance { get; set; }
 
         public RNGAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 

@@ -1186,7 +1186,7 @@ namespace Barotrauma.Items.Components
             foreach (DockingPort dockingPort in DockingPort.List)
             {
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
-                if (dockingPort.Item.HiddenInGame) { continue; }
+                if (dockingPort.Item.IsHidden) { continue; }
                 if (dockingPort.Item.Submarine == null) { continue; }
                 if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
                 // docking ports should be shown even if defined as not, if the submarine is the same as the sonar's
@@ -1446,7 +1446,7 @@ namespace Barotrauma.Items.Components
                 //only relevant in the end levels or maybe custom subs with some kind of non-hulled parts
                 Rectangle worldBorders = submarine.GetDockedBorders();
                 worldBorders.Location += submarine.WorldPosition.ToPoint();
-                if (Submarine.RectContains(worldBorders, pingSource))
+                if (Submarine.RectContains(worldBorders, pingSource) || submarine.Info.OutpostGenerationParams is { AlwaysShowStructuresOnSonar: true })
                 {
                     CreateBlipsForSubmarineWalls(submarine, pingSource, transducerPos, pingRadius, prevPingRadius, range, passive);
                     continue;
@@ -1502,7 +1502,9 @@ namespace Barotrauma.Items.Components
                     foreach (Voronoi2.GraphEdge edge in cell.Edges)
                     {
                         if (!edge.IsSolid) { continue; }
-                        float cellDot = Vector2.Dot(cell.Center - pingSource, (edge.Center + cell.Translation) - cell.Center);
+                        
+                        //the normal of the edge must be pointing towards the ping source to be visible
+                        float cellDot = Vector2.Dot((edge.Center + cell.Translation) - pingSource, edge.GetNormal(cell));
                         if (cellDot > 0) { continue; }
 
                         float facingDot = Vector2.Dot(
@@ -1543,6 +1545,7 @@ namespace Barotrauma.Items.Components
             {
                 if (c.AnimController.CurrentHull != null || !c.Enabled) { continue; }
                 if (!c.IsUnconscious && c.Params.HideInSonar) { continue; }
+                if (c.InDetectable) { continue; }
                 if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
 
                 if (c.AnimController.SimplePhysicsEnabled)

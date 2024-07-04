@@ -15,7 +15,7 @@ namespace Barotrauma
         public DeformableSprite DeformableSprite { get; private set; }
         public Sprite ActiveSprite => Sprite ?? DeformableSprite.Sprite;
 
-        public ConditionalSprite(ContentXElement element, ISerializableEntity target, string file = "", bool lazyLoad = false)
+        public ConditionalSprite(ContentXElement element, ISerializableEntity target, string file = "", bool lazyLoad = false, float sourceRectScale = 1)
         {
             Target = target;
             Exclusive = element.GetAttributeBool("exclusive", Exclusive);
@@ -28,10 +28,10 @@ namespace Barotrauma
                         conditionals.AddRange(PropertyConditional.FromXElement(subElement));
                         break;
                     case "sprite":
-                        Sprite = new Sprite(subElement, file: file, lazyLoad: lazyLoad);
+                        Sprite = new Sprite(subElement, file: file, lazyLoad: lazyLoad, sourceRectScale: sourceRectScale);
                         break;
                     case "deformablesprite":
-                        DeformableSprite = new DeformableSprite(subElement, filePath: file, lazyLoad: lazyLoad);
+                        DeformableSprite = new DeformableSprite(subElement, filePath: file, lazyLoad: lazyLoad, sourceRectScale: sourceRectScale);
                         break;
                 }
             }

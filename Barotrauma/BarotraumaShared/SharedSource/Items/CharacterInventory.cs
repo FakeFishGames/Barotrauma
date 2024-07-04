@@ -15,6 +15,19 @@ namespace Barotrauma
 
     partial class CharacterInventory : Inventory
     {
+        /// <summary>
+        /// How much access other characters have to the inventory?
+        /// <see cref="Restricted"/> = Only accessible when character is knocked down or handcuffed.
+        /// <see cref="Limited"/> = Can also access inventories of bots on the same team and friendly pets.
+        /// <see cref="Allowed"/> = Can also access other players in the same team (used for drag and drop give).
+        /// </summary>
+        public enum AccessLevel
+        {
+            Restricted,
+            Limited,
+            Allowed
+        }
+        
         private readonly Character character;
 
         public InvSlotType[] SlotTypes
@@ -22,8 +35,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-
+        
         public static readonly List<InvSlotType> AnySlot = new List<InvSlotType>() { InvSlotType.Any };
 
         public static bool IsHandSlotType(InvSlotType s) => s.HasFlag(InvSlotType.LeftHand) || s.HasFlag(InvSlotType.RightHand);
@@ -546,6 +558,7 @@ namespace Barotrauma
             {
                 item.AssignCampaignInteractionType(CampaignMode.InteractionType.None);
             }
+            item.Equipper = user;            
         }
 
         protected override void CreateNetworkEvent(Range slotRange)

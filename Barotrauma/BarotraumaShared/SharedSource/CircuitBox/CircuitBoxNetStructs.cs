@@ -8,6 +8,19 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
+    [Flags]
+    internal enum CircuitBoxResizeDirection
+    {
+        None = 0,
+        Down = 1,
+        Right = 2,
+        Left = 4
+    }
+
+    // TODO this needs to be refactored at some point for reasons:
+    // 1. We need to send 4 different ImmutableArray<short> for some network packets
+    // 2. We have 3 identical remove events that are identical in signature
+    // 3. We have 3 different events for selecting. nodes, wires, and server broadcast
     public enum CircuitBoxOpcode
     {
         Error,
@@ -20,6 +33,11 @@ namespace Barotrauma
         SelectWires,
         UpdateSelection,
         DeleteComponent,
+        RenameLabel,
+        AddLabel,
+        RemoveLabel,
+        ResizeLabel,
+        RenameConnections,
         ServerInitialize
     }
 
@@ -89,6 +107,18 @@ namespace Barotrauma
     }
 
     [NetworkSerialize]
+    internal readonly record struct CircuitBoxAddLabelEvent(Vector2 Position, Color Color, NetLimitedString Header, NetLimitedString Body) : INetSerializableStruct;
+
+    [NetworkSerialize]
+    internal readonly record struct CircuitBoxServerAddLabelEvent(ushort ID, Vector2 Position, Vector2 Size, Color Color, NetLimitedString Header, NetLimitedString Body) : INetSerializableStruct;
+
+    [NetworkSerialize]
+    internal readonly record struct CircuitBoxResizeLabelEvent(ushort ID, Vector2 Position, Vector2 Size) : INetSerializableStruct;
+
+    [NetworkSerialize]
+    internal readonly record struct CircuitBoxRemoveLabelEvent(ImmutableArray<ushort> TargetIDs) : INetSerializableStruct;
+
+    [NetworkSerialize]
     internal readonly record struct CircuitBoxAddComponentEvent(UInt32 PrefabIdentifier, Vector2 Position) : INetSerializableStruct;
 
     [NetworkSerialize]
@@ -98,13 +128,13 @@ namespace Barotrauma
     internal readonly record struct CircuitBoxRemoveComponentEvent(ImmutableArray<ushort> TargetIDs) : INetSerializableStruct;
 
     [NetworkSerialize]
-    internal readonly record struct CircuitBoxMoveComponentEvent(ImmutableArray<ushort> TargetIDs, ImmutableArray<CircuitBoxInputOutputNode.Type> IOs, Vector2 MoveAmount) : INetSerializableStruct;
+    internal readonly record struct CircuitBoxMoveComponentEvent(ImmutableArray<ushort> TargetIDs, ImmutableArray<CircuitBoxInputOutputNode.Type> IOs, ImmutableArray<ushort> LabelIDs, Vector2 MoveAmount) : INetSerializableStruct;
 
     [NetworkSerialize]
-    internal readonly record struct CircuitBoxSelectNodesEvent(ImmutableArray<ushort> TargetIDs, ImmutableArray<CircuitBoxInputOutputNode.Type> IOs, bool Overwrite, ushort CharacterID) : INetSerializableStruct;
+    internal readonly record struct CircuitBoxSelectNodesEvent(ImmutableArray<ushort> TargetIDs, ImmutableArray<CircuitBoxInputOutputNode.Type> IOs, ImmutableArray<ushort> LabelIDs, bool Overwrite, ushort CharacterID) : INetSerializableStruct;
 
     [NetworkSerialize]
-    internal readonly record struct CircuitBoxServerUpdateSelection(ImmutableArray<CircuitBoxIdSelectionPair> ComponentIds, ImmutableArray<CircuitBoxIdSelectionPair> WireIds, ImmutableArray<CircuitBoxTypeSelectionPair> InputOutputs) : INetSerializableStruct;
+    internal readonly record struct CircuitBoxServerUpdateSelection(ImmutableArray<CircuitBoxIdSelectionPair> ComponentIds, ImmutableArray<CircuitBoxIdSelectionPair> WireIds, ImmutableArray<CircuitBoxTypeSelectionPair> InputOutputs, ImmutableArray<CircuitBoxIdSelectionPair> LabelIds) : INetSerializableStruct;
 
     [NetworkSerialize]
     internal readonly record struct CircuitBoxIdSelectionPair(ushort ID, Option<ushort> SelectedBy) : INetSerializableStruct;
@@ -125,12 +155,21 @@ namespace Barotrauma
     internal readonly record struct CircuitBoxRemoveWireEvent(ImmutableArray<ushort> TargetIDs) : INetSerializableStruct;
 
     [NetworkSerialize]
+    internal readonly record struct CircuitBoxRenameLabelEvent(ushort LabelId, Color Color, NetLimitedString NewHeader, NetLimitedString NewBody) : INetSerializableStruct;
+
+    [NetworkSerialize]
+    internal readonly record struct CircuitBoxRenameConnectionLabelsEvent(CircuitBoxInputOutputNode.Type Type, NetDictionary<string, string> Override) : INetSerializableStruct;
+
+
+    [NetworkSerialize]
     internal readonly record struct CircuitBoxErrorEvent(string Message) : INetSerializableStruct;
 
     [NetworkSerialize]
     internal readonly record struct CircuitBoxInitializeStateFromServerEvent(
         ImmutableArray<CircuitBoxServerCreateComponentEvent> Components,
         ImmutableArray<CircuitBoxServerCreateWireEvent> Wires,
+        ImmutableArray<CircuitBoxServerAddLabelEvent> Labels,
+        ImmutableArray<CircuitBoxRenameConnectionLabelsEvent> LabelOverrides,
         Vector2 InputPos,
         Vector2 OutputPos) : INetSerializableStruct;
 
@@ -157,6 +196,16 @@ namespace Barotrauma
                     => CircuitBoxOpcode.RemoveWire,
                 CircuitBoxInitializeStateFromServerEvent
                     => CircuitBoxOpcode.ServerInitialize,
+                CircuitBoxRenameLabelEvent
+                    => CircuitBoxOpcode.RenameLabel,
+                (CircuitBoxAddLabelEvent or CircuitBoxServerAddLabelEvent)
+                    => CircuitBoxOpcode.AddLabel,
+                CircuitBoxRemoveLabelEvent
+                    => CircuitBoxOpcode.RemoveLabel,
+                CircuitBoxResizeLabelEvent
+                    => CircuitBoxOpcode.ResizeLabel,
+                CircuitBoxRenameConnectionLabelsEvent
+                    => CircuitBoxOpcode.RenameConnections,
                 _ => throw new ArgumentOutOfRangeException(nameof(Data))
             };
     }

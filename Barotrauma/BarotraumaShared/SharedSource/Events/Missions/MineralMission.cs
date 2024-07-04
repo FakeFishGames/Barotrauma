@@ -259,7 +259,7 @@ namespace Barotrauma
             }
             else if (owner is Character c)
             {
-                return c.Info != null && GameMain.GameSession.CrewManager.CharacterInfos.Contains(c.Info);
+                return c.Info != null && GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(c.Info);
             }
             return false;
         }

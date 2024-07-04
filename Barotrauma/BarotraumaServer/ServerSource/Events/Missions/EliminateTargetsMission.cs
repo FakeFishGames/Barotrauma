@@ -2,7 +2,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    partial class AlienRuinMission : Mission
+    partial class EliminateTargetsMission : Mission
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {

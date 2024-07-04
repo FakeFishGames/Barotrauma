@@ -3,16 +3,19 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Barotrauma
 {
-    abstract partial class CampaignMode : GameMode
+    internal abstract partial class CampaignMode : GameMode
     {
-        protected bool crewDead;
+        public bool CrewDead
+        {
+            get; 
+            protected set;
+        }
 
         protected Color overlayColor;
         protected Sprite overlaySprite;
@@ -251,7 +254,7 @@ namespace Barotrauma
                     buttonText = TextManager.Get("map"); 
                 }
                 else if (prevCampaignUIAutoOpenType != availableTransition && 
-                        (availableTransition == TransitionType.ProgressToNextEmptyLocation || availableTransition == TransitionType.ReturnToPreviousEmptyLocation))
+                        availableTransition == TransitionType.ProgressToNextEmptyLocation)
                 {
                     HintManager.OnAvailableTransition(availableTransition);
                     //opening the campaign map pauses the game and prevents HintManager from running -> update it manually to get the hint to show up immediately
@@ -341,18 +344,6 @@ namespace Barotrauma
             }
         }
 
-        protected SubmarineInfo GetPredefinedStartOutpost()
-        {
-            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && !parameters.OutpostFilePath.IsNullOrEmpty())
-            {
-                return new SubmarineInfo(parameters.OutpostFilePath.Value)
-                {
-                    OutpostGenerationParams = parameters
-                };
-            }
-            return null;
-        }
-
         partial void NPCInteractProjSpecific(Character npc, Character interactor)
         {
             if (npc == null || interactor == null) { return; }
@@ -367,7 +358,7 @@ namespace Barotrauma
                     UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade").Value, IsSinglePlayer, npc);
                     return;
                 case InteractionType.Crew when GameMain.NetworkMember != null:
-                    CampaignUI.CrewManagement.SendCrewState(false);
+                    CampaignUI.HRManagerUI.SendCrewState(false);
                     goto default;
                 case InteractionType.MedicalClinic:
                     CampaignUI.MedicalClinic.RequestLatestPending();

@@ -238,8 +238,7 @@ namespace Barotrauma
                     foreach (Hull hull in Hull.HullList)
                     {
                         if (hull.Submarine != sub) { continue; }
-                        if (string.IsNullOrEmpty(hull.RoomName) || 
-                            hull.RoomName.Contains("RoomName.", StringComparison.OrdinalIgnoreCase))
+                        if (string.IsNullOrEmpty(hull.RoomName))
                         {
                             hull.RoomName = hull.CreateRoomName();
                         }
@@ -877,16 +876,16 @@ namespace Barotrauma
                 }
             }
 
-            if (availableModules.Count() == 0) { return null; }
+            if (!availableModules.Any()) { return null; }
 
             //try to search for modules made specifically for this location type first
             var modulesSuitableForLocationType =
-                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
+                availableModules.Where(m => m.OutpostModuleInfo.IsAllowedInLocationType(locationType));
 
             //if not found, search for modules suitable for any location type
             if (!modulesSuitableForLocationType.Any())
             {
-                modulesSuitableForLocationType = availableModules.Where(m => !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+                modulesSuitableForLocationType = availableModules.Where(m => m.OutpostModuleInfo.IsAllowedInAnyLocationType());
             }
 
             if (!modulesSuitableForLocationType.Any())
@@ -956,11 +955,12 @@ namespace Barotrauma
                 {
                     if (disallowNonLocationTypeSpecific)
                     {
+                        //don't use OutpostModuleInfo.IsLocationTypeAllowed here - we're trying to choose a module specifically for this location type, not modules suitable for any location type
                         suitable = modules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
                     }
                     else
                     {
-                        suitable = modules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier) || !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+                        suitable = modules.Where(m => m.OutpostModuleInfo.IsAllowedInLocationType(locationType));
                     }
                 }
                 if (requireAllowAttachToPrevious && prevModule != null)

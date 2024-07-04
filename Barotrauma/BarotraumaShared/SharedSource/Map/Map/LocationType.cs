@@ -18,7 +18,7 @@ namespace Barotrauma
         private readonly ImmutableArray<Sprite> portraits;
 
         //<name, commonness>
-        private readonly ImmutableArray<(Identifier Name, float Commonness)> hireableJobs;
+        private readonly ImmutableArray<(Identifier Identifier, float Commonness, bool AlwaysAvailableIfMissingFromCrew)> hireableJobs;
         private readonly float totalHireableWeight;
 
         public readonly Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
@@ -86,6 +86,16 @@ namespace Barotrauma
 
         public Identifier ReplaceInRadiation { get; }
 
+        /// <summary>
+        /// If set, forces the location to be assigned to this faction. Set to "None" if you don't want the location to be assigned to any faction.
+        /// </summary>
+        public Identifier Faction { get; }
+
+        /// <summary>
+        /// If set, forces the location to be assigned to this secondary faction. Set to "None" if you don't want the location to be assigned to any secondary faction.
+        /// </summary>
+        public Identifier SecondaryFaction { get; }
+
         public Sprite Sprite { get; private set; }
         public Sprite RadiationSprite { get; }
 
@@ -133,6 +143,9 @@ namespace Barotrauma
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
             AllowAsBiomeGate = element.GetAttributeBool(nameof(AllowAsBiomeGate), true);
             AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
+
+            Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
+            SecondaryFaction = element.GetAttributeIdentifier(nameof(SecondaryFaction), Identifier.Empty);
 
             ShowSonarMarker = element.GetAttributeBool("showsonarmarker", true);
 
@@ -213,7 +226,7 @@ namespace Barotrauma
                 MinCountPerZone[zoneIndex] = minCount;
             }
             var portraits = new List<Sprite>();
-            var hireableJobs = new List<(Identifier, float)>();
+            var hireableJobs = new List<(Identifier, float, bool)>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -221,8 +234,9 @@ namespace Barotrauma
                     case "hireable":
                         Identifier jobIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
+                        bool availableIfMissing = subElement.GetAttributeBool("AlwaysAvailableIfMissingFromCrew", false);
                         totalHireableWeight += jobCommonness;
-                        hireableJobs.Add((jobIdentifier, jobCommonness));
+                        hireableJobs.Add((jobIdentifier, jobCommonness, availableIfMissing));
                         break;
                     case "symbol":
                         Sprite = new Sprite(subElement, lazyLoad: true);
@@ -257,16 +271,33 @@ namespace Barotrauma
             this.hireableJobs = hireableJobs.ToImmutableArray();
         }
 
+        public IEnumerable<JobPrefab> GetHireablesMissingFromCrew()
+        {
+            if (GameMain.GameSession?.CrewManager != null)
+            {
+                var missingJobs = hireableJobs
+                    .Where(j => j.AlwaysAvailableIfMissingFromCrew)
+                    .Where(j => GameMain.GameSession.CrewManager.GetCharacterInfos().None(c => c.Job?.Prefab.Identifier == j.Identifier));
+                if (missingJobs.Any())
+                {
+                    foreach (var missingJob in missingJobs)
+                    {
+                        if (JobPrefab.Prefabs.TryGet(missingJob.Identifier, out JobPrefab job))
+                        {
+                            yield return job;
+                        }
+                    }
+                }
+            }
+        }
+
         public JobPrefab GetRandomHireable()
         {
-            float randFloat = Rand.Range(0.0f, totalHireableWeight, Rand.RandSync.ServerAndClient);
-
-            foreach ((Identifier jobIdentifier, float commonness) in hireableJobs)
+            Identifier selectedJobId = hireableJobs.GetRandomByWeight(j => j.Commonness, Rand.RandSync.ServerAndClient).Identifier;
+            if (JobPrefab.Prefabs.TryGet(selectedJobId, out JobPrefab job))
             {
-                if (randFloat < commonness) { return JobPrefab.Prefabs[jobIdentifier]; }
-                randFloat -= commonness;
+                return job;
             }
-
             return null;
         }
 

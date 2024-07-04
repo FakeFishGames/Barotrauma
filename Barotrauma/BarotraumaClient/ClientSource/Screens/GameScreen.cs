@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -177,10 +177,15 @@ namespace Barotrauma
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            GameMain.LightManager.ObstructVision = 
-                Character.Controlled != null && 
-                Character.Controlled.ObstructVision && 
-                (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null);
+            if (Character.Controlled != null && 
+                (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null))
+            {
+                GameMain.LightManager.ObstructVisionAmount = Character.Controlled.ObstructVisionAmount;
+            }
+            else
+            {
+                GameMain.LightManager.ObstructVisionAmount = 0.0f;
+            }
 
             GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled?.CursorWorldPosition ?? Vector2.Zero);
 
@@ -517,6 +522,8 @@ namespace Barotrauma
                 PostProcessEffect.CurrentTechnique.Passes[0].Apply();
             }
             GraphicsQuad.Render();
+
+            Character.DrawSpeechBubbles(spriteBatch, cam);
 
             if (fadeToBlackState > 0.0f)
             {

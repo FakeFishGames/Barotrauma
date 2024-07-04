@@ -22,11 +22,7 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.SpeciesName);
-                    if (!character.VariantOf.IsEmpty)
-                    {
-                        _ragdollParams.ApplyVariantScale(character.Params.VariantFile);
-                    }
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character);
                 }
                 return _ragdollParams;
             }
@@ -133,7 +129,7 @@ namespace Barotrauma
 
         public FishAnimController(Character character, string seed, FishRagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 
-        public override void UpdateAnim(float deltaTime)
+        protected override void UpdateAnim(float deltaTime)
         {
             //wait a bit for the ragdoll to "settle" (for joints to force the limbs to appropriate positions) before starting to animate
             if (Timing.TotalTime - character.SpawnTime < 0.1f) { return; }
@@ -145,7 +141,7 @@ namespace Barotrauma
             }
             var mainLimb = MainLimb;
 
-            levitatingCollider = !IsHanging;
+            levitatingCollider = !IsHangingWithRope;
 
             if (!character.CanMove)
             {
@@ -158,7 +154,10 @@ namespace Barotrauma
                     Collider.SetTransformIgnoreContacts(mainLimb.SimPosition, mainLimb.Rotation);
                     //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
                     //(except when dragging, then we need the pull joints)
-                    if (!character.CanBeDragged || character.SelectedBy == null) { ResetPullJoints(); }
+                    if (!Draggable || character.SelectedBy == null)
+                    {
+                        ResetPullJoints();
+                    }
                 }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
@@ -1011,15 +1010,7 @@ namespace Barotrauma
         {
             //make sure the angle "has the same number of revolutions" as the reference limb
             //(e.g. we don't want to rotate the legs to 0 if the torso is at 360, because that'd blow up the hip joints) 
-            while (referenceLimb.Rotation - angle > MathHelper.TwoPi)
-            {
-                angle += MathHelper.TwoPi;
-            }
-            while (referenceLimb.Rotation - angle < -MathHelper.TwoPi)
-            {
-                angle -= MathHelper.TwoPi;
-            }
-
+            angle = referenceLimb.body.WrapAngleToSameNumberOfRevolutions(angle);
             limb?.body.SmoothRotate(angle, torque, wrapAngle: false);
         }
 

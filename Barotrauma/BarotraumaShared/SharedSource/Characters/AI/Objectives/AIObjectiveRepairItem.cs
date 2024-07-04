@@ -10,9 +10,9 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "repair item".ToIdentifier();
 
-        public override bool AllowInFriendlySubs => true;
+        protected override bool AllowInFriendlySubs => true;
         public override bool KeepDivingGearOn => Item?.CurrentHull == null;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public Item Item { get; private set; }
 
@@ -37,7 +37,7 @@ namespace Barotrauma
 
         protected override float GetPriority()
         {
-            if (!IsAllowed) { HandleNonAllowed(); }
+            if (!IsAllowed) { HandleDisallowed(); }
             if (Item.IgnoreByAI(character))
             {
                 Abandon = true;
@@ -64,10 +64,7 @@ namespace Barotrauma
                 float distanceFactor = 1;
                 if (!isPriority && Item.CurrentHull != character.CurrentHull)
                 {
-                    float yDist = Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y);
-                    yDist = yDist > 100 ? yDist * 5 : 0;
-                    float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
-                    distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 4000, dist));
+                    distanceFactor = GetDistanceFactor(Item.WorldPosition, factorAtMaxDistance: 0.25f, verticalDistanceMultiplier: 5, maxDistance: 4000);
                 }
                 float requiredSuccessFactor = objectiveManager.HasOrder<AIObjectiveRepairItems>() ? 0 : AIObjectiveRepairItems.RequiredSuccessFactor;
                 float severity = isPriority ? 1 : AIObjectiveRepairItems.GetTargetPriority(Item, character, requiredSuccessFactor) / 100;
@@ -113,7 +110,7 @@ namespace Barotrauma
                 if (!repairable.HasRequiredItems(character, false))
                 {
                     //make sure we have all the items required to fix the target item
-                    foreach (var kvp in repairable.requiredItems)
+                    foreach (var kvp in repairable.RequiredItems)
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
@@ -140,7 +137,7 @@ namespace Barotrauma
             }
             if (repairTool != null)
             {
-                if (repairTool.requiredItems.TryGetValue(RelatedItem.RelationType.Contained, out var requiredItems))
+                if (repairTool.RequiredItems.TryGetValue(RelatedItem.RelationType.Contained, out var requiredItems))
                 {
                     if (repairTool.Item.OwnInventory == null)
                     {
@@ -282,7 +279,7 @@ namespace Barotrauma
         {
             foreach (Repairable repairable in Item.Repairables)
             {
-                foreach (var kvp in repairable.requiredItems)
+                foreach (var kvp in repairable.RequiredItems)
                 {
                     foreach (RelatedItem requiredItem in kvp.Value)
                     {

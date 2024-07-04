@@ -1,5 +1,8 @@
 namespace Barotrauma;
 
+/// <summary>
+/// Checks the state of an Objective created using <see cref="EventObjectiveAction"/>.
+/// </summary>
 partial class CheckObjectiveAction : BinaryOptionAction
 {
     public CheckObjectiveAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

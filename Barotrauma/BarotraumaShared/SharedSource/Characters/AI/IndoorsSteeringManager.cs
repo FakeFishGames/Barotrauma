@@ -492,14 +492,20 @@ namespace Barotrauma
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 5, 0, 1));
                 float colliderHeight = collider.Height / 2 + collider.Radius;
-                float heightDiff = currentPath.CurrentNode.SimPosition.Y - collider.SimPosition.Y;
-                if (heightDiff < colliderHeight)
+                if (currentPath.CurrentNode.Stairs == null)
                 {
-                    //the waypoint is between the top and bottom of the collider, no need to move vertically.
-                    diff.Y = 0.0f;
+                    float heightDiff = currentPath.CurrentNode.SimPosition.Y - collider.SimPosition.Y;
+                    if (heightDiff < colliderHeight)
+                    {
+                        // Original comment:
+                        //the waypoint is between the top and bottom of the collider, no need to move vertically.
+                        // Note that the waypoint can be below collider too! This might be incorrect.
+                        diff.Y = 0.0f;
+                    }
                 }
-                if (currentPath.CurrentNode.Stairs != null)
+                else
                 {
+                    // In stairs
                     bool isNextNodeInSameStairs = currentPath.NextNode?.Stairs == currentPath.CurrentNode.Stairs;
                     if (!isNextNodeInSameStairs)
                     {
@@ -883,7 +889,18 @@ namespace Barotrauma
             //steer away from edges of the hull
             bool wander = false;
             bool inWater = character.AnimController.InWater;
-            var currentHull = character.CurrentHull;
+            Hull currentHull = character.CurrentHull;
+            // TODO: disabled for now, because seems to cause bots to walk towards walls/doors in some places. In some places it's because how the hulls are defined, but there is probably something else too, is it seems to happen also elsewhere.
+            // if (!inWater)
+            // {
+            //     Vector2 colliderBottomPos = ConvertUnits.ToDisplayUnits(character.AnimController.GetColliderBottom());
+            //     if (Hull.FindHull(colliderBottomPos, guess: currentHull, useWorldCoordinates: false) is Hull lowestHull)
+            //     {
+            //         // Use the hull found at the collider bottom, if found.
+            //         // Makes difference in some rooms that have multiple hulls, of which the lowest hull where the feet are might not be the same as where the center position of the main collider is.
+            //         currentHull = lowestHull;
+            //     }
+            // }
             if (currentHull != null && !inWater)
             {
                 float roomWidth = currentHull.Rect.Width;

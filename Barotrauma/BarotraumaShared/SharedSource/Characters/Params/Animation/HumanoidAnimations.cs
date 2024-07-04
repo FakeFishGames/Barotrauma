@@ -5,9 +5,9 @@ namespace Barotrauma
     class HumanWalkParams : HumanGroundedParams
     {
         public static HumanWalkParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanWalkParams>(character, AnimationType.Walk);
-        public static HumanWalkParams GetAnimParams(Character character, string fileName = null)
+        public static HumanWalkParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return GetAnimParams<HumanWalkParams>(character.SpeciesName, AnimationType.Walk, fileName);
+            return GetAnimParams<HumanWalkParams>(character, AnimationType.Walk, file, throwErrors);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<HumanWalkParams>();
@@ -16,9 +16,9 @@ namespace Barotrauma
     class HumanRunParams : HumanGroundedParams
     {
         public static HumanRunParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanRunParams>(character, AnimationType.Run);
-        public static HumanRunParams GetAnimParams(Character character, string fileName = null)
+        public static HumanRunParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return GetAnimParams<HumanRunParams>(character.SpeciesName, AnimationType.Run, fileName);
+            return GetAnimParams<HumanRunParams>(character, AnimationType.Run, file, throwErrors);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<HumanRunParams>();
@@ -36,9 +36,9 @@ namespace Barotrauma
         public float ExtraTorsoAngleWhenStationary { get; set; }
 
         public static HumanCrouchParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanCrouchParams>(character, AnimationType.Crouch);
-        public static HumanCrouchParams GetAnimParams(Character character, string fileName = null)
+        public static HumanCrouchParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return GetAnimParams<HumanCrouchParams>(character.SpeciesName, AnimationType.Crouch, fileName);
+            return GetAnimParams<HumanCrouchParams>(character, AnimationType.Crouch, file, throwErrors);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<HumanCrouchParams>();
@@ -47,9 +47,9 @@ namespace Barotrauma
     class HumanSwimFastParams: HumanSwimParams
     {
         public static HumanSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimFastParams>(character, AnimationType.SwimFast);
-        public static HumanSwimFastParams GetAnimParams(Character character, string fileName = null)
+        public static HumanSwimFastParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return GetAnimParams<HumanSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
+            return GetAnimParams<HumanSwimFastParams>(character, AnimationType.SwimFast, file, throwErrors);
         }
 
 
@@ -59,9 +59,9 @@ namespace Barotrauma
     class HumanSwimSlowParams : HumanSwimParams
     {
         public static HumanSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimSlowParams>(character, AnimationType.SwimSlow);
-        public static HumanSwimSlowParams GetAnimParams(Character character, string fileName = null)
+        public static HumanSwimSlowParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return GetAnimParams<HumanSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
+            return GetAnimParams<HumanSwimSlowParams>(character, AnimationType.SwimSlow, file, throwErrors);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<HumanSwimSlowParams>();
@@ -69,20 +69,12 @@ namespace Barotrauma
 
     abstract class HumanSwimParams : SwimParams, IHumanAnimation
     {
+        [Header("Legs")]
         [Serialize(0.5f, IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
         public float LegMoveAmount { get; set; }
 
         [Serialize(5.0f, IsPropertySaveable.Yes), Editable]
         public float LegCycleLength { get; set; }
-
-        [Serialize("0.5, 0.1", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
-        public Vector2 HandMoveAmount { get; set; }
-
-        [Serialize(5.0f, IsPropertySaveable.Yes), Editable]
-        public float HandCycleSpeed { get; set; }
-
-        [Serialize("0.0, 0.0", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
-        public Vector2 HandMoveOffset { get; set; }
 
         /// <summary>
         /// In degrees.
@@ -96,7 +88,18 @@ namespace Barotrauma
                 FootAngleInRadians = MathHelper.ToRadians(value);
             }
         }
+
         public float FootAngleInRadians { get; private set; }
+
+        [Header("Arms")]
+        [Serialize("0.5, 0.1", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
+        public Vector2 HandMoveAmount { get; set; }
+
+        [Serialize(5.0f, IsPropertySaveable.Yes), Editable]
+        public float HandCycleSpeed { get; set; }
+
+        [Serialize("0.0, 0.0", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
+        public Vector2 HandMoveOffset { get; set; }
 
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the arms."), Editable(MinValueFloat = 0, MaxValueFloat = 20, DecimalCount = 2)]
         public float ArmMoveStrength { get; set; }
@@ -104,12 +107,14 @@ namespace Barotrauma
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
 
+        [Header("Other")]
         [Serialize(true, IsPropertySaveable.Yes, description: "Is the head angle fixed or does the angle follow the mouse position?"), Editable]
         public bool FixedHeadAngle { get; set; }
     }
 
     abstract class HumanGroundedParams : GroundedMovementParams, IHumanAnimation
     {
+        [Header("Standing")]
         [Serialize(0.3f, IsPropertySaveable.Yes, description: "How much force is used to force the character upright."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float GetUpForce { get; set; }
 
@@ -119,11 +124,19 @@ namespace Barotrauma
         [Serialize(0.25f, IsPropertySaveable.Yes, description: "How much the character's torso leans forwards when moving."), Editable(DecimalCount = 2)]
         public float TorsoLeanAmount { get; set; }
 
+        [Header("Legs")]
         [Serialize(15.0f, IsPropertySaveable.Yes, description: "How much force is used to move the feet to the correct position."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float FootMoveStrength { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "How much the horizontal difference of waist and the foot positions has an effect to lifting the foot."), Editable(DecimalCount = 2, ValueStep = 0.1f, MinValueFloat = 0f, MaxValueFloat = 1f)]
         public float FootLiftHorizontalFactor { get; set; }
+
+        [Serialize("0,0", IsPropertySaveable.Yes, description: "Normally the character's feet are positioned at a scaled-down version of it's normal step position - this can be used to override that value if you want to e.g. make the character to spread out it's feet more when standing."), Editable(DecimalCount = 2, ValueStep = 0.01f)]
+        public Vector2 StepSizeWhenStanding
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// In degrees.
@@ -145,6 +158,7 @@ namespace Barotrauma
         [Serialize(10.0f, IsPropertySaveable.Yes, description: "How much torque is used to bend the characters legs when taking a step."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float LegBendTorque { get; set; }
 
+        [Header("Arms")]
         [Serialize("0.4, 0.15", IsPropertySaveable.Yes, description: "How much the hands move along each axis."), Editable(DecimalCount = 2)]
         public Vector2 HandMoveAmount { get; set; }
 
@@ -160,6 +174,7 @@ namespace Barotrauma
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
 
+        [Header("Other")]
         [Serialize(true, IsPropertySaveable.Yes, description: "Is the head angle fixed or does the angle follow the mouse position?"), Editable]
         public bool FixedHeadAngle { get; set; }
     }

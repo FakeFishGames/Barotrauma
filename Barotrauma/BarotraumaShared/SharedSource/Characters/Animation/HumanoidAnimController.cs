@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
-        private const float SteepestWalkableSlopeAngleDegrees = 50f;
+        private const float SteepestWalkableSlopeAngleDegrees = 55f;
         private const float SlowlyWalkableSlopeAngleDegrees = 30f;
 
         private static readonly float SteepestWalkableSlopeNormalX =
@@ -20,6 +20,8 @@ namespace Barotrauma
 
         private const float MaxSpeedOnStairs = 1.7f;
         private const float SteepSlopePushMagnitude = MaxSpeedOnStairs;
+
+        public const float BreakFromGrabDistance = 1.4f;
 
         public override RagdollParams RagdollParams
         {
@@ -36,7 +38,7 @@ namespace Barotrauma
                 {
                     if (_ragdollParams == null)
                     {
-                        _ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(character.SpeciesName);
+                        _ragdollParams = HumanRagdollParams.GetDefaultRagdollParams(character);
                     }
                     return _ragdollParams;
                 }
@@ -248,12 +250,12 @@ namespace Barotrauma
                 GetLimb(footType).PullJointLocalAnchorA);
         }
 
-        public override void UpdateAnim(float deltaTime)
+        protected override void UpdateAnim(float deltaTime)
         {
             if (Frozen) { return; }
             if (MainLimb == null) { return; }
 
-            levitatingCollider = !IsHanging;
+            levitatingCollider = !IsHangingWithRope;
             if (onGround && character.CanMove)
             {
                 if ((character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
@@ -309,7 +311,10 @@ namespace Barotrauma
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
                     //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
                     //(except when dragging, then we need the pull joints)
-                    if (!character.CanBeDragged || character.SelectedBy == null) { ResetPullJoints(); }
+                    if (!Draggable || character.SelectedBy == null)
+                    {
+                        ResetPullJoints();
+                    }
                 }
                 return;
             }
@@ -396,7 +401,9 @@ namespace Barotrauma
             if (SimplePhysicsEnabled)
             {
                 UpdateStandingSimple();
-                IsHanging = false;
+                StopHangingWithRope();
+                StopHoldingToRope();
+                StopGettingDraggedWithRope();
                 return;
             }
 
@@ -490,7 +497,21 @@ namespace Barotrauma
             aiming = false;
             wasAimingMelee = aimingMelee;
             aimingMelee = false;
-            IsHanging = IsHanging && character.IsRagdolled;
+            if (!shouldHangWithRope)
+            {
+                StopHangingWithRope();
+            }
+            if (!shouldHoldToRope)
+            {
+                StopHoldingToRope();
+            }
+            if (!shouldBeDraggedWithRope)
+            {
+                StopGettingDraggedWithRope();
+            }
+            shouldHoldToRope = false;
+            shouldHangWithRope = false;
+            shouldBeDraggedWithRope = false;
         }
 
         void UpdateStanding()
@@ -686,6 +707,16 @@ namespace Barotrauma
 
             if (!onGround)
             {
+                const float MaxFootVelocityDiff = 5.0f;
+                const float MaxFootVelocityDiffSqr = MaxFootVelocityDiff * MaxFootVelocityDiff;
+                //if the feet have a significantly different velocity from the main limb, try moving them back to a neutral pose below the torso
+                //this can happen e.g. when jumping over an obstacle: the feet can have a large upwards velocity during the walk/run animation,
+                //and just "letting go of the animations" would let them keep moving upwards, twisting the character to a weird pose
+                if ((leftFoot != null && (MainLimb.LinearVelocity - leftFoot.LinearVelocity).LengthSquared() > MaxFootVelocityDiffSqr) ||
+                    (rightFoot != null && (MainLimb.LinearVelocity - rightFoot.LinearVelocity).LengthSquared() > MaxFootVelocityDiffSqr))
+                {
+                    UpdateFallingProne(10.0f, moveHands: false, moveTorso: false, moveLegs: true);
+                }
                 return;
             }
 
@@ -786,7 +817,12 @@ namespace Barotrauma
                     }
                     else
                     {
-                        footPos = new Vector2(colliderPos.X + stepSize.X * i * 0.2f, colliderPos.Y - 0.1f);
+                        float footPosX = stepSize.X * i * 0.2f;
+                        if (CurrentGroundedParams.StepSizeWhenStanding != Vector2.Zero)
+                        {
+                            footPosX = Math.Sign(stepSize.X) * CurrentGroundedParams.StepSizeWhenStanding.X * i;
+                        }
+                        footPos = new Vector2(colliderPos.X + footPosX, colliderPos.Y - 0.1f);
                     }
                     if (Stairs == null && !onSlopeThatMakesSlow)
                     {
@@ -1519,6 +1555,8 @@ namespace Barotrauma
             {
                 torso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 targetTorso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                //the pumping animation can sometimes cause impact damage, prevent that by briefly disabling it
+                target.DisableImpactDamageTimer = 0.15f;
                 cprPumpTimer = 0;
 
                 if (skill < CPRSettings.Active.DamageSkillThreshold)
@@ -1727,7 +1765,7 @@ namespace Barotrauma
                     if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
                         pullLimb.PullJointMaxForce = 5000.0f;
-                        if (!character.HasAbilityFlag(AbilityFlags.MoveNormallyWhileDragging))
+                        if (!character.CanRunWhileDragging())
                         {
                             targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
                         }
@@ -1803,7 +1841,7 @@ namespace Barotrauma
 
                 float dist = ConvertUnits.ToSimUnits(Vector2.Distance(target.WorldPosition, WorldPosition));
                 //let the target break free if it's moving away and gets far enough
-                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && dist > 1.4f && target.AllowInput &&
+                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && dist > BreakFromGrabDistance && target.AllowInput &&
                     Vector2.Dot(target.WorldPosition - WorldPosition, target.AnimController.TargetMovement) > 0)
                 {
                     character.DeselectCharacter();
@@ -1811,7 +1849,7 @@ namespace Barotrauma
                 }
 
                 //limit movement if moving away from the target
-                if (!character.HasAbilityFlag(AbilityFlags.MoveNormallyWhileDragging) && Vector2.Dot(target.WorldPosition - WorldPosition, targetMovement) < 0)
+                if (!character.CanRunWhileDragging() && Vector2.Dot(target.WorldPosition - WorldPosition, targetMovement) < 0)
                 {
                     targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
                 }

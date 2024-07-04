@@ -261,8 +261,7 @@ namespace Barotrauma
 
             foreach (var endLocation in EndLocations)
             {
-                if (endLocation.Type?.ForceLocationName != null &&
-                    !endLocation.Type.ForceLocationName.IsEmpty)
+                if (endLocation.Type?.ForceLocationName is { IsEmpty: false })
                 {
                     endLocation.ForceName(endLocation.Type.ForceLocationName);
                 }
@@ -298,7 +297,7 @@ namespace Barotrauma
             //if no outpost was found (using a mod that replaces the outpost location type?), find any type of outpost
             if (CurrentLocation == null)
             {
-                FindStartLocation(l => l.Type.HasOutpost);
+                FindStartLocation(l => l.Type.HasOutpost && l.Type.OutpostTeam == CharacterTeamType.FriendlyNPC);
             }
 
             void FindStartLocation(Func<Location, bool> predicate)
@@ -313,25 +312,38 @@ namespace Barotrauma
                 }
             }
 
-            StartLocation.SecondaryFaction = null;             
+            StartLocation.SecondaryFaction = null;
             var startOutpostFaction = campaign?.Factions.FirstOrDefault(f => f.Prefab.StartOutpost);
             if (startOutpostFaction != null)
             {
                 StartLocation.Faction = startOutpostFaction;
-                foreach (var connection in StartLocation.Connections)
+            }
+            foreach (var connection in StartLocation.Connections)
+            {
+                //force locations adjacent to the start location to have an outpost
+                //non-inhabited locations seem to be confusing to new players, particularly
+                //on the first round/mission when they still don't know how transitions between levels work
+                var otherLocation = connection.OtherLocation(StartLocation);
+                if (!otherLocation.HasOutpost())
                 {
-                    var otherLocation = connection.OtherLocation(StartLocation);
-                    if (otherLocation.HasOutpost() && otherLocation.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
+                    if (LocationType.Prefabs.TryGet("outpost".ToIdentifier(), out LocationType outpostLocationType))
                     {
-                        otherLocation.Faction = startOutpostFaction;
+                        otherLocation.ChangeType(campaign, outpostLocationType);
                     }
+                }
+
+                if (otherLocation.HasOutpost() &&
+                    otherLocation.Type.OutpostTeam == CharacterTeamType.FriendlyNPC &&
+                    otherLocation.Type.Faction.IsEmpty)
+                {
+                    otherLocation.Faction = startOutpostFaction;
                 }
             }
 
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
             int loops = campaign.CampaignMetadata.GetInt("campaign.endings".ToIdentifier(), 0);
-            if (loops == 0 && (campaign.Settings.Difficulty == GameDifficulty.Easy || campaign.Settings.Difficulty == GameDifficulty.Medium))
+            if (loops == 0 && (campaign.Settings.WorldHostility == WorldHostilityOption.Low || campaign.Settings.WorldHostility == WorldHostilityOption.Medium))
             {
                 if (StartLocation != null)
                 {
@@ -705,10 +717,19 @@ namespace Barotrauma
             foreach (Location location in Locations)
             {
                 location.LevelData = new LevelData(location, this, CalculateDifficulty(location.MapPosition.X, location.Biome));
+                location.TryAssignFactionBasedOnLocationType(campaign);
                 if (location.Type.HasOutpost && campaign != null && location.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
                 {
-                    location.Faction ??= campaign.GetRandomFaction(Rand.RandSync.ServerAndClient);
-                    location.SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.ServerAndClient);
+                    if (location.Type.Faction.IsEmpty)
+                    {
+                        //no faction defined in the location type, assign a random one
+                        location.Faction ??= campaign.GetRandomFaction(Rand.RandSync.ServerAndClient);
+                    }
+                    if (location.Type.SecondaryFaction.IsEmpty)
+                    {
+                        //no secondary faction defined in the location type, assign a random one
+                        location.SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.ServerAndClient);
+                    }
                 }
                 location.CreateStores(force: true);
             }
@@ -1502,6 +1523,10 @@ namespace Barotrauma
                         LocationType prevLocationType = location.Type;
                         LocationType newLocationType = LocationType.Prefabs.Find(lt => lt.Identifier == locationType) ?? LocationType.Prefabs.First();
                         location.ChangeType(campaign, newLocationType);
+
+                        var factionIdentifier = subElement.GetAttributeIdentifier("faction", Identifier.Empty);
+                        location.Faction = factionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == factionIdentifier);
+
                         if (showNotifications && prevLocationType != location.Type)
                         {
                             var change = prevLocationType.CanChangeTo.Find(c => c.ChangeToType == location.Type.Identifier);
@@ -1511,9 +1536,6 @@ namespace Barotrauma
                                 location.TimeSinceLastTypeChange = 0;
                             }
                         }
-
-                        var factionIdentifier = subElement.GetAttributeIdentifier("faction", Identifier.Empty);
-                        location.Faction = factionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == factionIdentifier);
 
                         var secondaryFactionIdentifier = subElement.GetAttributeIdentifier("secondaryfaction", Identifier.Empty);
                         location.SecondaryFaction = secondaryFactionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == secondaryFactionIdentifier);

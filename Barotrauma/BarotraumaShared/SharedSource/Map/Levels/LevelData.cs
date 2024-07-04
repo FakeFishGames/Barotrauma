@@ -43,6 +43,10 @@ namespace Barotrauma
 
         public OutpostGenerationParams ForceOutpostGenerationParams;
 
+        public SubmarineInfo ForceBeaconStation;
+
+        public SubmarineInfo ForceWreck;
+
         public bool AllowInvalidOutpost;
 
         public readonly Point Size;
@@ -95,6 +99,11 @@ namespace Barotrauma
                 return Math.Max(Size.Y * Physics.DisplayToRealWorldRatio, Level.DefaultRealWorldCrushDepth);
             }
         }
+        
+        /// <summary>
+        /// Inclusive (matching the min an max values is accepted).
+        /// </summary>
+        public bool IsAllowedDifficulty(float minDifficulty, float maxDifficulty) => Difficulty >= minDifficulty && Difficulty <= maxDifficulty;
 
         public LevelData(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome)
         {

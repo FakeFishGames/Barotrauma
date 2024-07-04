@@ -1,11 +1,14 @@
 namespace Barotrauma
 {
+    /// <summary>
+    /// Makes the event jump to a <see cref="Label"/> somewhere else in the event.
+    /// </summary>
     class GoTo : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Name of the label to jump to.")]
         public string Name { get; set; }
 
-        [Serialize(-1, IsPropertySaveable.Yes)]
+        [Serialize(-1, IsPropertySaveable.Yes, description: "How many times can this GoTo action be repeated? Can be used to make some parts of an event repeat a limited number of times. If negative or zero, there's no limit.")]
         public int MaxTimes { get; set; }
 
         private int counter;

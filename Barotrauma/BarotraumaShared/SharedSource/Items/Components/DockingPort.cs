@@ -326,6 +326,8 @@ namespace Barotrauma.Items.Components
 
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
+                item.SendSignal("1", "on_dock");
+                DockingTarget.Item.SendSignal("1", "on_dock");
 
 #if SERVER
                 if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
@@ -655,7 +657,9 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Location -= MathUtils.ToPoint(subs[i].WorldPosition - subs[i].HiddenSubPosition);
                     hulls[i] = new Hull(hullRects[i], subs[i])
                     {
-                        RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch"
+                        RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch",
+                        AvoidStaying = true,
+                        IsWetRoom = true
                     };
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
@@ -974,6 +978,7 @@ namespace Barotrauma.Items.Components
             item.linkedTo.Clear();
 
             docked = false;
+            item.SendSignal("1", "on_undock");
 
             Item.Submarine.RefreshOutdoorNodes();
             Item.Submarine.EnableObstructedWaypoints(DockingTarget.Item.Submarine);

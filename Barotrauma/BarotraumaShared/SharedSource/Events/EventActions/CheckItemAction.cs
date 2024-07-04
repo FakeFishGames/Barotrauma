@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -6,18 +6,22 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Can be used to do various kinds of checks on items: whether a specific kind of item exists, 
+    /// if it's in a specific character's inventory or in a container, or whether some conditions are met on the item.
+    /// </summary>
     class CheckItemAction : BinaryOptionAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Either the tag of the item(s) we want to check, or a character/container the items are inside.")]
         public Identifier TargetTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The target item must have one of these identifiers.")]
         public string ItemIdentifiers { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The target item must have at least one of these tags.")]
         public string ItemTags { get; set; }
 
-        [Serialize(1, IsPropertySaveable.Yes)]
+        [Serialize(1, IsPropertySaveable.Yes, description: "The minimum number of matching items for the check to succeed.")]
         public int Amount { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "Optional tag of a hull the target must be inside.")]
@@ -29,31 +33,30 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the found item(s) when the check succeeds.")]
         public Identifier ApplyTagToItem { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Does the item need to be equipped for the check to succeed?")]
         public bool RequireEquipped { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Does the item need to be worn for the check to succeed?")]
+        public bool RequireWorn { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "If enabled, the doesn't need to be directly inside the container/character we're checking, but can be nested inside multiple containers (e.g. in a toolbelt in a character's inventory).")]
         public bool Recursive { get; set; }
 
-        [Serialize(-1, IsPropertySaveable.Yes)]
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Can be used to require the item to be in a specific ItemContainer of the target container. For example, the input slots of a fabricator (the first ItemContainer of the fabricator, with an index of 0).")]
         public int ItemContainerIndex { get; set; }
 
         private readonly bool checkPercentage;
 
         private float requiredConditionalMatchPercentage;
 
-        [Serialize(100.0f, IsPropertySaveable.Yes)]
-
-        /// <summary>
-        /// What percentage of targets do the conditionals need to match for the check to succeed?
-        /// </summary>
+        [Serialize(100.0f, IsPropertySaveable.Yes, description: "What percentage of targets do the conditionals need to match for the check to succeed?")]
         public float RequiredConditionalMatchPercentage 
         {
             get { return requiredConditionalMatchPercentage; }
             set { requiredConditionalMatchPercentage = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "When enabled, the number of matching items is compared to the number of matching items there were at the start of the round. Only valid if RequiredConditionalMatchPercentage is set.")]
         public bool CompareToInitialAmount { get; set; }
 
         private readonly IReadOnlyList<PropertyConditional> conditionals;
@@ -94,12 +97,12 @@ namespace Barotrauma
 
         private bool EnoughTargets(int totalTargets, int targetsWithConditionalsMatched)
         {
-            if (CompareToInitialAmount)
-            {
-                totalTargets = ParentEvent.GetInitialTargetCount(TargetTag);
-            }
             if (checkPercentage)
             {
+                if (CompareToInitialAmount)
+                {
+                    totalTargets = ParentEvent.GetInitialTargetCount(TargetTag);
+                }
                 return MathUtils.Percentage(targetsWithConditionalsMatched, totalTargets) >= RequiredConditionalMatchPercentage;
             }
             else
@@ -255,6 +258,19 @@ namespace Barotrauma
             {
                 if (character == null) { return false; }
                 return character.HasEquippedItem(item);
+            }
+            if (RequireWorn)
+            {
+                if (character == null) { return false; }
+                foreach (var wearable in item.GetComponents<Wearable>())
+                {
+                    foreach (var allowedSlot in wearable.AllowedSlots)
+                    {
+                        if (allowedSlot == InvSlotType.Any) { continue; }
+                        if (character.HasEquippedItem(item, allowedSlot)) { return true; }
+                    }
+                }
+                return false;
             }
             return true;
         }

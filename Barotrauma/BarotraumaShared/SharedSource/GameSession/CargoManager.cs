@@ -298,7 +298,7 @@ namespace Barotrauma
 
         public void PurchaseItems(Identifier storeIdentifier, List<PurchasedItem> itemsToPurchase, bool removeFromCrate, Client client = null)
         {
-            var store = Location.GetStore(storeIdentifier);
+            var store = Location?.GetStore(storeIdentifier);
             if (store == null) { return; }
             var itemsPurchasedFromStore = GetPurchasedItems(storeIdentifier, create: true);
             // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
@@ -533,7 +533,7 @@ namespace Barotrauma
             .Distinct();
 
         public static IEnumerable<Item> FilterCargoCrates(IEnumerable<Item> items, Func<Item, bool> conditional = null)
-            => items.Where(it => it.HasTag(Tags.Crate) && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed && (conditional == null || conditional(it)));
+            => items.Where(it => it.HasTag(Tags.Crate) && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.IsHidden && !it.Removed && (conditional == null || conditional(it)));
 
         public static IEnumerable<ItemContainer> FindReusableCargoContainers(IEnumerable<Submarine> subs, IEnumerable<Hull> cargoRooms = null) =>
             FilterCargoCrates(Item.ItemList, it => subs.Contains(it.Submarine) && !it.HasTag(Tags.CargoMissionItem) && (cargoRooms == null || cargoRooms.Contains(it.CurrentHull)))
@@ -661,6 +661,10 @@ namespace Barotrauma
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
+                    if (item.GetComponent<Holdable>() is { Attached: true })
+                    {
+                        item.Drop(dropper: null);
+                    }
                     if (!character.Inventory.TryPutItem(item, user: null, item.AllowedSlots))
                     {
                         foreach (Item containedItem in character.Inventory.AllItemsMod)
@@ -681,7 +685,14 @@ namespace Barotrauma
             var idCard = item.GetComponent<IdCard>();
             if (cargoManager != null && idCard != null && purchased.BuyerCharacterInfoIdentifier != 0)
             {
-                cargoManager.purchasedIDCards.Add((purchased, idCard));
+                if (purchased.DeliverImmediately)
+                {
+                    InitPurchasedIDCard(purchased, idCard);
+                }
+                else
+                {
+                    cargoManager.purchasedIDCards.Add((purchased, idCard));
+                }
             }
 
             Submarine sub = item.Submarine ?? item.RootContainer?.Submarine;
@@ -699,16 +710,21 @@ namespace Barotrauma
         {
             foreach ((PurchasedItem purchased, IdCard idCard) in purchasedIDCards)
             {
-                if (idCard != null && purchased.BuyerCharacterInfoIdentifier != 0)
-                {
-                    var owner = Character.CharacterList.Find(c => c.Info?.GetIdentifier() == purchased.BuyerCharacterInfoIdentifier);
-                    if (owner?.Info != null)
-                    {
-                        var mainSubSpawnPoints = WayPoint.SelectCrewSpawnPoints(new List<CharacterInfo>() { owner.Info }, Submarine.MainSub);
-                        idCard.Initialize(mainSubSpawnPoints.FirstOrDefault(), owner);
-                    }
-                }
+                InitPurchasedIDCard(purchased, idCard);
             }
+        }
+
+        private static void InitPurchasedIDCard(PurchasedItem purchased, IdCard idCard)
+        {
+            if (idCard != null && purchased.BuyerCharacterInfoIdentifier != 0)
+            {
+                var owner = Character.CharacterList.Find(c => c.Info?.GetIdentifier() == purchased.BuyerCharacterInfoIdentifier);
+                if (owner?.Info != null)
+                {
+                    var mainSubSpawnPoints = WayPoint.SelectCrewSpawnPoints(new List<CharacterInfo>() { owner.Info }, Submarine.MainSub);
+                    idCard.Initialize(mainSubSpawnPoints.FirstOrDefault(), owner);
+                }
+            }            
         }
 
         public static Vector2 GetCargoPos(Hull hull, ItemPrefab itemPrefab)

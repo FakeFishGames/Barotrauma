@@ -24,6 +24,8 @@ namespace Barotrauma
         public float damage;
         public Gap gap;
 
+        public bool NoPhysicsBody;
+
         public Structure Wall { get; }
         public Vector2 Position => Wall.SectionPosition(Wall.Sections.IndexOf(this));
         public Vector2 WorldPosition => Wall.SectionPosition(Wall.Sections.IndexOf(this), world: true);
@@ -49,21 +51,18 @@ namespace Barotrauma
         public static List<Structure> WallList = new List<Structure>();
 
         const float LeakThreshold = 0.1f;
+        const float BigGapThreshold = 0.7f;
 
 #if CLIENT
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 #endif
 
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
-        private readonly List<Vector2> bodyDebugDimensions = new List<Vector2>();
+        private readonly Dictionary<Body, Vector2> bodyDimensions = new Dictionary<Body, Vector2>();
 
         private static Explosion explosionOnBroken;
 
-#if DEBUG
         [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody)]
-#else
-        [Serialize(false, IsPropertySaveable.Yes)]
-#endif
         public bool Indestructible
         {
             get;
@@ -596,7 +595,7 @@ namespace Barotrauma
         private void CreateStairBodies()
         {
             Bodies = new List<Body>();
-            bodyDebugDimensions.Clear();
+            bodyDimensions.Clear();
 
             float stairAngle = MathHelper.ToRadians(Math.Min(Prefab.StairAngle, 75.0f));
 
@@ -621,7 +620,7 @@ namespace Barotrauma
 
             newBody.Position = ConvertUnits.ToSimUnits(stairPos) + BodyOffset * Scale;
 
-            bodyDebugDimensions.Add(new Vector2(bodyWidth, bodyHeight));
+            bodyDimensions.Add(newBody, new Vector2(bodyWidth, bodyHeight));
 
             Bodies.Add(newBody);
         }
@@ -929,7 +928,7 @@ namespace Barotrauma
         public bool SectionIsLeakingFromOutside(int sectionIndex)
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
-            return SectionIsLeaking(sectionIndex) && !Sections[sectionIndex].gap.IsRoomToRoom;
+            return SectionIsLeaking(sectionIndex) && Sections[sectionIndex].gap is { IsRoomToRoom: false };
         }
 
         public int SectionLength(int sectionIndex)
@@ -962,18 +961,22 @@ namespace Barotrauma
             return true;
         }
 
-        public void AddDamage(int sectionIndex, float damage, Character attacker = null, bool emitParticles = true)
+        public void AddDamage(int sectionIndex, float damage, Character attacker = null, bool emitParticles = true, bool createWallDamageProjectiles = false)
         {
             if (!Prefab.Body || Prefab.Platform || Indestructible) { return; }
 
             if (sectionIndex < 0 || sectionIndex > Sections.Length - 1) { return; }
 
             var section = Sections[sectionIndex];
-
+            float prevDamage = section.damage;
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                SetDamage(sectionIndex, section.damage + damage, attacker, createWallDamageProjectiles: createWallDamageProjectiles);
+            }
 #if CLIENT
             if (damage > 0 && emitParticles)
             {
-                float dmg = Math.Min(MaxHealth - section.damage, damage);
+                float dmg = Math.Min(section.damage - prevDamage, damage);
                 float particleAmount = MathHelper.Lerp(0, 25, MathUtils.InverseLerp(0, 100, dmg * Rand.Range(0.75f, 1.25f)));
                 // Special case for very low but frequent dmg like plasma cutter: 10% chance for emitting a particle
                 if (particleAmount < 1 && Rand.Value() < 0.10f)
@@ -996,14 +999,10 @@ namespace Barotrauma
                     var particle = GameMain.ParticleManager.CreateParticle(Prefab.DamageParticle,
                         position: particlePosFinal,
                         velocity: Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
-                    if (particle == null) break;
+                    if (particle == null) { break; }
                 }
             }
 #endif
-            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
-            {
-                SetDamage(sectionIndex, section.damage + damage, attacker);
-            }
         }
 
         public int FindSectionIndex(Vector2 displayPos, bool world = false, bool clamp = false)
@@ -1132,7 +1131,7 @@ namespace Barotrauma
                 if (MathUtils.CircleIntersectsRectangle(transformedPos, attack.DamageRange, sectionRect))
                 {
                     damageAmount = attack.GetStructureDamage(deltaTime);
-                    AddDamage(i, damageAmount, attacker);
+                    AddDamage(i, damageAmount, attacker, createWallDamageProjectiles: attack.CreateWallDamageProjectiles);
 #if CLIENT
                     if (attack.EmitStructureDamageParticles)
                     {
@@ -1165,13 +1164,19 @@ namespace Barotrauma
             return new AttackResult(damageAmount, null);
         }
 
-        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true, bool isNetworkEvent = true, bool createExplosionEffect = true)
+        public void SetDamage(int sectionIndex, float damage, Character attacker = null, 
+            bool createNetworkEvent = true, 
+            bool isNetworkEvent = true, 
+            bool createExplosionEffect = true,
+            bool createWallDamageProjectiles = false)
         {
             if (Submarine != null && Submarine.GodMode || (Indestructible && !isNetworkEvent)) { return; }
             if (!Prefab.Body) { return; }
             if (!MathUtils.IsValid(damage)) { return; }
 
             damage = MathHelper.Clamp(damage, 0.0f, MaxHealth - Prefab.MinHealth);
+
+            if (Sections[sectionIndex].NoPhysicsBody) { return; }
 
 #if SERVER
             if (GameMain.Server != null && createNetworkEvent && damage != Sections[sectionIndex].damage)
@@ -1301,13 +1306,22 @@ namespace Barotrauma
                 }
 
                 var gap = Sections[sectionIndex].gap;
-                float gapOpen = MaxHealth <= 0.0f ? 0.0f : (damage / MaxHealth - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
+                float damageRatio = MaxHealth <= 0.0f ? 0 : damage / MaxHealth;
+                float gapOpen = 0;
+                if (damageRatio > BigGapThreshold)
+                {
+                    gapOpen = MathHelper.Lerp(0.35f, 0.75f, MathUtils.InverseLerp(BigGapThreshold, 1.0f, damageRatio));
+                }
+                else if (damageRatio > LeakThreshold)
+                {
+                    gapOpen = MathHelper.Lerp(0f, 0.35f, MathUtils.InverseLerp(LeakThreshold, BigGapThreshold, damageRatio));
+                }
                 gap.Open = gapOpen;
 
                 //gap appeared or became much larger -> explosion effect
                 if (gapOpen - prevGapOpenState > 0.25f && createExplosionEffect && !gap.IsRoomToRoom)
                 {
-                    CreateWallDamageExplosion(gap, attacker);
+                    CreateWallDamageExplosion(gap, attacker, createWallDamageProjectiles);
                 }
             }
 
@@ -1337,7 +1351,7 @@ namespace Barotrauma
             UpdateSections();
         }
 
-        private static void CreateWallDamageExplosion(Gap gap, Character attacker)
+        private static void CreateWallDamageExplosion(Gap gap, Character attacker, bool createProjectiles)
         {
             const float explosionRange = 500.0f;
             float explosionStrength = gap.Open;
@@ -1367,31 +1381,52 @@ namespace Barotrauma
                 {
                     explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
                 }
+                explosionOnBroken.CameraShake = 5.0f;
                 explosionOnBroken.IgnoreCover = false;
                 explosionOnBroken.OnlyInside = true;
                 explosionOnBroken.DistanceFalloff = false;
+                explosionOnBroken.PlayDamageSounds = true;
                 explosionOnBroken.DisableParticles();
             }
-
+            explosionOnBroken.CameraShake = 25.0f;
             explosionOnBroken.IgnoredCover = gap.ConnectedWall?.ToEnumerable();
-            explosionOnBroken.Attack.Range = explosionRange * gap.Open;
+            explosionOnBroken.Attack.Range = explosionOnBroken.CameraShakeRange = explosionRange * gap.Open;
             explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
             explosionOnBroken.Attack.Stun = MathHelper.Clamp(explosionStrength, 0.5f, 1.0f);
             explosionOnBroken.IgnoredCharacters.Clear();
             if (attacker?.AIController is EnemyAIController) { explosionOnBroken.IgnoredCharacters.Add(attacker); }           
             explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
+
+            if (createProjectiles)
+            {
+                if (ItemPrefab.Prefabs.TryGet("walldamageprojectile", out var projectilePrefab) && linkedHull != null)
+                {
+                    float angle = gap.IsHorizontal ?
+                        (linkedHull.WorldPosition.X < gap.WorldPosition.X ? MathHelper.Pi : 0) :
+                        (linkedHull.WorldPosition.Y < gap.WorldPosition.Y ? -MathHelper.PiOver2 : MathHelper.PiOver2);
+                    Spawner.AddItemToSpawnQueue(projectilePrefab, gap.WorldPosition, onSpawned: (item) =>
+                    {
+                        item.body.SetTransformIgnoreContacts(item.body.SimPosition, angle);
+                        var projectile = item.GetComponent<Items.Components.Projectile>();
+                        projectile?.Use();
+                    });                    
+                }
+            }
+
 #if CLIENT
+            SoundPlayer.PlaySound("Ricochet", gap.WorldPosition);
             if (linkedHull != null)
             {
                 for (int i = 0; i <= 50; i++)
                 {
-                    Vector2 particlePos = new Vector2(Rand.Range(gap.WorldRect.X, gap.WorldRect.Right), Rand.Range(gap.WorldRect.Y - gap.WorldRect.Height, gap.WorldRect.Y));
-                    var velocity = gap.IsHorizontal ?
+                    var emitDirection = gap.IsHorizontal ?
                         gap.linkedTo[0].WorldPosition.X < gap.WorldPosition.X ? -Vector2.UnitX : Vector2.UnitX :
                         gap.linkedTo[0].WorldPosition.Y < gap.WorldPosition.Y ? -Vector2.UnitY : Vector2.UnitY;
-                    velocity = new Vector2(velocity.X + Rand.Range(-0.2f, 0.2f), velocity.Y + Rand.Range(-0.2f, 0.2f));
-                    var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, velocity * Rand.Range(100.0f, 3000.0f), collisionIgnoreTimer: 0.1f);
-                    if (particle == null) { break; }
+                    Vector2 particlePos = new Vector2(Rand.Range(gap.WorldRect.X, gap.WorldRect.Right), Rand.Range(gap.WorldRect.Y - gap.WorldRect.Height, gap.WorldRect.Y));
+                    emitDirection = new Vector2(emitDirection.X + Rand.Range(-0.2f, 0.2f), emitDirection.Y + Rand.Range(-0.2f, 0.2f));
+                    var shrapnelParticle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, emitDirection * Rand.Range(100.0f, 3000.0f), hullGuess: linkedHull, collisionIgnoreTimer: 0.1f);
+                    var sparkParticle = GameMain.ParticleManager.CreateParticle("whitespark", particlePos, emitDirection * Rand.Range(1000.0f, 3000.0f), hullGuess: linkedHull, collisionIgnoreTimer: 0.05f);
+                    if (shrapnelParticle == null || sparkParticle == null) { break; }
                 }
             }
 #endif
@@ -1416,7 +1451,7 @@ namespace Barotrauma
                 GameMain.World.Remove(b);
             }
             Bodies.Clear();
-            bodyDebugDimensions.Clear();
+            bodyDimensions.Clear();
 #if CLIENT
             convexHulls?.ForEach(ch => ch.Remove());
             convexHulls?.Clear();
@@ -1454,8 +1489,27 @@ namespace Barotrauma
             if (hasHoles || !Bodies.Any())
             {
                 Body sensorBody = CreateRectBody(rect, createConvexHull: false);
-                sensorBody.CollisionCategories = Physics.CollisionRepair;
-                sensorBody.SetIsSensor(true);
+                sensorBody.CollisionCategories = Physics.CollisionRepairableWall;
+            }
+
+            foreach (var section in Sections)
+            {
+                bool intersectsWithBody = false;
+                foreach (var body in Bodies)
+                {
+                    var bodyRect = new Rectangle(
+                        ConvertUnits.ToDisplayUnits(body.Position - bodyDimensions[body] / 2).ToPoint(), 
+                        ConvertUnits.ToDisplayUnits(bodyDimensions[body]).ToPoint());
+
+                    Rectangle sectionRect = section.rect;
+                    sectionRect.Y -= section.rect.Height;
+                    if (bodyRect.Intersects(sectionRect))
+                    {
+                        intersectsWithBody = true;
+                        break;
+                    }
+                }
+                section.NoPhysicsBody = !intersectsWithBody;
             }
         }
 
@@ -1511,7 +1565,7 @@ namespace Barotrauma
             }
 
             Bodies.Add(newBody);
-            bodyDebugDimensions.Add(new Vector2(ConvertUnits.ToSimUnits(rect.Width), ConvertUnits.ToSimUnits(rect.Height)));
+            bodyDimensions.Add(newBody, new Vector2(ConvertUnits.ToSimUnits(rect.Width), ConvertUnits.ToSimUnits(rect.Height)));
 
             return newBody;
         }
@@ -1534,7 +1588,7 @@ namespace Barotrauma
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
                 Bodies.ForEach(b => GameMain.World.Remove(b));
                 Bodies.Clear();
-                bodyDebugDimensions.Clear();
+                bodyDimensions.Clear();
 
                 CreateStairBodies();
             }
@@ -1562,7 +1616,7 @@ namespace Barotrauma
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
                 Bodies.ForEach(b => GameMain.World.Remove(b));
                 Bodies.Clear();
-                bodyDebugDimensions.Clear();
+                bodyDimensions.Clear();
 
                 CreateStairBodies();
             }

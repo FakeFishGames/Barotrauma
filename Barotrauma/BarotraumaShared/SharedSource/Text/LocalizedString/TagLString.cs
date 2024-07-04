@@ -11,6 +11,11 @@ namespace Barotrauma
     {
         private readonly ImmutableArray<Identifier> tags;
 
+        /// <summary>
+        /// Did we end up using the text in the default language (English) due to the text not being found in the selected language?
+        /// </summary>
+        public bool UsingDefaultLanguageAsFallback { get; private set; }
+
         public TagLString(params Identifier[] tags)
         {
             this.tags = tags.ToImmutableArray();
@@ -30,6 +35,8 @@ namespace Barotrauma
         public override void RetrieveValue()
         {
             UpdateLanguage();
+
+            UsingDefaultLanguageAsFallback = false;
 
             (string value, bool loaded) tryLoad(LanguageIdentifier lang)
             {
@@ -69,8 +76,9 @@ namespace Barotrauma
             cachedValue = value;
             if (!loaded && Language != TextManager.DefaultLanguage)
             {
-                (value, _) = tryLoad(TextManager.DefaultLanguage);
+                (value, bool fallbackLoaded) = tryLoad(TextManager.DefaultLanguage);
                 cachedValue = value;
+                UsingDefaultLanguageAsFallback = fallbackLoaded;
                 //Notice how we don't set loadedSuccessfully again here.
                 //This is by design; falling back to English means that
                 //this text did NOT load successfully, so Loaded must

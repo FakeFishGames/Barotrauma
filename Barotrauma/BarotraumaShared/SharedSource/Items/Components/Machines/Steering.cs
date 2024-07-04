@@ -23,6 +23,11 @@ namespace Barotrauma.Items.Components
         private const float AIPilotMaxSpeed = 1.0f;
 
         /// <summary>
+        /// How many units before crush depth the pressure warning is shown
+        /// </summary>
+        public const float PressureWarningThreshold = 500.0f;
+
+        /// <summary>
         /// How fast the steering vector adjusts when the nav terminal is operated by something else than a character (= signals)
         /// </summary>
         const float DefaultSteeringAdjustSpeed = 0.2f;

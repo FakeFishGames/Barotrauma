@@ -128,6 +128,11 @@ namespace Barotrauma
                 {
                     case "sprite":
                         UISprite newSprite = new UISprite(subElement);
+                        Rectangle sourceRect = newSprite.Sprite.SourceRect;
+                        if ((sourceRect.Width <= 1 || sourceRect.Height <= 1) && newSprite.Tile)
+                        {
+                            DebugConsole.AddWarning($"Sprite \"{subElement.GetAttributeString("name", Name)}\" has a size of 1 or less which may cause performance problems.", contentPackage: element.ContentPackage);
+                        }
 
                         GUIComponent.ComponentState spriteState = GUIComponent.ComponentState.None;
                         if (subElement.GetAttribute("state") != null)

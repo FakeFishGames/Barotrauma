@@ -52,7 +52,7 @@ namespace Barotrauma
             {
                 if (orderedCharacter != CommandingCharacter)
                 {
-                    CommandingCharacter.Speak(SuggestedOrder.GetChatMessage(OrderedCharacter.Name, "", false), minDurationBetweenSimilar: 5);
+                    CommandingCharacter.Speak(SuggestedOrder.GetChatMessage(OrderedCharacter.Name, "", givingOrderToSelf: false), minDurationBetweenSimilar: 5);
                 }
                 CurrentOrder = SuggestedOrder
                     .WithOption(Option)

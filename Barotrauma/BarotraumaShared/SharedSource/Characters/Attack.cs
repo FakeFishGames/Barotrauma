@@ -37,7 +37,9 @@ namespace Barotrauma
         FallBackUntilCanAttack,
         PursueIfCanAttack,
         Pursue,
+        Eat,
         FollowThrough,
+        FollowThroughWithoutObstacleAvoidance,
         FollowThroughUntilCanAttack,
         IdleUntilCanAttack,
         Reverse,
@@ -104,6 +106,13 @@ namespace Barotrauma
         [Serialize(0f, IsPropertySaveable.Yes, description: "A delay before reacting after performing an attack."), Editable]
         public float AfterAttackDelay { get; set; }
 
+        [Serialize(AIBehaviorAfterAttack.FallBack, IsPropertySaveable.Yes, 
+            description: "Secondary AI behavior after the attack. The character first executes the AfterAttack behavior, then after AfterAttackSecondaryDelay passes, switches to this one. Ignored if AfterAttackSecondaryDelay is 0 or less."), Editable]
+        public AIBehaviorAfterAttack AfterAttackSecondary { get; set; }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How long the character executes the AfterAttack before switching to AfterAttackSecondary. The secondary behavior is ignored if this value is 0 or less."), Editable]
+        public float AfterAttackSecondaryDelay { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the AI try to turn around when aiming with this attack?"), Editable]
         public bool Reverse { get; private set; }
 
@@ -135,10 +144,11 @@ namespace Barotrauma
         [Serialize(0.25f, IsPropertySaveable.Yes, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
 
-        [Serialize(5f, IsPropertySaveable.Yes, description: "How long the AI waits between the attacks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
+        [Serialize(5f, IsPropertySaveable.Yes, description: "How long the AI must wait before it can use this attack again."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
         public float CoolDown { get; set; } = 5;
 
-        [Serialize(0f, IsPropertySaveable.Yes, description: "Used as the attack cooldown between different kind of attacks. Does not have effect, if set to 0."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "When the attack cooldown is running and when there are other valid attacks possible for the character to use, the secondary cooldown is used instead of the regular cooldown. Does not have an effect, if set to 0 or less than the regular cooldown value."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
         public float SecondaryCoolDown { get; set; } = 0;
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "A random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases)."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
@@ -154,6 +164,9 @@ namespace Barotrauma
             get => _structureDamage * DamageMultiplier;
             set => _structureDamage = value;
         }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "If the attack causes an explosion of wall damage shrapnel, should some of the shrapnel be launched as projectiles that can go through walls?"), Editable]
+        public bool CreateWallDamageProjectiles { get; private set; }
 
         [Serialize(true, IsPropertySaveable.Yes, description: "Whether or not damaging structures with the attack causes damage particles to emit."), Editable]
         public bool EmitStructureDamageParticles { get; private set; }
@@ -443,6 +456,12 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            if (SecondaryCoolDown > CoolDown)
+            {
+                DebugConsole.AddWarning($"Potentially misconfigured attack in {parentDebugName}. Secondary cooldown should not be longer than the primary cooldown.",
+                    contentPackage: element.ContentPackage);
+            }
         }
         partial void InitProjSpecific(ContentXElement element);
 
@@ -461,11 +480,6 @@ namespace Barotrauma
                 }
                 affliction = afflictionPrefab.Instantiate(0.0f);
                 affliction.Deserialize(subElement);
-                //backwards compatibility
-                if (subElement.GetAttribute("amount") != null && subElement.GetAttribute("strength") == null)
-                {
-                    affliction.Strength = subElement.GetAttributeFloat("amount", 0.0f);
-                }
                 // add the affliction anyway, so that it can be shown in the editor.
                 Afflictions.Add(affliction, subElement);
             }
@@ -708,6 +722,8 @@ namespace Barotrauma
         public float SecondaryCoolDownTimer { get; set; }
         public bool IsRunning { get; private set; }
 
+        public float AfterAttackTimer { get; set; }
+
         public void UpdateCoolDown(float deltaTime)
         {
             CoolDownTimer -= deltaTime;
@@ -729,6 +745,7 @@ namespace Barotrauma
 
         public void ResetAttackTimer()
         {
+            AfterAttackTimer = 0;
             AttackTimer = 0;
             IsRunning = false;
         }

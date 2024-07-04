@@ -9,7 +9,7 @@ namespace Barotrauma
     class AIObjectiveDecontainItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "decontain item".ToIdentifier();
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public Func<Item, float> GetItemPriority;
 
@@ -39,6 +39,9 @@ namespace Barotrauma
         /// </summary>
         public bool DropIfFails { get; set; } = true;
 
+        /// <summary>
+        /// Should existing item(s) be removed from the targetContainer if the targetItem won't fit otherwise?
+        /// </summary>
         public bool RemoveExistingWhenNecessary { get; set; }
         public Func<Item, bool> RemoveExistingPredicate { get; set; }
         public int? RemoveExistingMax { get; set; }

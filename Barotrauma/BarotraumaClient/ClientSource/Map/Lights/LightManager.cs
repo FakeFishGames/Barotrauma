@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +70,7 @@ namespace Barotrauma.Lights
 
         public bool LightingEnabled = true;
 
-        public bool ObstructVision;
+        public float ObstructVisionAmount;
 
         private readonly Texture2D visionCircle;
 
@@ -498,7 +498,7 @@ namespace Barotrauma.Lights
             {
                 foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.MapEntityList))
                 {
-                    if (e is Item item && !item.HiddenInGame && item.GetComponent<Wire>() is Wire wire)
+                    if (e is Item item && !item.IsHidden && item.GetComponent<Wire>() is Wire wire)
                     {
                         wire.DebugDraw(spriteBatch, alpha: 0.4f);
                     }
@@ -664,7 +664,7 @@ namespace Barotrauma.Lights
             visibleHulls.Clear();
             foreach (Hull hull in Hull.HullList)
             {
-                if (hull.HiddenInGame) { continue; }
+                if (hull.IsHidden) { continue; }
                 var drawRect =
                     hull.Submarine == null ?
                     hull.Rect :
@@ -682,12 +682,12 @@ namespace Barotrauma.Lights
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
-            if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) { return; }
+            if ((!LosEnabled || LosMode == LosMode.None) && ObstructVisionAmount <= 0.0f) { return; }
             if (ViewTarget == null) return;
 
             graphics.SetRenderTarget(LosTexture);
 
-            if (ObstructVision)
+            if (ObstructVisionAmount > 0.0f)
             {
                 graphics.Clear(Color.Black);
                 Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
@@ -695,12 +695,25 @@ namespace Barotrauma.Lights
                 if (diff.LengthSquared() > 20.0f * 20.0f) { losOffset = diff; }
                 float rotation = MathUtils.VectorToAngle(losOffset);
 
+                //the visible area stretches to the maximum when the cursor is this far from the character
+                const float MaxOffset = 256.0f;
+                //the magic numbers here are just based on experimentation
+                float MinHorizontalScale = MathHelper.Lerp(3.5f, 1.5f, ObstructVisionAmount);
+                float MaxHorizontalScale = MinHorizontalScale * 1.25f;
+                float VerticalScale = MathHelper.Lerp(4.0f, 1.25f, ObstructVisionAmount);
+
+                //Starting point and scale-based modifier that moves the point of origin closer to the edge of the texture if the player moves their mouse further away, or vice versa.
+                float relativeOriginStartPosition = 0.1f; //Increasing this value moves the origin further behind the character
+                float originStartPosition = visionCircle.Width * relativeOriginStartPosition * MinHorizontalScale;
+                float relativeOriginLookAtPosModifier = -0.055f; //Increase this value increases how much the vision changes by moving the mouse
+                float originLookAtPosModifier = visionCircle.Width * relativeOriginLookAtPosModifier;
+
                 Vector2 scale = new Vector2(
-                    MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
+                    MathHelper.Clamp(losOffset.Length() / MaxOffset, MinHorizontalScale, MaxHorizontalScale), VerticalScale);
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameSettings.CurrentConfig.Graphics.LightMapScale, GameSettings.CurrentConfig.Graphics.LightMapScale, 1.0f)));
                 spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
-                    new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
+                    new Vector2(originStartPosition + (scale.X * originLookAtPosModifier), visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
                 spriteBatch.End();
             }
             else

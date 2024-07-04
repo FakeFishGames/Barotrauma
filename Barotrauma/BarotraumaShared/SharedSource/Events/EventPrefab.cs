@@ -33,6 +33,11 @@ namespace Barotrauma
         public readonly Identifier BiomeIdentifier;
 
         /// <summary>
+        /// If set, this layer must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredLayer;
+
+        /// <summary>
         /// If set, the event set can only be chosen in locations that belong to this faction.
         /// </summary>
         public readonly Identifier Faction;
@@ -94,24 +99,26 @@ namespace Barotrauma
             Probability = Math.Clamp(element.GetAttributeFloat(1.0f, "probability", "spawnprobability"), 0, 1);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", EventType != typeof(ScriptedEvent));
 
+            RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
+
             UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
             UnlockPathTooltip = element.GetAttributeString("unlockpathtooltip", "lockedpathtooltip");
             UnlockPathReputation = element.GetAttributeInt("unlockpathreputation", 0);
         }
 
-        public bool TryCreateInstance<T>(out T instance) where T : Event
+        public bool TryCreateInstance<T>(int seed, out T instance) where T : Event
         {
-            instance = CreateInstance() as T;
+            instance = CreateInstance(seed) as T;
             return instance is not null;
         }
 
-        public Event CreateInstance()
+        public Event CreateInstance(int seed)
         {
-            ConstructorInfo constructor = EventType.GetConstructor(new[] { GetType() });
+            ConstructorInfo constructor = EventType.GetConstructor(new[] { GetType(), typeof(int) });
             Event instance = null;
             try
             {
-                instance = constructor.Invoke(new object[] { this }) as Event;
+                instance = constructor.Invoke(new object[] { this, seed }) as Event;
             }
             catch (Exception ex)
             {

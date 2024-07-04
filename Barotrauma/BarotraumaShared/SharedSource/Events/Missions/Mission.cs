@@ -183,41 +183,40 @@ namespace Barotrauma
                 completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier})");
             }
 
-            for (int n = 0; n < 2; n++)
-            {
-                string locationName = $"‖color:gui.orange‖{locations[n].DisplayName}‖end‖";
-                if (description != null) { description = description.Replace("[location" + (n + 1) + "]", locationName); }
-                if (successMessage != null) { successMessage = successMessage.Replace("[location" + (n + 1) + "]", locationName); }
-                if (failureMessage != null) { failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locationName); }
-                for (int m = 0; m < messages.Length; m++)
-                {
-                    messages[m] = messages[m].Replace("[location" + (n + 1) + "]", locationName);
-                }
-            }
-            string rewardText = $"‖color:gui.orange‖{string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub))}‖end‖";
-            if (description != null) 
-            {
-                descriptionWithoutReward = description;
-                description = description.Replace("[reward]", rewardText); 
-            }
-            if (successMessage != null) { successMessage = successMessage.Replace("[reward]", rewardText); }
-            if (failureMessage != null) { failureMessage = failureMessage.Replace("[reward]", rewardText); }
+            descriptionWithoutReward = ReplaceVariablesInMissionMessage(description, sub, replaceReward: false);
+            description = ReplaceVariablesInMissionMessage(description, sub);
+            successMessage = ReplaceVariablesInMissionMessage(successMessage, sub);
+            failureMessage = ReplaceVariablesInMissionMessage(failureMessage, sub);
             for (int m = 0; m < messages.Length; m++)
             {
-                messages[m] = messages[m].Replace("[reward]", rewardText);
+                messages[m] = ReplaceVariablesInMissionMessage(messages[m], sub);
             }
-
             Messages = messages.ToImmutableArray();
+        }
+
+        public LocalizedString ReplaceVariablesInMissionMessage(LocalizedString message, Submarine sub, bool replaceReward = true)
+        {
+            for (int locationIndex = 0; locationIndex < 2; locationIndex++)
+            {
+                string locationName = $"‖color:gui.orange‖{Locations[locationIndex].DisplayName}‖end‖";
+                message = message.Replace("[location" + (locationIndex + 1) + "]", locationName);
+            }
+            if (replaceReward)
+            {
+                string rewardText = $"‖color:gui.orange‖{string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub))}‖end‖";
+                message = message.Replace("[reward]", rewardText);
+            }
+            return message;
         }
 
         public virtual void SetLevel(LevelData level) { }
 
-        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
-            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer);
+            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer, difficultyLevel);
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
             if (missionType == MissionType.None)
@@ -226,37 +225,44 @@ namespace Barotrauma
             }
             else
             {
-                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => ((int)(missionType & m.Type)) != 0));
+                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => m.Type.HasAnyFlag(missionType)));
             }
-
-            allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
+            allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);
             if (requireCorrectLocationType)
             {
                 allowedMissions.RemoveAll(m => !m.IsAllowed(locations[0], locations[1]));
             }
-
-            if (allowedMissions.Count == 0)
+            if (difficultyLevel.HasValue)
             {
-                return null;
+                allowedMissions.RemoveAll(m => !m.IsAllowedDifficulty(difficultyLevel.Value));
             }
-
-            int probabilitySum = allowedMissions.Sum(m => m.Commonness);
-            int randomNumber = rand.NextInt32() % probabilitySum;
-            foreach (MissionPrefab missionPrefab in allowedMissions)
-            {
-                if (randomNumber <= missionPrefab.Commonness)
-                {
-                    return missionPrefab.Instantiate(locations, Submarine.MainSub);
-                }
-                randomNumber -= missionPrefab.Commonness;
-            }
-
-            return null;
+            if (allowedMissions.Count == 0) { return null; }
+            MissionPrefab missionPrefab = ToolBox.SelectWeightedRandom(allowedMissions, m => m.Commonness, rand);
+            return missionPrefab.Instantiate(locations, Submarine.MainSub);
         }
 
-        public virtual int GetReward(Submarine sub)
+        /// <summary>
+        /// Calculates the base reward, can be overridden for different mission types
+        /// </summary>
+        public virtual int GetBaseReward(Submarine sub)
         {
             return Prefab.Reward;
+        }
+
+        /// <summary>
+        /// Calculates the available reward, taking into account universal modifiers such as campaign settings
+        /// </summary>
+        public int GetReward(Submarine sub)
+        {
+            int reward = GetBaseReward(sub);
+
+            // Some modifiers should apply universally to all implementations of GetBaseReward
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                reward = (int)Math.Round(reward * campaign.Settings.MissionRewardMultiplier);
+            }
+
+            return reward;
         }
 
         public void Start(Level level)
@@ -270,7 +276,7 @@ namespace Barotrauma
             {
                 foreach (MapEntity entityToShow in MapEntity.MapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
-                    entityToShow.HiddenInGame = false;
+                    entityToShow.IsLayerHidden = false;
                 }
             }
             this.level = level;
@@ -353,7 +359,7 @@ namespace Barotrauma
             }
             if (GameMain.GameSession?.EventManager != null)
             {
-                var newEvent = eventPrefab.CreateInstance();
+                var newEvent = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
                 GameMain.GameSession.EventManager.ActivateEvent(newEvent);
             }
         }
@@ -363,9 +369,12 @@ namespace Barotrauma
         /// </summary>
         public void End()
         {
-            completed = 
-                DetermineCompleted() && 
-                (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            if (GameMain.NetworkMember is not { IsClient: true })
+            {
+                completed =                 
+                    DetermineCompleted() && 
+                    (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            }
             if (completed)
             {
                 if (Prefab.LocationTypeChangeOnCompleted != null)
@@ -455,9 +464,13 @@ namespace Barotrauma
 
                 foreach (var reputationReward in ReputationRewards)
                 {
+                    var reputationGainMultiplier = new AbilityMissionReputationGainMultiplier(this, 1f, character: null);
+                    foreach (var c in crewCharacters) { c.CheckTalents(AbilityEffectType.OnCrewGainMissionReputation, reputationGainMultiplier); }
+                    float amount = reputationReward.Amount * reputationGainMultiplier.Value;
+                    
                     if (reputationReward.FactionIdentifier == "location")
                     {
-                        OriginLocation.Reputation?.AddReputation(reputationReward.Amount);
+                        OriginLocation.Reputation?.AddReputation(amount);
                         TryGiveReputationForOpposingFaction(OriginLocation.Faction, reputationReward.AmountForOpposingFaction);
                     }
                     else
@@ -465,7 +478,7 @@ namespace Barotrauma
                         Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.FactionIdentifier);
                         if (faction != null)
                         {
-                            faction.Reputation.AddReputation(reputationReward.Amount);
+                            faction.Reputation.AddReputation(amount);
                             TryGiveReputationForOpposingFaction(faction, reputationReward.AmountForOpposingFaction);
                         }
                     }
@@ -656,6 +669,20 @@ namespace Barotrauma
         public AbilityMissionExperienceGainMultiplier(Mission mission, float missionExperienceGainMultiplier, Character character)
         {
             Value = missionExperienceGainMultiplier;
+            Mission = mission;
+            Character = character;
+        }
+
+        public float Value { get; set; }
+        public Mission Mission { get; set; }
+        public Character Character { get; set; }
+    }
+    
+    class AbilityMissionReputationGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission, IAbilityCharacter
+    {
+        public AbilityMissionReputationGainMultiplier(Mission mission, float reputationMultiplier, Character character)
+        {
+            Value = reputationMultiplier;
             Mission = mission;
             Character = character;
         }

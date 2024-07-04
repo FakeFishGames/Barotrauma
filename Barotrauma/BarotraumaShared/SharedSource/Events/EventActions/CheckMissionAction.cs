@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Barotrauma;
 
+/// <summary>
+/// Check whether a specific mission is currently active, selected for the next round or available.
+/// </summary>
 class CheckMissionAction : BinaryOptionAction
 {
     public enum MissionType
@@ -12,16 +15,16 @@ class CheckMissionAction : BinaryOptionAction
         Available
     }
 
-    [Serialize(MissionType.Current, IsPropertySaveable.Yes)]
+    [Serialize(MissionType.Current, IsPropertySaveable.Yes, description: "Does the mission need to be currently active, selected for the next round or available.")]
     public MissionType Type { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the mission.")]
     public Identifier MissionIdentifier { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Tag of the mission. Ignored if MissionIdentifier is set.")]
     public Identifier MissionTag { get; set; }
 
-    [Serialize(1, IsPropertySaveable.Yes)]
+    [Serialize(1, IsPropertySaveable.Yes, description: "Minimum number of matching missions for the check to succeed.")]
     public int MissionCount { get; set; }
 
     public CheckMissionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)

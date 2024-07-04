@@ -60,7 +60,9 @@ namespace Barotrauma
             = new[]
             {
                 (SpeciallyHandledCharCategory.CJK, UnicodeToIntRanges(
+                    UnicodeRanges.HalfwidthandFullwidthForms,
                     UnicodeRanges.HangulJamo,
+                    UnicodeRanges.HangulCompatibilityJamo,
                     UnicodeRanges.CjkRadicalsSupplement,
                     UnicodeRanges.CjkSymbolsandPunctuation,
                     UnicodeRanges.EnclosedCjkLettersandMonths,
@@ -172,7 +174,7 @@ namespace Barotrauma
             var allTexts = TextPacks[GameSettings.CurrentConfig.Language]
                 .SelectMany(p => p.Texts.TryGetValue(tag, out var value)
                     ? (IEnumerable<TextPack.Text>)value
-                    : Array.Empty<TextPack.Text>());
+                    : Array.Empty<TextPack.Text>()).ToList();
 
             var firstOverride = allTexts.FirstOrDefault(t => t.IsOverride);
             if (firstOverride != default)
@@ -190,17 +192,25 @@ namespace Barotrauma
             var allTexts = TextPacks[GameSettings.CurrentConfig.Language]
                 .SelectMany(p => p.Texts);
 
-            var firstOverride = allTexts.SelectMany(kvp => kvp.Value).FirstOrDefault(t => t.IsOverride);
-            if (firstOverride != default)
+            foreach (var textList in allTexts)
             {
-                return allTexts
-                    .Where(kvp => kvp.Value.Any(t => t.IsOverride && t.TextPack == firstOverride.TextPack))
-                    .SelectMany(kvp => kvp.Value.Select(v => new KeyValuePair<Identifier, string>(kvp.Key, v.String)));
-            }
-            else
-            {
-                return allTexts
-                    .SelectMany(kvp => kvp.Value.Select(v => new KeyValuePair<Identifier, string>(kvp.Key, v.String)));
+                var firstOverride = textList.Value.FirstOrDefault(t => t.IsOverride);
+                if (firstOverride != default)
+                {
+                    //if there's any overrides for this tag, only return the overrides
+                    foreach (var text in textList.Value)
+                    {
+                        if (!text.IsOverride) { continue; }
+                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.String);
+                    }
+                }
+                else
+                {
+                    foreach (var text in textList.Value)
+                    {
+                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.String);
+                    }
+                }
             }
         }
 

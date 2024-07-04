@@ -65,8 +65,13 @@ namespace Barotrauma
             public static void ReloadCore()
             {
                 if (Core == null) { return; }
-                Core.UnloadContent();
-                Core.LoadContent();
+                ReloadPackage(Core);
+            }
+
+            public static void ReloadPackage(ContentPackage p)
+            {
+                p.UnloadContent();
+                p.LoadContent();
                 SortContent();
             }
 

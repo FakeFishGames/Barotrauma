@@ -14,6 +14,8 @@ namespace Barotrauma
         public RectangleF Rect;
         private Vector2 position;
 
+        public virtual bool IsResizable => false;
+
         public Vector2 Position
         {
             get => position;
@@ -22,12 +24,12 @@ namespace Barotrauma
                 const float clampSize = CircuitBoxSizes.PlayableAreaSize / 2f;
 
                 position = new Vector2(Math.Clamp(value.X, -clampSize, clampSize),
-                                       Math.Clamp(value.Y, -clampSize, clampSize));
+                    Math.Clamp(value.Y, -clampSize, clampSize));
                 UpdatePositions();
             }
         }
 
-        public ImmutableArray<CircuitBoxConnection> Connectors;
+        public ImmutableArray<CircuitBoxConnection> Connectors = ImmutableArray<CircuitBoxConnection>.Empty;
 
         public static float Opacity = 0.8f;
 
@@ -36,6 +38,47 @@ namespace Barotrauma
         public CircuitBoxNode(CircuitBox circuitBox)
         {
             CircuitBox = circuitBox;
+        }
+
+        public (Vector2 Size, Vector2 Pos) ResizeBy(CircuitBoxResizeDirection directions, Vector2 amount)
+        {
+            Vector2 newSize = Size;
+            Vector2 newPos = Position;
+            amount.Y = -amount.Y;
+            
+            if (directions.HasFlag(CircuitBoxResizeDirection.Down))
+            {
+                newSize.Y += amount.Y;
+                newSize.Y = Math.Max(newSize.Y, CircuitBoxLabelNode.MinSize.Y);
+                newPos = new Vector2(newPos.X, newPos.Y - (newSize.Y - Size.Y) / 2f);
+            }
+
+            if (directions.HasFlag(CircuitBoxResizeDirection.Right))
+            {
+                newSize.X += amount.X;
+                newSize.X = Math.Max(newSize.X, CircuitBoxLabelNode.MinSize.X);
+                newPos = new Vector2(newPos.X + (newSize.X - Size.X) / 2f, newPos.Y);
+            }
+
+            if (directions.HasFlag(CircuitBoxResizeDirection.Left))
+            {
+                newSize.X -= amount.X;
+                newSize.X = Math.Max(newSize.X, CircuitBoxLabelNode.MinSize.X);
+                newPos = new Vector2(newPos.X + (Size.X - newSize.X) / 2f, newPos.Y);
+            }
+
+            return (newSize, newPos);
+        }
+
+        public void ApplyResize(Vector2 newSize, Vector2 newPos)
+        {
+            if (!MathUtils.IsValid(newSize)) { return; }
+            Size = newSize;
+            Position = newPos;
+            UpdatePositions();
+#if CLIENT
+            OnResized(DrawRect);
+#endif
         }
 
         public static Vector2 CalculateSize(IReadOnlyList<CircuitBoxConnection> conns)

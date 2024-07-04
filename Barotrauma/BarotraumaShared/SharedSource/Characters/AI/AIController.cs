@@ -76,9 +76,9 @@ namespace Barotrauma
             get { return Character.AnimController.Collider.LinearVelocity; }
         }
 
-        public virtual bool CanEnterSubmarine
+        public virtual CanEnterSubmarine CanEnterSubmarine
         {
-            get { return true; }
+            get { return Character.AnimController.CanEnterSubmarine; }
         }
 
         public virtual bool CanFlip
@@ -327,8 +327,17 @@ namespace Barotrauma
                         {
                             if (otherItem.Prefab.Identifier == item.Prefab.Identifier || otherItem.HasIdentifierOrTags(targetTags))
                             {
-                                // Shouldn't try dropping identical items, because that causes infinite looping when trying to get multiple items of the same type and if can't fit them all in the inventory.
-                                return false;
+                                bool switchingToBetterSuit =
+                                    targetTags != null &&
+                                    targetTags.FirstOrDefault() == Tags.HeavyDivingGear &&
+                                    AIObjectiveFindDivingGear.IsSuitablePressureProtection(item, Tags.HeavyDivingGear, Character) &&
+                                    !AIObjectiveFindDivingGear.IsSuitablePressureProtection(otherItem, Tags.HeavyDivingGear, Character);
+                                // Shouldn't try dropping identical items, because that causes infinite looping when trying to get multiple items
+                                // of the same type and if can't fit them all in the inventory.
+                                if (!switchingToBetterSuit)
+                                {
+                                    return false;
+                                }
                             }
                             //if everything else fails, simply drop the existing item
                             otherItem.Drop(Character);

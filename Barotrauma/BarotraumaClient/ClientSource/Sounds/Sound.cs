@@ -24,6 +24,8 @@ namespace Barotrauma.Sounds
 
         public readonly bool StreamsReliably;
 
+        public bool Loading { get; protected set; }
+
         private readonly SoundManager.SourcePoolIndex sourcePoolIndex = SoundManager.SourcePoolIndex.Default;
         public virtual SoundManager.SourcePoolIndex SourcePoolIndex
         {
@@ -84,18 +86,34 @@ namespace Barotrauma.Sounds
             return Owner.IsPlaying(this);
         }
 
+        public bool LogWarningIfStillLoading()
+        {
+            if (Loading)
+            { 
+                if (Level.Loaded is not { Generating: true })
+                {
+                    DebugConsole.AddWarning($"Attempted to play the sound {this} while it was still loading.");
+                }
+                return true;
+            }
+            return false;
+        }
+
         public virtual SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
         {
+            LogWarningIfStillLoading();
             return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), 1.0f, range * 0.4f, range, "default", muffle);
         }
 
         public virtual SoundChannel Play(float gain, float range, float freqMult, Vector2 position, bool muffle = false)
         {
+            LogWarningIfStillLoading();
             return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), freqMult, range * 0.4f, range, "default", muffle);
         }
 
         public virtual SoundChannel Play(Vector3? position, float gain, float freqMult = 1.0f, bool muffle = false)
         {
+            LogWarningIfStillLoading();
             return new SoundChannel(this, gain, position, freqMult, BaseNear, BaseFar, "default", muffle);
         }
 
@@ -119,20 +137,8 @@ namespace Barotrauma.Sounds
         {
             for (int i = 0; i < length; i++)
             {
-                outBuffer[i] = FloatToShort(inBuffer[i]);
+                outBuffer[i] = ToolBox.FloatToShortAudioSample(inBuffer[i]);
             }
-        }
-
-        static protected short FloatToShort(float fVal)
-        {
-            int temp = (int)(32767 * fVal);
-            if (temp > short.MaxValue) temp = short.MaxValue;
-            else if (temp < short.MinValue) temp = short.MinValue;
-            return (short)temp;
-        }
-        static protected float ShortToFloat(short shortVal)
-        {
-            return shortVal / 32767f;
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

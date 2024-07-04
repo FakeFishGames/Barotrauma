@@ -779,6 +779,24 @@ namespace Barotrauma
             NonScaledSize = targetSize;
             yield return CoroutineStatus.Success;
         }
+
+        /// <summary>
+        /// Sets the minimum height of the transfrom to equal to the sum of the minimum heights of the children 
+        /// (i.e. makes the rect at least large enough to fit all the children vertically)
+        /// </summary>
+        public void InheritTotalChildrenMinHeight()
+        {
+            MinSize = new Point(MinSize.X, children.Sum(c => c.MinSize.Y));
+        }
+
+        /// <summary>
+        /// Sets the minimum height of the transfrom to equal to the sum of the heights of the children 
+        /// (i.e. makes the rect at least large enough to fit all the children vertically)
+        /// </summary>
+        public void InheritTotalChildrenHeight()
+        {
+            MinSize = new Point(MinSize.X, children.Sum(c => c.Rect.Height));
+        }
         #endregion
 
         #region Static methods

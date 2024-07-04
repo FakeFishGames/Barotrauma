@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace Barotrauma;
 
@@ -51,9 +51,19 @@ public static class Tags
     public static readonly Identifier ArtifactHolder = "artifactholder".ToIdentifier();
     public static readonly Identifier Thalamus = "thalamus".ToIdentifier();
 
+    public static readonly Identifier IgnoreThis = "ignorethis".ToIdentifier();
+    public static readonly Identifier UnignoreThis = "unignorethis".ToIdentifier();
+
+    public static readonly Identifier DeconstructThis = "deconstructthis".ToIdentifier();
+    public static readonly Identifier DontDeconstructThis = "dontdeconstructthis".ToIdentifier();
+
+    public static readonly Identifier Poison = "poison".ToIdentifier();
+    public static readonly Identifier Stun = "stun".ToIdentifier();
+
     public static readonly Identifier Crate = "crate".ToIdentifier();
     public static readonly Identifier DontSellItems = "dontsellitems".ToIdentifier();
     public static readonly Identifier CargoContainer = "cargocontainer".ToIdentifier();
+    public static readonly Identifier DisallowCargo = "disallowcargo".ToIdentifier();
 
     public static readonly Identifier CargoMissionItem = "cargomission".ToIdentifier();
 
@@ -66,6 +76,8 @@ public static class Tags
     public static readonly Identifier Weapon = "weapon".ToIdentifier();
     public static readonly Identifier StunnerItem = "stunner".ToIdentifier();
     public static readonly Identifier MobileRadio = "mobileradio".ToIdentifier();
+
+    public static readonly Identifier Scooter = "scooter".ToIdentifier();
 
     /// <summary>
     /// Any handcuffs.
@@ -90,6 +102,8 @@ public static class Tags
     public static readonly Identifier TraitorMissionItem = "traitormissionitem".ToIdentifier();
     public static readonly Identifier TraitorGuidelinesForSecurity = "traitorguidelinesforsecurity".ToIdentifier();
 
+    public static readonly Identifier ProvocativeToHumanAI = "provocativetohumanai".ToIdentifier();
+
     /// <summary>
     /// Container where the initial gear (diving suit, oxygen tank, etc) of respawning players is placed
     /// </summary>
@@ -110,5 +124,8 @@ public static class Tags
     public static readonly Identifier ElectricalSkill = "electrical".ToIdentifier();
     public static readonly Identifier MechanicalSkill = "mechanical".ToIdentifier();
     public static readonly Identifier MedicalSkill = "medical".ToIdentifier();
+
+    public static readonly Identifier SkillLossDeathResistance = "skilllossdeath".ToIdentifier();
+    public static readonly Identifier SkillLossRespawnResistance = "skilllossrespawn".ToIdentifier();
 }
 

@@ -91,7 +91,9 @@ namespace Barotrauma.Items.Components
         public override void Equip(Character character)
         {
             base.Equip(character);
-            reloadTimer = Math.Min(reload, 1.0f);
+            //force a wait of at least 1 second when equipping the weapon, so you can't "rapid-fire" by swapping between weapons
+            const float forcedDelayOnEquip = 1.0f;
+            reloadTimer = Math.Max(Math.Min(reload, forcedDelayOnEquip), reloadTimer);
             IsActive = true;
         }
 
@@ -218,13 +220,12 @@ namespace Barotrauma.Items.Components
             AnimController ac = picker.AnimController;
             if (!hitting)
             {
-                bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim &&
-                    !UsageDisabledByRangedWeapon(picker);
+                bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim && !UsageDisabledByRangedWeapon(picker);
                 if (aim)
                 {
                     UpdateSwingPos(deltaTime, out Vector2 swingPos);
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 3f, MathHelper.PiOver4));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos + swingPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos + aimAngle, aimMelee: true);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: aimPos + swingPos, aim: false, hitPos, holdAngle + hitPos + aimAngle, aimMelee: true);
                     if (ac.InWater)
                     {
                         ac.LockFlipping();
@@ -233,7 +234,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     hitPos = 0;
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle);
                 }
             }
             else
@@ -242,11 +243,11 @@ namespace Barotrauma.Items.Components
                 hitPos -= deltaTime * 15f;
                 if (Swing)
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, SwingPos, Vector2.Zero, aim: false, hitPos, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: SwingPos, aim: false, hitPos, holdAngle);
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle);
                 }
                 if (hitPos < -MathHelper.Pi)
                 {
@@ -295,7 +296,7 @@ namespace Barotrauma.Items.Components
             impactQueue.Clear();
             item.body.FarseerBody.OnCollision -= OnCollision;
             item.body.CollisionCategories = Physics.CollisionItem;
-            item.body.CollidesWith = Physics.CollisionWall;
+            item.body.CollidesWith = Physics.DefaultItemCollidesWith;
             item.body.FarseerBody.IsBullet = false;
             item.body.PhysEnabled = false;
         }

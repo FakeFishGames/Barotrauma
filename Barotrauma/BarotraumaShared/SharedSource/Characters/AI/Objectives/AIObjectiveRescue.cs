@@ -13,10 +13,9 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "rescue".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
+        protected override bool AllowWhileHandcuffed => false;
 
         const float TreatmentDelay = 0.5f;
 
@@ -278,52 +277,66 @@ namespace Barotrauma
 
             float cprSuitability = Target.Oxygen < 0.0f ? -Target.Oxygen * 100.0f : 0.0f;
 
-            //find which treatments are the most suitable to treat the character's current condition
-            Target.CharacterHealth.GetSuitableTreatments(currentTreatmentSuitabilities, user: character, normalize: false, predictFutureDuration: 10.0f);
-
-            //check if we already have a suitable treatment for any of the afflictions
+            float bestSuitability = 0.0f;
+            Item bestItem = null;
+            Affliction afflictionToTreat = null;
             foreach (Affliction affliction in GetSortedAfflictions(Target))
             {
-                if (affliction == null) { throw new Exception("Affliction was null"); }
-                if (affliction.Prefab == null) { throw new Exception("Affliction prefab was null"); }
-                float bestSuitability = 0.0f;
-                Item bestItem = null;
-                foreach (KeyValuePair<Identifier, float> treatmentSuitability in affliction.Prefab.TreatmentSuitabilities)
+                //find which treatments are the most suitable to treat the character's current condition
+                Target.CharacterHealth.GetSuitableTreatments(
+                    currentTreatmentSuitabilities, 
+                    limb: Target.CharacterHealth.GetAfflictionLimb(affliction), 
+                    user: character,
+                    predictFutureDuration: 10.0f);
+
+                foreach (KeyValuePair<Identifier, float> treatmentSuitability in currentTreatmentSuitabilities)
                 {
-                    if (currentTreatmentSuitabilities.ContainsKey(treatmentSuitability.Key) && 
-                        currentTreatmentSuitabilities[treatmentSuitability.Key] > bestSuitability)
+                    float thisSuitability = currentTreatmentSuitabilities[treatmentSuitability.Key];
+                    if (thisSuitability <= 0) { continue; }
+                    
+                    Item matchingItem = FindMedicalItem(character.Inventory, treatmentSuitability.Key);
+                    //allow taking items from the target's inventory too if the target is unconscious
+                    if (matchingItem == null && Target.IsIncapacitated)
                     {
-                        Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key, true);
-                        //allow taking items from the target's inventory too if the target is unconscious
-                        if (matchingItem == null && Target.IsIncapacitated)
-                        {
-                            matchingItem ??= Target.Inventory?.FindItemByIdentifier(treatmentSuitability.Key, true);
-                        }
-                        if (matchingItem != null) 
-                        {
-                            bestItem = matchingItem;
-                            bestSuitability = currentTreatmentSuitabilities[treatmentSuitability.Key];
-                        }
+                        matchingItem = FindMedicalItem(Target.Inventory, treatmentSuitability.Key);
                     }
-                }
-                if (bestItem != null)
-                {
-                    if (Target != character) { character.SelectCharacter(Target); }
-                    ApplyTreatment(affliction, bestItem);
-                    //wait a bit longer after applying a treatment to wait for potential side-effects to manifest
-                    treatmentTimer = TreatmentDelay * 4;
-                    return;
+                    if (matchingItem == null) { continue; }
+
+                    //also check how suitable the treatment is for the specific affliction we're now checking
+                    //we don't want to e.g. give fentanyl for oxygen low just because the character has burns on other limbs
+                    //that would also be healed by it!
+                    float suitabilityForThisAffliction = affliction.Prefab.GetTreatmentSuitability(matchingItem);
+                    float totalSuitability = thisSuitability * suitabilityForThisAffliction;
+                    if (matchingItem != null && totalSuitability > bestSuitability)
+                    {
+                        bestItem = matchingItem;
+                        afflictionToTreat = affliction;
+                        bestSuitability = totalSuitability;
+                    }                    
                 }
             }
+
+            if (bestItem != null && bestSuitability > cprSuitability)
+            {
+                if (Target != character) { character.SelectCharacter(Target); }
+                ApplyTreatment(afflictionToTreat, bestItem);
+                //wait a bit longer after applying a treatment to wait for potential side-effects to manifest
+                treatmentTimer = TreatmentDelay * 4;
+                return;
+            }
+
             // Find treatments outside of own inventory only if inside the own sub.
             if (character.Submarine != null && character.Submarine.TeamID == character.TeamID)
             {
+                //get "overall" suitability for no specific limb at this point
+                Target.CharacterHealth.GetSuitableTreatments(
+                    currentTreatmentSuitabilities, user: character, predictFutureDuration: 10.0f);
                 //didn't have any suitable treatments available, try to find some medical items
                 if (currentTreatmentSuitabilities.Any(s => s.Value > cprSuitability))
                 {
                     itemNameList.Clear();
                     suitableItemIdentifiers.Clear();
-                    foreach (KeyValuePair<Identifier, float> treatmentSuitability in currentTreatmentSuitabilities)
+                    foreach (KeyValuePair<Identifier, float> treatmentSuitability in currentTreatmentSuitabilities.OrderByDescending(s => s.Value))
                     {
                         if (treatmentSuitability.Value <= cprSuitability) { continue; }
                         if (ItemPrefab.Prefabs.TryGet(treatmentSuitability.Key, out ItemPrefab itemPrefab))
@@ -420,6 +433,28 @@ namespace Barotrauma
             }
         }
 
+        public static Item FindMedicalItem(Inventory inventory, Identifier itemIdentifier)
+        {
+            return FindMedicalItem(inventory, it => it.Prefab.Identifier == itemIdentifier);
+        }
+
+        public static Item FindMedicalItem(Inventory inventory, Func<Item, bool> predicate)
+        {
+            if (inventory == null) { return null; }
+            //prefer items not in a container
+            Item match = inventory.FindItem(predicate, recursive: false);
+            if (match != null) { return match; }
+
+            //start from the inventories with most slots 
+            //= prefer taking items from things like toolbelts or doctor's uniforms, as opposed to e.g. autoinjectors which tend to have one or two slots
+            foreach (var potentialContainer in inventory.AllItems.OrderByDescending(it => it.OwnInventory?.Capacity ?? -1))
+            {
+                match = potentialContainer.OwnInventory?.FindItem(predicate, recursive: true);
+                if (match != null) { return match; }
+            }
+            return null;
+        }
+
         private void SpeakCannotTreat()
         {
             LocalizedString msg = character == Target ?
@@ -448,7 +483,7 @@ namespace Barotrauma
         protected override float GetPriority()
         {
             if (Target == null) { Abandon = true; }
-            if (!IsAllowed) { HandleNonAllowed(); }
+            if (!IsAllowed) { HandleDisallowed(); }
             if (Abandon)
             {
                 return Priority;
@@ -495,8 +530,8 @@ namespace Barotrauma
 
         public override void OnDeselected()
         {
-            character.SelectedCharacter = null;
             base.OnDeselected();
+            character.DeselectCharacter();
         }
     }
 }

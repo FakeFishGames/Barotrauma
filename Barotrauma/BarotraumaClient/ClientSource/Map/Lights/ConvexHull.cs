@@ -156,17 +156,7 @@ namespace Barotrauma.Lights
             BoundingBox = rect;
 
             this.isHorizontal = isHorizontal;
-            if (ParentEntity is Structure structure)
-            {
-                Debug.Assert(!structure.Removed);
-                isHorizontal = structure.IsHorizontal;
-            }
-            else if (ParentEntity is Item item)
-            {
-                Debug.Assert(!item.Removed);
-                var door = item.GetComponent<Door>();
-                if (door != null) { isHorizontal = door.IsHorizontal; }
-            }
+            Debug.Assert(!ParentEntity.Removed);     
 
             Vector2[] verts = new Vector2[]
             {

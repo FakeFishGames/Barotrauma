@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "idle".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowInAnySub => true;
 
         private BehaviorType behavior;
         public BehaviorType Behavior
@@ -90,8 +90,6 @@ namespace Barotrauma
 
         protected override bool CheckObjectiveSpecific() => false;
         public override bool CanBeCompleted => true;
-
-        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
 
         public readonly HashSet<Identifier> PreferredOutpostModuleTypes = new HashSet<Identifier>();
 
@@ -266,7 +264,7 @@ namespace Barotrauma
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
                             return true;
                             //don't stop at ladders when idling
-                        }, endNodeFilter: node => node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
+                        }, endNodeFilter: node => node.Waypoint.Stairs == null && node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -299,7 +297,7 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, 
                         nodeFilter: node => node.Waypoint.CurrentHull != null, 
-                        endNodeFilter: node => node.Waypoint.Ladders == null);
+                        endNodeFilter: node => node.Waypoint.Ladders == null && node.Waypoint.Stairs == null);
                 }
                 else
                 {
@@ -454,14 +452,16 @@ namespace Barotrauma
                 {
                     targetHulls.Add(hull);
                     float weight = hull.RectWidth;
-                    // Prefer rooms that are closer. Avoid rooms that are not in the same level.
-                    // If the behavior is active, prefer rooms that are not close.
-                    float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
-                    yDist = yDist > 100 ? yDist * 5 : 0;
-                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
-                    float distanceFactor = behavior == BehaviorType.Patrol ? MathHelper.Lerp(1, 0, MathUtils.InverseLerp(2500, 0, dist)) : MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 2500, dist));
+                    float distanceFactor = GetDistanceFactor(hull.WorldPosition, verticalDistanceMultiplier: 5, maxDistance: 2500, 
+                        factorAtMinDistance: 1, factorAtMaxDistance: 0);
+                    if (behavior == BehaviorType.Patrol)
+                    {
+                        //invert when patrolling (= prefer travelling to far-away hulls)
+                        distanceFactor = 1.0f - distanceFactor;
+                    }
                     float waterFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 100, hull.WaterPercentage * 2));
                     weight *= distanceFactor * waterFactor;
+                    System.Diagnostics.Debug.Assert(weight >= 0);
                     hullWeights.Add(weight);
                 }
             }

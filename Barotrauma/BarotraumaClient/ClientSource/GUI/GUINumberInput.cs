@@ -15,20 +15,73 @@ namespace Barotrauma
 
         public GUITextBox TextBox { get; private set; }
 
+        public override RichString ToolTip
+        {
+            get
+            {
+                return base.ToolTip;
+            }
+            set
+            {
+                base.ToolTip = value;
+                TextBox.ToolTip = value;
+            }
+        }
+
         public GUIButton PlusButton { get; private set; }
         public GUIButton MinusButton { get; private set; }
 
+        public enum ButtonVisibility { Automatic, Manual, ForceVisible, ForceHidden }
+        private ButtonVisibility _plusMinusButtonVisibility;
+        /// <summary>
+        /// Whether or not the default +- buttons should be shown. Defaults to Automatic,
+        /// which enables it for all integers and for those floats that have a defined
+        /// range, because for these it is implicitly more obvious how to increment them.
+        /// </summary>
+        public ButtonVisibility PlusMinusButtonVisibility
+        {
+            get { return _plusMinusButtonVisibility; }
+            set
+            {
+                if (_plusMinusButtonVisibility != value)
+                {
+                    _plusMinusButtonVisibility = value;
+                    UpdatePlusMinusButtonVisibility();
+                }
+            }
+        }
+
         private void UpdatePlusMinusButtonVisibility()
         {
-            if (ForceShowPlusMinusButtons
-                || inputType == NumberType.Int
-                || (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue))
+            switch (PlusMinusButtonVisibility)
             {
-                ShowPlusMinusButtons();
-            }
-            else
-            {
-                HidePlusMinusButtons();
+                case ButtonVisibility.ForceHidden:
+                {
+                    HidePlusMinusButtons();
+                    break;
+                }
+                case ButtonVisibility.ForceVisible:
+                {
+                    ShowPlusMinusButtons();
+                    break;
+                }
+                case ButtonVisibility.Automatic:
+                {
+                    if (inputType == NumberType.Int
+                        || (inputType == NumberType.Float
+                            && MinValueFloat > float.MinValue
+                            && MaxValueFloat < float.MaxValue))
+                    {
+                        ShowPlusMinusButtons();
+                    }
+                    else
+                    {
+                        HidePlusMinusButtons();
+                    }
+                    break;
+                }
+                case ButtonVisibility.Manual:
+                    return;
             }
         }
         
@@ -75,7 +128,7 @@ namespace Barotrauma
             }
             set
             {
-                if (MathUtils.NearlyEqual(value, floatValue)) { return; }
+                if (Math.Abs(value - floatValue) < 0.0001f && MathUtils.NearlyEqual(value, floatValue)) { return; }
                 floatValue = value;
                 ClampFloatValue();
                 float newValue = floatValue;
@@ -83,19 +136,6 @@ namespace Barotrauma
                 //UpdateText may remove decimals from the value, force to full accuracy
                 floatValue = newValue; 
                 OnValueChanged?.Invoke(this);
-            }
-        }
-
-        private bool forceShowPlusMinusButtons;
-
-        public bool ForceShowPlusMinusButtons
-        {
-            get { return forceShowPlusMinusButtons; }
-            set
-            {
-                if (forceShowPlusMinusButtons == value) { return; }
-                forceShowPlusMinusButtons = value;
-                UpdatePlusMinusButtonVisibility();
             }
         }
 
@@ -162,6 +202,17 @@ namespace Barotrauma
                 }
             }
         }
+        
+        public bool Readonly
+        {
+            get { return TextBox.Readonly; }
+            set
+            {
+                TextBox.Readonly = value;
+                PlusButton.Enabled = !value;
+                MinusButton.Enabled = !value;
+            }
+        }
 
         public override GUIFont Font
         {
@@ -189,11 +240,19 @@ namespace Barotrauma
 
         public float ValueStep;
 
+        // Enable holding to scroll through values faster
         private float pressedTimer;
         private readonly float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
 
-        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center, float? relativeButtonAreaWidth = null, bool hidePlusMinusButtons = false) : base(style, rectT)
+        public GUINumberInput(
+            RectTransform rectT,
+            NumberType inputType,
+            string style = "",
+            Alignment textAlignment = Alignment.Center,
+            float? relativeButtonAreaWidth = null,
+            ButtonVisibility buttonVisibility = ButtonVisibility.Automatic,
+            (GUIButton PlusButton, GUIButton MinusButton)? customPlusMinusButtons = null) : base(style, rectT)
         {
             LayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
@@ -233,9 +292,23 @@ namespace Barotrauma
                 return true;
             };
 
-            var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
-            PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), style: null);
-            GUIStyle.Apply(PlusButton, "PlusButton", this);
+            if (customPlusMinusButtons.HasValue)
+            {
+                PlusButton = customPlusMinusButtons.Value.PlusButton;
+                MinusButton = customPlusMinusButtons.Value.MinusButton;
+            }
+            else // generate the default +- buttons
+            {
+                var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
+
+                PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), style: null);
+                GUIStyle.Apply(PlusButton, "PlusButton", this);
+
+                MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), style: null);
+                GUIStyle.Apply(MinusButton, "MinusButton", this);
+            }
+
+            // Set up default and custom +- buttons the same way to ensure uniform functionality
             PlusButton.ClickSound = GUISoundType.Increase;
             PlusButton.OnButtonDown += () =>
             {
@@ -255,9 +328,6 @@ namespace Barotrauma
                 }
                 return true;
             };
-
-            MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), style: null);
-            GUIStyle.Apply(MinusButton, "MinusButton", this);
             MinusButton.ClickSound = GUISoundType.Decrease;
             MinusButton.OnButtonDown += () =>
             {
@@ -278,10 +348,7 @@ namespace Barotrauma
                 return true;
             };
 
-            if (inputType != NumberType.Int || hidePlusMinusButtons)
-            {
-                HidePlusMinusButtons();
-            }
+            PlusMinusButtonVisibility = buttonVisibility;
 
             if (inputType == NumberType.Int)
             {
@@ -324,16 +391,16 @@ namespace Barotrauma
 
         private void HidePlusMinusButtons()
         {
-            PlusButton.Parent.Visible = false;
-            PlusButton.Parent.IgnoreLayoutGroups = true;
+            PlusButton.Parent.Visible = MinusButton.Parent.Visible = false;
+            PlusButton.Parent.IgnoreLayoutGroups = MinusButton.Parent.IgnoreLayoutGroups = true;
             TextBox.RectTransform.RelativeSize = Vector2.One;
             LayoutGroup.Recalculate();
         }
 
         private void ShowPlusMinusButtons()
         {
-            PlusButton.Parent.Visible = true;
-            PlusButton.Parent.IgnoreLayoutGroups = false;
+            PlusButton.Parent.Visible = MinusButton.Parent.Visible = true;
+            PlusButton.Parent.IgnoreLayoutGroups = MinusButton.Parent.IgnoreLayoutGroups = false;
             TextBox.RectTransform.RelativeSize = new Vector2(1.0f - PlusButton.Parent.RectTransform.RelativeSize.X, 1.0f);
             LayoutGroup.Recalculate();
         }
@@ -427,6 +494,11 @@ namespace Barotrauma
                     Math.Min(floatValue, MaxValueFloat.Value);
                 PlusButton.Enabled = WrapAround || floatValue < MaxValueFloat;
             }
+
+            if (Readonly)
+            {
+                PlusButton.Enabled = MinusButton.Enabled = false;
+            }
         }
 
         private void ClampIntValue()
@@ -441,8 +513,16 @@ namespace Barotrauma
                 intValue = WrapAround && MinValueInt.HasValue ? MinValueInt.Value : Math.Min(intValue, MaxValueInt.Value);
                 UpdateText();
             }
-            PlusButton.Enabled = WrapAround || MaxValueInt == null || intValue < MaxValueInt;
-            MinusButton.Enabled = WrapAround || MinValueInt == null || intValue > MinValueInt;
+
+            if (Readonly)
+            {
+                PlusButton.Enabled = MinusButton.Enabled = false;
+            }
+            else
+            {
+                PlusButton.Enabled = WrapAround || MaxValueInt == null || intValue < MaxValueInt;
+                MinusButton.Enabled = WrapAround || MinValueInt == null || intValue > MinValueInt;
+            }
         }
 
         private void UpdateText()

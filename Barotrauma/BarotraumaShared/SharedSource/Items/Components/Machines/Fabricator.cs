@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
 
         private ItemContainer inputContainer, outputContainer;
         
-        [Serialize(1.0f, IsPropertySaveable.Yes)]
+        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 1000), Serialize(1.0f, IsPropertySaveable.Yes)]
         public float FabricationSpeed { get; set; }
         
         [Serialize(1.0f, IsPropertySaveable.Yes)]
@@ -469,7 +469,10 @@ namespace Barotrauma.Items.Components
                         character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationitemAmount);
                     }
                     user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationitemAmount);
-                    quality = GetFabricatedItemQuality(fabricatedItem, user).RollQuality();
+                    quality =
+                        fabricatedItem.TargetItem.MaxStackSize > 1 ?
+                        GetFabricatedItemQuality(fabricatedItem, user).Quality :
+                        GetFabricatedItemQuality(fabricatedItem, user).RollQuality();
                 }
 
                 int amount = (int)fabricationitemAmount.Value;
@@ -490,7 +493,12 @@ namespace Barotrauma.Items.Components
                 for (int i = 0; i < amount; i++)
                 {
                     float outCondition = fabricatedItem.OutCondition;
-                    GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + fabricatedItem.TargetItem.Identifier);
+                    if (fabricatedItem.TargetItem.ContentPackage == ContentPackageManager.VanillaCorePackage &&
+                        /* we don't need info of every fabricated item, we can get a good sample size just by logging 5% */
+                        Rand.Range(0.0f, 1.0f) < 0.05f)
+                    {
+                        GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + fabricatedItem.TargetItem.Identifier);
+                    }
                     if (i < amountFittingContainer)
                     {
                         Entity.Spawner.AddItemToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition, quality,
@@ -577,11 +585,11 @@ namespace Barotrauma.Items.Components
         public static float CalculateBonusRollPercentage(float skillLevel, float target)
             => Math.Clamp((skillLevel - target) / (100f - target) * 100f, min: 0, max: 100);
 
-        public readonly record struct QualityResult(int Quality, float PlusOnePercentage, float PlusTwoPercentage)
+        public readonly record struct QualityResult(int Quality, bool HasRandomQuality, float PlusOnePercentage, float PlusTwoPercentage)
         {
-            public static readonly QualityResult Empty = new QualityResult(0, 0, 0);
+            public static readonly QualityResult Empty = new QualityResult(0, true, 0, 0);
 
-            public bool HasRandomQualityRollChance => PlusOnePercentage > 0f || PlusTwoPercentage > 0f;
+            public bool HasRandomQualityRollChance => HasRandomQuality && (PlusOnePercentage > 0f || PlusTwoPercentage > 0f);
 
             // The total real world percentage for a roll to succeed, taking into account that +1 needs to succeed for +2 to be attempted and
             // that the chance for only +1 goes down as +2 increases since some of the +1's will turn into +2s
@@ -676,19 +684,41 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            bool hasRandomQuality = !(fabricatedItem.TargetItem.MaxStackSize > 1); //don't randomise items with a stacksize > 1
+            float PlusOnePercentage = plusOne.Match(some: static f => f, none: static () => 0f);
+            float PlusTwoPercentage = plusTwo.Match(some: static f => f, none: static () => 0f);
+
+            if (!hasRandomQuality && PlusOnePercentage > 0)
+            {
+                quality++;
+                if (PlusTwoPercentage > 0)
+                {
+                    quality++;
+                }
+            }
+
             return new QualityResult(quality,
-                PlusOnePercentage: plusOne.Match(some: static f => f, none: static () => 0f),
-                PlusTwoPercentage: plusTwo.Match(some: static f => f, none: static () => 0f));
+                hasRandomQuality,
+                PlusOnePercentage,
+                PlusTwoPercentage);
         }
 
         partial void UpdateRequiredTimeProjSpecific();
 
         private static bool AnyOneHasRecipeForItem(Character user, ItemPrefab item)
         {
+            CharacterType mustHaveRecipe = GameMain.GameSession?.GameMode is { IsSinglePlayer: true } ?
+                //in single player it doesn't matter if it's a bot or a player who has the recipe 
+                //(the bots can turn into a "player" when switching characters, and that could interrupt the fabrication)
+                CharacterType.Both : 
+                //in MP the recipes other players have don't cound
+                CharacterType.Bot;
             return
                 (user != null && user.HasRecipeForItem(item.Identifier)) ||
-                GameSession.GetSessionCrewCharacters(CharacterType.Bot).Any(c => c.HasRecipeForItem(item.Identifier));
+                GameSession.GetSessionCrewCharacters(mustHaveRecipe).Any(c => c.HasRecipeForItem(item.Identifier));
         }
+
+        private readonly HashSet<Item> usedIngredients = new HashSet<Item>();
 
         private bool CanBeFabricated(FabricationRecipe fabricableItem, IReadOnlyDictionary<Identifier, List<Item>> availableIngredients, Character character)
         {
@@ -733,22 +763,26 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
+            //maintain a list of used ingredients so we don't end up considering the same item a suitable for multiple required ingredients
+            usedIngredients.Clear();
+
             return fabricableItem.RequiredItems.All(requiredItem =>
             {
-                int availablePrefabsAmount = 0;
+                int availableItemsAmount = 0;
                 foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
                 {
-                    if (!availableIngredients.ContainsKey(requiredPrefab.Identifier)) { continue; }
+                    if (!availableIngredients.TryGetValue(requiredPrefab.Identifier, out var availableItems)) { continue; }            
 
-                    var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
-                    foreach (Item availablePrefab in availablePrefabs)
+                    foreach (Item availableItem in availableItems)
                     {
-                        if (requiredItem.IsConditionSuitable(availablePrefab.ConditionPercentage))
+                        if (usedIngredients.Contains(availableItem)) { continue; }
+                        if (requiredItem.IsConditionSuitable(availableItem.ConditionPercentage))
                         {
-                            availablePrefabsAmount++;
+                            usedIngredients.Add(availableItem);
+                            availableItemsAmount++;
                         }
 
-                        if (availablePrefabsAmount >= requiredItem.Amount)
+                        if (availableItemsAmount >= requiredItem.Amount)
                         {
                             return true;
                         }
@@ -958,9 +992,9 @@ namespace Barotrauma.Items.Components
             return componentElement;
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             savedFabricatedItem = componentElement.GetAttributeString("fabricateditemidentifier", "");
             savedTimeUntilReady = componentElement.GetAttributeFloat("savedtimeuntilready", 0.0f);
             savedRequiredTime = componentElement.GetAttributeFloat("savedrequiredtime", 0.0f);

@@ -158,7 +158,9 @@ namespace Barotrauma
             {
                 SetMenuTabPositioning();
                 CreateHostServerFields();
+                bool prevMenuOpen = GUI.SettingsMenuOpen;
                 SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
+                GUI.SettingsMenuOpen = prevMenuOpen;
                 if (remoteContentDoc?.Root != null)
                 {
                     remoteContentContainer.ClearChildren();
@@ -1355,7 +1357,7 @@ namespace Barotrauma
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
             GameMain.GameSession = new GameSession(selectedSub, savePath, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
-            GameMain.GameSession.CrewManager.CharacterInfos.Clear();
+            GameMain.GameSession.CrewManager.ClearCharacterInfos();
             foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
             {
                 GameMain.GameSession.CrewManager.AddCharacterInfo(characterInfo);
@@ -1496,7 +1498,7 @@ namespace Barotrauma
             float bannerAspectRatio = (float) playstyleBanner.Sprite.SourceRect.Width / playstyleBanner.Sprite.SourceRect.Height;
             playstyleBanner.RectTransform.NonScaledSize = new Point(playstyleBanner.Rect.Width, (int)(playstyleBanner.Rect.Width / bannerAspectRatio));
             playstyleBanner.RectTransform.IsFixedSize = true;
-            new GUIFrame(new RectTransform(Vector2.One, playstyleBanner.RectTransform), "InnerGlow", color: Color.Black);
+            new GUIFrame(new RectTransform(playstyleBanner.Rect.Size + new Point(1), playstyleBanner.RectTransform, Anchor.Center), "InnerGlow", color: Color.Black);
 
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.03f) },
                 "playstyle name goes here", font: GUIStyle.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");

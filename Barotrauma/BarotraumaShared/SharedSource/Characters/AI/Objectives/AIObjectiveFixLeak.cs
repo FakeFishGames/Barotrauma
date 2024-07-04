@@ -12,9 +12,9 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "fix leak".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-        public override bool AllowInFriendlySubs => true;
-        public override bool AllowInAnySub => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowInFriendlySubs => true;
+        protected override bool AllowInAnySub => true;
+        protected override bool AllowWhileHandcuffed => false;
 
         public Gap Leak { get; private set; }
 
@@ -37,7 +37,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             float coopMultiplier = 1;
@@ -120,7 +120,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                if (weldingTool.OwnInventory == null && repairTool.requiredItems.Any(r => r.Key == RelatedItem.RelationType.Contained))
+                if (weldingTool.OwnInventory == null && repairTool.RequiredItems.Any(r => r.Key == RelatedItem.RelationType.Contained))
                 {
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"{weldingTool}\" has no proper inventory");

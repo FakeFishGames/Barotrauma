@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
+    /// <summary>
+    /// Adjusts the crew's reputation by some value.
+    /// </summary>
     class ReputationAction : EventAction
     {
         public enum ReputationType
@@ -17,13 +14,13 @@ namespace Barotrauma
 
         public ReputationAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Amount of reputation to add or remove.")]
         public float Increase { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the faction you want to adjust the reputation for. Ignored if TargetType is set to Location.")]
         public Identifier Identifier { get; set; }
 
-        [Serialize(ReputationType.None, IsPropertySaveable.Yes)]
+        [Serialize(ReputationType.None, IsPropertySaveable.Yes, description: "Do you want to adjust the reputation for a specific faction, or whichever faction controls the current location?")]
         public ReputationType TargetType { get; set; }
 
         private bool isFinished;

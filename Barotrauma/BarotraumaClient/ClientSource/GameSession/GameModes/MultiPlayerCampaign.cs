@@ -67,10 +67,11 @@ namespace Barotrauma
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), layout.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
             {
+                Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
-            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), layout.RectTransform, Anchor.BottomLeft), style: "InnerFrame")
+            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), layout.RectTransform, Anchor.BottomLeft), style: "GUIFrameListBox")
             {
                 CanBeFocused = false
             };
@@ -95,6 +96,7 @@ namespace Barotrauma
                 loadCampaignButton.Selected = false;
                 newCampaignContainer.Visible = true;
                 loadCampaignContainer.Visible = false;
+                GameMain.NetLobbyScreen?.RefreshStartButtonVisibility();
                 return true;
             };
             loadCampaignButton.OnClicked = (btn, obj) =>
@@ -103,6 +105,7 @@ namespace Barotrauma
                 loadCampaignButton.Selected = true;
                 newCampaignContainer.Visible = false;
                 loadCampaignContainer.Visible = true;
+                GameMain.NetLobbyScreen?.RefreshStartButtonVisibility();
                 return true;
             };
             loadCampaignContainer.Visible = false;
@@ -159,7 +162,7 @@ namespace Barotrauma
             };
         }
 
-        private void InitCampaignUI()
+        public void InitCampaignUI()
         {
             campaignUIContainer = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
             CampaignUI = new CampaignUI(this, campaignUIContainer)
@@ -297,7 +300,7 @@ namespace Barotrauma
             Level prevLevel = Level.Loaded;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-            crewDead = false;
+            CrewDead = false;
 
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             if (continueButton != null)
@@ -480,7 +483,6 @@ namespace Barotrauma
             GameMain.CampaignEndScreen.OnFinished = () =>
             {
                 GameMain.NetLobbyScreen.Select();
-                if (GameMain.NetLobbyScreen.ContinueCampaignButton != null) { GameMain.NetLobbyScreen.ContinueCampaignButton.Enabled = false; }
                 if (GameMain.NetLobbyScreen.QuitCampaignButton != null) { GameMain.NetLobbyScreen.QuitCampaignButton.Enabled = false; }
             };
         }
@@ -718,7 +720,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
+                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, isNetworkMessage: true);
                         }
                     }
                     foreach (Item item in Item.ItemList.ToList())
@@ -904,6 +906,8 @@ namespace Barotrauma
 
         public void ClientReadCrew(IReadMessage msg)
         {
+            bool createNotification = msg.ReadBoolean();
+
             ushort availableHireLength = msg.ReadUInt16();
             List<CharacterInfo> availableHires = new List<CharacterInfo>();
             for (int i = 0; i < availableHireLength; i++)
@@ -914,10 +918,10 @@ namespace Barotrauma
             }
 
             ushort pendingHireLength = msg.ReadUInt16();
-            List<int> pendingHires = new List<int>();
+            List<UInt16> pendingHires = new List<UInt16>();
             for (int i = 0; i < pendingHireLength; i++)
             {
-                pendingHires.Add(msg.ReadInt32());
+                pendingHires.Add(msg.ReadUInt16());
             }
 
             ushort hiredLength = msg.ReadUInt16();
@@ -932,30 +936,49 @@ namespace Barotrauma
             bool renameCrewMember = msg.ReadBoolean();
             if (renameCrewMember)
             {
-                int renamedIdentifier = msg.ReadInt32();
+                UInt16 renamedIdentifier = msg.ReadUInt16();
                 string newName = msg.ReadString();
-                CharacterInfo renamedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
-                if (renamedCharacter != null) { CrewManager.RenameCharacter(renamedCharacter, newName); }
+                CharacterInfo renamedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                if (renamedCharacter != null)
+                {
+                    CrewManager.RenameCharacter(renamedCharacter, newName);
+                    // Since renaming can only be done once in permadeath, we can safely set this to false to disable the renaming in the UI.
+                    renamedCharacter.RenamingEnabled = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Could not find a character to rename with the ID {renamedIdentifier}.");
+                }
             }
 
             bool fireCharacter = msg.ReadBoolean();
             if (fireCharacter)
             {
-                int firedIdentifier = msg.ReadInt32();
-                CharacterInfo firedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
+                UInt16 firedIdentifier = msg.ReadUInt16();
+                CharacterInfo firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == firedIdentifier);
                 // this one might and is allowed to be null since the character is already fired on the original sender's game
                 if (firedCharacter != null) { CrewManager.FireCharacter(firedCharacter); }
             }
 
-            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.CrewManagement != null && 
-                /*can't apply until we have the latest save file*/
-                !NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
+            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.HRManagerUI != null)
             {
-                CampaignUI.CrewManagement.SetHireables(map.CurrentLocation, availableHires);
-                if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters); }
-                CampaignUI.CrewManagement.SetPendingHires(pendingHires, map.CurrentLocation);
-                if (renameCrewMember || fireCharacter) { CampaignUI.CrewManagement.UpdateCrew(); }
+                //can't apply until we have the latest save file
+                if (!NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
+                {
+                    CampaignUI.HRManagerUI.SetHireables(map.CurrentLocation, availableHires);
+                    if (hiredCharacters.Any()) { CampaignUI.HRManagerUI.ValidateHires(hiredCharacters, takeMoney: false, createNotification: createNotification); }
+                    CampaignUI.HRManagerUI.SetPendingHires(pendingHires, map.CurrentLocation);
+                    if (renameCrewMember || fireCharacter) { CampaignUI.HRManagerUI.UpdateCrew(); }
+                }
             }
+            else
+            {
+                //This is pretty nasty: setting hireables is handled through CrewManagement,
+                //which is part of the Campaign UI that might not exist when the client is still initializing the round.
+                //If that's the case, let's force the available hires here so they're available when the UI is created
+                CurrentLocation?.ForceHireableCharacters(availableHires);
+            }
+            
         }
 
         public void ClientReadMoney(IReadMessage inc)
@@ -977,6 +1000,7 @@ namespace Barotrauma
                 else
                 {
                     Bank.Balance = info.Balance;
+                    Bank.RewardDistribution = info.RewardDistribution;
                     TryInvokeEvent(Bank, transaction.ChangedData, info);
                 }
             }
@@ -992,6 +1016,11 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
+            if (price == 0)
+            {
+                return true;
+            }
+
             if (!AllowedToManageCampaign(ClientPermissions.ManageMoney))
             {
                 return PersonalWallet.TryDeduct(price);

@@ -75,7 +75,7 @@ namespace Barotrauma
                 NetConfig.HighPrioCharacterPositionUpdateInterval,
                 priority);
 
-            if (IsDead)
+            if (IsDead && !AnimController.IsDraggedWithRope)
             {
                 interval = Math.Max(interval * 2, 0.1f);
             }
@@ -459,6 +459,7 @@ namespace Barotrauma
                     Client owner = controlEventData.Owner;
                     msg.WriteBoolean(owner == c && owner.Character == this);
                     msg.WriteByte(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.SessionId : (byte)0);
+                    msg.WriteBoolean(info is { RenamingEnabled: true });
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);
@@ -587,6 +588,31 @@ namespace Barotrauma
                             msg.WriteIdentifier(savedStatValue.StatIdentifier);
                             msg.WriteSingle(savedStatValue.StatValue);
                             msg.WriteBoolean(savedStatValue.RemoveOnDeath);
+                        }
+                    }
+                    break;
+                case LatchedOntoTargetEventData latchedOntoTargetEventData:
+                    msg.WriteBoolean(latchedOntoTargetEventData.IsLatched);
+                    if (latchedOntoTargetEventData.IsLatched)
+                    {
+                        msg.WriteSingle(SimPosition.X);
+                        msg.WriteSingle(SimPosition.Y);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachSurfaceNormal.X);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachSurfaceNormal.Y);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachPos.X);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachPos.Y);
+                        msg.WriteInt32(latchedOntoTargetEventData.TargetLevelWallIndex);
+                        if (latchedOntoTargetEventData.TargetStructureID != NullEntityID)
+                        {
+                            msg.WriteUInt16(latchedOntoTargetEventData.TargetStructureID);
+                        }
+                        else if (latchedOntoTargetEventData.TargetCharacterID != NullEntityID)
+                        {
+                            msg.WriteUInt16(latchedOntoTargetEventData.TargetCharacterID);
+                        }
+                        else
+                        {
+                            msg.WriteUInt16(NullEntityID);
                         }
                     }
                     break;

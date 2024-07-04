@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
 
             // === LABEL === //
-            new GUITextBlock(new RectTransform(new Vector2(1f, 0.05f), paddedFrame.RectTransform), item.Name, font: GUIStyle.SubHeadingFont)
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.05f), paddedFrame.RectTransform), item.Prefab.Name, font: GUIStyle.SubHeadingFont)
             {
                 TextAlignment = Alignment.Center,
                 AutoScaleVertical = true
@@ -326,7 +326,7 @@ namespace Barotrauma.Items.Components
                     UserData = fi,
                     HoverColor = Color.Gold * 0.2f,
                     SelectedColor = Color.Gold * 0.5f,
-                    ToolTip = fi.TargetItem.Description
+                    ToolTip = RichString.Rich(fi.TargetItem.Description)
                 };
                 
                 var container = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform),
@@ -339,7 +339,7 @@ namespace Barotrauma.Items.Components
                         itemIcon, scaleToFit: true)
                     {
                         Color = fi.TargetItem.InventoryIconColor,
-                        ToolTip = fi.TargetItem.Description
+                        ToolTip = RichString.Rich(fi.TargetItem.Description)
                     };
                 }
 
@@ -347,7 +347,7 @@ namespace Barotrauma.Items.Components
                 {
                     Padding = Vector4.Zero,
                     AutoScaleVertical = true,
-                    ToolTip = fi.TargetItem.Description
+                    ToolTip = RichString.Rich(fi.TargetItem.Description)
                 };
 
                 new GUITextBlock(new RectTransform(new Vector2(0.85f, 1f), frame.RectTransform, Anchor.BottomRight), 
@@ -925,8 +925,6 @@ namespace Barotrauma.Items.Components
             nameBlock.Padding = new Vector4(0, nameBlock.Padding.Y, GUI.IntScale(5), nameBlock.Padding.W);
             if (nameBlock.TextScale < 0.7f)
             {
-                nameBlock.SetRichText(TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", itemName)
-                    .Fallback(TextManager.GetWithVariable("itemname.quality3", "[itemname]", itemName)));
                 nameBlock.AutoScaleHorizontal = false;
                 nameBlock.TextScale = 0.7f;
                 nameBlock.Wrap = true;
@@ -937,7 +935,7 @@ namespace Barotrauma.Items.Components
             if (!selectedItem.TargetItem.Description.IsNullOrEmpty())
             {
                 var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                    selectedItem.TargetItem.Description,
+                    RichString.Rich(selectedItem.TargetItem.Description),
                     font: GUIStyle.SmallFont, wrap: true);
                 description.Padding = new Vector4(0, description.Padding.Y, description.Padding.Z, description.Padding.W);
 

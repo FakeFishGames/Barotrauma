@@ -134,11 +134,11 @@ namespace Barotrauma.Items.Components
             spriteIndex += (force / 100.0f) * AnimSpeed * deltaTime;
             if (spriteIndex < 0)
             {
-                spriteIndex = propellerSprite.FrameCount;
+                spriteIndex = propellerSprite.FrameCount - Math.Abs(spriteIndex) % propellerSprite.FrameCount;
             }
-            if (spriteIndex >= propellerSprite.FrameCount)
+            else
             {
-                spriteIndex = 0.0f;
+                spriteIndex = spriteIndex % propellerSprite.FrameCount;
             }
         }
 

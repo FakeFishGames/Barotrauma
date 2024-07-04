@@ -5,9 +5,12 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check whether there's at least / at most some number of entities matching some specific criteria.
+    /// </summary>
     class CountTargetsAction : BinaryOptionAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the entities to check.")]
         public Identifier TargetTag { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "Optional second tag. Can be used if the target must have two different tags.")]
@@ -16,29 +19,19 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Optional tag of a hull the target must be inside.")]
         public Identifier HullTag { get; set; }
 
-        [Serialize(-1, IsPropertySaveable.Yes)]
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Minimum number of matching entities for the check to succeed. If omitted or negative, there is no minimum amount.")]
         public int MinAmount { get; set; }
 
-        [Serialize(-1, IsPropertySaveable.Yes)]
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Maximum number of matching entities for the check to succeed. If omitted or negative, there is no maximum amount.")]
         public int MaxAmount { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of some other entities to compare the number of targets to. E.g. you could compare the number of entities tagged as \"discoveredhull\" to entities tagged as \"anyhull\". The minimum/maximum amount of entities there must be relative to the other entities is configured using MinPercentageRelativeToTarget and MaxPercentageRelativeToTarget.")]
         public Identifier CompareToTarget { get; set; }
 
-        [Serialize(-1.0f, IsPropertySaveable.Yes)]
-
-        /// <summary>
-        /// Minimum amount of targets, as a percentage of the number of entities tagged with CompareToTarget
-        /// E.g. you could compare the number of entities tagged as "discoveredhull" to entities tagged as "anyhull" to require 50% of hulls to be discovered.
-        /// </summary>
+        [Serialize(-1.0f, IsPropertySaveable.Yes, description: "Minimum amount of targets, as a percentage of the number of entities tagged with CompareToTarget. E.g. you could compare the number of entities tagged as \"discoveredhull\" to entities tagged as \"anyhull\" to require 50% of hulls to be discovered.")]
         public float MinPercentageRelativeToTarget { get; set; }
 
-        [Serialize(-1.0f, IsPropertySaveable.Yes)]
-
-        /// <summary>
-        /// Maximum amount of targets, as a percentage of the number of entities tagged with CompareToTarget
-        /// E.g. you could compare the number of entities tagged as "floodedhull" to entities tagged as "anyhull" to require less than 50% of hulls to be flooded.
-        /// </summary>
+        [Serialize(-1.0f, IsPropertySaveable.Yes, description: "Maximum amount of targets, as a percentage of the number of entities tagged with CompareToTarget. E.g. you could compare the number of entities tagged as \"floodedhull\" to entities tagged as \"anyhull\" to require less than 50% of hulls to be flooded.")]
         public float MaxPercentageRelativeToTarget { get; set; }
 
         private readonly IReadOnlyList<PropertyConditional> conditionals;

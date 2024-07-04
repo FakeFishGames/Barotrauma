@@ -12,7 +12,7 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "cleanup item".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public readonly Item item;
         public bool IsPriority { get; set; }
@@ -20,6 +20,11 @@ namespace Barotrauma
         private readonly List<Item> ignoredContainers = new List<Item>();
         private AIObjectiveDecontainItem decontainObjective;
         private int itemIndex = 0;
+
+        /// <summary>
+        /// Allows decontainObjective to be interrupted if this objective gets abandoned (e.g. due to the item no longer being eligible for cleanup)
+        /// </summary>
+        protected override bool ConcurrentObjectives => true;
 
         public AIObjectiveCleanupItem(Item item, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -31,7 +36,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             else
@@ -39,10 +44,8 @@ namespace Barotrauma
                 float distanceFactor = 0.9f;
                 if (!IsPriority && item.CurrentHull != character.CurrentHull)
                 {
-                    float yDist = Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y);
-                    yDist = yDist > 100 ? yDist * 5 : 0;
-                    float dist = Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + yDist;
-                    distanceFactor = MathHelper.Lerp(0.9f, 0, MathUtils.InverseLerp(0, 5000, dist));
+                    distanceFactor = GetDistanceFactor(item.WorldPosition, verticalDistanceMultiplier: 5, maxDistance: 5000,  
+                        factorAtMinDistance: 0.9f, factorAtMaxDistance: 0);
                 }
                 bool isSelected = character.HasItem(item);
                 float selectedBonus = isSelected ? 100 - MaxDevotion : 0;
@@ -116,11 +119,11 @@ namespace Barotrauma
 
         protected override bool CheckObjectiveSpecific()
         {
-            if (item.IgnoreByAI(character))
+            if (item.IgnoreByAI(character) || Item.DeconstructItems.Contains(item))
             {
                 Abandon = true;
             }
-            else if (item.ParentInventory != null)
+            else if (item.ParentInventory != null && item.GetRootInventoryOwner() != character)
             {
                 if (!objectiveManager.HasOrder<AIObjectiveCleanupItems>())
                 {

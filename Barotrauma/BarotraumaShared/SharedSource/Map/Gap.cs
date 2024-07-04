@@ -756,11 +756,12 @@ namespace Barotrauma
             hull2.Oxygen -= deltaOxygen;
         }
 
-        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
+        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist, bool allowRoomToRoom = false)
         {
             foreach (Gap gap in gaps)
             {
-                if (gap.Open == 0.0f || gap.IsRoomToRoom) { continue; }
+                if (gap.Open == 0.0f) { continue; }
+                if (gap.IsRoomToRoom && !allowRoomToRoom) { continue; }
 
                 if (gap.ConnectedWall != null)
                 {
@@ -850,9 +851,9 @@ namespace Barotrauma
             Gap g = new Gap(rect, isHorizontal, submarine, id: idRemap.GetOffsetId(element))
             {
                 linkedToID = new List<ushort>(),
+                Layer = element.GetAttributeString(nameof(Layer), null)
             };
-
-            g.HiddenInGame = element.GetAttributeBool(nameof(HiddenInGame).ToLower(), g.HiddenInGame);
+            g.HiddenInGame = element.GetAttributeBool(nameof(HiddenInGame), g.HiddenInGame);
             return g;
         }
 
@@ -863,7 +864,8 @@ namespace Barotrauma
             element.Add(
                 new XAttribute("ID", ID),
                 new XAttribute("horizontal", IsHorizontal ? "true" : "false"),
-                new XAttribute(nameof(HiddenInGame).ToLower(), HiddenInGame));
+                new XAttribute(nameof(HiddenInGame), HiddenInGame),
+                new XAttribute(nameof(Layer), Layer ?? string.Empty));
 
             element.Add(new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +

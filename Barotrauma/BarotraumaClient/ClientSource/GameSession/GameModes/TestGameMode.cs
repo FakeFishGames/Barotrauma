@@ -42,6 +42,15 @@ namespace Barotrauma
             foreach (Submarine submarine in Submarine.Loaded)
             {
                 submarine.NeutralizeBallast();
+                //normally the body would be made static during level generation,
+                //but in the test mode we load the outpost/wreck/beacon as if it was a normal sub and need to do this manually
+                if (submarine.Info.Type == SubmarineType.Outpost ||
+                    submarine.Info.Type == SubmarineType.OutpostModule ||
+                    submarine.Info.Type == SubmarineType.Wreck ||
+                    submarine.Info.Type == SubmarineType.BeaconStation)
+                {
+                    submarine.PhysicsBody.BodyType = FarseerPhysics.BodyType.Static;
+                }
             }
 
             if (SpawnOutpost)
@@ -51,14 +60,14 @@ namespace Barotrauma
 
             if (TriggeredEvent != null)
             {
-                scriptedEvent = new List<Event> { TriggeredEvent.CreateInstance() };
+                scriptedEvent = new List<Event> { TriggeredEvent.CreateInstance(GameMain.GameSession.EventManager.RandomSeed) };
                 GameMain.GameSession.EventManager.PinnedEvent = scriptedEvent.Last();
 
                 createEventButton = new GUIButton(new RectTransform(new Point(128, 64), GUI.Canvas, Anchor.TopCenter) { ScreenSpaceOffset = new Point(0, 32) }, TextManager.Get("create"))
                 {
                     OnClicked = delegate 
                     {
-                        scriptedEvent.Add(TriggeredEvent.CreateInstance());
+                        scriptedEvent.Add(TriggeredEvent.CreateInstance(GameMain.GameSession.EventManager.RandomSeed));
                         GameMain.GameSession.EventManager.PinnedEvent = scriptedEvent.Last();
                         return true;
                     }

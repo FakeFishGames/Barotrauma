@@ -77,6 +77,9 @@ namespace Barotrauma.Items.Components
     {
         Stem = 0b0000,
         CrossJunction = 0b1111,
+        HorizontalLine = 0b1010,
+        VerticalLine = 0b0101,
+        /*backwards compatibility, the vertical and horizontal "lane" used to be backwards*/
         VerticalLane = 0b1010,
         HorizontalLane = 0b0101,
         TurnTopRight = 0b1001,
@@ -893,9 +896,9 @@ namespace Barotrauma.Items.Components
             return element;
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             flowerTiles = componentElement.GetAttributeIntArray("flowertiles", Array.Empty<int>())!;
             Decayed = componentElement.GetAttributeBool("decayed", false);
 

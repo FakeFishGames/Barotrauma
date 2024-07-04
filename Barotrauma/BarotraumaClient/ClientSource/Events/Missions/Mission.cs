@@ -151,10 +151,10 @@ namespace Barotrauma
                 message = ModifyMessage(message);
             }
 
-            CoroutineManager.StartCoroutine(ShowMessageBoxAfterRoundSummary(header, message));
+            CoroutineManager.StartCoroutine(ShowMessageBoxWhenRoundSummaryIsNotActive(header, message));
         }
 
-        private IEnumerable<CoroutineStatus> ShowMessageBoxAfterRoundSummary(LocalizedString header, LocalizedString message)
+        private IEnumerable<CoroutineStatus> ShowMessageBoxWhenRoundSummaryIsNotActive(LocalizedString header, LocalizedString message)
         {
             while (GUIMessageBox.VisibleBox?.UserData is RoundSummary)
             {

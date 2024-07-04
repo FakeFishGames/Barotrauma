@@ -316,28 +316,28 @@ namespace Barotrauma.Items.Components
                 {
                     case 0:
                         leftText = TextManager.Get("DescentVelocity");
-                        centerText = $"({TextManager.Get("KilometersPerHour")})";
+                        centerText = TextManager.Get("KilometersPerHour");
                         rightTextGetter = () =>
                         {
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
-                            return ((int)(-realWorldVel)).ToString();
+                            return (-realWorldVel).ToString("0.0");
                         };
                         break;
                     case 1:
                         leftText = TextManager.Get("Velocity");
-                        centerText = $"({TextManager.Get("KilometersPerHour")})";
+                        centerText = TextManager.Get("KilometersPerHour");
                         rightTextGetter = () =>
                         {
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
                             if (controlledSub != null && controlledSub.FlippedX) { realWorldVel *= -1; }
-                            return ((int)realWorldVel).ToString();
+                            return realWorldVel.ToString("0.0");
                         };
                         break;
                     case 2:
                         leftText = TextManager.Get("Depth");
-                        centerText = $"({TextManager.Get("Meter")})";
+                        centerText = TextManager.Get("Meter");
                         rightTextGetter = () =>
                         {
                             if (Level.Loaded is { IsEndBiome: true })
@@ -789,9 +789,9 @@ namespace Barotrauma.Items.Components
             }
 
             pressureWarningText.Visible = item.Submarine != null && Timing.TotalTime % 1.0f < 0.8f;
-            float depthEffectThreshold = 500.0f;
             if (Level.Loaded != null && pressureWarningText.Visible && 
-                item.Submarine.RealWorldDepth > Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && item.Submarine.RealWorldDepth > item.Submarine.RealWorldCrushDepth - depthEffectThreshold)
+                item.Submarine.RealWorldDepth > Level.Loaded.RealWorldCrushDepth - PressureWarningThreshold && 
+                item.Submarine.RealWorldDepth > item.Submarine.RealWorldCrushDepth - PressureWarningThreshold)
             {
                 pressureWarningText.Visible = true;
                 pressureWarningText.Text =

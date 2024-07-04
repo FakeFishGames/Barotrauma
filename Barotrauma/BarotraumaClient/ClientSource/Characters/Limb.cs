@@ -289,18 +289,19 @@ namespace Barotrauma
                 spriteAnimState.Add(decorativeSprite, new SpriteState());
             }
             TintMask = null;
+            float sourceRectScale = ragdoll.RagdollParams.SourceRectScale;
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        Sprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.normalSpriteParams, ref _texturePath));
+                        Sprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.normalSpriteParams, ref _texturePath), sourceRectScale: sourceRectScale);
                         break;
                     case "damagedsprite": 
-                        DamagedSprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.damagedSpriteParams, ref _damagedTexturePath));
+                        DamagedSprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.damagedSpriteParams, ref _damagedTexturePath), sourceRectScale: sourceRectScale);
                         break;
                     case "conditionalsprite":
-                        var conditionalSprite = new ConditionalSprite(subElement, GetConditionalTarget(), file: GetSpritePath(subElement, null, ref _texturePath));
+                        var conditionalSprite = new ConditionalSprite(subElement, GetConditionalTarget(), file: GetSpritePath(subElement, null, ref _texturePath), sourceRectScale: sourceRectScale);
                         ConditionalSprites.Add(conditionalSprite);
                         if (conditionalSprite.DeformableSprite != null)
                         {
@@ -310,7 +311,7 @@ namespace Barotrauma
                         }
                         break;
                     case "deformablesprite":
-                        _deformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement, Params.deformSpriteParams, ref _texturePath));
+                        _deformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement, Params.deformSpriteParams, ref _texturePath), sourceRectScale: sourceRectScale);
                         var deformations = CreateDeformations(subElement);
                         Deformations.AddRange(deformations);
                         NonConditionalDeformations.AddRange(deformations);
@@ -339,7 +340,7 @@ namespace Barotrauma
                         ContentPath tintMaskPath = subElement.GetAttributeContentPath("texture");
                         if (!tintMaskPath.IsNullOrWhiteSpace())
                         {
-                            TintMask = new Sprite(subElement, file: GetSpritePath(tintMaskPath));
+                            TintMask = new Sprite(subElement, file: GetSpritePath(tintMaskPath), sourceRectScale: sourceRectScale);
                             TintHighlightThreshold = subElement.GetAttributeFloat("highlightthreshold", 0.6f);
                             TintHighlightMultiplier = subElement.GetAttributeFloat("highlightmultiplier", 0.8f);
                         }
@@ -348,7 +349,7 @@ namespace Barotrauma
                         ContentPath huskMaskPath = subElement.GetAttributeContentPath("texture");
                         if (!huskMaskPath.IsNullOrWhiteSpace())
                         {
-                            HuskMask = new Sprite(subElement, file: GetSpritePath(huskMaskPath));
+                            HuskMask = new Sprite(subElement, file: GetSpritePath(huskMaskPath), sourceRectScale: sourceRectScale);
                         }
                         break;
                 }
@@ -483,9 +484,11 @@ namespace Barotrauma
                     //2. check if the base prefab defines the texture
                     if (texturePath.IsNullOrEmpty() && !character.Prefab.VariantOf.IsEmpty)
                     {
+                        Identifier speciesName = character.GetBaseCharacterSpeciesName();
                         RagdollParams parentRagdollParams = character.IsHumanoid ?
-                                RagdollParams.GetRagdollParams<HumanRagdollParams>(character.Prefab.VariantOf) :
-                                RagdollParams.GetRagdollParams<FishRagdollParams>(character.Prefab.VariantOf);
+                                RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, character.Params, character.Prefab.ContentPackage) :
+                                RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, character.Params, character.Prefab.ContentPackage);
+ 
                         texturePath = parentRagdollParams.OriginalElement?.GetAttributeContentPath("texture");
                     }
                     //3. "default case", get the texture from this character's XML
@@ -514,8 +517,8 @@ namespace Barotrauma
             if (characterInfo != null)
             {
                 spritePath = characterInfo.ReplaceVars(spritePath);
-
-                if (characterInfo.HeadSprite != null && characterInfo.SpriteTags.Any())
+                characterInfo.VerifySpriteTagsLoaded();
+                if (characterInfo.SpriteTags.Any())
                 {
                     string tags = "";
                     characterInfo.SpriteTags.ForEach(tag => tags += $"[{tag}]");
@@ -695,35 +698,40 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
         {
             var spriteParams = Params.GetSprite();
-            if (spriteParams == null) { return; }
+            if (spriteParams == null || Alpha <= 0) { return; }
             float burn = spriteParams.IgnoreTint ? 0 : burnOverLayStrength;
             float brightness = Math.Max(1.0f - burn, 0.2f);
-            Color clr = spriteParams.Color;
+            Color tintedColor = spriteParams.Color;
             if (!spriteParams.IgnoreTint)
             {
-                clr = clr.Multiply(ragdoll.RagdollParams.Color);
+                tintedColor = tintedColor.Multiply(ragdoll.RagdollParams.Color);
                 if (character.Info != null)
                 {
-                    clr = clr.Multiply(character.Info.Head.SkinColor);
+                    tintedColor = tintedColor.Multiply(character.Info.Head.SkinColor);
                 }
                 if (character.CharacterHealth.FaceTint.A > 0 && type == LimbType.Head)
                 {
-                    clr = Color.Lerp(clr, character.CharacterHealth.FaceTint.Opaque(), character.CharacterHealth.FaceTint.A / 255.0f);
+                    tintedColor = Color.Lerp(tintedColor, character.CharacterHealth.FaceTint.Opaque(), character.CharacterHealth.FaceTint.A / 255.0f);
                 }
                 if (character.CharacterHealth.BodyTint.A > 0)
                 {
-                    clr = Color.Lerp(clr, character.CharacterHealth.BodyTint.Opaque(), character.CharacterHealth.BodyTint.A / 255.0f);
+                    tintedColor = Color.Lerp(tintedColor, character.CharacterHealth.BodyTint.Opaque(), character.CharacterHealth.BodyTint.A / 255.0f);
                 }
             }
-            Color color = new Color((byte)(clr.R * brightness), (byte)(clr.G * brightness), (byte)(clr.B * brightness), clr.A);
+            Color color = new Color(tintedColor.Multiply(brightness), tintedColor.A);
+            Color colorWithoutTint = new Color(spriteParams.Color.Multiply(brightness), spriteParams.Color.A);
             Color blankColor = new Color(brightness, brightness, brightness, 1);
             if (deadTimer > 0)
             {
                 color = Color.Lerp(color, spriteParams.DeadColor, MathUtils.InverseLerp(0, spriteParams.DeadColorTime, deadTimer));
+                colorWithoutTint = Color.Lerp(colorWithoutTint, spriteParams.DeadColor, MathUtils.InverseLerp(0, spriteParams.DeadColorTime, deadTimer));
             }
 
             color = overrideColor ?? color;
+            colorWithoutTint = overrideColor ?? colorWithoutTint;
             blankColor = overrideColor ?? blankColor;
+            color *= Alpha;
+            blankColor *= Alpha;
 
             if (isSevered)
             {
@@ -735,6 +743,7 @@ namespace Barotrauma
                 else if (severedFadeOutTimer > SeveredFadeOutTime - 1.0f)
                 {
                     color *= SeveredFadeOutTime - severedFadeOutTimer;
+                    colorWithoutTint *= SeveredFadeOutTime - severedFadeOutTimer;
                 }
             }
             
@@ -779,7 +788,7 @@ namespace Barotrauma
                 else
                 {
                     bool useTintMask = TintMask != null && spriteBatch.GetCurrentEffect() is null;
-                    if (useTintMask)
+                    if (useTintMask && Sprite?.Texture != null && TintMask?.Texture != null)
                     {
                         tintEffectParams.Effect ??= GameMain.GameScreen.ThresholdTintEffect;
                         tintEffectParams.Params ??= new Dictionary<string, object>();
@@ -952,7 +961,7 @@ namespace Barotrauma
                 {
                     DamagedSprite.Draw(spriteBatch,
                         new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                        color * damageOverlayStrength, activeSprite.Origin,
+                        colorWithoutTint * damageOverlayStrength, activeSprite.Origin,
                         -body.DrawRotation,
                         Scale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
                 }

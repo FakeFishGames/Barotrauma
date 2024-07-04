@@ -16,6 +16,7 @@ namespace Barotrauma
         public bool IsLoaded { get; protected set; }
         public string Name { get; private set; }
         public string FileName { get; private set; }
+        public string FileNameWithoutExtension { get; private set; }
         public string Folder { get; private set; }
         public ContentPath Path { get; protected set; } = ContentPath.Empty;
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; protected set; }
@@ -103,8 +104,9 @@ namespace Barotrauma
         {
             Path = fullPath;
             Name = GetName();
-            FileName = System.IO.Path.GetFileName(Path.Value);
-            Folder = System.IO.Path.GetDirectoryName(Path.Value);
+            FileName = Barotrauma.IO.Path.GetFileName(Path.Value);
+            FileNameWithoutExtension = Barotrauma.IO.Path.GetFileNameWithoutExtension(Path.Value);
+            Folder = Barotrauma.IO.Path.GetDirectoryName(Path.Value);
         }
 
         public virtual bool Save(string fileNameWithoutExtension = null, System.Xml.XmlWriterSettings settings = null)

@@ -228,6 +228,9 @@ namespace Barotrauma
 
         public readonly Entity Owner;
 
+        /// <summary>
+        /// Capacity, or the number of slots in the inventory.
+        /// </summary>
         protected readonly int capacity;
         protected readonly ItemSlot[] slots;
 
@@ -271,6 +274,21 @@ namespace Barotrauma
         public int Capacity
         {
             get { return capacity; }
+        }
+        
+        public static bool IsDragAndDropGiveAllowed
+        {
+            get
+            {
+                // allowed for single player
+                if (GameMain.NetworkMember == null)
+                {
+                    return true;
+                }
+                
+                // controlled by server setting in multiplayer
+                return GameMain.NetworkMember.ServerSettings.AllowDragAndDropGive;
+            }
         }
 
         public int EmptySlotCount => slots.Count(i => !i.Empty());

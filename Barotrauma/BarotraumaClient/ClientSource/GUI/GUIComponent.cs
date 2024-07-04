@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
@@ -734,7 +734,7 @@ namespace Barotrauma
             DrawToolTip(spriteBatch, ToolTip, Rect);
         }
         
-        public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Vector2 pos)
+        public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Vector2 pos, Color? textColor = null, Color? backgroundColor = null)
         {
             if (ObjectiveManager.ContentRunning) { return; }
 
@@ -745,6 +745,8 @@ namespace Barotrauma
             if (toolTipBlock == null || (RichString)toolTipBlock.UserData != toolTip)
             {
                 toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), toolTip, font: GUIStyle.SmallFont, wrap: true, style: "GUIToolTip");
+                if (textColor != null) { toolTipBlock.TextColor = textColor.Value; }
+                if (backgroundColor != null) { toolTipBlock.Color = backgroundColor.Value; }
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
                     (int)(GUIStyle.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
                     (int)(GUIStyle.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
@@ -753,6 +755,15 @@ namespace Barotrauma
 
             toolTipBlock.RectTransform.AbsoluteOffset = pos.ToPoint();
             toolTipBlock.SetTextPos();
+
+            if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
+            {
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width,0);
+            }
+            if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
+            {
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(0, toolTipBlock.Rect.Height);
+            }
 
             toolTipBlock.DrawManually(spriteBatch);
         }
@@ -804,7 +815,8 @@ namespace Barotrauma
         protected virtual void SetAlpha(float a)
         {
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
-            hoverColor = new Color(hoverColor.R / 255.0f, hoverColor.G / 255.0f, hoverColor.B / 255.0f, a);;
+            hoverColor = new Color(hoverColor.R / 255.0f, hoverColor.G / 255.0f, hoverColor.B / 255.0f, a);
+            disabledColor = new Color(disabledColor.R / 255.0f, disabledColor.G / 255.0f, disabledColor.B / 255.0f, a);
         }
 
         public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectInflate = null)
@@ -824,15 +836,29 @@ namespace Barotrauma
             flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
-        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
+        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null, bool alsoChildren = false)
         {
             CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait, onRemove));
+            if (alsoChildren)
+            {
+                foreach (var child in Children)
+                {
+                    child.FadeOut(duration, removeAfter, wait, onRemove, alsoChildren);
+                }
+            }
         }
 
-        public void FadeIn(float wait, float duration)
+        public void FadeIn(float wait, float duration, bool alsoChildren = false)
         {
             SetAlpha(0.0f);
             CoroutineManager.StartCoroutine(LerpAlpha(1.0f, duration, false, wait));
+            if (alsoChildren)
+            {
+                foreach (var child in Children)
+                {
+                    child.FadeIn(wait, duration, alsoChildren);
+                }
+            }
         }
 
         public void SlideIn(float wait, float duration, int amount, SlideDirection direction)
@@ -980,6 +1006,24 @@ namespace Barotrauma
                 RectTransform.MaxSize = new Point(RectTransform.MaxSize.X, style.Height.Value);
                 if (rectTransform.IsFixedSize) { RectTransform.Resize(new Point(rectTransform.NonScaledSize.X, style.Height.Value)); }
             }
+        }
+
+        /// <summary>
+        /// Sets the minimum height of the transfrom to equal to the sum of the minimum heights of the children 
+        /// (i.e. makes the element at least large enough to fit all the children vertically)
+        /// </summary>
+        public void InheritTotalChildrenMinHeight()
+        {
+            RectTransform.InheritTotalChildrenMinHeight();
+        }
+
+        /// <summary>
+        /// Sets the minimum height of the transfrom to equal to the sum of the heights of the children 
+        /// (i.e. makes the element at least large enough to fit all the children vertically)
+        /// </summary>
+        public void InheritTotalChildrenHeight()
+        {
+            RectTransform.InheritTotalChildrenHeight();
         }
 
         public static GUIComponent FromXML(ContentXElement element, RectTransform parent)

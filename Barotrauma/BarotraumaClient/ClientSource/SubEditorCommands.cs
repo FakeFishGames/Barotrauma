@@ -112,7 +112,7 @@ namespace Barotrauma
     internal class AddOrDeleteCommand : Command
     {
         private readonly Dictionary<InventorySlotItem, Inventory> PreviousInventories = new Dictionary<InventorySlotItem, Inventory>();
-        private readonly List<MapEntity> Receivers;
+        public readonly List<MapEntity> Receivers;
         private readonly List<MapEntity> CloneList;
         private readonly bool WasDeleted;
         private readonly List<AddOrDeleteCommand> ContainedItemsCommand = new List<AddOrDeleteCommand>();

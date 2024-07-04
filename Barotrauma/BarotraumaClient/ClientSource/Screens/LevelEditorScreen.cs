@@ -35,6 +35,8 @@ namespace Barotrauma
         private readonly GUITickBox lightingEnabled, cursorLightEnabled, allowInvalidOutpost, mirrorLevel;
 
         private readonly GUIDropDown selectedSubDropDown;
+        private readonly GUIDropDown selectedBeaconStationDropdown;
+        private readonly GUIDropDown selectedWreckDropdown;
 
         private Sprite editingSprite;
 
@@ -69,7 +71,7 @@ namespace Barotrauma
                 currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                 editorContainer.ClearChildren();
                 SortLevelObjectsList(currentLevelData);
-                new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, false, true, elementHeight: 20);
+                new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, inGame: false, showName: true, elementHeight: 20, titleFont: GUIStyle.LargeFont);
                 return true;
             };
 
@@ -195,6 +197,28 @@ namespace Barotrauma
             }
             subDropDownContainer.RectTransform.MinSize = new Point(0, selectedSubDropDown.RectTransform.MinSize.Y);
 
+            var beaconStationDropDownContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), beaconStationDropDownContainer.RectTransform), TextManager.Get("submarinetype.beaconstation"));
+            selectedBeaconStationDropdown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), beaconStationDropDownContainer.RectTransform));
+            selectedBeaconStationDropdown.AddItem(TextManager.Get("Any"), userData: null);
+            foreach (SubmarineInfo beaconStation in SubmarineInfo.SavedSubmarines)
+            {
+                if (beaconStation.Type != SubmarineType.BeaconStation) { continue; }
+                selectedBeaconStationDropdown.AddItem(beaconStation.DisplayName, userData: beaconStation);
+            }
+            beaconStationDropDownContainer.RectTransform.MinSize = new Point(0, selectedBeaconStationDropdown.RectTransform.MinSize.Y);
+
+            var wreckDropDownContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), wreckDropDownContainer.RectTransform), TextManager.Get("submarinetype.wreck"));
+            selectedWreckDropdown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), wreckDropDownContainer.RectTransform));
+            selectedWreckDropdown.AddItem(TextManager.Get("Any"), userData: null);
+            foreach (SubmarineInfo wreck in SubmarineInfo.SavedSubmarines)
+            {
+                if (wreck.Type != SubmarineType.Wreck) { continue; }
+                selectedWreckDropdown.AddItem(wreck.DisplayName, userData: wreck);
+            }
+            wreckDropDownContainer.RectTransform.MinSize = new Point(0, selectedWreckDropdown.RectTransform.MinSize.Y);
+
             mirrorLevel = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), TextManager.Get("mirrorentityx"));
 
             allowInvalidOutpost = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedRightPanel.RectTransform),
@@ -218,6 +242,8 @@ namespace Barotrauma
                     GameMain.LightManager.ClearLights();
                     currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                     currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
+                    currentLevelData.ForceBeaconStation = selectedBeaconStationDropdown.SelectedData as SubmarineInfo;
+                    currentLevelData.ForceWreck = selectedWreckDropdown.SelectedData as SubmarineInfo;
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
                     var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
                     Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
@@ -269,7 +295,7 @@ namespace Barotrauma
 
                     var nonPlayerFiles = ContentPackageManager.EnabledPackages.All.SelectMany(p => p
                         .GetFiles<BaseSubFile>()
-                        .Where(f => !(f is SubmarineFile))).ToArray();
+                        .Where(f => f is not SubmarineFile)).ToArray();
                     SubmarineInfo subInfo = selectedSubDropDown.SelectedData as SubmarineInfo;
                     subInfo ??= SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s =>
                         s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&
@@ -339,6 +365,9 @@ namespace Barotrauma
 
                     currentLevelData = LevelData.CreateRandom(ToolBox.RandomSeed(10), generationParams: selectedParams);
                     currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
+                    currentLevelData.ForceBeaconStation = selectedBeaconStationDropdown.SelectedData as SubmarineInfo;
+                    currentLevelData.ForceWreck = selectedWreckDropdown.SelectedData as SubmarineInfo;
+
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
                     var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
                     DebugConsole.NewMessage("*****************************************************************************");
@@ -967,7 +996,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item == null) { continue; }
+                    if (item == null || item.IsHidden) { continue; }
                     foreach (var light in item.GetComponents<Items.Components.LightComponent>())
                     {
                         light.Update((float)deltaTime, Cam);

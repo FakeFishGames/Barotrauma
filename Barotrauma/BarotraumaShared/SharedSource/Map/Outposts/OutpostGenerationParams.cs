@@ -131,6 +131,13 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the outpost generation parameters that should be used if this outpost has become critically irradiated."), Editable]
         public string ReplaceInRadiation { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "By default, sonar only shows the outline of the sub/outpost from the outside. Enable this if you want to see each structure individually."), Editable]
+        public bool AlwaysShowStructuresOnSonar
+        {
+            get;
+            set;
+        }
+
         public ContentPath OutpostFilePath { get; set; }
 
         public class ModuleCount

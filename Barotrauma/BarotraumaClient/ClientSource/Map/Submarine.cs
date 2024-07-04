@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -506,6 +507,47 @@ namespace Barotrauma
                 Hull.ShowHulls = true;
             }
 
+            if (!IsWarningSuppressed(SubEditorScreen.WarningType.NotEnoughContainers))
+            {
+                HashSet<ContainerTagPrefab> missingContainerTags = new();
+                foreach (var prefab in ContainerTagPrefab.Prefabs)
+                {
+                    if (!prefab.IsRecommendedForSub(this) || !prefab.WarnIfLess) { continue; }
+                
+                    int count = Item.ItemList.Count(i => i.HasTag(prefab.Identifier));
+                    if (count < prefab.RecommendedAmount)
+                    {
+                        missingContainerTags.Add(prefab);
+                    }
+                }
+
+                if (missingContainerTags.Any())
+                {
+                    StringBuilder sb = new();
+                    int count = 0;
+                    foreach (var tag in missingContainerTags)
+                    {
+                        sb.AppendLine($"- {tag.Name}");
+                        count++;
+                        if (missingContainerTags.Count > count && count >= 3)
+                        {
+                            var moreIndicator = TextManager.GetWithVariable(
+                                "upgradeuitooltip.moreindicator",
+                                "[amount]",
+                                (missingContainerTags.Count - count).ToString()).Value;
+                            sb.AppendLine(moreIndicator);
+                            break;
+                        }
+                    }
+
+                    errorMsgs.Add(TextManager.GetWithVariable(
+                        "ContainerTagUI.CountWarning",
+                        "[tags]",
+                        sb.ToString()).Value);
+                    warnings.Add(SubEditorScreen.WarningType.NotEnoughContainers);
+                }
+            }
+            
             if (Info.Type == SubmarineType.Player)
             {
                 foreach (Item item in Item.ItemList)
@@ -521,7 +563,40 @@ namespace Barotrauma
                         break;
                     }
                 }
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.GetComponent<OxygenGenerator>() is not OxygenGenerator oxygenGenerator) { continue; }
 
+                    Dictionary<Hull, float> hullOxygenFlow = new Dictionary<Hull, float>();
+
+                    foreach (var linkedTo in item.linkedTo)
+                    {
+                        if (linkedTo is not Item linkedItem || linkedItem.GetComponent<Vent>() is not Vent vent) { continue; }
+                        if (vent.Item.CurrentHull == null)
+                        {
+                            vent.Item.FindHull();
+                            if (vent.Item.CurrentHull == null) { continue; }
+                        }                        
+                        float oxygenFlow = oxygenGenerator.GetVentOxygenFlow(vent);
+                        if (!hullOxygenFlow.ContainsKey(vent.Item.CurrentHull))
+                        {
+                            hullOxygenFlow[vent.Item.CurrentHull] = oxygenFlow;
+                        }
+                        else
+                        {
+                            hullOxygenFlow[vent.Item.CurrentHull] += oxygenFlow;
+                        }                        
+                    }
+                    foreach ((Hull hull, float oxygenFlow) in hullOxygenFlow)
+                    {
+                        if (oxygenFlow < Hull.OxygenConsumptionSpeed)
+                        {
+                            errorMsgs.Add(TextManager.GetWithVariable("LowOxygenOutputWarning", "[roomname]",
+                                hull.DisplayName).Value);
+                            warnings.Add(SubEditorScreen.WarningType.LowOxygenOutputWarning);
+                        }
+                    }
+                }
                 if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Human))
                 {
                     if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoHumanSpawnpoints))
@@ -552,6 +627,15 @@ namespace Barotrauma
                     {
                         errorMsgs.Add(TextManager.Get("NoHiddenContainersWarning").Value);
                         warnings.Add(SubEditorScreen.WarningType.NoHiddenContainers);
+                    }
+                }
+                if (Info.Dimensions.X * Physics.DisplayToRealWorldRatio > 80 ||
+                    Info.Dimensions.Y * Physics.DisplayToRealWorldRatio > 32)
+                {
+                    if (!IsWarningSuppressed(SubEditorScreen.WarningType.TooLargeForEndGame))
+                    {
+                        errorMsgs.Add(TextManager.Get("TooLargeForEndGameWarning").Value);
+                        warnings.Add(SubEditorScreen.WarningType.TooLargeForEndGame);
                     }
                 }
             }
@@ -636,9 +720,16 @@ namespace Barotrauma
 
             if (errorMsgs.Any())
             {
-                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), new Vector2(0.25f, 0.0f), new Point(400, 200));
+                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("Warning"), string.Empty, new Vector2(0.25f, 0.0f), minSize: new Point(GUI.IntScale(650), GUI.IntScale(650)));
                 if (warnings.Any())
                 {
+                    var textListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), msgBox.Content.RectTransform));
+                    var text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textListBox.Content.RectTransform), string.Join("\n\n", errorMsgs), wrap: true)
+                    {
+                        CanBeFocused = false
+                    };
+                    text.RectTransform.MinSize = new Point(0, (int)text.TextSize.Y);
+
                     Point size = msgBox.RectTransform.NonScaledSize;
                     GUITickBox suppress = new GUITickBox(new RectTransform(new Vector2(1f, 0.33f), msgBox.Content.RectTransform), TextManager.Get("editor.suppresswarnings"));
                     msgBox.RectTransform.NonScaledSize = new Point(size.X, size.Y + suppress.RectTransform.NonScaledSize.Y);
@@ -652,7 +743,6 @@ namespace Barotrauma
                                 SubEditorScreen.SuppressedWarnings.Add(warning);
                             }
                         }
-
                         return true;
                     };
                 }
@@ -749,7 +839,9 @@ namespace Barotrauma
         
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            throw new Exception($"Error while reading a network event for the submarine \"{Info.Name} ({ID})\". Submarines are not even supposed to receive events!");
+            Identifier layerIdentifier = msg.ReadIdentifier();
+            bool enabled = msg.ReadBoolean();
+            SetLayerEnabled(layerIdentifier, enabled);
         }
     }
 }

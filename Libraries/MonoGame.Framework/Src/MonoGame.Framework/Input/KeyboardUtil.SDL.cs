@@ -151,6 +151,14 @@ namespace Microsoft.Xna.Framework.Input
             _map.Add(1073742097, Keys.BrowserRefresh);
             _map.Add(1073742098, Keys.BrowserFavorites);
             _map.Add(1073742106, Keys.Sleep);
+            // Map keys on an Azerty layout to the corresponding keys on a US layout
+            _map.Add(178, Keys.OemTilde);           // ²
+            _map.Add(41, Keys.OemMinus);            // )
+            _map.Add(36, Keys.Add);                 // $
+            _map.Add(249, Keys.OemQuotes);          // ù
+            _map.Add(42, Keys.OemPipe);             // *
+            _map.Add(58, Keys.OemPeriod);           // :
+            _map.Add(33, Keys.OemQuestion);         // !
         }
 
         public static Keys ToXna(int key)

@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
@@ -11,13 +11,8 @@ namespace Barotrauma
     class AIObjectiveLoadItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "load item".ToIdentifier();
-        public override bool IsLoop
-        {
-            get => true;
-            set => throw new Exception("Trying to set the value for AIObjectiveLoadItem.IsLoop from: " + Environment.StackTrace.CleanupStackTrace());
-        }
 
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         private AIObjectiveLoadItems.ItemCondition TargetItemCondition { get; }
         private Item Container { get; }
@@ -163,7 +158,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             else if (!AIObjectiveLoadItems.IsValidTarget(Container, character, targetCondition: TargetItemCondition))
@@ -193,7 +188,10 @@ namespace Barotrauma
                     if (yDist > 100) { dist += yDist * 5; }
                     dist += Math.Abs(character.WorldPosition.X - targetPos.X);
                 }
-                float distanceFactor = dist > 0.0f ? MathHelper.Lerp(0.9f, 0, MathUtils.InverseLerp(0, 5000, dist)) : 0.9f;
+
+                float distanceFactor = 
+                    GetDistanceFactor(targetItem.WorldPosition, verticalDistanceMultiplier: 5, maxDistance: 5000, factorAtMinDistance: 0.9f, factorAtMaxDistance: 0);
+
                 bool hasContainable = character.HasItem(targetItem);
                 float devotion = (CumulatedDevotion + (hasContainable ? 100 - MaxDevotion : 0)) / 100;
                 float max = AIObjectiveManager.LowestOrderPriority - (hasContainable ? 1 : 2);
@@ -295,12 +293,14 @@ namespace Barotrauma
             if (item.Removed) { return false; }
             if (!ValidContainableItemIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
             if (ignoredItems.Contains(item)) { return false; }
+            if ((item.Illegitimate) == character.IsOnPlayerTeam) { return false; }
             if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
-            var rootInventoryOwner = item.GetRootInventoryOwner();
-            if (rootInventoryOwner is Character owner && owner != character) { return false; }
-            if (rootInventoryOwner is Item parentItem)
+            if (item.GetRootInventoryOwner() is Character owner && owner != character) { return false; }
+            Item parentItem = item.Container;
+            while (parentItem != null)
             {
                 if (parentItem.HasTag(Tags.DontTakeItems)) { return false; }
+                parentItem = parentItem.Container;
             }
             if (!item.HasAccess(character)) { return false; }
             if (!character.HasItem(item) && !CanEquip(item, allowWearing: false)) { return false; }

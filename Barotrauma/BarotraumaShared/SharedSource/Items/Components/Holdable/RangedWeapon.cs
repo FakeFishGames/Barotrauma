@@ -95,6 +95,20 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
+        
+        [Serialize(defaultValue: 1f, IsPropertySaveable.Yes, description: "Penalty multiplier to reload time when dual-wielding.")]
+        public float DualWieldReloadTimePenaltyMultiplier
+        {
+            get;
+            private set;
+        }
+        
+        [Serialize(defaultValue: 0f, IsPropertySaveable.Yes, description: "Additive penalty to accuracy (spread angle) when dual-wielding.")]
+        public float DualWieldAccuracyPenalty
+        {
+            get;
+            private set;
+        }
 
         private readonly IReadOnlySet<Identifier> suitableProjectiles;
 
@@ -128,8 +142,11 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             item.IsShootable = true;
-            // TODO: should define this in xml if we have ranged weapons that don't require aim to use
-            item.RequireAimToUse = true;
+            if (element.Parent is { } parent)
+            {
+                item.RequireAimToUse = parent.GetAttributeBool(nameof(item.RequireAimToUse), true);
+            }
+
             characterUsable = true;
             suitableProjectiles = element.GetAttributeIdentifierArray(nameof(suitableProjectiles), Array.Empty<Identifier>()).ToHashSet();
             if (ReloadSkillRequirement > 0 && ReloadNoSkill <= reload)
@@ -140,7 +157,7 @@ namespace Barotrauma.Items.Components
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(ContentXElement element);
+        partial void InitProjSpecific(ContentXElement rangedWeaponElement);
 
         public override void Equip(Character character)
         {
@@ -194,7 +211,26 @@ namespace Barotrauma.Items.Components
             float degreeOfFailure = MathHelper.Clamp(1.0f - DegreeOfSuccess(user), 0.0f, 1.0f);
             degreeOfFailure *= degreeOfFailure;
             float spread = MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure) / (1f + user.GetStatValue(StatTypes.RangedSpreadReduction));
+            if (user.IsDualWieldingRangedWeapons())
+            {
+                spread += Math.Max(0f, ApplyDualWieldPenaltyReduction(user, DualWieldAccuracyPenalty, neutralValue: 0f));
+            }
             return MathHelper.ToRadians(spread);
+        }
+
+        /// <summary>
+        /// Lerps between the original penalty and a neutral value, which should be 1 for multipliers and 0 for additive penalties.
+        /// </summary>
+        /// <param name="character">The character to get stat values from</param>
+        /// <param name="originalPenalty">The original penalty value</param>
+        /// <param name="neutralValue">Neutral value to lerp towards. Should be 1 for multipliers and 0 for additives.</param>
+        /// <returns></returns>
+        private static float ApplyDualWieldPenaltyReduction(Character character, float originalPenalty, float neutralValue)
+        {
+            float statAdjustmentPrc = character.GetStatValue(StatTypes.DualWieldingPenaltyReduction);
+            statAdjustmentPrc = MathHelper.Clamp(statAdjustmentPrc, 0f, 1f);
+            float reducedPenaltyMultiplier = MathHelper.Lerp(originalPenalty, neutralValue, statAdjustmentPrc);
+            return reducedPenaltyMultiplier;
         }
 
         private readonly List<Body> ignoredBodies = new List<Body>();
@@ -208,43 +244,32 @@ namespace Barotrauma.Items.Components
             IsActive = true;
             float baseReloadTime = reload;
             float weaponSkill = character.GetSkillLevel("weapons");
-            if (ReloadSkillRequirement > 0 && ReloadNoSkill > reload && weaponSkill < ReloadSkillRequirement)
+            
+            bool applyReloadFailure = ReloadSkillRequirement > 0 && ReloadNoSkill > reload && weaponSkill < ReloadSkillRequirement;
+            if (applyReloadFailure)
             {
                 //Examples, assuming 40 weapon skill required: 1 - 40/40 = 0 ... 1 - 0/40 = 1 ... 1 - 20 / 40 = 0.5
                 float reloadFailure = MathHelper.Clamp(1 - (weaponSkill / ReloadSkillRequirement), 0, 1);
                 baseReloadTime = MathHelper.Lerp(reload, ReloadNoSkill, reloadFailure);
             }
+
+            if (character.IsDualWieldingRangedWeapons()) 
+            { 
+                baseReloadTime *= Math.Max(1f, ApplyDualWieldPenaltyReduction(character, DualWieldReloadTimePenaltyMultiplier, neutralValue: 1f));
+            }
+            
             ReloadTimer = baseReloadTime / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
             ReloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.FiringRateMultiplier);
 
             currentChargeTime = 0f;
 
-            if (character != null)
-            {
-                var abilityRangedWeapon = new AbilityRangedWeapon(item);
-                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityRangedWeapon);
-            }
+            var abilityRangedWeapon = new AbilityRangedWeapon(item);
+            character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityRangedWeapon);
 
             if (item.AiTarget != null)
             {
                 item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
                 item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
-            }
-
-            ignoredBodies.Clear();
-            foreach (Limb l in character.AnimController.Limbs)
-            {
-                if (l.IsSevered) { continue; }
-                ignoredBodies.Add(l.body.FarseerBody);
-            }
-
-            foreach (Item heldItem in character.HeldItems)
-            {
-                var holdable = heldItem.GetComponent<Holdable>();
-                if (holdable?.Pusher != null)
-                {
-                    ignoredBodies.Add(holdable.Pusher.FarseerBody);
-                }
             }
 
             float degreeOfFailure = 1.0f - DegreeOfSuccess(character);
@@ -270,6 +295,25 @@ namespace Barotrauma.Items.Components
                     }
                     float damageMultiplier = (1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier)) * WeaponDamageModifier;
                     projectile.Launcher = item;
+
+                    ignoredBodies.Clear();
+                    if (!projectile.DamageUser)
+                    {
+                        foreach (Limb l in character.AnimController.Limbs)
+                        {
+                            if (l.IsSevered) { continue; }
+                            ignoredBodies.Add(l.body.FarseerBody);
+                        }
+
+                        foreach (Item heldItem in character.HeldItems)
+                        {
+                            var holdable = heldItem.GetComponent<Holdable>();
+                            if (holdable?.Pusher != null)
+                            {
+                                ignoredBodies.Add(holdable.Pusher.FarseerBody);
+                            }
+                        }
+                    }
                     projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: ignoredBodies.ToList(), createNetworkEvent: false, damageMultiplier, LaunchImpulse);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (projectile.Item.body != null)

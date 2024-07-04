@@ -320,7 +320,61 @@ namespace Barotrauma
                 var reputationButton = createTabButton(InfoFrameTab.Reputation, "reputation");
 
                 var balanceFrame = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, innerLayoutGroup.Rect.Height - infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
-                GUITextBlock balanceText = new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), string.Empty, textAlignment: Alignment.Right);
+                GUILayoutGroup salaryFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.66f, 1f), balanceFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+
+                GUIScrollBar salaryScrollBar = null;
+                GUITextBlock salaryPercentage = null;
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                {
+                    float value = campaignMode.Bank.RewardDistribution;
+                    GUITextBlock salaryText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), salaryFrame.RectTransform), TextManager.Get("defaultsalary"), textAlignment: Alignment.Center)
+                    {
+                        AutoScaleHorizontal = true
+                    };
+                    salaryScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 1f), salaryFrame.RectTransform), barSize: 0.1f, style: "GUISlider")
+                    {
+                        Range = new Vector2(0, 1),
+                        BarScrollValue = value / 100f,
+                        Step = 0.01f,
+                        BarSize = 0.1f,
+                    };
+
+                    salaryPercentage = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1f), salaryFrame.RectTransform), "0", textAlignment: Alignment.Center)
+                    {
+                        Text = ValueToPercentage(RoundRewardDistribution(salaryScrollBar.BarScroll, salaryScrollBar.Step))
+                    };
+
+                    salaryScrollBar.OnMoved = (scrollBar, value) =>
+                    {
+                        salaryPercentage.Text = ValueToPercentage(RoundRewardDistribution(value, scrollBar.Step));
+                        return true;
+                    };
+                    salaryScrollBar.OnReleased = (bar, scroll) =>
+                    {
+                        int newRewardDistribution = RoundRewardDistribution(scroll, bar.Step);
+                        SetRewardDistribution(Option.None, newRewardDistribution);
+                        return true;
+                    };
+
+                    var resetButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), salaryFrame.RectTransform), TextManager.Get("ResetSalaries"), style: "GUIButtonSmall")
+                    {
+                        TextBlock = { AutoScaleHorizontal = true },
+                        ToolTip = TextManager.Get("resetsalaries.tooltip"),
+                        OnClicked = (button, userData) =>
+                        {
+                            GUI.AskForConfirmation(TextManager.Get("ResetSalaries"), TextManager.Get("ResetSalaries.Warning"), onConfirm: ResetRewardDistributions);
+                            return true;
+                        }
+                    };
+
+                    void UpdateSliderEnabled() 
+                        => salaryScrollBar.Enabled = resetButton.Enabled = CampaignMode.AllowedToManageWallets();
+                    UpdateSliderEnabled();
+
+                    Identifier defaultSalaryEventIdentifier = "DefaultSalarySlider".ToIdentifier();
+                    GameMain.Client?.OnPermissionChanged?.RegisterOverwriteExisting(defaultSalaryEventIdentifier, _ => UpdateSliderEnabled());
+                }
+                GUITextBlock balanceText = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1f), balanceFrame.RectTransform, Anchor.TopRight), string.Empty, textAlignment: Alignment.Right);
                 if (GameMain.IsMultiplayer)
                 {
                     balanceText.ToolTip = TextManager.Get("bankdescription");
@@ -343,6 +397,13 @@ namespace Barotrauma
                 {
                     if (!e.Owner.IsNone()) { return; }
                     SetBalanceText(balanceText, e.Wallet.Balance);
+
+                    if (salaryPercentage is not null && salaryScrollBar is not null)
+                    {
+                        float rewardDistribution = e.Wallet.RewardDistribution;
+                        salaryScrollBar.BarScrollValue = rewardDistribution / 100f;
+                        salaryPercentage.Text = ValueToPercentage(rewardDistribution);
+                    }
                 });
                 registeredEvents.Add(eventIdentifier);
 
@@ -350,6 +411,9 @@ namespace Barotrauma
                 {
                     text.Text = TextManager.GetWithVariable("bankbalanceformat", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", balance));
                 }
+
+                LocalizedString ValueToPercentage(float value)
+                    => TextManager.GetWithVariable("percentageformat", "[value]", $"{(int)MathF.Round(value)}");
             }
 
             var submarineButton = createTabButton(InfoFrameTab.Submarine, "submarine");
@@ -1037,11 +1101,10 @@ namespace Barotrauma
                 {
                     int newRewardDistribution = RoundRewardDistribution(scroll, bar.Step);
                     if (newRewardDistribution == targetWallet.RewardDistribution) { return false; }
-                    SetRewardDistribution(character, newRewardDistribution);
+                    SetRewardDistribution(Option.Some(character), newRewardDistribution);
                     return true;
                 }
             };
-            int RoundRewardDistribution(float scroll, float step) => (int)MathUtils.RoundTowardsClosest(scroll * 100, step * 100);
 
             SetRewardText(targetWallet.RewardDistribution, rewardBlock);
 
@@ -1066,7 +1129,7 @@ namespace Barotrauma
                             GUIButton centerButton = new GUIButton(new RectTransform(new Vector2(1f), centerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight, anchor: Anchor.Center), style: "GUIButtonTransferArrow");
 
                     GUILayoutGroup inputLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedTransferMenuLayout.RectTransform), childAnchor: Anchor.Center);
-                        GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), NumberType.Int, hidePlusMinusButtons: true)
+                        GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), NumberType.Int, buttonVisibility: GUINumberInput.ButtonVisibility.ForceHidden)
                         {
                             MinValueInt = 0
                         };
@@ -1201,6 +1264,7 @@ namespace Barotrauma
                     {
                         moneyBlock.Text = TextManager.FormatCurrency(e.Info.Balance);
                         salarySlider.BarScrollValue = e.Info.RewardDistribution / 100f;
+                        SetRewardText(e.Info.RewardDistribution, rewardBlock);
                     }
 
                     UpdateAllInputs();
@@ -1311,19 +1375,28 @@ namespace Barotrauma
                 transfer.Write(msg);
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
             }
-
-            static void SetRewardDistribution(Character character, int newValue)
-            {
-                INetSerializableStruct transfer = new NetWalletSetSalaryUpdate
-                {
-                    Target = character.ID,
-                    NewRewardDistribution = newValue
-                };
-                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.REWARD_DISTRIBUTION);
-                transfer.Write(msg);
-                GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
-            }
         }
+
+        static void SetRewardDistribution(Option<Character> character, int newValue)
+        {
+            INetSerializableStruct transfer = new NetWalletSetSalaryUpdate
+            {
+                Target = character.Select(c => c.ID),
+                NewRewardDistribution = newValue
+            };
+            IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.REWARD_DISTRIBUTION);
+            transfer.Write(msg);
+            GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        static void ResetRewardDistributions()
+        {
+            IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.RESET_REWARD_DISTRIBUTION);
+            GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        static int RoundRewardDistribution(float scroll, float step) 
+            => (int)MathUtils.RoundTowardsClosest(scroll * 100, step * 100);
 
         private GUIComponent CreateClientInfoFrame(GUIFrame frame, Client client, Sprite permissionIcon = null)
         {

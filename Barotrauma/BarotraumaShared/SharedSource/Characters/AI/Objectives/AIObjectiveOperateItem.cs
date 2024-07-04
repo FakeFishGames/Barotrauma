@@ -13,8 +13,8 @@ namespace Barotrauma
 
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowMultipleInstances => true;
-        public override bool AllowInAnySub => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowInAnySub => true;
+        protected override bool AllowWhileHandcuffed => false;
         public override bool PrioritizeIfSubObjectivesActive => component != null && (component is Reactor || component is Turret);
 
         private readonly ItemComponent component, controller;
@@ -29,7 +29,12 @@ namespace Barotrauma
         /// </summary>
         public Func<PathNode, bool> EndNodeFilter;
 
-        public bool Override { get; set; } = true;
+        public bool Override { get; init; } = true;
+        
+        /// <summary>
+        /// When true, the operate objective is never completed, unless it's abandoned.
+        /// </summary>
+        public bool Repeat { get; init; }
 
         public override bool CanBeCompleted => base.CanBeCompleted && (!useController || controller != null);
 
@@ -50,7 +55,7 @@ namespace Barotrauma
             bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             if (!isOrder && component.Item.ConditionPercentage <= 0)
@@ -211,6 +216,10 @@ namespace Barotrauma
                     return;
                 }
             }
+
+            //the character shouldn't be grabbing anyone if it's trying to operate an item
+            character.SelectedCharacter = null;
+
             if (target.CanBeSelected)
             {
                 if (!character.IsClimbing && character.CanInteractWith(target.Item, out _, checkLinked: false))
@@ -303,7 +312,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific() => isDoneOperating && !IsLoop;
+        protected override bool CheckObjectiveSpecific() => isDoneOperating && !Repeat;
 
         public override void Reset()
         {

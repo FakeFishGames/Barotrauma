@@ -504,7 +504,10 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine) { continue; }
+                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine != CanEnterSubmarine.True) 
+                { 
+                    continue; 
+                }
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
@@ -567,7 +570,7 @@ namespace Barotrauma
             {
                 buoyancy = MathHelper.Lerp(buoyancy, 0.1f, forceUpwardsTimer / ForceUpwardsDelay);
             }
-            return new Vector2(0.0f, buoyancy * Body.Mass * 10.0f) * massRatio;
+            return new Vector2(0.0f, buoyancy * totalMass * 10.0f) * massRatio;
         }
 
         public void ApplyForce(Vector2 force)
@@ -597,6 +600,9 @@ namespace Barotrauma
             const float MaxWallDamage = 500.0f;
             const float MinCameraShake = 5f;
             const float MaxCameraShake = 50.0f;
+            //delay at the start of the round during which you take no depth damage
+            //(gives you a bit of time to react and return if you start the round in a level that's too deep)
+            const float MinRoundDuration = 60.0f;
 
             if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth + CosmeticEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)
             {
@@ -613,7 +619,7 @@ namespace Barotrauma
             }
 
             depthDamageTimer -= deltaTime;
-            if (depthDamageTimer <= 0.0f)
+            if (depthDamageTimer <= 0.0f && (GameMain.GameSession == null || GameMain.GameSession.RoundDuration > MinRoundDuration))
             {
                 foreach (Structure wall in Structure.WallList)
                 {
@@ -684,9 +690,26 @@ namespace Barotrauma
 
         private bool CheckCharacterCollision(Contact contact, Character character)
         {
-            //characters that can't enter the sub always collide regardless of gaps
-            if (!character.AnimController.CanEnterSubmarine) { return true; }
             if (character.Submarine != null) { return false; }
+            switch (character.AnimController.CanEnterSubmarine)
+            {
+                case CanEnterSubmarine.False:
+                    //characters that can't enter the sub always collide regardless of gaps
+                    return true;
+                case CanEnterSubmarine.Partial:
+                    //characters that can partially enter the sub can poke their limbs inside, but not the collider
+                    if (contact.FixtureB.Body == 
+                        character.AnimController.Collider.FarseerBody)
+                    {
+                        return true;
+                    }       
+                    if (contact.FixtureB.Body.UserData is Limb limb && 
+                        !limb.Params.CanEnterSubmarine)
+                    {
+                        return true;
+                    }
+                    break;
+            }
 
             contact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> points);
 
@@ -717,17 +740,23 @@ namespace Barotrauma
                 if (adjacentGap == null) { return true; }
             }
 
-            if (newHull != null)
-            {
-                CoroutineManager.Invoke(() =>
-                {
-                    if (character != null && !character.Removed)
-                    {
-                        character.AnimController.FindHull(newHull.WorldPosition, setSubmarine: true);
-                    }
-                });
+            if (character.AnimController.CanEnterSubmarine == CanEnterSubmarine.Partial) 
+            { 
+                return contact.FixtureB.Body == character.AnimController.Collider.FarseerBody; 
             }
-
+            else
+            {
+                if (newHull != null)
+                {
+                    CoroutineManager.Invoke(() =>
+                    {
+                        if (character != null && !character.Removed)
+                        {
+                            character.AnimController.FindHull(newHull.WorldPosition, setSubmarine: true);
+                        }
+                    });
+                }
+            }
             return false;
         }
 
@@ -880,16 +909,11 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            int particleAmount = (int)Math.Min(wallImpact * 10.0f, 50);
-            for (int i = 0; i < particleAmount; i++)
-            {
-                GameMain.ParticleManager.CreateParticle("iceshards",
-                    ConvertUnits.ToDisplayUnits(impact.ImpactPos) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
-                    Rand.Vector(Rand.Range(50.0f, 500.0f)) + impact.Velocity);
-            }
-#endif
+            HandleLevelCollisionProjSpecific(impact);
         }
+
+
+        partial void HandleLevelCollisionProjSpecific(Impact impact);
 
         private void HandleSubCollision(Impact impact, Submarine otherSub)
         {

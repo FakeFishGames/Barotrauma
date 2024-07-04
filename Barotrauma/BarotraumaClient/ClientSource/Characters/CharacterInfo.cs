@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using System;
 using System.Linq;
@@ -46,6 +46,7 @@ namespace Barotrauma
                 ContentPath tintMaskPath = maskElement.GetAttributeContentPath("texture");
                 if (!tintMaskPath.IsNullOrEmpty())
                 {
+                    VerifySpriteTagsLoaded();
                     tintMask = new Sprite(maskElement, file: Limb.GetSpritePath(tintMaskPath, this));
                     tintHighlightThreshold = maskElement.GetAttributeFloat("highlightthreshold", 0.6f);
                     tintHighlightMultiplier = maskElement.GetAttributeFloat("highlightmultiplier", 0.8f);
@@ -61,7 +62,7 @@ namespace Barotrauma
                //Stretch = true
             };
 
-            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.322f), paddedFrame.RectTransform), isHorizontal: true);
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedFrame.RectTransform), isHorizontal: true);
 
             new GUICustomComponent(new RectTransform(new Vector2(0.425f, 1.0f), headerArea.RectTransform), 
                 onDraw: (sb, component) => DrawInfoFrameCharacterIcon(sb, component.Rect));
@@ -140,7 +141,7 @@ namespace Barotrauma
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), skill.DisplayName, textColor: textColor, font: font) { Padding = Vector4.Zero };
 
                     float modifiedSkillLevel = skill.Level;
                     if (Character != null)
@@ -185,7 +186,7 @@ namespace Barotrauma
 
         private void DrawInfoFrameCharacterIcon(SpriteBatch sb, Rectangle componentRect)
         {
-            if (_headSprite == null) { return; }
+            if (HeadSprite == null) { return; }
             Vector2 targetAreaSize = componentRect.Size.ToVector2();
             float scale = Math.Min(targetAreaSize.X / _headSprite.size.X, targetAreaSize.Y / _headSprite.size.Y);
             DrawIcon(sb, componentRect.Location.ToVector2() + _headSprite.size / 2 * scale, targetAreaSize);
@@ -524,6 +525,7 @@ namespace Barotrauma
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
             string originalName = inc.ReadString();
+            bool renamingEnabled = inc.ReadBoolean();
             int tagCount = inc.ReadByte();
             HashSet<Identifier> tagSet = new HashSet<Identifier>();
             for (int i = 0; i < tagCount; i++)
@@ -538,7 +540,7 @@ namespace Barotrauma
             Color hairColor = inc.ReadColorR8G8B8();
             Color facialHairColor = inc.ReadColorR8G8B8();
 
-            string ragdollFile = inc.ReadString();
+
             Identifier npcId = inc.ReadIdentifier();
 
             Identifier factionId = inc.ReadIdentifier();
@@ -560,21 +562,19 @@ namespace Barotrauma
                     throw new Exception($"Error while reading {nameof(CharacterInfo)} received from the server: could not find a job prefab with the identifier \"{jobIdentifier}\".");
                 }
                 byte skillCount = inc.ReadByte();
-                List<SkillPrefab> jobSkills = jobPrefab?.Skills.OrderBy(s => s.Identifier).ToList();
                 for (int i = 0; i < skillCount; i++)
                 {
+                    Identifier skillIdentifier = inc.ReadIdentifier();
                     float skillLevel = inc.ReadSingle();
-                    if (jobSkills != null && i < jobSkills.Count)
-                    {
-                        skillLevels.Add(jobSkills[i].Identifier, skillLevel);
-                    }
+                    skillLevels.Add(skillIdentifier, skillLevel);
                 }
             }
 
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant, npcIdentifier: npcId)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, variant, npcIdentifier: npcId)
             {
                 ID = infoID,
-                MinReputationToHire = (factionId, minReputationToHire)
+                MinReputationToHire = (factionId, minReputationToHire),
+                RenamingEnabled = renamingEnabled
             };
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;
@@ -585,6 +585,7 @@ namespace Barotrauma
 
             ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
+            ch.PermanentlyDead = inc.ReadBoolean();
             return ch;
         }
 

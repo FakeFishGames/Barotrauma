@@ -1,6 +1,6 @@
-﻿using System;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -47,6 +47,8 @@ namespace Barotrauma
         public readonly static GUISprite SubmarineLocationIcon = new GUISprite("SubmarineLocationIcon");
         public readonly static GUISprite Arrow = new GUISprite("Arrow");
         public readonly static GUISprite SpeechBubbleIcon = new GUISprite("SpeechBubbleIcon");
+        public readonly static GUISprite SpeechBubbleIconSliced = new GUISprite("SpeechBubbleIconSliced");
+        public readonly static GUISprite InteractionLabelBackground = new GUISprite("InteractionLabelBackground");
         public readonly static GUISprite BrokenIcon = new GUISprite("BrokenIcon");
         public readonly static GUISprite YouAreHereCircle = new GUISprite("YouAreHereCircle");
 
@@ -124,6 +126,9 @@ namespace Barotrauma
         public readonly static GUIColor ColorReputationNeutral = new GUIColor("ColorReputationNeutral", new Color(228, 217, 167, 255));
         public readonly static GUIColor ColorReputationHigh = new GUIColor("ColorReputationHigh", new Color(51, 152, 64, 255));
         public readonly static GUIColor ColorReputationVeryHigh = new GUIColor("ColorReputationVeryHigh", new Color(71, 160, 164, 255));
+        
+        public readonly static GUIColor InteractionLabelColor = new GUIColor("InteractionLabelColor", new Color(255, 255, 255, 255));
+        public readonly static GUIColor InteractionLabelHoverColor = new GUIColor("InteractionLabelHoverColor", new Color(0, 255, 255, 255));
 
         // Inventory
         public readonly static GUIColor EquipmentSlotIconColor = new GUIColor("EquipmentSlotIconColor", new Color(99, 70, 64, 255));
@@ -195,8 +200,7 @@ namespace Barotrauma
 
                 if (parentStyle == null)
                 {
-                    Identifier parentStyleName = parent.GetType().Name.ToIdentifier();
-
+                    Identifier parentStyleName = ReflectionUtils.GetTypeNameWithoutGenericArity(parent.GetType());
                     if (!ComponentStyles.ContainsKey(parentStyleName))
                     {
                         DebugConsole.ThrowError($"Couldn't find a GUI style \"{parentStyleName}\"");
@@ -204,7 +208,7 @@ namespace Barotrauma
                     }
                     parentStyle = ComponentStyles[parentStyleName];
                 }
-                Identifier childStyleName = styleName.IsEmpty ? targetComponent.GetType().Name.ToIdentifier() : styleName;
+                Identifier childStyleName = styleName.IsEmpty ? ReflectionUtils.GetTypeNameWithoutGenericArity(targetComponent.GetType()) : styleName;
                 parentStyle.ChildStyles.TryGetValue(childStyleName, out componentStyle);
             }
             else
@@ -212,7 +216,7 @@ namespace Barotrauma
                 Identifier styleIdentifier = styleName.ToIdentifier();
                 if (styleIdentifier == Identifier.Empty)
                 {
-                    styleIdentifier = targetComponent.GetType().Name.ToIdentifier();
+                    styleIdentifier = ReflectionUtils.GetTypeNameWithoutGenericArity(targetComponent.GetType());
                 }
                 if (!ComponentStyles.ContainsKey(styleIdentifier))
                 {

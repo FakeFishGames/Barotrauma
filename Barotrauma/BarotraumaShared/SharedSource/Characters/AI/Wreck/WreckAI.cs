@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -109,7 +109,7 @@ namespace Barotrauma
 
         private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, Identifier tag) => MapEntity.MapEntityList.Where(e => e.Submarine == wreck && e.Prefab != null && IsThalamus(e.Prefab, tag));
 
-        private static bool IsThalamus(MapEntityPrefab entityPrefab, Identifier tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
+        public static bool IsThalamus(MapEntityPrefab entityPrefab, Identifier tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
 
         public static WreckAI Create(Submarine wreck)
         {
@@ -213,7 +213,7 @@ namespace Barotrauma
             foreach (Item item in thalamusItems)
             {
                 // Ensure that thalamus items are visible
-                item.HiddenInGame = false;
+                item.IsLayerHidden = false;
                 if (item.HasTag(Config.Spawner))
                 {
                     if (!spawnOrgans.Contains(item))

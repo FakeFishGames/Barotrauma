@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -243,7 +244,7 @@ namespace Barotrauma
                 savedOnStart = true;
             }
 
-            crewDead = false;
+            CrewDead = false;
             endTimer = 5.0f;
             CrewManager.InitSinglePlayerRound();
             LoadPets();
@@ -373,7 +374,7 @@ namespace Barotrauma
             SoundPlayer.OverrideMusicType = (success ? "endround" : "crewdead").ToIdentifier();
             SoundPlayer.OverrideMusicDuration = 18.0f;
             GUI.SetSavingIndicatorState(success);
-            crewDead = false;
+            CrewDead = false;
 
             if (success)
             {
@@ -582,9 +583,12 @@ namespace Barotrauma
                 HintManager.OnAvailableTransition(transitionType);
             }
 
-            if (!crewDead)
+            if (!CrewDead)
             {
-                if (!CrewManager.GetCharacters().Any(c => !c.IsDead)) { crewDead = true; }                
+                if (CrewManager.GetCharacters().None(c => !c.IsDead && !CrewManager.IsFired(c))) 
+                { 
+                    CrewDead = true; 
+                }                
             }
             else
             {

@@ -262,6 +262,9 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public const float MinFrequencyMultiplier = 0.25f;
+        public const float MaxFrequencyMultiplier = 4.0f;
+        
         public float frequencyMultiplier;
         public float FrequencyMultiplier
         {
@@ -271,11 +274,11 @@ namespace Barotrauma.Sounds
             }
             set
             {
-                if (value < 0.25f || value > 4.0f)
+                if (value is < MinFrequencyMultiplier or > MaxFrequencyMultiplier)
                 {
                     DebugConsole.ThrowError($"Frequency multiplier out of range: {value}" + Environment.StackTrace.CleanupStackTrace());
                 }
-                frequencyMultiplier = Math.Clamp(value, 0.25f, 4.0f);
+                frequencyMultiplier = Math.Clamp(value, MinFrequencyMultiplier, MaxFrequencyMultiplier);
 
                 if (ALSourceIndex < 0) { return; }
 

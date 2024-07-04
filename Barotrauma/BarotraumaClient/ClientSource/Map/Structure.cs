@@ -221,6 +221,12 @@ namespace Barotrauma
                 editor.AddCustomContent(tickBox, 1);
             }
 
+            if (!Layer.IsNullOrEmpty())
+            {
+                var layerText = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)) { MinSize = new Point(0, heightScaled) }, TextManager.AddPunctuation(':', TextManager.Get("editor.layer"), Layer));
+                editor.AddCustomContent(layerText, 1);
+            }
+
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
             {
                 Stretch = true,
@@ -376,7 +382,10 @@ namespace Barotrauma
                 if (!HasBody && !ShowStructures) { return; }
                 if (HasBody && !ShowWalls) { return; }
             }
-            else if (HiddenInGame) { return; }
+            else if (IsHidden) 
+            {
+                return; 
+            }
 
             Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted ? GUIStyle.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
 
@@ -435,12 +444,11 @@ namespace Barotrauma
                         dropShadowOffset.Y = -dropShadowOffset.Y;
                     }
 
-                    SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
-                    Prefab.BackgroundSprite.effects ^= SpriteEffects;
-
                     Vector2 backGroundOffset = new Vector2(
                         MathUtils.PositiveModulo(-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width * TextureScale.X * Scale),
                         MathUtils.PositiveModulo(-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height * TextureScale.Y * Scale));
+
+                    float rotationRad = rotationForSprite(this.rotationRad, Prefab.BackgroundSprite);
 
                     Prefab.BackgroundSprite.DrawTiled(
                         spriteBatch,
@@ -451,7 +459,8 @@ namespace Barotrauma
                         color: Prefab.BackgroundSpriteColor,
                         textureScale: TextureScale * Scale,
                         startOffset: backGroundOffset,
-                        depth: Math.Max(GetDrawDepth(Prefab.BackgroundSprite.Depth, Prefab.BackgroundSprite), depth + 0.000001f));
+                        depth: Math.Max(GetDrawDepth(Prefab.BackgroundSprite.Depth, Prefab.BackgroundSprite), depth + 0.000001f),
+                        spriteEffects: Prefab.BackgroundSprite.effects ^ SpriteEffects);
 
                     if (UseDropShadow)
                     {
@@ -464,18 +473,14 @@ namespace Barotrauma
                             color: Color.Black * 0.5f,
                             textureScale: TextureScale * Scale,
                             startOffset: backGroundOffset,
-                            depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f);
+                            depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f,
+                            spriteEffects: Prefab.BackgroundSprite.effects ^ SpriteEffects);
                     }
-
-                    Prefab.BackgroundSprite.effects = oldEffects;
                 }
             }
 
             if (back == GetRealDepth() > 0.5f)
             {
-                SpriteEffects oldEffects = Prefab.Sprite.effects;
-                Prefab.Sprite.effects ^= SpriteEffects;
-
                 Vector2 advanceX = MathUtils.RotatedUnitXRadians(this.rotationRad).FlipY();
                 Vector2 advanceY = advanceX.YX().FlipX();
                 if (FlippedX != FlippedY)
@@ -483,6 +488,9 @@ namespace Barotrauma
                     advanceX = advanceX.FlipY();
                     advanceY = advanceY.FlipX();
                 }
+
+                float sectionSpriteRotationRad = rotationForSprite(this.rotationRad, Prefab.Sprite);
+
                 for (int i = 0; i < Sections.Length; i++)
                 {
                     Rectangle drawSection = Sections[i].rect;
@@ -532,12 +540,13 @@ namespace Barotrauma
                         spriteBatch,
                         pos,
                         new Vector2(drawSection.Width, drawSection.Height),
-                        rotation: rotationRad,
+                        rotation: sectionSpriteRotationRad,
                         origin: rect.Size.ToVector2() * new Vector2(0.5f, 0.5f),
                         color: color,
                         startOffset: sectionOffset,
                         depth: depth,
-                        textureScale: TextureScale * Scale);
+                        textureScale: TextureScale * Scale,
+                        spriteEffects: Prefab.Sprite.effects ^ SpriteEffects);
                 }
 
                 foreach (var decorativeSprite in Prefab.DecorativeSprites)
@@ -545,27 +554,42 @@ namespace Barotrauma
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                     float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor) + this.rotationRad;
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
-                    decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, Prefab.Sprite.effects,
+                    Vector2 drawPos = DrawPosition + MathUtils.RotatePoint(offset, -this.rotationRad);
+                    decorativeSprite.Sprite.Draw(
+                        spriteBatch: spriteBatch,
+                        pos: drawPos.FlipY(),
+                        color: color,
+                        rotate: rotation,
+                        scale: decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale,
+                        spriteEffect: Prefab.Sprite.effects ^ SpriteEffects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - Prefab.Sprite.Depth), 0.999f));
                 }
-                Prefab.Sprite.effects = oldEffects;
+            }
+
+            static float rotationForSprite(float rotationRad, Sprite sprite)
+            {
+                if (sprite.effects.HasFlag(SpriteEffects.FlipHorizontally) != sprite.effects.HasFlag(SpriteEffects.FlipVertically))
+                {
+                    rotationRad = -rotationRad;
+                }
+                return rotationRad;
             }
 
             if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.5f)
             {
                 if (Bodies != null)
                 {
-                    for (int i = 0; i < Bodies.Count; i++)
+                    foreach (var body in Bodies)
                     {
-                        Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
+                        Vector2 pos = ConvertUnits.ToDisplayUnits(body.Position);
                         if (Submarine != null) { pos += Submarine.DrawPosition; }
                         pos.Y = -pos.Y;
+                        var dimensions = bodyDimensions[body];
                         GUI.DrawRectangle(spriteBatch,
                             pos,
-                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].X),
-                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].Y),
-                            -Bodies[i].Rotation, Color.White);
+                            ConvertUnits.ToDisplayUnits(dimensions.X),
+                            ConvertUnits.ToDisplayUnits(dimensions.Y),
+                            -body.Rotation, Color.White);
                     }
                 }
 

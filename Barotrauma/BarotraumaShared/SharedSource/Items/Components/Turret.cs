@@ -17,19 +17,20 @@ namespace Barotrauma.Items.Components
         private readonly List<(Sprite sprite, Vector2 position)> chargeSprites = new List<(Sprite sprite, Vector2 position)>();
         private readonly List<Sprite> spinningBarrelSprites = new List<Sprite>();
 
+        /// <summary>
+        /// Sentinel value that represents the turret being launched without a projectile in network events
+        /// </summary>
+        const ushort LaunchWithoutProjectileId = ushort.MaxValue;
+
         private Vector2 barrelPos;
         private Vector2 transformedBarrelPos;
         
-        private float rotation, targetRotation;
+        private float targetRotation;
 
-        private float reload, reloadTime, delayBetweenBurst;
-        private int shotsPerBurst, shotCounter;
+        private float reload;
+        private int shotCounter;
 
         private float minRotation, maxRotation;
-
-        private float launchImpulse;
-
-        private float damageMultiplier;
 
         private Camera cam;
 
@@ -90,11 +91,8 @@ namespace Barotrauma.Items.Components
 
         private readonly bool isSlowTurret;
 
-        public float Rotation
-        {
-            get { return rotation; }
-        }
-        
+        public float Rotation { get; private set; }
+
         [Serialize("0,0", IsPropertySaveable.No, description: "The position of the barrel relative to the upper left corner of the base sprite (in pixels).")]
         public Vector2 BarrelPos
         {
@@ -110,195 +108,35 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize("0,0", IsPropertySaveable.No, description: "The projectile launching location relative to transformed barrel position (in pixels).")]
-        public Vector2 FiringOffset
-        {
-            get;
-            set;
-        }
+        public Vector2 FiringOffset { get; set; }
 
-        public bool flipFiringOffset;
+        private bool flipFiringOffset;
 
         [Serialize(false, IsPropertySaveable.No, description: "If enabled, the firing offset will alternate from left to right (i.e. flipping the x-component of the offset each shot.)")]
-        public bool AlternatingFiringOffset
-        {
-            get;
-            set;
-        }
+        public bool AlternatingFiringOffset { get; set; }
 
-        public Vector2 TransformedBarrelPos
-        {
-            get
-            {
-                return transformedBarrelPos;
-            }
-        }
+        public Vector2 TransformedBarrelPos => transformedBarrelPos;
 
         [Serialize(0.0f, IsPropertySaveable.No, description: "The impulse applied to the physics body of the projectile (the higher the impulse, the faster the projectiles are launched).")]
-        public float LaunchImpulse
-        {
-            get { return launchImpulse; }
-            set { launchImpulse = value; }
-        }
-
-        [Editable(0.0f, 1000.0f, decimals: 3), Serialize(5.0f, IsPropertySaveable.No, description: "The period of time the user has to wait between shots.")]
-        public float Reload
-        {
-            get { return reloadTime; }
-            set { reloadTime = value; }
-        }
-
-        [Editable(1, 100), Serialize(1, IsPropertySaveable.No, description: "How many projectiles needs to be shot before we add an extra break? Think of the double coilgun.")]
-        public int ShotsPerBurst
-        {
-            get { return shotsPerBurst; }
-            set { shotsPerBurst = value; }
-        }
-
-        [Editable(0.0f, 1000.0f, decimals: 3), Serialize(0.0f, IsPropertySaveable.No, description: "An extra delay between the bursts. Added to the reload.")]
-        public float DelayBetweenBursts
-        {
-            get { return delayBetweenBurst; }
-            set { delayBetweenBurst = value; }
-        }
-
-        [Editable(0.1f, 10f), Serialize(1.0f, IsPropertySaveable.No, description: "Modifies the duration of retraction of the barrell after recoil to get back to the original position after shooting. Reload time affects this too.")]
-        public float RetractionDurationMultiplier
-        {
-            get;
-            set;
-        }
-
-        [Editable(0.1f, 10f), Serialize(0.1f, IsPropertySaveable.No, description: "How quickly the recoil moves the barrel after launching.")]
-        public float RecoilTime
-        {
-            get;
-            set;
-        }
-
-        [Editable(0f, 1000f), Serialize(0f, IsPropertySaveable.No, description: "How long the barrell stays in place after the recoil and before retracting back to the original position.")]
-        public float RetractionDelay
-        {
-            get;
-            set;
-        }
+        public float LaunchImpulse { get; set; }
 
         [Serialize(1.0f, IsPropertySaveable.No, description: "Multiplies the damage the turret deals by this amount.")]
-        public float DamageMultiplier
-        {
-            get { return damageMultiplier; }
-            set { damageMultiplier = value; }
-        }
+        public float DamageMultiplier { get; set; }
 
         [Serialize(1, IsPropertySaveable.No, description: "How many projectiles the weapon launches when fired once.")]
-        public int ProjectileCount
-        {
-            get;
-            set;
-        }
+        public int ProjectileCount { get; set; }
 
         [Serialize(false, IsPropertySaveable.No, description: "Can the turret be fired without projectiles (causing it just to execute the OnUse effects and the firing animation without actually firing anything).")]
-        public bool LaunchWithoutProjectile
-        {
-            get;
-            set;
-        }
-
-        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
-            Serialize("0.0,0.0", IsPropertySaveable.Yes, description: "The range at which the barrel can rotate.", alwaysUseInstanceValues: true)]
-        public Vector2 RotationLimits
-        {
-            get
-            {
-                return new Vector2(MathHelper.ToDegrees(minRotation), MathHelper.ToDegrees(maxRotation)); 
-            }
-            set
-            {
-                minRotation = MathHelper.ToRadians(Math.Min(value.X, value.Y));
-                maxRotation = MathHelper.ToRadians(Math.Max(value.X, value.Y));
-
-                rotation = (minRotation + maxRotation) / 2;
-#if CLIENT
-                if (lightComponents != null)
-                {
-                    foreach (var light in lightComponents)
-                    {
-                        light.Rotation = rotation;
-                        light.Light.Rotation = -rotation;
-                    }
-                }
-#endif
-            }
-        }
+        public bool LaunchWithoutProjectile { get; set; }
 
         [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the firing angle of the projectiles (in degrees).")]
-        public float Spread
-        {
-            get;
-            set;
-        }
-
-        [Editable(0.0f, 1000.0f, DecimalCount = 2),
-            Serialize(5.0f, IsPropertySaveable.No, description: "How much torque is applied to rotate the barrel when the item is used by a character"
-            + " with insufficient skills to operate it. Higher values make the barrel rotate faster.")]
-        public float SpringStiffnessLowSkill
-        {
-            get;
-            private set;
-        }
-        [Editable(0.0f, 1000.0f, DecimalCount = 2),
-            Serialize(2.0f, IsPropertySaveable.No, description: "How much torque is applied to rotate the barrel when the item is used by a character"
-            + " with sufficient skills to operate it. Higher values make the barrel rotate faster.")]
-        public float SpringStiffnessHighSkill
-        {
-            get;
-            private set;
-        }
-
-        [Editable(0.0f, 1000.0f, DecimalCount = 2),
-            Serialize(50.0f, IsPropertySaveable.No, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character"
-            + " with insufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at.")]
-        public float SpringDampingLowSkill
-        {
-            get;
-            private set;
-        }
-        [Editable(0.0f, 1000.0f, DecimalCount = 2),
-            Serialize(10.0f, IsPropertySaveable.No, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character"
-            + " with sufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at.")]
-        public float SpringDampingHighSkill
-        {
-            get;
-            private set;
-        }
-
-        [Editable(0.0f, 100.0f, DecimalCount = 2),
-            Serialize(1.0f, IsPropertySaveable.No, description: "Maximum angular velocity of the barrel when used by a character with insufficient skills to operate it.")]
-        public float RotationSpeedLowSkill
-        {
-            get;
-            private set;
-        }
-        [Editable(0.0f, 100.0f, DecimalCount = 2),
-            Serialize(5.0f, IsPropertySaveable.No, description: "Maximum angular velocity of the barrel when used by a character with sufficient skills to operate it."),]
-        public float RotationSpeedHighSkill
-        {
-            get;
-            private set;
-        }
-
+        public float Spread { get; set; }
+        
         [Serialize(1.0f, IsPropertySaveable.No, description: "How fast the turret can rotate while firing (for charged weapons).")]
-        public float FiringRotationSpeedModifier
-        {
-            get;
-            private set;
-        }
+        public float FiringRotationSpeedModifier { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Whether the turret should always charge-up fully to shoot.")]
-        public bool SingleChargedShot
-        {
-            get;
-            private set;
-        }
+        public bool SingleChargedShot { get; set; }
 
         private float prevScale;
         float prevBaseRotation;
@@ -314,11 +152,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize(3500.0f, IsPropertySaveable.Yes, description: "How close to a target the turret has to be for an AI character to fire it.")]
-        public float AIRange
-        {
-            get;
-            set;
-        }
+        public float AIRange { get; set; }
 
         private float _maxAngleOffset;
         [Serialize(10.0f, IsPropertySaveable.No, description: "How much off the turret can be from the target for the AI to shoot. In degrees.")]
@@ -329,68 +163,168 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize(1.1f, IsPropertySaveable.No, description: "How much does the AI prefer currently selected targets over new targets closer to the turret.")]
-        public float AICurrentTargetPriorityMultiplier
-        {
-            get;
-            private set;
-        }
+        public float AICurrentTargetPriorityMultiplier { get; private set; }
 
         [Serialize(-1, IsPropertySaveable.Yes, description: "The turret won't fire additional projectiles if the number of previously fired, still active projectiles reaches this limit. If set to -1, there is no limit to the number of projectiles.")]
-        public int MaxActiveProjectiles
-        {
-            get;
-            set;
-        }
+        public int MaxActiveProjectiles { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "The time required for a charge-type turret to charge up before able to fire.")]
-        public float MaxChargeTime
-        {
-            get;
-            private set;
-        }
+        public float MaxChargeTime { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description:"Should the turret operate automatically using AI targeting? Comes with some optional random movement that can be adjusted below."), Editable]
+        #region Editable properties
+        
+        [Serialize(5.0f, IsPropertySaveable.No, description: "The period of time the user has to wait between shots."), 
+         Editable(0.0f, 1000.0f, decimals: 3)]
+        public float Reload { get; set; }
+
+        [Serialize(1, IsPropertySaveable.No, description: "How many projectiles needs to be shot before we add an extra break? Think of the double coilgun."), 
+         Editable(1, 100)]
+        public int ShotsPerBurst { get; set; }
+
+        [Serialize(0.0f, IsPropertySaveable.No, description: "An extra delay between the bursts. Added to the reload."),
+         Editable(0.0f, 1000.0f, decimals: 3)]
+        public float DelayBetweenBursts { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "Modifies the duration of retraction of the barrell after recoil to get back to the original position after shooting. Reload time affects this too."),
+         Editable(0.1f, 10f)]
+        public float RetractionDurationMultiplier { get; set; }
+
+        [Serialize(0.1f, IsPropertySaveable.No, description: "How quickly the recoil moves the barrel after launching."), 
+         Editable(0.1f, 10f)]
+        public float RecoilTime { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.No, description: "How long the barrell stays in place after the recoil and before retracting back to the original position."),
+         Editable(0f, 1000f)]
+        public float RetractionDelay { get; set; }
+        
+        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }),
+         Serialize("0.0,0.0", IsPropertySaveable.Yes, description: "The range at which the barrel can rotate.", alwaysUseInstanceValues: true)]
+        public Vector2 RotationLimits
+        {
+            get
+            {
+                return new Vector2(MathHelper.ToDegrees(minRotation), MathHelper.ToDegrees(maxRotation));
+            }
+            set
+            {
+                float newMinRotation = MathHelper.ToRadians(value.X);
+                float newMaxRotation = MathHelper.ToRadians(value.Y);
+                
+                bool minRotationModified = MathHelper.Distance(newMinRotation, minRotation) > 0.02f;
+                bool maxRotationModified = MathHelper.Distance(newMaxRotation, maxRotation) > 0.02f;
+                
+                // if only one rotation changes (when editing via text field), use the other one to clamp to max range
+                if (minRotationModified && !maxRotationModified)
+                {
+                    newMinRotation = MathHelper.Clamp(newMinRotation, maxRotation - MathHelper.TwoPi, maxRotation);
+                }
+                else if (!minRotationModified && maxRotationModified)
+                {
+                    newMaxRotation = MathHelper.Clamp(newMaxRotation, minRotation, minRotation + MathHelper.TwoPi);
+                }
+                
+                maxRotation = newMaxRotation;
+                minRotation = newMinRotation;
+                
+                Rotation = (minRotation + maxRotation) / 2;
+#if CLIENT
+                if (lightComponents != null)
+                {
+                    foreach (var light in lightComponents)
+                    {
+                        light.Rotation = Rotation;
+                        light.Light.Rotation = -Rotation;
+                    }
+                }
+#endif
+            }
+        }
+        
+        [Serialize(5.0f, IsPropertySaveable.No, description: "How much torque is applied to rotate the barrel when the item is used by a character with insufficient skills to operate it. Higher values make the barrel rotate faster."), 
+         Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        public float SpringStiffnessLowSkill { get; private set; }
+        
+        [Serialize(2.0f, IsPropertySaveable.No, description: "How much torque is applied to rotate the barrel when the item is used by a character with sufficient skills to operate it. Higher values make the barrel rotate faster."),
+         Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        public float SpringStiffnessHighSkill { get; private set; }
+
+        [Serialize(50.0f, IsPropertySaveable.No, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character with insufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at."),
+         Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        public float SpringDampingLowSkill { get; private set; }
+        
+        [Serialize(10.0f, IsPropertySaveable.No, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character with sufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at."), 
+         Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        public float SpringDampingHighSkill { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "Maximum angular velocity of the barrel when used by a character with insufficient skills to operate it."), 
+         Editable(0.0f, 100.0f, DecimalCount = 2)]
+        public float RotationSpeedLowSkill { get; private set; }
+        
+        [Serialize(5.0f, IsPropertySaveable.No, description: "Maximum angular velocity of the barrel when used by a character with sufficient skills to operate it."), 
+         Editable(0.0f, 100.0f, DecimalCount = 2)]
+        public float RotationSpeedHighSkill { get; private set; }
+        
+        [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "Optional screen tint color when the item is being operated (R,G,B,A)."), 
+         Editable]
+        public Color HudTint { get; set; }
+        
+        [Header(localizedTextTag: "sp.turret.AutoOperate.propertyheader")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the turret operate automatically using AI targeting? Comes with some optional random movement that can be adjusted below."),
+         Editable(TransferToSwappedItem = true)]
         public bool AutoOperate { get; set; }
 
-        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How much the turret should adjust the aim off the target randomly instead of tracking the target perfectly? In Degrees."), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Can the Auto Operate functionality be enabled using signals to the turret?"),
+            Editable(TransferToSwappedItem = true)]
+        public bool AllowAutoOperateWithWiring { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How much the turret should adjust the aim off the target randomly instead of tracking the target perfectly? In Degrees."),
+         Editable(TransferToSwappedItem = true)]
         public float RandomAimAmount { get; set; }
 
-        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How often the turret should adjust the aim randomly instead of tracking the target perfectly? Minimum wait time, in seconds."), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How often the turret should adjust the aim randomly instead of tracking the target perfectly? Minimum wait time, in seconds."),
+         Editable(TransferToSwappedItem = true)]
         public float RandomAimMinTime { get; set; }
 
-        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How often the turret should adjust the aim randomly instead of tracking the target perfectly? Maximum wait time, in seconds."), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How often the turret should adjust the aim randomly instead of tracking the target perfectly? Maximum wait time, in seconds."),
+         Editable(TransferToSwappedItem = true)]
         public float RandomAimMaxTime { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret move randomly while idle?"), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret move randomly while idle?"),
+         Editable(TransferToSwappedItem = true)]
         public bool RandomMovement { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret have a delay while targeting targets or always aim prefectly?"), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret have a delay while targeting targets or always aim prefectly?"),
+         Editable(TransferToSwappedItem = true)]
         public bool AimDelay { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target characters in general?"), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target characters in general?"),
+         Editable(TransferToSwappedItem = true)]
         public bool TargetCharacters { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target all monsters?"), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target all monsters?"),
+         Editable(TransferToSwappedItem = true)]
         public bool TargetMonsters { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target all humans (or creatures in the same group, like pets)?"), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target all humans (or creatures in the same group, like pets)?"),
+         Editable(TransferToSwappedItem = true)]
         public bool TargetHumans { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target other submarines?"), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target other submarines?"),
+         Editable(TransferToSwappedItem = true)]
         public bool TargetSubmarines { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target items?"), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target items?"),
+         Editable(TransferToSwappedItem = true)]
         public bool TargetItems { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "[Auto Operate] Group or SpeciesName that the AI ignores when the turret is operated automatically."), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "[Auto Operate] Group or SpeciesName that the AI ignores when the turret is operated automatically."), 
+         Editable(TransferToSwappedItem = true)]
         public Identifier FriendlyTag { get; private set; }
-
-        [Editable, Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "Optional screen tint color when the item is being operated (R,G,B,A).")]
-        public Color HudTint
-        {
-            get;
-            private set;
-        }
+        
+        #endregion
+        
+        private const string SetAutoOperateConnection = "set_auto_operate";
+        private const string ToggleAutoOperateConnection = "toggle_auto_operate";
 
         public Turret(Item item, ContentXElement element)
             : base(item, element)
@@ -442,8 +376,18 @@ namespace Barotrauma.Items.Components
             base.OnMapLoaded();
             if (loadedRotationLimits.HasValue) { RotationLimits = loadedRotationLimits.Value; }
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
-            targetRotation = rotation;
+            targetRotation = Rotation;
             UpdateTransformedBarrelPos();
+            if (!AllowAutoOperateWithWiring && 
+                Screen.Selected is { IsEditor: false })
+            {
+                // If the turret is not set to auto operate and the auto operate connections haven't been wired to anything,
+                // don't allow changing the state with wirings.
+                foreach (ConnectionPanel connectionPanel in Item.GetComponents<ConnectionPanel>())
+                {
+                    connectionPanel.Connections.RemoveAll(c => c.Name is ToggleAutoOperateConnection or SetAutoOperateConnection && c.Wires.None());
+                }
+            }
         }
 
         private void FindLightComponents()
@@ -471,7 +415,7 @@ namespace Barotrauma.Items.Components
                     // We want the turret to control the state of the LightComponent, not tie it's state to the state of the Turret (the light can be inactive even if the turret is active)
                     light.Parent = null;
                     light.Rotation = Rotation - item.RotationRad;
-                    light.Light.Rotation = -rotation;
+                    light.Light.Rotation = -Rotation;
                     //turret lights are high-prio (don't want the lights to disappear when you're fighting something)
                     light.Light.PriorityMultiplier *= 10.0f;
                 }
@@ -520,8 +464,8 @@ namespace Barotrauma.Items.Components
             {
                 // single charged shot guns will decharge after firing
                 // for cosmetic reasons, this is done by lerping in half the reload time
-                currentChargeTime = reloadTime > 0.0f ? 
-                    Math.Max(0f, MaxChargeTime * (reload / reloadTime - 0.5f)) : 
+                currentChargeTime = Reload > 0.0f ? 
+                    Math.Max(0f, MaxChargeTime * (reload / Reload - 0.5f)) : 
                     0.0f;
             }
             else
@@ -584,9 +528,9 @@ namespace Barotrauma.Items.Components
                     SkillSettings.Current.SkillIncreasePerSecondWhenOperatingTurret * deltaTime);
             }
 
-            float rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
+            float rotMidDiff = MathHelper.WrapAngle(Rotation - (minRotation + maxRotation) / 2.0f);
 
-            float targetRotationDiff = MathHelper.WrapAngle(targetRotation - rotation);
+            float targetRotationDiff = MathHelper.WrapAngle(targetRotation - Rotation);
 
             if ((maxRotation - minRotation) < MathHelper.TwoPi)
             {
@@ -611,18 +555,18 @@ namespace Barotrauma.Items.Components
                 (targetRotationDiff * springStiffness - angularVelocity * springDamping) * deltaTime;
             angularVelocity = MathHelper.Clamp(angularVelocity, -rotationSpeed, rotationSpeed);
 
-            rotation += angularVelocity * deltaTime;
+            Rotation += angularVelocity * deltaTime;
 
-            rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
+            rotMidDiff = MathHelper.WrapAngle(Rotation - (minRotation + maxRotation) / 2.0f);
 
             if (rotMidDiff < -maxDist)
             {
-                rotation = minRotation;
+                Rotation = minRotation;
                 angularVelocity *= -0.5f;
             }
             else if (rotMidDiff > maxDist)
             {
-                rotation = maxRotation;
+                Rotation = maxRotation;
                 angularVelocity *= -0.5f;
             }
 
@@ -683,7 +627,7 @@ namespace Barotrauma.Items.Components
 
         private Vector2 GetBarrelDir()
         {
-            return new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
+            return new Vector2((float)Math.Cos(Rotation), -(float)Math.Sin(Rotation));
         }
 
         private bool TryLaunch(float deltaTime, Character character = null, bool ignorePower = false)
@@ -888,18 +832,13 @@ namespace Barotrauma.Items.Components
             
             public EventData(Item projectile, Turret turret)
             {
-                System.Diagnostics.Debug.Assert(projectile != null, $"Tried to create Turret {nameof(EventData)} with no projectile.");
-                GameAnalyticsManager.AddErrorEventOnce(
-                    "Turret.EventData:entitynull"+ turret.Item.Prefab.Identifier, 
-                    GameAnalyticsManager.ErrorSeverity.Error,
-                    $"Turret \"{turret.Item.Prefab.Identifier}\" tried to create {nameof(EventData)} with no projectile.");
                 Projectile = projectile;
             }
         }
         
         private void Launch(Item projectile, Character user = null, float? launchRotation = null, float tinkeringStrength = 0f)
         {
-            reload = reloadTime;
+            reload = Reload;
             if (ShotsPerBurst > 1)
             {
                 shotCounter++;
@@ -946,7 +885,7 @@ namespace Barotrauma.Items.Components
                 {
                     launchPos = Submarine.LastPickedPosition;
                 }
-                projectile.SetTransform(launchPos, -(launchRotation ?? rotation) + spread);
+                projectile.SetTransform(launchPos, -(launchRotation ?? Rotation) + spread);
                 projectile.UpdateTransform();
                 projectile.Submarine = projectile.body?.Submarine;
 
@@ -1540,7 +1479,7 @@ namespace Barotrauma.Items.Components
                             if (!IsWithinAimingRadius(closestPoint))
                             {
                                 // The closest point can't be targeted -> get a point directly in front of the turret
-                                Vector2 barrelDir = new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
+                                Vector2 barrelDir = new Vector2((float)Math.Cos(Rotation), -(float)Math.Sin(Rotation));
                                 if (MathUtils.GetLineSegmentIntersection(p1, p2, item.WorldPosition, item.WorldPosition + barrelDir * shootDistance, out Vector2 intersection))
                                 {
                                     closestPoint = intersection;
@@ -1687,7 +1626,7 @@ namespace Barotrauma.Items.Components
         private bool IsPointingTowards(Vector2 targetPos)
         {
             float enemyAngle = MathUtils.VectorToAngle(targetPos - item.WorldPosition);
-            float turretAngle = -rotation;
+            float turretAngle = -Rotation;
             float maxAngleError = MathHelper.ToRadians(MaxAngleOffset);
             if (MaxChargeTime > 0.0f && currentChargingState == ChargingState.WindingUp && FiringRotationSpeedModifier > 0.0f)
             {
@@ -1720,7 +1659,7 @@ namespace Barotrauma.Items.Components
             }
             else if (target is Item targetItem)
             {
-                if (targetItem.Removed || targetItem.Condition <= 0 || !targetItem.Prefab.IsAITurretTarget || targetItem.Prefab.AITurretPriority <= 0 || targetItem.HiddenInGame)
+                if (targetItem.Removed || targetItem.Condition <= 0 || !targetItem.Prefab.IsAITurretTarget || targetItem.Prefab.AITurretPriority <= 0 || targetItem.IsHidden)
                 {
                     return false;
                 }
@@ -1832,7 +1771,7 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 currOffSet = FiringOffset;
                 if (flipFiringOffset) { currOffSet.X = -currOffSet.X; }
-                transformedFiringOffset = MathUtils.RotatePoint(new Vector2(-currOffSet.Y, -currOffSet.X) * item.Scale, -rotation);
+                transformedFiringOffset = MathUtils.RotatePoint(new Vector2(-currOffSet.Y, -currOffSet.X) * item.Scale, -Rotation);
             }
             return new Vector2(item.WorldRect.X + transformedBarrelPos.X + transformedFiringOffset.X, item.WorldRect.Y - transformedBarrelPos.Y + transformedFiringOffset.Y);
         }
@@ -1939,7 +1878,7 @@ namespace Barotrauma.Items.Components
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
-            targetRotation = rotation = (minRotation + maxRotation) / 2;
+            targetRotation = Rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
             UpdateLightComponents();
@@ -1961,7 +1900,7 @@ namespace Barotrauma.Items.Components
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
-            targetRotation = rotation = (minRotation + maxRotation) / 2;
+            targetRotation = Rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
             UpdateLightComponents();
@@ -2019,14 +1958,25 @@ namespace Barotrauma.Items.Components
                         UpdateLightComponents();
                     }
                     break;
+                case SetAutoOperateConnection:
+                    if (!AllowAutoOperateWithWiring) { return; }
+                    AutoOperate = signal.value != "0";
+                    break;
+                case ToggleAutoOperateConnection:
+                    if (!AllowAutoOperateWithWiring) { return; }
+                    if (signal.value != "0")
+                    {
+                        AutoOperate = !AutoOperate;
+                    }
+                    break;
             }
         }
 
         private Vector2? loadedRotationLimits;
         private float? loadedBaseRotation;
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             loadedRotationLimits = componentElement.GetAttributeVector2("rotationlimits", RotationLimits);
             loadedBaseRotation = componentElement.GetAttributeFloat("baserotation", componentElement.Parent.GetAttributeFloat("rotation", BaseRotation));
         }
@@ -2035,7 +1985,7 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             FindLightComponents();
-            targetRotation = rotation;
+            targetRotation = Rotation;
             if (!loadedBaseRotation.HasValue)
             {
                 if (item.FlippedX) { FlipX(relativeToSub: false); }
@@ -2047,8 +1997,8 @@ namespace Barotrauma.Items.Components
         {
             if (TryExtractEventData(extraData, out EventData eventData))
             {
-                msg.WriteUInt16(eventData.Projectile?.ID ?? Entity.NullEntityID);
-                msg.WriteRangedSingle(MathHelper.Clamp(wrapAngle(rotation), minRotation, maxRotation), minRotation, maxRotation, 16);
+                msg.WriteUInt16(eventData.Projectile?.ID ?? LaunchWithoutProjectileId);
+                msg.WriteRangedSingle(MathHelper.Clamp(wrapAngle(Rotation), minRotation, maxRotation), minRotation, maxRotation, 16);
             }
             else
             {

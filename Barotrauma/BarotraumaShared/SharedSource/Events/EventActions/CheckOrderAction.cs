@@ -2,6 +2,9 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check whether a specific character has been given a specific order.
+    /// </summary>
     class CheckOrderAction : BinaryOptionAction
     {
         public enum OrderPriority
@@ -10,19 +13,19 @@ namespace Barotrauma
             Any
         }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character to check.")]
         public Identifier TargetTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the order the target character must have.")]
         public Identifier OrderIdentifier { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The option that must be selected for the order. If the order has multiple options (such as turning on or turning off a reactor).")]
         public Identifier OrderOption { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the entity the order must be targeting. Only valid for orders that can target a specific entity (such as orders to operate a specific turret).")]
         public Identifier OrderTargetTag { get; set; }
 
-        [Serialize(OrderPriority.Any, IsPropertySaveable.Yes)]
+        [Serialize(OrderPriority.Any, IsPropertySaveable.Yes, description: "Does the order need to have top priority, or is any priority fine?")]
         public OrderPriority Priority { get; set; }
 
         public CheckOrderAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
