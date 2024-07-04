@@ -19,7 +19,7 @@ namespace Barotrauma
 
             if (!IsSinglePlayer || !GameMain.GameSession.CrewManager.IsSinglePlayer || !GameMain.GameSession.IsRunning || GameMain.GameSession.RoundEnding) return;
 
-            bool isCrewDead = GameMain.GameSession.CrewManager.CharacterInfos.All(c => (c.Character == null || c.Character.IsDead || c.Character.IsIncapacitated));
+            bool isCrewDead = GameMain.GameSession.CrewManager.GetCharacterInfos().All(c => (c.Character == null || c.Character.IsDead || c.Character.IsIncapacitated));
 
             bool subAtLevelEnd = false;
             if (Submarine.MainSub != null)

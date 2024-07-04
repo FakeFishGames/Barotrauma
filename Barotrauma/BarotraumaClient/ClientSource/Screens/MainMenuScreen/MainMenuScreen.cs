@@ -408,71 +408,49 @@ namespace Barotrauma
                 Visible = false
             };
 
-            new GUIButton(new RectTransform(new Vector2(1, 0.5f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.SubmarineEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
 
-            new GUIButton(new RectTransform(new Vector2(1, 0.5f), customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.CharacterEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
 
-            new GUIButton(new RectTransform(new Vector2(1, 0.5f), customizeList.RectTransform), TextManager.Get("LevelEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            /* Other editors require touch-ups and localization before being put on the main menu.
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("LevelEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.LevelEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
 
-            new GUIButton(new RectTransform(new Vector2(1, 0.5f), customizeList.RectTransform), TextManager.Get("ParticleEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("ParticleEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.ParticleEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
 
-            new GUIButton(new RectTransform(new Vector2(1, 0.5f), customizeList.RectTransform), TextManager.Get("EventEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("EventEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.EventEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
 
-            new GUIButton(new RectTransform(new Vector2(1, 0.5f), customizeList.RectTransform), TextManager.Get("SpriteEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("SpriteEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.SpriteEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
+            */
 
             // === OPTION
             var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), parent: buttonsParent.RectTransform), isHorizontal: true);
@@ -1380,7 +1358,7 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < ((selectedSub.RecommendedCrewSizeMin + selectedSub.RecommendedCrewSizeMax) / 2) - gameSession.CrewManager.CharacterInfos.Count; i++)
+            for (int i = 0; i < ((selectedSub.RecommendedCrewSizeMin + selectedSub.RecommendedCrewSizeMax) / 2) - gameSession.CrewManager.GetCharacterInfos().Count(); i++)
             {
                 JobPrefab prefab = JobPrefab.Random(Rand.RandSync.Unsynced, job => !job.HiddenJob && GetAddedJobCount(job) < job.MaxNumber);
                 gameSession.CrewManager.AddCharacterInfo(new(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: prefab, variant: Rand.Range(0, prefab.Variants)));
@@ -1388,7 +1366,7 @@ namespace Barotrauma
 
             gameSession.CrewManager.InitSinglePlayerRound();
 
-            int GetAddedJobCount(JobPrefab prefab) => gameSession.CrewManager.CharacterInfos.Where(info => info.Job.Prefab == prefab).Count();
+            int GetAddedJobCount(JobPrefab prefab) => gameSession.CrewManager.GetCharacterInfos().Where(info => info.Job.Prefab == prefab).Count();
         }
 
         private void LoadGame(string saveFile)
