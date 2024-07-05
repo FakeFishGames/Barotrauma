@@ -144,9 +144,9 @@ namespace Barotrauma.Networking
 
             var pingLocation = NetPingLocation.TryParseFromString(pingLocationStr);
 
-            if (pingLocation.HasValue && Steamworks.SteamNetworkingUtils.LocalPingLocation.HasValue)
+            if (pingLocation.HasValue)
             {
-                int ping = Steamworks.SteamNetworkingUtils.LocalPingLocation.Value.EstimatePingTo(pingLocation.Value);
+                int ping = Steamworks.SteamNetworkingUtils.EstimatePingTo(pingLocation.Value);
                 if (ping < 0) { return Result.Failure(SteamLobbyPingError.PingEstimationFailed); }
                 return Result.Success(ping);
             }
