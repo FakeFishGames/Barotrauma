@@ -116,6 +116,10 @@ namespace Barotrauma
         /// </summary>
         OnAbility = 23,
         /// <summary>
+        /// Executes continuously when a specific Containable is NOT inside an ItemContainer. Only valid for Containables defined in an ItemContainer component.
+        /// </summary>
+        OnNotContaining = 24,
+        /// <summary>
         /// Executes when the character dies. Only valid for characters.
         /// </summary>
         OnDeath = OnBroken

@@ -688,6 +688,28 @@ namespace Barotrauma.Items.Components
                 effect.Apply(ActionType.OnContaining, deltaTime, item, targets);
                 if (wearing) { effect.Apply(ActionType.OnWearing, deltaTime, item, targets); }
             }
+
+            for (int i = 0; i < slotRestrictions.Length; i++)
+            {
+                foreach (StatusEffect effect in slotRestrictions[i].ContainableItems.SelectMany(ci => ci.StatusEffects.Where(se => se.type == ActionType.OnNotContaining && Inventory.GetItemsAt(i).None(ci.MatchesItem))))
+                {
+                    targets.Clear();
+                    if (effect.HasTargetType(StatusEffect.TargetType.This))
+                    {
+                        targets.AddRange(item.AllPropertyObjects);
+                    }
+                    if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
+                    {
+                        targets.Add(character);
+                    }
+                    if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) || effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                    {
+                        effect.AddNearbyTargets(item.WorldPosition, targets);
+                    }
+                    effect.Apply(ActionType.OnNotContaining, deltaTime, item, targets);
+                    DebugConsole.NewMessage($"Applied StatusEffect {effect.type}");
+                }
+            }
         }
 
         /// <summary>
