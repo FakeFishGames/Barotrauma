@@ -707,7 +707,6 @@ namespace Barotrauma.Items.Components
                         effect.AddNearbyTargets(item.WorldPosition, targets);
                     }
                     effect.Apply(ActionType.OnNotContaining, deltaTime, item, targets);
-                    DebugConsole.NewMessage($"Applied StatusEffect {effect.type}");
                 }
             }
         }
