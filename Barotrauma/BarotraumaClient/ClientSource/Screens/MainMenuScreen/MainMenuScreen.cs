@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.Steam;
+using Barotrauma.ClientSource.Screens.GameSetupUI.MissionSetupUI;
 
 namespace Barotrauma
 {
@@ -36,11 +37,7 @@ namespace Barotrauma
             Mods = 8,
             Credits = 9,
             Empty = 10,
-            LevelEditor = 11,
-            ParticleEditor = 12,
-            EventEditor = 13,
-            SpriteEditor = 14,
-            NewMission = 15
+            NewMission = 11
         }
 
         private readonly GUIComponent buttonsParent;
@@ -421,36 +418,6 @@ namespace Barotrauma
                 UserData = Tab.CharacterEditor,
                 OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
-
-            /* Other editors require touch-ups and localization before being put on the main menu.
-            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("LevelEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-            {
-                ForceUpperCase = ForceUpperCase.Yes,
-                UserData = Tab.LevelEditor,
-                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
-            };
-
-            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("ParticleEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-            {
-                ForceUpperCase = ForceUpperCase.Yes,
-                UserData = Tab.ParticleEditor,
-                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
-            };
-
-            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("EventEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-            {
-                ForceUpperCase = ForceUpperCase.Yes,
-                UserData = Tab.EventEditor,
-                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
-            };
-
-            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("SpriteEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-            {
-                ForceUpperCase = ForceUpperCase.Yes,
-                UserData = Tab.SpriteEditor,
-                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
-            };
-            */
 
             // === OPTION
             var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), parent: buttonsParent.RectTransform), isHorizontal: true);
@@ -857,18 +824,6 @@ namespace Barotrauma
                 case Tab.Empty:
                     titleText.Visible = true;
                     selectedTab = Tab.Empty;
-                    break;
-                case Tab.LevelEditor:
-                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.LevelEditorScreen));
-                    break;
-                case Tab.ParticleEditor:
-                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.ParticleEditorScreen));
-                    break;
-                case Tab.EventEditor:
-                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.EventEditorScreen));
-                    break;
-                case Tab.SpriteEditor:
-                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SpriteEditorScreen));
                     break;
                 case Tab.NewMission:
                     if (GameSettings.CurrentConfig.TutorialSkipWarning)

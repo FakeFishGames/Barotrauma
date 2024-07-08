@@ -320,7 +320,7 @@ namespace Barotrauma
 #if SERVER
                         GameMain.Server?.EndGame();
 #else
-                        if (GameMain.GameSession.GameMode is { IsSinglePlayer: true } && GameMain.GameSession.CrewManager is { IsSinglePlayer: true })
+                        if (GameMain.GameSession.GameMode is { IsSinglePlayer: true })
                         {
                             GameMain.GameSession.GameMode.End();
                         }
@@ -348,7 +348,7 @@ namespace Barotrauma
 #if SERVER
                             GameMain.Server?.EndGame();
 #else
-                            if (GameMain.GameSession.GameMode is { IsSinglePlayer: true } && GameMain.GameSession.CrewManager is { IsSinglePlayer: true })
+                            if (GameMain.GameSession.GameMode is { IsSinglePlayer: true })
                             {
                                 GameMain.GameSession.GameMode.End();
                             }
