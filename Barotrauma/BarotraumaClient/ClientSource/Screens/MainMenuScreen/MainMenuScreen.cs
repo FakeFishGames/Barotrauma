@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.Steam;
+using Barotrauma.ClientSource.Screens.GameSetupUI.MissionSetupUI;
 
 namespace Barotrauma
 {
@@ -35,7 +36,8 @@ namespace Barotrauma
             SubmarineEditor = 7,
             Mods = 8,
             Credits = 9,
-            Empty = 10
+            Empty = 10,
+            NewMission = 11
         }
 
         private readonly GUIComponent buttonsParent;
@@ -43,6 +45,7 @@ namespace Barotrauma
         private readonly Dictionary<Tab, GUIFrame> menuTabs;
 
         private SinglePlayerCampaignSetupUI campaignSetupUI;
+        private SinglePlayerMissionSetupUI missionSetupUI;
 
         private GUITextBox serverNameBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
@@ -240,7 +243,7 @@ namespace Barotrauma
 
             float labelHeight = 0.18f;
 
-
+       
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
        
@@ -276,10 +279,10 @@ namespace Barotrauma
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("NewMissionButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
-                UserData = Tab.LoadGame,
+                UserData = Tab.NewMission,
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
@@ -291,6 +294,17 @@ namespace Barotrauma
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.NewGame,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = ForceUpperCase.Yes,
+                UserData = Tab.LoadGame,
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
@@ -391,26 +405,18 @@ namespace Barotrauma
                 Visible = false
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.SubmarineEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(Vector2.One, customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.CharacterEditor,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
+                OnClicked = (tb, userdata) => SelectTab(tb, userdata)
             };
 
             // === OPTION
@@ -531,10 +537,12 @@ namespace Barotrauma
                     CanBeFocused = false
                 },
                 [Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), Frame.RectTransform, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset }),
-                [Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset })
+                [Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset }),
+                [Tab.NewMission] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), Frame.RectTransform, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset })
             };
 
             CreateCampaignSetupUI();
+            CreateMissionSetupUI();
 
             var hostServerScale = new Vector2(0.7f, 1.2f);
             menuTabs[Tab.HostServer] = new GUIFrame(new RectTransform(
@@ -816,6 +824,17 @@ namespace Barotrauma
                 case Tab.Empty:
                     titleText.Visible = true;
                     selectedTab = Tab.Empty;
+                    break;
+                case Tab.NewMission:
+                    if (GameSettings.CurrentConfig.TutorialSkipWarning)
+                    {
+                        selectedTab = Tab.Empty;
+                        ShowTutorialSkipWarning(Tab.NewGame);
+                        return true;
+                    }
+
+                    missionSetupUI.RandomizeSeed();
+                    missionSetupUI.UpdateSubList(SubmarineInfo.SavedSubmarines);
                     break;
             }
 
@@ -1279,6 +1298,32 @@ namespace Barotrauma
             ((SinglePlayerCampaign)GameMain.GameSession.GameMode).LoadNewLevel();
         }
 
+        private static void StartMission(SubmarineInfo selectedSub, string mapSeed, float difficulty, List<MissionType> missionTypes)
+        {
+            GameSession gameSession = new GameSession(selectedSub, "", GameModePreset.SinglePlayerMission, CampaignSettings.Empty, mapSeed, !missionTypes.Any() ? MissionType.None : missionTypes.GetRandomUnsynced());
+
+            gameSession.StartRound(mapSeed, difficulty);
+            GameMain.GameScreen.Select();
+
+            foreach (JobPrefab prefab in JobPrefab.Prefabs.Where(job => !job.HiddenJob && GetAddedJobCount(job) < Math.Max(job.MinNumber, 1)))
+            {
+                for (int i = 0; i < Math.Max(prefab.MinNumber, 1); i++)
+                {
+                    gameSession.CrewManager.AddCharacterInfo(new(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: prefab, variant: Rand.Range(0, prefab.Variants)));
+                }
+            }
+
+            for (int i = 0; i < ((selectedSub.RecommendedCrewSizeMin + selectedSub.RecommendedCrewSizeMax) / 2) - gameSession.CrewManager.GetCharacterInfos().Count(); i++)
+            {
+                JobPrefab prefab = JobPrefab.Random(Rand.RandSync.Unsynced, job => !job.HiddenJob && GetAddedJobCount(job) < job.MaxNumber);
+                gameSession.CrewManager.AddCharacterInfo(new(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: prefab, variant: Rand.Range(0, prefab.Variants)));
+            }
+
+            gameSession.CrewManager.InitSinglePlayerRound();
+
+            int GetAddedJobCount(JobPrefab prefab) => gameSession.CrewManager.GetCharacterInfos().Where(info => info.Job.Prefab == prefab).Count();
+        }
+
         private void LoadGame(string saveFile)
         {
             if (string.IsNullOrWhiteSpace(saveFile)) return;
@@ -1318,6 +1363,24 @@ namespace Barotrauma
             {
                 LoadGame = LoadGame,
                 StartNewGame = StartGame
+            };
+        }
+
+        private void CreateMissionSetupUI()
+        {
+            menuTabs[Tab.NewMission].ClearChildren();
+
+            GUILayoutGroup innerNewMission = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[Tab.NewMission].RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            GUIFrame newMissionContent = new GUIFrame(new RectTransform(new Vector2(1, 0.95f), innerNewMission.RectTransform, Anchor.Center), "InnerFrame");
+
+            missionSetupUI = new SinglePlayerMissionSetupUI(newMissionContent)
+            {
+                StartNewGame = StartMission
             };
         }
 

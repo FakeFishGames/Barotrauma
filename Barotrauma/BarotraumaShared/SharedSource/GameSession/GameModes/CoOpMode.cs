@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class CoOpMode : MissionMode
+    internal partial class CoOpMode : MissionMode
     {
         public CoOpMode(GameModePreset preset, IEnumerable<MissionPrefab> missionPrefabs) : base(preset, ValidateMissionPrefabs(missionPrefabs, MissionPrefab.CoOpMissionClasses)) { }
 
