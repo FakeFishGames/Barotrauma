@@ -1866,7 +1866,7 @@
       </CheckDataAction>
     </ScriptedEvent>
     <!--Censorship-->
-    <ScriptedEvent identifier="censorship2" commonness="50">
+    <ScriptedEvent identifier="censorship" commonness="50">
       <TagAction criteria="player" tag="player" />
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown" targetmoduletags="clownmodule" spawnlocation="Outpost" />
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="boxsecurity" targetmoduletags="adminmodule" offset="150" />
@@ -1895,7 +1895,7 @@
                   </StatusEffectAction>
                 </Option>
                 <!-- refuse -->
-                <Option text="EventText.censorship.o1.o1.o2">
+                <Option text="EventText.censorship.o1.o1.o2" endconversation="true" >
                   <Goto name="Endevent" />
                 </Option>
               </ConversationAction>
@@ -1903,7 +1903,7 @@
           </ConversationAction>
         </Option>
         <!-- refuse -->
-        <Option text="EventText.generic.ignore">
+        <Option text="EventText.generic.ignore" endconversation="true">
           <Goto name="Endevent" />
         </Option>
       </ConversationAction>
