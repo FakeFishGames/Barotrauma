@@ -602,7 +602,7 @@
     </LightComponent>
   </Item>
   <!--Dorm-->
-  <Item name="" identifier="opdeco_bunkbeds" width="356" height="264" texturescale="1.0,1.0" scale="0.5" category="Decorative" spritecolor="255,255,255,255">
+  <Item name="" identifier="opdeco_bunkbeds" tags="bed" width="356" height="264" texturescale="1.0,1.0" scale="0.5" category="Decorative" spritecolor="255,255,255,255">
     <Upgrade gameversion="0.12.0.0" noninteractable="false" />
     <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1600,1760,384,264" depth="0.85" premultiplyalpha="false" origin="0.5,0.5" />
     <Controller UserPos="0,-300" direction="Right" hidehud="false" canbeselected="true" drawuserbehind="true" noninteractablewhenflippedy="true">
@@ -616,7 +616,6 @@
       <limbposition limb="RightHand" position="224,-160" allowusinglimb="false" />
       <limbposition limb="LeftHand" position="224,-160" allowusinglimb="false" />
       <StatusEffect type="OnActive" target="Character">
-        <reduceaffliction type="damage" strength="0.05" />
         <reduceaffliction identifier="concussion" strength="0.02" />
         <reduceaffliction identifier="infection" strength="0.02" />
         <reduceaffliction identifier="bloodloss" strength="0.05" />
@@ -625,6 +624,8 @@
         <reduceaffliction identifier="opiatewithdrawal" strength="0.06" />
         <reduceaffliction identifier="opiateaddiction" strength="0.06" />
         <reduceaffliction identifier="drunk" strength="0.08" />
+        <!-- gives resting -->
+        <Affliction identifier="resting" strength="31"/>
       </StatusEffect>
     </Controller>
     <Upgrade gameversion="0.20.8.0">
@@ -633,7 +634,7 @@
       </Controller>
     </Upgrade>
   </Item>
-  <Item name="" identifier="opdeco_bunks1" nameidentifier="opdeco_bunks1" allowattachitems="false" width="463" height="398" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+  <Item name="" identifier="opdeco_bunks1" tags="bed" nameidentifier="opdeco_bunks1" allowattachitems="false" width="463" height="398" texturescale="1.0,1.0" scale="0.5" category="Decorative">
     <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1296,1289,463,387" depth="0.85" premultiplyalpha="false" origin="0.5,0.5" />
     <DecorativeSprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1390,1126,320,160" depth="0.86" origin="0.5,0.5" offset="40,-95" />
     <DecorativeSprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1390,1126,320,160" depth="0.86" origin="0.5,0.5" offset="40,105" />
@@ -657,6 +658,8 @@
         <reduceaffliction identifier="opiatewithdrawal" strength="0.06" />
         <reduceaffliction identifier="opiateaddiction" strength="0.06" />
         <reduceaffliction identifier="drunk" strength="0.08" />
+        <!-- gives resting -->
+        <Affliction identifier="resting" strength="31"/>
       </StatusEffect>
     </Controller>
     <Upgrade gameversion="0.20.8.0">
@@ -665,7 +668,7 @@
       </Controller>
     </Upgrade>
   </Item>
-  <Item name="" identifier="opdeco_hospitalbed" width="416" height="192" texturescale="1.0,1.0" scale="0.5" noninteractable="false" category="Decorative">
+  <Item name="" identifier="opdeco_hospitalbed" tags="bed,medbed" width="416" height="192" texturescale="1.0,1.0" scale="0.5" noninteractable="false" category="Decorative">
     <Upgrade gameversion="0.12.0.0" noninteractable="false" />
     <sprite texture="Content/Map/Outposts/Art/MedBayAssets.png" sourcerect="96,304,416,192" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
     <Controller UserPos="0,-300" direction="Right" hidehud="false" issecondaryitem="true" canbeselected="true" noninteractablewhenflippedy="true" drawuserbehind="true">
@@ -688,6 +691,8 @@
         <reduceaffliction identifier="opiatewithdrawal" strength="0.08" />
         <reduceaffliction identifier="opiateaddiction" strength="0.08" />
         <reduceaffliction identifier="drunk" strength="0.1" />
+        <!-- gives resting faster -->
+        <Affliction identifier="resting" strength="32"/>
       </StatusEffect>
     </Controller>
     <Upgrade gameversion="0.20.8.0">
@@ -696,7 +701,7 @@
       </Controller>
     </Upgrade>
   </Item>
-  <Item name="" identifier="opdeco_prisonbed" allowattachitems="true" width="384" height="96" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+  <Item name="" identifier="opdeco_prisonbed" tags="bed" allowattachitems="true" width="384" height="96" texturescale="1.0,1.0" scale="0.5" category="Decorative">
     <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="864,1888,384,96" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
     <Controller UserPos="0,-300" direction="Right" hidehud="false" issecondaryitem="true" canbeselected="true" noninteractablewhenflippedy="true" drawuserbehind="true">
       <!-- don't allow laying in bed when wearing an exosuit -->
@@ -718,6 +723,8 @@
         <reduceaffliction identifier="opiatewithdrawal" strength="0.06" />
         <reduceaffliction identifier="opiateaddiction" strength="0.06" />
         <reduceaffliction identifier="drunk" strength="0.08" />
+        <!-- gives resting -->
+        <Affliction identifier="resting" strength="31"/>
       </StatusEffect>
     </Controller>
     <Upgrade gameversion="0.20.8.0">

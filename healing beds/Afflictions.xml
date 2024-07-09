@@ -3170,4 +3170,29 @@
     </Effect>
     <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="256,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
+  
+  <Affliction
+    name="Resting"
+    identifier="resting"
+    description="Taking some rest. Recover faster."
+    type="buff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="30"
+    showinhealthscannerthreshold="1000"
+    iconcolors="100,120,100,255;90,130,90,255;80,140,80,255">
+    <!-- Gradual improvement of healing effectiveness, up to 30% after 30 seconds (on a regular bed) -->
+    <!-- -30 strength per second, beds give +31 -->
+    <Effect minstrength="0" maxstrength="10" strengthchange="-30">
+      <StatValue stattype="MedicalItemEffectivenessMultiplier" minvalue="0" maxvalue="0.1" />
+    </Effect>
+    <Effect minstrength="10" maxstrength="20" strengthchange="-30">
+      <StatValue stattype="MedicalItemEffectivenessMultiplier" minvalue="0.1" maxvalue="0.2" />
+    </Effect>
+    <Effect minstrength="20" maxstrength="30" strengthchange="-30">
+      <StatValue stattype="MedicalItemEffectivenessMultiplier" minvalue="0.2" maxvalue="0.3" />
+    </Effect>
+    <icon texture="Content/UI/CommandUIAtlas.png" sourcerect="384,512,128,128" color="255,255,255,255" origin="0,0"/>
+  </Affliction>
+  
 </Afflictions>
