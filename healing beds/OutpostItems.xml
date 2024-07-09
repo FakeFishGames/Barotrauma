@@ -616,6 +616,7 @@
       <limbposition limb="RightHand" position="224,-160" allowusinglimb="false" />
       <limbposition limb="LeftHand" position="224,-160" allowusinglimb="false" />
       <StatusEffect type="OnActive" target="Character">
+        <reduceaffliction type="damage" strength="0.05" />
         <reduceaffliction identifier="concussion" strength="0.02" />
         <reduceaffliction identifier="infection" strength="0.02" />
         <reduceaffliction identifier="bloodloss" strength="0.05" />
