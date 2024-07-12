@@ -1,11 +1,8 @@
-﻿using System;
+﻿using Barotrauma.IO;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.IO;
 
 namespace Barotrauma.Items.Components
 {
@@ -48,33 +45,36 @@ namespace Barotrauma.Items.Components
                     return;
                 }
 
-                foreach (ContentXElement limbElement in characterInfo.Ragdoll.MainElement.Elements())
+                if (characterInfo.Ragdoll.MainElement?.Elements() is { } limbElements)
                 {
-                    if (!limbElement.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
-
-                    ContentXElement spriteElement = limbElement.GetChildElement("sprite");
-                    if (spriteElement == null) { continue; }
-
-                    ContentPath contentPath = spriteElement.GetAttributeContentPath("texture");
-
-                    string spritePath = characterInfo.ReplaceVars(contentPath.Value);
-                    string fileName = Path.GetFileNameWithoutExtension(spritePath);
-
-                    //go through the files in the directory to find a matching sprite
-                    foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
+                    foreach (ContentXElement limbElement in limbElements)
                     {
-                        if (!file.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                        if (!limbElement.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                        ContentXElement spriteElement = limbElement.GetChildElement("sprite");
+                        if (spriteElement == null) { continue; }
+
+                        ContentPath contentPath = spriteElement.GetAttributeContentPath("texture");
+
+                        string spritePath = characterInfo.ReplaceVars(contentPath.Value);
+                        string fileName = Path.GetFileNameWithoutExtension(spritePath);
+
+                        //go through the files in the directory to find a matching sprite
+                        foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
                         {
-                            continue;
+                            if (!file.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+                            string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
+                            fileWithoutTags = fileWithoutTags.Split('[', ']').First();
+                            if (fileWithoutTags != fileName) { continue; }
+                            Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+                            break;
                         }
-                        string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
-                        fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-                        if (fileWithoutTags != fileName) { continue; }
-                        Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+
                         break;
                     }
-
-                    break;
                 }
 
                 if (characterInfo.Wearables != null)

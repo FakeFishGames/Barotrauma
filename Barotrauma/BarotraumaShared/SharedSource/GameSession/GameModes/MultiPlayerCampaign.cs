@@ -156,17 +156,15 @@ namespace Barotrauma
             if (CheatsEnabled)
             {
                 DebugConsole.CheatsEnabled = true;
-#if USE_STEAM
-                if (!SteamAchievementManager.CheatsEnabled)
+                if (!AchievementManager.CheatsEnabled)
                 {
-                    SteamAchievementManager.CheatsEnabled = true;
+                    AchievementManager.CheatsEnabled = true;
 #if CLIENT
-                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive Steam Achievements until you restart the game.");       
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive achievements until you restart the game.");       
 #else
                     DebugConsole.NewMessage("Cheat commands have been enabled.", Color.Red);
 #endif
                 }
-#endif
             }
 
             foreach (var subElement in element.Elements())
@@ -223,10 +221,16 @@ namespace Barotrauma
                     case "stats":
                         LoadStats(subElement);
                         break;
+                    case "eventmanager":
+                        GameMain.GameSession.EventManager.Load(subElement);
+                        break;
                     case Wallet.LowerCaseSaveElementName:
                         Bank = new Wallet(Option<Character>.None(), subElement);
                         break;
 #if SERVER
+                    case "traitormanager":
+                        GameMain.Server?.TraitorManager?.Load(subElement);
+                        break;
                     case "savedexperiencepoints":
                         foreach (XElement savedExp in subElement.Elements())
                         {
@@ -272,29 +276,35 @@ namespace Barotrauma
             bool isSubmarineVisible(SubmarineInfo s)
                 => !GameMain.NetworkMember.ServerSettings.HiddenSubs.Any(h
                     => s.Name.Equals(h, StringComparison.OrdinalIgnoreCase));
-            
-            List<SubmarineInfo> availableSubs =
-                SubmarineInfo.SavedSubmarines
+
+            var availableSubs = SubmarineInfo.SavedSubmarines;
+#if CLIENT
+            if (GameMain.Client != null)
+            {
+                availableSubs = GameMain.Client.ServerSubmarines;
+            }
+#endif
+
+            List<SubmarineInfo> campaignSubs =
+                availableSubs
                     .Where(s =>
                         s.IsCampaignCompatible
                         && isSubmarineVisible(s))
                     .ToList();
 
-            if (!availableSubs.Any())
+            if (!campaignSubs.Any())
             {
                 //None of the available subs were marked as campaign-compatible, just include all visible subs
-                availableSubs.AddRange(
-                    SubmarineInfo.SavedSubmarines
-                        .Where(isSubmarineVisible));
+                campaignSubs.AddRange(availableSubs.Where(isSubmarineVisible));
             }
 
-            if (!availableSubs.Any())
+            if (!campaignSubs.Any())
             {
                 //No subs are visible at all! Just make the selected one available
-                availableSubs.Add(GameMain.NetLobbyScreen.SelectedSub);
+                campaignSubs.Add(GameMain.NetLobbyScreen.SelectedSub);
             }
 
-            return availableSubs;
+            return campaignSubs;
         }
 
         private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
@@ -307,6 +317,7 @@ namespace Barotrauma
                 foreach (var item in storeItems.Value)
                 {
                     msg.WriteIdentifier(item.ItemPrefabIdentifier);
+                    msg.WriteBoolean(item.DeliverImmediately);
                     msg.WriteRangedInteger(item.Quantity, 0, CargoManager.MaxQuantity);
                 }
             }
@@ -324,8 +335,12 @@ namespace Barotrauma
                 for (int j = 0; j < itemCount; j++)
                 {
                     Identifier itemId = msg.ReadIdentifier();
+                    bool deliverImmediately = msg.ReadBoolean();
+#if SERVER
+                    if (!AllowImmediateItemDelivery(sender)) { deliverImmediately = false; }
+#endif
                     int quantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                    items[storeId].Add(new PurchasedItem(itemId, quantity, sender));
+                    items[storeId].Add(new PurchasedItem(itemId, quantity, sender) { DeliverImmediately = deliverImmediately });
                 }
             }
             return items;

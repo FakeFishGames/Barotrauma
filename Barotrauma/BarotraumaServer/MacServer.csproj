@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>1.0.13.2</Version>
+    <Version>1.5.9.1</Version>
     <Copyright>Copyright © FakeFish 2018-2023</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;SERVER;OSX;USE_STEAM;DEBUG;NETCOREAPP;NETCOREAPP3_0</DefineConstants>
+    <DefineConstants>TRACE;SERVER;OSX;DEBUG;NETCOREAPP;NETCOREAPP3_0</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\DebugMac</OutputPath>
     <ConsolePause>true</ConsolePause>
@@ -25,20 +25,20 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <DefineConstants>TRACE;DEBUG;SERVER;OSX;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SERVER;OSX;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Mac\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;SERVER;OSX;USE_STEAM;RELEASE;NETCOREAPP;NETCOREAPP3_0</DefineConstants>
+    <DefineConstants>TRACE;SERVER;OSX;RELEASE;NETCOREAPP;NETCOREAPP3_0</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <DebugType></DebugType>
     <OutputPath>..\bin\ReleaseMac</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|AnyCPU'">
-    <DefineConstants>TRACE;SERVER;OSX;USE_STEAM;RELEASE;NETCOREAPP;NETCOREAPP3_0;UNSTABLE</DefineConstants>
+    <DefineConstants>TRACE;SERVER;OSX;RELEASE;NETCOREAPP;NETCOREAPP3_0;UNSTABLE</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <DebugType />
     <OutputPath>..\bin\ReleaseMac</OutputPath>
@@ -46,13 +46,13 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>TRACE;SERVER;OSX;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;SERVER;OSX;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Mac\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|x64'">
-    <DefineConstants>TRACE;SERVER;OSX;X64;USE_STEAM;UNSTABLE</DefineConstants>
+    <DefineConstants>TRACE;SERVER;OSX;X64;UNSTABLE</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Mac\</OutputPath>
     <Optimize>true</Optimize>
@@ -70,12 +70,14 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
+    <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
+    <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
@@ -85,14 +87,12 @@
   <ItemGroup>
     <PackageReference Include="RestSharp" Version="106.13.0" />
   </ItemGroup>
-  
-  <!-- Sourced from https://stackoverflow.com/a/45248069 -->
+
   <ItemGroup>
-    <None Include="..\BarotraumaShared\libsteam_api64.dylib">
-      <Link>libsteam_api64.dylib</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\..\Libraries\BarotraumaLibs\BarotraumaCore\BarotraumaCore.csproj" />
+    <ProjectReference Include="..\..\Libraries\BarotraumaLibs\EosInterface\EosInterface.csproj" />
   </ItemGroup>
+  <!-- Sourced from https://stackoverflow.com/a/45248069 -->
   <Target Name="GetGitRevision" BeforeTargets="WriteGitRevision" Condition="'$(BuildHash)' == ''">
     <PropertyGroup>
       <!-- temp file for the git version (lives in "obj" folder)-->
@@ -155,5 +155,11 @@
     <!-- writes the attribute to the customAssemblyInfo file -->
     <WriteCodeFragment Language="C#" OutputFile="$(CustomAssemblyInfoFile)" AssemblyAttributes="@(AssemblyAttributes)" />
   </Target>
+
+  <PropertyGroup>
+    <ManualDeployRuntime>osx-x64</ManualDeployRuntime>
+    <ProjectFileNamePlatformSuffix>MacOS</ProjectFileNamePlatformSuffix>
+  </PropertyGroup>
+  <Import Project="../BarotraumaShared/DeployEosPrivate.props" />
 
 </Project>

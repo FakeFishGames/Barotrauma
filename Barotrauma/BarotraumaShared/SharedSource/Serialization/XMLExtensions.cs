@@ -5,10 +5,12 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 using File = Barotrauma.IO.File;
 using FileStream = Barotrauma.IO.FileStream;
 using Path = Barotrauma.IO.Path;
@@ -17,7 +19,7 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
-        private static ImmutableDictionary<Type, Func<string, object, object>> converters
+        private readonly static ImmutableDictionary<Type, Func<string, object, object>> Converters
             = new Dictionary<Type, Func<string, object, object>>()
             {
                 { typeof(string), (str, defVal) => str },
@@ -213,6 +215,16 @@ namespace Barotrauma
             return splitValue;
         }
 
+        public static Identifier[] GetAttributeIdentifierArray(this XElement element, Identifier[] defaultValue, params string[] matchingAttributeName)
+        {
+            if (element == null) { return defaultValue; }
+            foreach (string name in matchingAttributeName)
+            {
+                var value = element.GetAttributeIdentifierArray(name, defaultValue);
+                if (value != defaultValue) { return value; }
+            }
+            return defaultValue;
+        }
 
         public static Identifier[] GetAttributeIdentifierArray(this XElement element, string name, Identifier[] defaultValue, bool trim = true)
         {
@@ -339,10 +351,11 @@ namespace Barotrauma
             }
             return false;
         }
-        
-        public static int GetAttributeInt(this XElement element, string name, int defaultValue)
+
+        public static int GetAttributeInt(this XElement element, string name, int defaultValue) => GetAttributeInt(element?.GetAttribute(name), defaultValue);
+
+        public static int GetAttributeInt(this XAttribute attribute, int defaultValue)
         {
-            var attribute = element?.GetAttribute(name);
             if (attribute == null) { return defaultValue; }
 
             int val = defaultValue;
@@ -351,12 +364,12 @@ namespace Barotrauma
             {
                 if (!Int32.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
                 {
-                    val = (int)float.Parse(element.GetAttribute(name).Value, CultureInfo.InvariantCulture);
+                    val = (int)float.Parse(attribute.Value, CultureInfo.InvariantCulture);
                 }
             }
             catch (Exception e)
             {
-                LogAttributeError(attribute, element, e);
+                LogAttributeError(attribute, attribute.Parent, e);
             }
 
             return val;
@@ -372,6 +385,25 @@ namespace Barotrauma
             try
             {
                 val = UInt32.Parse(attribute.Value);
+            }
+            catch (Exception e)
+            {
+                LogAttributeError(attribute, element, e);
+            }
+
+            return val;
+        }
+
+        public static ushort GetAttributeUInt16(this XElement element, string name, ushort defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+
+            ushort val = defaultValue;
+
+            try
+            {
+                val = ushort.Parse(attribute.Value);
             }
             catch (Exception e)
             {
@@ -728,8 +760,8 @@ namespace Barotrauma
             string[] elems = strValue.Split(',');
             if (elems.Length != 2) { return defaultValue; }
             
-            return ((T1)converters[typeof(T1)].Invoke(elems[0], defaultValue.Item1),
-                (T2)converters[typeof(T2)].Invoke(elems[1], defaultValue.Item2));
+            return ((T1)Converters[typeof(T1)].Invoke(elems[0], defaultValue.Item1),
+                (T2)Converters[typeof(T2)].Invoke(elems[1], defaultValue.Item2));
         }
         
         public static Point ParsePoint(string stringPoint, bool errorMessages = true)
@@ -811,6 +843,13 @@ namespace Barotrauma
             return vector;
         }
 
+        private static readonly ImmutableDictionary<Identifier, Color> monoGameColors =
+            typeof(Color)
+                .GetProperties(BindingFlags.Static | BindingFlags.Public)
+                .Where(p => p.PropertyType == typeof(Color))
+                .Select(p => (p.Name.ToIdentifier(), p.GetValueFromStaticProperty<Color>()))
+                .ToImmutableDictionary();
+
         public static Color ParseColor(string stringColor, bool errorMessages = true)
         {
             if (stringColor.StartsWith("gui.", StringComparison.OrdinalIgnoreCase))
@@ -832,6 +871,11 @@ namespace Barotrauma
                     return faction.IconColor;
                 }
                 return Color.White;
+            }
+
+            if (monoGameColors.TryGetValue(stringColor.ToIdentifier(), out var monoGameColor))
+            {
+                return monoGameColor;
             }
 
             string[] strComponents = stringColor.Split(',');
@@ -996,6 +1040,12 @@ namespace Barotrauma
         }
 
         public static bool IsOverride(this XElement element) => element.NameAsIdentifier() == "override";
+
+        /// <summary>
+        /// Get the root element of the document, or the first child element of the root if it's an override element.
+        /// Or in other words, the "rootmost element that actually contains some content".
+        /// </summary>
+        public static XElement GetRootExcludingOverride(this XDocument doc) => doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
 
         public static XElement FirstElement(this XElement element) => element.Elements().FirstOrDefault();
 

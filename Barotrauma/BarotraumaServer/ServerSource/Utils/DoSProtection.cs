@@ -71,6 +71,15 @@ namespace Barotrauma
                           StrikesResetInterval = 60,
                           StrikeThreshold = 6;
 
+        private const int MinPacketLimitMultipler = 1;
+
+        private static int GetMaxPacketLimit(ServerSettings settings)
+            => (int)MathF.Ceiling(
+                settings.MaxPacketAmount *
+                MathF.Max(
+                    settings.TickRate / (float)ServerSettings.DefaultTickRate,
+                    MinPacketLimitMultipler)); // Prevent the rate limit multiplier from being less than 1.
+
         /// <summary>
         /// Called when the server receives a packet to start logging how much time it takes to process.
         /// </summary>
@@ -122,11 +131,7 @@ namespace Barotrauma
 
         private void StartFor(Client client)
         {
-            if (!clients.ContainsKey(client))
-            {
-                clients.Add(client, new OffenseData());
-            }
-
+            clients.TryAdd(client, new OffenseData());
             clients[client].Stopwatch.Start();
         }
 
@@ -149,7 +154,7 @@ namespace Barotrauma
             if (GameMain.Server?.ServerSettings is not { } settings) { return; }
 
             // client is sending too many packets, kick them
-            if (data.PacketCount > settings.MaxPacketAmount && settings.MaxPacketAmount > ServerSettings.PacketLimitMin)
+            if (data.PacketCount > GetMaxPacketLimit(settings) && settings.MaxPacketAmount > ServerSettings.PacketLimitMin)
             {
                 AttemptKickClient(client, TextManager.Get("PacketLimitKicked"));
                 clients.Remove(client);
@@ -216,7 +221,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Server?.ServerSettings is { MaxPacketAmount: > ServerSettings.PacketLimitMin } settings)
                     {
-                        if (data.PacketCount > settings.MaxPacketAmount * 0.9f)
+                        if (data.PacketCount > GetMaxPacketLimit(settings) * 0.9f)
                         {
                             GameServer.Log($"{NetworkMember.ClientLogName(client)} is sending a lot of packets and almost got kicked! ({data.PacketCount}).", ServerLog.MessageType.DoSProtection);
                         }

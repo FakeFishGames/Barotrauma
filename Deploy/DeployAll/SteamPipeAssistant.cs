@@ -34,7 +34,7 @@ public static class SteamPipeAssistant
         }
     }
     
-    private static string steamCmdUrl
+    private static string SteamCmdUrl
         => true switch
         {
             _ when RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -46,7 +46,7 @@ public static class SteamPipeAssistant
             _ => throw new Exception($"Unsupported host platform: {RuntimeInformation.OSDescription}")
         };
 
-    private static string[] steamCmdFilenames
+    private static string[] SteamCmdFilenames
         => true switch
         {
             _ when RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -71,9 +71,9 @@ public static class SteamPipeAssistant
         
         Util.RecreateDirectory(SteamCmdPath);
         
-        var steamCmdPkg = Util.DownloadFile(steamCmdUrl).ToArray();
+        var steamCmdPkg = Util.DownloadFile(SteamCmdUrl, out _).ToArray();
         
-        if (Path.GetExtension(steamCmdUrl) == ".zip")
+        if (Path.GetExtension(SteamCmdUrl) == ".zip")
         {
             using var memStream = new MemoryStream(steamCmdPkg);
             using ZipArchive archive = new ZipArchive(memStream, ZipArchiveMode.Read);
@@ -81,7 +81,7 @@ public static class SteamPipeAssistant
         }
         else
         {
-            string downloadResultPath = Path.Combine(SteamCmdPath, Path.GetFileName(steamCmdUrl));
+            string downloadResultPath = Path.Combine(SteamCmdPath, Path.GetFileName(SteamCmdUrl));
             File.WriteAllBytes(downloadResultPath, steamCmdPkg);
 
             var psi = new ProcessStartInfo
@@ -102,7 +102,7 @@ public static class SteamPipeAssistant
 
             File.Delete(downloadResultPath);
 
-            foreach (var filename in steamCmdFilenames)
+            foreach (var filename in SteamCmdFilenames)
             {
                 psi = new ProcessStartInfo
                 {
@@ -126,7 +126,7 @@ public static class SteamPipeAssistant
     private const string ScriptPath = "Deploy/bin/scripts";
     private const string BuildOutput = "Deploy/bin/output";
 
-    private const string appIdScriptFileFmt = "app_{0}.vdf";
+    private const string AppIdScriptFileFmt = "app_{0}.vdf";
 
     private const ulong ClientAppId = 602960;
     private const ulong ClientWindowsDepotId = 602961;
@@ -201,7 +201,7 @@ public static class SteamPipeAssistant
             new SingleItem("preview", "0"),
             depotScripts);
         
-        var scriptFileName = Path.Combine(ScriptPath, string.Format(appIdScriptFileFmt, appId));
+        var scriptFileName = Path.Combine(ScriptPath, string.Format(AppIdScriptFileFmt, appId));
         File.WriteAllText(scriptFileName, script.ToString());
     }
     
@@ -223,7 +223,7 @@ public static class SteamPipeAssistant
         
         ProcessStartInfo psi = new ProcessStartInfo
         {
-            FileName = Path.Combine(SteamCmdPath, steamCmdFilenames.First()),
+            FileName = Path.Combine(SteamCmdPath, SteamCmdFilenames.First()),
             ArgumentList =
             {
                 "+login",
@@ -233,13 +233,13 @@ public static class SteamPipeAssistant
             RedirectStandardError = false
         };
 
-        void addScriptCmd(ulong appId)
+        void AddScriptCmd(ulong appId)
         {
             psi.ArgumentList.Add("+run_app_build");
-            psi.ArgumentList.Add(Path.GetFullPath(Path.Combine(ScriptPath, string.Format(appIdScriptFileFmt, appId))));
+            psi.ArgumentList.Add(Path.GetFullPath(Path.Combine(ScriptPath, string.Format(AppIdScriptFileFmt, appId))));
         }
-        addScriptCmd(ClientAppId);
-        if (configuration == "Release") { addScriptCmd(ServerAppId); }
+        AddScriptCmd(ClientAppId);
+        if (configuration == "Release") { AddScriptCmd(ServerAppId); }
         
         psi.ArgumentList.Add("+quit");
         var process = Util.StartProcess(psi);

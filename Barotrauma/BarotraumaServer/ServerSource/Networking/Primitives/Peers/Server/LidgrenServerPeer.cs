@@ -1,24 +1,26 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Net;
 using System.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
-    internal sealed class LidgrenServerPeer : ServerPeer
+    internal sealed class LidgrenServerPeer : ServerPeer<LidgrenConnection>
     {
         private readonly NetPeerConfiguration netPeerConfiguration;
+        private ImmutableDictionary<AuthenticationTicketKind, Authenticator>? authenticators;
         private NetServer? netServer;
 
         private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
-        public LidgrenServerPeer(Option<int> ownKey, ServerSettings settings, Callbacks callbacks) : base(callbacks)
+        public LidgrenServerPeer(Option<int> ownKey, ServerSettings settings, Callbacks callbacks) : base(callbacks, settings)
         {
-            serverSettings = settings;
-
+            authenticators = null;
             netServer = null;
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma")
@@ -27,7 +29,8 @@ namespace Barotrauma.Networking
                 AutoExpandMTU = false,
                 MaximumConnections = NetConfig.MaxPlayers * 2,
                 EnableUPnP = serverSettings.EnableUPnP,
-                Port = serverSettings.Port
+                Port = serverSettings.Port,
+                DualStack = GameSettings.CurrentConfig.UseDualModeSockets
             };
 
             netPeerConfiguration.DisableMessageType(
@@ -40,9 +43,6 @@ namespace Barotrauma.Networking
 
             netPeerConfiguration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
-            connectedClients = new List<NetworkConnection>();
-            pendingClients = new List<PendingClient>();
-
             incomingLidgrenMessages = new List<NetIncomingMessage>();
 
             ownerKey = ownKey;
@@ -51,6 +51,8 @@ namespace Barotrauma.Networking
         public override void Start()
         {
             if (netServer != null) { return; }
+
+            authenticators = Authenticator.GetAuthenticatorsForHost(Option.None);
 
             incomingLidgrenMessages.Clear();
 
@@ -79,7 +81,7 @@ namespace Barotrauma.Networking
 
             for (int i = connectedClients.Count - 1; i >= 0; i--)
             {
-                Disconnect(connectedClients[i], PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
+                Disconnect(connectedClients[i].Connection, PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
             }
 
             netServer.Shutdown(PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown).ToLidgrenStringRepresentation());
@@ -88,8 +90,6 @@ namespace Barotrauma.Networking
             connectedClients.Clear();
 
             netServer = null;
-
-            Steamworks.SteamServer.OnValidateAuthTicketResponse -= OnAuthChange;
 
             callbacks.OnShutdown.Invoke();
         }
@@ -164,9 +164,10 @@ namespace Barotrauma.Networking
             ToolBox.ThrowIfNull(netPeerConfiguration);
 
             netServer.UPnP.ForwardPort(netPeerConfiguration.Port, "barotrauma");
-#if USE_STEAM
-            netServer.UPnP.ForwardPort(serverSettings.QueryPort, "barotrauma");
-#endif
+            if (SteamManager.IsInitialized)
+            {
+                netServer.UPnP.ForwardPort(serverSettings.QueryPort, "barotrauma");
+            }
         }
 
         private bool DiscoveringUPnP()
@@ -198,7 +199,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            PendingClient? pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == inc.SenderConnection);
+            PendingClient? pendingClient = pendingClients.Find(c => c.Connection.NetConnection == inc.SenderConnection);
 
             if (pendingClient is null)
             {
@@ -213,7 +214,7 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            PendingClient? pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == lidgrenMsg.SenderConnection);
+            PendingClient? pendingClient = pendingClients.Find(c => c.Connection.NetConnection == lidgrenMsg.SenderConnection);
 
             IReadMessage inc = lidgrenMsg.ToReadMessage();
 
@@ -225,7 +226,7 @@ namespace Barotrauma.Networking
             }
             else if (!packetHeader.IsConnectionInitializationStep())
             {
-                if (connectedClients.Find(c => c is LidgrenConnection l && l.NetConnection == lidgrenMsg.SenderConnection) is not LidgrenConnection conn)
+                if (FindConnection(lidgrenMsg.SenderConnection) is not { } conn)
                 {
                     if (pendingClient != null)
                     {
@@ -253,6 +254,15 @@ namespace Barotrauma.Networking
                 var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
                 callbacks.OnMessageReceived.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
             }
+
+            LidgrenConnection? FindConnection(NetConnection ligdrenConn)
+            {
+                if (connectedClients.Find(c => c.Connection.NetConnection == ligdrenConn) is { Connection: LidgrenConnection conn })
+                {
+                    return conn;
+                }
+                return null;
+            }
         }
 
         private void HandleStatusChanged(NetIncomingMessage inc)
@@ -262,7 +272,7 @@ namespace Barotrauma.Networking
             switch (inc.SenderConnection.Status)
             {
                 case NetConnectionStatus.Disconnected:
-                    LidgrenConnection? conn = connectedClients.Cast<LidgrenConnection>().FirstOrDefault(c => c.NetConnection == inc.SenderConnection);
+                    LidgrenConnection? conn = connectedClients.Select(c => c.Connection).FirstOrDefault(c => c.NetConnection == inc.SenderConnection);
                     if (conn != null)
                     {
                         if (conn == OwnerConnection)
@@ -289,12 +299,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void InitializeSteamServerCallbacks()
-        {
-            Steamworks.SteamServer.OnValidateAuthTicketResponse += OnAuthChange;
-        }
-
-        private void OnAuthChange(Steamworks.SteamId steamId, Steamworks.SteamId ownerId, Steamworks.AuthResponse status)
+        private void OnSteamAuthChange(Steamworks.SteamId steamId, Steamworks.SteamId ownerId, Steamworks.AuthResponse status)
         {
             if (netServer == null) { return; }
 
@@ -306,8 +311,8 @@ namespace Barotrauma.Networking
                 if (status == Steamworks.AuthResponse.OK) { return; }
 
                 if (connectedClients.Find(c
-                        => c.AccountInfo.AccountId.TryUnwrap<SteamId>(out var id) && id.Value == steamId)
-                    is LidgrenConnection connection)
+                        => c.Connection.AccountInfo.AccountId.TryUnwrap<SteamId>(out var id) && id.Value == steamId)
+                    is { Connection: LidgrenConnection connection })
                 {
                     Disconnect(connection,  PeerDisconnectPacket.SteamAuthError(status));
                 }
@@ -340,9 +345,15 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            if (!connectedClients.Contains(conn))
+            if (conn is not LidgrenConnection lidgrenConnection)
             {
-                DebugConsole.ThrowError($"Tried to send message to unauthenticated connection: {conn.Endpoint.StringRepresentation}");
+                DebugConsole.ThrowError($"Tried to send message to connection of incorrect type: expected {nameof(LidgrenConnection)}, got {conn.GetType().Name}");
+                return;
+            }
+
+            if (!connectedClients.Any(cc => cc.Connection == lidgrenConnection))
+            {
+                DebugConsole.ThrowError($"Tried to send message to unauthenticated connection: {lidgrenConnection.Endpoint.StringRepresentation}");
                 return;
             }
 
@@ -366,7 +377,7 @@ namespace Barotrauma.Networking
             {
                 Buffer = bufAux
             };
-            SendMsgInternal(conn, headers, body);
+            SendMsgInternal(lidgrenConnection, headers, body);
         }
 
         public override void Disconnect(NetworkConnection conn, PeerDisconnectPacket peerDisconnectPacket)
@@ -375,18 +386,21 @@ namespace Barotrauma.Networking
 
             if (conn is not LidgrenConnection lidgrenConn) { return; }
 
-            if (connectedClients.Contains(lidgrenConn))
+            if (connectedClients.FindIndex(cc => cc.Connection == lidgrenConn) is >= 0 and var ccIndex)
             {
                 lidgrenConn.Status = NetworkConnectionStatus.Disconnected;
-                connectedClients.Remove(lidgrenConn);
+                connectedClients.RemoveAt(ccIndex);
                 callbacks.OnDisconnect.Invoke(conn, peerDisconnectPacket);
-                if (conn.AccountInfo.AccountId.TryUnwrap<SteamId>(out var steamId)) { SteamManager.StopAuthSession(steamId); }
+                if (conn.AccountInfo.AccountId.TryUnwrap(out var accountId))
+                {
+                    authenticators?.Values.ForEach(authenticator => authenticator.EndAuthSession(accountId));
+                }
             }
 
             lidgrenConn.NetConnection.Disconnect(peerDisconnectPacket.ToLidgrenStringRepresentation());
         }
 
-        protected override void SendMsgInternal(NetworkConnection conn, PeerPacketHeaders headers, INetSerializableStruct? body)
+        protected override void SendMsgInternal(LidgrenConnection conn, PeerPacketHeaders headers, INetSerializableStruct? body)
         {
             IWriteMessage msgToSend = new WriteOnlyMessage();
             msgToSend.WriteNetSerializableStruct(headers);
@@ -401,75 +415,94 @@ namespace Barotrauma.Networking
 
         protected override void CheckOwnership(PendingClient pendingClient)
         {
-            if (OwnerConnection == null
-                && pendingClient.Connection is LidgrenConnection l
-                && IPAddress.IsLoopback(l.NetConnection.RemoteEndPoint.Address)
-                && ownerKey.IsSome() && pendingClient.OwnerKey == ownerKey)
+            if (OwnerConnection != null
+                || pendingClient.Connection is not LidgrenConnection l
+                || !IPAddress.IsLoopback(l.NetConnection.RemoteEndPoint.Address)
+                || !ownerKey.IsSome() || pendingClient.OwnerKey != ownerKey)
             {
-                ownerKey = Option<int>.None();
-                OwnerConnection = pendingClient.Connection;
-                callbacks.OnOwnerDetermined.Invoke(OwnerConnection);
+                return;
             }
+
+            ownerKey = Option.None;
+            OwnerConnection = pendingClient.Connection;
+            callbacks.OnOwnerDetermined.Invoke(OwnerConnection);
         }
 
-        protected override void ProcessAuthTicket(ClientSteamTicketAndVersionPacket packet, PendingClient pendingClient)
+        private enum AuthResult
         {
-            if (pendingClient.AccountInfo.AccountId.IsNone())
-            {
-                bool requireSteamAuth = GameSettings.CurrentConfig.RequireSteamAuthentication;
-#if DEBUG
-                requireSteamAuth = false;
-#endif
-                bool hasSteamAuth = packet.SteamAuthTicket.TryUnwrap(out var ticket);
+            Success,
+            Failure
+        }
 
-                //steam auth cannot be done (SteamManager not initialized or no ticket given),
-                //but it's not required either -> let the client join without auth
-                if ((!SteamManager.IsInitialized || !hasSteamAuth) && !requireSteamAuth)
+        protected override void ProcessAuthTicket(ClientAuthTicketAndVersionPacket packet, PendingClient pendingClient)
+        {
+            if (pendingClient.AccountInfo.AccountId.IsSome())
+            {
+                if (pendingClient.AccountInfo.AccountId != packet.AccountId)
                 {
-                    pendingClient.Name = packet.Name;
-                    pendingClient.OwnerKey = packet.OwnerKey;
-                    pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
+                    RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+                }
+                return;
+            }
+
+            void acceptClient(AccountInfo accountInfo)
+            {
+                pendingClient.Connection.SetAccountInfo(accountInfo);
+                pendingClient.Name = packet.Name;
+                pendingClient.OwnerKey = packet.OwnerKey;
+                pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
+            }
+
+            void rejectClient()
+            {
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+            }
+
+            if (authenticators is null && 
+                GameMain.Server.ServerSettings.RequireAuthentication)
+            {
+                DebugConsole.NewMessage(
+                    "The server is configured to require authentication from clients, but there are no authenticators available. " +
+                    $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.", 
+                    Microsoft.Xna.Framework.Color.Yellow);
+            }
+
+            if (authenticators is null
+                || !packet.AuthTicket.TryUnwrap(out var authTicket)
+                || !authenticators.TryGetValue(authTicket.Kind, out var authenticator))
+            {                
+#if DEBUG
+                DebugConsole.NewMessage("Debug server accepts unauthenticated connections", Microsoft.Xna.Framework.Color.Yellow);
+                acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
+#else
+                if (GameMain.Server.ServerSettings.RequireAuthentication)
+                {
+                    DebugConsole.NewMessage(
+                        "A client attempted to join without an authentication ticket, but the server is configured to require authentication. " +
+                        $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.",
+                        Microsoft.Xna.Framework.Color.Yellow);
+                    rejectClient();
                 }
                 else
                 {
-                    if (!packet.SteamId.TryUnwrap(out var id) || id is not SteamId steamId)
-                    {
-                        if (requireSteamAuth)
-                        {
-                            RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.SteamAuthenticationFailed));
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        Steamworks.BeginAuthResult authSessionStartState = SteamManager.StartAuthSession(ticket, steamId);
-                        if (authSessionStartState != Steamworks.BeginAuthResult.OK)
-                        {
-                            if (requireSteamAuth)
-                            {
-                                RemovePendingClient(pendingClient, PeerDisconnectPacket.SteamAuthError(authSessionStartState));
-                            }
-                            else
-                            {
-                                packet.SteamId = Option<AccountId>.None();
-                                pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
-                            }
-                        }
-                    }
+                    acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
+                }
+#endif
+                return;
+            }
 
-                    pendingClient.Connection.SetAccountInfo(new AccountInfo(packet.SteamId.Select(uid => (AccountId)uid)));
-                    pendingClient.Name = packet.Name;
-                    pendingClient.OwnerKey = packet.OwnerKey;
-                    pendingClient.AuthSessionStarted = true;
-                }
-            }
-            else
+            pendingClient.AuthSessionStarted = true;
+            TaskPool.Add($"{nameof(LidgrenServerPeer)}.ProcessAuth", authenticator.VerifyTicket(authTicket), t =>
             {
-                if (pendingClient.AccountInfo.AccountId != packet.SteamId.Select(uid => (AccountId)uid))
+                if (!t.TryGetResult(out AccountInfo accountInfo)
+                    || accountInfo.IsNone)
                 {
-                    RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.SteamAuthenticationFailed));
+                    rejectClient();
+                    return;
                 }
-            }
+
+                acceptClient(accountInfo);
+            });
         }
 
         private NetSendResult ForwardToLidgren(IWriteMessage msg, NetworkConnection connection, DeliveryMethod deliveryMethod)

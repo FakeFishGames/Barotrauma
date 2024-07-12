@@ -203,6 +203,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        public bool MeltedDownThisRound { get; private set; }
+
         public Reactor(Item item, ContentXElement element)
             : base(item, element)
         {         
@@ -282,7 +284,7 @@ namespace Barotrauma.Items.Components
             }
 
             prevAvailableFuel = AvailableFuel;
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             //use a smoothed "correct output" instead of the actual correct output based on the load
             //so the player doesn't have to keep adjusting the rate impossibly fast when the load fluctuates heavily
@@ -338,7 +340,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Item item in containedItems)
                 {
-                    if (!item.HasTag("reactorfuel")) { continue; }
+                    if (!item.HasTag(Tags.Fuel)) { continue; }
                     if (fissionRate > 0.0f)
                     {
                         bool isConnectedToFriendlyOutpost = Level.IsLoadedOutpost && 
@@ -648,6 +650,7 @@ namespace Barotrauma.Items.Components
             item.Condition = 0.0f;
             fireTimer = 0.0f;
             meltDownTimer = 0.0f;
+            MeltedDownThisRound = true;
 
             var containedItems = item.OwnInventory?.AllItems;
             if (containedItems != null)
@@ -704,13 +707,13 @@ namespace Barotrauma.Items.Components
                             var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount: 1, equip: true, removeEmpty: true, spawnItemIfNotFound: !character.IsOnPlayerTeam, dropItemOnDeselected: true);
                             containObjective.Completed += ReportFuelRodCount;
                             containObjective.Abandoned += ReportFuelRodCount;
-                            character.Speak(TextManager.Get("DialogReactorFuel").Value, null, 0.0f, "reactorfuel".ToIdentifier(), 30.0f);
+                            character.Speak(TextManager.Get("DialogReactorFuel").Value, null, 0.0f, Tags.Fuel, 30.0f);
 
                             void ReportFuelRodCount()
                             {
                                 if (!character.IsOnPlayerTeam) { return; }
                                 if (character.Submarine != Submarine.MainSub) { return; }
-                                int remainingFuelRods = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("reactorfuel") && i.Condition > 1);
+                                int remainingFuelRods = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(Tags.Fuel) && i.Condition > 1);
                                 if (remainingFuelRods == 0)
                                 {
                                     character.Speak(TextManager.Get("DialogOutOfFuelRods").Value, null, 0.0f, "outoffuelrods".ToIdentifier(), 30.0f);
@@ -775,7 +778,6 @@ namespace Barotrauma.Items.Components
             if (shutDown)
             {
                 PowerOn = false;
-                AutoTemp = false;
                 TargetFissionRate = 0.0f;
                 TargetTurbineOutput = 0.0f;
                 unsentChanges = true;
@@ -873,7 +875,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private float GetMaxOutput() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorMaxOutput, MaxPowerOutput);
-        private float GetFuelConsumption() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorFuelConsumption, fuelConsumptionRate);
+        private float GetMaxOutput() => item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.ReactorMaxOutput, MaxPowerOutput);
+        private float GetFuelConsumption() => item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.ReactorFuelConsumption, fuelConsumptionRate);
     }
 }

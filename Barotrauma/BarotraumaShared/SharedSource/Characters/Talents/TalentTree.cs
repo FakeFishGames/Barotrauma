@@ -37,7 +37,8 @@ namespace Barotrauma
 
             if (Identifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"No job defined for talent tree in \"{file.Path}\"!");
+                DebugConsole.ThrowError($"No job defined for talent tree in \"{file.Path}\"!",
+                    contentPackage: element.ContentPackage);
                 return;
             }
 
@@ -81,16 +82,15 @@ namespace Barotrauma
             TalentSubTree subTree = talentTree!.TalentSubTrees.FirstOrDefault(tst => tst.Identifier == subTreeIdentifier);
             if (subTree is null) { return TalentStages.Invalid; }
 
-            if (!TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents))
-            {
-                return TalentStages.Locked;
-            }
-
             TalentOption targetTalentOption = subTree.TalentOptionStages[index];
-
             if (targetTalentOption.HasEnoughTalents(character.Info))
             {
                 return TalentStages.Unlocked;
+            }
+
+            if (!TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents))
+            {
+                return TalentStages.Locked;
             }
 
             if (targetTalentOption.HasSelectedTalent(selectedTalents))
@@ -133,6 +133,14 @@ namespace Barotrauma
 
             if (IsTalentLocked(talentIdentifier)) { return false; }
 
+            if (character.Info.GetUnlockedTalentsInTree().Contains(talentIdentifier))
+            {
+                //if the character already has the talent, it must be viable?
+                //needed for backwards compatibility, otherwise if we remove e.g. a tier 1 or tier 2 talent,
+                //all the already-unlocked higher-tier talents will be considered invalid which'll break the talent selection
+                return true;
+            }
+
             foreach (var subTree in talentTree!.TalentSubTrees)
             {
                 if (subTree.AllTalentIdentifiers.Contains(talentIdentifier) && subTree.HasMaxTalents(selectedTalents)) { return false; }
@@ -143,11 +151,12 @@ namespace Barotrauma
                     {
                         return !talentOptionStage.HasMaxTalents(selectedTalents) && TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents);
                     }
+                    //if a previous stage hasn't been completed, this talent can't be selected yet
                     bool optionStageCompleted = talentOptionStage.HasEnoughTalents(selectedTalents);
                     if (!optionStageCompleted)
                     {
                         break;
-                    }
+                    }                    
                 }
             }
 
@@ -295,7 +304,8 @@ namespace Barotrauma
 
             if (RequiredTalents > MaxChosenTalents)
             {
-                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - MaxChosenTalents is larger than RequiredTalents.");
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - MaxChosenTalents is larger than RequiredTalents.",
+                    contentPackage: talentOptionsElement.ContentPackage);
             }
 
             HashSet<Identifier> identifiers = new HashSet<Identifier>();
@@ -324,11 +334,13 @@ namespace Barotrauma
 
             if (RequiredTalents > talentIdentifiers.Count)
             {
-                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - completing a stage of the tree requires more talents than there are in the stage.");
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - completing a stage of the tree requires more talents than there are in the stage.",
+                    contentPackage: talentOptionsElement.ContentPackage);
             }
             if (MaxChosenTalents > talentIdentifiers.Count)
             {
-                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - maximum number of talents to choose is larger than the number of talents.");
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - maximum number of talents to choose is larger than the number of talents.",
+                    contentPackage: talentOptionsElement.ContentPackage);
             }
         }
     }

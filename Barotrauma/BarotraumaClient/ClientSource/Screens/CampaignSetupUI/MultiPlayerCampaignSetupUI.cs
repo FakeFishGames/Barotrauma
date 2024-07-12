@@ -1,10 +1,7 @@
-using Barotrauma.Extensions;
-using Barotrauma.IO;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -14,16 +11,20 @@ namespace Barotrauma
 
         private int prevInitialMoney;
 
+        private CampaignSettingElements campaignSettingElements;
+
+        public bool LoadGameMenuVisible => loadGameContainer is { Visible: true };
+
         public MultiPlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, List<CampaignMode.SaveInfo> saveFiles = null)
             : base(newGameContainer, loadGameContainer)
         {
             var verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: false)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.025f
             };
 
-            GUILayoutGroup nameSeedLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), verticalLayout.RectTransform), isHorizontal: false)
+            GUILayoutGroup nameSeedLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), verticalLayout.RectTransform), isHorizontal: false)
             {
                 Stretch = true
             };
@@ -31,119 +32,41 @@ namespace Barotrauma
             GUILayoutGroup campaignSettingLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), verticalLayout.RectTransform), isHorizontal: false)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.0f
             };
 
             // New game
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform), string.Empty)
+            var saveLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("SaveName"), textAlignment: Alignment.CenterLeft);
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), saveLabel.RectTransform, Anchor.CenterRight), string.Empty)
             {
                 textFilterFunction = ToolBox.RemoveInvalidFileNameChars
             };
+            saveLabel.InheritTotalChildrenMinHeight();
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform), ToolBox.RandomSeed(8));
+            var seedLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("MapSeed"), textAlignment: Alignment.CenterLeft);
+            seedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedLabel.RectTransform, Anchor.CenterRight), ToolBox.RandomSeed(8));
+            seedLabel.InheritTotalChildrenMinHeight();
 
-            nameSeedLayout.RectTransform.MinSize = new Point(0, nameSeedLayout.Children.Sum(c => c.RectTransform.MinSize.Y));
+            nameSeedLayout.InheritTotalChildrenMinHeight();
 
-            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingLayout, CampaignSettings.Empty, false);
+            campaignSettingElements = CreateCampaignSettingList(campaignSettingLayout, CampaignSettings.Empty, false);
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f),
-                verticalLayout.RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.BottomRight, isHorizontal: true);
+                verticalLayout.RectTransform) { MaxSize = new Point(int.MaxValue, GUI.IntScale(30)) }, childAnchor: Anchor.BottomRight, isHorizontal: true);
 
-            StartButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1f), buttonContainer.RectTransform, Anchor.BottomRight), TextManager.Get("StartCampaignButton"))
-            {
-                OnClicked = (GUIButton btn, object userData) =>
-                {
-                    if (string.IsNullOrWhiteSpace(saveNameBox.Text))
-                    {
-                        saveNameBox.Flash(GUIStyle.Red);
-                        return false;
-                    }
-
-                    SubmarineInfo selectedSub = null;
-
-                    if (GameMain.NetLobbyScreen.SelectedSub == null) { return false; }
-                    selectedSub = GameMain.NetLobbyScreen.SelectedSub;
-
-                    if (selectedSub.SubmarineClass == SubmarineClass.Undefined)
-                    {
-                        new GUIMessageBox(TextManager.Get("error"), TextManager.Get("undefinedsubmarineselected"));
-                        return false;
-                    }
-
-                    if (string.IsNullOrEmpty(selectedSub.MD5Hash.StringRepresentation))
-                    {
-                        new GUIMessageBox(TextManager.Get("error"), TextManager.Get("nohashsubmarineselected"));
-                        return false;
-                    }
-
-                    string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveNameBox.Text);
-                    bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
-
-                    CampaignSettings settings = elements.CreateSettings();
-
-                    if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
-                    {
-                        if (!hasRequiredContentPackages)
-                        {
-                            var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
-                                TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
-                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
-
-                            msgBox.Buttons[0].OnClicked = msgBox.Close;
-                            msgBox.Buttons[0].OnClicked += (button, obj) =>
-                            {
-                                if (GUIMessageBox.MessageBoxes.Count == 0)
-                                {
-                                    StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
-                                    CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
-                                }
-                                return true;
-                            };
-
-                            msgBox.Buttons[1].OnClicked = msgBox.Close;
-                        }
-
-                        if (selectedSub.HasTag(SubmarineTag.Shuttle))
-                        {
-                            var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
-                                TextManager.Get("ShuttleWarning"),
-                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
-
-                            msgBox.Buttons[0].OnClicked = (button, obj) => 
-                            {
-                                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
-                                CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
-                                return true;
-                            };
-                            msgBox.Buttons[0].OnClicked += msgBox.Close;
-
-                            msgBox.Buttons[1].OnClicked = msgBox.Close;
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
-                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
-                    }
-
-                    return true;
-                }
-            };
-            StartButton.RectTransform.MaxSize = RectTransform.MaxPoint;
-            StartButton.Children.ForEach(c => c.RectTransform.MaxSize = RectTransform.MaxPoint);
-
-            prevInitialMoney = 8000;
-            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUIStyle.SmallFont, textColor: GUIStyle.Green)
+            prevInitialMoney = CampaignSettings.DefaultInitialMoney;
+            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUIStyle.SmallFont, textColor: GUIStyle.Green, textAlignment: Alignment.CenterRight)
             {
                 TextGetter = () =>
                 {
-                    int initialMoney = 8000;
-                    if (CampaignModePresets.Definitions.TryGetValue(nameof(StartingBalanceAmount).ToIdentifier(), out var definition))
+                    int defaultInitialMoney = CampaignSettings.DefaultInitialMoney;
+                    int initialMoney = defaultInitialMoney;
+                    if (CampaignModePresets.TryGetAttribute(
+                        nameof(CampaignSettings.StartingBalanceAmount).ToIdentifier(),
+                        campaignSettingElements.StartingFunds.GetValue().ToIdentifier(),
+                        out var attribute))
                     {
-                        initialMoney = definition.GetInt(elements.StartingFunds.GetValue().ToIdentifier());
+                        initialMoney = attribute.GetAttributeInt(defaultInitialMoney);
                     }
                     if (prevInitialMoney != initialMoney)
                     {
@@ -162,7 +85,88 @@ namespace Barotrauma
 
             verticalLayout.Recalculate();
 
-            UpdateLoadMenu(saveFiles);
+            CreateLoadMenu(saveFiles);
+        }
+
+        public bool StartGameClicked(GUIButton button, object userdata)
+        {
+            if (string.IsNullOrWhiteSpace(saveNameBox.Text))
+            {
+                saveNameBox.Flash(GUIStyle.Red, flashDuration: 5.0f);
+                saveNameBox.Pulsate(Vector2.One, Vector2.One * 1.2f, duration: 2.0f);
+                newGameContainer?.Flash(GUIStyle.Red, flashDuration: 0.5f);
+                return false;
+            }
+
+            SubmarineInfo selectedSub = null;
+
+            if (GameMain.NetLobbyScreen.SelectedSub == null) { return false; }
+            selectedSub = GameMain.NetLobbyScreen.SelectedSub;
+
+            if (selectedSub.SubmarineClass == SubmarineClass.Undefined)
+            {
+                new GUIMessageBox(TextManager.Get("error"), TextManager.Get("undefinedsubmarineselected"));
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(selectedSub.MD5Hash.StringRepresentation))
+            {
+                new GUIMessageBox(TextManager.Get("error"), TextManager.Get("nohashsubmarineselected"));
+                return false;
+            }
+
+            string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveNameBox.Text);
+            bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
+
+            CampaignSettings settings = campaignSettingElements.CreateSettings();
+
+            if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
+            {
+                if (!hasRequiredContentPackages)
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
+                        TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                    msgBox.Buttons[0].OnClicked = msgBox.Close;
+                    msgBox.Buttons[0].OnClicked += (button, obj) =>
+                    {
+                        if (GUIMessageBox.MessageBoxes.Count == 0)
+                        {
+                            StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
+                            CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                        }
+                        return true;
+                    };
+
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                }
+
+                if (selectedSub.HasTag(SubmarineTag.Shuttle))
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
+                        TextManager.Get("ShuttleWarning"),
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                    msgBox.Buttons[0].OnClicked = (button, obj) =>
+                    {
+                        StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
+                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    return false;
+                }
+            }
+            else
+            {
+                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
+                CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+            }
+
+            return true;
         }
 
         private IEnumerable<CoroutineStatus> WaitForCampaignSetup()
@@ -192,7 +196,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public override void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
+        public override void CreateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Barotrauma.IO;
@@ -111,7 +111,7 @@ namespace Barotrauma
         /// </summary>
         public static float AspectRatioAdjustment => HorizontalAspectRatio < 1.4f ? (1.0f - (1.4f - HorizontalAspectRatio)) : 1.0f;
 
-        public static bool IsUltrawide => HorizontalAspectRatio > 2.0f;
+        public static bool IsUltrawide => HorizontalAspectRatio > 2.3f;
 
         public static int UIWidth
         {
@@ -199,19 +199,15 @@ namespace Barotrauma
 
         public static bool PauseMenuOpen { get; private set; }
 
-        public static bool InputBlockingMenuOpen
-        {
-            get
-            {
-                return PauseMenuOpen ||
-                    SettingsMenuOpen ||
-                    DebugConsole.IsOpen ||
-                    GameSession.IsTabMenuOpen ||
-                    GameMain.GameSession?.GameMode is { Paused: true } ||
-                    CharacterHUD.IsCampaignInterfaceOpen ||
-                    GameMain.GameSession?.Campaign is { SlideshowPlayer: { Finished: false, Visible: true } };
-            }
-        }
+        public static bool InputBlockingMenuOpen =>
+            PauseMenuOpen
+            || SettingsMenuOpen
+            || SocialOverlay.Instance is { IsOpen: true }
+            || DebugConsole.IsOpen
+            || GameSession.IsTabMenuOpen
+            || GameMain.GameSession?.GameMode is { Paused: true }
+            || CharacterHUD.IsCampaignInterfaceOpen
+            || GameMain.GameSession?.Campaign is { SlideshowPlayer: { Finished: false, Visible: true } };
 
         public static bool PreventPauseMenuToggle = false;
 
@@ -512,10 +508,18 @@ namespace Barotrauma
                                     soundStr += " (stopped)";
                                     clr *= 0.5f;
                                 }
-                                else if (playingSoundChannel.Muffled)
+                                else
                                 {
-                                    soundStr += " (muffled)";
-                                    clr = Color.Lerp(clr, Color.LightGray, 0.5f);
+                                    if (playingSoundChannel.Muffled)
+                                    {
+                                        soundStr += " (muffled)";
+                                        clr = Color.Lerp(clr, Color.LightGray, 0.5f);
+                                    }
+                                    if (playingSoundChannel.FadingOutAndDisposing)
+                                    {
+                                        soundStr += ". Fading out...";
+                                        clr = Color.Lerp(clr, Color.Black, 0.15f);
+                                    }
                                 }
                             }
 
@@ -637,19 +641,9 @@ namespace Barotrauma
                                 sprite?.Draw(spriteBatch, PlayerInput.MousePosition, scale: Math.Min(64 / sprite.size.X, 64 / sprite.size.Y) * Scale);
                                 break;
                             }
-                        case ItemAssemblyPrefab iPrefab:
+                        case ItemAssemblyPrefab itemAssemblyPrefab:
                             {
-                                var (x, y) = PlayerInput.MousePosition;
-                                foreach (var pair in iPrefab.DisplayEntities)
-                                {
-                                    Rectangle dRect = pair.Item2;
-                                    dRect = new Rectangle(x: (int)(dRect.X * iPrefab.Scale + x),
-                                                          y: (int)(dRect.Y * iPrefab.Scale - y),
-                                                          width: (int)(dRect.Width * iPrefab.Scale),
-                                                          height: (int)(dRect.Height * iPrefab.Scale));
-                                    MapEntityPrefab prefab = MapEntityPrefab.Find("", pair.Item1);
-                                    prefab.DrawPlacing(spriteBatch, dRect, prefab.Scale * iPrefab.Scale);
-                                }
+                                itemAssemblyPrefab.Draw(spriteBatch, PlayerInput.MousePosition.FlipY());
                                 break;
                             }
                     }
@@ -712,7 +706,7 @@ namespace Barotrauma
 
             spriteBatch.Draw(backgroundSprite.Texture,
                 area.Center.ToVector2() + pos,
-                null, color, 0.0f, backgroundSprite.size / 2,
+                backgroundSprite.SourceRect, color, 0.0f, backgroundSprite.size / 2,
                 scale, spriteEffects, 0.0f);
         }
 
@@ -723,9 +717,9 @@ namespace Barotrauma
         private static readonly Queue<GUIComponent> removals = new Queue<GUIComponent>();
         private static readonly Queue<GUIComponent> additions = new Queue<GUIComponent>();
         // A helpers list for all elements that have a draw order less than 0.
-        private static readonly List<GUIComponent> first = new List<GUIComponent>();
+        private static readonly List<GUIComponent> firstAdditions = new List<GUIComponent>();
         // A helper list for all elements that have a draw order greater than 0.
-        private static readonly List<GUIComponent> last = new List<GUIComponent>();
+        private static readonly List<GUIComponent> lastAdditions = new List<GUIComponent>();
 
         /// <summary>
         /// Adds the component on the addition queue.
@@ -743,11 +737,11 @@ namespace Barotrauma
                 if (!component.Visible) { return; }
                 if (component.UpdateOrder < 0)
                 {
-                    first.Add(component);
+                    firstAdditions.Add(component);
                 }
                 else if (component.UpdateOrder > 0)
                 {
-                    last.Add(component);
+                    lastAdditions.Add(component);
                 }
                 else
                 {
@@ -806,9 +800,9 @@ namespace Barotrauma
                         RemoveFromUpdateList(component);
                     }
                 }
-                ProcessHelperList(first);
+                ProcessHelperList(firstAdditions);
                 ProcessAdditions();
-                ProcessHelperList(last);
+                ProcessHelperList(lastAdditions);
                 ProcessRemovals();
             }
         }
@@ -874,31 +868,36 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            lock (mutex)
+            bool currentMessageBoxIsVerificationPrompt = GUIMessageBox.VisibleBox is GUIMessageBox { DrawOnTop: true };
+
+            if (!currentMessageBoxIsVerificationPrompt)
             {
                 GUIMessageBox.AddActiveToGUIUpdateList();
-                GUIContextMenu.AddActiveToGUIUpdateList();
+            }
 
-                if (PauseMenuOpen)
-                {
-                    PauseMenu.AddToGUIUpdateList();
-                }
-                if (SettingsMenuOpen)
-                {
-                    SettingsMenuContainer.AddToGUIUpdateList();
-                }
+            if (SettingsMenuOpen)
+            {
+                SettingsMenuContainer.AddToGUIUpdateList();
+            }
+            else if (PauseMenuOpen)
+            {
+                PauseMenu.AddToGUIUpdateList();
+            }
 
-                //the "are you sure you want to quit" prompts are drawn on top of everything else
-                if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt" || GUIMessageBox.VisibleBox?.UserData as string == "bugreporter")
-                {
-                    GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-                }
+            SocialOverlay.Instance?.AddToGuiUpdateList();
+
+            GUIContextMenu.AddActiveToGUIUpdateList();
+
+            //the "are you sure you want to quit" prompts are drawn on top of everything else
+            if (currentMessageBoxIsVerificationPrompt)
+            {
+                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
         }
 
         public static IEnumerable<GUIComponent> GetAdditions()
         {
-            return additions;
+            return additions.Union(firstAdditions).Union(lastAdditions);
         }
         #endregion
 
@@ -1010,16 +1009,13 @@ namespace Barotrauma
                         // Sub editor drag and highlight
                         case SubEditorScreen editor:
                         {
-                            foreach (var mapEntity in MapEntity.mapEntityList)
+                            if (MapEntity.StartMovingPos != Vector2.Zero || MapEntity.Resizing)
                             {
-                                if (MapEntity.StartMovingPos != Vector2.Zero)
-                                {
-                                    return CursorState.Dragging;
-                                }
-                                if (mapEntity.IsHighlighted)
-                                {
-                                    return CursorState.Hand;
-                                }
+                                return CursorState.Dragging;
+                            }
+                            if (MapEntity.HighlightedEntities.Any(h => !h.IsSelected))
+                            {
+                                return CursorState.Hand;
                             }
                             break;
                         }
@@ -1044,12 +1040,31 @@ namespace Barotrauma
                         {
                             return dragHandle.Dragging ? CursorState.Dragging : CursorState.Hand;
                         }
+                        //do not show the hover cursor when the cursor is on a listbox (on the listbox itself, not any of elements inside it!)
+                        if (c is GUIListBox && (parent == null || parent == c))
+                        {
+                            return CursorState.Default;
+                        }
                         // Some parent elements take priority
                         // but not when the child is a GUIButton or GUITickBox
-                        if (!(parent is GUIButton) && !(parent is GUIListBox) ||
+                        if (parent is not GUIButton && parent is not GUIListBox ||
                                   (c is GUIButton) || (c is GUITickBox))
                         {
-                            if (!c.Rect.Equals(monitorRect)) { return c.HoverCursor; }
+                            if (!c.Rect.Equals(monitorRect))
+                            { 
+                                if (c is GUITickBox)
+                                {
+                                    //tickboxes have some special logic: not all of the component is hoverable (just the box and the text area)
+                                    if (c.State is GUIComponent.ComponentState.Hover or GUIComponent.ComponentState.HoverSelected) 
+                                    { 
+                                        return c.HoverCursor;
+                                    }
+                                }
+                                else
+                                {
+                                    return c.HoverCursor;
+                                }
+                            }
                         }
                     }
 
@@ -2156,6 +2171,28 @@ namespace Barotrauma
             return frame;
         }
 
+        public static GUITextBox CreateTextBoxWithPlaceholder(RectTransform rectT, string text, LocalizedString placeholder)
+        {
+            var holder = new GUIFrame(rectT, style: null);
+            var textBox = new GUITextBox(new RectTransform(Vector2.One, holder.RectTransform, Anchor.CenterLeft), text, createClearButton: false);
+            var placeholderElement = new GUITextBlock(new RectTransform(Vector2.One, holder.RectTransform, Anchor.CenterLeft),
+                textColor: Color.DarkGray * 0.6f,
+                text: placeholder,
+                textAlignment: Alignment.CenterLeft)
+            {
+                CanBeFocused = false
+            };
+
+            new GUICustomComponent(new RectTransform(Vector2.Zero, holder.RectTransform),
+                onUpdate: delegate { placeholderElement.RectTransform.NonScaledSize = textBox.Frame.RectTransform.NonScaledSize; });
+
+            textBox.OnSelected += delegate { placeholderElement.Visible = false; };
+            textBox.OnDeselected += delegate { placeholderElement.Visible = textBox.Text.IsNullOrWhiteSpace(); };
+
+            placeholderElement.Visible = string.IsNullOrWhiteSpace(text);
+            return textBox;
+        }
+
         public static void NotifyPrompt(LocalizedString header, LocalizedString body)
         {
             GUIMessageBox msgBox = new GUIMessageBox(header, body, new[] { TextManager.Get("Ok") }, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
@@ -2166,10 +2203,10 @@ namespace Barotrauma
             };
         }
 
-        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Action onConfirm, Action onDeny = null)
+        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Action onConfirm, Action onDeny = null, Vector2? relativeSize = null, Point? minSize = null)
         {
             LocalizedString[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
-            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
+            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, relativeSize: relativeSize ?? new Vector2(0.2f, 0.175f), minSize: minSize ?? new Point(300, 175));
 
             // Cancel button
             msgBox.Buttons[1].OnClicked = delegate
@@ -2393,30 +2430,31 @@ namespace Barotrauma
                 }
                 iterations++;
             }
-
-            static Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
-            {
-                if (Rect.Y < clampTo.Y)
-                {
-                    moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
-                }
-                else if (Rect.Bottom > clampTo.Bottom)
-                {
-                    moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
-                }
-                if (Rect.X < clampTo.X)
-                {
-                    moveAmount.X = Math.Max(moveAmount.X, 0.0f);
-                }
-                else if (Rect.Right > clampTo.Right)
-                {
-                    moveAmount.X = Math.Min(moveAmount.X, 0.0f);
-                }
-                return moveAmount;
-            }
         }
 
-#endregion
+        private static Vector2 ClampMoveAmount(Rectangle rect, Rectangle clampTo, Vector2 moveAmount)
+        {
+            if (rect.Y < clampTo.Y)
+            {
+                moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
+            }
+            else if (rect.Bottom > clampTo.Bottom)
+            {
+                moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
+            }
+            if (rect.X < clampTo.X)
+            {
+                moveAmount.X = Math.Max(moveAmount.X, 0.0f);
+            }
+            else if (rect.Right > clampTo.Right)
+            {
+                moveAmount.X = Math.Min(moveAmount.X, 0.0f);
+            }
+            return moveAmount;
+        }
+
+
+        #endregion
 
 #region Misc
         public static void TogglePauseMenu()
@@ -2438,13 +2476,14 @@ namespace Barotrauma
 
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(250, 300) });
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.6f), pauseMenuInner.RectTransform, Anchor.Center))
+                float padding = 0.06f;
+
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.8f), pauseMenuInner.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, padding) })
                 {
-                    Stretch = true,
-                    RelativeSpacing = 0.05f
+                    AbsoluteSpacing = IntScale(15)
                 };
 
-                new GUIButton(new RectTransform(new Vector2(0.1f, 0.1f), pauseMenuInner.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point((int)(15 * GUI.Scale)) },
+                new GUIButton(new RectTransform(new Vector2(0.1f, 0.07f), pauseMenuInner.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(padding) },
                     "", style: "GUIBugButton")
                 {
                     IgnoreLayoutGroups = true,
@@ -2470,7 +2509,7 @@ namespace Barotrauma
                             GameMain.GameSession.LoadPreviousSave();
                         });
 
-                        if (IsFriendlyOutpostLevel())
+                        if (IsFriendlyOutpostLevel() && !spMode.CrewDead)
                         {
                             CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToMainMenuVerification", action: () =>
                             {
@@ -2520,6 +2559,13 @@ namespace Barotrauma
                 }
 
                 GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(c => ((GUIButton)c).TextBlock));
+                //scale to ensure there's enough room for all the buttons
+                pauseMenuInner.RectTransform.MinSize = new Point(
+                    pauseMenuInner.RectTransform.MinSize.X,
+                        Math.Max(
+                            (int)(buttonContainer.Children.Sum(c => c.Rect.Height + buttonContainer.AbsoluteSpacing) / buttonContainer.RectTransform.RelativeSize.Y),
+                            pauseMenuInner.RectTransform.MinSize.X));
+
             }
 
             void CreateButton(string textTag, GUIComponent parent, Action action, string verificationTextTag = null)
@@ -2547,7 +2593,8 @@ namespace Barotrauma
                 var msgBox = new GUIMessageBox("", TextManager.Get(textTag),
                     new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
                 {
-                    UserData = "verificationprompt"
+                    UserData = "verificationprompt",
+                    DrawOnTop = true
                 };
                 msgBox.Buttons[0].OnClicked = (_, __) =>
                 {

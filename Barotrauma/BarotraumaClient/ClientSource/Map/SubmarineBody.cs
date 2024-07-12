@@ -1,11 +1,52 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Voronoi2;
 
 namespace Barotrauma
 {
     partial class SubmarineBody
     {
+
+        partial void HandleLevelCollisionProjSpecific(Impact impact)
+        {
+            float wallImpact = Vector2.Dot(impact.Velocity, -impact.Normal);
+            int particleAmount = (int)Math.Min(wallImpact, 10);
+
+            const float BurstParticleThreshold = 5.0f;
+
+            float velocityFactor = MathHelper.Clamp(wallImpact / 10.0f, 0.0f, 1.0f);
+            for (int i = 0; i < particleAmount * 5; i++)
+            {
+                GameMain.ParticleManager.CreateParticle("iceshards",
+                    ConvertUnits.ToDisplayUnits(impact.ImpactPos) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
+                    (Rand.Vector(0.9f) + impact.Normal) * Rand.Range(100.0f, 10000) * velocityFactor);
+            }
+            for (int i = 0; i < particleAmount; i++)
+            {
+                float particleVelocityMultiplier = Rand.Range(0.0f, 1);
+                var p = GameMain.ParticleManager.CreateParticle("iceexplosion",
+                     ConvertUnits.ToDisplayUnits(impact.ImpactPos) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
+                     (Rand.Vector(0.5f) + impact.Normal) * particleVelocityMultiplier * 500 * velocityFactor);
+                if (p != null)
+                {
+                    p.VelocityChangeMultiplier = particleVelocityMultiplier * Rand.Range(0.0f, 1.0f);
+                    p.Size *= Math.Max(particleVelocityMultiplier, 0);
+                }
+            }
+            if (wallImpact > BurstParticleThreshold)
+            {
+                for (int i = 0; i < particleAmount; i++)
+                {
+                    GameMain.ParticleManager.CreateParticle("iceburst",
+                         ConvertUnits.ToDisplayUnits(impact.ImpactPos) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
+                         angle: MathUtils.VectorToAngle(impact.Normal.FlipY() + Rand.Vector(0.25f)), speed: 0.0f);
+                }
+            }
+        }
+
         partial void ClientUpdatePosition(float deltaTime)
         {
             if (GameMain.Client == null) { return; }
@@ -18,7 +59,7 @@ namespace Barotrauma
                 return;
             }
 
-            List<Submarine> subsToMove = submarine.GetConnectedSubs();
+            var subsToMove = submarine.GetConnectedSubs();
             foreach (Submarine dockedSub in subsToMove)
             {
                 if (dockedSub == submarine) { continue; }
@@ -51,7 +92,6 @@ namespace Barotrauma
                     sub.PhysicsBody.SetTransformIgnoreContacts(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
                 }
             }
-
             if (closestSub != null && subsToMove.Contains(closestSub))
             {
                 GameMain.GameScreen.Cam.Position += moveAmount;

@@ -1,4 +1,3 @@
-using Barotrauma.Tutorials;
 using System;
 using System.Linq;
 
@@ -17,7 +16,7 @@ partial class MessageBoxAction : EventAction
                 var segment = ObjectiveManager.Segment.CreateMessageBoxSegment(id, ObjectiveTag, CreateMessageBox);
                 segment.CanBeCompleted = ObjectiveCanBeCompleted;
                 segment.ParentId = ParentObjectiveId;
-                ObjectiveManager.TriggerTutorialSegment(segment, connectObjective: Type == ActionType.ConnectObjective);
+                ObjectiveManager.TriggerSegment(segment, connectObjective: Type == ActionType.ConnectObjective);
             }
         }
         else if (Type == ActionType.Close)

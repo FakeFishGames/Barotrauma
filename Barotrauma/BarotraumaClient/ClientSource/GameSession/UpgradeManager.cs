@@ -1,7 +1,6 @@
 ﻿#nullable enable
-using System;
-using System.Linq;
 using Barotrauma.Networking;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -13,7 +12,7 @@ namespace Barotrauma
 
             if (character != null)
             {
-                Speak(character);
+                character.Speak(text, ChatMessageType.Default);
                 return;
             }
 
@@ -21,21 +20,8 @@ namespace Barotrauma
             {
                 if (npc.CampaignInteractionType == CampaignMode.InteractionType.Upgrade)
                 {
-                    Speak(npc);
+                    npc.Speak(text, ChatMessageType.Default);
                     break;
-                }
-            }
-
-            void Speak(Character npc)
-            {
-                ChatMessage message = ChatMessage.Create(npc.Name, text, ChatMessageType.Default, npc);
-                if (!isSinglePlayer)
-                {
-                    GameMain.Client?.AddChatMessage(message);
-                }
-                else
-                {
-                    GameMain.GameSession?.CrewManager?.AddSinglePlayerChatMessage(message);
                 }
             }
         }

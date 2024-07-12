@@ -1,10 +1,9 @@
 #nullable enable
 
+using Barotrauma.IO;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Barotrauma.IO;
 
 namespace Barotrauma
 {
@@ -23,7 +22,7 @@ namespace Barotrauma
 
         private string? cachedValue;
         private string? cachedFullPath;
-
+        
         public string Value
         {
             get
@@ -93,14 +92,20 @@ namespace Barotrauma
         }
 
         public static ContentPath FromRaw(string? rawValue)
-            => new ContentPath(null, rawValue);
-        
-        public static ContentPath FromRaw(ContentPackage? contentPackage, string? rawValue)
-            => new ContentPath(contentPackage, rawValue);
+            => FromRaw(null, rawValue);
 
-        public static ContentPath FromEvaluated(ContentPackage? contentPackage, string? evaluatedValue)
+        private static ContentPath? prevCreatedRaw;
+
+        public static ContentPath FromRaw(ContentPackage? contentPackage, string? rawValue)
         {
-            throw new NotImplementedException();
+            var newRaw = new ContentPath(contentPackage, rawValue);
+            if (prevCreatedRaw is not null && prevCreatedRaw.ContentPackage == contentPackage &&
+                prevCreatedRaw.RawValue == rawValue)
+            {
+                newRaw.cachedValue = prevCreatedRaw.Value;
+            }
+            prevCreatedRaw = newRaw;
+            return newRaw;
         }
         
         private static bool StringEquality(string? a, string? b)
@@ -109,8 +114,8 @@ namespace Barotrauma
             {
                 return a.IsNullOrEmpty() == b.IsNullOrEmpty();
             }
-            return string.Equals(Path.GetFullPath(a.CleanUpPathCrossPlatform(false) ?? ""),
-                    Path.GetFullPath(b.CleanUpPathCrossPlatform(false) ?? ""), StringComparison.OrdinalIgnoreCase);
+            return string.Equals(Path.GetFullPath(a.CleanUpPathCrossPlatform(correctFilenameCase: false) ?? ""),
+                    Path.GetFullPath(b.CleanUpPathCrossPlatform(correctFilenameCase: false) ?? ""), StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool operator==(ContentPath a, ContentPath b)
@@ -135,9 +140,9 @@ namespace Barotrauma
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (ReferenceEquals(null, obj)) { return false; }
+            if (ReferenceEquals(this, obj)) { return true; }
+            if (obj.GetType() != this.GetType()) { return false; }
             return Equals((ContentPath)obj);
         }
 
@@ -146,8 +151,8 @@ namespace Barotrauma
             return HashCode.Combine(RawValue, ContentPackage, cachedValue, cachedFullPath);
         }
 
-        public bool IsNullOrEmpty() => string.IsNullOrEmpty(Value);
-        public bool IsNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
+        public bool IsPathNullOrEmpty() => string.IsNullOrEmpty(Value);
+        public bool IsPathNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
 
         public bool EndsWith(string suffix) => Value.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
         

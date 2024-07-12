@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using System.Linq;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -96,11 +95,16 @@ namespace Barotrauma.Items.Components
             if (selectedEffect != null)
             {
                 targetCharacter = character;
-                ApplyStatusEffects(ActionType.OnWearing, 1.0f);
+                ApplyStatusEffects(ActionType.OnWearing, 1.0f, targetCharacter);
                 float selectedEffectStrength = GetCombinedEffectStrength();
                 character.CharacterHealth.ApplyAffliction(null, selectedEffect.Instantiate(selectedEffectStrength));
                 var affliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
-                if (affliction != null) { affliction.Strength = selectedEffectStrength; }
+                if (affliction != null) 
+                {
+                    affliction.Strength = selectedEffectStrength;
+                    //force strength to the correct value to bypass any clamping e.g. AfflictionHusk might be doing
+                    affliction.SetStrength(selectedEffectStrength);
+                }
 #if SERVER
                 item.CreateServerEvent(this);
 #endif      
@@ -110,7 +114,12 @@ namespace Barotrauma.Items.Components
                 float selectedTaintedEffectStrength = GetCombinedTaintedEffectStrength();
                 character.CharacterHealth.ApplyAffliction(null, selectedTaintedEffect.Instantiate(selectedTaintedEffectStrength));
                 var affliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
-                if (affliction != null) { affliction.Strength = selectedTaintedEffectStrength; }
+                if (affliction != null) 
+                { 
+                    affliction.Strength = selectedTaintedEffectStrength;
+                    //force strength to the correct value to bypass any clamping e.g. AfflictionHusk might be doing
+                    affliction.SetStrength(selectedTaintedEffectStrength);
+                }
                 targetCharacter = character;
 #if SERVER
                 item.CreateServerEvent(this);
@@ -127,7 +136,7 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
             if (targetCharacter != null)
             {
-                var rootContainer = item.GetRootContainer();
+                var rootContainer = item.RootContainer;
                 if (!targetCharacter.HasEquippedItem(item) && 
                     (rootContainer == null || !targetCharacter.HasEquippedItem(rootContainer) || !targetCharacter.Inventory.IsInLimbSlot(rootContainer, InvSlotType.HealthInterface)))
                 {
@@ -159,8 +168,8 @@ namespace Barotrauma.Items.Components
             conditionIncrease += user?.GetStatValue(StatTypes.GeneticMaterialRefineBonus) ?? 0.0f;
             if (item.Prefab == otherGeneticMaterial.item.Prefab)
             {
+                float taintedProbability = GetTaintedProbabilityOnRefine(otherGeneticMaterial, user);
                 item.Condition = Math.Max(item.Condition, otherGeneticMaterial.item.Condition) + conditionIncrease;
-                float taintedProbability = GetTaintedProbabilityOnRefine(user);
                 if (taintedProbability >= Rand.Range(0.0f, 1.0f))
                 {
                     MakeTainted();
@@ -212,15 +221,15 @@ namespace Barotrauma.Items.Components
             return taintedEffectStrength;
         }
 
-        private float GetTaintedProbabilityOnRefine(Character user)
+        private float GetTaintedProbabilityOnRefine(GeneticMaterial otherGeneticMaterial, Character user)
         {
             if (user == null) { return 1.0f; }
-            float probability = MathHelper.Lerp(0.0f, 0.99f, item.Condition / 100.0f);
+            float probability = MathHelper.Lerp(0.0f, 0.99f, Math.Max(item.Condition, otherGeneticMaterial.Item.Condition) / 100.0f);
             probability *= MathHelper.Lerp(1.0f, 0.25f, DegreeOfSuccess(user));
             return MathHelper.Clamp(probability, 0.0f, 1.0f);
         }
 
-        private float GetTaintedProbabilityOnCombine(Character user)
+        private static float GetTaintedProbabilityOnCombine(Character user)
         {
             if (user == null) { return 1.0f; }
             float probability = 1.0f - user.GetStatValue(StatTypes.GeneticMaterialTaintedProbabilityReductionOnCombine);

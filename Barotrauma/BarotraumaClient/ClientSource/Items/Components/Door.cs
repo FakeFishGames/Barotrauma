@@ -75,6 +75,7 @@ namespace Barotrauma.Items.Components
         private void UpdateConvexHulls()
         {
             if (item.Removed) { return; }
+            if (doorSprite == null) { return; }
 
             doorRect = new Rectangle(
                 item.Rect.Center.X - (int)(doorSprite.size.X / 2 * item.Scale),
@@ -83,7 +84,7 @@ namespace Barotrauma.Items.Components
                 (int)(doorSprite.size.Y * item.Scale));
 
             Rectangle rect = doorRect;
-            if (IsHorizontal)
+            if (IsConvexHullHorizontal)
             {
                 rect.Width = (int)(rect.Width * (1.0f - openState));
             }
@@ -92,12 +93,9 @@ namespace Barotrauma.Items.Components
                 rect.Height = (int)(rect.Height * (1.0f - openState));
             }
 
-            //only merge the door's convex hull with overlapping wall segments if it's fully open or fully closed
-            //it's the heaviest part of changing the convex hull, and doesn't need to be done while the door is still in motion
-            bool mergeOverlappingSegments = openState <= 0.0f || openState >= 1.0f;
             if (Window.Height > 0 && Window.Width > 0)
             {
-                if (IsHorizontal)
+                if (IsConvexHullHorizontal)
                 {
                     rect.Width = (int)(Window.X * item.Scale);
                     rect.X -= (int)(doorRect.Width * openState);
@@ -117,7 +115,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
+                            SetVertices(convexHull2, rect2);
                         }
                     }
                 }
@@ -141,7 +139,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
+                            SetVertices(convexHull2, rect2);
                         }
                     }
                 }
@@ -156,10 +154,22 @@ namespace Barotrauma.Items.Components
             else
             {
                 convexHull.Enabled = true;
-                convexHull.SetVertices(GetConvexHullCorners(rect), mergeOverlappingSegments);
+                SetVertices(convexHull, rect);
             }
         }
 
+
+        private void SetVertices(ConvexHull convexHull, Rectangle rect)
+        {
+            var verts = GetConvexHullCorners(rect);
+            Vector2 center = (verts[0] + verts[2]) / 2;
+            convexHull.SetVertices(
+                verts,
+                IsConvexHullHorizontal ? 
+                    new Vector2[] { new Vector2(verts[0].X, center.Y), new Vector2(verts[2].X, center.Y) } :
+                    new Vector2[] { new Vector2(center.X, verts[0].Y), new Vector2(center.X, verts[2].Y) });
+            convexHull.MaxMergeLosVerticesDist = 35.0f;
+        }
 
         partial void UpdateProjSpecific(float deltaTime)
         {
@@ -176,9 +186,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
-            Color color = item.GetSpriteColor(withHighlight: true);
+            Color color = overrideColor ?? item.GetSpriteColor(withHighlight: true);
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
@@ -193,7 +203,7 @@ namespace Barotrauma.Items.Components
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,
-                    weldSpritePos, item.SpriteColor * (stuck / 100.0f), scale: item.Scale);
+                    weldSpritePos, overrideColor ?? (item.SpriteColor * (stuck / 100.0f)), scale: item.Scale);
             }
 
             if (openState >= 1.0f) { return; }
@@ -295,6 +305,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                bool stateChanged = open != isOpen;
                 isOpen = open;
                 if (!isNetworkMessage || open != PredictedState)
                 {
@@ -304,6 +315,11 @@ namespace Barotrauma.Items.Components
                         PlayInteractionSound();
                     }
                     if (isOpen) { stuck = MathHelper.Clamp(stuck - StuckReductionOnOpen, 0.0f, 100.0f); }
+                }
+                if (stateChanged)
+                {
+                    ActionType actionType = open ? ActionType.OnOpen : ActionType.OnClose;
+                    item.ApplyStatusEffects(actionType, deltaTime: 1.0f);
                 }
             }
             

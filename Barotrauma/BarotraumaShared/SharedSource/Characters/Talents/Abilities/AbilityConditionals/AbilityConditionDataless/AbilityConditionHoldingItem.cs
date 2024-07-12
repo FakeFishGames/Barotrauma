@@ -16,7 +16,7 @@ internal sealed class AbilityConditionHoldingItem : AbilityConditionDataless
     {
         if (tags.Count is 0)
         {
-            return HasItemInHand(character, null);
+            return HasItemInHand(character, Identifier.Empty);
         }
 
         foreach (Identifier tag in tags)
@@ -26,9 +26,9 @@ internal sealed class AbilityConditionHoldingItem : AbilityConditionDataless
 
         return false;
 
-        static bool HasItemInHand(Character character, Identifier? tagOrIdentifier) =>
-            character.GetEquippedItem(tagOrIdentifier?.Value, InvSlotType.RightHand) is not null ||
-            character.GetEquippedItem(tagOrIdentifier?.Value, InvSlotType.LeftHand) is not null;
+        static bool HasItemInHand(Character character, Identifier tagOrIdentifier) =>
+            character.GetEquippedItem(tagOrIdentifier, InvSlotType.RightHand) is not null ||
+            character.GetEquippedItem(tagOrIdentifier, InvSlotType.LeftHand) is not null;
 
     }
 }

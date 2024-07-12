@@ -1,12 +1,10 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -56,12 +54,16 @@ namespace Barotrauma
                 return null;
             }
 
-            var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) }, style: "ListBoxElement")
+            var saveFrame = new GUIFrame(
+                new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) },
+                style: "ListBoxElement")
             {
                 UserData = saveInfo
             };
 
-            var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), Path.GetFileNameWithoutExtension(saveInfo.FilePath), 
+            var nameText = new GUITextBlock(
+                new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform),
+                Path.GetFileNameWithoutExtension(saveInfo.FilePath), 
                 textColor: GUIStyle.TextColorBright)
             {
                 CanBeFocused = false
@@ -79,8 +81,10 @@ namespace Barotrauma
             prevSaveFiles ??= new List<CampaignMode.SaveInfo>();
             prevSaveFiles.Add(saveInfo);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                text: saveInfo.SubmarineName, font: GUIStyle.SmallFont)
+            new GUITextBlock(
+                new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
+                text: saveInfo.SubmarineName,
+                font: GUIStyle.SmallFont)
             {
                 CanBeFocused = false,
                 UserData = saveInfo.FilePath
@@ -91,8 +95,11 @@ namespace Barotrauma
             {
                 saveTimeStr = time.ToLocalUserString();
             }
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
-                text: saveTimeStr, textAlignment: Alignment.Right, font: GUIStyle.SmallFont)
+            new GUITextBlock(
+                new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
+                text: saveTimeStr,
+                textAlignment: Alignment.Right,
+                font: GUIStyle.SmallFont)
             {
                 CanBeFocused = false,
                 UserData = saveInfo.FilePath
@@ -127,9 +134,19 @@ namespace Barotrauma
             public SettingValue<bool> TutorialEnabled;
             public SettingValue<bool> RadiationEnabled;
             public SettingValue<int> MaxMissionCount;
-            public SettingValue<StartingBalanceAmount> StartingFunds;
-            public SettingValue<GameDifficulty> Difficulty;
+            public SettingValue<StartingBalanceAmountOption> StartingFunds;
+            public SettingValue<WorldHostilityOption> WorldHostility;
             public SettingValue<Identifier> StartItemSet;
+            public SettingValue<float> CrewVitalityMultiplier;
+            public SettingValue<float> NonCrewVitalityMultiplier;
+            public SettingValue<float> OxygenMultiplier;
+            public SettingValue<float> FuelMultiplier;
+            public SettingValue<float> MissionRewardMultiplier;
+            public SettingValue<float> ShopPriceMultiplier;
+            public SettingValue<float> ShipyardPriceMultiplier;
+            public SettingValue<float> RepairFailMultiplier;
+            public SettingValue<PatdownProbabilityOption> PatdownProbability;
+            public SettingValue<bool> ShowHuskWarning;
 
             public readonly CampaignSettings CreateSettings()
             {
@@ -140,8 +157,18 @@ namespace Barotrauma
                     RadiationEnabled = RadiationEnabled.GetValue(),
                     MaxMissionCount = MaxMissionCount.GetValue(),
                     StartingBalanceAmount = StartingFunds.GetValue(),
-                    Difficulty = Difficulty.GetValue(),
-                    StartItemSet = StartItemSet.GetValue()
+                    WorldHostility = WorldHostility.GetValue(),
+                    StartItemSet = StartItemSet.GetValue(),
+                    CrewVitalityMultiplier = CrewVitalityMultiplier.GetValue(),
+                    NonCrewVitalityMultiplier = NonCrewVitalityMultiplier.GetValue(),
+                    OxygenMultiplier = OxygenMultiplier.GetValue(),
+                    FuelMultiplier = FuelMultiplier.GetValue(),
+                    MissionRewardMultiplier = MissionRewardMultiplier.GetValue(),
+                    ShopPriceMultiplier = ShopPriceMultiplier.GetValue(),
+                    ShipyardPriceMultiplier = ShipyardPriceMultiplier.GetValue(),
+                    RepairFailMultiplier = RepairFailMultiplier.GetValue(),
+                    PatdownProbability = PatdownProbability.GetValue(),
+                    ShowHuskWarning = ShowHuskWarning.GetValue(),
                 };
             }
         }
@@ -188,9 +215,16 @@ namespace Barotrauma
 
             bool loadingPreset = false;
 
-            GUILayoutGroup presetDropdownLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, verticalSize), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), presetDropdownLayout.RectTransform), TextManager.Get("campaignsettingpreset"));
-            GUIDropDown presetDropdown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), presetDropdownLayout.RectTransform), elementCount: CampaignModePresets.List.Length + 1);
+            GUILayoutGroup presetDropdownLayout = new GUILayoutGroup(
+                new RectTransform(new Vector2(1f, verticalSize), parent.RectTransform),
+                isHorizontal: true,
+                childAnchor: Anchor.CenterLeft);
+            new GUITextBlock(
+                new RectTransform(new Vector2(0.5f, 1f), presetDropdownLayout.RectTransform),
+                TextManager.Get("campaignsettingpreset"));
+            GUIDropDown presetDropdown = new GUIDropDown(
+                new RectTransform(new Vector2(0.5f, 1f), presetDropdownLayout.RectTransform),
+                elementCount: CampaignModePresets.List.Length + 1);
             presetDropdown.AddItem(TextManager.Get("karmapreset.custom"), null);
             presetDropdown.Select(0);
 
@@ -216,37 +250,235 @@ namespace Barotrauma
                 Spacing = GUI.IntScale(5)
             };
 
-            SettingValue<bool> tutorialEnabled = isSinglePlayer ?
-                CreateTickbox(settingsList.Content, TextManager.Get("CampaignOption.EnableTutorial"), TextManager.Get("campaignoption.enabletutorial.tooltip"), prevSettings.TutorialEnabled, verticalSize, OnValuesChanged) :
-                new SettingValue<bool>(static () => false, static _ => { });
-            SettingValue<bool> radiationEnabled = CreateTickbox(settingsList.Content, TextManager.Get("CampaignOption.EnableRadiation"), TextManager.Get("campaignoption.enableradiation.tooltip"), prevSettings.RadiationEnabled, verticalSize, OnValuesChanged);
+            // GENERAL CAMPAIGN SETTINGS:
 
-            ImmutableArray<SettingCarouselElement<Identifier>> startingSetOptions = StartItemSet.Sets.OrderBy(s => s.Order).Select(set => new SettingCarouselElement<Identifier>(set.Identifier, $"startitemset.{set.Identifier}")).ToImmutableArray();
-            SettingCarouselElement<Identifier> prevStartingSet = startingSetOptions.FirstOrNull(element => element.Value == prevSettings.StartItemSet) ?? startingSetOptions[1];
-            SettingValue<Identifier> startingSetInput = CreateSelectionCarousel(settingsList.Content, TextManager.Get("startitemset"), TextManager.Get("startitemsettooltip"), prevStartingSet, verticalSize, startingSetOptions, OnValuesChanged);
+            NetLobbyScreen.CreateSubHeader("campaignsettingcategories.general", settingsList.Content);
 
-            ImmutableArray<SettingCarouselElement<StartingBalanceAmount>> fundOptions = ImmutableArray.Create(
-                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Low, "startingfunds.low"),
-                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Medium, "startingfunds.medium"),
-                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.High, "startingfunds.high")
+            // Tutorial
+            SettingValue<bool> tutorialEnabled = isSinglePlayer
+                ? CreateTickbox(
+                    settingsList.Content,
+                    TextManager.Get("CampaignOption.EnableTutorial"),
+                    TextManager.Get("campaignoption.enabletutorial.tooltip"),
+                    prevSettings.TutorialEnabled,
+                    verticalSize,
+                    OnValuesChanged)
+                : new SettingValue<bool>(static () => false, static _ => { });
+
+            // Jovian radiation
+            SettingValue<bool> radiationEnabled = CreateTickbox(
+                settingsList.Content,
+                TextManager.Get("CampaignOption.EnableRadiation"),
+                TextManager.Get("campaignoption.enableradiation.tooltip"),
+                prevSettings.RadiationEnabled,
+                verticalSize,
+                OnValuesChanged);
+
+            // RESOURCE-RELATED CAMPAIGN SETTINGS:
+
+            NetLobbyScreen.CreateSubHeader("campaignsettingcategories.resources", settingsList.Content);
+
+            // Starting set
+            ImmutableArray<SettingCarouselElement<Identifier>> startingSetOptions =
+                StartItemSet.Sets
+                    .OrderBy(s => s.Order)
+                    .Select(set => new SettingCarouselElement<Identifier>(
+                        set.Identifier,
+                        $"startitemset.{set.Identifier}"))
+                    .ToImmutableArray();
+            SettingCarouselElement<Identifier> prevStartingSet = startingSetOptions
+                .FirstOrNull(element => element.Value == prevSettings.StartItemSet)
+                ?? startingSetOptions[1];
+            SettingValue<Identifier> startingSetInput = CreateSelectionCarousel(
+                settingsList.Content,
+                TextManager.Get("startitemset"),
+                TextManager.Get("startitemsettooltip"),
+                prevStartingSet,
+                verticalSize,
+                startingSetOptions,
+                OnValuesChanged);
+
+            // Starting money
+            ImmutableArray<SettingCarouselElement<StartingBalanceAmountOption>> fundOptions = ImmutableArray.Create(
+                new SettingCarouselElement<StartingBalanceAmountOption>(StartingBalanceAmountOption.Low, "startingfunds.low"),
+                new SettingCarouselElement<StartingBalanceAmountOption>(StartingBalanceAmountOption.Medium, "startingfunds.medium"),
+                new SettingCarouselElement<StartingBalanceAmountOption>(StartingBalanceAmountOption.High, "startingfunds.high")
             );
+            SettingCarouselElement<StartingBalanceAmountOption> prevStartingFund = fundOptions
+                .FirstOrNull(element => element.Value == prevSettings.StartingBalanceAmount)
+                ?? fundOptions[1];
+            SettingValue<StartingBalanceAmountOption> startingFundsInput = CreateSelectionCarousel(
+                settingsList.Content,
+                TextManager.Get("startingfundsdescription"),
+                TextManager.Get("startingfundstooltip"),
+                prevStartingFund,
+                verticalSize,
+                fundOptions,
+                OnValuesChanged);
 
-            SettingCarouselElement<StartingBalanceAmount> prevStartingFund = fundOptions.FirstOrNull(element => element.Value == prevSettings.StartingBalanceAmount) ?? fundOptions[1];
-            SettingValue<StartingBalanceAmount> startingFundsInput = CreateSelectionCarousel(settingsList.Content, TextManager.Get("startingfundsdescription"), TextManager.Get("startingfundstooltip"), prevStartingFund, verticalSize, fundOptions, OnValuesChanged);
-
-            ImmutableArray<SettingCarouselElement<GameDifficulty>> difficultyOptions = ImmutableArray.Create(
-                new SettingCarouselElement<GameDifficulty>(GameDifficulty.Easy, "difficulty.easy"),
-                new SettingCarouselElement<GameDifficulty>(GameDifficulty.Medium, "difficulty.medium"),
-                new SettingCarouselElement<GameDifficulty>(GameDifficulty.Hard, "difficulty.hard"),
-                new SettingCarouselElement<GameDifficulty>(GameDifficulty.Hellish, "difficulty.hellish", isHidden: true)
-            );
-
-            SettingCarouselElement<GameDifficulty> prevDifficulty = difficultyOptions.FirstOrNull(element => element.Value == prevSettings.Difficulty) ?? difficultyOptions[1];
-            SettingValue<GameDifficulty> difficultyInput = CreateSelectionCarousel(settingsList.Content, TextManager.Get("leveldifficulty"), TextManager.Get("leveldifficultyexplanation"), prevDifficulty, verticalSize, difficultyOptions, OnValuesChanged);
-
-            SettingValue<int> maxMissionCountInput = CreateGUINumberInputCarousel(settingsList.Content, TextManager.Get("maxmissioncount"), TextManager.Get("maxmissioncounttooltip"),
+            // Max mission count
+            SettingValue<int> maxMissionCountInput = CreateGUIIntegerInputCarousel(
+                settingsList.Content,
+                TextManager.Get("maxmissioncount"),
+                TextManager.Get("maxmissioncounttooltip"),
                 prevSettings.MaxMissionCount,
-                valueStep: 1, minValue: CampaignSettings.MinMissionCountLimit, maxValue: CampaignSettings.MaxMissionCountLimit,
+                valueStep: 1,
+                minValue: CampaignSettings.MinMissionCountLimit,
+                maxValue: CampaignSettings.MaxMissionCountLimit,
+                verticalSize,
+                OnValuesChanged);
+
+            // Mission reward multiplier
+            CampaignSettings.MultiplierSettings rewardMultiplierSettings = CampaignSettings.GetMultiplierSettings("MissionRewardMultiplier");
+            SettingValue<float> rewardMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.missionrewardmultiplier"),
+                TextManager.Get("campaignoption.missionrewardmultiplier.tooltip"),
+                prevSettings.MissionRewardMultiplier,
+                valueStep: rewardMultiplierSettings.Step,
+                minValue: rewardMultiplierSettings.Min,
+                maxValue: rewardMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            // Shop buying prices multiplier
+            CampaignSettings.MultiplierSettings shopPriceMultiplierSettings = CampaignSettings.GetMultiplierSettings("ShopPriceMultiplier");
+            SettingValue<float> shopPriceMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.shoppricemultiplier"),
+                TextManager.Get("campaignoption.shoppricemultiplier.tooltip"),
+                prevSettings.ShopPriceMultiplier,
+                valueStep: shopPriceMultiplierSettings.Step,
+                minValue: shopPriceMultiplierSettings.Min,
+                maxValue: shopPriceMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            // Shipyard prices multiplier
+            CampaignSettings.MultiplierSettings shipyardPriceMultiplierSettings = CampaignSettings.GetMultiplierSettings("ShipyardPriceMultiplier");
+            SettingValue<float> shipyardPriceMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.shipyardpricemultiplier"),
+                TextManager.Get("campaignoption.shipyardpricemultiplier.tooltip"),
+                prevSettings.ShipyardPriceMultiplier,
+                valueStep: shipyardPriceMultiplierSettings.Step,
+                minValue: shipyardPriceMultiplierSettings.Min,
+                maxValue: shipyardPriceMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            // OVERALL HAZARD-RELATED CAMPAIGN SETTINGS:
+
+            NetLobbyScreen.CreateSubHeader("campaignsettingcategories.hazards", settingsList.Content);
+
+            // World hostility (used to be "Difficulty" or level difficulty)
+            ImmutableArray<SettingCarouselElement<WorldHostilityOption>> hostilityOptions = ImmutableArray.Create(
+                new SettingCarouselElement<WorldHostilityOption>(WorldHostilityOption.Low, "worldhostility.low"),
+                new SettingCarouselElement<WorldHostilityOption>(WorldHostilityOption.Medium, "worldhostility.medium"),
+                new SettingCarouselElement<WorldHostilityOption>(WorldHostilityOption.High, "worldhostility.high"),
+                new SettingCarouselElement<WorldHostilityOption>(WorldHostilityOption.Hellish, "worldhostility.hellish", isHidden: true)
+            );
+            SettingCarouselElement<WorldHostilityOption> prevHostility = hostilityOptions
+                .FirstOrNull(element => element.Value == prevSettings.WorldHostility)
+                ?? hostilityOptions[1];
+            SettingValue<WorldHostilityOption> hostilityInput = CreateSelectionCarousel(
+                settingsList.Content,
+                TextManager.Get("worldhostility"),
+                TextManager.Get("worldhostility.tooltip"),
+                prevHostility,
+                verticalSize,
+                hostilityOptions,
+                OnValuesChanged);
+
+            // Crew max vitality multiplier
+            CampaignSettings.MultiplierSettings crewVitalityMultiplierSettings = CampaignSettings.GetMultiplierSettings("CrewVitalityMultiplier");
+            SettingValue<float> crewVitalityMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.maxvitalitymultipliercrew"),
+                TextManager.Get("campaignoption.maxvitalitymultipliercrew.tooltip"),
+                prevSettings.CrewVitalityMultiplier,
+                valueStep: crewVitalityMultiplierSettings.Step,
+                minValue: crewVitalityMultiplierSettings.Min,
+                maxValue: crewVitalityMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            // Non-crew max vitality multiplier
+            CampaignSettings.MultiplierSettings nonCrewVitalityMultiplierSettings = CampaignSettings.GetMultiplierSettings("NonCrewVitalityMultiplier");
+            SettingValue<float> nonCrewVitalityMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.maxvitalitymultipliernoncrew"),
+                TextManager.Get("campaignoption.maxvitalitymultipliernoncrew.tooltip"),
+                prevSettings.NonCrewVitalityMultiplier,
+                valueStep: nonCrewVitalityMultiplierSettings.Step,
+                minValue: nonCrewVitalityMultiplierSettings.Min,
+                maxValue: nonCrewVitalityMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            // Oxygen source multiplier
+            CampaignSettings.MultiplierSettings oxygenSourceMultiplierSettings = CampaignSettings.GetMultiplierSettings("OxygenMultiplier");
+            SettingValue<float> oxygenMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.oxygensourcemultiplier"),
+                TextManager.Get("campaignoption.oxygensourcemultiplier.tooltip"),
+                prevSettings.OxygenMultiplier,
+                valueStep: oxygenSourceMultiplierSettings.Step,
+                minValue: oxygenSourceMultiplierSettings.Min,
+                maxValue: oxygenSourceMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            // Reactor fuel multiplier
+            CampaignSettings.MultiplierSettings reactorFuelMultiplierSettings = CampaignSettings.GetMultiplierSettings("FuelMultiplier");
+            SettingValue<float> fuelMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.reactorfuelmultiplier"),
+                TextManager.Get("campaignoption.reactorfuelmultiplier.tooltip"),
+                prevSettings.FuelMultiplier,
+                valueStep: reactorFuelMultiplierSettings.Step,
+                minValue: reactorFuelMultiplierSettings.Min,
+                maxValue: reactorFuelMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            // Repair fail effect multiplier
+            CampaignSettings.MultiplierSettings repairFailMultiplierSettings = CampaignSettings.GetMultiplierSettings("RepairFailMultiplier");
+            SettingValue<float> repairFailMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.repairfailmultiplier"),
+                TextManager.Get("campaignoption.repairfailmultiplier.tooltip"),
+                prevSettings.RepairFailMultiplier,
+                valueStep: repairFailMultiplierSettings.Step,
+                minValue: repairFailMultiplierSettings.Min,
+                maxValue: repairFailMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
+            ImmutableArray<SettingCarouselElement<PatdownProbabilityOption>> patdownProbabilityPresets = ImmutableArray.Create(
+                new SettingCarouselElement<PatdownProbabilityOption>(PatdownProbabilityOption.Off, "probability.off"),
+                new SettingCarouselElement<PatdownProbabilityOption>(PatdownProbabilityOption.Low, "probability.low"),
+                new SettingCarouselElement<PatdownProbabilityOption>(PatdownProbabilityOption.Medium, "probability.medium"),
+                new SettingCarouselElement<PatdownProbabilityOption>(PatdownProbabilityOption.High, "probability.high")
+            );
+            SettingCarouselElement<PatdownProbabilityOption> prevPatdownProbability = patdownProbabilityPresets
+                .FirstOrNull(element => element.Value == prevSettings.PatdownProbability)
+                ?? patdownProbabilityPresets[1]; // middle option
+            SettingValue<PatdownProbabilityOption> patdownProbability = CreateSelectionCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.patdownprobability"),
+                TextManager.Get("campaignoption.patdownprobability.tooltip"),
+                prevPatdownProbability,
+                verticalSize,
+                patdownProbabilityPresets,
+                OnValuesChanged);
+
+            // Show initial husk warning
+            SettingValue<bool> huskWarning = CreateTickbox(
+                settingsList.Content,
+                TextManager.Get("campaignoption.showhuskwarning"),
+                TextManager.Get("campaignoption.showhuskwarning.tooltip"),
+                prevSettings.ShowHuskWarning,
                 verticalSize,
                 OnValuesChanged);
 
@@ -259,8 +491,18 @@ namespace Barotrauma
                 radiationEnabled.SetValue(settings.RadiationEnabled);
                 maxMissionCountInput.SetValue(settings.MaxMissionCount);
                 startingFundsInput.SetValue(settings.StartingBalanceAmount);
-                difficultyInput.SetValue(settings.Difficulty);
+                hostilityInput.SetValue(settings.WorldHostility);
                 startingSetInput.SetValue(settings.StartItemSet);
+                crewVitalityMultiplier.SetValue(settings.CrewVitalityMultiplier);
+                nonCrewVitalityMultiplier.SetValue(settings.NonCrewVitalityMultiplier);
+                oxygenMultiplier.SetValue(settings.OxygenMultiplier);
+                fuelMultiplier.SetValue(settings.FuelMultiplier);
+                rewardMultiplier.SetValue(settings.MissionRewardMultiplier);
+                shopPriceMultiplier.SetValue(settings.ShopPriceMultiplier);
+                shipyardPriceMultiplier.SetValue(settings.ShipyardPriceMultiplier);
+                repairFailMultiplier.SetValue(settings.RepairFailMultiplier);
+                patdownProbability.SetValue(settings.PatdownProbability);
+                huskWarning.SetValue(settings.ShowHuskWarning);
                 loadingPreset = false;
                 return true;
             };
@@ -268,7 +510,7 @@ namespace Barotrauma
             void OnValuesChanged()
             {
                 if (loadingPreset) { return; }
-                presetDropdown.Select(0);
+                presetDropdown.Select(0); // Switch to the Custom preset if this is an actual user-made change
             }
 
             return new CampaignSettingElements
@@ -278,70 +520,178 @@ namespace Barotrauma
                 RadiationEnabled = radiationEnabled,
                 MaxMissionCount = maxMissionCountInput,
                 StartingFunds = startingFundsInput,
-                Difficulty = difficultyInput,
-                StartItemSet = startingSetInput
+                WorldHostility = hostilityInput,
+                StartItemSet = startingSetInput,
+                CrewVitalityMultiplier = crewVitalityMultiplier,
+                NonCrewVitalityMultiplier = nonCrewVitalityMultiplier,
+                OxygenMultiplier = oxygenMultiplier,
+                FuelMultiplier = fuelMultiplier,
+                MissionRewardMultiplier = rewardMultiplier,
+                ShopPriceMultiplier = shopPriceMultiplier,
+                ShipyardPriceMultiplier = shipyardPriceMultiplier,
+                RepairFailMultiplier = repairFailMultiplier,
+                PatdownProbability = patdownProbability,
+                ShowHuskWarning = huskWarning,
             };
 
-            // Create a number input with plus and minus buttons because for some reason the default GUINumberInput buttons don't work when in a GUIMessageBox
-            static SettingValue<int> CreateGUINumberInputCarousel(GUIComponent parent, LocalizedString description, LocalizedString tooltip, int defaultValue, int valueStep, int minValue, int maxValue, float verticalSize, Action onChanged)
+            // Create a number input with plus and minus buttons because for some reason
+            // the default GUINumberInput buttons don't work when in a GUIMessageBox
+            static SettingValue<int> CreateGUIIntegerInputCarousel(
+                GUIComponent parent,
+                LocalizedString description,
+                LocalizedString tooltip,
+                int defaultValue,
+                int valueStep,
+                int minValue,
+                int maxValue,
+                float verticalSize,
+                Action onChanged)
             {
-                GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, horizontalSize: 0.55f, verticalSize: verticalSize);
+                GUILayoutGroup inputContainer = CreateSettingBase(
+                    parent,
+                    description,
+                    tooltip,
+                    horizontalSize: 0.55f,
+                    verticalSize: verticalSize);
 
-                GUIButton minusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center)
-                {
-                    ClickSound = GUISoundType.Decrease,
-                    UserData = -valueStep
-                };
-                GUINumberInput numberInput = new GUINumberInput(new RectTransform(Vector2.One, inputContainer.RectTransform, Anchor.Center), NumberType.Int, textAlignment: Alignment.Center, style: "GUITextBox",
-                    hidePlusMinusButtons: true)
+                GUIButton minusButton = new GUIButton(
+                    new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                    style: "GUIMinusButton",
+                    textAlignment: Alignment.Center);
+                RectTransform numberInputRect = new(Vector2.One, inputContainer.RectTransform, Anchor.Center);
+                GUIButton plusButton = new GUIButton(
+                    new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                    style: "GUIPlusButton",
+                    textAlignment: Alignment.Center);
+                GUINumberInput numberInput = new GUINumberInput(
+                    numberInputRect,
+                    NumberType.Int,
+                    textAlignment: Alignment.Center,
+                    style: "GUITextBox",
+                    buttonVisibility: GUINumberInput.ButtonVisibility.ForceVisible,
+                    customPlusMinusButtons: (plusButton, minusButton))
                 {
                     IntValue = defaultValue,
                     MinValueInt = minValue,
-                    MaxValueInt = maxValue
+                    MaxValueInt = maxValue,
+                    ValueStep = valueStep,
+                    ToolTip = tooltip
                 };
                 inputContainer.RectTransform.Parent.MinSize = new Point(0, numberInput.RectTransform.MinSize.Y);
-                GUIButton plusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
-                {
-                    ClickSound = GUISoundType.Increase,
-                    UserData = valueStep
-                };
-
-                minusButton.OnClicked = plusButton.OnClicked = ChangeValue;
 
                 numberInput.OnValueChanged += _ => onChanged();
 
-                bool ChangeValue(GUIButton btn, object userData)
-                {
-                    if (userData is not int change) { return false; }
-
-                    numberInput.IntValue += change;
-                    return true;
-                }
-
-                return new SettingValue<int>(() => numberInput.IntValue, i => numberInput.IntValue = i);
+                return new SettingValue<int>(
+                    () => numberInput.IntValue,
+                    i => numberInput.IntValue = i);
             }
 
-            static SettingValue<T> CreateSelectionCarousel<T>(GUIComponent parent, LocalizedString description, LocalizedString tooltip, SettingCarouselElement<T> defaultValue, float verticalSize,
-                                                               ImmutableArray<SettingCarouselElement<T>> options, Action onChanged)
+            static SettingValue<float> CreateGUIFloatInputCarousel(
+                GUIComponent parent,
+                LocalizedString description,
+                LocalizedString tooltip,
+                float defaultValue,
+                float valueStep,
+                float minValue,
+                float maxValue,
+                float verticalSize,
+                Action onChanged)
             {
-                GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, horizontalSize: 0.55f, verticalSize: verticalSize);
+                GUILayoutGroup inputContainer = CreateSettingBase(
+                    parent,
+                    description,
+                    tooltip,
+                    horizontalSize: 0.55f,
+                    verticalSize: verticalSize);
 
-                GUIButton minusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleLeft", textAlignment: Alignment.Center) { UserData = -1 };
-                GUIFrame inputFrame = new GUIFrame(new RectTransform(Vector2.One, inputContainer.RectTransform), style: null);
-                GUINumberInput numberInput = new GUINumberInput(new RectTransform(Vector2.One, inputFrame.RectTransform, Anchor.Center), NumberType.Int, textAlignment: Alignment.Center, style: "GUITextBox", hidePlusMinusButtons: true)
+                GUIButton minusButton = new GUIButton(
+                    new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                    style: "GUIMinusButton",
+                    textAlignment: Alignment.Center);
+                RectTransform numberInputRect = new(Vector2.One, inputContainer.RectTransform, Anchor.Center);
+                GUIButton plusButton = new GUIButton(
+                    new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                    style: "GUIPlusButton",
+                    textAlignment: Alignment.Center);
+                GUINumberInput numberInput = new GUINumberInput(
+                    numberInputRect,
+                    NumberType.Float,
+                    textAlignment: Alignment.Center,
+                    style: "GUITextBox",
+                    buttonVisibility: GUINumberInput.ButtonVisibility.ForceVisible,
+                    customPlusMinusButtons: (plusButton, minusButton))
+                {
+                    FloatValue = defaultValue,
+                    MinValueFloat = minValue,
+                    MaxValueFloat = maxValue,
+                    ValueStep = valueStep,
+                    ToolTip = tooltip
+                };
+                numberInput.RectTransform.Parent.MinSize = new Point(0, numberInput.RectTransform.MinSize.Y);
+
+                numberInput.OnValueChanged += _ => onChanged();
+
+                return new SettingValue<float>(
+                    () => numberInput.FloatValue,
+                    i => numberInput.FloatValue = (float)Math.Round(i, 1));
+            }
+
+            static SettingValue<T> CreateSelectionCarousel<T>(
+                GUIComponent parent,
+                LocalizedString description,
+                LocalizedString tooltip,
+                SettingCarouselElement<T> defaultValue,
+                float verticalSize,
+                ImmutableArray<SettingCarouselElement<T>> options,
+                Action onChanged)
+            {
+                GUILayoutGroup inputContainer = CreateSettingBase(
+                    parent,
+                    description,
+                    tooltip,
+                    horizontalSize: 0.55f,
+                    verticalSize: verticalSize);
+
+                GUIButton minusButton = new GUIButton(
+                    new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                    style: "GUIButtonToggleLeft",
+                    textAlignment: Alignment.Center)
+                {
+                    UserData = -1
+                };
+                GUIFrame inputFrame = new GUIFrame(
+                    new RectTransform(Vector2.One, inputContainer.RectTransform),
+                    style: null);
+                GUINumberInput numberInput = new GUINumberInput(
+                    new RectTransform(Vector2.One, inputFrame.RectTransform, Anchor.Center),
+                    NumberType.Int,
+                    textAlignment: Alignment.Center,
+                    style: "GUITextBox",
+                    buttonVisibility: GUINumberInput.ButtonVisibility.ForceHidden)
                 {
                     IntValue = options.IndexOf(defaultValue),
                     MinValueInt = 0,
                     MaxValueInt = options.Length,
-                    Visible = false
+                    Visible = false,
+                    ToolTip = tooltip
                 };
                 inputContainer.RectTransform.Parent.MinSize = new Point(0, numberInput.RectTransform.MinSize.Y);
-                GUITextBox inputLabel = new GUITextBox(new RectTransform(Vector2.One, inputFrame.RectTransform, Anchor.Center), text: defaultValue.Label.Value, textAlignment: Alignment.Center, createPenIcon: false)
+                GUITextBox inputLabel = new GUITextBox(
+                    new RectTransform(Vector2.One, inputFrame.RectTransform, Anchor.Center),
+                    text: defaultValue.Label.Value,
+                    textAlignment: Alignment.Center,
+                    createPenIcon: false)
                 {
                     CanBeFocused = false
                 };
 
-                GUIButton plusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleRight", textAlignment: Alignment.Center) { UserData = 1 };
+                GUIButton plusButton = new GUIButton(
+                    new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                    style: "GUIButtonToggleRight",
+                    textAlignment: Alignment.Center)
+                {
+                    UserData = 1
+                };
 
                 minusButton.OnClicked = plusButton.OnClicked = ChangeValue;
 
@@ -381,20 +731,33 @@ namespace Barotrauma
                     inputLabel.Text = options[value].Label.Value;
                 }
 
-                return new SettingValue<T>(() => options[numberInput.IntValue].Value, t => SetValue(options.IndexOf(e => Equals(e.Value, t))));
+                return new SettingValue<T>(
+                    () => options[numberInput.IntValue].Value,
+                    t => SetValue(options.IndexOf(e => Equals(e.Value, t)))
+                );
             }
 
-            static SettingValue<bool> CreateTickbox(GUIComponent parent, LocalizedString description, LocalizedString tooltip, bool defaultValue, float verticalSize, Action onChanged)
+            static SettingValue<bool> CreateTickbox(
+                GUIComponent parent,
+                LocalizedString description,
+                LocalizedString tooltip,
+                bool defaultValue,
+                float verticalSize,
+                Action onChanged)
             {
-                GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, 0.7f, verticalSize);
-                GUILayoutGroup tickboxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform), childAnchor: Anchor.Center);
-                GUITickBox tickBox = new GUITickBox(new RectTransform(Vector2.One, tickboxContainer.RectTransform), string.Empty)
+                GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, 0.625f, verticalSize);
+                GUILayoutGroup tickboxContainer = new GUILayoutGroup(
+                    new RectTransform(new Vector2(0.375f, 1.0f), inputContainer.RectTransform),
+                    childAnchor: Anchor.Center);
+                GUITickBox tickBox = new GUITickBox(
+                    new RectTransform(Vector2.One, tickboxContainer.RectTransform),
+                    string.Empty)
                 {
                     Selected = defaultValue,
                     ToolTip = tooltip
                 };
                 tickBox.Box.IgnoreLayoutGroups = true;
-                tickBox.Box.RectTransform.SetPosition(Anchor.CenterRight);
+                tickBox.Box.RectTransform.SetPosition(Anchor.CenterLeft);
                 inputContainer.RectTransform.Parent.MinSize = new Point(0, tickBox.RectTransform.MinSize.Y);
 
                 tickBox.OnSelected += _ =>
@@ -406,11 +769,29 @@ namespace Barotrauma
                 return new SettingValue<bool>(() => tickBox.Selected, b => tickBox.Selected = b);
             }
 
-            static GUILayoutGroup CreateSettingBase(GUIComponent parent, LocalizedString description, LocalizedString tooltip, float horizontalSize, float verticalSize)
+            static GUILayoutGroup CreateSettingBase(
+                GUIComponent parent,
+                LocalizedString description,
+                LocalizedString tooltip,
+                float horizontalSize,
+                float verticalSize)
             {
-                GUILayoutGroup settingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1f, verticalSize), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-                GUITextBlock descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(horizontalSize, 1f), settingHolder.RectTransform), description, font: parent.Rect.Width < 320 ? GUIStyle.SmallFont : GUIStyle.Font,  wrap: true) { ToolTip = tooltip };
-                GUILayoutGroup inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f - horizontalSize, 0.8f), settingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                GUILayoutGroup settingHolder = new GUILayoutGroup(
+                    new RectTransform(new Vector2(1f, verticalSize), parent.RectTransform),
+                    isHorizontal: true,
+                    childAnchor: Anchor.CenterLeft);
+                GUITextBlock descriptionBlock = new GUITextBlock(
+                    new RectTransform(new Vector2(horizontalSize, 1f), settingHolder.RectTransform),
+                    description,
+                    font: parent.Rect.Width < 320 ? GUIStyle.SmallFont : GUIStyle.Font,
+                    wrap: true)
+                {
+                    ToolTip = tooltip
+                };
+                GUILayoutGroup inputContainer = new GUILayoutGroup(
+                    new RectTransform(new Vector2(1f - horizontalSize, 0.8f), settingHolder.RectTransform),
+                    isHorizontal: true,
+                    childAnchor: Anchor.CenterLeft)
                 {
                     RelativeSpacing = 0.05f,
                     Stretch = true
@@ -421,7 +802,7 @@ namespace Barotrauma
             }
         }
 
-        public abstract void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null);
+        public abstract void CreateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null);
 
         protected bool DeleteSave(GUIButton button, object obj)
         {
@@ -434,7 +815,7 @@ namespace Barotrauma
             {
                 SaveUtil.DeleteSave(saveInfo.FilePath);
                 prevSaveFiles?.RemoveAll(s => s.FilePath == saveInfo.FilePath);
-                UpdateLoadMenu(prevSaveFiles.ToList());
+                CreateLoadMenu(prevSaveFiles.ToList());
                 return true;
             });
 

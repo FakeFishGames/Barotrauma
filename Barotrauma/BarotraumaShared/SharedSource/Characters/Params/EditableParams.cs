@@ -16,6 +16,7 @@ namespace Barotrauma
         public bool IsLoaded { get; protected set; }
         public string Name { get; private set; }
         public string FileName { get; private set; }
+        public string FileNameWithoutExtension { get; private set; }
         public string Folder { get; private set; }
         public ContentPath Path { get; protected set; } = ContentPath.Empty;
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; protected set; }
@@ -71,7 +72,7 @@ namespace Barotrauma
             element ??= MainElement;
             if (element == null)
             {
-                DebugConsole.ThrowError("[EditableParams] The XML element is null!");
+                DebugConsole.ThrowError("[EditableParams] The XML element is null! Failed to save the parameters.");
                 return false;
             }
             SerializableProperty.SerializeProperties(this, element, true);
@@ -82,7 +83,18 @@ namespace Barotrauma
         {
             UpdatePath(file);
             doc = XMLExtensions.TryLoadXml(Path);
-            if (doc == null) { return false; }
+            if (doc == null)
+            {
+                DebugConsole.ThrowError("[EditableParams] The document is null! Failed to load the parameters.",
+                    contentPackage: file.ContentPackage);
+                return false;
+            }
+            if (MainElement == null)
+            {
+                DebugConsole.ThrowError("[EditableParams] The main element is null! Failed to load the parameters.",
+                    contentPackage: file.ContentPackage);
+                return false;
+            }
             IsLoaded = Deserialize(MainElement);
             OriginalElement = new XElement(MainElement).FromPackage(MainElement.ContentPackage);
             return IsLoaded;
@@ -92,8 +104,9 @@ namespace Barotrauma
         {
             Path = fullPath;
             Name = GetName();
-            FileName = System.IO.Path.GetFileName(Path.Value);
-            Folder = System.IO.Path.GetDirectoryName(Path.Value);
+            FileName = Barotrauma.IO.Path.GetFileName(Path.Value);
+            FileNameWithoutExtension = Barotrauma.IO.Path.GetFileNameWithoutExtension(Path.Value);
+            Folder = Barotrauma.IO.Path.GetDirectoryName(Path.Value);
         }
 
         public virtual bool Save(string fileNameWithoutExtension = null, System.Xml.XmlWriterSettings settings = null)

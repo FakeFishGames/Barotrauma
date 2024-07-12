@@ -9,9 +9,9 @@ namespace Barotrauma
     {
         static partial void CreateConsentPrompt()
         {
-            if (consentTextAvailable)
+            if (ConsentTextAvailable)
             {
-                var background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+                var background = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: "GUIBackgroundBlocker");
                 var frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.7f), background.RectTransform, Anchor.Center) { MinSize = new Point(800, 0), MaxSize = new Point(1500, int.MaxValue) });
 
                 var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), frame.RectTransform, Anchor.Center))
@@ -20,8 +20,13 @@ namespace Barotrauma
                     AbsoluteSpacing = GUI.IntScale(15)
                 };
 
+                string consentTextTag = "statisticsconsenttext";
+                if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
+                {
+                    consentTextTag = "statisticsconsenteostext";
+                }
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("statisticsconsentheader"), font: GUIStyle.SubHeadingFont, textColor: Color.White);
-                var mainText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), RichString.Rich(TextManager.Get("statisticsconsenttext")), wrap: true);
+                var mainText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), RichString.Rich(TextManager.Get(consentTextTag)), wrap: true);
 
                 foreach (var data in mainText.RichTextData)
                 {
@@ -30,7 +35,7 @@ namespace Barotrauma
                         Data = data,
                         OnClick = (GUITextBlock component, GUITextBlock.ClickableArea area) =>
                         {
-                            GameMain.ShowOpenUrlInWebBrowserPrompt("https://gameanalytics.com/privacy/");
+                            GameMain.ShowOpenUriPrompt("https://gameanalytics.com/privacy/");
                         }
                     });
                 }
@@ -55,7 +60,8 @@ namespace Barotrauma
                 yesBtn.OnClicked += (btn, userdata) =>
                 {
                     GUIMessageBox.MessageBoxes.Remove(background);
-                    SetConsentInternal(Consent.Yes);
+                    var loadingBox = GUIMessageBox.CreateLoadingBox(TextManager.Get("PleaseWait"));
+                    SetConsentInternal(Consent.Yes, onAnswerSent: loadingBox.Close);
                     return true;
                 };
                 yesBtn.Enabled = false;
@@ -69,14 +75,15 @@ namespace Barotrauma
                     }
                     yield return CoroutineStatus.Success;
                 }
-                
+
                 buttonContainerSpacing(0.2f);
 
                 var noBtn = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform), TextManager.Get("No"));
                 noBtn.OnClicked += (btn, userdata) =>
                 {
                     GUIMessageBox.MessageBoxes.Remove(background);
-                    SetConsent(Consent.No);
+                    var loadingBox = GUIMessageBox.CreateLoadingBox(TextManager.Get("PleaseWait"));
+                    SetConsent(Consent.No, onAnswerSent: loadingBox.Close);
                     return true;
                 };
                 noBtn.Enabled = false;

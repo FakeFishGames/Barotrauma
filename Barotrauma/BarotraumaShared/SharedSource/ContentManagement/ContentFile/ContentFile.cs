@@ -67,6 +67,23 @@ namespace Barotrauma
                 .ToImmutableHashSet();
         }
 
+        public static bool IsLegacyContentType(XElement contentFileElement, ContentPackage package, bool logWarning)
+        {
+            Identifier elemName = contentFileElement.NameAsIdentifier();
+            if (elemName == "TraitorMissions")
+            {
+                if (logWarning)
+                {
+                    DebugConsole.AddWarning(
+                      $"The content type \"TraitorMission\" in content package \"{package.Name}\" is no longer supported." +
+                      $" Traitor missions should be implemented using the scripted event system and the content type TraitorEvents.",
+                      package);
+                }
+                return true;
+            }
+            return false;
+        }
+
         public static Result<ContentFile, ContentPackage.LoadError> CreateFromXElement(ContentPackage contentPackage, XElement element)
         {
             static Result<ContentFile, ContentPackage.LoadError> fail(string error, Exception? exception = null)

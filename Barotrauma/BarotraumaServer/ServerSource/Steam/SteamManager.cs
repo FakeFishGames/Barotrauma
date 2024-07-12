@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
 using Barotrauma.Networking;
 
 namespace Barotrauma.Steam
@@ -30,8 +30,6 @@ namespace Barotrauma.Steam
 
             RefreshServerDetails(server);
 
-            server.ServerPeer.InitializeSteamServerCallbacks();
-
             Steamworks.SteamServer.LogOnAnonymous();
 
             return true;
@@ -44,66 +42,40 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var contentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent);
-
-            // These server state variables may be changed at any time.  Note that there is no longer a mechanism
-            // to send the player count. The player count is maintained by Steam and you should use the player
-            // creation/authentication functions to maintain your player count.
-            Steamworks.SteamServer.ServerName = server.ServerName;
-            Steamworks.SteamServer.MaxPlayers = server.ServerSettings.MaxPlayers;
-            Steamworks.SteamServer.Passworded = server.ServerSettings.HasPassword;
             Steamworks.SteamServer.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName?.Value ?? "";
-            Steamworks.SteamServer.SetKey("haspassword", server.ServerSettings.HasPassword.ToString());
-            Steamworks.SteamServer.SetKey("message", server.ServerSettings.ServerMessageText);
-            Steamworks.SteamServer.SetKey("version", GameMain.Version.ToString());
-            Steamworks.SteamServer.SetKey("playercount", server.ConnectedClients.Count.ToString());
-            int index = 0;
-            foreach (var contentPackage in contentPackages)
-            {
-                string ugcIdStr = contentPackage.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : string.Empty;
-                Steamworks.SteamServer.SetKey(
-                    $"contentpackage{index}", 
-                    contentPackage.Name+","+ contentPackage.Hash.StringRepresentation + "," + ugcIdStr);
-                index++;
-            }
-            Steamworks.SteamServer.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
-            Steamworks.SteamServer.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
-            Steamworks.SteamServer.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());
-            Steamworks.SteamServer.SetKey("allowspectating", server.ServerSettings.AllowSpectating.ToString());
-            Steamworks.SteamServer.SetKey("allowrespawn", server.ServerSettings.AllowRespawn.ToString());
-            Steamworks.SteamServer.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
-            Steamworks.SteamServer.SetKey("friendlyfireenabled", server.ServerSettings.AllowFriendlyFire.ToString());
-            Steamworks.SteamServer.SetKey("karmaenabled", server.ServerSettings.KarmaEnabled.ToString());
-            Steamworks.SteamServer.SetKey("gamestarted", server.GameStarted.ToString());
-            Steamworks.SteamServer.SetKey("gamemode", server.ServerSettings.GameModeIdentifier.Value);
-            Steamworks.SteamServer.SetKey("playstyle", server.ServerSettings.PlayStyle.ToString());
-            Steamworks.SteamServer.SetKey("language", server.ServerSettings.Language.ToString());
+            server.ServerSettings.UpdateServerListInfo(SetServerListInfo);
 
             Steamworks.SteamServer.DedicatedServer = true;
 
             return true;
         }
 
-        public static Steamworks.BeginAuthResult StartAuthSession(byte[] authTicketData, SteamId clientSteamID)
+        private static void SetServerListInfo(Identifier key, object value)
         {
-            if (!IsInitialized || !Steamworks.SteamServer.IsValid) return Steamworks.BeginAuthResult.ServerNotConnectedToSteam;
-
-            DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
-            Steamworks.BeginAuthResult startResult = Steamworks.SteamServer.BeginAuthSession(authTicketData, clientSteamID.Value);
-            if (startResult != Steamworks.BeginAuthResult.OK)
+            switch (value)
             {
-                DebugConsole.Log("Authentication failed: failed to start auth session (" + startResult.ToString() + ")");
+                case string stringValue when key == "ServerName":
+                    Steamworks.SteamServer.ServerName = stringValue;
+                    return;
+                case int maxPlayers when key == "MaxPlayers":
+                    Steamworks.SteamServer.MaxPlayers = maxPlayers;
+                    return;
+                case bool hasPassword when key == "HasPassword":
+                    Steamworks.SteamServer.Passworded = hasPassword;
+                    return;
+                case IEnumerable<ContentPackage> contentPackages:
+                    int index = 0;
+                    foreach (var contentPackage in contentPackages)
+                    {
+                        Steamworks.SteamServer.SetKey(
+                            $"contentpackage{index}",
+                            new ServerListContentPackageInfo(contentPackage).ToString());
+                        index++;
+                    }
+                    return;
             }
 
-            return startResult;
-        }
-
-        public static void StopAuthSession(SteamId clientSteamId)
-        {
-            if (!IsInitialized || !Steamworks.SteamServer.IsValid) return;
-
-            DebugConsole.Log("SteamManager ending auth session with Steam client " + clientSteamId);
-            Steamworks.SteamServer.EndSession(clientSteamId.Value);
+            Steamworks.SteamServer.SetKey(key.Value.ToLowerInvariant(), value.ToString());
         }
 
         public static bool CloseServer()

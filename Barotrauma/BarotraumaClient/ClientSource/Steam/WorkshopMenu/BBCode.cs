@@ -196,9 +196,9 @@ namespace Barotrauma.Steam
                 SteamManager.Workshop.GetItemAsap(workshopItem.Id.Value, withLongDescription: true),
                 t =>
                 {
-                    if (!t.TryGetResult(out Steamworks.Ugc.Item? workshopItemWithDescription)) { return; }
+                    if (!t.TryGetResult(out Option<Steamworks.Ugc.Item> workshopItemWithDescription)) { return; }
 
-                    bbCode = workshopItemWithDescription?.Description ?? "";
+                    bbCode = workshopItemWithDescription.TryUnwrap(out var item) ? (item.Description ?? "") : "";
                     forceReset();
                 });
 

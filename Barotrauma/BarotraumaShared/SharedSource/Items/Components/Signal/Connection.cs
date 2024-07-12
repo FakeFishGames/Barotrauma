@@ -23,22 +23,34 @@ namespace Barotrauma.Items.Components
         private readonly HashSet<Wire> wires;
         public IReadOnlyCollection<Wire> Wires => wires;
 
+        /// <summary>
+        /// Circuit box input and output connections that are linked to this connection.
+        /// </summary>
+        /// <remarks>
+        /// We don't want to create a wire between the circuit boxes connection panel and the
+        /// connection panel of the item inside the circuit box so we use this to bridge the gap.
+        /// </remarks>
+        public List<CircuitBoxConnection> CircuitBoxConnections = new();
+
         private bool enumeratingWires;
         private readonly HashSet<Wire> removedWires = new HashSet<Wire>();
 
         private readonly Item item;
 
         public readonly bool IsOutput;
-        
+
         public readonly List<StatusEffect> Effects;
 
-        public readonly List<ushort> LoadedWireIds;
+        public readonly List<(ushort wireId, int? connectionIndex)> LoadedWires;
 
         //The grid the connection is a part of
         public GridInfo Grid;
 
         //Priority in which power output will be handled - load is unaffected
         public PowerPriority Priority = PowerPriority.Default;
+
+        public Signal LastSentSignal { get; private set; }
+        public Signal LastReceivedSignal {get; private set;}
 
         public bool IsPower
         {
@@ -151,16 +163,20 @@ namespace Barotrauma.Items.Components
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
 
-            LoadedWireIds = new List<ushort>();
+            LoadedWires = new List<(ushort wireId, int? connectionIndex)>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "link":
                         int id = subElement.GetAttributeInt("w", 0);
+                        int? i = null;                        
+                        if (subElement.GetAttribute("i") != null)
+                        {
+                            i = subElement.GetAttributeInt("i", 0); 
+                        }                       
                         if (id < 0) { id = 0; }
-                        if (LoadedWireIds.Count < MaxWires) { LoadedWireIds.Add(idRemap.GetOffsetId(id)); }
-
+                        if (LoadedWires.Count < MaxWires) { LoadedWires.Add((idRemap.GetOffsetId(id), i)); }
                         break;
                     case "statuseffect":
                         Effects ??= new List<StatusEffect>();
@@ -169,6 +185,12 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        /// <summary>
+        /// Checks if the the connection is connected to a wire or a circuit box connection
+        /// </summary>
+        public bool IsConnectedToSomething()
+            => wires.Count > 0 || CircuitBoxConnections.Count > 0;
 
         public void SetRecipientsDirty()
         {
@@ -288,6 +310,7 @@ namespace Barotrauma.Items.Components
 
         public void SendSignal(Signal signal)
         {
+            LastSentSignal = signal;
             enumeratingWires = true;
             foreach (var wire in wires)
             {
@@ -296,21 +319,15 @@ namespace Barotrauma.Items.Components
                 if (recipient.item == this.item || signal.source?.LastSentSignalRecipients.LastOrDefault() == recipient) { continue; }
 
                 signal.source?.LastSentSignalRecipients.Add(recipient);
+#if CLIENT
+                wire.RegisterSignal(signal, source: this);
+#endif
+                SendSignalIntoConnection(signal, recipient);
+            }
 
-                Connection connection = recipient;
-
-                foreach (ItemComponent ic in recipient.item.Components)
-                {
-                    ic.ReceiveSignal(signal, connection);
-                }
-
-                if (recipient.Effects != null && signal.value != "0")
-                {
-                    foreach (StatusEffect effect in recipient.Effects)
-                    {
-                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
-                    }
-                }
+            foreach (CircuitBoxConnection connection in CircuitBoxConnections)
+            {
+                connection.ReceiveSignal(signal);
             }
             enumeratingWires = false;
             foreach (var removedWire in removedWires)
@@ -319,7 +336,24 @@ namespace Barotrauma.Items.Components
             }
             removedWires.Clear();
         }
-        
+
+        public static void SendSignalIntoConnection(Signal signal, Connection conn)
+        {
+            conn.LastReceivedSignal = signal;
+
+            foreach (ItemComponent ic in conn.item.Components)
+            {
+                ic.ReceiveSignal(signal, conn);
+            }
+
+            if (conn.Effects == null || signal.value == "0") { return; }
+
+            foreach (StatusEffect effect in conn.Effects)
+            {
+                conn.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
+            }
+        }
+
         public void ClearConnections()
         {
             if (IsPower && Grid != null)
@@ -351,22 +385,29 @@ namespace Barotrauma.Items.Components
         
         public void InitializeFromLoaded()
         {
-            if (LoadedWireIds.Count == 0) { return; }
+            if (LoadedWires.Count == 0) { return; }
             
-            for (int i = 0; i < LoadedWireIds.Count; i++)
+            foreach ((ushort wireId, int? connectionIndex) in LoadedWires)
             {
-                if (!(Entity.FindEntityByID(LoadedWireIds[i]) is Item wireItem)) { continue; }
+                if (Entity.FindEntityByID(wireId) is not Item wireItem) { continue; }
 
                 var wire = wireItem.GetComponent<Wire>();
                 if (wire != null && TryAddLink(wire))
                 {
-                    if (wire.Item.body != null) wire.Item.body.Enabled = false;
-                    wire.Connect(this, false, false);
+                    if (wire.Item.body != null) { wire.Item.body.Enabled = false; }
+                    if (connectionIndex.HasValue)
+                    {
+                        wire.Connect(this, connectionIndex.Value, addNode: false, sendNetworkEvent: false);
+                    }
+                    else
+                    {
+                        wire.TryConnect(this, addNode: false, sendNetworkEvent: false);
+                    }
                     wire.FixNodeEnds();
                     recipientsDirty = true;
                 }
             }
-            LoadedWireIds.Clear();
+            LoadedWires.Clear();
         }
 
 
@@ -377,7 +418,8 @@ namespace Barotrauma.Items.Components
             foreach (var wire in wires.OrderBy(w => w.Item.ID))
             {
                 newElement.Add(new XElement("link",
-                    new XAttribute("w", wire.Item.ID.ToString())));
+                    new XAttribute("w", wire.Item.ID.ToString()),
+                    new XAttribute("i", wire.Connections[0] == this ? 0 : 1)));
             }
 
             parentElement.Add(newElement);

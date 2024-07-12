@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -23,6 +24,27 @@ namespace Barotrauma
                 else
                 {
                     GameServer.Log(GameServer.CharacterLogName(this) + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
+                }
+            }
+
+            if (GameMain.Server is { ServerSettings.RespawnMode: RespawnMode.Permadeath } && 
+                GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign &&
+                causeOfDeath != CauseOfDeathType.Disconnected)
+            {
+                Client ownerClient = GameMain.Server.ConnectedClients.FirstOrDefault(c => c.Character == this);
+                if (ownerClient != null)
+                {
+                    ownerClient.SpectateOnly = true;
+                    CharacterCampaignData matchingData = mpCampaign.GetClientCharacterData(ownerClient);
+                    if (matchingData != null)
+                    {
+                        matchingData.ApplyPermadeath();
+                        
+                        if (GameMain.Server is { ServerSettings.IronmanMode: true })
+                        {
+                            mpCampaign.SaveSingleCharacter(matchingData);
+                        }
+                    }
                 }
             }
 

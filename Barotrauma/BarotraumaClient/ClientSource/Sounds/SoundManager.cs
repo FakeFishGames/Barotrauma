@@ -39,7 +39,7 @@ namespace Barotrauma.Sounds
 
         public bool Disconnected { get; private set; }
 
-        private Thread streamingThread;
+        private Thread updateChannelsThread;
 
         private Vector3 listenerPosition;
         public Vector3 ListenerPosition
@@ -51,7 +51,7 @@ namespace Barotrauma.Sounds
                 listenerPosition = value;
                 Al.Listener3f(Al.Position,value.X,value.Y,value.Z);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener position: " + Al.GetErrorString(alError));
                 }
@@ -68,7 +68,7 @@ namespace Barotrauma.Sounds
                 listenerOrientation[0] = value.X; listenerOrientation[1] = value.Y; listenerOrientation[2] = value.Z;
                 Al.Listenerfv(Al.Orientation, listenerOrientation);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener target vector: " + Al.GetErrorString(alError));
                 }
@@ -83,7 +83,7 @@ namespace Barotrauma.Sounds
                 listenerOrientation[3] = value.X; listenerOrientation[4] = value.Y; listenerOrientation[5] = value.Z;
                 Al.Listenerfv(Al.Orientation, listenerOrientation);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener up vector: " + Al.GetErrorString(alError));
                 }
@@ -101,7 +101,7 @@ namespace Barotrauma.Sounds
                 listenerGain = value;
                 Al.Listenerf(Al.Gain, listenerGain);
                 int alError = Al.GetError();
-                if (alError != Al.NoError)
+                if (alError != Al.NoError && !GameMain.IsExiting)
                 {
                     throw new Exception("Failed to set listener gain: " + Al.GetErrorString(alError));
                 }
@@ -201,7 +201,7 @@ namespace Barotrauma.Sounds
         public SoundManager()
         {
             loadedSounds = new List<Sound>();
-            streamingThread = null;
+            updateChannelsThread = null;
 
             sourcePools = new SoundSourcePool[2];
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
@@ -696,7 +696,7 @@ namespace Barotrauma.Sounds
                 CompressionDynamicRangeGain = 1.0f;
             }
 
-            if (streamingThread == null || streamingThread.ThreadState.HasFlag(ThreadState.Stopped))
+            if (updateChannelsThread == null || updateChannelsThread.ThreadState.HasFlag(ThreadState.Stopped))
             {
                 bool startedStreamThread = false;
                 for (int i = 0; i < playingChannels.Length; i++)
@@ -708,7 +708,7 @@ namespace Barotrauma.Sounds
                             if (playingChannels[i][j] == null) { continue; }
                             if (playingChannels[i][j].IsStream && playingChannels[i][j].IsPlaying)
                             {
-                                InitStreamThread();
+                                InitUpdateChannelThread();
                                 startedStreamThread = true;
                             }
                             if (startedStreamThread) { break; }
@@ -727,37 +727,43 @@ namespace Barotrauma.Sounds
             SetCategoryGainMultiplier("music", GameSettings.CurrentConfig.Audio.MusicVolume, 0);
             SetCategoryGainMultiplier("voip", Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);
         }
-        
-        public void InitStreamThread()
+
+        /// <summary>
+        /// Initializes the thread that handles streaming audio and fading out and disposing channels that are no longer needed.
+        /// </summary>
+        public void InitUpdateChannelThread()
         {
             if (Disabled) { return; }
-            bool isStreamThreadDying;
+            bool isUpdateChannelsThreadDying;
             lock (threadDeathMutex)
             {
-                isStreamThreadDying = !areStreamsPlaying;
+                isUpdateChannelsThreadDying = !needsUpdateChannels;
             }
-            if (streamingThread == null || streamingThread.ThreadState.HasFlag(ThreadState.Stopped) || isStreamThreadDying)
+            if (updateChannelsThread == null || updateChannelsThread.ThreadState.HasFlag(ThreadState.Stopped) || isUpdateChannelsThreadDying)
             {
-                if (streamingThread != null && !streamingThread.Join(1000))
+                if (updateChannelsThread != null && !updateChannelsThread.Join(1000))
                 {
-                    DebugConsole.ThrowError("Sound stream thread join timed out!");
+                    DebugConsole.ThrowError("SoundManager.UpdateChannels thread join timed out!");
                 }
-                areStreamsPlaying = true;
-                streamingThread = new Thread(UpdateStreaming)
+                needsUpdateChannels = true;
+                updateChannelsThread = new Thread(UpdateChannels)
                 {
-                    Name = "SoundManager Streaming Thread",
+                    Name = "SoundManager.UpdateChannels Thread",
                     IsBackground = true //this should kill the thread if the game crashes
                 };
-                streamingThread.Start();
+                updateChannelsThread.Start();
             }
         }
 
-        bool areStreamsPlaying = false;
-        ManualResetEvent streamMre = null;
+        private bool needsUpdateChannels = false;
+        private ManualResetEvent updateChannelsMre = null;
 
-        void UpdateStreaming()
+        /// <summary>
+        /// Handles streaming audio and fading out and disposing channels that are no longer needed.
+        /// </summary>
+        private void UpdateChannels()
         {
-            streamMre = new ManualResetEvent(false);
+            updateChannelsMre = new ManualResetEvent(false);
             bool killThread = false;
             while (!killThread)
             {
@@ -784,6 +790,7 @@ namespace Barotrauma.Sounds
                             }
                             else if (playingChannels[i][j].FadingOutAndDisposing)
                             {
+                                killThread = false;
                                 playingChannels[i][j].Gain -= 0.1f;
                                 if (playingChannels[i][j].Gain <= 0.0f)
                                 {
@@ -794,25 +801,25 @@ namespace Barotrauma.Sounds
                         }
                     }
                 }
-                streamMre.WaitOne(10);
-                streamMre.Reset();
+                updateChannelsMre.WaitOne(10);
+                updateChannelsMre.Reset();
                 lock (threadDeathMutex)
                 {
-                    areStreamsPlaying = !killThread;
+                    needsUpdateChannels = !killThread;
                 }
             }
         }
 
         public void ForceStreamUpdate()
         {
-            streamMre?.Set();
+            updateChannelsMre?.Set();
         }
 
         private void ReloadSounds()
         {
             for (int i = loadedSounds.Count - 1; i >= 0; i--)
             {
-                loadedSounds[i].InitializeALBuffers();
+                loadedSounds[i].InitializeAlBuffers();
             }
         }
 
@@ -824,17 +831,17 @@ namespace Barotrauma.Sounds
                 {
                     for (int j = 0; j < playingChannels[i].Length; j++)
                     {
-                        if (playingChannels[i][j] != null) playingChannels[i][j].Dispose();
+                        playingChannels[i][j]?.Dispose();
                     }
                 }
             }
 
-            streamingThread?.Join();
+            updateChannelsThread?.Join();
             for (int i = loadedSounds.Count - 1; i >= 0; i--)
             {
                 if (keepSounds)
                 {
-                    loadedSounds[i].DeleteALBuffers();
+                    loadedSounds[i].DeleteAlBuffers();
                 }
                 else
                 {
@@ -853,14 +860,14 @@ namespace Barotrauma.Sounds
 
             ReleaseResources(false);
 
-            if (!Alc.MakeContextCurrent(IntPtr.Zero))
+            if (!Alc.MakeContextCurrent(IntPtr.Zero) && !GameMain.IsExiting)
             {
                 throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
             }
 
             Alc.DestroyContext(alcContext);
             
-            if (!Alc.CloseDevice(alcDevice))
+            if (!Alc.CloseDevice(alcDevice) && !GameMain.IsExiting)
             {
                 throw new Exception("Failed to close ALC device!");
             }

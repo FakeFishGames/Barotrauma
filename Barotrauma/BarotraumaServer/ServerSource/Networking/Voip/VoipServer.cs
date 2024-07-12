@@ -112,16 +112,32 @@ namespace Barotrauma.Networking
             if (recipientSpectating)
             {
                 if (recipient.SpectatePos == null) { return true; }
-                distanceFactor = MathHelper.Clamp(Vector2.Distance(sender.Character.WorldPosition, recipient.SpectatePos.Value) / ChatMessage.SpeakRange, 0.0f, 1.0f);
+                distanceFactor = MathHelper.Clamp(Vector2.Distance(sender.Character.WorldPosition, recipient.SpectatePos.Value) / ChatMessage.SpeakRangeVOIP, 0.0f, 1.0f);
                 return distanceFactor < 1.0f;
             }
             else
             {
                 //otherwise do a distance check
-                float garbleAmount = ChatMessage.GetGarbleAmount(recipient.Character, sender.Character, ChatMessage.SpeakRange);
+                float garbleAmount = ChatMessage.GetGarbleAmount(recipient.Character, sender.Character, ChatMessage.SpeakRangeVOIP);
                 distanceFactor = garbleAmount;
                 return garbleAmount < 1.0f;
             }
+        }
+
+        public static void Read(IReadMessage inc, Client connectedClient)
+        {
+            var queue = connectedClient.VoipQueue;
+            if (queue.Read(inc, discardData: false))
+            {
+                connectedClient.VoipServerDecoder.OnNewVoiceReceived();
+            }
+
+#if DEBUG
+            var msg = new WriteOnlyMessage().WithHeader(ServerPacketHeader.VOICE_AMPLITUDE_DEBUG);
+            msg.WriteRangedSingle(connectedClient.VoipServerDecoder.Amplitude, min: 0, max: 1, bitCount: 8);
+
+            GameMain.Server?.ServerPeer?.Send(msg, connectedClient.Connection, DeliveryMethod.Unreliable);
+#endif
         }
     }
 }

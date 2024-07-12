@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }

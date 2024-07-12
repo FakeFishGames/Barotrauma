@@ -299,9 +299,12 @@ namespace Barotrauma.Items.Components
             //make sure the clients know about the states of the checkboxes and text fields
             if (customInterfaceElementList.Any())
             {
-                if (item.Submarine == null || !item.Submarine.Loading)
+                if (item.FullyInitialized)
                 {
-                    item.CreateServerEvent(this);
+                    CoroutineManager.Invoke(() =>
+                    {
+                        if (!item.Removed) { item.CreateServerEvent(this); }
+                    }, delay: 0.1f);
                 }
             }
 #endif

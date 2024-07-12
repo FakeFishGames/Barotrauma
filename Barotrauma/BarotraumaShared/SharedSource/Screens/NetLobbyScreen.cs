@@ -30,25 +30,9 @@ namespace Barotrauma
                 GameMain.Server.ServerSettings.SelectedLevelDifficulty = difficulty;
                 lastUpdateID++;
             }
-#endif
-#if CLIENT
-            levelDifficultyScrollBar.BarScroll = difficulty / 100.0f;
-            levelDifficultyScrollBar.OnMoved(levelDifficultyScrollBar, levelDifficultyScrollBar.BarScroll);
-#endif
-        }
-
-        public void ToggleTraitorsEnabled(int dir)
-        {
-#if SERVER
-            if (GameMain.Server == null) return;
-
-            lastUpdateID++;
-            
-            int index = (int)GameMain.Server.ServerSettings.TraitorsEnabled + dir;
-            if (index < 0) index = 2;
-            if (index > 2) index = 0;
-
-            SetTraitorsEnabled((YesNoMaybe)index);
+#elif CLIENT
+            levelDifficultySlider.BarScroll = difficulty / 100.0f;
+            levelDifficultySlider.OnMoved(levelDifficultySlider, levelDifficultySlider.BarScroll);
 #endif
         }
 
@@ -64,9 +48,6 @@ namespace Barotrauma
                 lastUpdateID++;
             }
 #endif
-#if CLIENT
-            botCountText.Text = botCount.ToString();
-#endif
         }
 
         public void SetBotSpawnMode(BotSpawnMode botSpawnMode)
@@ -78,24 +59,26 @@ namespace Barotrauma
                 lastUpdateID++;
             }
 #endif
-#if CLIENT
-
-            botSpawnModeText.Text = TextManager.Get(botSpawnMode.ToString());
-            botSpawnModeText.ToolTip = TextManager.Get($"botspawnmode.{botSpawnMode}.tooltip") + "\n\n" + TextManager.Get("botspawn.campaignnote");
-            foreach (var btn in botSpawnModeButtons)
-            {
-                btn.ToolTip = botSpawnModeText.ToolTip;
-            }
-#endif
         }
 
-        public void SetTraitorsEnabled(YesNoMaybe enabled)
+        public void SetTraitorProbability(float probability)
         {
+            if (GameMain.NetworkMember != null)
+            {
+                GameMain.NetworkMember.ServerSettings.TraitorProbability = probability;
+            }
+        }
+
+        public void SetTraitorDangerLevel(int dangerLevel)
+        {
+            if (GameMain.NetworkMember != null)
+            {
+                GameMain.NetworkMember.ServerSettings.TraitorDangerLevel = dangerLevel;
+            }
 #if SERVER
-            if (GameMain.Server != null) GameMain.Server.ServerSettings.TraitorsEnabled = enabled;
-#endif
-#if CLIENT
-            traitorProbabilityText.Text = TextManager.Get(enabled.ToString());
+            if (GameMain.Server != null) { GameMain.Server.ServerSettings.TraitorDangerLevel = dangerLevel; }
+#elif CLIENT
+            SetTraitorDangerIndicators(dangerLevel);
 #endif
         }
     }

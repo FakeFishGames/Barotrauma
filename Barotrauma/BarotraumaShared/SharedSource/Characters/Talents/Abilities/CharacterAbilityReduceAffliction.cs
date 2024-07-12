@@ -14,14 +14,15 @@ namespace Barotrauma.Abilities
 
             if (afflictionId.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in {nameof(CharacterAbilityReduceAffliction)} - affliction identifier not set.");
+                DebugConsole.ThrowError($"Error in {nameof(CharacterAbilityReduceAffliction)} - affliction identifier not set.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
             if (abilityObject is not IAbilityCharacter character) { return; }
-            character.Character.CharacterHealth.ReduceAfflictionOnAllLimbs(afflictionId, amount);
+            character.Character.CharacterHealth.ReduceAfflictionOnAllLimbs(afflictionId, amount, attacker: Character);
         }
     }
 }

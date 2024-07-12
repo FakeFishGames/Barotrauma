@@ -31,7 +31,7 @@ namespace Barotrauma
                 // Item must be in a non-equipment slot if possible
                 if (!item.AllowedSlots.All(s => equipmentSlots.Contains(s)) && IsInEquipmentSlot(item)) { return false; }
                 // Item must not be contained inside an item in an equipment slot
-                if (item.GetRootContainer() is Item rootContainer && IsInEquipmentSlot(rootContainer)) { return false; }
+                if (item.RootContainer is Item rootContainer && IsInEquipmentSlot(rootContainer)) { return false; }
                 return true;
             }, recursive: true).Distinct();
 
@@ -147,7 +147,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.LogError($"Error selling items: uknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error selling items: unknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
                 return;
             }
             bool canAddToRemoveQueue = campaign.IsSinglePlayer && Entity.Spawner != null;

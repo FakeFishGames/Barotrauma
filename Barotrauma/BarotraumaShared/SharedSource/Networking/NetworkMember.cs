@@ -33,10 +33,13 @@ namespace Barotrauma.Networking
         ERROR,           //tell the server that an error occurred
         CREW,            //hiring UI
         MEDICAL,         //medical clinic
-        TRANSFER_MONEY,      // wallet transfers
-        REWARD_DISTRIBUTION, // wallet reward distribution
+        TRANSFER_MONEY,              // wallet transfers
+        REWARD_DISTRIBUTION,         // wallet reward distribution
+        RESET_REWARD_DISTRIBUTION,
+        CIRCUITBOX,
         READY_CHECK,
-        READY_TO_SPAWN
+        READY_TO_SPAWN,
+        TAKEOVERBOT
     }
 
     enum ClientNetSegment
@@ -64,6 +67,7 @@ namespace Barotrauma.Networking
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
+        ACHIEVEMENT_STAT,   //increment stat for an achievement
         CHEATS_ENABLED,     //tell the clients whether cheats are on or off
 
         CAMPAIGN_SETUP_INFO,
@@ -71,6 +75,7 @@ namespace Barotrauma.Networking
         FILE_TRANSFER,
 
         VOICE,
+        VOICE_AMPLITUDE_DEBUG,
 
         PING_REQUEST,       //ping the client
         CLIENT_PINGS,       //tell the client the pings of all other clients
@@ -80,11 +85,12 @@ namespace Barotrauma.Networking
         STARTGAMEFINALIZE,  //finalize round initialization
         ENDGAME,
 
-        TRAITOR_MESSAGE,
         MISSION,
         EVENTACTION,
+        TRAITOR_MESSAGE,
         CREW,               //anything related to managing bots in multiplayer
         MEDICAL,            //medical clinic
+        CIRCUITBOX,
         MONEY,
         READY_CHECK         //start, end and update a ready check
     }
@@ -112,14 +118,6 @@ namespace Barotrauma.Networking
                 EntityId: entity.ID);
     }
 
-    enum TraitorMessageType
-    {
-        Server,
-        ServerMessageBox,
-        Objective,
-        Console
-    }
-
     enum VoteType
     {
         Unknown,
@@ -131,7 +129,8 @@ namespace Barotrauma.Networking
         PurchaseAndSwitchSub,
         PurchaseSub,
         SwitchSub,
-        TransferMoney
+        TransferMoney,
+        Traitor,
     }
 
     public enum ReadyCheckState
@@ -152,13 +151,14 @@ namespace Barotrauma.Networking
         ServerCrashed,
         ServerFull,
         AuthenticationRequired,
-        SteamAuthenticationFailed,
+        AuthenticationFailed,
         SessionTaken,
         TooManyFailedLogins,
         InvalidName,
         NameTaken,
         InvalidVersion,
         SteamP2PError,
+        MalformedData,
         
         //attempt reconnecting with these reasons
         Timeout,
@@ -208,33 +208,12 @@ namespace Barotrauma.Networking
         
         public TimeSpan UpdateInterval => new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / ServerSettings.TickRate, 1, 500));
 
-
-        public bool CanUseRadio(Character sender)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Entity senderEntity = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
-            if (sender == null) { return false; }
-
-            var radio = sender.Inventory.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
-            if (radio == null || !sender.HasEquippedItem(radio)) { return false; }
-
-            var radioComponent = radio.GetComponent<WifiComponent>();
-            if (radioComponent == null) { return false; }
-            return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderEntity, senderClient, changeType: changeType, textColor: textColor));
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
-        {
-            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType, textColor: textColor));
-        }
-
-        public virtual void AddChatMessage(ChatMessage message)
-        {
-            if (string.IsNullOrEmpty(message.Text)) { return; }
-
-            if (message.Sender != null && !message.Sender.IsDead)
-            {
-                message.Sender.ShowSpeechBubble(2.0f, message.Color);
-            }
-        }
+        public abstract void AddChatMessage(ChatMessage message);
 
         public static string ClientLogName(Client client, string name = null)
         {

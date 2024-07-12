@@ -21,7 +21,10 @@ namespace Barotrauma.Items.Components
         public float FlashTimer { get; private set; }
         public static Wire DraggingConnected { get; private set; }
 
-        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Rectangle dragArea, Character character)
+        private static float ConnectionSpriteSize => 35.0f * GUI.Scale;
+
+        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Rectangle dragArea, Character character, 
+            out (Vector2 tooltipPos, LocalizedString text) tooltip)
         {
             if (DraggingConnected?.Item?.Removed ?? true)
             {
@@ -31,8 +34,6 @@ namespace Barotrauma.Items.Components
             Rectangle panelRect = panel.GuiFrame.Rect;
             int x = panelRect.X, y = panelRect.Y;
             int width = panelRect.Width, height = panelRect.Height;
-
-            Vector2 scale = GetScale(panel.GuiFrame.RectTransform.MaxSize, panel.GuiFrame.Rect.Size);
 
             bool mouseInRect = panelRect.Contains(PlayerInput.MousePosition);
 
@@ -64,18 +65,20 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            tooltip = (Vector2.Zero, string.Empty);
+
             //two passes: first the connector, then the wires to get the wires to render in front
             for (int i = 0; i < 2; i++)
             {
-                Vector2 rightPos = GetRightPos(x, y, width, scale);
-                Vector2 leftPos = GetLeftPos(x, y, scale);
+                Vector2 rightPos = GetRightPos(x, y, width);
+                Vector2 leftPos = GetLeftPos(x, y);
 
-                Vector2 rightWirePos = new Vector2(x + width - 5 * scale.X, y + 30 * scale.Y);
-                Vector2 leftWirePos = new Vector2(x + 5 * scale.X, y + 30 * scale.Y);
+                Vector2 rightWirePos = new Vector2(x + width - 5 * GUI.Scale, y + 30 * GUI.Scale);
+                Vector2 leftWirePos = new Vector2(x + 5 * GUI.Scale, y + 30 * GUI.Scale);
 
-                int wireInterval = (height - (int)(20 * scale.Y)) / Math.Max(totalWireCount, 1);
-                int connectorIntervalLeft = GetConnectorIntervalLeft(height, scale, panel);
-                int connectorIntervalRight = GetConnectorIntervalRight(height, scale, panel);
+                int wireInterval = (height - (int)(20 * GUI.Scale)) / Math.Max(totalWireCount, 1);
+                int connectorIntervalLeft = GetConnectorIntervalLeft(height, panel);
+                int connectorIntervalRight = GetConnectorIntervalRight(height, panel);
 
                 foreach (Connection c in panel.Connections)
                 {
@@ -97,12 +100,27 @@ namespace Barotrauma.Items.Components
                         }
                     }
 
+                    Vector2 position = c.IsOutput ? rightPos : leftPos;
+                    if (ConnectionPanel.ShouldDebugDrawWiring)
+                    {
+                        DrawConnectionDebugInfo(spriteBatch, c, position, GUI.Scale, out var tooltipText);
+
+                        if (!tooltipText.IsNullOrEmpty())
+                        {
+                            bool mouseOn = Vector2.DistanceSquared(position, PlayerInput.MousePosition) < MathUtils.Pow2(35 * GUI.Scale);
+                            if (mouseOn)
+                            {
+                                tooltip = (position, tooltipText);
+                            }
+                        }
+                    }
+
                     //outputs are drawn at the right side of the panel, inputs at the left
                     if (c.IsOutput)
                     {
                         if (i == 0)
                         {
-                            c.DrawConnection(spriteBatch, panel, rightPos, GetOutputLabelPosition(rightPos, panel, c), scale);
+                            c.DrawConnection(spriteBatch, panel, rightPos, GetOutputLabelPosition(rightPos, panel, c));
                         }
                         else
                         {
@@ -115,7 +133,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (i == 0)
                         {
-                            c.DrawConnection(spriteBatch, panel, leftPos, GetInputLabelPosition(leftPos, panel, c), scale);
+                            c.DrawConnection(spriteBatch, panel, leftPos, GetInputLabelPosition(leftPos, panel, c));
                         }
                         else
                         {
@@ -126,7 +144,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
 
             if (DraggingConnected != null)
             {
@@ -186,8 +203,8 @@ namespace Barotrauma.Items.Components
             }
 
 
-            float step = (width * 0.75f) / panel.DisconnectedWires.Count();
-            x = (int)(x + width / 2 - step * (panel.DisconnectedWires.Count() - 1) / 2);
+            float step = (width * 0.75f) / panel.DisconnectedWires.Count;
+            x = (int)(x + width / 2 - step * (panel.DisconnectedWires.Count - 1) / 2);
             foreach (Wire wire in panel.DisconnectedWires)
             {
                 if (wire == DraggingConnected && mouseInRect) { continue; }
@@ -205,32 +222,69 @@ namespace Barotrauma.Items.Components
             //stop dragging a wire item if the cursor is within any connection panel
             //(so we don't drop the item when dropping the wire on a connection)
             if (mouseInRect || (GUI.MouseOn?.UserData is ConnectionPanel && GUI.MouseOn.MouseRect.Contains(PlayerInput.MousePosition))) 
-            { 
-                Inventory.DraggingItems.Clear(); 
-            }       
+            {
+                Inventory.DraggingItems.Clear();
+            }
         }
 
-        private void DrawConnection(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 scale)
+        public static void DrawConnectionDebugInfo(SpriteBatch spriteBatch, Connection c, Vector2 position, float scale, out LocalizedString tooltip)
+        {
+            Color highlightColor = Color.Transparent;
+            if (c.IsPower)
+            {
+                highlightColor = VisualizeSignal(0.0f, highlightColor, Color.Red);
+            }
+            else
+            {
+                highlightColor = VisualizeSignal(c.LastReceivedSignal.TimeSinceCreated, highlightColor, Color.LightGreen);
+                highlightColor = VisualizeSignal(c.LastSentSignal.TimeSinceCreated, highlightColor, Color.Orange);
+            }
+
+            LocalizedString toolTipText = c.GetToolTip();
+            if (!toolTipText.IsNullOrEmpty())
+            {
+                var glowSprite = GUIStyle.UIGlowCircular.Value.Sprite;
+                glowSprite.Draw(spriteBatch, position, highlightColor, glowSprite.size / 2,
+                    scale: 45.0f / glowSprite.size.X * scale);
+            }
+
+            tooltip = toolTipText;
+
+            static Color VisualizeSignal(double timeSinceCreated, Color defaultColor, Color color)
+            {
+                if (timeSinceCreated < 1.0f)
+                {
+                    float pulseAmount = (MathF.Sin((float)Timing.TotalTimeUnpaused * 10.0f) + 3.0f) / 4.0f;
+                    Color targetColor = Color.Lerp(defaultColor, color, pulseAmount);
+                    return Color.Lerp(targetColor, defaultColor, (float)timeSinceCreated);
+                }
+                return defaultColor;
+            }
+        }
+
+        private void DrawConnection(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos)
         {
             string text = DisplayName.Value.ToUpperInvariant();
 
             //nasty
             if (GUIStyle.GetComponentStyle("ConnectionPanelLabel")?.Sprites.Values.First().First() is UISprite labelSprite)
             {
-                Rectangle labelArea = GetLabelArea(labelPos, text, scale);
+                Rectangle labelArea = GetLabelArea(labelPos, text);
                 labelSprite.Draw(spriteBatch, labelArea, IsPower ? GUIStyle.Red : Color.SteelBlue);
             }
 
             GUI.DrawString(spriteBatch, labelPos + Vector2.UnitY, text, Color.Black * 0.8f, font: GUIStyle.SmallFont);
             GUI.DrawString(spriteBatch, labelPos, text, GUIStyle.TextColorBright, font: GUIStyle.SmallFont);
 
-            float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
+            float connectorSpriteScale = ConnectionSpriteSize / connectionSprite.SourceRect.Width;
+
             connectionSprite.Draw(spriteBatch, position, scale: connectorSpriteScale);
+
         }
 
         private void DrawWires(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)
         {
-            float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
+            float connectorSpriteScale = ConnectionSpriteSize / connectionSprite.SourceRect.Width;
 
             foreach (var wire in wires)
             {
@@ -238,16 +292,30 @@ namespace Barotrauma.Items.Components
                 if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
                 Connection recipient = wire.OtherConnection(this);
-                LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
-                if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                LocalizedString label;
+                if (wire.Item.IsLayerHidden)
+                {
+                    label = TextManager.Get("ConnectionLocked");
+                }
+                else
+                {
+                    label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                    if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                }
+
                 DrawWire(spriteBatch, wire, position, wirePosition, equippedWire, panel, label);
 
                 wirePosition.Y += wireInterval;
             }
 
-            if (DraggingConnected != null && Vector2.Distance(position, PlayerInput.MousePosition) < (20.0f * GUI.Scale))
+            bool isMouseOn = Vector2.Distance(position, PlayerInput.MousePosition) < (20.0f * GUI.Scale);
+            if (isMouseOn)
             {
                 connectionSpriteHighlight.Draw(spriteBatch, position, scale: connectorSpriteScale);
+            }
+
+            if (DraggingConnected != null && isMouseOn)
+            {
 
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
@@ -259,7 +327,7 @@ namespace Barotrauma.Items.Components
                         {
                             bool alreadyConnected = DraggingConnected.IsConnectedTo(panel.Item);
                             DraggingConnected.RemoveConnection(panel.Item);
-                            if (DraggingConnected.Connect(this, !alreadyConnected, true))
+                            if (DraggingConnected.TryConnect(this, !alreadyConnected, true))
                             {
                                 var otherConnection = DraggingConnected.OtherConnection(this);
                                 ConnectWire(DraggingConnected);
@@ -307,6 +375,63 @@ namespace Barotrauma.Items.Components
             FlashTimer -= deltaTime;
         }
 
+        private (string signal, LocalizedString tooltip) lastSignalToolTip;
+        private  (int powerValue, LocalizedString tooltip) lastPowerToolTip;
+
+        private LocalizedString GetToolTip()
+        {
+            if (LastReceivedSignal.TimeSinceCreated < 1.0f)
+            {
+                return getSignalTooltip(LastReceivedSignal, "receivedsignal");
+            }
+            else if (LastSentSignal.TimeSinceCreated < 1.0f)
+            {
+                return getSignalTooltip(LastSentSignal, "sentsignal");
+            }
+
+            LocalizedString getSignalTooltip(Signal signal, string textTag)
+            {
+                if (lastSignalToolTip.signal == signal.value && !lastSignalToolTip.tooltip.IsNullOrEmpty()) { return lastSignalToolTip.tooltip; }
+                lastSignalToolTip = (signal.value, TextManager.GetWithVariable(textTag, "[signal]", signal.value));
+                return lastSignalToolTip.tooltip;
+            }
+
+            if (IsPower)
+            {
+                if (item.GetComponent<Powered>() is Powered powered)
+                {
+                    if (IsOutput)
+                    {
+                        if (powered.CurrPowerConsumption < 0)
+                        {
+                            return getPowerTooltip(-(int)powered.CurrPowerConsumption, "reactoroutput");
+                        }
+                        else if (powered is PowerTransfer || powered is PowerContainer)
+                        {
+                            return getPowerTooltip((int)(Grid?.Power ?? 0), "reactoroutput");
+                        }
+                    }
+                    else if (!IsOutput)
+                    {
+                        float powerConsumption = powered.GetCurrentPowerConsumption(this);
+                        if (!MathUtils.NearlyEqual((int)powerConsumption, 0.0f))
+                        {
+                            return getPowerTooltip((int)powerConsumption, "reactorload");
+                        }
+                    }
+                }
+            }
+
+            LocalizedString getPowerTooltip(int powerValue, string textTag)
+            {
+                if (lastPowerToolTip.powerValue == powerValue && !lastPowerToolTip.tooltip.IsNullOrEmpty()) { return lastPowerToolTip.tooltip; }
+                lastPowerToolTip = (powerValue, TextManager.GetWithVariable(textTag, "[kw]", powerValue.ToString()));
+                return lastPowerToolTip.tooltip;
+            }
+
+            return null;
+        }
+
         private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Vector2 end, Vector2 start, Wire equippedWire, ConnectionPanel panel, LocalizedString label)
         {
             int textX = (int)start.X;
@@ -321,7 +446,7 @@ namespace Barotrauma.Items.Components
 
             bool mouseOn =
                 canDrag &&
-                !(GUI.MouseOn is GUIDragHandle) &&
+                GUI.MouseOn is not GUIDragHandle &&
                 ((PlayerInput.MousePosition.X > Math.Min(start.X, end.X) &&
                 PlayerInput.MousePosition.X < Math.Max(start.X, end.X) &&
                 MathUtils.LineToPointDistanceSquared(start, end, PlayerInput.MousePosition) < 36) ||
@@ -345,12 +470,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            var wireEnd = end + Vector2.Normalize(start - end) * 30.0f * panel.Scale;
+            var wireEnd = end + Vector2.Normalize(start - end) * 30.0f * GUI.Scale;
 
             float dist = Vector2.Distance(start, wireEnd);
 
-            float wireWidth = 12 * panel.Scale;
-            float highlight = 5 * panel.Scale;
+            float wireWidth = 12 * GUI.Scale;
+            float highlight = 5 * GUI.Scale;
             if (mouseOn)
             {
                 spriteBatch.Draw(wireVertical.Texture, new Rectangle(wireEnd.ToPoint(), new Point((int)(wireWidth + highlight), (int)dist)), wireVertical.SourceRect,
@@ -378,7 +503,7 @@ namespace Barotrauma.Items.Components
                     ConnectionPanel.HighlightedWire = wire;
 
                     bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring || panel.AlwaysAllowRewiring;
-                    if (allowRewiring && (!wire.Locked && !panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
+                    if (allowRewiring && (!wire.Locked && !wire.Item.IsLayerHidden && !panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
                         if (PlayerInput.PrimaryMouseButtonHeld()) { DraggingConnected = wire; }
@@ -391,110 +516,84 @@ namespace Barotrauma.Items.Components
         {
             Rectangle panelRect = panel.GuiFrame.Rect;
             int x = panelRect.X, y = panelRect.Y;
-            Vector2 scale = GetScale(panel.GuiFrame.RectTransform.MaxSize, panel.GuiFrame.Rect.Size);
-            Vector2 rightPos = GetRightPos(x, y, panelRect.Width, scale);
-            Vector2 leftPos = GetLeftPos(x, y, scale);
-            int connectorIntervalLeft = GetConnectorIntervalLeft(panelRect.Height, scale, panel);
-            int connectorIntervalRight = GetConnectorIntervalRight(panelRect.Height, scale, panel);
+            Vector2 rightPos = GetRightPos(x, y, panelRect.Width);
+            Vector2 leftPos = GetLeftPos(x, y);
+            int connectorIntervalLeft = GetConnectorIntervalLeft(panelRect.Height, panel);
+            int connectorIntervalRight = GetConnectorIntervalRight(panelRect.Height, panel);
             newRectSize = panelRect.Size;
-            var labelAreas = new List<Rectangle>();
-            for (int i = 0; i < 100; i++)
+
+            //make sure the connection labels don't overlap horizontally
+            float rightMostInput = panelRect.Center.X;
+            float leftMostOutput = panelRect.Center.X;
+            foreach (var c in panel.Connections)
             {
-                labelAreas.Clear();
-                foreach (var c in panel.Connections)
+                if (c.IsOutput)
                 {
-                    if (c.IsOutput)
-                    {
-                        var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.Value.ToUpperInvariant(), scale);
-                        labelAreas.Add(labelArea);
-                        rightPos.Y += connectorIntervalLeft;
-                    }
-                    else
-                    {
-                        var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.Value.ToUpperInvariant(), scale);
-                        labelAreas.Add(labelArea);
-                        leftPos.Y += connectorIntervalRight;
-                    }
+                    var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.Value.ToUpperInvariant());
+                    leftMostOutput = Math.Min(leftMostOutput, labelArea.X);
+                    rightPos.Y += connectorIntervalLeft;
                 }
-                bool foundOverlap = false;
-                for (int j = 0; j < labelAreas.Count; j++)
+                else
                 {
-                    for (int k = 0; k < labelAreas.Count; k++)
-                    {
-                        if (k == j) { continue; }
-                        if (!labelAreas[j].Intersects(labelAreas[k])) { continue; }
-                        newRectSize += new Point(10);
-                        Point maxSize = new Point(
-                            Math.Max(panel.GuiFrame.RectTransform.MaxSize.X, newRectSize.X),
-                            Math.Max(panel.GuiFrame.RectTransform.MaxSize.Y, newRectSize.Y));
-                        scale = GetScale(maxSize, newRectSize);
-                        rightPos = GetRightPos(x, y, newRectSize.X, scale);
-                        leftPos = GetLeftPos(x, y, scale);
-                        connectorIntervalLeft = GetConnectorIntervalLeft(newRectSize.Y, scale, panel);
-                        connectorIntervalRight = GetConnectorIntervalRight(newRectSize.Y, scale, panel);
-                        foundOverlap = true;
-                        break;
-                    }
+                    var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.Value.ToUpperInvariant());
+                    rightMostInput = Math.Max(rightMostInput, labelArea.Right);
+                    leftPos.Y += connectorIntervalRight;
                 }
-                if (!foundOverlap) { break; }
+            }
+            if (leftMostOutput < rightMostInput)
+            {
+                newRectSize += new Point((int)(rightMostInput - leftMostOutput) + GUI.IntScale(15), 0);
+            }
+
+            //make sure connection sprites don't overlap vertically
+            while (GetConnectorIntervalLeft(newRectSize.Y, panel) < ConnectionSpriteSize ||
+                    GetConnectorIntervalRight(newRectSize.Y, panel) < ConnectionSpriteSize)
+            {
+                newRectSize.Y += 10;
             }
             return newRectSize.X != panel.GuiFrame.Rect.Width || newRectSize.Y > panel.GuiFrame.Rect.Height;
-        }
-
-        private static Vector2 GetScale(Point maxSize, Point size)
-        {
-            Vector2 scale = new Vector2(GUI.Scale);
-            if (maxSize.X < int.MaxValue)
-            {
-                scale.X = maxSize.X / size.X;
-            }
-            if (maxSize.Y < int.MaxValue)
-            {
-                scale.Y = maxSize.Y / size.Y;
-            }
-            return scale;
         }
 
         private static Vector2 GetInputLabelPosition(Vector2 connectorPosition, ConnectionPanel panel, Connection connection)
         {
             return new Vector2(
-                connectorPosition.X + 25 * panel.Scale,
-                connectorPosition.Y - 5 * panel.Scale - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).Y);
+                connectorPosition.X + 25 * GUI.Scale,
+                connectorPosition.Y - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).Y / 2);
         }
 
         private static Vector2 GetOutputLabelPosition(Vector2 connectorPosition, ConnectionPanel panel, Connection connection)
         {
             return new Vector2(
-                connectorPosition.X - 25 * panel.Scale - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).X,
-                connectorPosition.Y + 5 * panel.Scale);
+                connectorPosition.X - 25 * GUI.Scale - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).X,
+                connectorPosition.Y - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).Y / 2);
         }
 
-        private static Rectangle GetLabelArea(Vector2 labelPos, string text, Vector2 scale)
+        private static Rectangle GetLabelArea(Vector2 labelPos, string text)
         {
             Vector2 textSize = GUIStyle.SmallFont.MeasureString(text);
             Rectangle labelArea = new Rectangle(labelPos.ToPoint(), textSize.ToPoint());
-            labelArea.Inflate(10 * scale.X, 3 * scale.Y);
+            labelArea.Inflate(GUI.IntScale(10), GUI.IntScale(3));
             return labelArea;
         }
 
-        private static Vector2 GetLeftPos(int x, int y, Vector2 scale)
+        private static Vector2 GetLeftPos(int x, int y)
         {
-            return new Vector2(x + 80 * scale.X, y + 60 * scale.Y);
+            return new Vector2(x + 80 * GUI.Scale, y + 60 * GUI.Scale);
         }
 
-        private static Vector2 GetRightPos(int x, int y, int width, Vector2 scale)
+        private static Vector2 GetRightPos(int x, int y, int width)
         {
-            return new Vector2(x + width - 80 * scale.X, y + 60 * scale.Y);
+            return new Vector2(x + width - 80 * GUI.Scale, y + 60 * GUI.Scale);
         }
 
-        private static int GetConnectorIntervalLeft(int height, Vector2 scale, ConnectionPanel panel)
+        private static int GetConnectorIntervalLeft(int height, ConnectionPanel panel)
         {
-            return (height - (int)(100 * scale.Y)) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
+            return (height - GUI.IntScale(60)) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
         }
 
-        private static int GetConnectorIntervalRight(int height, Vector2 scale, ConnectionPanel panel)
+        private static int GetConnectorIntervalRight(int height, ConnectionPanel panel)
         {
-            return (height - (int)(100 * scale.Y)) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
+            return (height - GUI.IntScale(60)) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
         }
     }
 }

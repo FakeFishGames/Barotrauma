@@ -1,11 +1,12 @@
-using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Waits for a player to trigger the action before continuing. Triggering can mean entering a specific trigger area, or interacting with a specific entity.
+    /// </summary>
     class TriggerAction : EventAction
     {
         public enum TriggerType
@@ -49,6 +50,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.Yes, description: "If true and using multiple targets, all targets must be inside/outside the radius.")]
         public bool CheckAllTargets { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "If true, interacting with the target will make the character select it.")]
+        public bool SelectOnTrigger { get; set; }
 
         private float distance;
 
@@ -186,7 +190,12 @@ namespace Barotrauma
                         {
                             if (npc != null)
                             {
-                                if (npc.CampaignInteractionType != CampaignMode.InteractionType.Examine)
+                                if (npc.CampaignInteractionType == CampaignMode.InteractionType.Talk)
+                                {
+                                    //if the NPC has a conversation available, don't assign the trigger until the conversation is done
+                                    continue;
+                                }
+                                else if (npc.CampaignInteractionType != CampaignMode.InteractionType.Examine)
                                 {
                                     if (!npcsOrItems.Any(n => n.TryGet(out Character npc2) && npc2 == npc)) 
                                     {
@@ -213,7 +222,8 @@ namespace Barotrauma
                                 {
                                     npcsOrItems.Add(item);
                                 }
-                                item.CampaignInteractionType = CampaignMode.InteractionType.Examine;
+                                item.AssignCampaignInteractionType(CampaignMode.InteractionType.Examine, 
+                                    GameMain.NetworkMember?.ConnectedClients.Where(c => c.Character != null && targets2.Contains(c.Character)));
                                 if (player.SelectedItem == item ||
                                     player.SelectedSecondaryItem == item ||
                                     (player.Inventory != null && player.Inventory.Contains(item)) ||
@@ -276,7 +286,7 @@ namespace Barotrauma
                 }
                 else if (npcOrItem.TryGet(out Item item))
                 {
-                    item.CampaignInteractionType = CampaignMode.InteractionType.None;
+                    item.AssignCampaignInteractionType(CampaignMode.InteractionType.None);
                 }
             }
         }
@@ -350,6 +360,37 @@ namespace Barotrauma
             if (!ApplyToTarget2.IsEmpty)
             {
                 ParentEvent.AddTarget(ApplyToTarget2, entity2);
+            }
+
+            Character player = null;
+            Entity target = null;
+            if (entity1 is Character { IsPlayer: true })
+            {
+                player = entity1 as Character;
+                target = entity2;
+            }
+            else if (entity2 is Character { IsPlayer: true })
+            {
+                player = entity2 as Character;
+                target = entity1;
+            }
+            if (player != null && SelectOnTrigger)
+            {
+                if (target is Character targetCharacter)
+                {
+                    player.SelectCharacter(targetCharacter);
+                }
+                else if (target is Item targetItem)
+                {
+                    if (targetItem.IsSecondaryItem)
+                    {
+                        player.SelectedSecondaryItem = targetItem;
+                    }
+                    else
+                    {
+                        player.SelectedItem = targetItem;
+                    }
+                }
             }
 
             isRunning = false;

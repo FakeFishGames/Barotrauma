@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             if (!MathUtils.IsValid(dir)) { return true; }
             float length = 200;
             dir = dir.ClampLength(length) / length;
-            Vector2 propulsion = dir * Force * character.PropulsionSpeedMultiplier;
+            Vector2 propulsion = dir * Force * character.PropulsionSpeedMultiplier * (1.0f + character.GetStatValue(StatTypes.PropulsionSpeed));
             if (character.AnimController.InWater && Force > 0.0f) { character.AnimController.TargetMovement = dir; }
 
             foreach (Limb limb in character.AnimController.Limbs)

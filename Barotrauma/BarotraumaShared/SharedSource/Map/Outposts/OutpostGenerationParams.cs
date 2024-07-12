@@ -31,6 +31,12 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(-1, IsPropertySaveable.Yes, description: "The closer to the current level difficulty this value is, the higher the probability of choosing these generation params are. Defaults to -1, which means we use the current difficulty."), Editable(MinValueInt = 1, MaxValueInt = 50)]
+        public int PreferredDifficulty
+        {
+            get;
+            set;
+        }
 
         [Serialize(10, IsPropertySaveable.Yes, description: "Total number of modules in the outpost."), Editable(MinValueInt = 1, MaxValueInt = 50)]
         public int TotalModuleCount
@@ -124,6 +130,13 @@ namespace Barotrauma
 
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the outpost generation parameters that should be used if this outpost has become critically irradiated."), Editable]
         public string ReplaceInRadiation { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "By default, sonar only shows the outline of the sub/outpost from the outside. Enable this if you want to see each structure individually."), Editable]
+        public bool AlwaysShowStructuresOnSonar
+        {
+            get;
+            set;
+        }
 
         public ContentPath OutpostFilePath { get; set; }
 
@@ -243,7 +256,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Error in outpost generation parameters \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.");
+                    DebugConsole.ThrowError($"Error in outpost generation parameters \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.", contentPackage: element.ContentPackage);
                 }
             }
 

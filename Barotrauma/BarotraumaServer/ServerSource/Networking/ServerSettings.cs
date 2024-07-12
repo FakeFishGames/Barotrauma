@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -94,15 +95,6 @@ namespace Barotrauma.Networking
         {
             NetFlags requiredFlags = GetRequiredFlags(c);
             outMsg.WriteByte((byte)requiredFlags);
-            if (requiredFlags.HasFlag(NetFlags.Name))
-            {
-                outMsg.WriteString(ServerName);
-            }
-
-            if (requiredFlags.HasFlag(NetFlags.Message))
-            {
-                outMsg.WriteString(ServerMessageText);
-            }
             outMsg.WriteByte((byte)PlayStyle);
             outMsg.WriteByte((byte)MaxPlayers);
             outMsg.WriteBoolean(HasPassword);
@@ -121,8 +113,7 @@ namespace Barotrauma.Networking
                 WriteHiddenSubs(outMsg);
             }
 
-            if (c.HasPermission(Networking.ClientPermissions.ManageSettings)
-                && NetIdUtils.IdMoreRecent(
+            if (NetIdUtils.IdMoreRecent(
                     newID: LastUpdateIdForFlag[NetFlags.Properties],
                     oldID: c.LastRecvServerSettingsUpdate))
             {
@@ -146,20 +137,6 @@ namespace Barotrauma.Networking
 
             bool changed = false;
             
-            if (flags.HasFlag(NetFlags.Name))
-            {
-                string serverName = incMsg.ReadString();
-                if (ServerName != serverName) { changed = true; }
-                ServerName = serverName;
-            }
-            
-            if (flags.HasFlag(NetFlags.Message))
-            {
-                string serverMessageText = incMsg.ReadString();
-                if (ServerMessageText != serverMessageText) { changed = true; }
-                ServerMessageText = serverMessageText;
-            }
-                        
             if (flags.HasFlag(NetFlags.Properties))
             {
                 bool propertiesChanged = ReadExtraCargo(incMsg);
@@ -215,38 +192,9 @@ namespace Barotrauma.Networking
                 int orBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
                 int andBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
                 GameMain.NetLobbyScreen.MissionType = (MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
-                
-                int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
-                if (traitorSetting < 0) { traitorSetting = 2; }
-                if (traitorSetting > 2) { traitorSetting = 0; }
-                TraitorsEnabled = (YesNoMaybe)traitorSetting;
 
-                int botCount = BotCount + incMsg.ReadByte() - 1;
-                if (botCount < 0) { botCount = MaxBotCount; }
-                if (botCount > MaxBotCount) { botCount = 0; }
-                BotCount = botCount;
-
-                int botSpawnMode = (int)BotSpawnMode + incMsg.ReadByte() - 1;
-                if (botSpawnMode < 0) { botSpawnMode = 1; }
-                if (botSpawnMode > 1) { botSpawnMode = 0; }
-                BotSpawnMode = (BotSpawnMode)botSpawnMode;
-
-                float levelDifficulty = incMsg.ReadSingle();
-                if (levelDifficulty >= 0.0f) { SelectedLevelDifficulty = levelDifficulty; }
-
-                bool changedUseRespawnShuttle = incMsg.ReadBoolean();
-                bool useRespawnShuttle = incMsg.ReadBoolean();
-                if (changedUseRespawnShuttle)
-                {
-                    UseRespawnShuttle = useRespawnShuttle;
-                }
-
-                bool changedAutoRestart = incMsg.ReadBoolean();
-                bool autoRestart = incMsg.ReadBoolean();
-                if (changedAutoRestart)
-                {
-                    AutoRestart = autoRestart;
-                }
+                //the byte indicates the direction we're changing the value, subtract one to get negative values from a byte
+                TraitorDangerLevel = TraitorDangerLevel + incMsg.ReadByte() - 1;
 
                 changed |= true;
                 UpdateFlag(NetFlags.Misc);
@@ -277,15 +225,15 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("port", Port);
-#if USE_STEAM
-            doc.Root.SetAttributeValue("queryport", QueryPort);
-#endif
+
+            if (QueryPort != 0)
+            {
+                doc.Root.SetAttributeValue("queryport", QueryPort);
+            }
             doc.Root.SetAttributeValue("password", password ?? "");
 
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
             doc.Root.SetAttributeValue("autorestart", autoRestart);
-
-            doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
 
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
 
@@ -296,6 +244,8 @@ namespace Barotrauma.Networking
 
             SerializableProperty.SerializeProperties(this, doc.Root, true);
             doc.Root.Add(CampaignSettings.Save());
+
+            doc.Root.SetAttributeValue("DisabledMonsters", string.Join(",", MonsterEnabled.Where(kvp => !kvp.Value).Select(kvp => kvp.Key.Value)));
 
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
@@ -344,10 +294,7 @@ namespace Barotrauma.Networking
             AllowSubVoting = SubSelectionMode == SelectionMode.Vote;            
             AllowModeVoting = ModeSelectionMode == SelectionMode.Vote;
 
-            selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
-            GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
-            
-            GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+            GameMain.NetLobbyScreen.SetTraitorProbability(traitorProbability);
 
             HiddenSubs.UnionWith(doc.Root.GetAttributeStringArray("HiddenSubs", Array.Empty<string>()));
             if (HiddenSubs.Any())
@@ -370,6 +317,8 @@ namespace Barotrauma.Networking
                     "192-255",
                     "384-591",
                     "1024-1279",
+                    "4352-4607", //Hangul Jamo
+                    "44032-55215", //Hangul Syllables
                     "19968-21327","21329-40959","13312-19903","131072-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
                 };
 
@@ -439,6 +388,14 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
 
             MonsterEnabled ??= CharacterPrefab.Prefabs.Select(p => (p.Identifier, true)).ToDictionary();
+            var disabledMonsters = doc.Root.GetAttributeIdentifierArray("DisabledMonsters", Array.Empty<Identifier>());
+            foreach (var disabledMonster in disabledMonsters)
+            {
+                if (MonsterEnabled.ContainsKey(disabledMonster))
+                {
+                    MonsterEnabled[disabledMonster] = false;
+                }
+            }
 
             foreach (XElement element in doc.Root.Elements())
             {
@@ -605,7 +562,7 @@ namespace Barotrauma.Networking
                 {
                     foreach (DebugConsole.Command command in clientPermission.PermittedCommands)
                     {
-                        clientElement.Add(new XElement("command", new XAttribute("name", command.names[0])));
+                        clientElement.Add(new XElement("command", new XAttribute("name", command.Names[0])));
                     }
                 }
                 doc.Root.Add(clientElement);

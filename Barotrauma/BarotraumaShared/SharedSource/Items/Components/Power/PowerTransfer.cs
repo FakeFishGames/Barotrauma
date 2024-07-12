@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
                 isBroken = false;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             float powerReadingOut = 0;
             float loadReadingOut = ExtraLoad;
@@ -407,7 +407,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!(this is RelayComponent))
+            if (this is not RelayComponent)
             {
                 if (PowerConnections.Any(p => !p.IsOutput) && PowerConnections.Any(p => p.IsOutput))
                 {
@@ -435,7 +435,7 @@ namespace Barotrauma.Items.Components
                 {
                     //other junction boxes don't need to receive the signal in the pass-through signal connections
                     //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                    if (ic is PowerTransfer && !(ic is RelayComponent)) { continue; }
+                    if (ic is PowerTransfer && ic is not RelayComponent) { continue; }
                     ic.ReceiveSignal(signal, recipient);
                 }
 
@@ -454,6 +454,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
             connectedRecipients?.Clear();
             connectionDirty?.Clear();
+            recipientsToRefresh.Clear();
         }
     }
 }

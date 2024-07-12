@@ -29,6 +29,8 @@ namespace Barotrauma
         /// </summary>
         private bool forcePlaySounds;
 
+        private CoroutineHandle playSoundAfterLoadedCoroutine;
+
         partial void InitProjSpecific(ContentXElement element, string parentDebugName)
         {
             particleEmitters = new List<ParticleEmitter>();
@@ -150,9 +152,7 @@ namespace Barotrauma
                             GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                             return;
                         }
-                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
-                        ignoreMuffling = sound.IgnoreMuffling;
-                        if (soundChannel != null) { soundChannel.Looping = loopSound; }
+                        PlaySoundOrDelayIfNotLoaded(sound);
                     }
                 }
                 else
@@ -177,9 +177,7 @@ namespace Barotrauma
                         GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         return;
                     }
-                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling, freqMult: selectedSound.GetRandomFrequencyMultiplier());
-                    ignoreMuffling = selectedSound.IgnoreMuffling;
-                    if (soundChannel != null) { soundChannel.Looping = loopSound; }
+                    PlaySoundOrDelayIfNotLoaded(selectedSound);
                 }
             }
             else
@@ -192,6 +190,46 @@ namespace Barotrauma
                 ActiveLoopingSounds.Add(this);
                 soundEmitter = entity;
                 loopStartTime = Timing.TotalTime;
+            }
+                        
+            void PlaySoundOrDelayIfNotLoaded(RoundSound selectedSound)
+            {
+                if (playSoundAfterLoadedCoroutine != null) { return; }
+                if (selectedSound.Sound.Loading)
+                {
+                    playSoundAfterLoadedCoroutine = CoroutineManager.StartCoroutine(PlaySoundAfterLoaded(selectedSound));                    
+                }
+                else
+                {
+                    PlaySound(selectedSound);
+                }
+            }
+
+            IEnumerable<CoroutineStatus> PlaySoundAfterLoaded(RoundSound selectedSound)
+            {
+                float maxWaitTimer = 1.0f;
+                while (selectedSound.Sound.Loading && maxWaitTimer > 0.0f)
+                {
+                    maxWaitTimer -= CoroutineManager.DeltaTime;
+                    yield return CoroutineStatus.Running;
+                }
+                if (!selectedSound.Sound.Loading)
+                {
+                    PlaySound(selectedSound);
+                }
+                yield return CoroutineStatus.Success;
+            }
+
+            void PlaySound(RoundSound selectedSound)
+            {
+                //if the sound loops, we must make sure the existing channel
+                System.Diagnostics.Debug.Assert(
+                    soundChannel == null || !soundChannel.IsPlaying || soundChannel.FadingOutAndDisposing || !soundChannel.Looping,
+                    "A StatusEffect attempted to play a sound, but an looping sound is already playing. The looping sound should be stopped before playing a new one, or it will keep looping indefinitely.");
+                
+                soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling, freqMult: selectedSound.GetRandomFrequencyMultiplier());
+                ignoreMuffling = selectedSound.IgnoreMuffling;
+                if (soundChannel != null) { soundChannel.Looping = loopSound; }
             }
         }
 
@@ -210,7 +248,7 @@ namespace Barotrauma
                     statusEffect.soundChannel.FadeOutAndDispose();
                     statusEffect.soundChannel = null;
                 }
-                else
+                else if (statusEffect.soundEmitter is { Removed: false })
                 {
                     statusEffect.soundChannel.Position = new Vector3(statusEffect.soundEmitter.WorldPosition, 0.0f);
                     if (doMuffleCheck && !statusEffect.ignoreMuffling)

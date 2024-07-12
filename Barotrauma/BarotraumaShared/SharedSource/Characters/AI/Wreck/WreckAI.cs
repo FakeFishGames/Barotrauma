@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -80,7 +80,7 @@ namespace Barotrauma
         {
             foreach (var turret in turrets)
             {
-                turret.UpdateAutoOperate(deltaTime, friendlyTag);
+                turret.UpdateAutoOperate(deltaTime, ignorePower: true, friendlyTag);
             }
         }
     }
@@ -107,9 +107,9 @@ namespace Barotrauma
 
         private static IEnumerable<T> GetThalamusEntities<T>(Submarine wreck, Identifier tag) where T : MapEntity => GetThalamusEntities(wreck, tag).Where(e => e is T).Select(e => e as T);
 
-        private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, Identifier tag) => MapEntity.mapEntityList.Where(e => e.Submarine == wreck && e.Prefab != null && IsThalamus(e.Prefab, tag));
+        private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, Identifier tag) => MapEntity.MapEntityList.Where(e => e.Submarine == wreck && e.Prefab != null && IsThalamus(e.Prefab, tag));
 
-        private static bool IsThalamus(MapEntityPrefab entityPrefab, Identifier tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
+        public static bool IsThalamus(MapEntityPrefab entityPrefab, Identifier tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
 
         public static WreckAI Create(Submarine wreck)
         {
@@ -213,7 +213,7 @@ namespace Barotrauma
             foreach (Item item in thalamusItems)
             {
                 // Ensure that thalamus items are visible
-                item.HiddenInGame = false;
+                item.IsLayerHidden = false;
                 if (item.HasTag(Config.Spawner))
                 {
                     if (!spawnOrgans.Contains(item))
@@ -273,6 +273,10 @@ namespace Barotrauma
                 }
             }
             destroyedOrgans.ForEach(o => spawnOrgans.Remove(o));
+            if (!IsClient)
+            {
+                if (!initialCellsSpawned) { SpawnInitialCells(); }
+            }
             bool isSomeoneNearby = false;
             float minDist = Sonar.DefaultSonarRange * 2.0f;
 #if SERVER
@@ -322,7 +326,6 @@ namespace Barotrauma
             OperateTurrets(deltaTime, Config.Entity);
             if (!IsClient)
             {
-                if (!initialCellsSpawned) { SpawnInitialCells(); }
                 UpdateReinforcements(deltaTime);
             }
         }

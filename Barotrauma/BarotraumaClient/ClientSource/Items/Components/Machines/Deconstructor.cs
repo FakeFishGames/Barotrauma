@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.08f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1f, 0.07f), paddedFrame.RectTransform) { MinSize = new Point(0, GUI.IntScale(25)) }, item.Name, font: GUIStyle.SubHeadingFont)
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.07f), paddedFrame.RectTransform) { MinSize = new Point(0, GUI.IntScale(25)) }, item.Prefab.Name, font: GUIStyle.SubHeadingFont)
             {
                 TextAlignment = Alignment.Center,
                 AutoScaleHorizontal = true
@@ -341,7 +341,7 @@ namespace Barotrauma.Items.Components
                 GUIFrame itemFrame = new GUIFrame(new RectTransform(new Vector2(0.1f, 1f), parent.RectTransform), style: null)
                 {
                     UserData = identifier,
-                    ToolTip = GetTooltip(prefab)
+                    ToolTip = prefab.CreateTooltipText()
                 };
 
                 Sprite icon = prefab.InventoryIcon ?? prefab.Sprite;
@@ -371,21 +371,6 @@ namespace Barotrauma.Items.Components
                 if (!(component.FindChild(outputItemCountUserData, recursive: true) is GUITextBlock textBlock)) { return; }
 
                 textBlock.Text = TextManager.GetWithVariable("campaignstore.quantity", "[amount]", count.ToString());
-            }
-
-            static RichString GetTooltip(ItemPrefab prefab)
-            {
-                LocalizedString toolTip = $"‖color:{Color.White.ToStringHex()}‖{prefab.Name}‖color:end‖";
-
-                LocalizedString description = prefab.Description;
-                if (!description.IsNullOrEmpty()) { toolTip += '\n' + description; }
-
-                if (prefab.ContentPackage != GameMain.VanillaContent && prefab.ContentPackage != null)
-                {
-                    toolTip += $"\n‖color:{Color.MediumPurple.ToStringHex()}‖{prefab.ContentPackage.Name}‖color:end‖";
-                }
-
-                return RichString.Rich(toolTip);
             }
         }
 
@@ -428,7 +413,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             inSufficientPowerWarning.Visible = IsActive && !hasPower;
         }

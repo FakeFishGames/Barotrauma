@@ -2,6 +2,7 @@
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using Voronoi2;
 
 namespace Barotrauma
@@ -75,6 +76,7 @@ namespace Barotrauma
         public void AddDamage(float damage, Vector2 worldPosition)
         {
             AddDamageProjSpecific(damage, worldPosition);
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (Destroyed) { return; }
             if (!MathUtils.NearlyEqual(damage, 0.0f)) { NetworkUpdatePending = true; }
@@ -89,7 +91,7 @@ namespace Barotrauma
         partial void AddDamageProjSpecific(float damage, Vector2 worldPosition);
 
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = true)
         {
             AddDamage(attack.StructureDamage, worldPosition);
             return new AttackResult(attack.StructureDamage);
@@ -100,6 +102,7 @@ namespace Barotrauma
 #if CLIENT
             SoundPlayer.PlaySound("icebreak", WorldPosition);
 #endif
+            Vector2 center = Vector2.Zero;
             //generate initial triangles (one triangle from each edge to the center of the cell)
             List<List<Vector2>> triangles = new List<List<Vector2>>();
             foreach (var cell in Cells)
@@ -114,6 +117,11 @@ namespace Barotrauma
                     };
                     triangles.Add(triangleVerts);
                 }
+                center += cell.Center;
+            }
+            if (Cells.Any())
+            {
+                center /= Cells.Count;
             }
 
             //split triangles that have edges more than 1000 units long
@@ -174,23 +182,24 @@ namespace Barotrauma
 
                 Vector2 bodyDiff = simTriangleCenter - Body.Position;
                 fragment.Body.LinearVelocity = (bodyDiff + Rand.Vector(0.5f)).ClampLength(15.0f);
-                fragment.Body.AngularVelocity = Rand.Range(-0.5f, 0.5f);// MathHelper.Clamp(-bodyDiff.X * 0.1f, -0.5f, 0.5f);
+                fragment.Body.AngularVelocity = Rand.Range(-0.5f, 0.5f);
 
                 Level.Loaded.UnsyncedExtraWalls.Add(fragment);
 
 #if CLIENT
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     int startEdgeIndex = Rand.Int(3);
                     Vector2 pos1 = triangle[startEdgeIndex];
                     Vector2 pos2 = triangle[(startEdgeIndex + 1) % 3];
 
-                    var particle = GameMain.ParticleManager.CreateParticle("iceshards",
+                    var particle = GameMain.ParticleManager.CreateParticle("iceexplosion",
                         triangleCenter + Vector2.Lerp(pos1, pos2, Rand.Range(0.0f, 1.0f)),
-                        Rand.Vector(Rand.Range(50.0f, 1000.0f)) + fragment.Body.LinearVelocity * 100.0f);
+                        velocity: (Rand.Vector(Rand.Range(50.0f, 1000.0f)) + fragment.Body.LinearVelocity * 100.0f));
                     if (particle != null)
                     {
                         particle.Size *= Rand.Range(1.0f, 5.0f);
+                        particle.ColorMultiplier *= Rand.Range(0.7f, 1.0f);
                     }
                 }
 #endif

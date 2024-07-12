@@ -60,7 +60,8 @@ namespace Barotrauma.Items.Components
                         string statTypeString = subElement.GetAttributeString("stattype", "");
                         if (!Enum.TryParse(statTypeString, true, out StatType statType))
                         {
-                            DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" in item (" + ((MapEntity)item).Prefab.Identifier + ")");
+                            DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" in item (" + ((MapEntity)item).Prefab.Identifier + ")",
+                                contentPackage: element.ContentPackage);
                         }
                         float statValue = subElement.GetAttributeFloat("value", 0f);
                         statValues.TryAdd(statType, statValue);                        

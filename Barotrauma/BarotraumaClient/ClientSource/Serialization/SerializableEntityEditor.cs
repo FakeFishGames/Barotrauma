@@ -2,10 +2,12 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Barotrauma
 {
@@ -23,6 +25,31 @@ namespace Barotrauma
         public static bool PropertyChangesActive;
         public static DateTime NextCommandPush;
         public static Tuple<SerializableProperty, PropertyCommand> CommandBuffer;
+
+        private bool isReadonly;
+        public bool Readonly
+        {
+            get => isReadonly;
+            set 
+            {
+                foreach (var component in Fields.SelectMany(f => f.Value))
+                {
+                    switch (component)
+                    {
+                        case GUINumberInput numInput:
+                            numInput.Readonly = value;
+                            break;
+                        case GUITextBox textBox:
+                            textBox.Readonly = value;
+                            break;
+                        default:
+                            component.Enabled = !value;
+                            break;
+                    }
+                }
+                isReadonly = value;
+            }
+        }
 
         private Action refresh;
 
@@ -299,7 +326,7 @@ namespace Barotrauma
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, IEnumerable<SerializableProperty> properties, bool showName, string style = "", int elementHeight = 24, GUIFont titleFont = null)
             : base(style, new RectTransform(Vector2.One, parent))
         {
-            this.elementHeight =  (int)(elementHeight * GUI.Scale);
+            elementHeight =  (int)(elementHeight * GUI.Scale);
             var tickBoxStyle = GUIStyle.GetComponentStyle("GUITickBox");
             var textBoxStyle = GUIStyle.GetComponentStyle("GUITextBox");
             var numberInputStyle = GUIStyle.GetComponentStyle("GUINumberInput");
@@ -316,7 +343,50 @@ namespace Barotrauma
                     Color = Color.Black
                 };
             }
-            properties.ForEach(ep => CreateNewField(ep, entity));
+
+            List<Header> headers = new List<Header>() 
+            { 
+                //"no header" comes first = properties under no header are listed first
+                null 
+            };
+            //check which header each property is under
+            Dictionary<SerializableProperty, Header> propertyHeaders = new Dictionary<SerializableProperty, Header>();
+            Header prevHeader = null;
+            foreach (var property in properties)
+            {
+                var header = property.GetAttribute<Header>();
+                if (header != null)
+                {
+                    prevHeader = header;
+                    //Attribute.Equals is based on the equality of the fields,
+                    //so in practice we treat identical headers split into different files/classes as the same header
+                    if (!headers.Contains(header)) 
+                    { 
+                        //collect headers into a list in the order they're encountered in
+                        //(to keep them in the same order as they're defined in the code, as the dictionary is not in any particular order)                        
+                        headers.Add(header); 
+                    }
+                }
+                propertyHeaders[property] = prevHeader;
+            }
+
+            prevHeader = null;
+            foreach (Header header in headers)
+            {
+                //go through all the properties that belong under this header
+                foreach (var property in properties)
+                {
+                    if (!Equals(propertyHeaders[property], header)) { continue; }
+                    //don't create a header if the previous header has the same text as this one (= if we already created this header before)
+                    if (header != null && !Equals(header, prevHeader))
+                    {
+                        new GUITextBlock(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform, isFixedSize: true),
+                            header.Text, textColor: GUIStyle.TextColorBright, font: GUIStyle.SubHeadingFont);
+                        prevHeader = header;
+                    }
+                    CreateNewField(property, entity);
+                }
+            }
 
             //scale the size of this component and the layout group to fit the children
             Recalculate();
@@ -343,12 +413,11 @@ namespace Barotrauma
             if (property.PropertyType == typeof(string) && value == null)
             {
                 value = "";
-            }            
+            }
 
             Identifier propertyTag = $"{property.PropertyInfo.DeclaringType.Name}.{property.PropertyInfo.Name}".ToIdentifier();
             Identifier fallbackTag = property.PropertyInfo.Name.ToIdentifier();
-            LocalizedString displayName =
-                TextManager.Get(propertyTag, $"sp.{propertyTag}.name".ToIdentifier());
+            LocalizedString displayName = TextManager.Get(propertyTag, $"sp.{propertyTag}.name".ToIdentifier());
             if (displayName.IsNullOrEmpty())
             {
                 Editable editable = property.GetAttribute<Editable>();
@@ -380,14 +449,18 @@ namespace Barotrauma
             }
 
             LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description");
-            if (toolTip.IsNullOrEmpty() && entity.GetType() != property.PropertyInfo.DeclaringType)
+            if (entity.GetType() != property.PropertyInfo.DeclaringType)
             {
                 Identifier propertyTagForDerivedClass = $"{entity.GetType().Name}.{property.PropertyInfo.Name}".ToIdentifier();
-                toolTip = TextManager.Get($"{propertyTagForDerivedClass}.description", $"sp.{propertyTagForDerivedClass}.description");
+                var toolTipForDerivedClass = TextManager.Get($"{propertyTagForDerivedClass}.description", $"sp.{propertyTagForDerivedClass}.description");
+                if (!toolTipForDerivedClass.IsNullOrEmpty())
+                {
+                    toolTip = toolTipForDerivedClass;
+                }
             }
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip = TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
+                toolTip = TextManager.Get($"{propertyTag}.description", $"{fallbackTag}.description", $"sp.{fallbackTag}.description");
             }
             if (toolTip.IsNullOrEmpty())
             {
@@ -475,6 +548,7 @@ namespace Barotrauma
                 GUITickBox propertyTickBox = new GUITickBox(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform, isFixedSize: true), displayName)
                 {
                     Font = GUIStyle.SmallFont,
+                    Enabled = !Readonly,
                     Selected = value,
                     ToolTip = toolTip,
                     OnSelected = (tickBox) =>
@@ -525,7 +599,8 @@ namespace Barotrauma
                 var numberInput = new GUINumberInput(new RectTransform(new Vector2(inputFieldWidth, 1), frame.RectTransform, Anchor.TopRight), NumberType.Int)
                 {
                     ToolTip = toolTip,
-                    Font = GUIStyle.SmallFont
+                    Font = GUIStyle.SmallFont,
+                    Readonly = Readonly
                 };
                 numberInput.MinValueInt = editableAttribute.MinValueInt;
                 numberInput.MaxValueInt = editableAttribute.MaxValueInt;
@@ -568,22 +643,49 @@ namespace Barotrauma
             numberInput.MinValueFloat = editableAttribute.MinValueFloat;
             numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
             numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-            numberInput.valueStep = editableAttribute.ValueStep;
+            numberInput.ValueStep = editableAttribute.ValueStep;
+            numberInput.PlusMinusButtonVisibility = editableAttribute
+                .ForceShowPlusMinusButtons ? GUINumberInput.ButtonVisibility.ForceVisible : default;
             numberInput.FloatValue = value;
 
-            numberInput.OnValueChanged += (numInput) =>
+            numberInput.OnValueChanged += numInput =>
             {
                 if (SetPropertyValue(property, entity, numInput.FloatValue))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }
             };
+
+            HandleSetterValueTampering(numberInput, () => property.GetFloatValue(entity));
             refresh += () =>
             {
                 if (!numberInput.TextBox.Selected) { numberInput.FloatValue = (float)property.GetValue(entity); }
             };
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name.ToIdentifier(), new GUIComponent[] { numberInput }); }
             return frame;
+        }
+
+        private static void HandleSetterValueTampering(GUINumberInput numberInput, Func<float> getter)
+        {
+            // Lots of UI boilerplate to handle all(?) cases where the property's setter may be called
+            // and modify the input value (e.g. rotation value wrapping)
+            void HandleSetterModifyingInput(GUINumberInput numInput)
+            {
+                var inputFloatValue = numInput.FloatValue;
+                var resultingFloatValue = getter();
+                if (!MathUtils.NearlyEqual(resultingFloatValue, inputFloatValue))
+                {
+                    numInput.FloatValue = resultingFloatValue;
+                }
+            }
+            bool HandleSetterModifyingInputOnButtonPressed() { HandleSetterModifyingInput(numberInput); return true; }
+            bool HandleSetterModifyingInputOnButtonClicked(GUIButton _, object __) { HandleSetterModifyingInput(numberInput); return true; }
+
+            numberInput.OnValueEntered += HandleSetterModifyingInput;
+            numberInput.PlusButton.OnPressed += HandleSetterModifyingInputOnButtonPressed;
+            numberInput.PlusButton.OnClicked += HandleSetterModifyingInputOnButtonClicked;
+            numberInput.MinusButton.OnPressed += HandleSetterModifyingInputOnButtonPressed;
+            numberInput.MinusButton.OnClicked += HandleSetterModifyingInputOnButtonClicked;
         }
 
         public GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value, LocalizedString displayName, LocalizedString toolTip)
@@ -661,25 +763,31 @@ namespace Barotrauma
 
         public GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value, LocalizedString displayName, LocalizedString toolTip)
         {
-            var frame = new GUILayoutGroup(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform, isFixedSize: true), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            bool isItemTagBox = IsItemTagBox(entity, property.Name, out Item it);
+            var mainFrame = new GUILayoutGroup(new RectTransform(new Point(Rect.Width, isItemTagBox ? elementHeight * 2 : elementHeight), layoutGroup.RectTransform, isFixedSize: true));
+
+            var frame = new GUILayoutGroup(new RectTransform(isItemTagBox ? new Vector2(1f, 0.5f) : Vector2.One, mainFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true
             };
+
             var label = new GUITextBlock(new RectTransform(new Vector2(1.0f - inputFieldWidth, 1), frame.RectTransform), displayName, font: GUIStyle.SmallFont, textAlignment: Alignment.Left)
             {
                 ToolTip = toolTip
             };
+
             Identifier translationTextTag = property.GetAttribute<Serialize>()?.TranslationTextTag ?? Identifier.Empty;
-            float browseButtonWidth = 0.1f;
+            const float browseButtonWidth = 0.1f;
             var editableAttribute = property.GetAttribute<Editable>();
             float textBoxWidth = inputFieldWidth;
-            if (!translationTextTag.IsEmpty) { textBoxWidth -= browseButtonWidth; }
+            if (!translationTextTag.IsEmpty || isItemTagBox) { textBoxWidth -= browseButtonWidth; }
             GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(textBoxWidth, 1), frame.RectTransform))
             {
                 Enabled = editableAttribute != null && !editableAttribute.ReadOnly,
+                Readonly = Readonly,
                 ToolTip = toolTip,
                 Font = GUIStyle.SmallFont,
-                Text = value,
+                Text = StripPrefabTags(value),
                 OverflowClip = true
             };
 
@@ -696,7 +804,9 @@ namespace Barotrauma
             propertyBox.OnEnterPressed += (box, text) => OnApply(box);
             refresh += () =>
             {
-                if (!propertyBox.Selected) { propertyBox.Text = property.GetValue(entity).ToString(); }
+                if (propertyBox.Selected) { return; }
+
+                propertyBox.Text = StripPrefabTags(property.GetValue(entity).ToString());
             };
 
             bool OnApply(GUITextBox textBox)
@@ -714,7 +824,7 @@ namespace Barotrauma
                 if (SetPropertyValue(property, entity, textBox.Text))
                 {
                     TrySendNetworkUpdate(entity, property);
-                    textBox.Text = property.GetValue(entity).ToString();
+                    textBox.Text = StripPrefabTags(property.GetValue(entity).ToString());
                     textBox.Flash(GUIStyle.Green, flashDuration: 1f);
                 }
                 //restore the entities that were selected before applying
@@ -749,9 +859,63 @@ namespace Barotrauma
                 };
                 propertyBox.Text = value;
             }
+
+            if (isItemTagBox)
+            {
+                // create prefab tag box
+                var prefabFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), mainFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true
+                };
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f - inputFieldWidth, 1), prefabFrame.RectTransform), TextManager.Get("predefinedtags.name"), font: GUIStyle.SmallFont, textAlignment: Alignment.Left)
+                {
+                    ToolTip = TextManager.Get("predefinedtags.description")
+                };
+
+                new GUITextBox(new RectTransform(new Vector2(inputFieldWidth, 1), prefabFrame.RectTransform), createPenIcon: false)
+                {
+                    Readonly = true,
+                    Font = GUIStyle.SmallFont,
+                    Text = GetPrefabTags(it),
+                    OverflowClip = true,
+                    ToolTip = TextManager.Get("predefinedtags.description")
+                };
+
+                // add container tag popup button to the modifiable tag box
+                new GUIButton(new RectTransform(new Vector2(browseButtonWidth, 1), frame.RectTransform, Anchor.TopRight), "...")
+                {
+                    OnClicked = (_, _) => { it.CreateContainerTagPicker(propertyBox); return true; }
+                };  
+            }
+
             frame.RectTransform.MinSize = new Point(0, frame.RectTransform.Children.Max(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name.ToIdentifier(), new GUIComponent[] { propertyBox }); }
             return frame;
+
+            static bool IsItemTagBox(ISerializableEntity entity, string propertyName, [NotNullWhen(true)] out Item it)
+            {
+                if (entity is Item item && propertyName.Equals(nameof(Item.Tags), StringComparison.OrdinalIgnoreCase))
+                {
+                    it = item;
+                    return true;
+                }
+                it = null;
+                return false;
+            }
+
+            string StripPrefabTags(string text)
+            {
+                if (!isItemTagBox) { return text; }
+
+                string prefabTags = GetPrefabTags(it);
+                if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(prefabTags)) { return text; }
+
+                string[] splitTags = text.Split(',');
+                return string.Join(',', splitTags.Where(t => !it.Prefab.Tags.Contains(t)));
+            }
+
+            static string GetPrefabTags(Item it) => string.Join(',', it.Prefab.Tags);
         }
 
         public GUIComponent CreatePointField(ISerializableEntity entity, SerializableProperty property, Point value, LocalizedString displayName, LocalizedString toolTip)
@@ -856,27 +1020,35 @@ namespace Barotrauma
                 numberInput.MinValueFloat = editableAttribute.MinValueFloat;
                 numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-                numberInput.valueStep = editableAttribute.ValueStep;
+                numberInput.ValueStep = editableAttribute.ValueStep;
+                numberInput.PlusMinusButtonVisibility = editableAttribute
+                    .ForceShowPlusMinusButtons ? GUINumberInput.ButtonVisibility.ForceVisible : default;
 
-                if (i == 0)
-                    numberInput.FloatValue = value.X;
-                else
-                    numberInput.FloatValue = value.Y;
+                numberInput.FloatValue = i == 0 ? value.X : value.Y;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
                     Vector2 newVal = (Vector2)property.GetValue(entity);
                     if (comp == 0)
+                    {
                         newVal.X = numInput.FloatValue;
+                    }
                     else
+                    {
                         newVal.Y = numInput.FloatValue;
+                    }
 
                     if (SetPropertyValue(property, entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                HandleSetterValueTampering(numberInput, () =>
+                {
+                    Vector2 currVal = (Vector2)property.GetValue(entity);
+                    return comp == 0 ? currVal.X : currVal.Y;
+                });
                 fields[i] = numberInput;
             }
             refresh += () =>
@@ -927,7 +1099,7 @@ namespace Barotrauma
                 numberInput.MinValueFloat = editableAttribute.MinValueFloat;
                 numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-                numberInput.valueStep = editableAttribute.ValueStep;
+                numberInput.ValueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;
@@ -1003,7 +1175,7 @@ namespace Barotrauma
                 numberInput.MinValueFloat = editableAttribute.MinValueFloat;
                 numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-                numberInput.valueStep = editableAttribute.ValueStep;
+                numberInput.ValueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;
@@ -1239,7 +1411,11 @@ namespace Barotrauma
                 // Set the label to be (i + 1) so it's easier to understand for non-programmers
                 string componentLabel = (i + 1).ToString();
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), elementLayoutGroup.RectTransform) { MaxSize = new Point(25, elementLayoutGroup.Rect.Height) }, componentLabel, font: GUIStyle.SmallFont, textAlignment: Alignment.Center);
-                GUITextBox textBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), elementLayoutGroup.RectTransform), text: value[i]) { Font = GUIStyle.SmallFont };
+                GUITextBox textBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), elementLayoutGroup.RectTransform), text: value[i])
+                {
+                    Font = GUIStyle.SmallFont,
+                    Readonly = Readonly
+                };
                 int comp = i;
                 textBox.OnEnterPressed += (textBox, text) => OnApply(textBox);
                 textBox.OnDeselected += (textBox, keys) => OnApply(textBox);
@@ -1331,9 +1507,11 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         private static void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
         {
+            if (IsEntityRemoved(entity)) { return; }
+
             if (GameMain.Client != null)
             {
                 if (entity is Item item)
@@ -1349,7 +1527,7 @@ namespace Barotrauma
 
         private bool SetPropertyValue(SerializableProperty property, object entity, object value)
         {
-            if (LockEditing) { return false; }
+            if (LockEditing || IsEntityRemoved(entity) || Readonly) { return false; }
 
             object oldData = property.GetValue(entity);
             // some properties have null as the default string value
@@ -1399,6 +1577,9 @@ namespace Barotrauma
 
             return property.TrySetValue(entity, value);
         }
+
+        public static bool IsEntityRemoved(object entity)
+            => entity is Entity { Removed: true } or ItemComponent { Item.Removed: true };
 
         public static void CommitCommandBuffer()
         {

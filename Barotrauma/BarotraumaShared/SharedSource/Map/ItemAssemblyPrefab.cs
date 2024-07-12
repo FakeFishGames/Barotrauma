@@ -17,7 +17,12 @@ namespace Barotrauma
 
         private readonly XElement configElement;
 
-        public readonly ImmutableArray<(Identifier Identifier, Rectangle Rect)> DisplayEntities;
+        public readonly record struct DisplayEntity(
+            Identifier Identifier,
+            Rectangle Rect,
+            float RotationRad);
+
+        public readonly ImmutableArray<DisplayEntity> DisplayEntities;
 
         public readonly Rectangle Bounds;
 
@@ -81,23 +86,25 @@ namespace Barotrauma
 
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
-            var displayEntities = new List<(Identifier, Rectangle)>();
+            var displayEntities = new List<DisplayEntity>();
             foreach (XElement entityElement in element.Elements())
             {
                 ushort id = (ushort)entityElement.GetAttributeInt("ID", 0);
                 if (id > 0 && containedItemIDs.Contains(id)) { continue; }
 
+                if (entityElement.Elements().Any(e => e.Name.LocalName.Equals("wire", StringComparison.OrdinalIgnoreCase))) { continue; }
+                
                 Identifier identifier = entityElement.GetAttributeIdentifier("identifier", entityElement.Name.ToString().ToLowerInvariant());
-
                 Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
-                if (!entityElement.Elements().Any(e => e.Name.LocalName.Equals("wire", StringComparison.OrdinalIgnoreCase)))
-                {
-                    if (!entityElement.GetAttributeBool("hideinassemblypreview", false)) { displayEntities.Add((identifier, rect)); }
-                    minX = Math.Min(minX, rect.X);
-                    minY = Math.Min(minY, rect.Y - rect.Height);
-                    maxX = Math.Max(maxX, rect.Right);
-                    maxY = Math.Max(maxY, rect.Y);
+                float rotation = MathHelper.ToRadians(entityElement.GetAttributeFloat("rotation", 0.0f));
+                if (!entityElement.GetAttributeBool("hideinassemblypreview", false)) 
+                { 
+                    displayEntities.Add(new DisplayEntity(identifier, rect, rotation)); 
                 }
+                minX = Math.Min(minX, rect.X);
+                minY = Math.Min(minY, rect.Y - rect.Height);
+                maxX = Math.Max(maxX, rect.Right);
+                maxY = Math.Max(maxY, rect.Y);                
             }
             DisplayEntities = displayEntities.ToImmutableArray();
 
@@ -121,7 +128,11 @@ namespace Barotrauma
 
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectInstance = false)
         {
-            return PasteEntities(position, sub, configElement, ContentFile.Path.Value, selectInstance);
+            var retVal = PasteEntities(position, sub, configElement, ContentFile.Path.Value, selectInstance);
+#if CLIENT
+            GameMain.SubEditorScreen?.ReconstructLayers();
+#endif
+            return retVal;
         }
 
         public static List<MapEntity> PasteEntities(Vector2 position, Submarine sub, XElement configElement, string filePath = null, bool selectInstance = false)
@@ -136,7 +147,7 @@ namespace Barotrauma
             {
                 me.Move(position);
                 me.Submarine = sub;
-                if (!(me is Item item)) { continue; }
+                if (me is not Item item) { continue; }
                 Wire wire = item.GetComponent<Wire>();
                 //Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
                 if (wire != null) 
@@ -176,7 +187,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Deleting item assembly \"" + Name + "\" failed.", e);
+                DebugConsole.ThrowErrorLocalized("Deleting item assembly \"" + Name + "\" failed.", e);
             }
         }
 

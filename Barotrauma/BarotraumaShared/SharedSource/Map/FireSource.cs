@@ -91,7 +91,12 @@ namespace Barotrauma
             get { return hull; }
         }
 
-        public FireSource(Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false)
+        /// <summary>
+        /// Which character caused this fire (if any)?
+        /// </summary>
+        public readonly Character SourceCharacter;
+
+        public FireSource(Vector2 worldPosition, Hull spawningHull = null, Character sourceCharacter = null, bool isNetworkMessage = false)
         {
             hull = Hull.FindHull(worldPosition, spawningHull);
             if (hull == null || worldPosition.Y < hull.WorldSurface) { return; }
@@ -108,6 +113,8 @@ namespace Barotrauma
                 submarine = hull.Submarine;
                 position -= Submarine.Position;
             }
+
+            SourceCharacter = sourceCharacter;
 
 #if CLIENT
             lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull?.Submarine);
@@ -254,7 +261,7 @@ namespace Barotrauma
                 d.ForceRefreshFadeTimer(Math.Min(d.FadeTimer, d.FadeInTime));
             }
 
-            UpdateProjSpecific(growModifier);
+            UpdateProjSpecific(growModifier, deltaTime);
 
             
             if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
@@ -273,7 +280,7 @@ namespace Barotrauma
             position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
         }
 
-        partial void UpdateProjSpecific(float growModifier);
+        partial void UpdateProjSpecific(float growModifier, float deltaTime);
 
         private void OnChangeHull(Vector2 pos, Hull particleHull)
         {
@@ -306,8 +313,12 @@ namespace Barotrauma
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (limb.IsSevered) { continue; }
-                    c.LastDamageSource = null;
-                    c.DamageLimb(WorldPosition, limb, AfflictionPrefab.Burn.Instantiate(dmg).ToEnumerable(), 0.0f, false, 0.0f);
+                    c.LastDamageSource = SourceCharacter;
+                    c.DamageLimb(WorldPosition, limb, AfflictionPrefab.Burn.Instantiate(dmg).ToEnumerable(), 
+                        stun: 0.0f, 
+                        playSound: false, 
+                        attackImpulse: Vector2.Zero, 
+                        attacker: SourceCharacter);
                 }
 #if CLIENT
                 //let clients display the client-side damage immediately, otherwise they may not be able to react to the damage fast enough

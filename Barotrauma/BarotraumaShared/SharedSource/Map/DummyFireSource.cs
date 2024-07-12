@@ -9,7 +9,8 @@ namespace Barotrauma
 
         public bool CausedByPsychosis;
 
-        public DummyFireSource(Vector2 maxSize, Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false) : base(worldPosition, spawningHull, isNetworkMessage)
+        public DummyFireSource(Vector2 maxSize, Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false) : 
+            base(worldPosition, spawningHull, sourceCharacter: null, isNetworkMessage: isNetworkMessage)
         {
             this.maxSize = maxSize;
             DamagesItems = false;

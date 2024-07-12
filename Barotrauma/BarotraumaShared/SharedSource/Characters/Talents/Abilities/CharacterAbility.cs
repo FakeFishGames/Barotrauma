@@ -26,7 +26,7 @@ namespace Barotrauma.Abilities
 
         public CharacterAbility(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement)
         {
-            CharacterAbilityGroup = characterAbilityGroup;
+            CharacterAbilityGroup = characterAbilityGroup ?? throw new ArgumentNullException(nameof(characterAbilityGroup));
             CharacterTalent = characterAbilityGroup.CharacterTalent;
             Character = CharacterTalent.Character;
             RequiresAlive = abilityElement.GetAttributeBool("requiresalive", true);
@@ -59,7 +59,8 @@ namespace Barotrauma.Abilities
 
         protected virtual void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)
         {
-            DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}: Ability {this} does not have an implementation for VerifyState! This ability does not work in interval ability groups.");
+            DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}: Ability {this} does not have an implementation for VerifyState! This ability does not work in interval ability groups.",
+                contentPackage: CharacterTalent.Prefab.ContentPackage);
         }
 
         public void ApplyAbilityEffect(AbilityObject abilityObject)
@@ -76,17 +77,20 @@ namespace Barotrauma.Abilities
 
         protected virtual void ApplyEffect()
         {
-            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not have a definition for ApplyEffect in talent {CharacterTalent.DebugIdentifier}");
+            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not have a definition for ApplyEffect in talent {CharacterTalent.DebugIdentifier}",
+                CharacterTalent.Prefab.ContentPackage);
         }
 
         protected virtual void ApplyEffect(AbilityObject abilityObject)
         {
-            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect in talent {CharacterTalent.DebugIdentifier}");
+            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect in talent {CharacterTalent.DebugIdentifier}",
+                CharacterTalent.Prefab.ContentPackage);
         }
 
         protected void LogAbilityObjectMismatch()
         {
-            DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type in talent {CharacterTalent.DebugIdentifier}");
+            DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type in talent {CharacterTalent.DebugIdentifier}",
+                    contentPackage: CharacterTalent.Prefab.ContentPackage);
         }
 
         // XML
@@ -96,16 +100,21 @@ namespace Barotrauma.Abilities
             string type = abilityElement.Name.ToString().ToLowerInvariant();
             try
             {
-                abilityType = Type.GetType("Barotrauma.Abilities." + type + "", false, true);
+                abilityType = ReflectionUtils.GetTypeWithBackwardsCompatibility("Barotrauma.Abilities", type, false, true);
                 if (abilityType == null)
                 {
-                    if (errorMessages) DebugConsole.ThrowError("Could not find the CharacterAbility \"" + type + "\" (" + characterAbilityGroup.CharacterTalent.DebugIdentifier + ")");
+                    if (errorMessages) DebugConsole.ThrowError("Could not find the CharacterAbility \"" + type + "\" (" + characterAbilityGroup.CharacterTalent.DebugIdentifier + ")",
+                        contentPackage: abilityElement.ContentPackage);
                     return null;
                 }
             }
             catch (Exception e)
             {
-                if (errorMessages) DebugConsole.ThrowError("Could not find the CharacterAbility \"" + type + "\" (" + characterAbilityGroup.CharacterTalent.DebugIdentifier + ")", e);
+                if (errorMessages)
+                {
+                    DebugConsole.ThrowError("Could not find the CharacterAbility \"" + type + "\" (" + characterAbilityGroup.CharacterTalent.DebugIdentifier + ")", e,
+                        contentPackage: abilityElement.ContentPackage);
+                }
                 return null;
             }
 
@@ -118,7 +127,8 @@ namespace Barotrauma.Abilities
             }
             catch (TargetInvocationException e)
             {
-                DebugConsole.ThrowError("Error while creating an instance of a CharacterAbility of the type " + abilityType + ".", e.InnerException);
+                DebugConsole.ThrowError("Error while creating an instance of a CharacterAbility of the type " + abilityType + ".", e.InnerException,
+                    contentPackage: abilityElement.ContentPackage);
                 return null;
             }
 

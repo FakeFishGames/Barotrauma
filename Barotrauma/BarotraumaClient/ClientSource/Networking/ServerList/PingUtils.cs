@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Barotrauma.Extensions;
 using Steamworks.Data;
 using Color = Microsoft.Xna.Framework.Color;
 using Socket = System.Net.Sockets.Socket;
@@ -34,26 +35,28 @@ namespace Barotrauma.Networking
         {
             if (CoroutineManager.IsCoroutineRunning("ConnectToServer")) { return; }
 
-            switch (serverInfo.Endpoint)
+            var endpointOption = serverInfo.Endpoints.FirstOrNone(e => e is not EosP2PEndpoint);
+            if (!endpointOption.TryUnwrap(out var endpoint)) { return; }
+
+            switch (endpoint)
             {
                 case LidgrenEndpoint { NetEndpoint: var endPoint }:
-
                     GetIPAddressPing(serverInfo, endPoint, onPingDiscovered);
                     break;
-                case SteamP2PEndpoint steamP2PEndpoint:
-                    TaskPool.Add($"EstimateSteamLobbyPing ({steamP2PEndpoint.StringRepresentation})",
+                case SteamP2PEndpoint:
+                    TaskPool.Add($"EstimateSteamLobbyPing ({endpoint.StringRepresentation})",
                         EstimateSteamLobbyPing(serverInfo),
                         t =>
                         {
-                            if (!t.TryGetResult(out Option<int> ping)) { return; }
-                            serverInfo.Ping = ping;
+                            if (!t.TryGetResult(out Result<int, SteamLobbyPingError> ping)) { return; }
+                            serverInfo.Ping = ping.TryUnwrapSuccess(out var ms) ? Option.Some(ms) : Option.None;
                             onPingDiscovered(serverInfo);
                         });
                     break;
             }
         }
 
-        private readonly ref struct LobbyDataChangedEventHandler
+        private readonly struct LobbyDataChangedEventHandler : IDisposable
         {
             private readonly Action<Lobby> action;
             
@@ -99,35 +102,57 @@ namespace Barotrauma.Networking
 
             return loadedLobby;
         }
-        
-        private static async Task<Option<int>> EstimateSteamLobbyPing(ServerInfo serverInfo)
-        {
-            if (!(serverInfo.Endpoint is SteamP2PEndpoint { SteamId: var ownerId })) { return Option<int>.None(); }
-            while (!steamPingInfoReady) { await Task.Delay(50); }
 
-            Lobby lobby;
+        private enum SteamLobbyPingError
+        {
+            SteamPingUnsupported,
+            FailedToGetHostLocationData,
+            FailedToParseHostLocationData,
+            PingEstimationFailed
+        }
+        
+        private static async Task<Result<int, SteamLobbyPingError>> EstimateSteamLobbyPing(ServerInfo serverInfo)
+        {
+            while (!steamPingInfoReady)
+            {
+                if (!SteamManager.IsInitialized) { return Result.Failure(SteamLobbyPingError.SteamPingUnsupported); }
+                await Task.Delay(50);
+            }
+
+            string pingLocationStr = "";
 
             if (serverInfo.MetadataSource.TryUnwrap(out SteamP2PServerProvider.DataSource src))
             {
-                lobby = src.Lobby;
+                var lobby = src.Lobby;
+                pingLocationStr = lobby.GetData("steampinglocation");
+                if (pingLocationStr.IsNullOrEmpty()) { pingLocationStr = lobby.GetData("pinglocation"); }
             }
-            else
+            else if (serverInfo.MetadataSource.TryUnwrap(out EosServerProvider.DataSource srcEos))
             {
-                var friendLobby = await GetSteamLobbyForUser(ownerId);
-                if (friendLobby is null) { return Option<int>.None(); }
-                lobby = friendLobby.Value;
+                pingLocationStr = srcEos.SteamPingLocation;
+            }
+            else if (serverInfo.Endpoints.OfType<SteamP2PEndpoint>().FirstOrNone().TryUnwrap(out var steamP2PEndpoint))
+            {
+                var friendLobby = await GetSteamLobbyForUser(steamP2PEndpoint.SteamId);
+                pingLocationStr = friendLobby?.GetData("steampinglocation") ?? "";
             }
 
-            var pingLocation = NetPingLocation.TryParseFromString(lobby.GetData("pinglocation"));
-            
+            if (pingLocationStr.IsNullOrEmpty())
+            {
+                return Result.Failure(SteamLobbyPingError.FailedToGetHostLocationData);
+            }
+
+            var pingLocation = NetPingLocation.TryParseFromString(pingLocationStr);
+
             if (pingLocation.HasValue && Steamworks.SteamNetworkingUtils.LocalPingLocation.HasValue)
             {
                 int ping = Steamworks.SteamNetworkingUtils.LocalPingLocation.Value.EstimatePingTo(pingLocation.Value);
-                return ping >= 0 ? Option<int>.Some(ping) : Option<int>.None();
+                if (ping < 0) { return Result.Failure(SteamLobbyPingError.PingEstimationFailed); }
+                return Result.Success(ping);
             }
             else
             {
-                return Option<int>.None();
+                return Result.Failure(SteamLobbyPingError.FailedToParseHostLocationData);
             }
         }
 
@@ -173,7 +198,7 @@ namespace Barotrauma.Networking
             }
 
             if (endPoint?.Address == null) { return Option<int>.None(); }
-            
+
             //don't attempt to ping if the address is IPv6 and it's not supported
             if (endPoint.Address.AddressFamily == AddressFamily.InterNetworkV6 && !Socket.OSSupportsIPv6) { return Option<int>.None(); }
             

@@ -16,27 +16,34 @@ namespace Barotrauma
 
             float scale = Math.Min(drawArea.Width / (float)Bounds.Width, drawArea.Height / (float)Bounds.Height) * 0.9f;
 
-            foreach ((Identifier identifier, Rectangle rect) in DisplayEntities)
+            foreach (var displayEntity in DisplayEntities)
             {
-                var entityPrefab = FindByIdentifier(identifier);
+                var entityPrefab = FindByIdentifier(displayEntity.Identifier);
                 if (entityPrefab is CoreEntityPrefab || entityPrefab == null) { continue; }
                 var drawRect = new Rectangle(
-                    (int)(rect.X * scale) + drawArea.Center.X, (int)((rect.Y) * scale) - drawArea.Center.Y, 
-                    (int)(rect.Width * scale), (int)(rect.Height * scale));
-                entityPrefab.DrawPlacing(spriteBatch, drawRect, entityPrefab.Scale * scale);
+                    (int)(displayEntity.Rect.X * scale) + drawArea.Center.X, (int)((displayEntity.Rect.Y) * scale) - drawArea.Center.Y, 
+                    (int)(displayEntity.Rect.Width * scale), (int)(displayEntity.Rect.Height * scale));
+                entityPrefab.DrawPlacing(spriteBatch, drawRect, entityPrefab.Scale * scale, rotation: displayEntity.RotationRad);
             }
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             base.DrawPlacing(spriteBatch, cam);
-            foreach ((Identifier identifier, Rectangle rect) in DisplayEntities)
+            Draw(
+                spriteBatch,
+                placePosition != Vector2.Zero ? placePosition : Submarine.MouseToWorldGrid(cam, Submarine.MainSub));
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Vector2 pos)
+        {
+            foreach (var displayEntity in DisplayEntities)
             {
-                var entityPrefab = FindByIdentifier(identifier);
+                var entityPrefab = FindByIdentifier(displayEntity.Identifier);
                 if (entityPrefab == null) { continue; }
-                Rectangle drawRect = rect;
-                drawRect.Location += placePosition != Vector2.Zero ? placePosition.ToPoint() : Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();                
-                entityPrefab.DrawPlacing(spriteBatch, drawRect, entityPrefab.Scale);
+                Rectangle drawRect = displayEntity.Rect;
+                drawRect.Location += pos.ToPoint();
+                entityPrefab.DrawPlacing(spriteBatch, drawRect, entityPrefab.Scale, rotation: displayEntity.RotationRad);
             }
         }
 
@@ -47,9 +54,12 @@ namespace Barotrauma
                 new XAttribute("description", description),
                 new XAttribute("hideinmenus", hideInMenus));
 
-
             //move the entities so that their "center of mass" is at {0,0}
             var assemblyEntities = MapEntity.CopyEntities(entities);
+            for (int i = 0; i < assemblyEntities.Count && i < entities.Count; i++)
+            {
+                assemblyEntities[i].Layer = entities[i].Layer;
+            }
 
             //find wires and items that are contained inside another item
             //place them at {0,0} to prevent them from messing up the origin of the prefab and to hide them in preview
@@ -98,6 +108,10 @@ namespace Barotrauma
                     entityElement.Add(new XAttribute("hideinassemblypreview", "true"));
                 }
             }
+
+            //restore the previous selection
+            MapEntity.SelectedList.Clear();
+            entities.ForEach(e => MapEntity.AddSelection(e));
 
             return element;
         }

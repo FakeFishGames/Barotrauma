@@ -19,7 +19,7 @@ namespace Barotrauma
         private static UISprite spectateIcon, disconnectedIcon;
         private static Sprite ownerIcon, moderatorIcon;
 
-        public enum InfoFrameTab { Crew, Mission, Reputation, Traitor, Submarine, Talents };
+        public enum InfoFrameTab { Crew, Mission, Reputation, Submarine, Talents };
         public static InfoFrameTab SelectedTab { get; private set; }
         private GUIFrame infoFrame, contentFrame;
 
@@ -165,6 +165,11 @@ namespace Barotrauma
         public TabMenu()
         {
             if (!initialized) { Initialize(); }
+            if (Level.Loaded == null)
+            {
+                //make sure we're not trying to view e.g. mission or reputation info if the tab menu is opened in the test mode
+                SelectedTab = InfoFrameTab.Crew;
+            }
             CreateInfoFrame(SelectedTab);
             SelectInfoFrameTab(SelectedTab);
         }
@@ -299,9 +304,15 @@ namespace Barotrauma
 
             var crewButton = createTabButton(InfoFrameTab.Crew, "crew");
 
-            if (!(GameMain.GameSession?.GameMode is TestGameMode))
+            if (GameMain.GameSession?.GameMode is not TestGameMode)
             {
-                createTabButton(InfoFrameTab.Mission, "mission");
+                var missionBtn = createTabButton(InfoFrameTab.Mission, "mission");
+                eventLogNotification = GameSession.CreateNotificationIcon(missionBtn);
+                eventLogNotification.Visible = GameMain.GameSession?.EventManager?.EventLog?.UnreadEntries ?? false;
+                if (eventLogNotification.Visible)
+                {
+                    eventLogNotification.Pulsate(Vector2.One, Vector2.One * 2, 1.0f);
+                }
             }
 
             if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
@@ -309,7 +320,61 @@ namespace Barotrauma
                 var reputationButton = createTabButton(InfoFrameTab.Reputation, "reputation");
 
                 var balanceFrame = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, innerLayoutGroup.Rect.Height - infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
-                GUITextBlock balanceText = new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), string.Empty, textAlignment: Alignment.Right);
+                GUILayoutGroup salaryFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.66f, 1f), balanceFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+
+                GUIScrollBar salaryScrollBar = null;
+                GUITextBlock salaryPercentage = null;
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                {
+                    float value = campaignMode.Bank.RewardDistribution;
+                    GUITextBlock salaryText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), salaryFrame.RectTransform), TextManager.Get("defaultsalary"), textAlignment: Alignment.Center)
+                    {
+                        AutoScaleHorizontal = true
+                    };
+                    salaryScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 1f), salaryFrame.RectTransform), barSize: 0.1f, style: "GUISlider")
+                    {
+                        Range = new Vector2(0, 1),
+                        BarScrollValue = value / 100f,
+                        Step = 0.01f,
+                        BarSize = 0.1f,
+                    };
+
+                    salaryPercentage = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1f), salaryFrame.RectTransform), "0", textAlignment: Alignment.Center)
+                    {
+                        Text = ValueToPercentage(RoundRewardDistribution(salaryScrollBar.BarScroll, salaryScrollBar.Step))
+                    };
+
+                    salaryScrollBar.OnMoved = (scrollBar, value) =>
+                    {
+                        salaryPercentage.Text = ValueToPercentage(RoundRewardDistribution(value, scrollBar.Step));
+                        return true;
+                    };
+                    salaryScrollBar.OnReleased = (bar, scroll) =>
+                    {
+                        int newRewardDistribution = RoundRewardDistribution(scroll, bar.Step);
+                        SetRewardDistribution(Option.None, newRewardDistribution);
+                        return true;
+                    };
+
+                    var resetButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), salaryFrame.RectTransform), TextManager.Get("ResetSalaries"), style: "GUIButtonSmall")
+                    {
+                        TextBlock = { AutoScaleHorizontal = true },
+                        ToolTip = TextManager.Get("resetsalaries.tooltip"),
+                        OnClicked = (button, userData) =>
+                        {
+                            GUI.AskForConfirmation(TextManager.Get("ResetSalaries"), TextManager.Get("ResetSalaries.Warning"), onConfirm: ResetRewardDistributions);
+                            return true;
+                        }
+                    };
+
+                    void UpdateSliderEnabled() 
+                        => salaryScrollBar.Enabled = resetButton.Enabled = CampaignMode.AllowedToManageWallets();
+                    UpdateSliderEnabled();
+
+                    Identifier defaultSalaryEventIdentifier = "DefaultSalarySlider".ToIdentifier();
+                    GameMain.Client?.OnPermissionChanged?.RegisterOverwriteExisting(defaultSalaryEventIdentifier, _ => UpdateSliderEnabled());
+                }
+                GUITextBlock balanceText = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1f), balanceFrame.RectTransform, Anchor.TopRight), string.Empty, textAlignment: Alignment.Right);
                 if (GameMain.IsMultiplayer)
                 {
                     balanceText.ToolTip = TextManager.Get("bankdescription");
@@ -332,6 +397,13 @@ namespace Barotrauma
                 {
                     if (!e.Owner.IsNone()) { return; }
                     SetBalanceText(balanceText, e.Wallet.Balance);
+
+                    if (salaryPercentage is not null && salaryScrollBar is not null)
+                    {
+                        float rewardDistribution = e.Wallet.RewardDistribution;
+                        salaryScrollBar.BarScrollValue = rewardDistribution / 100f;
+                        salaryPercentage.Text = ValueToPercentage(rewardDistribution);
+                    }
                 });
                 registeredEvents.Add(eventIdentifier);
 
@@ -339,14 +411,9 @@ namespace Barotrauma
                 {
                     text.Text = TextManager.GetWithVariable("bankbalanceformat", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", balance));
                 }
-            }
-            else
-            {
-                bool isTraitor = GameMain.Client?.Character?.IsTraitor ?? false;
-                if (isTraitor && GameMain.Client.TraitorMission != null)
-                {
-                    var traitorButton = createTabButton(InfoFrameTab.Traitor, "tabmenu.traitor");
-                }
+
+                LocalizedString ValueToPercentage(float value)
+                    => TextManager.GetWithVariable("percentageformat", "[value]", $"{(int)MathF.Round(value)}");
             }
 
             var submarineButton = createTabButton(InfoFrameTab.Submarine, "submarine");
@@ -361,7 +428,7 @@ namespace Barotrauma
                 }
             };
 
-            talentPointNotification = GameSession.CreateTalentIconNotification(talentsButton);
+            talentPointNotification = GameSession.CreateNotificationIcon(talentsButton);
         }
 
         public void SelectInfoFrameTab(InfoFrameTab selectedTab)
@@ -386,12 +453,6 @@ namespace Barotrauma
                         GUIFrame reputationFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrameHolder.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
                         GameMain.GameSession.RoundSummary.CreateReputationInfoPanel(reputationFrame, campaignMode);
                     }
-                    break;
-                case InfoFrameTab.Traitor:
-                    TraitorMissionPrefab traitorMission = GameMain.Client?.TraitorMission;
-                    Character traitor = GameMain.Client?.Character;
-                    if (traitor == null || traitorMission == null) { return; }
-                    CreateTraitorInfo(infoFrameHolder, traitorMission, traitor);
                     break;
                 case InfoFrameTab.Submarine:
                     CreateSubmarineInfo(infoFrameHolder, Submarine.MainSub);
@@ -1040,11 +1101,10 @@ namespace Barotrauma
                 {
                     int newRewardDistribution = RoundRewardDistribution(scroll, bar.Step);
                     if (newRewardDistribution == targetWallet.RewardDistribution) { return false; }
-                    SetRewardDistribution(character, newRewardDistribution);
+                    SetRewardDistribution(Option.Some(character), newRewardDistribution);
                     return true;
                 }
             };
-            int RoundRewardDistribution(float scroll, float step) => (int)MathUtils.RoundTowardsClosest(scroll * 100, step * 100);
 
             SetRewardText(targetWallet.RewardDistribution, rewardBlock);
 
@@ -1069,7 +1129,7 @@ namespace Barotrauma
                             GUIButton centerButton = new GUIButton(new RectTransform(new Vector2(1f), centerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight, anchor: Anchor.Center), style: "GUIButtonTransferArrow");
 
                     GUILayoutGroup inputLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedTransferMenuLayout.RectTransform), childAnchor: Anchor.Center);
-                        GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), NumberType.Int, hidePlusMinusButtons: true)
+                        GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), NumberType.Int, buttonVisibility: GUINumberInput.ButtonVisibility.ForceHidden)
                         {
                             MinValueInt = 0
                         };
@@ -1204,6 +1264,7 @@ namespace Barotrauma
                     {
                         moneyBlock.Text = TextManager.FormatCurrency(e.Info.Balance);
                         salarySlider.BarScrollValue = e.Info.RewardDistribution / 100f;
+                        SetRewardText(e.Info.RewardDistribution, rewardBlock);
                     }
 
                     UpdateAllInputs();
@@ -1314,19 +1375,28 @@ namespace Barotrauma
                 transfer.Write(msg);
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
             }
-
-            static void SetRewardDistribution(Character character, int newValue)
-            {
-                INetSerializableStruct transfer = new NetWalletSetSalaryUpdate
-                {
-                    Target = character.ID,
-                    NewRewardDistribution = newValue
-                };
-                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.REWARD_DISTRIBUTION);
-                transfer.Write(msg);
-                GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
-            }
         }
+
+        static void SetRewardDistribution(Option<Character> character, int newValue)
+        {
+            INetSerializableStruct transfer = new NetWalletSetSalaryUpdate
+            {
+                Target = character.Select(c => c.ID),
+                NewRewardDistribution = newValue
+            };
+            IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.REWARD_DISTRIBUTION);
+            transfer.Write(msg);
+            GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        static void ResetRewardDistributions()
+        {
+            IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.RESET_REWARD_DISTRIBUTION);
+            GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        static int RoundRewardDistribution(float scroll, float step) 
+            => (int)MathUtils.RoundTowardsClosest(scroll * 100, step * 100);
 
         private GUIComponent CreateClientInfoFrame(GUIFrame frame, Client client, Sprite permissionIcon = null)
         {
@@ -1516,7 +1586,7 @@ namespace Barotrauma
                 portraitImage.RectTransform.NonScaledSize = new Point(Math.Min((int)(portraitImage.Rect.Size.Y * portraitAspectRatio), portraitImage.Rect.Width), portraitImage.Rect.Size.Y);
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Name, font: GUIStyle.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.DisplayName, font: GUIStyle.LargeFont);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
 
             if (location.Faction?.Prefab != null)
@@ -1539,96 +1609,44 @@ namespace Barotrauma
 
             int locationInfoYOffset = locationInfoContainer.Rect.Height + padding * 2;
 
-
             GUIListBox missionList = new GUIListBox(new RectTransform(new Point(contentWidth, missionFrameContent.Rect.Height - locationInfoYOffset), missionFrameContent.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationInfoYOffset) });
             missionList.ContentBackground.Color = Color.Transparent;
             missionList.Spacing = GUI.IntScale(15);
 
             if (GameMain.GameSession?.Missions != null)
             {
-                int spacing = GUI.IntScale(5);
-                int iconSize = (int)(GUIStyle.LargeFont.MeasureChar('T').Y + GUIStyle.Font.MeasureChar('T').Y * 4 + spacing * 4);
-
                 foreach (Mission mission in GameMain.GameSession.Missions)
                 {
                     if (!mission.Prefab.ShowInMenus) { continue; }
-                    GUIFrame missionDescriptionHolder = new GUIFrame(new RectTransform(Vector2.One, missionList.Content.RectTransform), style: null);
-                    GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.744f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(iconSize + spacing, 0) }, false, childAnchor: Anchor.TopLeft)
+
+                    var textContent = new List<LocalizedString>()
                     {
-                        AbsoluteSpacing = spacing
+                        mission.GetMissionRewardText(Submarine.MainSub),
+                        mission.GetReputationRewardText(),
+                        mission.Description
                     };
-                    LocalizedString descriptionText = mission.Description;
-                    foreach (LocalizedString missionMessage in mission.ShownMessages)
+                    textContent.AddRange(mission.ShownMessages);
+
+                    RoundSummary.CreateMissionEntry(
+                        missionList.Content, 
+                        mission.Name, 
+                        textContent, 
+                        mission.Difficulty ?? 0, 
+                        mission.Prefab.Icon, mission.Prefab.IconColor,
+                        out GUIImage missionIcon);
+                    if (missionIcon != null)
                     {
-                        descriptionText += "\n\n" + missionMessage;
-                    }
-                    RichString rewardText = mission.GetMissionRewardText(Submarine.MainSub);
-                    RichString reputationText = mission.GetReputationRewardText();
+                        UpdateMissionStateIcon();
+                        mission.OnMissionStateChanged += (mission) => UpdateMissionStateIcon();
 
-                    Func<string, string> wrapMissionText(GUIFont font)
-                    {
-                        return (str) => ToolBox.WrapText(str, missionTextGroup.Rect.Width, font.Value);
-                    }
-                    RichString missionNameString = RichString.Rich(mission.Name, wrapMissionText(GUIStyle.LargeFont));
-                    RichString missionRewardString = RichString.Rich(rewardText, wrapMissionText(GUIStyle.Font));
-                    RichString missionReputationString = RichString.Rich(reputationText, wrapMissionText(GUIStyle.Font));
-                    RichString missionDescriptionString = RichString.Rich(descriptionText, wrapMissionText(GUIStyle.Font));
-
-                    Vector2 missionNameSize = GUIStyle.LargeFont.MeasureString(missionNameString.SanitizedValue);
-                    Vector2 missionDescriptionSize = GUIStyle.Font.MeasureString(missionDescriptionString.SanitizedValue);
-                    Vector2 missionRewardSize = GUIStyle.Font.MeasureString(missionRewardString.SanitizedValue);
-                    Vector2 missionReputationSize = GUIStyle.Font.MeasureString(missionReputationString.SanitizedValue);
-
-                    float ySize = missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y + missionReputationSize.Y + missionTextGroup.AbsoluteSpacing * 4;
-                    bool displayDifficulty = mission.Difficulty.HasValue;
-                    if (displayDifficulty) { ySize += missionRewardSize.Y; }
-
-                    missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)ySize);
-                    missionTextGroup.RectTransform.NonScaledSize = new Point(missionTextGroup.RectTransform.NonScaledSize.X, missionDescriptionHolder.RectTransform.NonScaledSize.Y);
-
-                    if (mission.Prefab.Icon != null)
-                    {
-                        /*float iconAspectRatio = mission.Prefab.Icon.SourceRect.Width / mission.Prefab.Icon.SourceRect.Height;
-                        int iconWidth = (int)(0.225f * missionDescriptionHolder.RectTransform.NonScaledSize.X);
-                        int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
-                        Point iconSize = new Point(iconWidth, iconHeight);*/
-
-                        var icon = new GUIImage(new RectTransform(new Point(iconSize), missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true)
+                        void UpdateMissionStateIcon()
                         {
-                            Color = mission.Prefab.IconColor,
-                            HoverColor = mission.Prefab.IconColor,
-                            SelectedColor = mission.Prefab.IconColor,
-                            CanBeFocused = false
-                        };
-                        UpdateMissionStateIcon(mission, icon);
-                        mission.OnMissionStateChanged += (mission) => UpdateMissionStateIcon(mission, icon);
-                    }
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUIStyle.LargeFont);
-                    GUILayoutGroup difficultyIndicatorGroup = null;
-                    if (displayDifficulty)
-                    {
-                        difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(new Point(missionTextGroup.Rect.Width, (int)missionRewardSize.Y), parent: missionTextGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
-                        {
-                            AbsoluteSpacing = 1
-                        };
-                        var difficultyColor = mission.GetDifficultyColor();
-                        for (int i = 0; i < mission.Difficulty.Value; i++)
-                        {
-                            new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest), "DifficultyIndicator", scaleToFit: true)
+                            if (mission.DisplayAsCompleted || mission.DisplayAsFailed)
                             {
-                                CanBeFocused = false,
-                                Color = difficultyColor
-                            };
+                                RoundSummary.UpdateMissionStateIcon(mission.DisplayAsCompleted, missionIcon);
+                            }
                         }
                     }
-                    var rewardTextBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardString);
-                    if (difficultyIndicatorGroup != null)
-                    {
-                        difficultyIndicatorGroup.RectTransform.Resize(new Point((int)(difficultyIndicatorGroup.Rect.Width - rewardTextBlock.Padding.X - rewardTextBlock.Padding.Z), difficultyIndicatorGroup.Rect.Height));
-                        difficultyIndicatorGroup.RectTransform.AbsoluteOffset = new Point((int)rewardTextBlock.Padding.X, 0);
-                    }
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionReputationString);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
                 }
             }
             else
@@ -1636,66 +1654,14 @@ namespace Barotrauma
                 GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0f), missionList.RectTransform, Anchor.CenterLeft), false, childAnchor: Anchor.TopLeft);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), TextManager.Get("NoMission"), font: GUIStyle.LargeFont);
             }
+
+            GameMain.GameSession?.EventManager?.EventLog?.CreateEventLogUI(missionList.Content);
+            GameMain.GameSession.EnableEventLogNotificationIcon(enabled: false);
+
+            RoundSummary.AddSeparators(missionList.Content);
         }
 
-        private void UpdateMissionStateIcon(Mission mission, GUIImage missionIcon)
-        {
-            if (mission == null || missionIcon == null) { return; }
-            string style = string.Empty;
-            if (mission.DisplayAsFailed)
-            {
-                style = "MissionFailedIcon";
-            }
-            else if (mission.DisplayAsCompleted)
-            {
-                style = "MissionCompletedIcon";
-            }
-            GUIImage stateIcon = missionIcon.GetChild<GUIImage>();
-            if (string.IsNullOrEmpty(style))
-            {
-                if (stateIcon != null)
-                {
-                    stateIcon.Visible = false;
-                }
-            }
-            else
-            {
-                stateIcon ??= new GUIImage(new RectTransform(Vector2.One, missionIcon.RectTransform), style, scaleToFit: true);
-                stateIcon.Visible = true;
-            }
-        }
-
-        private void CreateTraitorInfo(GUIFrame infoFrame, TraitorMissionPrefab traitorMission, Character traitor)
-        {
-            GUIFrame missionFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
-
-            int padding = (int)(0.0245f * missionFrame.Rect.Height);
-
-            GUIFrame missionDescriptionHolder = new GUIFrame(new RectTransform(new Point(missionFrame.Rect.Width - padding * 2, 0), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, padding) }, style: null);
-            GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.65f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.319f, 0f) }, false, childAnchor: Anchor.TopLeft);
-
-            LocalizedString missionNameString = ToolBox.WrapText(TextManager.Get("tabmenu.traitor"), missionTextGroup.Rect.Width, GUIStyle.LargeFont);
-            LocalizedString missionDescriptionString = ToolBox.WrapText(traitor.TraitorCurrentObjective, missionTextGroup.Rect.Width, GUIStyle.Font);
-
-            Vector2 missionNameSize = GUIStyle.LargeFont.MeasureString(missionNameString);
-            Vector2 missionDescriptionSize = GUIStyle.Font.MeasureString(missionDescriptionString);
-
-            missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)(missionNameSize.Y + missionDescriptionSize.Y));
-            missionTextGroup.RectTransform.NonScaledSize = new Point(missionTextGroup.RectTransform.NonScaledSize.X, missionDescriptionHolder.RectTransform.NonScaledSize.Y);
-
-            float aspectRatio = traitorMission.Icon.SourceRect.Width / traitorMission.Icon.SourceRect.Height;
-
-            int iconWidth = (int)(0.319f * missionDescriptionHolder.RectTransform.NonScaledSize.X);
-            int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * aspectRatio));
-            Point iconSize = new Point(iconWidth, iconHeight);
-
-            new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), traitorMission.Icon, null, true) { Color = traitorMission.IconColor };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUIStyle.LargeFont);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
-        }
-
-        private void CreateSubmarineInfo(GUIFrame infoFrame, Submarine sub)
+        private static void CreateSubmarineInfo(GUIFrame infoFrame, Submarine sub)
         {
             GUIFrame subInfoFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(Vector2.One * 0.97f, subInfoFrame.RectTransform, Anchor.Center), style: null);
@@ -1793,7 +1759,7 @@ namespace Barotrauma
             }
         }
 
-        private GUIImage talentPointNotification;
+        private GUIImage talentPointNotification, eventLogNotification;
 
         public static void CreateSkillList(Character character, CharacterInfo info, GUIListBox parent)
         {

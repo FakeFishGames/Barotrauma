@@ -64,7 +64,8 @@ namespace Barotrauma
 
             if (itemConfig == null)
             {
-                DebugConsole.ThrowError("Failed to initialize a Scan mission: item config is not set");
+                DebugConsole.ThrowError("Failed to initialize a Scan mission: item config is not set",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -77,7 +78,8 @@ namespace Barotrauma
             TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.ServerAndClient);
             if (TargetRuin == null)
             {
-                DebugConsole.ThrowError("Failed to initialize a Scan mission: level contains no alien ruins");
+                DebugConsole.ThrowError("Failed to initialize a Scan mission: level contains no alien ruins",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -85,7 +87,8 @@ namespace Barotrauma
             ruinWaypoints.RemoveAll(wp => wp.CurrentHull == null);
             if (ruinWaypoints.Count < targetsToScan)
             {
-                DebugConsole.ThrowError($"Failed to initialize a Scan mission: target ruin has less waypoints than required as scan targets ({ruinWaypoints.Count} < {targetsToScan})");
+                DebugConsole.ThrowError($"Failed to initialize a Scan mission: target ruin has less waypoints than required as scan targets ({ruinWaypoints.Count} < {targetsToScan})",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
             var availableWaypoints = new List<WayPoint>();
@@ -107,7 +110,8 @@ namespace Barotrauma
                         if (availableWaypoints.None())
                         {
 #if DEBUG
-                            DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets available on try #{tries + 1} to reach the required scan target count (current targets: {scanTargets.Count}, required targets: {targetsToScan})");
+                            DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets available on try #{tries + 1} to reach the required scan target count (current targets: {scanTargets.Count}, required targets: {targetsToScan})",
+                                contentPackage: Prefab.ContentPackage);
 #endif
                             break;
                         }
@@ -131,7 +135,8 @@ namespace Barotrauma
             }
             if (scanTargets.Count < targetsToScan)
             {
-                DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets (current targets: {scanTargets.Count}, required targets: {targetsToScan})");
+                DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets (current targets: {scanTargets.Count}, required targets: {targetsToScan})", 
+                    contentPackage: Prefab.ContentPackage);
             }
         }
 
@@ -218,7 +223,7 @@ namespace Barotrauma
 #endif
         }
 
-        private bool IsValidScanPosition(Scanner scanner, KeyValuePair<WayPoint, bool> scanStatus, float scanRadiusSquared)
+        private static bool IsValidScanPosition(Scanner scanner, KeyValuePair<WayPoint, bool> scanStatus, float scanRadiusSquared)
         {
             if (scanStatus.Value) { return false; }
             if (scanStatus.Key.Submarine != scanner.Item.Submarine) { return false; }
@@ -232,39 +237,15 @@ namespace Barotrauma
             switch (State)
             {
                 case 0:
-                    if (!AllTargetsScanned) { return; }
-                    State = 1;
-                    break;
-                case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
-                    State = 2;
+                    if (AllTargetsScanned)
+                    {
+                        State = 1;
+                    }
                     break;
             }
         }
 
-        protected override bool DetermineCompleted()
-        {
-            return State == 2 && AllScannersReturned();
-
-            bool AllScannersReturned()
-            {
-                foreach (var scanner in scanners)
-                {
-                    if (scanner?.Item == null || scanner.Item.Removed) { return false; }
-                    var owner = scanner.Item.GetRootInventoryOwner();
-                    if (owner.Submarine != null && owner.Submarine.Info.Type == SubmarineType.Player)
-                    {
-                        continue;
-                    }
-                    else if (owner is Character c && c.Info != null && GameMain.GameSession.CrewManager.CharacterInfos.Contains(c.Info))
-                    {
-                        continue;
-                    }
-                    return false;
-                }
-                return true;
-            }
-        }
+        protected override bool DetermineCompleted() => State > 0;
 
         protected override void EndMissionSpecific(bool completed)
         {

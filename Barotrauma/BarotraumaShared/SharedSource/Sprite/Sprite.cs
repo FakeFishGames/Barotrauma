@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
-using Barotrauma.IO;
 using System;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 #if CLIENT
@@ -14,28 +12,6 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
-        public static IEnumerable<Sprite> LoadedSprites
-        {
-            get
-            {
-                List<Sprite> retVal = null;
-                lock (list)
-                {
-                    retVal = list.Select(wRef =>
-                    {
-                        if (wRef.TryGetTarget(out Sprite spr))
-                        {
-                            return spr;
-                        }
-                        return null;
-                    }).Where(s => s != null).ToList();
-                }
-                return retVal;
-            }
-        }
-
-        private readonly static List<WeakReference<Sprite>> list = new List<WeakReference<Sprite>>();
-
         /// <summary>
         /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!
         /// </summary>
@@ -119,7 +95,6 @@ namespace Barotrauma
             return FilePath + ": " + sourceRect;
         }
 
-        public Identifier Identifier { get; private set; }
         /// <summary>
         /// Identifier of the Map Entity so that we can link the sprite to its owner.
         /// </summary>
@@ -130,17 +105,15 @@ namespace Barotrauma
 
         partial void CalculateSourceRect();
 
-        private static void AddToList(Sprite elem)
-        {
-            lock (list)
-            {
-                list.Add(new WeakReference<Sprite>(elem));
-            }
-        }
+        static partial void AddToList(Sprite sprite);
 
-        public Sprite(ContentXElement element, string path = "", string file = "", bool lazyLoad = false)
+        public Sprite(ContentXElement element, string path = "", string file = "", bool lazyLoad = false, float sourceRectScale = 1)
         {
-            if (element is null) { return; }
+            if (element is null)
+            {
+                DebugConsole.ThrowError($"Sprite: xml element null in {file}. Failed to create the sprite!");
+                return;
+            }
             this.LazyLoad = lazyLoad;
             SourceElement = element;
             if (!ParseTexturePath(path, file)) { return; }
@@ -164,15 +137,17 @@ namespace Barotrauma
                 LoadTexture(ref sourceVector, ref shouldReturn);
             }
             if (shouldReturn) { return; }
-            sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
+            sourceRect = new Rectangle((int)(sourceVector.X * sourceRectScale), (int)(sourceVector.Y * sourceRectScale), (int)(sourceVector.Z * sourceRectScale), (int)(sourceVector.W * sourceRectScale));
             size = SourceElement.GetAttributeVector2("size", Vector2.One);
             RelativeSize = size;
             size.X *= sourceRect.Width;
             size.Y *= sourceRect.Height;
             RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
+#if CLIENT
             Identifier = GetIdentifier(SourceElement);
             AddToList(this);
+#endif
         }
 
         internal void LoadParams(SpriteParams spriteParams, bool isFlipped)
@@ -235,12 +210,11 @@ namespace Barotrauma
             return $"{sourceElement}{parentElement?.ToString() ?? ""}".ToIdentifier();
         }
 
+        static partial void RemoveFromList(Sprite sprite);
+        
         public void Remove()
         {
-            lock (list)
-            {
-                list.RemoveAll(wRef => !wRef.TryGetTarget(out Sprite s) || s == this);
-            }
+            RemoveFromList(this);
             DisposeTexture();
         }
 
@@ -308,12 +282,18 @@ namespace Barotrauma
                 size.Y *= sourceRect.Height;
                 RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                 Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
+#if CLIENT
                 Identifier = GetIdentifier(SourceElement);
+#endif
             }
         }
 
         public bool ParseTexturePath(string path = "", string file = "")
         {
+#if SERVER
+            // Server doesn't care about texture paths at all
+            return true;
+#endif
             if (file == "")
             {
                 file = SourceElement.GetAttributeStringUnrestricted("texture", "");
@@ -326,7 +306,8 @@ namespace Barotrauma
             }
             if (file == "")
             {
-                DebugConsole.ThrowError("Sprite " + SourceElement + " doesn't have a texture specified!");
+                DebugConsole.ThrowError("Sprite " + SourceElement.Element + " doesn't have a texture specified!",
+                    contentPackage: SourceElement.ContentPackage);
                 return false;
             }
             if (!string.IsNullOrEmpty(path))

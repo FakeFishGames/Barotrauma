@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -68,7 +67,6 @@ namespace Barotrauma.Items.Components
         public bool UseDirectionalPing => useDirectionalPing;
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
-        private bool useMineralScanner;
 
         private bool aiPingCheckPending;
 
@@ -132,6 +130,9 @@ namespace Barotrauma.Items.Components
                 hasMineralScanner = value;
             }
         }
+
+        [Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool UseMineralScanner { get; set; }
 
         public float Zoom
         {
@@ -213,10 +214,10 @@ namespace Barotrauma.Items.Components
                         activePings[currentPingIndex].Direction = pingDirection;
                         activePings[currentPingIndex].State = 0.0f;
                         activePings[currentPingIndex].PrevPingRadius = 0.0f;
-                        if (item.AiTarget != null)
+                        foreach (AITarget aiTarget in GetAITargets())
                         {
-                            item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
-                            item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                            aiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                            aiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                         }
                         item.Use(deltaTime);
                     }
@@ -229,10 +230,10 @@ namespace Barotrauma.Items.Components
 
             for (var pingIndex = 0; pingIndex < activePingsCount;)
             {
-                if (item.AiTarget != null)
+                foreach (AITarget aiTarget in GetAITargets())
                 {
-                    float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
-                    item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range));
+                    float range = MathUtils.InverseLerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
+                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range));
                 }
                 if (activePings[pingIndex].State > 1.0f)
                 {
@@ -248,6 +249,24 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     ++pingIndex;
+                }
+            }
+        }
+
+        private IEnumerable<AITarget> GetAITargets()
+        {
+            if (!UseTransducers)
+            {
+                if (item.AiTarget != null) { yield return item.AiTarget; }                
+            }
+            else
+            {
+                foreach (var transducer in connectedTransducers)
+                {
+                    if (transducer.Transducer.Item.AiTarget != null) 
+                    {
+                        yield return transducer.Transducer.Item.AiTarget;                    
+                    }
                 }
             }
         }
@@ -366,7 +385,7 @@ namespace Barotrauma.Items.Components
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
             float zoomT = zoom, pingDirectionT = 0.0f;
-            bool mineralScanner = useMineralScanner;
+            bool mineralScanner = UseMineralScanner;
             if (isActive)
             {
                 zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
@@ -391,13 +410,13 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, pingDirectionT);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
-                useMineralScanner = mineralScanner;
+                UseMineralScanner = mineralScanner;
 #if CLIENT
                 zoomSlider.BarScroll = zoomT;
                 directionalModeSwitch.Selected = useDirectionalPing;
                 if (mineralScannerSwitch != null)
                 {
-                    mineralScannerSwitch.Selected = useMineralScanner;
+                    mineralScannerSwitch.Selected = UseMineralScanner;
                 }
 #endif
             }
@@ -418,7 +437,7 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
-                msg.WriteBoolean(useMineralScanner);
+                msg.WriteBoolean(UseMineralScanner);
             }
         }
     }

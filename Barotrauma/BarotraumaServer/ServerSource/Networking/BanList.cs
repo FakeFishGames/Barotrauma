@@ -174,6 +174,22 @@ namespace Barotrauma.Networking
             return bannedPlayer != null;
         }
 
+        public bool IsBanned(AccountInfo accountInfo, out string reason)
+        {
+            if (accountInfo.AccountId.TryUnwrap(out var accountId) && IsBanned(accountId, out reason))
+            {
+                return true;
+            }
+
+            foreach (var otherId in accountInfo.OtherMatchingIds)
+            {
+                if (IsBanned(otherId, out reason)) { return true; }
+            }
+
+            reason = "";
+            return false;
+        }
+
         public void BanPlayer(string name, Endpoint endpoint, string reason, TimeSpan? duration)
             => BanPlayer(name, endpoint.Address, reason, duration);
         
@@ -305,7 +321,7 @@ namespace Barotrauma.Networking
                         else
                         {
                             outMsg.WriteBoolean(false); outMsg.WritePadBits();
-                            outMsg.WriteString(((SteamId)bannedPlayer.AddressOrAccountId).StringRepresentation);
+                            outMsg.WriteString(((AccountId)bannedPlayer.AddressOrAccountId).StringRepresentation);
                         }
                     }
                 }
@@ -333,7 +349,7 @@ namespace Barotrauma.Networking
                 {
                     UInt32 id = incMsg.ReadUInt32();
                     BannedPlayer? bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
-                    if (bannedPlayer != null)
+                    if (bannedPlayer != null && c.HasPermission(ClientPermissions.Unban))
                     {
                         GameServer.Log(GameServer.ClientLogName(c) + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.AddressOrAccountId + ")", ServerLog.MessageType.ConsoleUsage);
                         RemoveBan(bannedPlayer);

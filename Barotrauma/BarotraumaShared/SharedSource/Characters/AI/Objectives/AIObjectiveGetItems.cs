@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System;
 
 namespace Barotrauma
 {
@@ -12,6 +13,7 @@ namespace Barotrauma
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool AllowMultipleInstances => true;
+        protected override bool AllowWhileHandcuffed => false;
 
         public bool AllowStealing { get; set; }
         public bool TakeWholeStack { get; set; }
@@ -23,6 +25,12 @@ namespace Barotrauma
         public bool CheckPathForEachItem { get; set; }
         public bool RequireNonEmpty { get; set; }
         public bool RequireAllItems { get; set; }
+        public bool RequireDivingSuitAdequate { get; set; }
+
+        /// <summary>
+        /// T1 = item to check, T2 = tag we're trying to find a suitable item for
+        /// </summary>
+        public Func<Item, Identifier, bool>? ItemFilter;
 
         private readonly ImmutableArray<Identifier> gearTags;
         private readonly ImmutableHashSet<Identifier> ignoredTags;
@@ -40,55 +48,56 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
+            if (subObjectivesCreated) { return; }
+            foreach (Identifier tag in gearTags)
             {
-                Abandon = true;
-                return;
-            }
-            if (!subObjectivesCreated)
-            {
-                foreach (Identifier tag in gearTags)
+                if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
+                int count = gearTags.Count(t => t == tag);
+                AIObjectiveGetItem? getItem = null;
+                TryAddSubObjective(ref getItem, () =>
                 {
-                    if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
-                    int count = gearTags.Count(t => t == tag);
-                    AIObjectiveGetItem? getItem = null;
-                    TryAddSubObjective(ref getItem, () =>
-                        new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
-                        {
-                            AllowVariants = AllowVariants,
-                            Wear = Wear,
-                            TakeWholeStack = TakeWholeStack,
-                            AllowStealing = AllowStealing,
-                            ignoredIdentifiersOrTags = ignoredTags,
-                            CheckPathForEachItem = CheckPathForEachItem,
-                            RequireNonEmpty = RequireNonEmpty,
-                            ItemCount = count,
-                            SpeakIfFails = RequireAllItems
-                        },
-                        onCompleted: () =>
-                        {
-                            var item = getItem?.TargetItem;
-                            if (item?.IsOwnedBy(character) != null)
-                            {
-                                achievedItems.Add(item);
-                            }
-                        },
-                        onAbandon: () =>
-                        {
-                            var item = getItem?.TargetItem;
-                            if (item != null)
-                            {
-                                achievedItems.Remove(item);
-                            }
-                            RemoveSubObjective(ref getItem);
-                            if (RequireAllItems)
-                            {
-                                Abandon = true;
-                            }
-                        });
-                }
-                subObjectivesCreated = true;
+                   var getItem = new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
+                    {
+                        AllowVariants = AllowVariants,
+                        Wear = Wear,
+                        TakeWholeStack = TakeWholeStack,
+                        AllowStealing = AllowStealing,
+                        ignoredIdentifiersOrTags = ignoredTags,
+                        CheckPathForEachItem = CheckPathForEachItem,
+                        RequireNonEmpty = RequireNonEmpty,
+                        ItemCount = count,
+                        SpeakIfFails = RequireAllItems,
+                       
+                    };
+                    if (ItemFilter != null)
+                    {
+                        getItem.ItemFilter = (Item it) => ItemFilter(it, tag);
+                    }
+                    return getItem;
+                },
+                onCompleted: () =>
+                {
+                    var item = getItem?.TargetItem;
+                    if (item?.IsOwnedBy(character) != null)
+                    {
+                        achievedItems.Add(item);
+                    }
+                },
+                onAbandon: () =>
+                {
+                    var item = getItem?.TargetItem;
+                    if (item != null)
+                    {
+                        achievedItems.Remove(item);
+                    }
+                    RemoveSubObjective(ref getItem);
+                    if (RequireAllItems)
+                    {
+                        Abandon = true;
+                    }
+                });
             }
+            subObjectivesCreated = true;
         }
 
         public override void Reset()

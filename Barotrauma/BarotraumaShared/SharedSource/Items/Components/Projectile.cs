@@ -56,6 +56,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        enum StickTargetType
+        {
+            Structure,
+            Limb,
+            Item,
+            Submarine,
+            LevelWall,
+            Unknown
+        }
+
         public const float WaterDragCoefficient = 0.1f;
 
         private readonly Queue<Impact> impactQueue = new Queue<Impact>();
@@ -73,6 +83,7 @@ namespace Barotrauma.Items.Components
         public Attack Attack { get; private set; }
 
         private Vector2 launchPos;
+        public Submarine LaunchSub;
 
         private readonly HashSet<Body> hits = new HashSet<Body>();
 
@@ -277,6 +288,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Can the projectile hit the user? Should generally be disabled, unless the projectile is for example something like shrapnel launched by a projectile impact.")]
+        public bool DamageUser
+        {
+            get;
+            set;
+        }
+
         public bool IsStuckToTarget => StickTarget != null;
 
         private Category originalCollisionCategories;
@@ -295,7 +313,8 @@ namespace Barotrauma.Items.Components
 
             if (item.body == null)
             {
-                DebugConsole.ThrowError($"Error in projectile definition ({item.Name}): No body defined!");
+                DebugConsole.ThrowError($"Error in projectile definition ({item.Name}): No body defined!",
+                    contentPackage: element.ContentPackage);
                 return;
             }
 
@@ -352,8 +371,9 @@ namespace Barotrauma.Items.Components
             User = user;
             if (Item.Removed) { return; }
             launchPos = simPosition;
+            LaunchSub = item.Submarine;
             //set the rotation of the projectile again because dropping the projectile resets the rotation
-            Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians));
+            Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians), findNewHull: false);
             if (DeactivationTime > 0)
             {
                 deactivationTimer = DeactivationTime;
@@ -400,6 +420,12 @@ namespace Barotrauma.Items.Components
             if (StickTarget != null || IsActive) { return false; }
 
             float initialRotation = item.body.Rotation;
+            //if the item is being launched from an inventory, assume it's being fired by a gun that handles setting the rotation correctly
+            //but if the item is e.g. being thrown by a character, we need to take the direction into account
+            if (item.body.Dir < 0 && item.ParentInventory is not ItemInventory)
+            {
+                initialRotation -= MathHelper.Pi;
+            }
             for (int i = 0; i < HitScanCount; i++)
             {
                 float launchAngle;
@@ -442,26 +468,49 @@ namespace Barotrauma.Items.Components
         {
             hits.Clear();
 
+            Vector2 prevVelocity = item.body.LinearVelocity;
+
             if (item.AiTarget != null)
             {
                 item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
                 item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
             }
 
+            //do not create a network event about dropping the projectile at this point,
+            //otherwise clients would fail to launch the correct projectile when firing the weapon
+            var prevInventory = item.ParentInventory;
+            if (prevInventory != null && GameMain.NetworkMember is { IsServer: true })
+            {
+                //update the state of the inventory after a delay,
+                //in case a client failed to launch the projectile for some reason
+                CoroutineManager.Invoke(() =>
+                {
+                    if (item.Removed) { return; }
+                    prevInventory.CreateNetworkEvent();
+                }, delay: CorrectionDelay / 2);
+            }
             item.Drop(null, createNetworkEvent: false);
+
             Item.WaterDragCoefficient = WaterDragCoefficient;
 
             launchPos = item.SimPosition;
+            LaunchSub = item.Submarine;
 
-            item.body.Enabled = true;            
+            item.body.Enabled = true;
             if (item.body.BodyType == BodyType.Kinematic)
             {
                 item.body.LinearVelocity = impulse;
             }
-            else
+            else if (impulse.LengthSquared() > 0.001f)
             {
                 impulse *= item.body.Mass;
                 item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.95f);
+            }
+            else
+            {
+                //if no impulse is defined, maintain the projectile's original velocity (if any)
+                //can be used to make throwable items behave as projectiles
+                item.body.LinearVelocity = prevVelocity;
             }
             
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
@@ -483,7 +532,7 @@ namespace Barotrauma.Items.Components
             float rotation = item.body.Rotation;
             Vector2 simPositon = item.SimPosition;
             Vector2 rayStartWorld = item.WorldPosition;
-            item.Drop(null);
+            item.Drop(null, createNetworkEvent: false);
             Item.WaterDragCoefficient = WaterDragCoefficient;
 
             item.body.Enabled = true;
@@ -600,6 +649,8 @@ namespace Barotrauma.Items.Components
                 }
                 if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.CollidesWith == Category.None) { return true; }
+                //only collides with characters = probably an "outsideCollisionBlocker" created by a gap
+                if (fixture.CollidesWith == Physics.CollisionCharacter) { return true; }
 
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body.UserData is Hull || fixture.UserData is Hull) { return true; }
 
@@ -653,6 +704,8 @@ namespace Barotrauma.Items.Components
                 }
                 if (fixture.Body.UserData is VineTile) { return -1; }
                 if (fixture.CollidesWith == Category.None) { return -1; }
+                //only collides with characters = probably an "outsideCollisionBlocker" created by a gap
+                if (fixture.CollidesWith == Physics.CollisionCharacter) { return -1; }
                 if (fixture.Body.UserData is Item item)
                 {
                     if (item.Condition <= 0) { return -1; }
@@ -666,6 +719,7 @@ namespace Barotrauma.Items.Components
                     if (fixture.Body.UserData is VoronoiCell) { return -1; }
                     if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return -1; }
                     if (fixture.Body.UserData is Limb limb && limb.character?.Submarine != submarine) { return -1; }
+                    if (fixture.Body == Level.Loaded?.TopBarrier || fixture.Body == Level.Loaded?.BottomBarrier) { return -1; }
                 }
 
                 // Ignore holdables that can't push -> shouldn't block
@@ -709,7 +763,7 @@ namespace Barotrauma.Items.Components
             return hits;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             Item.ResetWaterDragCoefficient();
             if (dropper != null)
@@ -717,7 +771,7 @@ namespace Barotrauma.Items.Components
                 DisableProjectileCollisions();
                 Unstick();
             }
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -891,17 +945,32 @@ namespace Barotrauma.Items.Components
                     return false; 
                 }
 
-                Vector2 dir = item.body.LinearVelocity.LengthSquared() < 0.001f ?
-                contact.Manifold.LocalNormal : Vector2.Normalize(item.body.LinearVelocity);
+                Vector2 normalizedVel;
+                Vector2 dir;
+                if (item.body.LinearVelocity.LengthSquared() < 0.001f)
+                {
+                    normalizedVel = Vector2.Zero;
+                    dir = contact.Manifold.LocalNormal;
+                }
+                else
+                {
+                    normalizedVel = dir = Vector2.Normalize(item.body.LinearVelocity);
+                }
 
                 //do a raycast in the sub's coordinate space to see if it hit a structure
                 var wallBody = Submarine.PickBody(
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
                     collisionCategory: Physics.CollisionWall);
+
+                Vector2 launchPosInCurrentCoordinateSpace = launchPos;
+                if (item.body.Submarine == null && LaunchSub != null)
+                {
+                    launchPosInCurrentCoordinateSpace += ConvertUnits.ToSimUnits(LaunchSub.Position);
+                }
                 if (wallBody?.FixtureList?.First() != null && (wallBody.UserData is Structure || wallBody.UserData is Item) &&
                     //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
-                    Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0)
+                    Vector2.Dot((item.body.SimPosition + normalizedVel) - launchPosInCurrentCoordinateSpace, dir) > 0)
                 {
                     target = wallBody.FixtureList.First();
                     if (hits.Contains(target.Body))
@@ -939,7 +1008,7 @@ namespace Barotrauma.Items.Components
             Character character = null;
             if (target.Body.UserData is Submarine submarine && target.UserData is not Barotrauma.Item)
             {
-                item.Move(-submarine.Position);
+                item.Move(-submarine.Position, ignoreContacts: false);
                 item.Submarine = submarine;
                 item.body.Submarine = submarine;
                 return !Hitscan;
@@ -971,9 +1040,10 @@ namespace Barotrauma.Items.Components
                 {
                     attackResult = Attack.DoDamage(User ?? Attacker, targetItem, item.WorldPosition, 1.0f);
 #if CLIENT
-                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar)
+                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
+                        (User == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
                     {
-                        Character.Controlled?.UpdateHUDProgressBar(targetItem,
+                        Character.Controlled.UpdateHUDProgressBar(targetItem,
                             targetItem.WorldPosition,
                             targetItem.Condition / targetItem.MaxCondition,
                             emptyColor: GUIStyle.HealthBarColorLow,
@@ -1136,7 +1206,13 @@ namespace Barotrauma.Items.Components
                 removePending = true;
                 item.HiddenInGame = true;
                 item.body.FarseerBody.Enabled = false;
-                Entity.Spawner?.AddItemToRemoveQueue(item);                
+                //delete with a brief delay so we don't delete the item
+                //before a client has managed to launch it (can happen with hitscan projectile)
+                CoroutineManager.Invoke(() =>
+                {
+                    if (item.Removed) { return; }
+                    Entity.Spawner?.AddItemToRemoveQueue(item);
+                }, delay: 0.5f);
             }
 
             return true;
@@ -1179,6 +1255,11 @@ namespace Barotrauma.Items.Components
                 }
             }
             IgnoredBodies?.Clear();
+        }
+
+        public bool IsAttachedTo(PhysicsBody body)
+        {
+            return stickJoint != null && (stickJoint.BodyA == body?.FarseerBody || stickJoint.BodyB == body?.FarseerBody);
         }
 
         private void StickToTarget(Body targetBody, Vector2 axis)

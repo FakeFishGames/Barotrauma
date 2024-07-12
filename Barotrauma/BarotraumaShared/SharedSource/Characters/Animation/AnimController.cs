@@ -32,6 +32,48 @@ namespace Barotrauma
         public abstract GroundedMovementParams RunParams { get; set; }
         public abstract SwimParams SwimSlowParams { get; set; }
         public abstract SwimParams SwimFastParams { get; set; }
+        
+        protected class AnimSwap
+        {
+            public readonly AnimationType AnimationType;
+            public readonly AnimationParams TemporaryAnimation;
+            public readonly float Priority;
+            public bool IsActive
+            {
+                get { return _isActive; }
+                set
+                {
+                    if (value)
+                    {
+                        expirationTimer = expirationTime;
+                    }
+                    _isActive = value;
+                }
+            } 
+            private bool _isActive;
+            private float expirationTimer;
+            private const float expirationTime = 0.1f;
+            
+            public AnimSwap(AnimationParams temporaryAnimation, float priority)
+            {
+                AnimationType = temporaryAnimation.AnimationType;
+                TemporaryAnimation = temporaryAnimation;
+                Priority = priority;
+                IsActive = true;
+            }
+            
+            public void Update(float deltaTime)
+            {
+                expirationTimer -= deltaTime;
+                if (expirationTimer <= 0)
+                {
+                    IsActive = false;
+                }
+            }
+        }
+        
+        protected readonly Dictionary<AnimationType, AnimSwap> tempAnimations = new Dictionary<AnimationType, AnimSwap>();
+        protected readonly HashSet<AnimationType> expiredAnimations = new HashSet<AnimationType>();
 
         public AnimationParams CurrentAnimationParams
         {
@@ -87,7 +129,11 @@ namespace Barotrauma
         }
 
         public bool CanWalk => RagdollParams.CanWalk;
-        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir) && CurrentAnimationParams is not FishGroundedParams { Flip: false };
+        public bool IsMovingBackwards => 
+            !InWater && 
+            Math.Sign(targetMovement.X) == -Math.Sign(Dir) && 
+            CurrentAnimationParams is not FishGroundedParams { Flip: false } &&
+            Anim != Animation.Climbing;
 
         // TODO: define death anim duration in XML
         protected float deathAnimTimer, deathAnimDuration = 5.0f;
@@ -177,8 +223,14 @@ namespace Barotrauma
         public float WalkPos { get; protected set; }
 
         public AnimController(Character character, string seed, RagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
+        
+        public void UpdateAnimations(float deltaTime)
+        {
+            UpdateTemporaryAnimations(deltaTime);
+            UpdateAnim(deltaTime);
+        }
 
-        public abstract void UpdateAnim(float deltaTime);
+        protected abstract void UpdateAnim(float deltaTime);
 
         public abstract void DragCharacter(Character target, float deltaTime);
 
@@ -253,23 +305,26 @@ namespace Barotrauma
             switch (type)
             {
                 case AnimationType.Walk:
-                    return WalkParams;
+                    return CanWalk ? WalkParams : null;
                 case AnimationType.Run:
-                    return RunParams;
+                    return CanWalk ? RunParams : null;
                 case AnimationType.Crouch:
                     if (this is HumanoidAnimController humanAnimController)
                     {
                         return humanAnimController.HumanCrouchParams;
                     }
-                    throw new NotImplementedException(type.ToString());
+                    else
+                    {
+                        DebugConsole.ThrowError($"Animation params of type {type} not implemented for non-humanoids!");
+                        return null;
+                    }
                 case AnimationType.SwimSlow:
                     return SwimSlowParams;
                 case AnimationType.SwimFast:
                     return SwimFastParams;
                 case AnimationType.NotDefined:
-                    return null;
                 default:
-                    throw new NotImplementedException(type.ToString());
+                    return null;
             }
         }
 
@@ -286,17 +341,32 @@ namespace Barotrauma
 
         public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
-            useItemTimer = 0.5f;
+            useItemTimer = 0.05f;
             StartUsingItem();
 
             if (!allowMovement)
             {
                 TargetMovement = Vector2.Zero;
                 TargetDir = handWorldPos.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
-                float sqrDist = Vector2.DistanceSquared(character.WorldPosition, handWorldPos);
-                if (sqrDist > MathUtils.Pow(ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength), 2))
+                if (InWater)
                 {
-                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false) * Math.Max(character.SpeedMultiplier, 1);
+                    float sqrDist = Vector2.DistanceSquared(character.WorldPosition, handWorldPos);
+                    if (sqrDist > MathUtils.Pow(ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength), 2))
+                    {
+                        TargetMovement = GetTargetMovement(Vector2.Normalize(handWorldPos - character.WorldPosition));
+                    }
+                }
+                else
+                {
+                    float distX = Math.Abs(handWorldPos.X - character.WorldPosition.X);
+                    if (distX > ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength))
+                    {
+                        TargetMovement = GetTargetMovement(Vector2.UnitX * Math.Sign(handWorldPos.X - character.WorldPosition.X));
+                    }
+                }
+                Vector2 GetTargetMovement(Vector2 dir)
+                {
+                    return dir * GetCurrentSpeed(false) * Math.Max(character.SpeedMultiplier, 1);
                 }
             }
 
@@ -306,6 +376,15 @@ namespace Barotrauma
             if (character.Submarine != null)
             {
                 handSimPos -= character.Submarine.SimPosition;
+            }
+
+            Vector2 refPos = rightShoulder?.WorldAnchorA ?? leftShoulder?.WorldAnchorA ?? MainLimb.SimPosition;
+            Vector2 diff = handSimPos - refPos;
+            float dist = diff.Length();
+            float maxDist = ArmLength * 0.9f;
+            if (dist > maxDist)
+            {
+                handSimPos = refPos + diff / dist * maxDist;
             }
 
             var leftHand = GetLimb(LimbType.LeftHand);
@@ -322,6 +401,16 @@ namespace Barotrauma
                 rightHand.Disabled = true;
                 rightHand.PullJointEnabled = true;
                 rightHand.PullJointWorldAnchorB = handSimPos;
+            }
+
+            //make the character crouch if using an item some distance below them (= on the floor)
+            if (!inWater && 
+                character.WorldPosition.Y - handWorldPos.Y > ConvertUnits.ToDisplayUnits(CurrentGroundedParams.TorsoPosition) / 4 &&
+                this is HumanoidAnimController humanoidAnimController)
+            {
+                humanoidAnimController.Crouching = true;
+                humanoidAnimController.ForceSelectAnimationType = AnimationType.Crouch;
+                character.SetInput(InputType.Crouch, hit: false, held: true);
             }
         }
 
@@ -342,7 +431,7 @@ namespace Barotrauma
         private Direction previousDirection;
         private readonly Vector2[] transformedHandlePos = new Vector2[2];
         //TODO: refactor this method, it's way too convoluted
-        public void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f, bool aimMelee = false)
+        public void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 itemPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f, bool aimMelee = false, Vector2? targetPos = null)
         {
             aimingMelee = aimMelee;
             if (character.Stun > 0.0f || character.IsIncapacitated)
@@ -351,27 +440,20 @@ namespace Barotrauma
             }
 
             //calculate the handle positions
-            Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
-            float horizontalOffset = ConvertUnits.ToSimUnits((item.Sprite.size.X / 2 - item.Sprite.Origin.X) * item.Scale);
-
-            //handlePos[0] = ConvertUnits.ToSimUnits(new Vector2(-45,25) * 0.5f);
-            //handlePos[1] = ConvertUnits.ToSimUnits(new Vector2(-65,30) * 0.5f);
-
-            transformedHandlePos[0] = Vector2.Transform(new Vector2(handlePos[0].X + horizontalOffset, handlePos[0].Y), itemTransfrom);
-            transformedHandlePos[1] = Vector2.Transform(new Vector2(handlePos[1].X + horizontalOffset, handlePos[1].Y), itemTransfrom);
+            Matrix itemTransform = Matrix.CreateRotationZ(item.body.Rotation);
+            transformedHandlePos[0] = Vector2.Transform(handlePos[0], itemTransform);
+            transformedHandlePos[1] = Vector2.Transform(handlePos[1], itemTransform);
 
             Limb torso = GetLimb(LimbType.Torso) ?? MainLimb;
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
-            Vector2 itemPos = aim ? aimPos : holdPos;
-
             var controller = character.SelectedItem?.GetComponent<Controller>();
-            bool usingController = controller != null && !controller.AllowAiming;
+            bool usingController = controller is { AllowAiming: false };
             if (!usingController)
             {
                 controller = character.SelectedSecondaryItem?.GetComponent<Controller>();
-                usingController = controller != null && !controller.AllowAiming;
+                usingController = controller is { AllowAiming: false };
             }
             bool isClimbing = character.IsClimbing && Math.Abs(character.AnimController.TargetMovement.Y) > 0.01f;
             float itemAngle;
@@ -379,13 +461,17 @@ namespace Barotrauma
             float torsoRotation = torso.Rotation;
 
             Item rightHandItem = character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand);
-            bool equippedInRightHand = rightHandItem == item && rightHand != null && !rightHand.IsSevered;
+            bool equippedInRightHand = rightHandItem == item && rightHand is { IsSevered: false };
             Item leftHandItem = character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand);
-            bool equippedInLefthand = leftHandItem == item && leftHand != null && !leftHand.IsSevered;
+            bool equippedInLeftHand = leftHandItem == item && leftHand is { IsSevered: false };
             if (aim && !isClimbing && !usingController && character.Stun <= 0.0f && itemPos != Vector2.Zero && !character.IsIncapacitated)
             {
-                Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
-                Vector2 diff = holdable.Aimable ? (mousePos - AimSourceSimPos) * Dir : Vector2.UnitX;
+                targetPos ??= ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
+                
+                Vector2 diff = holdable.Aimable ? 
+                    (targetPos.Value - AimSourceSimPos) * Dir : 
+                    MathUtils.RotatePoint(Vector2.UnitX, torsoRotation);
+                
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torsoRotation * Dir;
                 holdAngle += GetAimWobble(rightHand, leftHand, item);
                 itemAngle = torsoRotation + holdAngle * Dir;
@@ -393,7 +479,7 @@ namespace Barotrauma
                 if (holdable.ControlPose)
                 {
                     //if holding two items that should control the characters' pose, let the item in the right hand do it
-                    bool anotherItemControlsPose = equippedInLefthand && rightHandItem != item && (rightHandItem?.GetComponent<Holdable>()?.ControlPose ?? false);
+                    bool anotherItemControlsPose = equippedInLeftHand && rightHandItem != item && (rightHandItem?.GetComponent<Holdable>()?.ControlPose ?? false);
                     if (!anotherItemControlsPose && TargetMovement == Vector2.Zero && inWater)
                     {
                         torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
@@ -410,7 +496,7 @@ namespace Barotrauma
                     {
                         itemAngle = rightHand.Rotation + holdAngle * Dir;
                     }
-                    else if (equippedInLefthand)
+                    else if (equippedInLeftHand)
                     {
                         itemAngle = leftHand.Rotation + holdAngle * Dir;
                     }
@@ -434,7 +520,7 @@ namespace Barotrauma
                     transformedHoldPos = rightHand.PullJointWorldAnchorA - transformedHandlePos[0];
                     itemAngle = rightHand.Rotation + (holdAngle - rightHand.Params.GetSpriteOrientation() + MathHelper.PiOver2) * Dir;
                 }
-                else if (equippedInLefthand)
+                else if (equippedInLeftHand)
                 {
                     transformedHoldPos = leftHand.PullJointWorldAnchorA - transformedHandlePos[1];
                     itemAngle = leftHand.Rotation + (holdAngle - leftHand.Params.GetSpriteOrientation() + MathHelper.PiOver2) * Dir;
@@ -447,7 +533,7 @@ namespace Barotrauma
                     transformedHoldPos = rightShoulder.WorldAnchorA;
                     rightHand.Disabled = true;
                 }
-                if (equippedInLefthand)
+                if (equippedInLeftHand)
                 {
                     if (leftShoulder == null) { return; }
                     transformedHoldPos = leftShoulder.WorldAnchorA;
@@ -480,6 +566,16 @@ namespace Barotrauma
                 return;
             }
 
+            float targetAngle = MathUtils.WrapAngleTwoPi(itemAngle + itemAngleRelativeToHoldAngle * Dir);
+            float currentRotation = MathUtils.WrapAngleTwoPi(item.body.Rotation);
+            float itemRotation = MathHelper.SmoothStep(currentRotation, targetAngle, deltaTime * 25);
+            if (previousDirection != dir || Math.Abs(targetAngle - currentRotation) > MathHelper.Pi)
+            {
+                itemRotation = targetAngle;
+            }
+            item.SetTransform(currItemPos, itemRotation, setPrevTransform: false);
+            previousDirection = dir;
+
             if (holdable.Pusher != null)
             {
                 if (character.Stun > 0.0f || character.IsIncapacitated)
@@ -497,24 +593,11 @@ namespace Barotrauma
                     else
                     {
                         holdable.Pusher.TargetPosition = currItemPos;
-                        holdable.Pusher.TargetRotation = holdAngle * Dir;
-
+                        holdable.Pusher.TargetRotation = itemRotation;
                         holdable.Pusher.MoveToTargetPosition(true);
-
-                        currItemPos = holdable.Pusher.SimPosition;
-                        itemAngle = holdable.Pusher.Rotation;
                     }
                 }
             }
-            float targetAngle = MathUtils.WrapAngleTwoPi(itemAngle + itemAngleRelativeToHoldAngle * Dir);
-            float currentRotation = MathUtils.WrapAngleTwoPi(item.body.Rotation);
-            float itemRotation = MathHelper.SmoothStep(currentRotation, targetAngle, deltaTime * 25);
-            if (previousDirection != dir || Math.Abs(targetAngle - currentRotation) > MathHelper.Pi)
-            {
-                itemRotation = targetAngle;
-            }
-            item.SetTransform(currItemPos, itemRotation, setPrevTransform: false);
-            previousDirection = dir;
 
             if (!isClimbing && !character.IsIncapacitated && itemPos != Vector2.Zero && (aim || !holdable.UseHandRotationForHoldAngle))
             {
@@ -524,7 +607,8 @@ namespace Barotrauma
 #if DEBUG
                     if (handlePos[i].LengthSquared() > ArmLength)
                     {
-                        DebugConsole.AddWarning($"Aim position for the item {item.Name} may be incorrect (further than the length of the character's arm)");
+                        DebugConsole.AddWarning($"Aim position for the item {item.Name} may be incorrect (further than the length of the character's arm)",
+                            item.Prefab.ContentPackage);
                     }
 #endif
                     HandIK(
@@ -774,5 +858,260 @@ namespace Barotrauma
         public void StopUsingItem() => StopAnimation(Animation.UsingItem);
 
         public void StopClimbing() => StopAnimation(Animation.Climbing);
+        
+        private readonly Dictionary<AnimationType, AnimationParams> defaultAnimations = new Dictionary<AnimationType, AnimationParams>();
+        
+        /// <summary>
+        /// Loads an animation (variation) that automatically resets in 0.1s, unless triggered again.
+        /// Meant e.g. for triggering animations in status effects, without having to worry about resetting them.
+        /// </summary>
+        public bool TryLoadTemporaryAnimation(StatusEffect.AnimLoadInfo animLoadInfo, bool throwErrors)
+        {
+            AnimationType animType = animLoadInfo.Type;
+            if (tempAnimations.TryGetValue(animType, out AnimSwap animSwap))
+            {
+                if (animLoadInfo.File.TryGet(out string fileName) && animSwap.TemporaryAnimation.FileNameWithoutExtension.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Already loaded, keep active
+                    animSwap.IsActive = true;
+                    return true;
+                }
+                else if (animLoadInfo.File.TryGet(out ContentPath contentPath) && animSwap.TemporaryAnimation.Path == contentPath)
+                {
+                    // Already loaded, keep active
+                    animSwap.IsActive = true;
+                    return true;
+                }
+                else
+                {
+                    if (animSwap.Priority >= animLoadInfo.Priority)
+                    {
+                        // If the priority of the current animation is higher than the new animation, just return and do nothing.
+                        // Returning false would tell the status effect to not try again, which is not what we want here, which is why we fake a bit with the return value.
+                        return true;
+                    }
+                    else
+                    {
+                        // Override any previous animations of the same type.
+                        tempAnimations.Remove(animType);   
+                    }
+                }
+            }
+            AnimationParams defaultAnimation = GetAnimationParamsFromType(animType);
+            if (defaultAnimation == null) { return false; }
+            if (!TryLoadAnimation(animType, animLoadInfo.File, out AnimationParams tempParams, throwErrors)) { return false; }
+            // Store the default animation, if not yet stored. There should always be just one of the same type.
+            defaultAnimations.TryAdd(animType, defaultAnimation);
+            tempAnimations.Add(animType, new AnimSwap(tempParams, animLoadInfo.Priority));
+            return true;
+        }
+        
+        private void UpdateTemporaryAnimations(float deltaTime)
+        {
+            if (tempAnimations.None()) { return; }
+            foreach ((AnimationType animationType, AnimSwap animSwap) in tempAnimations)
+            {
+                if (!animSwap.IsActive)
+                {
+                    if (defaultAnimations.TryGetValue(animSwap.AnimationType, out AnimationParams defaultAnimation))
+                    {
+                        TrySwapAnimParams(defaultAnimation);
+                        expiredAnimations.Add(animationType); 
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError($"[AnimController] Failed to find the default animation parameters of type {animSwap.AnimationType}. Cannot swap back the default animations!");
+                        tempAnimations.Clear();
+                    }
+                }
+            }
+            foreach (AnimationType anim in expiredAnimations)
+            {
+                tempAnimations.Remove(anim);
+            }
+            expiredAnimations.Clear();
+            foreach (AnimSwap animSwap in tempAnimations.Values)
+            {
+                animSwap.Update(deltaTime);
+            }
+        }
+        
+        /// <summary>
+        /// Loads animations. Non-permanent (= resets on load).
+        /// </summary>
+        public bool TryLoadAnimation(AnimationType animationType, Either<string, ContentPath> file, out AnimationParams animParams, bool throwErrors)
+        {
+            animParams = null;
+            if (character.IsHumanoid && this is HumanoidAnimController humanAnimController)
+            {
+                switch (animationType)
+                {
+                    case AnimationType.Walk:
+                        humanAnimController.WalkParams = HumanWalkParams.GetAnimParams(character, file, throwErrors);
+                        animParams = humanAnimController.WalkParams;
+                        break;
+                    case AnimationType.Run:
+                        humanAnimController.RunParams = HumanRunParams.GetAnimParams(character, file, throwErrors);
+                        animParams = humanAnimController.RunParams;
+                        break;
+                    case AnimationType.Crouch:
+                        humanAnimController.HumanCrouchParams = HumanCrouchParams.GetAnimParams(character, file, throwErrors);
+                        animParams = humanAnimController.HumanCrouchParams;
+                        break;
+                    case AnimationType.SwimSlow:
+                        humanAnimController.SwimSlowParams = HumanSwimSlowParams.GetAnimParams(character, file, throwErrors);
+                        animParams = humanAnimController.SwimSlowParams;
+                        break;
+                    case AnimationType.SwimFast:
+                        humanAnimController.SwimFastParams = HumanSwimFastParams.GetAnimParams(character, file, throwErrors);
+                        animParams = humanAnimController.SwimFastParams;
+                        break;
+                    default:
+                        DebugConsole.ThrowError($"[AnimController] Animation of type {animationType} not implemented!");
+                        break;
+                }
+            }
+            else
+            {
+                switch (animationType)
+                {
+                    case AnimationType.Walk:
+                        if (CanWalk)
+                        {
+                            character.AnimController.WalkParams = FishWalkParams.GetAnimParams(character, file, throwErrors);
+                            animParams = character.AnimController.WalkParams;
+                        }
+                        break;
+                    case AnimationType.Run:
+                        if (CanWalk)
+                        {
+                            character.AnimController.RunParams = FishRunParams.GetAnimParams(character, file, throwErrors);
+                            animParams = character.AnimController.RunParams;
+                        }
+                        break;
+                    case AnimationType.SwimSlow:
+                        character.AnimController.SwimSlowParams = FishSwimSlowParams.GetAnimParams(character, file, throwErrors);
+                        animParams = character.AnimController.SwimSlowParams;
+                        break;
+                    case AnimationType.SwimFast:
+                        character.AnimController.SwimFastParams = FishSwimFastParams.GetAnimParams(character, file, throwErrors);
+                        animParams = character.AnimController.SwimFastParams;
+                        break;
+                    default:
+                        DebugConsole.ThrowError($"[AnimController] Animation of type {animationType} not implemented!");
+                        break;
+                }
+            }
+            
+            bool success = animParams != null;
+            if (!file.TryGet(out string fileName))
+            {
+                if (file.TryGet(out ContentPath contentPath))
+                {
+                    fileName = contentPath.Value;
+                    if (success)
+                    {
+                        success = contentPath == animParams.Path;
+                    }
+                }
+            }
+            else
+            {
+                if (success)
+                {
+                    success = animParams.FileNameWithoutExtension.Equals(fileName, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            if (success)
+            {
+                DebugConsole.NewMessage($"Animation {fileName} successfully loaded for {character.DisplayName}", Color.LightGreen, debugOnly: true);
+            }
+            else if (throwErrors)
+            {
+                DebugConsole.ThrowError($"Animation {fileName} for {character.DisplayName} could not be loaded!");
+            }
+            return success;
+        }
+        
+        /// <summary>
+        /// Simply swaps existing animation parameters as current parameters.
+        /// </summary>
+        protected bool TrySwapAnimParams(AnimationParams newParams)
+        {
+            AnimationType animationType = newParams.AnimationType;
+            if (character.IsHumanoid && this is HumanoidAnimController humanAnimController)
+            {
+                switch (animationType)
+                {
+                    case AnimationType.Walk:
+                        if (newParams is HumanWalkParams newWalkParams)
+                        {
+                            humanAnimController.WalkParams = newWalkParams;   
+                        }
+                        return true;
+                    case AnimationType.Run:
+                        if (newParams is HumanRunParams newRunParams)
+                        {
+                            humanAnimController.HumanRunParams = newRunParams;
+                        }
+                        break;
+                    case AnimationType.Crouch:
+                        if (newParams is HumanCrouchParams newCrouchParams)
+                        {
+                            humanAnimController.HumanCrouchParams = newCrouchParams;
+                        }
+                        return true;
+                    case AnimationType.SwimSlow:
+                        if (newParams is HumanSwimSlowParams newSwimSlowParams)
+                        {
+                            humanAnimController.HumanSwimSlowParams = newSwimSlowParams;
+                        }
+                        return true;
+                    case AnimationType.SwimFast:
+                        if (newParams is HumanSwimFastParams newSwimFastParams)
+                        {
+                            humanAnimController.HumanSwimFastParams = newSwimFastParams;
+                        }
+                        return true;
+                    default:
+                        DebugConsole.ThrowError($"[AnimController] Animation of type {animationType} not implemented!");
+                        return false;
+                }
+            }
+            else
+            {
+                switch (animationType)
+                {
+                    case AnimationType.Walk:
+                        if (newParams is FishWalkParams walkParams)
+                        {
+                            character.AnimController.WalkParams = walkParams;
+                        }
+                        return true;
+                    case AnimationType.Run:
+                        if (newParams is FishRunParams runParams)
+                        {
+                            character.AnimController.RunParams = runParams;
+                        }
+                        return true;
+                    case AnimationType.SwimSlow:
+                        if (newParams is FishSwimSlowParams swimSlowParams)
+                        {
+                            character.AnimController.SwimSlowParams = swimSlowParams;
+                        }
+                        return true;
+                    case AnimationType.SwimFast:
+                        if (newParams is FishSwimFastParams swimFastParams)
+                        {
+                            character.AnimController.SwimFastParams = swimFastParams;
+                        }
+                        return true;
+                    default:
+                        DebugConsole.ThrowError($"[AnimController] Animation of type {animationType} not implemented!");
+                        break;
+                }
+            }
+            return false;
+        }
     }
 }

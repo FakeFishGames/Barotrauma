@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -25,6 +26,7 @@ namespace Barotrauma.Steam
 
         public static void CreateLobby(ServerSettings serverSettings)
         {
+            if (!SteamManager.IsInitialized) { return; }
             if (lobbyState != LobbyState.NotConnected) { return; }
             lobbyState = LobbyState.Creating;
             TaskPool.Add("CreateLobbyAsync", Steamworks.SteamMatchmaking.CreateLobbyAsync(serverSettings.MaxPlayers + 10),
@@ -87,40 +89,34 @@ namespace Barotrauma.Steam
                 return;
             }
 
-            var contentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent);
+            serverSettings.UpdateServerListInfo(SetServerListInfo);
 
-            currentLobby?.SetData("name", serverSettings.ServerName);
-            currentLobby?.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());
-            currentLobby?.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
-            //currentLobby?.SetData("hostipaddress", lobbyIP);
-            string pingLocation = Steamworks.SteamNetworkingUtils.LocalPingLocation?.ToString();
-            currentLobby?.SetData("pinglocation", pingLocation ?? "");
             currentLobby?.SetData("lobbyowner", GetSteamId().TryUnwrap(out var steamId)
                 ? steamId.StringRepresentation
                 : throw new InvalidOperationException("Steamworks not initialized"));
-            currentLobby?.SetData("haspassword", serverSettings.HasPassword.ToString());
 
-            currentLobby?.SetData("message", serverSettings.ServerMessageText);
-            currentLobby?.SetData("version", GameMain.Version.ToString());
-
-            currentLobby?.SetData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
-            currentLobby?.SetData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.Hash.StringRepresentation)));
-            currentLobby?.SetData("contentpackageid", string.Join(",", contentPackages.Select(cp
-                => cp.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : "")));
-            currentLobby?.SetData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
-            currentLobby?.SetData("subselectionmode", serverSettings.SubSelectionMode.ToString());
-            currentLobby?.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
-            currentLobby?.SetData("allowspectating", serverSettings.AllowSpectating.ToString());
-            currentLobby?.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
-            currentLobby?.SetData("karmaenabled", serverSettings.KarmaEnabled.ToString());
-            currentLobby?.SetData("friendlyfireenabled", serverSettings.AllowFriendlyFire.ToString());
-            currentLobby?.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
-            currentLobby?.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
-            currentLobby?.SetData("playstyle", serverSettings.PlayStyle.ToString());
-            currentLobby?.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier.Value ?? "");
-            currentLobby?.SetData("language", serverSettings.Language.ToString());
+            if (EosInterface.IdQueries.GetLoggedInPuids() is { Length: > 0 } puids)
+            {
+                currentLobby?.SetData("EosEndpoint", puids[0].Value);
+            }
 
             DebugConsole.Log("Lobby updated!");
+        }
+
+        private static void SetServerListInfo(Identifier key, object value)
+        {
+            switch (value)
+            {
+                case IEnumerable<ContentPackage> contentPackages:
+                    currentLobby?.SetData("contentpackage", contentPackages.Select(p => p.Name).JoinEscaped(','));
+                    currentLobby?.SetData("contentpackagehash", contentPackages.Select(p => p.Hash.StringRepresentation).JoinEscaped(','));
+                    currentLobby?.SetData("contentpackageid", contentPackages
+                        .Select(p => p.UgcId.Select(ugcId => ugcId.StringRepresentation).Fallback(""))
+                        .JoinEscaped(','));
+                    return;
+            }
+
+            currentLobby?.SetData(key.Value.ToLowerInvariant(), value.ToString());
         }
 
         public static void LeaveLobby()

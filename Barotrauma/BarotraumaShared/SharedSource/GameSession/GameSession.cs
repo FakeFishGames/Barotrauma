@@ -21,6 +21,8 @@ namespace Barotrauma
 
         public enum InfoFrameTab { Crew, Mission, MyCharacter, Traitor };
 
+        public Version LastSaveVersion { get; set; } = GameMain.Version;
+
         public readonly EventManager EventManager;
 
         public GameMode? GameMode;
@@ -107,6 +109,10 @@ namespace Barotrauma
 
         public string? SavePath { get; set; }
 
+        public bool TraitorsEnabled =>
+            GameMain.NetworkMember?.ServerSettings != null &&
+            GameMain.NetworkMember.ServerSettings.TraitorProbability > 0.0f;
+
         partial void InitProjSpecific();
 
         private GameSession(SubmarineInfo submarineInfo)
@@ -148,22 +154,25 @@ namespace Barotrauma
             this.SavePath = saveFile;
             GameMain.GameSession = this;
             XElement rootElement = doc.Root ?? throw new NullReferenceException("Game session XML element is invalid: document is null.");
-            //selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
+
+            LastSaveVersion = doc.Root.GetAttributeVersion("version", GameMain.Version);
 
             foreach (var subElement in rootElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-#if CLIENT
                     case "gamemode": //legacy support
                     case "singleplayercampaign":
+#if CLIENT
                         CrewManager = new CrewManager(true);
                         var campaign = SinglePlayerCampaign.Load(subElement);
                         campaign.LoadNewLevel();
                         GameMode = campaign;
                         InitOwnedSubs(submarineInfo, ownedSubmarines);
-                        break;
+#else
+                        throw new Exception("The server cannot load a single player campaign.");
 #endif
+                        break;            
                     case "multiplayercampaign":
                         CrewManager = new CrewManager(false);
                         var mpCampaign = MultiPlayerCampaign.LoadNew(subElement);
@@ -222,6 +231,12 @@ namespace Barotrauma
                 {
                     campaign.Bank.Deduct(selectedSub.Price);
                     campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, 0);
+#if SERVER
+                    if (GameMain.Server?.ServerSettings?.NewCampaignDefaultSalary is { } salary)
+                    {
+                        campaign.Bank.SetRewardDistribution((int)Math.Round(salary, digits: 0));
+                    }
+#endif
                 }
                 return campaign;
             }
@@ -300,7 +315,7 @@ namespace Barotrauma
         public void LoadPreviousSave()
         {
             Submarine.Unload();
-            SaveUtil.LoadGame(SavePath);
+            SaveUtil.LoadGame(SavePath ?? "");
         }
 
         /// <summary>
@@ -328,11 +343,11 @@ namespace Barotrauma
             Campaign!.TransferItemsOnSubSwitch = transferItems;
         }
 
-        public void PurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
+        public bool TryPurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
         {
-            if (Campaign is null) { return; }
+            if (Campaign is null) { return false; }
             int price = newSubmarine.GetPrice();
-            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && !Campaign.TryPurchase(client, price)) { return; }
+            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && !Campaign.TryPurchase(client, price)) { return false; }
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
                 GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarinePurchase, newSubmarine.Name);
@@ -341,6 +356,7 @@ namespace Barotrauma
                 (Campaign as MultiPlayerCampaign)?.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.SubList);
 #endif
             }
+            return true;
         }
 
         public bool IsSubmarineOwned(SubmarineInfo query)
@@ -375,8 +391,32 @@ namespace Barotrauma
                     missionPrefab.AllowedLocationTypes.Any() &&
                     !missionPrefab.AllowedConnectionTypes.Any())
                 {
-                    LocationType? locationType = LocationType.Prefabs.FirstOrDefault(lt => missionPrefab.AllowedLocationTypes.Any(m => m == lt.Identifier));
+                    Random rand = new MTRandom(ToolBox.StringToInt(levelSeed));
+                    LocationType? locationType = LocationType.Prefabs
+                        .Where(lt => missionPrefab.AllowedLocationTypes.Any(m => m == lt.Identifier))
+                        .GetRandom(rand);
                     dummyLocations = CreateDummyLocations(levelSeed, locationType);
+
+                    if (!tryCreateFaction(mission.Prefab.RequiredLocationFaction, dummyLocations, static (loc, fac) => loc.Faction = fac))
+                    {
+                        tryCreateFaction(locationType.Faction, dummyLocations, static (loc, fac) => loc.Faction = fac);
+                        tryCreateFaction(locationType.SecondaryFaction, dummyLocations, static (loc, fac) => loc.SecondaryFaction = fac);
+                    }
+                    static bool tryCreateFaction(Identifier factionIdentifier, Location[] locations, Action<Location, Faction> setter)
+                    {
+                        if (factionIdentifier.IsEmpty) { return false; }
+                        if (!FactionPrefab.Prefabs.TryGet(factionIdentifier, out var prefab)) { return false; }
+                        if (locations.Length == 0) { return false; }
+
+                        var newFaction = new Faction(metadata: null, prefab);
+                        for (int i = 0; i < locations.Length; i++)
+                        {
+                            setter(locations[i], newFaction);
+                        }
+
+                        return true;
+                    }
+
                     randomLevel = LevelData.CreateRandom(levelSeed, difficulty, levelGenerationParams, requireOutpost: true);
                     break;
                 }
@@ -391,7 +431,7 @@ namespace Barotrauma
             DateTime startTime = DateTime.Now;
 #endif
             RoundDuration = 0.0f;
-            AfflictionPrefab.LoadAllEffects();
+            AfflictionPrefab.LoadAllEffectsAndTreatmentSuitabilities();
 
             MirrorLevel = mirrorLevel;
             if (SubmarineInfo == null)
@@ -455,6 +495,11 @@ namespace Barotrauma
                 }
                 foreach (Item item in items)
                 {
+                    if (item.GetComponent<CircuitBox>() is { } cb)
+                    {
+                        cb.Locked = true;
+                    }
+
                     Wire wire = item.GetComponent<Wire>();
                     if (wire != null && !wire.NoAutoLock && wire.Connections.Any(c => c != null)) { wire.Locked = true; }                    
                 }
@@ -480,7 +525,7 @@ namespace Barotrauma
             string eventId = "StartRound:" + (GameMode?.Preset?.Identifier.Value ?? "none") + ":";
             GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
             GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Preset?.Identifier.Value ?? "none"));
-            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.GetCharacterInfos()?.Count() ?? 0));
             foreach (Mission mission in missions)
             {
                 GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier);
@@ -504,21 +549,36 @@ namespace Barotrauma
             }
             GameAnalyticsManager.AddDesignEvent($"{eventId}HintManager:{(HintManager.Enabled ? "Enabled" : "Disabled")}");
 #endif
-            if (GameMode is CampaignMode campaignMode) 
-            { 
-                if (campaignMode.Map?.Radiation != null && campaignMode.Map.Radiation.Enabled)
-                {
-                    GameAnalyticsManager.AddDesignEvent(eventId + "Radiation:Enabled");
-                }
-                else
-                {
-                    GameAnalyticsManager.AddDesignEvent(eventId + "Radiation:Disabled");
-                }
+            var campaignMode = GameMode as CampaignMode;
+            if (campaignMode != null)
+            {
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:RadiationEnabled:" + campaignMode.Settings.RadiationEnabled);
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:WorldHostility:" + campaignMode.Settings.WorldHostility);
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:ShowHuskWarning:" + campaignMode.Settings.ShowHuskWarning);
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:StartItemSet:" + campaignMode.Settings.StartItemSet);
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:MaxMissionCount:" + campaignMode.Settings.MaxMissionCount);
+                //log the multipliers as integers to reduce the number of distinct values
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:RepairFailMultiplier:" + (int)(campaignMode.Settings.RepairFailMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:FuelMultiplier:" + (int)(campaignMode.Settings.FuelMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:MissionRewardMultiplier:" + (int)(campaignMode.Settings.MissionRewardMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:CrewVitalityMultiplier:" + (int)(campaignMode.Settings.CrewVitalityMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:NonCrewVitalityMultiplier:" + (int)(campaignMode.Settings.NonCrewVitalityMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:OxygenMultiplier:" + (int)(campaignMode.Settings.OxygenMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:RepairFailMultiplier:" + (int)(campaignMode.Settings.RepairFailMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:ShipyardPriceMultiplier:" + (int)(campaignMode.Settings.ShipyardPriceMultiplier * 100));
+                GameAnalyticsManager.AddDesignEvent("CampaignSettings:ShopPriceMultiplier:" + (int)(campaignMode.Settings.ShopPriceMultiplier * 100));
+
                 bool firstTimeInBiome = Map != null && !Map.Connections.Any(c => c.Passed && c.Biome == LevelData!.Biome);
                 if (firstTimeInBiome)
                 {
                     GameAnalyticsManager.AddDesignEvent(eventId + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none") + "Discovered:Playtime", campaignMode.TotalPlayTime);
                     GameAnalyticsManager.AddDesignEvent(eventId + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none") + "Discovered:PassedLevels", campaignMode.TotalPassedLevels);
+                }
+                if (GameMain.NetworkMember?.ServerSettings is { } serverSettings)
+                {
+                    GameAnalyticsManager.AddDesignEvent("ServerSettings:RespawnMode:" + serverSettings.RespawnMode);
+                    GameAnalyticsManager.AddDesignEvent("ServerSettings:IronmanMode:" + serverSettings.IronmanMode);
+                    GameAnalyticsManager.AddDesignEvent("ServerSettings:AllowBotTakeoverOnPermadeath:" + serverSettings.AllowBotTakeoverOnPermadeath);
                 }
             }
 
@@ -532,7 +592,7 @@ namespace Barotrauma
             }
 #endif
 #if CLIENT
-            if (GameMode is CampaignMode && levelData != null) { SteamAchievementManager.OnBiomeDiscovered(levelData.Biome); }
+            if (campaignMode != null && levelData != null) { AchievementManager.OnBiomeDiscovered(levelData.Biome); }
 
             var existingRoundSummary = GUIMessageBox.MessageBoxes.Find(mb => mb.UserData is RoundSummary)?.UserData as RoundSummary;
             if (existingRoundSummary?.ContinueButton != null)
@@ -550,7 +610,7 @@ namespace Barotrauma
                 if (EndLocation != null && levelData != null)
                 {
                     GUI.AddMessage(levelData.Biome.DisplayName, Color.Lerp(Color.CadetBlue, Color.DarkRed, levelData.Difficulty / 100.0f), 5.0f, playSound: false);
-                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.Name), Color.CadetBlue, playSound: false);
+                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.DisplayName), Color.CadetBlue, playSound: false);
                     var missionsToShow = missions.Where(m => m.Prefab.ShowStartMessage);
                     if (missionsToShow.Count() > 1)
                     {
@@ -565,16 +625,37 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Location"), StartLocation.Name), Color.CadetBlue, playSound: false);
+                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Location"), StartLocation.DisplayName), Color.CadetBlue, playSound: false);
                 }
             }
 
             ReadyCheck.ReadyCheckCooldown = DateTime.MinValue;
-
             GUI.PreventPauseMenuToggle = false;
-
             HintManager.OnRoundStarted();
+            EnableEventLogNotificationIcon(enabled: false);
 #endif
+            if (campaignMode is { ItemsRelocatedToMainSub: true })
+            {
+#if SERVER
+                GameMain.Server.SendChatMessage(TextManager.Get("itemrelocated").Value, ChatMessageType.ServerMessageBoxInGame);
+#else
+                if (campaignMode.IsSinglePlayer)
+                {
+                    new GUIMessageBox(string.Empty, TextManager.Get("itemrelocated"));
+                }
+#endif
+                campaignMode.ItemsRelocatedToMainSub = false;
+            }
+
+            EventManager?.EventLog?.Clear();
+            if (campaignMode is { DivingSuitWarningShown: false } &&
+                Level.Loaded != null && Level.Loaded.GetRealWorldDepth(0) > 4000)
+            {
+#if CLIENT
+                CoroutineManager.Invoke(() => new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("hint.upgradedivingsuits")), delay: 5.0f);
+#endif
+                campaignMode.DivingSuitWarningShown = true;
+            }
         }
 
         private void InitializeLevel(Level? level)
@@ -595,7 +676,8 @@ namespace Barotrauma
 
             foreach (var sub in Submarine.Loaded)
             {
-                if (sub.Info.IsOutpost)
+                // TODO: Currently there's no need to check these on ruins, but that might change -> Could maybe just check if the body is static?
+                if (sub.Info.IsOutpost || sub.Info.IsBeacon || sub.Info.IsWreck)
                 {
                     sub.DisableObstructedWayPoints();
                 }
@@ -625,7 +707,7 @@ namespace Barotrauma
                 ObjectiveManager.ResetObjectives();
 #endif
                 EventManager?.StartRound(Level.Loaded);
-                SteamAchievementManager.OnStartRound();
+                AchievementManager.OnStartRound();
 
                 GameMode.ShowStartMessage();
 
@@ -691,7 +773,7 @@ namespace Barotrauma
                     if (port.IsHorizontal || port.Docked) { continue; }
                     if (port.Item.Submarine == level.StartOutpost)
                     {
-                        if (port.DockingTarget == null)
+                        if (port.DockingTarget == null || (outPostPort != null && !outPostPort.MainDockingPort && port.MainDockingPort))
                         {
                             outPostPort = port;
                         }
@@ -749,7 +831,7 @@ namespace Barotrauma
             // Make sure that linked subs which are NOT docked to the main sub
             // (but still close enough to NOT be considered as 'left behind')
             // are also moved to keep their relative position to the main sub
-            var linkedSubs = MapEntity.mapEntityList.FindAll(me => me is LinkedSubmarine);
+            var linkedSubs = MapEntity.MapEntityList.FindAll(me => me is LinkedSubmarine);
             foreach (LinkedSubmarine ls in linkedSubs)
             {
                 if (ls.Sub == null || ls.Submarine != Submarine) { continue; }
@@ -835,19 +917,24 @@ namespace Barotrauma
             return characters.ToImmutableHashSet();
         }
 
-        public void EndRound(string endMessage, List<TraitorMissionResult>? traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
+#if SERVER
+        private double LastEndRoundErrorMessageTime;
+#endif
+
+        public void EndRound(string endMessage, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None, TraitorManager.TraitorResults? traitorResults = null)
         {
             RoundEnding = true;
 
             //Clear the grids to allow for garbage collection
             Powered.Grids.Clear();
+            Powered.ChangedConnections.Clear();
 
             try
             {
+                EventManager?.TriggerOnEndRoundActions();
+
                 ImmutableHashSet<Character> crewCharacters = GetSessionCrewCharacters(CharacterType.Both);
-
                 int prevMoney = GetAmountOfMoney(crewCharacters);
-
                 foreach (Mission mission in missions)
                 {
                     mission.End();
@@ -885,14 +972,16 @@ namespace Barotrauma
                 {
                     ToggleTabMenu();
                 }
+                DeathPrompt?.Close();
+                DeathPrompt.CloseBotPanel();
 
                 GUI.PreventPauseMenuToggle = true;
 
-                if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null && transitionType != CampaignMode.TransitionType.End)
+                if (GameMode is not TestGameMode && Screen.Selected == GameMain.GameScreen && RoundSummary != null && transitionType != CampaignMode.TransitionType.End)
                 {
                     GUI.ClearMessages();
                     GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
-                    GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
+                    GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, transitionType, traitorResults);
                     GUIMessageBox.MessageBoxes.Add(summaryFrame);
                     RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
                 }
@@ -903,8 +992,11 @@ namespace Barotrauma
                 ObjectiveManager.ResetUI();
                 CharacterHUD.ClearBossProgressBars();
 #endif
-                SteamAchievementManager.OnRoundEnded(this);
+                AchievementManager.OnRoundEnded(this);
 
+#if SERVER
+                GameMain.Server?.TraitorManager?.EndRound();
+#endif
                 GameMode?.End(transitionType);
                 EventManager?.EndRound();
                 StatusEffect.StopAll();
@@ -914,14 +1006,16 @@ namespace Barotrauma
 #if CLIENT
                 bool success = CrewManager!.GetCharacters().Any(c => !c.IsDead);
 #else
-                bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+                bool success =
+                    GameMain.Server != null &&
+                    GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
 #endif
                 GameAnalyticsManager.AddProgressionEvent(
                     success ? GameAnalyticsManager.ProgressionStatus.Complete : GameAnalyticsManager.ProgressionStatus.Fail,
                     GameMode?.Preset.Identifier.Value ?? "none",
                     RoundDuration);
                 string eventId = "EndRound:" + (GameMode?.Preset?.Identifier.Value ?? "none") + ":";
-                LogEndRoundStats(eventId);
+                LogEndRoundStats(eventId, traitorResults);
                 if (GameMode is CampaignMode campaignMode)
                 {
                     GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", GetAmountOfMoney(crewCharacters) - prevMoney);
@@ -932,6 +1026,19 @@ namespace Barotrauma
 #endif
                 missions.Clear();
             }
+            catch (Exception e)
+            {
+                string errorMsg = "Unknown error while ending the round.";
+                DebugConsole.ThrowError(errorMsg, e);
+                GameAnalyticsManager.AddErrorEventOnce("GameSession.EndRound:UnknownError", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + e.StackTrace);
+#if SERVER
+                if (Timing.TotalTime > LastEndRoundErrorMessageTime + 1.0)
+                {
+                    GameMain.Server?.SendChatMessage(errorMsg + "\n" + e.StackTrace, Networking.ChatMessageType.Error);
+                    LastEndRoundErrorMessageTime = Timing.TotalTime;
+                }
+#endif
+            }
             finally
             {
                 RoundEnding = false;
@@ -939,7 +1046,7 @@ namespace Barotrauma
 
             int GetAmountOfMoney(IEnumerable<Character> crew)
             {
-                if (!(GameMode is CampaignMode campaign)) { return 0; }
+                if (GameMode is not CampaignMode campaign) { return 0; }
 
                 return GameMain.NetworkMember switch
                 {
@@ -949,48 +1056,62 @@ namespace Barotrauma
             }
         }
 
-        public void LogEndRoundStats(string eventId)
+        public void LogEndRoundStats(string eventId, TraitorManager.TraitorResults? traitorResults = null)
         {
-            GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"), RoundDuration);
+            if (Submarine.MainSub?.Info?.IsVanillaSubmarine() ?? false)
+            {
+                //don't log modded subs, that's a ton of extra data to collect
+                GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"), RoundDuration);
+            }
             GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name.Value ?? "none"), RoundDuration);
-            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count ?? 0), RoundDuration);
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.GetCharacterInfos()?.Count() ?? 0), RoundDuration);
             foreach (Mission mission in missions)
             {
                 GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier + ":" + (mission.Completed ? "Completed" : "Failed"), RoundDuration);
             }
-            if (Level.Loaded != null)
+            if (!ContentPackageManager.ModsEnabled)
             {
-                Identifier levelId = (Level.Loaded.Type == LevelData.LevelType.Outpost ?
-                    Level.Loaded.StartOutpost?.Info?.OutpostGenerationParams?.Identifier :
-                    Level.Loaded.GenerationParams?.Identifier) ?? "null".ToIdentifier();
-                GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none" + ":" + levelId), RoundDuration);
-                GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"), RoundDuration);
+                if (Level.Loaded != null)
+                {
+                    Identifier levelId = (Level.Loaded.Type == LevelData.LevelType.Outpost ?
+                        Level.Loaded.StartOutpost?.Info?.OutpostGenerationParams?.Identifier :
+                        Level.Loaded.GenerationParams?.Identifier) ?? "null".ToIdentifier();
+                    GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none" + ":" + levelId), RoundDuration);
+                    GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"), RoundDuration);
+                }
+
+                //disabled for now, we're collecting too many events and this is information we don't need atm
+                /*if (Submarine.MainSub != null)
+                {
+                    Dictionary<ItemPrefab, int> submarineInventory = new Dictionary<ItemPrefab, int>();
+                    foreach (Item item in Item.ItemList)
+                    {
+                        var rootContainer = item.RootContainer ?? item;
+                        if (rootContainer.Submarine?.Info == null || rootContainer.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                        if (rootContainer.Submarine != Submarine.MainSub && !Submarine.MainSub.DockedTo.Contains(rootContainer.Submarine)) { continue; }
+
+                        var holdable = item.GetComponent<Holdable>();
+                        if (holdable == null || holdable.Attached) { continue; }
+                        var wire = item.GetComponent<Wire>();
+                        if (wire != null && wire.Connections.Any(c => c != null)) { continue; }
+
+                        if (!submarineInventory.ContainsKey(item.Prefab))
+                        {
+                            submarineInventory.Add(item.Prefab, 0);
+                        }
+                        submarineInventory[item.Prefab]++;
+                    }
+                    foreach (var subItem in submarineInventory)
+                    {
+                        GameAnalyticsManager.AddDesignEvent(eventId + "SubmarineInventory:" + subItem.Key.Identifier, subItem.Value);
+                    }
+                }*/
             }
 
-            if (Submarine.MainSub != null)
+            if (traitorResults.HasValue)
             {
-                Dictionary<ItemPrefab, int> submarineInventory = new Dictionary<ItemPrefab, int>();
-                foreach (Item item in Item.ItemList)
-                {
-                    var rootContainer = item.GetRootContainer() ?? item;
-                    if (rootContainer.Submarine?.Info == null || rootContainer.Submarine.Info.Type != SubmarineType.Player) { continue; }
-                    if (rootContainer.Submarine != Submarine.MainSub && !Submarine.MainSub.DockedTo.Contains(rootContainer.Submarine)) { continue; }
-
-                    var holdable = item.GetComponent<Holdable>();
-                    if (holdable == null || holdable.Attached) { continue; }
-                    var wire = item.GetComponent<Wire>();
-                    if (wire != null && wire.Connections.Any(c => c != null)) { continue; }
-
-                    if (!submarineInventory.ContainsKey(item.Prefab))
-                    {
-                        submarineInventory.Add(item.Prefab, 0);
-                    }
-                    submarineInventory[item.Prefab]++;
-                }
-                foreach (var subItem in submarineInventory)
-                {
-                    GameAnalyticsManager.AddDesignEvent(eventId + "SubmarineInventory:" + subItem.Key.Identifier, subItem.Value);
-                }
+                GameAnalyticsManager.AddDesignEvent($"TraitorEvent:{traitorResults.Value.TraitorEventIdentifier}:{traitorResults.Value.ObjectiveSuccessful}");
+                GameAnalyticsManager.AddDesignEvent($"TraitorEvent:{traitorResults.Value.TraitorEventIdentifier}:{(traitorResults.Value.VotedCorrectTraitor ? "TraitorIdentifier" : "TraitorUnidentified")}");
             }
 
             foreach (Character c in GetSessionCrewCharacters(CharacterType.Both))
@@ -1124,6 +1245,7 @@ namespace Barotrauma
             #warning TODO: after this gets on main, replace savetime with the commented line
             //rootElement.Add(new XAttribute("savetime", SerializableDateTime.LocalNow));
 
+            LastSaveVersion = GameMain.Version;
             rootElement.Add(new XAttribute("version", GameMain.Version));
             if (Submarine?.Info != null && !Submarine.Removed && Campaign != null)
             {

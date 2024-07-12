@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Pump : Powered, IServerSerializable, IClientSerializable
+    partial class Pump : Powered, IServerSerializable, IClientSerializable, IDeteriorateUnderStress
     {
         private float flowPercentage;
         private float maxFlow;
@@ -85,6 +85,8 @@ namespace Barotrauma.Items.Components
 
         public override bool UpdateWhenInactive => true;
 
+        public float CurrentStress => Math.Abs(flowPercentage / 100.0f);
+
         public Pump(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -132,20 +134,20 @@ namespace Barotrauma.Items.Components
 
             UpdateProjSpecific(deltaTime);
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             if (item.CurrentHull == null) { return; }      
 
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
 
-            currFlow = flowPercentage / 100.0f * item.StatManager.GetAdjustedValue(ItemTalentStats.PumpMaxFlow, MaxFlow) * powerFactor;
+            currFlow = flowPercentage / 100.0f * item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.PumpMaxFlow, MaxFlow) * powerFactor;
 
             if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)
             {
                 currFlow *= 1f + repairable.TinkeringStrength * TinkeringSpeedIncrease;
             }
 
-            currFlow = item.StatManager.GetAdjustedValue(ItemTalentStats.PumpSpeed, currFlow);
+            currFlow = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.PumpSpeed, currFlow);
 
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);

@@ -132,8 +132,14 @@ namespace Barotrauma.Particles
             }
         }
 
+        [Editable, Serialize(true, IsPropertySaveable.No, description: "Is the particle considered to be inside a submarine if it spawns at a position inside a hull (causing it to move with the sub)?")]
+        public bool CanEnterSubs { get; private set; }
+
         [Editable(0.0f, 10000.0f), Serialize(0.0f, IsPropertySaveable.No, description: "Radius of the particle's collider. Only has an effect if UseCollision is set to true.")]
         public float CollisionRadius { get; private set; }
+
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "If enabled, the size (or changes in size) of the particle doesn't affect the size of the collider.")]
+        public bool InvariantCollisionSize { get; private set; }
 
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the particle collide with the walls of the submarine and the level.")]
         public bool UseCollision { get; private set; }
@@ -150,10 +156,10 @@ namespace Barotrauma.Particles
 
         //size -----------------------------------------
 
-        [Editable, Serialize("1.0,1.0", IsPropertySaveable.No, description: "The minimum initial size of the particle.")]
+        [Editable(DecimalCount = 3), Serialize("1.0,1.0", IsPropertySaveable.No, description: "The minimum initial size of the particle.")]
         public Vector2 StartSizeMin { get; private set; }
 
-        [Editable, Serialize("1.0,1.0", IsPropertySaveable.No, description: "The maximum initial size of the particle.")]
+        [Editable(DecimalCount = 3), Serialize("1.0,1.0", IsPropertySaveable.No, description: "The maximum initial size of the particle.")]
         public Vector2 StartSizeMax { get; private set; }
         
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
@@ -162,7 +168,7 @@ namespace Barotrauma.Particles
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         public Vector2 SizeChangeMax { get; private set; }
 
-        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How many seconds it takes for the particle to grow to it's initial size.")]
+        [Editable(minValue: 0, maxValue: float.MaxValue, decimals: 2), Serialize(0.0f, IsPropertySaveable.No, description: "How many seconds it takes for the particle to grow to it's initial size.")]
         public float GrowTime { get; private set; }
 
         //rendering -----------------------------------------
@@ -241,7 +247,8 @@ namespace Barotrauma.Particles
 
             if (Sprites.Count == 0)
             {
-                DebugConsole.ThrowError($"Particle prefab \"{Name}\" in the file \"{file}\" has no sprites defined!");
+                DebugConsole.ThrowError($"Particle prefab \"{Name}\" in the file \"{file}\" has no sprites defined!",
+                    contentPackage: element.ContentPackage);
             }
 
             //if velocity change in water is not given, it defaults to the normal velocity change

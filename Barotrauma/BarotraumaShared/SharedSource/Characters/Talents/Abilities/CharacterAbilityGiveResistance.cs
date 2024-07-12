@@ -12,13 +12,16 @@
 
             if (resistanceId.IsEmpty)
             {
-                DebugConsole.ThrowError("Error in CharacterAbilityGiveResistance - resistance identifier not set.");
-            }
-            if (MathUtils.NearlyEqual(multiplier, 1))
-            {
-                DebugConsole.AddWarning($"Possible error in talent {CharacterTalent.DebugIdentifier} - multiplier set to 1, which will do nothing.");
+                DebugConsole.ThrowError("Error in CharacterAbilityGiveResistance - resistance identifier not set.",
+                    contentPackage: abilityElement.ContentPackage);
             }
 
+            // NOTE: The resistance value is a multiplier here, so 1.0 == 0% resistance
+            if (MathUtils.NearlyEqual(multiplier, 1))
+            {
+                DebugConsole.AddWarning($"Possible error in talent {CharacterTalent.DebugIdentifier} - multiplier set to 1, which will do nothing.",
+                    contentPackage: abilityElement.ContentPackage);
+            }
         }
 
         public override void InitializeAbility(bool addingFirstTime)

@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,11 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<LocationType> Prefabs = new PrefabCollection<LocationType>();
 
-        private readonly ImmutableArray<string> names;
+        private readonly ImmutableArray<string> rawNames;
         private readonly ImmutableArray<Sprite> portraits;
 
         //<name, commonness>
-        private readonly ImmutableArray<(Identifier Name, float Commonness)> hireableJobs;
+        private readonly ImmutableArray<(Identifier Identifier, float Commonness, bool AlwaysAvailableIfMissingFromCrew)> hireableJobs;
         private readonly float totalHireableWeight;
 
         public readonly Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
@@ -26,7 +27,7 @@ namespace Barotrauma
         public readonly LocalizedString Name;
         public readonly LocalizedString Description;
 
-        public readonly LocalizedString ForceLocationName;
+        public readonly Identifier ForceLocationName;
 
         public readonly float BeaconStationChance;
 
@@ -41,6 +42,8 @@ namespace Barotrauma
 
         public bool IsEnterable { get; private set; }
 
+        public bool AllowAsBiomeGate { get; private set; }
+
         /// <summary>
         /// Can this location type be used in the random, non-campaign levels that don't take place in any specific zone
         /// </summary>
@@ -52,12 +55,20 @@ namespace Barotrauma
             private set;
         }
 
+        private readonly ImmutableArray<Identifier>? nameIdentifiers = null;
+
+        private LanguageIdentifier nameFormatLanguage;
+
         private ImmutableArray<string>? nameFormats = null;
         public IReadOnlyList<string> NameFormats
         {
             get
             {
-                nameFormats ??= TextManager.GetAll($"LocationNameFormat.{Identifier}").ToImmutableArray();
+                if (nameFormats == null || GameSettings.CurrentConfig.Language != nameFormatLanguage)
+                {
+                    nameFormats = TextManager.GetAll($"LocationNameFormat.{Identifier}").ToImmutableArray();
+                    nameFormatLanguage = GameSettings.CurrentConfig.Language;
+                }
                 return nameFormats;
             }
         }
@@ -74,6 +85,16 @@ namespace Barotrauma
         }
 
         public Identifier ReplaceInRadiation { get; }
+
+        /// <summary>
+        /// If set, forces the location to be assigned to this faction. Set to "None" if you don't want the location to be assigned to any faction.
+        /// </summary>
+        public Identifier Faction { get; }
+
+        /// <summary>
+        /// If set, forces the location to be assigned to this secondary faction. Set to "None" if you don't want the location to be assigned to any secondary faction.
+        /// </summary>
+        public Identifier SecondaryFaction { get; }
 
         public Sprite Sprite { get; private set; }
         public Sprite RadiationSprite { get; }
@@ -120,7 +141,11 @@ namespace Barotrauma
             UsePortraitInRandomLoadingScreens = element.GetAttributeBool(nameof(UsePortraitInRandomLoadingScreens), true);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
+            AllowAsBiomeGate = element.GetAttributeBool(nameof(AllowAsBiomeGate), true);
             AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
+
+            Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
+            SecondaryFaction = element.GetAttributeIdentifier(nameof(SecondaryFaction), Identifier.Empty);
 
             ShowSonarMarker = element.GetAttributeBool("showsonarmarker", true);
 
@@ -140,29 +165,37 @@ namespace Barotrauma
 
             if (element.GetAttribute("name") != null)
             {
-                ForceLocationName = TextManager.Get(element.GetAttributeString("name", string.Empty));
+                ForceLocationName = element.GetAttributeIdentifier("name", string.Empty);
             }
             else
             {
-                string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
                 var names = new List<string>();
-                foreach (string rawPath in rawNamePaths)
+                //backwards compatibility for location names defined in a text file
+                string[] rawNamePaths = element.GetAttributeStringArray("namefile", Array.Empty<string>());
+                if (rawNamePaths.Any())
                 {
-                    try
+                    foreach (string rawPath in rawNamePaths)
                     {
-                        var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
-                        names.AddRange(File.ReadAllLines(path.Value).ToList());
+                        try
+                        {
+                            var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
+                            names.AddRange(File.ReadAllLines(path.Value).ToList());
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
+                        }
                     }
-                    catch (Exception e)
+                    if (!names.Any())
                     {
-                        DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
+                        names.Add("ERROR: No names found");
                     }
+                    this.rawNames = names.ToImmutableArray();
                 }
-                if (!names.Any())
+                else
                 {
-                    names.Add("ERROR: No names found");
+                    nameIdentifiers = element.GetAttributeIdentifierArray("nameidentifiers", new Identifier[] { Identifier }).ToImmutableArray();
                 }
-                this.names = names.ToImmutableArray();
             }
 
             string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
@@ -193,7 +226,7 @@ namespace Barotrauma
                 MinCountPerZone[zoneIndex] = minCount;
             }
             var portraits = new List<Sprite>();
-            var hireableJobs = new List<(Identifier, float)>();
+            var hireableJobs = new List<(Identifier, float, bool)>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -201,8 +234,9 @@ namespace Barotrauma
                     case "hireable":
                         Identifier jobIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
+                        bool availableIfMissing = subElement.GetAttributeBool("AlwaysAvailableIfMissingFromCrew", false);
                         totalHireableWeight += jobCommonness;
-                        hireableJobs.Add((jobIdentifier, jobCommonness));
+                        hireableJobs.Add((jobIdentifier, jobCommonness, availableIfMissing));
                         break;
                     case "symbol":
                         Sprite = new Sprite(subElement, lazyLoad: true);
@@ -237,16 +271,33 @@ namespace Barotrauma
             this.hireableJobs = hireableJobs.ToImmutableArray();
         }
 
+        public IEnumerable<JobPrefab> GetHireablesMissingFromCrew()
+        {
+            if (GameMain.GameSession?.CrewManager != null)
+            {
+                var missingJobs = hireableJobs
+                    .Where(j => j.AlwaysAvailableIfMissingFromCrew)
+                    .Where(j => GameMain.GameSession.CrewManager.GetCharacterInfos().None(c => c.Job?.Prefab.Identifier == j.Identifier));
+                if (missingJobs.Any())
+                {
+                    foreach (var missingJob in missingJobs)
+                    {
+                        if (JobPrefab.Prefabs.TryGet(missingJob.Identifier, out JobPrefab job))
+                        {
+                            yield return job;
+                        }
+                    }
+                }
+            }
+        }
+
         public JobPrefab GetRandomHireable()
         {
-            float randFloat = Rand.Range(0.0f, totalHireableWeight, Rand.RandSync.ServerAndClient);
-
-            foreach ((Identifier jobIdentifier, float commonness) in hireableJobs)
+            Identifier selectedJobId = hireableJobs.GetRandomByWeight(j => j.Commonness, Rand.RandSync.ServerAndClient).Identifier;
+            if (JobPrefab.Prefabs.TryGet(selectedJobId, out JobPrefab job))
             {
-                if (randFloat < commonness) { return JobPrefab.Prefabs[jobIdentifier]; }
-                randFloat -= commonness;
+                return job;
             }
-
             return null;
         }
 
@@ -256,17 +307,64 @@ namespace Barotrauma
             return portraits[Math.Abs(randomSeed) % portraits.Length];
         }
 
-        public string GetRandomName(Random rand, IEnumerable<Location> existingLocations)
+        public Identifier GetRandomNameId(Random rand, IEnumerable<Location> existingLocations)
         {
+            if (nameIdentifiers == null)
+            {
+                return Identifier.Empty;
+            }
+            List<Identifier> nameIds = new List<Identifier>();
+            foreach (var nameId in nameIdentifiers)
+            {
+                int index = 0;
+                while (true)
+                {
+                    Identifier tag = $"LocationName.{nameId}.{index}".ToIdentifier();
+                    if (TextManager.ContainsTag(tag, TextManager.DefaultLanguage))
+                    {
+                        nameIds.Add(tag);
+                        index++;
+                    }
+                    else
+                    {
+                        if (index == 0)
+                        {
+                            DebugConsole.ThrowError($"Could not find any location names for the location type {Identifier}. Name identifier: {nameId}");
+                        }
+                        break;
+                    }
+                }
+            }
+            if (nameIds.None())
+            {
+                return Identifier.Empty;
+            }
             if (existingLocations != null)
             {
-                var unusedNames = names.Where(name => !existingLocations.Any(l => l.BaseName == name)).ToList();
+                var unusedNameIds = nameIds.FindAll(nameId => existingLocations.None(l => l.NameIdentifier == nameId));
+                if (unusedNameIds.Count > 0)
+                {
+                    return unusedNameIds[rand.Next() % unusedNameIds.Count];
+                }
+            }
+            return nameIds[rand.Next() % nameIds.Count];
+        }
+
+        /// <summary>
+        /// For backwards compatibility. Chooses a random name from the names defined in the .txt name files (<see cref="rawNamePaths"/>).
+        /// </summary>
+        public string GetRandomRawName(Random rand, IEnumerable<Location> existingLocations)
+        {
+            if (rawNames == null || rawNames.None()) { return string.Empty; }
+            if (existingLocations != null)
+            {
+                var unusedNames = rawNames.Where(name => !existingLocations.Any(l => l.DisplayName.Value == name)).ToList();
                 if (unusedNames.Count > 0)
                 {
                     return unusedNames[rand.Next() % unusedNames.Count];
                 }
             }
-            return names[rand.Next() % names.Length];
+            return rawNames[rand.Next() % rawNames.Length];
         }
 
         public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false, Func<LocationType, bool> predicate = null)

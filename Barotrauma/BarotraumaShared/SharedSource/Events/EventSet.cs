@@ -23,6 +23,10 @@ namespace Barotrauma
     }
 #endif
 
+    /// <summary>
+    /// Event sets are sets of random events that occur within a level (most commonly, monster spawns and scripted events).
+    /// Event sets can also be nested: a "parent set" can choose from several "subsets", either randomly or by some kind of criteria.
+    /// </summary>
     sealed class EventSet : Prefab
     {
         internal class EventDebugStats
@@ -78,22 +82,55 @@ namespace Barotrauma
             return GetAllEventPrefabs().Find(prefab => prefab.Identifier == identifier);
         }
 
+        /// <summary>
+        /// If enabled, this set can only be chosen in the campaign mode.
+        /// </summary>
         public readonly bool IsCampaignSet;
 
-        //0-100
-        public readonly float MinLevelDifficulty, MaxLevelDifficulty;
+        /// <summary>
+        /// The difficulty of the current level must be equal to or higher than this for this set to be chosen. 
+        /// </summary>
+        public readonly float MinLevelDifficulty;
+        /// <summary>
+        /// The difficulty of the current level must be equal to or less than this for this set to be chosen. 
+        /// </summary>
+        public readonly float MaxLevelDifficulty;
 
+        /// <summary>
+        /// If set, the event set can only be chosen in this biome.
+        /// </summary>
         public readonly Identifier BiomeIdentifier;
 
+        /// <summary>
+        /// If set, the event set can only be chosen in this type of level (outpost level or a connection between outpost levels).
+        /// </summary>
         public readonly LevelData.LevelType LevelType;
 
+        /// <summary>
+        /// If set, this layer must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredLayer;
+
+        /// <summary>
+        /// If set, the event set can only be chosen in locations of this type.
+        /// </summary>
         public readonly ImmutableArray<Identifier> LocationTypeIdentifiers;
 
+        /// <summary>
+        /// If set, the event set can only be chosen in locations that belong to this faction.
+        /// </summary>
         public readonly Identifier Faction;
 
+        /// <summary>
+        /// If set, one event, or a sub event set, is chosen randomly from this set.
+        /// </summary>
         public readonly bool ChooseRandom;
 
+        /// <summary>
+        /// Only valid if ChooseRandom is enabled. How many random events to choose from the set?
+        /// </summary>
         private readonly int eventCount = 1;
+        public readonly int SubSetCount = 1;
         private readonly Dictionary<Identifier, int> overrideEventCount = new Dictionary<Identifier, int>();
 
         /// <summary>
@@ -101,47 +138,100 @@ namespace Barotrauma
         /// </summary>
         public readonly bool Exhaustible;
 
+        /// <summary>
+        /// The event set won't become active until the submarine has travelled at least this far. A value between 0-1, where 0 is the beginning of the level and 1 the end of the level (e.g. 0.5 would mean the sub needs to be half-way through the level).
+        /// </summary>
         public readonly float MinDistanceTraveled;
+
+        /// <summary>
+        /// The event set won't become active until the round has lasted at least this many seconds.
+        /// </summary>
         public readonly float MinMissionTime;
 
         //the events in this set are delayed if the current EventManager intensity is not between these values
         public readonly float MinIntensity, MaxIntensity;
 
+        /// <summary>
+        /// If the event is not allowed at start, it won't become active until the submarine has moved at least 50 meters away from the beginning of the level. Only valid in LocationConnections (levels between locations).
+        /// </summary>
         public readonly bool AllowAtStart;
 
+        /// <summary>
+        /// Normally an event (such as a monster spawn) triggers a cooldown during which no new events are created. This can be used to ignore the cooldown.
+        /// </summary>
         public readonly bool IgnoreCoolDown;
 
+        /// <summary>
+        /// Should this event set trigger the event cooldown (during which no new events are created) when it becomes active?
+        /// </summary>
+        public readonly bool TriggerEventCooldown;
+
+        /// <summary>
+        /// Normally events can only trigger if the intensity of the situation is low enough (e.g. you won't get new monster spawns if the submarine is already facing a disaster). This can be used to ignore the intensity.
+        /// </summary>
         public readonly bool IgnoreIntensity;
 
-        public readonly bool PerRuin, PerCave, PerWreck;
+        /// <summary>
+        /// The set is applied once per each ruin in the level. Can be used to ensure there's a consistent amount of monster spawns in the ruins in the level regardless of how many there are (and that no ruin monsters spawn if there are no ruins).
+        /// </summary>
+        public readonly bool PerRuin;
+
+        /// <summary>
+        /// The set is applied once per each cave in the level. Can be used to ensure there's a consistent amount of monster spawns in the cave in the level regardless of how many there are (and that no cave monsters spawn if there are no caves).
+        /// </summary>
+        public readonly bool PerCave;
+
+        /// <summary>
+        /// The set is applied once per each wreck in the level. Can be used to ensure there's a consistent amount of monster spawns in the wreck in the level regardless of how many there are (and that no wreck monsters spawn if there are no wreck).
+        /// </summary>
+        public readonly bool PerWreck;
+
+        /// <summary>
+        /// If enabled, this event will not be applied if the level contains hunting grounds.
+        /// </summary>
         public readonly bool DisableInHuntingGrounds;
 
         /// <summary>
-        /// If true, events from this set can only occur once in the level.
+        /// If enabled, events from this set can only occur once in the level.
         /// </summary>
         public readonly bool OncePerLevel;
 
+        /// <summary>
+        /// Should the event set be delayed if at least half of the crew is away from the submarine? The maximum amount of time the events can get delayed is defined in event manager settings (<see cref="EventManagerSettings.FreezeDurationWhenCrewAway"/>)
+        /// </summary>
         public readonly bool DelayWhenCrewAway;
 
-        public readonly bool TriggerEventCooldown;
-
+        /// <summary>
+        /// Additive sets are important to be aware of when creating custom event sets! If an additive set gets chosen for a level, the game will also select a non-additive one.
+        /// This means you can for example configure an additive set that spawns custom monsters (and make it very common if you want the monsters to spawn frequently), which will spawn those custom
+        /// monsters in addition to the vanilla monsters spawned by vanilla sets, without you having to add your custom monsters to every single vanilla set.
+        /// </summary>
         public readonly bool Additive;
             
+        /// <summary>
+        /// The commonness of the event set (i.e. how likely it is for this specific set to be chosen).
+        /// </summary>
         public readonly float DefaultCommonness;
         public readonly ImmutableDictionary<Identifier, float> OverrideCommonness;
 
+        /// <summary>
+        /// If set, the event set can trigger again after this amount of seconds has passed since it last triggered.
+        /// </summary>
         public readonly float ResetTime;
 
         /// <summary>
-        /// Used to force an event set based on how many other locations have been discovered before this. (Used for campaign tutorial event sets.)
+        /// Used to force an event set based on how many other locations have been discovered before this (used for campaign tutorial event sets).
         /// </summary>
         public readonly int ForceAtDiscoveredNr;
 
         /// <summary>
-        /// Used to force an event set based on how many other outposts have been visited before this. (Used for campaign tutorial event sets.)
+        /// Used to force an event set based on how many other outposts have been visited before this (used for campaign tutorial event sets).
         /// </summary>
         public readonly int ForceAtVisitedNr;
 
+        /// <summary>
+        /// If enabled, this set can only occur when the campaign tutorial is enabled (generally used for the tutorial events).
+        /// </summary>
         public readonly bool CampaignTutorialOnly;
 
         public readonly struct SubEventPrefab
@@ -223,7 +313,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.AddWarning($"{file.Path}: All root EventSets should have an identifier");
+                        DebugConsole.AddWarning($"{file.Path}: All root EventSets should have an identifier",
+                            file.ContentPackage);
                     }
                 }
 
@@ -263,7 +354,8 @@ namespace Barotrauma
             string levelTypeStr = element.GetAttributeString("leveltype", parentSet?.LevelType.ToString() ?? "LocationConnection");
             if (!Enum.TryParse(levelTypeStr, true, out LevelType))
             {
-                DebugConsole.ThrowError($"Error in event set \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.");
+                DebugConsole.ThrowError($"Error in event set \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.",
+                    contentPackage: element.ContentPackage);
             }
 
             Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
@@ -280,29 +372,33 @@ namespace Barotrauma
 
             ChooseRandom = element.GetAttributeBool("chooserandom", false);
             eventCount = element.GetAttributeInt("eventcount", 1);
-            Exhaustible = element.GetAttributeBool("exhaustible", false);
+            SubSetCount = element.GetAttributeInt("setcount", 1);
+            Exhaustible = element.GetAttributeBool("exhaustible", parentSet?.Exhaustible ?? false);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
-            AllowAtStart = element.GetAttributeBool("allowatstart", false);
+            AllowAtStart = element.GetAttributeBool("allowatstart", parentSet?.AllowAtStart ?? false);
             PerRuin = element.GetAttributeBool("perruin", false);
             PerCave = element.GetAttributeBool("percave", false);
             PerWreck = element.GetAttributeBool("perwreck", false);
-            DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
+            DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", parentSet?.DisableInHuntingGrounds ?? false);
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
             IgnoreIntensity = element.GetAttributeBool("ignoreintensity", parentSet?.IgnoreIntensity ?? false);
-            DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
-            OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", false));
-            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
+            DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", parentSet?.DelayWhenCrewAway ?? (!PerRuin && !PerCave && !PerWreck));
+            OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", parentSet?.OncePerLevel ?? false));
+            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", parentSet?.TriggerEventCooldown ?? true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
-            ResetTime = element.GetAttributeFloat("resettime", 0);
-            CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), false);
+            ResetTime = element.GetAttributeFloat(nameof(ResetTime), parentSet?.ResetTime ?? 0);
+            CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), parentSet?.CampaignTutorialOnly ?? false);
+
+            RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
 
             ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
             ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);
             if (ForceAtDiscoveredNr >= 0 && ForceAtVisitedNr >= 0)
             {
-                DebugConsole.ThrowError($"Error with event set \"{Identifier}\" - both ForceAtDiscoveredNr and ForceAtVisitedNr are defined, this could lead to unexpected behavior");
+                DebugConsole.ThrowError($"Error with event set \"{Identifier}\" - both ForceAtDiscoveredNr and ForceAtVisitedNr are defined, this could lead to unexpected behavior",
+                        contentPackage: element.ContentPackage);
             }
 
             DefaultCommonness = element.GetAttributeFloat("commonness", 1.0f);
@@ -360,6 +456,11 @@ namespace Barotrauma
             EventPrefabs = eventPrefabs.ToImmutableArray();
             ChildSets = childSets.ToImmutableArray();
             OverrideCommonness = overrideCommonness.ToImmutableDictionary();
+
+            if ((PerRuin && PerCave) || (PerWreck && PerCave) || (PerRuin && PerWreck))
+            {
+                DebugConsole.AddWarning($"Error in event set \"{Identifier}\". Only one of the settings {nameof(PerRuin)}, {nameof(PerCave)} or {nameof(PerWreck)} can be enabled at the time.");
+            }
         }
 
         public void CheckLocationTypeErrors()
@@ -376,17 +477,17 @@ namespace Barotrauma
 
         public float GetCommonness(Level level)
         {
-            if (level.GenerationParams?.Identifier != null && 
+            if (level.GenerationParams?.Identifier is { IsEmpty: false } && 
                 OverrideCommonness.TryGetValue(level.GenerationParams.Identifier, out float generationParamsCommonness))
             {
                 return generationParamsCommonness;
             }
-            else if (level.StartOutpost?.Info.OutpostGenerationParams?.Identifier != null && 
+            else if (level.StartOutpost?.Info.OutpostGenerationParams?.Identifier is { IsEmpty: false } && 
                 OverrideCommonness.TryGetValue(level.StartOutpost.Info.OutpostGenerationParams.Identifier, out float startOutpostParamsCommonness))
             {
                 return startOutpostParamsCommonness;
             }
-            else if (level.EndOutpost?.Info.OutpostGenerationParams?.Identifier != null &&
+            else if (level.EndOutpost?.Info.OutpostGenerationParams?.Identifier is { IsEmpty: false } &&
                 OverrideCommonness.TryGetValue(level.EndOutpost.Info.OutpostGenerationParams.Identifier, out float endOutpostParamsCommonness))
             {
                 return endOutpostParamsCommonness;
@@ -471,10 +572,11 @@ namespace Barotrauma
             
             static void AddEvent(EventDebugStats stats, EventPrefab eventPrefab, Func<MonsterEvent, bool> filter = null)
             {
-                if (eventPrefab.EventType == typeof(MonsterEvent) && eventPrefab.TryCreateInstance(out MonsterEvent monsterEvent))
+                if (eventPrefab.EventType == typeof(MonsterEvent) && 
+                    eventPrefab.TryCreateInstance(GameMain.GameSession?.EventManager?.RandomSeed ?? 0, out MonsterEvent monsterEvent))
                 {
                     if (filter != null && !filter(monsterEvent)) { return; }
-                    float spawnProbability = monsterEvent.Prefab.Probability;
+                    float spawnProbability = monsterEvent.Prefab?.Probability ?? 0.0f;
                     if (Rand.Value() > spawnProbability) { return; }
                     int count = Rand.Range(monsterEvent.MinAmount, monsterEvent.MaxAmount + 1);
                     if (count <= 0) { return; }

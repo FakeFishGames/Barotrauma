@@ -31,8 +31,8 @@ namespace Barotrauma.Steam
                 t =>
                 {
                     msgBox.Close();
-                    if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item> items)) { return; }
-                    
+                    if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item>? items)) { return; }
+
                     InitiateDownloads(items);
                 });
         }
@@ -48,15 +48,19 @@ namespace Barotrauma.Steam
                 t =>
                 {
                     msgBox.Close();
-                    if (!t.TryGetResult(out Steamworks.Ugc.Item?[] itemsNullable)) { return; }
+                    if (!t.TryGetResult(out Option<Steamworks.Ugc.Item>[]? itemOptions)) { return; }
 
-                    var items = itemsNullable
-                        .Where(it => it.HasValue)
-                        .Select(it => it ?? default)
-                        .ToArray();
-                    
-                    items.ForEach(it => it.Subscribe());
-                    InitiateDownloads(items, onComplete: () =>
+                    List<Steamworks.Ugc.Item> itemsToDownload = new List<Steamworks.Ugc.Item>();
+                    foreach (Option<Steamworks.Ugc.Item> itemOption in itemOptions)
+                    {
+                        if (itemOption.TryUnwrap(out var item))
+                        {
+                            itemsToDownload.Add(item);
+                        }
+                    }
+
+                    itemsToDownload.ForEach(it => it.Subscribe());
+                    InitiateDownloads(itemsToDownload, onComplete: () =>
                     {
                         ContentPackageManager.UpdateContentPackageList();
                         GameMain.Instance.ConnectCommand = Option<ConnectCommand>.Some(rejoinCommand);
@@ -74,7 +78,7 @@ namespace Barotrauma.Steam
                     .NotNone()
                     .OfType<SteamWorkshopId>()
                     .Select(async id => await SteamManager.Workshop.GetItem(id.Value))))
-                .Where(p => p.HasValue).Select(p => p ?? default).ToArray();
+                .NotNone().ToArray();
         }
 
         public static void InitiateDownloads(IReadOnlyList<Steamworks.Ugc.Item> itemsToDownload, Action? onComplete = null)
@@ -101,13 +105,36 @@ namespace Barotrauma.Steam
                     {
                         Color = GUIStyle.Green
                     };
+                var textShadow = new GUITextBlock(new RectTransform(Vector2.One, itemDownloadProgress.RectTransform) { AbsoluteOffset = new Point(GUI.IntScale(3)) }, "",
+                    textColor: Color.Black, textAlignment: Alignment.Center);
+                var text = new GUITextBlock(new RectTransform(Vector2.One, itemDownloadProgress.RectTransform), "",
+                    textAlignment: Alignment.Center);
                 var itemDownloadProgressUpdater = new GUICustomComponent(
                     new RectTransform(Vector2.Zero, msgBox.Content.RectTransform),
                     onUpdate: (f, component) =>
                     {
                         float progress = 0.0f;
-                        if (item.IsDownloading) { progress = item.DownloadAmount; }
-                        else if (itemDownloadProgress.BarSize > 0.0f) { progress = 1.0f; }
+                        if (item.IsDownloading) 
+                        { 
+                            progress = item.DownloadAmount;
+                            text.Text = textShadow.Text = TextManager.GetWithVariable(
+                                "PublishPopupDownload", 
+                                "[percentage]", 
+                                ((int)MathF.Round(item.DownloadAmount * 100)).ToString());
+                        }
+                        else if (itemDownloadProgress.BarSize > 0.0f) 
+                        { 
+                            if (!item.IsInstalled && !SteamManager.Workshop.CanBeInstalled(item.Id))
+                            {
+                                itemDownloadProgress.Color = GUIStyle.Red;
+                                text.Text = textShadow.Text = TextManager.Get("workshopiteminstallfailed");
+                            }
+                            else
+                            {
+                                text.Text = textShadow.Text = TextManager.Get(item.IsInstalled ? "workshopiteminstalled" : "PublishPopupInstall");
+                            }
+                            progress = 1.0f; 
+                        }
 
                         itemDownloadProgress.BarSize = Math.Max(itemDownloadProgress.BarSize,
                             MathHelper.Lerp(itemDownloadProgress.BarSize, progress, 0.1f));
@@ -134,9 +161,16 @@ namespace Barotrauma.Steam
         {
             foreach (var item in itemsToDownload)
             {
+                DebugConsole.Log($"Reinstalling {item.Title}...");
                 await SteamManager.Workshop.Reinstall(item);
-                if (!GUIMessageBox.MessageBoxes.Contains(msgBox)) { break; }
+                DebugConsole.Log($"Finished installing {item.Title}...");
+                if (!GUIMessageBox.MessageBoxes.Contains(msgBox)) 
+                {
+                    DebugConsole.Log($"Download prompt closed, interrupting {nameof(DownloadItems)}.");
+                    break; 
+                }
             }
+            DebugConsole.Log($"{nameof(DownloadItems)} finished.");
         }
     }
 }

@@ -101,27 +101,9 @@ namespace Barotrauma.Extensions
             return source.Where(predicate).OrderBy(p => p.UintIdentifier).ToArray().GetRandom(randSync);
         }
 
-
-        public static T RandomElementByWeight<T>(this IList<T> source, Func<T, float> weightSelector, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static T GetRandomByWeight<T>(this IEnumerable<T> source, Func<T, float> weightSelector, Rand.RandSync randSync)
         {
-            float totalWeight = source.Sum(weightSelector);
-
-            float itemWeightIndex = Rand.Range(0f, 1f, randSync) * totalWeight;
-            float currentWeightIndex = 0;
-
-            for (int i = 0; i < source.Count; i++)
-            {
-                T weightedItem = source[i];
-                float weight = weightSelector(weightedItem);
-                currentWeightIndex += weight;
-
-                if (currentWeightIndex >= itemWeightIndex)
-                {
-                    return weightedItem;
-                }
-            }
-
-            return default;
+            return ToolBox.SelectWeightedRandom(source, weightSelector, randSync);
         }
 
         /// <summary>
@@ -203,27 +185,6 @@ namespace Barotrauma.Extensions
             if (value != null) { source.Add(value); }
         }
 
-        public static ImmutableDictionary<TKey, TValue> ToImmutableDictionary<TKey, TValue>(this IEnumerable<(TKey, TValue)> enumerable)
-        {
-            return enumerable.ToDictionary().ToImmutableDictionary();
-        }
-        
-        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey, TValue)> enumerable)
-        {
-            var dictionary = new Dictionary<TKey, TValue>();
-            foreach (var (k,v) in enumerable)
-            {
-                dictionary.Add(k, v);
-            }
-            return dictionary;
-        }
-
-        public static Dictionary<TKey, TValue> ToMutable<TKey, TValue>(this ImmutableDictionary<TKey, TValue> immutableDictionary)
-        {
-            if (immutableDictionary == null) { return null; }
-            return new Dictionary<TKey, TValue>(immutableDictionary);
-        }
-
         public static NetCollection<T> ToNetCollection<T>(this IEnumerable<T> enumerable) => new NetCollection<T>(enumerable.ToImmutableArray());
 
         /// <summary>
@@ -254,82 +215,5 @@ namespace Barotrauma.Extensions
         
         public static IReadOnlyList<T> ListConcat<T>(this IEnumerable<T> self, IEnumerable<T> other)
             => new ListConcat<T>(self, other);
-
-        /// <summary>
-        /// Returns the maximum element in a given enumerable, or null if there
-        /// aren't any elements in the input.
-        /// </summary>
-        /// <param name="enumerable">Input collection</param>
-        /// <returns>Maximum element or null</returns>
-        public static T? MaxOrNull<T>(this IEnumerable<T> enumerable) where T : struct, IComparable<T>
-        {
-            T? retVal = null;
-            foreach (T v in enumerable)
-            {
-                if (!retVal.HasValue || v.CompareTo(retVal.Value) > 0) { retVal = v; }
-            }
-            return retVal;
-        }
-
-        public static TOut? MaxOrNull<TIn, TOut>(this IEnumerable<TIn> enumerable, Func<TIn, TOut> conversion)
-            where TOut : struct, IComparable<TOut>
-            => enumerable.Select(conversion).MaxOrNull();
-
-        public static int FindIndex<T>(this IReadOnlyList<T> list, Predicate<T> predicate)
-        {
-            for (int i=0; i<list.Count; i++)
-            {
-                if (predicate(list[i])) { return i; }
-            }
-            return -1;
-        }
-
-        /// <summary>
-        /// Same as FirstOrDefault but will always return null instead of default(T) when no element is found
-        /// </summary>
-        public static T? FirstOrNull<T>(this IEnumerable<T> source, Func<T, bool> predicate) where T : struct
-        {
-            if (source.FirstOrDefault(predicate) is var first && !first.Equals(default(T)))
-            {
-                return first;
-            }
-
-            return null;
-        }
-
-        public static T? FirstOrNull<T>(this IEnumerable<T> source) where T : struct
-        {
-            if (source.FirstOrDefault() is var first && !first.Equals(default(T)))
-            {
-                return first;
-            }
-
-            return null;
-        }
-
-        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> source) where T : struct
-            => source
-                .Where(nullable => nullable.HasValue)
-                .Select(nullable => nullable.Value);
-
-        public static IEnumerable<T> NotNone<T>(this IEnumerable<Option<T>> source)
-        {
-            foreach (var o in source)
-            {
-                if (o.TryUnwrap(out var v)) { yield return v; }
-            }
-        }
-
-        public static IEnumerable<TSuccess> Successes<TSuccess, TFailure>(
-            this IEnumerable<Result<TSuccess, TFailure>> source)
-            => source
-                .OfType<Success<TSuccess, TFailure>>()
-                .Select(s => s.Value);
-        
-        public static IEnumerable<TFailure> Failures<TSuccess, TFailure>(
-            this IEnumerable<Result<TSuccess, TFailure>> source)
-            => source
-                .OfType<Failure<TSuccess, TFailure>>()
-                .Select(f => f.Error);
     }
 }

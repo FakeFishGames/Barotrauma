@@ -9,7 +9,8 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "fix leaks".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowInFriendlySubs => true;
+
         private Hull PrioritizedHull { get; set; }
 
         public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Hull prioritizedHull = null) : base(character, objectiveManager, priorityModifier)
@@ -17,7 +18,7 @@ namespace Barotrauma
             PrioritizedHull = prioritizedHull;
         }
 
-        protected override bool Filter(Gap gap) => IsValidTarget(gap, character);
+        protected override bool IsValidTarget(Gap gap) => IsValidTarget(gap, character);
 
         public static float GetLeakSeverity(Gap leak)
         {
@@ -36,7 +37,7 @@ namespace Barotrauma
             }
         }
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             int totalLeaks = Targets.Count;
             if (totalLeaks == 0) { return 0; }

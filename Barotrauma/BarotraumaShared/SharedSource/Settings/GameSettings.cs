@@ -41,6 +41,13 @@ namespace Barotrauma
         BossHealthBarsOnly,
         HideAll
     }
+    
+    public enum InteractionLabelDisplayMode
+    {
+        Everything,
+        InteractionAvailable,
+        LooseItems
+    }
 
     public static class GameSettings
     {
@@ -64,8 +71,11 @@ namespace Barotrauma
                     SubEditorBackground = new Color(13, 37, 69, 255),
                     EnableSplashScreen = true,
                     PauseOnFocusLost = true,
+                    RemoteMainMenuContentUrl = "https://www.barotraumagame.com/gamedata/",
                     AimAssistAmount = DefaultAimAssist,
                     ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
+                    ChatSpeechBubbles = true,
+                    InteractionLabelDisplayMode = InteractionLabelDisplayMode.Everything,
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
@@ -73,25 +83,25 @@ namespace Barotrauma
                     TutorialSkipWarning = true,
                     CorpseDespawnDelay = 600,
                     CorpsesPerSubDespawnThreshold = 5,
-                    #if OSX
+#if OSX
                     UseDualModeSockets = false,
-                    #else
+#else
                     UseDualModeSockets = true,
-                    #endif
+#endif
                     DisableInGameHints = false,
                     EnableSubmarineAutoSave = true,
                     Graphics = GraphicsSettings.GetDefault(),
                     Audio = AudioSettings.GetDefault(),
 #if CLIENT
+                    CrossplayChoice = Eos.EosSteamPrimaryLogin.CrossplayChoice.Unknown,
+                    DisableGlobalSpamList = false,
                     KeyMap = KeyMapping.GetDefault(),
                     InventoryKeyMap = InventoryKeyMapping.GetDefault()
 #endif
 
                 };
 #if DEBUG
-                config.UseSteamMatchmaking = true;
                 config.QuickStartSub = "Humpback".ToIdentifier();
-                config.RequireSteamAuthentication = true;
                 config.AutomaticQuickStartEnabled = false;
                 config.AutomaticCampaignLoadEnabled = false;
                 config.TextManagerDebugModeEnabled = false;
@@ -112,6 +122,11 @@ namespace Barotrauma
                     retVal.Language = TextManager.DefaultLanguage;
                 }
 #endif
+                //RemoteMainMenuContentUrl gets set to default it left empty - lets allow leaving it empty to make it possible to disable the remote content 
+                if (element.GetAttribute("RemoteMainMenuContentUrl")?.Value == string.Empty)
+                {
+                    retVal.RemoteMainMenuContentUrl = string.Empty;
+                }
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);
 #if CLIENT
@@ -137,6 +152,8 @@ namespace Barotrauma
             public float AimAssistAmount;
             public bool EnableMouseLook;
             public EnemyHealthBarMode ShowEnemyHealthBars;
+            public bool ChatSpeechBubbles;
+            public InteractionLabelDisplayMode InteractionLabelDisplayMode;
             public bool ChatOpen;
             public bool CrewMenuOpen;
             public bool ShowOffensiveServerPrompt;
@@ -147,20 +164,18 @@ namespace Barotrauma
             public bool DisableInGameHints;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
+            public string RemoteMainMenuContentUrl;
 #if CLIENT
+            public Eos.EosSteamPrimaryLogin.CrossplayChoice CrossplayChoice;
             public XElement SavedCampaignSettings;
+            public bool DisableGlobalSpamList;
 #endif
 #if DEBUG
-            public bool UseSteamMatchmaking;
-            public bool RequireSteamAuthentication;
             public bool AutomaticQuickStartEnabled;
             public bool AutomaticCampaignLoadEnabled;
             public bool TestScreenEnabled;
             public bool TextManagerDebugModeEnabled;
             public bool ModBreakerMode;
-#else
-            public bool UseSteamMatchmaking => true;
-            public bool RequireSteamAuthentication => true;
 #endif
 
             public struct GraphicsSettings
@@ -297,6 +312,7 @@ namespace Barotrauma
                         { InputType.Health, Keys.H },
                         { InputType.Ragdoll, Keys.Space },
                         { InputType.Aim, MouseButton.SecondaryMouse },
+                        { InputType.DropItem, Keys.None },
 
                         { InputType.InfoTab, Keys.Tab },
                         { InputType.Chat, Keys.None },
@@ -310,6 +326,7 @@ namespace Barotrauma
                         { InputType.LocalVoice, Keys.None },
                         { InputType.ToggleChatMode, Keys.R },
                         { InputType.Command, MouseButton.MiddleMouse },
+                        { InputType.ContextualCommand, Keys.LeftShift },
                         { InputType.PreviousFireMode, MouseButton.MouseWheelDown },
                         { InputType.NextFireMode, MouseButton.MouseWheelUp },
 
@@ -328,7 +345,8 @@ namespace Barotrauma
                         { InputType.Use, Keys.E },
                         { InputType.Select, MouseButton.PrimaryMouse },
                         { InputType.Deselect, MouseButton.SecondaryMouse },
-                        { InputType.Shoot, MouseButton.PrimaryMouse }
+                        { InputType.Shoot, MouseButton.PrimaryMouse },
+                        { InputType.ShowInteractionLabels, Keys.LeftAlt }
                 }.ToImmutableDictionary();
 
                 public static KeyMapping GetDefault() => new KeyMapping
@@ -378,6 +396,13 @@ namespace Barotrauma
                         {
                             foreach (var savedBinding in savedBindings)
                             {
+                                if (savedBinding.Key is InputType.Run or InputType.TakeHalfFromInventorySlot &&
+                                    defaultBinding.Key == InputType.ContextualCommand)
+                                {
+                                    //run and contextual commands have always defaulted to Shift, but the latter used to be hard-coded.
+                                    //don't show a warning about those being bound to the same key
+                                    continue;
+                                }
                                 if (savedBinding.Value == defaultBinding.Value)
                                 {
                                     OnGameMainHasLoaded += () =>
@@ -541,6 +566,19 @@ namespace Barotrauma
                 currentConfig.Graphics.VSync != newConfig.Graphics.VSync ||
                 currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode;
 
+#if CLIENT
+            bool keybindsChanged = false;
+            foreach (var kvp in newConfig.KeyMap.Bindings)
+            {
+                if (!currentConfig.KeyMap.Bindings.TryGetValue(kvp.Key, out var existingBinding) ||
+                    existingBinding != kvp.Value)
+                {
+                    keybindsChanged = true;
+                    break;
+                }
+            }
+#endif
+
             currentConfig = newConfig;
 
 #if CLIENT
@@ -568,7 +606,19 @@ namespace Barotrauma
                 HUDLayoutSettings.CreateAreas();
                 GameMain.GameSession?.HUDScaleChanged();
             }
-            
+
+            if (keybindsChanged)
+            {
+                foreach (var item in Item.ItemList)
+                {
+                    foreach (var ic in item.Components)
+                    {
+                        //parse messages because they may contain keybind texts
+                        ic.ParseMsg();
+                    }
+                }
+            }
+
             GameMain.SoundManager?.ApplySettings();
 #endif
             if (languageChanged) { TextManager.ClearCache(); }

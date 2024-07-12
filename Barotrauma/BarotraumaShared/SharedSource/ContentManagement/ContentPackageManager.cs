@@ -32,6 +32,11 @@ namespace Barotrauma
             private static readonly List<RegularPackage> regular = new List<RegularPackage>();
             public static IReadOnlyList<RegularPackage> Regular => regular;
 
+            /// <summary>
+            /// Combined hash of the currently enabled packages. Can be used to check if the enabled mods or their load order has changed.
+            /// </summary>
+            public static Md5Hash MergedHash { get; private set; } = Md5Hash.Blank;
+
             public static IEnumerable<ContentPackage> All =>
                 Core != null
                     ? (Core as ContentPackage).ToEnumerable().CollectionConcat(Regular)
@@ -60,8 +65,13 @@ namespace Barotrauma
             public static void ReloadCore()
             {
                 if (Core == null) { return; }
-                Core.UnloadContent();
-                Core.LoadContent();
+                ReloadPackage(Core);
+            }
+
+            public static void ReloadPackage(ContentPackage p)
+            {
+                p.UnloadContent();
+                p.LoadContent();
                 SortContent();
             }
 
@@ -149,6 +159,8 @@ namespace Barotrauma
                     .SelectMany(r => r.Files)
                     .Distinct(new TypeComparer<ContentFile>())
                     .ForEach(f => f.Sort());
+                MergedHash = Md5Hash.MergeHashes(All.Select(cp => cp.Hash));
+                TextManager.IncrementLanguageVersion();
             }
 
             public static int IndexOf(ContentPackage contentPackage)
@@ -299,7 +311,7 @@ namespace Barotrauma
                     {
                         onLoadFail?.Invoke(
                             fileListPath,
-                            result.TryUnwrapFailure(out var exception) ? exception : throw new Exception("unreachable"));
+                            result.TryUnwrapFailure(out var exception) ? exception : throw new UnreachableCodeException());
                         continue;
                     }
                     
@@ -490,7 +502,7 @@ namespace Barotrauma
             List<RegularPackage> enabledRegularPackages = new List<RegularPackage>();
 
 #if CLIENT
-            TaskPool.Add("EnqueueWorkshopUpdates", EnqueueWorkshopUpdates(), t => { });
+            TaskPool.AddWithResult("EnqueueWorkshopUpdates", EnqueueWorkshopUpdates(), t => { });
 #else
             #warning TODO: implement Workshop updates for servers at some point
 #endif

@@ -46,6 +46,13 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool DebugWiring
+        {
+            get;
+            private set;
+        }
+
         [Serialize(true, IsPropertySaveable.No)]
         public bool ShowDeadCharacters
         {
@@ -111,6 +118,11 @@ namespace Barotrauma.Items.Components
                 refEntity = item;
             }
 
+            if (equipper != null && equipper == Character.Controlled && DebugWiring)
+            {
+                ConnectionPanel.DebugWiringEnabledUntil = Timing.TotalTimeUnpaused + 0.5;
+            }
+
             thermalEffectState += deltaTime;
             thermalEffectState %= 10000.0f;
 
@@ -125,6 +137,7 @@ namespace Barotrauma.Items.Components
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
                 if (!ShowDeadCharacters && c.IsDead) { continue; }
+                if (c.InDetectable) { continue; }
 
                 float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
@@ -151,6 +164,11 @@ namespace Barotrauma.Items.Components
         {
             equipper = null;
             IsActive = false;
+        }
+
+        public override void Drop(Character dropper, bool setTransform = true)
+        {
+            Unequip(dropper);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -265,12 +283,12 @@ namespace Barotrauma.Items.Components
                     texts.Add(CharacterHUD.GetCachedHudText("PlayHint", InputType.Use));
                     textColors.Add(GUIStyle.Green);
                 }
-                if (target.CharacterHealth.UseHealthWindow && !target.DisableHealthWindow && equipper?.FocusedCharacter == target && equipper.CanInteractWith(target, 160f, false))
+                if (equipper?.FocusedCharacter == target && target.CanBeHealedBy(equipper, checkFriendlyTeam: false))
                 {
                     texts.Add(CharacterHUD.GetCachedHudText("HealHint", InputType.Health));
                     textColors.Add(GUIStyle.Green);
                 }
-                if (target.CanBeDragged)
+                if (target.CanBeDraggedBy(Character.Controlled))
                 {
                     texts.Add(CharacterHUD.GetCachedHudText("GrabHint", InputType.Grab));
                     textColors.Add(GUIStyle.Green);
@@ -332,8 +350,8 @@ namespace Barotrauma.Items.Components
             }
 
             GUI.DrawString(spriteBatch, hudPos, texts[0].Value, textColors[0] * alpha, Color.Black * 0.7f * alpha, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
-            hudPos.X += 5.0f;
-            hudPos.Y += 24.0f * GameSettings.CurrentConfig.Graphics.TextScale;
+            hudPos.X += 5.0f * GUI.Scale;
+            hudPos.Y += GUIStyle.SubHeadingFont.MeasureString(texts[0].Value).Y;
 
             hudPos.X = (int)hudPos.X;
             hudPos.Y = (int)hudPos.Y;
@@ -341,7 +359,7 @@ namespace Barotrauma.Items.Components
             for (int i = 1; i < texts.Count; i++)
             {
                 GUI.DrawString(spriteBatch, hudPos, texts[i], textColors[i] * alpha, Color.Black * 0.7f * alpha, 2, GUIStyle.SmallFont);
-                hudPos.Y += (int)(18.0f * GameSettings.CurrentConfig.Graphics.TextScale);
+                hudPos.Y += (int)(GUIStyle.SubHeadingFont.MeasureString(texts[i].Value).Y);
             }
         }
     }

@@ -22,6 +22,12 @@ namespace Barotrauma
 
         public readonly Sprite Icon;
 
+        /// <summary>
+        /// When set to a value the talent tooltip will display a text showing the current value of the stat and the max value.
+        /// For example "Progress: 37/100".
+        /// </summary>
+        public readonly Option<(Identifier PermanentStatIdentifier, int Max)> TrackedStat;
+
 #if CLIENT
         public readonly Option<Color> ColorOverride;
 #endif
@@ -43,6 +49,12 @@ namespace Barotrauma
             DisplayName = TextManager.Get($"talentname.{Identifier}").Fallback(Identifier.Value);
 
             AbilityEffectsStackWithSameTalent = element.GetAttributeBool("abilityeffectsstackwithsametalent", true);
+
+            var trackedStat = element.GetAttributeIdentifier("trackedstat", Identifier.Empty);
+            var trackedMax = element.GetAttributeInt("trackedmax", 100);
+            TrackedStat = !trackedStat.IsEmpty 
+                ? Option.Some((trackedStat, trackedMax))
+                : Option.None;
 
             Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", Identifier.Empty);
             if (!nameIdentifier.IsEmpty)
@@ -84,7 +96,8 @@ namespace Barotrauma
                             }
                             catch (Exception e)
                             {
-                                DebugConsole.ThrowError($"Error while loading talent migration for talent \"{Identifier}\".", e);
+                                DebugConsole.ThrowError($"Error while loading talent migration for talent \"{Identifier}\".", e,
+                                    element?.ContentPackage);
                             }
                         }
                         break;

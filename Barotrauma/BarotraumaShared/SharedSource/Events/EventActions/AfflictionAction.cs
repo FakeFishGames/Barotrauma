@@ -1,25 +1,35 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
+﻿using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Gives an affliction to a specific character.
+    /// </summary>
     class AfflictionAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the affliction.")]
         public Identifier Affliction { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Strength of the affliction.")]
         public float Strength { get; set; }
 
-        [Serialize(LimbType.None, IsPropertySaveable.Yes)]
+        [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "Type of the limb(s) to apply the affliction on. Only valid if the affliction is limb-specific.")]
         public LimbType LimbType { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character to apply the affliction on.")]
         public Identifier TargetTag { get; set; }
 
-        public AfflictionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the strength be multiplied by the maximum vitality of the target?")]
+        public bool MultiplyByMaxVitality { get; set; }
+
+        public AfflictionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
+        { 
+            if (Affliction.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in {nameof(AfflictionAction)}: affliction not defined (use the attribute \"{nameof(Affliction)}\").", 
+                    contentPackage: element.ContentPackage);
+            }
+        }
 
         private bool isFinished = false;
 
@@ -36,35 +46,39 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
-            var afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(p => p.Identifier == Affliction);
-            if (afflictionPrefab != null)
+            if (AfflictionPrefab.Prefabs.TryGet(Affliction, out var afflictionPrefab))
             {
                 var targets = ParentEvent.GetTargets(TargetTag);
                 foreach (var target in targets)
                 {
                     if (target != null && target is Character character)
                     {
+                        float strength = Strength;
+                        if (MultiplyByMaxVitality)
+                        {
+                            strength *= character.MaxVitality;
+                        }
                         if (LimbType != LimbType.None)
                         {
                             var limb = character.AnimController.GetLimb(LimbType);
-                            if (Strength > 0.0f)
+                            if (strength > 0.0f)
                             {
-                                character.CharacterHealth.ApplyAffliction(limb, afflictionPrefab.Instantiate(Strength));
+                                character.CharacterHealth.ApplyAffliction(limb, afflictionPrefab.Instantiate(strength), ignoreUnkillability: true);
                             }
-                            else if (Strength < 0.0f)
+                            else if (strength < 0.0f)
                             {
-                                character.CharacterHealth.ReduceAfflictionOnLimb(limb, Affliction, -Strength);
+                                character.CharacterHealth.ReduceAfflictionOnLimb(limb, Affliction, -strength);
                             }
                         }
                         else
                         {
-                            if (Strength > 0.0f)
+                            if (strength > 0.0f)
                             {
-                                character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(Strength));
+                                character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(strength), ignoreUnkillability: true);
                             }
-                            else if (Strength < 0.0f)
+                            else if (strength < 0.0f)
                             {
-                                character.CharacterHealth.ReduceAfflictionOnAllLimbs(Affliction, -Strength);
+                                character.CharacterHealth.ReduceAfflictionOnAllLimbs(Affliction, -strength);
                             }
                         }
                     }

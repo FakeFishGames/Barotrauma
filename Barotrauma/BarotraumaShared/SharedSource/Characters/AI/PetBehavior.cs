@@ -34,7 +34,23 @@ namespace Barotrauma
             set { happiness = MathHelper.Clamp(value, 0.0f, MaxHappiness); }
         }
 
+        /// <summary>
+        /// At which point is the pet considered "unhappy" (playing unhappy sounds and showing the icon)
+        /// </summary>
+        public float UnhappyThreshold { get; set; }
+
+        /// <summary>
+        /// At which point is the pet considered "happy" (playing happy sounds and showing the icon)
+        /// </summary>
+        public float HappyThreshold { get; set; }
+
         public float MaxHappiness { get; set; }
+
+
+        /// <summary>
+        /// At which point is the pet considered "hungry" (playing unhappy sounds and showing the icon)
+        /// </summary>
+        public float HungryThreshold { get; set; }
         public float MaxHunger { get; set; }
 
         public float HappinessDecreaseRate { get; set; }
@@ -43,7 +59,7 @@ namespace Barotrauma
         public float PlayForce { get; set; }
 
         public float PlayTimer { get; set; }
-        private float? unstunY { get; set; }
+        private float? UnstunY { get; set; }
 
         public EnemyAIController AIController { get; private set; } = null;
 
@@ -136,7 +152,7 @@ namespace Barotrauma
                         if (aggregate >= r && Items[i].Prefab != null)
                         {
                             GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetProducedItem:" + pet.AIController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
-                            Entity.Spawner.AddItemToSpawnQueue(Items[i].Prefab, pet.AIController.Character.WorldPosition);
+                            Entity.Spawner?.AddItemToSpawnQueue(Items[i].Prefab, pet.AIController.Character.WorldPosition);
                             break;
                         }
                     }
@@ -162,16 +178,19 @@ namespace Barotrauma
         public PetBehavior(XElement element, EnemyAIController aiController)
         {
             AIController = aiController;
-            AIController.Character.CanBeDragged = true;
 
-            MaxHappiness = element.GetAttributeFloat("maxhappiness", 100.0f);
-            MaxHunger = element.GetAttributeFloat("maxhunger", 100.0f);
+            MaxHappiness = element.GetAttributeFloat(nameof(MaxHappiness), 100.0f);
+            UnhappyThreshold = element.GetAttributeFloat(nameof(UnhappyThreshold), MaxHappiness * 0.25f);
+            HappyThreshold = element.GetAttributeFloat(nameof(HappyThreshold), MaxHappiness * 0.8f);
+
+            MaxHunger = element.GetAttributeFloat(nameof(MaxHunger), 100.0f);
+            HungryThreshold = element.GetAttributeFloat(nameof(HungryThreshold), MaxHunger * 0.5f);
 
             Happiness = MaxHappiness * 0.5f;
             Hunger = MaxHunger * 0.5f;
 
-            HappinessDecreaseRate = element.GetAttributeFloat("happinessdecreaserate", 0.1f);
-            HungerIncreaseRate = element.GetAttributeFloat("hungerincreaserate", 0.25f);
+            HappinessDecreaseRate = element.GetAttributeFloat(nameof(HappinessDecreaseRate), 0.1f);
+            HungerIncreaseRate = element.GetAttributeFloat(nameof(HungerIncreaseRate), 0.25f);
 
             PlayForce = element.GetAttributeFloat("playforce", 15.0f);
 
@@ -208,9 +227,9 @@ namespace Barotrauma
 
         public StatusIndicatorType GetCurrentStatusIndicatorType()
         {
-            if (Hunger > MaxHunger * 0.5f) { return StatusIndicatorType.Hungry; }
-            if (Happiness > MaxHappiness * 0.8f) { return StatusIndicatorType.Happy; }
-            if (Happiness < MaxHappiness * 0.25f) { return StatusIndicatorType.Sad; }
+            if (Hunger > HungryThreshold) { return StatusIndicatorType.Hungry; }
+            if (Happiness > HappyThreshold) { return StatusIndicatorType.Happy; }
+            if (Happiness < UnhappyThreshold) { return StatusIndicatorType.Sad; }
             return StatusIndicatorType.None;
         }
 
@@ -264,12 +283,12 @@ namespace Barotrauma
         public void Play(Character player)
         {
             if (PlayTimer > 0.0f) { return; }
-            if (Owner == null) { Owner = player; }
+            Owner ??= player;
             PlayTimer = 5.0f;
             AIController.Character.IsRagdolled = true;
             Happiness += 10.0f;
             AIController.Character.AnimController.MainLimb.body.LinearVelocity += new Vector2(0, PlayForce);
-            unstunY = AIController.Character.SimPosition.Y;
+            UnstunY = AIController.Character.SimPosition.Y;
 #if CLIENT
             AIController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.9f);
 #endif
@@ -297,16 +316,16 @@ namespace Barotrauma
             var character = AIController.Character;
             if (character?.Removed ?? true || character.IsDead) { return; }
 
-            if (unstunY.HasValue)
+            if (UnstunY.HasValue)
             {
                 if (PlayTimer > 4.0f)
                 {
                     float extent = character.AnimController.MainLimb.body.GetMaxExtent();
-                    if (character.SimPosition.Y < (unstunY.Value + extent * 3.0f) &&
+                    if (character.SimPosition.Y < (UnstunY.Value + extent * 3.0f) &&
                         character.AnimController.MainLimb.body.LinearVelocity.Y < 0.0f)
                     {
                         character.IsRagdolled = false;
-                        unstunY = null;
+                        UnstunY = null;
                     }
                     else
                     {
@@ -316,7 +335,7 @@ namespace Barotrauma
                 else
                 {
                     character.IsRagdolled = false;
-                    unstunY = null;
+                    UnstunY = null;
                 }
             }
 
@@ -362,15 +381,11 @@ namespace Barotrauma
             {
                 character.CharacterHealth.ApplyAffliction(character.AnimController.MainLimb, new Affliction(AfflictionPrefab.InternalDamage, 8.0f * deltaTime));
             }
-            else if (Hunger < MaxHunger * 0.1f)
-            {
-                character.CharacterHealth.ReduceAllAfflictionsOnAllLimbs(8.0f * deltaTime);
-            }
 
             if (character.SelectedBy != null)
             {
                 character.IsRagdolled = true;
-                unstunY = character.SimPosition.Y;
+                UnstunY = character.SimPosition.Y;
             }
 
             for (int i = 0; i < itemsToProduce.Count; i++)
@@ -435,37 +450,34 @@ namespace Barotrauma
                     spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandomUnsynced();
                     spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
                 }
-                var pet = Character.Create(speciesName, spawnPos, seed, spawnInitialItems: false);
-                var petBehavior = (pet?.AIController as EnemyAIController)?.PetBehavior;
-                if (petBehavior != null)
+                
+                var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName.ToIdentifier());
+                if (characterPrefab == null)
                 {
-                    petBehavior.Owner = owner;
-                    var petBehaviorElement = subElement.Element("petbehavior");
-                    if (petBehaviorElement != null)
+                    DebugConsole.ThrowError($"Failed to load the pet \"{speciesName}\". Character prefab not found.");
+                    continue;
+                }
+                var pet = Character.Create(characterPrefab, spawnPos, seed, spawnInitialItems: false);
+                if (pet != null)
+                {
+                    var petBehavior = (pet.AIController as EnemyAIController)?.PetBehavior;
+                    if (petBehavior != null)
                     {
-                        petBehavior.Hunger = petBehaviorElement.GetAttributeFloat("hunger", 50.0f);
-                        petBehavior.Happiness = petBehaviorElement.GetAttributeFloat("happiness", 50.0f);
+                        petBehavior.Owner = owner;
+                        var petBehaviorElement = subElement.Element("petbehavior");
+                        if (petBehaviorElement != null)
+                        {
+                            petBehavior.Hunger = petBehaviorElement.GetAttributeFloat("hunger", 50.0f);
+                            petBehavior.Happiness = petBehaviorElement.GetAttributeFloat("happiness", 50.0f);
+                        }
                     }
                 }
-
                 var inventoryElement = subElement.Element("inventory");
                 if (inventoryElement != null)
                 {
                     pet.SpawnInventoryItems(pet.Inventory, inventoryElement.FromPackage(null));
-                }
+                }                
             }
-        }
-
-        public void ServerWrite(IWriteMessage msg)
-        {
-            msg.WriteRangedSingle(Happiness, 0.0f, MaxHappiness, 8);
-            msg.WriteRangedSingle(Hunger, 0.0f, MaxHunger, 8);
-        }
-
-        public void ClientRead(IReadMessage msg)
-        {
-            Happiness = msg.ReadRangedSingle(0.0f, MaxHappiness, 8);
-            Hunger = msg.ReadRangedSingle(0.0f, MaxHunger, 8);
         }
     }
 }

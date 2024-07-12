@@ -11,6 +11,7 @@ namespace Barotrauma
     class AIObjectiveContainItem: AIObjective
     {
         public override Identifier Identifier { get; set; } = "contain item".ToIdentifier();
+        protected override bool AllowWhileHandcuffed => false;
 
         public Func<Item, float> GetItemPriority;
 
@@ -109,7 +110,7 @@ namespace Barotrauma
 
         private bool CheckItem(Item item)
         {
-            return item.HasIdentifierOrTags(itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character);
+            return item.HasIdentifierOrTags(itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character) && container.ShouldBeContained(item, out _);
         }
 
         protected override void Act(float deltaTime)
@@ -198,7 +199,7 @@ namespace Barotrauma
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
                             container?.Item == null || container.Item.Removed || !container.Item.HasAccess(character) || 
-                            (container.Item.GetRootContainer()?.OwnInventory?.Locked ?? false) ||
+                            (container.Item.RootContainer?.OwnInventory?.Locked ?? false) ||
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
                         SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>(),
@@ -226,7 +227,10 @@ namespace Barotrauma
                             AllowToFindDivingGear = AllowToFindDivingGear,
                             AllowDangerousPressure = AllowDangerousPressure,
                             TargetCondition = ConditionLevel,
-                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem),
+                            ItemFilter = (Item potentialItem) =>
+                            {
+                                return (RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)) && container.ShouldBeContained(potentialItem, out _);
+                            },
                             ItemCount = ItemCount,
                             TakeWholeStack = MoveWholeStack
                         }, onAbandon: () =>

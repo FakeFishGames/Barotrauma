@@ -1,27 +1,30 @@
 ﻿#nullable enable
 using System;
-using System.Linq;
 
 namespace Barotrauma
 {
+
+    /// <summary>
+    /// Can be used to check arbitrary campaign metadata set using <see cref="SetDataAction"/>.
+    /// </summary>
     class CheckDataAction : BinaryOptionAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the data to check.")]
         public Identifier Identifier { get; set; } = Identifier.Empty;
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The condition that must be met for the check to succeed. Uses the same formatting as conditionals (for example, \"gt 5.2\", \"true\", \"lt 10\".)")]
         public string Condition { get; set; } = "";
 
-        [Serialize(false, IsPropertySaveable.Yes, "Forces the comparison to use string instead of attempting to parse it as a boolean or a float first")]
+        [Serialize(false, IsPropertySaveable.Yes, "Forces the comparison to use string instead of attempting to parse it as a boolean or a float first. Use this if you know the value is a string.")]
         public bool ForceString { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, "Performs the comparison against a metadata by identifier instead of a constant value")]
+        [Serialize(false, IsPropertySaveable.Yes, "Performs the comparison against a metadata by identifier instead of a constant value. Meaning that you could for example check whether the value of \"progress_of_some_event\" is larger than \"progress_of_some_other_event\".")]
         public bool CheckAgainstMetadata { get; set; }
 
         protected object? value2;
         protected object? value1;
 
-        protected PropertyConditional.OperatorType Operator { get; set; }
+        protected PropertyConditional.ComparisonOperatorType Operator { get; set; }
 
         public CheckDataAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         {
@@ -30,7 +33,8 @@ namespace Barotrauma
                 Condition = element.GetAttributeString("value", string.Empty)!;
                 if (string.IsNullOrEmpty(Condition))
                 {
-                    DebugConsole.ThrowError($"Error in scripted event \"{parentEvent.Prefab.Identifier}\". CheckDataAction with no condition set ({element}).");
+                    DebugConsole.ThrowError($"Error in scripted event \"{parentEvent.Prefab.Identifier}\". CheckDataAction with no condition set ({element}).",
+                        contentPackage: element?.ContentPackage);
                 }
             }
         }
@@ -42,7 +46,8 @@ namespace Barotrauma
                 Condition = element.GetAttributeString("value", string.Empty)!;
                 if (string.IsNullOrEmpty(Condition))
                 {
-                    DebugConsole.ThrowError($"Error in scripted event \"{parentDebugString}\". CheckDataAction with no condition set ({element}).");
+                    DebugConsole.ThrowError($"Error in scripted event \"{parentDebugString}\". CheckDataAction with no condition set ({element}).",
+                        contentPackage: element?.ContentPackage);
                 }
             }
         }
@@ -56,22 +61,13 @@ namespace Barotrauma
         {
             if (GameMain.GameSession?.GameMode is not CampaignMode campaignMode) { return false; }
 
-            string[] splitString = Condition.Split(' ');
-            string value;
-            if (splitString.Length > 0)
+            (Operator, string value) = PropertyConditional.ExtractComparisonOperatorFromConditionString(Condition);
+            if (Operator == PropertyConditional.ComparisonOperatorType.None)
             {
-                //the first part of the string is the operator, skip it
-                value = string.Join(" ", splitString.Skip(1));
-            }
-            else
-            {
-                DebugConsole.ThrowError($"{Condition} is too short, it should start with an operator followed by a boolean or a floating point value.");
+                DebugConsole.ThrowError($"{Condition} is invalid, it should start with an operator followed by a boolean or a floating point value.", 
+                    contentPackage: ParentEvent?.Prefab?.ContentPackage);
                 return false;
             }
-
-            string op = splitString[0];
-            Operator = PropertyConditional.GetOperatorType(op);
-            if (Operator == PropertyConditional.OperatorType.None) { return false; }
 
             if (CheckAgainstMetadata)
             {
@@ -82,8 +78,8 @@ namespace Barotrauma
                 {
                     return Operator switch
                     {
-                        PropertyConditional.OperatorType.Equals => metadata1 == metadata2,
-                        PropertyConditional.OperatorType.NotEquals => metadata1 != metadata2,
+                        PropertyConditional.ComparisonOperatorType.Equals => metadata1 == metadata2,
+                        PropertyConditional.ComparisonOperatorType.NotEquals => metadata1 != metadata2,
                         _ => false
                     };
                 }
@@ -95,7 +91,7 @@ namespace Barotrauma
                         case bool bool1 when metadata2 is bool bool2:
                             return CompareBool(bool1, bool2) ?? false;
                         case float float1 when metadata2 is float float2:
-                            return CompareFloat(float1, float2) ?? false;
+                            return PropertyConditional.CompareFloat(float1, float2, Operator);
                     }
                 }
 
@@ -139,9 +135,9 @@ namespace Barotrauma
             value2 = val2;
             switch (Operator)
             {
-                case PropertyConditional.OperatorType.Equals:
+                case PropertyConditional.ComparisonOperatorType.Equals:
                     return val1 == val2;
-                case PropertyConditional.OperatorType.NotEquals:
+                case PropertyConditional.ComparisonOperatorType.NotEquals:
                     return val1 != val2;
                 default:
                     DebugConsole.Log($"Only \"Equals\" and \"Not equals\" operators are allowed for a boolean (was {Operator} for {val2}).");
@@ -153,33 +149,10 @@ namespace Barotrauma
         {
             if (float.TryParse(value, out float f))
             {
-                return CompareFloat(GetFloat(campaignMode), f);
+                return PropertyConditional.CompareFloat(GetFloat(campaignMode), f, Operator);
             }
 
             DebugConsole.Log($"{value} != float");
-            return null;
-        }
-
-        private bool? CompareFloat(float val1, float val2)
-        {
-            value1 = val1;
-            value2 = val2;
-            switch (Operator)
-            {
-                case PropertyConditional.OperatorType.Equals:
-                    return MathUtils.NearlyEqual(val1, val2);
-                case PropertyConditional.OperatorType.GreaterThan:
-                    return val1 > val2;
-                case PropertyConditional.OperatorType.GreaterThanEquals:
-                    return val1 >= val2;
-                case PropertyConditional.OperatorType.LessThan:
-                    return val1 < val2;
-                case PropertyConditional.OperatorType.LessThanEquals:
-                    return val1 <= val2;
-                case PropertyConditional.OperatorType.NotEquals:
-                    return !MathUtils.NearlyEqual(val1, val2);
-            }
-
             return null;
         }
 
@@ -195,9 +168,9 @@ namespace Barotrauma
             bool equals = string.Equals(val1, val2, StringComparison.OrdinalIgnoreCase);
             switch (Operator)
             { 
-                case PropertyConditional.OperatorType.Equals:
+                case PropertyConditional.ComparisonOperatorType.Equals:
                     return equals;
-                case PropertyConditional.OperatorType.NotEquals:
+                case PropertyConditional.ComparisonOperatorType.NotEquals:
                     return !equals;
                 default:
                     DebugConsole.Log($"Only \"Equals\" and \"Not equals\" operators are allowed for a string (was {Operator} for {val2}).");

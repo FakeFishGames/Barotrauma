@@ -78,6 +78,11 @@ namespace Barotrauma.Networking
 
             public bool IsProcessed;
 
+            /// <summary>
+            /// Does the client need to be controlling a character for the server to consider the event valid?
+            /// </summary>
+            public bool RequireCharacter = true;
+
             public BufferedEvent(Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, ReadWriteMessage data)
             {
                 this.Sender = sender;
@@ -157,15 +162,19 @@ namespace Barotrauma.Networking
             {
                 if (bufferedEvent.Character == null || bufferedEvent.Character.IsDead)
                 {
-                    bufferedEvent.IsProcessed = true;
-                    continue;
+                    if (bufferedEvent.RequireCharacter)
+                    {
+                        bufferedEvent.IsProcessed = true;
+                        continue;
+                    }
                 }
 
                 //delay reading the events until the inputs for the corresponding frame have been processed
 
                 //UNLESS the character is unconscious, in which case we'll read the messages immediately (because further inputs will be ignored)
                 //atm the "give in" command is the only thing unconscious characters can do, other types of events are ignored
-                if (!bufferedEvent.Character.IsIncapacitated &&
+                if (bufferedEvent.Character != null &&
+                    !bufferedEvent.Character.IsIncapacitated &&
                     NetIdUtils.IdMoreRecent(bufferedEvent.CharacterStateID, bufferedEvent.Character.LastProcessedID))
                 {
                     DebugConsole.Log($"Delaying reading entity event sent by a client until the character state has been processed. Event's character state: {bufferedEvent.CharacterStateID}, last processed character state: {bufferedEvent.Character.LastProcessedID}");
@@ -426,8 +435,9 @@ namespace Barotrauma.Networking
             }
             else
             {
-                double midRoundSyncTimeOut = uniqueEvents.Count / 100 * server.UpdateInterval.TotalSeconds;
-                midRoundSyncTimeOut = Math.Max(10.0f, midRoundSyncTimeOut * 10.0f);
+                //assume we can get at least 10 events per second through
+                double midRoundSyncTimeOut = uniqueEvents.Count / 10 * server.UpdateInterval.TotalSeconds;
+                midRoundSyncTimeOut = Math.Max(midRoundSyncTimeOut, server.ServerSettings.MinimumMidRoundSyncTimeout);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.NeedsMidRoundSync = true;
@@ -502,7 +512,12 @@ namespace Barotrauma.Networking
                     byte[] temp = msg.ReadBytes(msgLength - 2);
                     buffer.WriteBytes(temp, 0, msgLength - 2);
                     buffer.BitPosition = 0;
-                    BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
+                    BufferEvent(
+                        new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer)
+                        {
+                            //hull updates can be sent without a character to allow editing water and fire in spectator mode
+                            RequireCharacter = entity is not Hull
+                        });
 
                     sender.LastSentEntityEventID++;
                 }

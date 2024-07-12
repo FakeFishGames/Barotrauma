@@ -14,6 +14,8 @@ namespace Barotrauma
 
         public readonly List<Item> prioritizedItems = new List<Item>();
 
+        protected override int MaxTargets => 100;
+
         public AIObjectiveCleanupItems(Character character, AIObjectiveManager objectiveManager, Item prioritizedItem = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
         {
@@ -29,7 +31,7 @@ namespace Barotrauma
             this.prioritizedItems.AddRange(prioritizedItems.Where(i => i != null));
         }
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 0; }
             if (objectiveManager.IsOrder(this))
@@ -45,7 +47,7 @@ namespace Barotrauma
             return AIObjectiveManager.RunPriority - 0.5f;
         }
 
-        protected override bool Filter(Item target)
+        protected override bool IsValidTarget(Item target)
         {
             System.Diagnostics.Debug.Assert(target.GetComponent<Pickable>() is { } pickable && !pickable.IsAttached, "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking pickable, non-attached items.");
             System.Diagnostics.Debug.Assert(target.Prefab.PreferredContainers.Any(), "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking items that have preferred containers defined.");
@@ -54,8 +56,15 @@ namespace Barotrauma
             // The validity changes when a character picks the item up.
             if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
             if (target.CurrentHull.FireSources.Count > 0) { return false; }
-            // Don't clean up items in rooms that have enemies inside.
-            if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c == character || !HumanAIController.IsActive(c)) { continue; }
+                if (c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c))
+                {
+                    // Don't clean up items in rooms that have enemies inside.
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -79,20 +88,19 @@ namespace Barotrauma
             return true;
         }
 
-        public static bool IsValidContainer(Item container, Character character, bool allowUnloading = true) =>
-            allowUnloading &&
+        public static bool IsValidContainer(Item container, Character character) =>
+            container.HasTag(Tags.AllowCleanup) && 
             container.HasAccess(character) && 
-            container.HasTag("allowcleanup") && 
             container.ParentInventory == null && container.OwnInventory != null && container.OwnInventory.AllItems.Any() && 
             container.GetComponent<ItemContainer>() != null &&
             IsItemInsideValidSubmarine(container, character) &&
             !container.IsClaimedByBallastFlora;
 
-        public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true)
+        public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true, bool requireValidContainer = true, bool ignoreItemsMarkedForDeconstruction = true)
         {
             if (item == null) { return false; }
-            if (!item.HasAccess(character)) { return false; }
-            if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
+            if (item.DontCleanUp) { return false; }
+            if (item.Illegitimate == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)
             {
                 if (item.Container == null)
@@ -100,14 +108,19 @@ namespace Barotrauma
                     // In a character inventory
                     return false;
                 }
-                if (!IsValidContainer(item.Container, character, allowUnloading)) { return false; }
+                if (!allowUnloading) { return false; }
+                if (requireValidContainer && !IsValidContainer(item.Container, character)) { return false; }
             }
+            if (ignoreItemsMarkedForDeconstruction && Item.DeconstructItems.Contains(item)) { return false; }
+            if (!item.HasAccess(character)) { return false; }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
             if (item.HasBallastFloraInHull) { return false; }
+            //something (e.g. a pet) was eating the item within the last second - don't clean up
+            if (item.LastEatenTime > Timing.TotalTimeUnpaused - 1.0) { return false; }
             var wire = item.GetComponent<Wire>();
             if (wire != null)
             {
-                if (wire.Connections.Any()) { return false; }
+                if (wire.Connections.Any(c => c != null)) { return false; }
             }
             else
             {
@@ -117,11 +130,16 @@ namespace Barotrauma
                     return false;
                 }
             }
+            if (item.GetComponent<Rope>() is { IsActive: true, Snapped: false })
+            {
+                // Don't clean up spears with an active rope component.
+                return false;
+            }
             if (!checkInventory)
             {
                 return true;
             }
-            return CanEquip(character, item, allowWearing: false);
+            return CanPutInInventory(character, item, allowWearing: false);
         }
 
         public override void OnDeselected()

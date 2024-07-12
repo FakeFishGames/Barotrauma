@@ -35,18 +35,24 @@ namespace Barotrauma
             /// The item this relation is defined in must be inside a specific kind of container. 
             /// Can for example by used to make an item do something when it's inside some other type of item.
             /// </summary>
-            Container
+            Container,
+            /// <summary>
+            /// Signifies an error (type could not be parsed)
+            /// </summary>
+            Invalid
         }
 
         /// <summary>
-        /// Should an empty inventory be considered valid? Can be used to, for example, make an item do something if there's a specific item, or nothing, inside it.
+        /// Should an empty inventory (or an empty inventory slot if <see cref="TargetSlot"/> is set) be considered valid? Can be used to, for example, make an item do something if there's a specific item, or nothing, inside it.
         /// </summary>
         public bool MatchOnEmpty { get; set; }
 
         /// <summary>
-        /// Should only an empty inventory be considered valid? Can be used to, for example, make an item do something when there's nothing inside it.
+        /// Should only an empty inventory (or an empty inventory slot if <see cref="TargetSlot"/> is set) be considered valid? Can be used to, for example, make an item do something when there's nothing inside it.
         /// </summary>
         public bool RequireEmpty { get; set; }
+
+        private bool RequireOrMatchOnEmpty => MatchOnEmpty || RequireEmpty;
 
         /// <summary>
         /// Only valid for the RequiredItems of an ItemComponent. Can be used to ignore the requirement in the submarine editor, 
@@ -54,15 +60,16 @@ namespace Barotrauma
         /// </summary>
         public bool IgnoreInEditor { get; set; }
 
+
         /// <summary>
         /// Identifier(s) or tag(s) of the items that are NOT considered valid. 
         /// Can be used to, for example, exclude some specific items when using tags that apply to multiple items.
         /// </summary>
         public ImmutableHashSet<Identifier> ExcludedIdentifiers { get; private set; }
 
-        private RelationType type;
+        private readonly RelationType type;
 
-        public List<StatusEffect> statusEffects;
+        public List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
         /// <summary>
         /// Only valid for the RequiredItems of an ItemComponent. A message displayed if the required item isn't found (e.g. a notification about lack of ammo or fuel).
@@ -100,6 +107,11 @@ namespace Barotrauma
         public int TargetSlot = -1;
 
         /// <summary>
+        /// The slot type the target must be in when targeting an item contained inside a character's inventory
+        /// </summary>
+        public InvSlotType CharacterInventorySlotType;
+
+        /// <summary>
         /// Overrides the position defined in ItemContainer. Only valid when used in the Containable definitions of an ItemContainer.
         /// </summary>
         public Vector2? ItemPos;
@@ -121,6 +133,12 @@ namespace Barotrauma
         ///  Can be used to force specific items to stay active inside the container (such as flashlights attached to a gun).
         /// </summary>
         public bool SetActive;
+
+        /// <summary>
+        ///  Only valid when used in the Containable definitions of an ItemContainer.
+        ///  Should the character who equipped the item be blamed if the wearer / character who's inventory the item is in dies?
+        /// </summary>
+        public bool BlameEquipperForDeath;
 
         /// <summary>
         /// Only valid for the RequiredItems of an ItemComponent. Can be used to make the requirement optional, 
@@ -163,6 +181,10 @@ namespace Barotrauma
             {
                 if (item.HasTag(excludedIdentifier)) { return false; }
             }
+            if (item.ParentInventory?.Owner is Character character && CharacterInventorySlotType != InvSlotType.None)
+            {
+                if (!character.HasEquippedItem(item, CharacterInventorySlotType)) { return false; }
+            }
             if (Identifiers.Contains(item.Prefab.Identifier)) { return true; }
             foreach (var identifier in Identifiers)
             {
@@ -198,115 +220,15 @@ namespace Barotrauma
         {
             this.Identifiers = identifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
             this.ExcludedIdentifiers = excludedIdentifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
-
-            statusEffects = new List<StatusEffect>();
         }
 
-        public bool CheckRequirements(Character character, Item parentItem)
-        {
-            switch (type)
-            {
-                case RelationType.Contained:
-                    if (parentItem == null) { return false; }
-                    return CheckContained(parentItem);
-                case RelationType.Container:
-                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty || RequireEmpty; }
-                    return CheckItem(parentItem.Container, this);
-                case RelationType.Equipped:
-                    if (character == null) { return false; }
-                    var heldItems = character.HeldItems;
-                    if ((RequireEmpty || MatchOnEmpty) && heldItems.None()) { return true; }
-                    foreach (Item equippedItem in heldItems)
-                    {
-                        if (equippedItem == null) { continue; }
-                        if (CheckItem(equippedItem, this))
-                        {
-                            if (RequireEmpty && equippedItem.Condition > 0) { return false; }
-                            return true;
-                        }
-                    }
-                    break;
-                case RelationType.Picked:
-                    if (character == null) { return false; }
-                    if (character.Inventory == null) { return MatchOnEmpty || RequireEmpty; }
-                    var allItems = character.Inventory.AllItems;
-                    if ((RequireEmpty || MatchOnEmpty) && allItems.None()) { return true; }
-                    foreach (Item pickedItem in allItems)
-                    {
-                        if (pickedItem == null) { continue; }
-                        if (CheckItem(pickedItem, this))
-                        {
-                            if (RequireEmpty && pickedItem.Condition > 0) { return false; }
-                            return true;
-                        }
-                    }
-                    break;
-                default:
-                    return true;
-            }
-
-            static bool CheckItem(Item i, RelatedItem ri) => (!ri.ExcludeBroken || ri.RequireEmpty || i.Condition > 0.0f) && (!ri.ExcludeFullCondition || !i.IsFullCondition) && ri.MatchesItem(i);
-
-            return false;
-        }
-
-        private bool CheckContained(Item parentItem)
-        {
-            if (parentItem.OwnInventory == null) { return false; }
-            bool isEmpty = parentItem.OwnInventory.IsEmpty();
-            if (RequireEmpty && !isEmpty) { return false; }
-            if (MatchOnEmpty && isEmpty) { return true; }
-            foreach (var container in parentItem.GetComponents<Items.Components.ItemContainer>())
-            {
-                foreach (Item contained in container.Inventory.AllItems)
-                {
-                    if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
-                    if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
-                    if (CheckContained(contained)) { return true; }
-                }
-            }
-            return false;
-        }
-
-        public void Save(XElement element)
-        {
-            element.Add(
-                new XAttribute("items", JoinedIdentifiers),
-                new XAttribute("type", type.ToString()),
-                new XAttribute("optional", IsOptional),
-                new XAttribute("ignoreineditor", IgnoreInEditor),
-                new XAttribute("excludebroken", ExcludeBroken),
-                new XAttribute("requireempty", RequireEmpty),
-                new XAttribute("excludefullcondition", ExcludeFullCondition),
-                new XAttribute("targetslot", TargetSlot),
-                new XAttribute("allowvariants", AllowVariants),
-                new XAttribute("rotation", Rotation),
-                new XAttribute("setactive", SetActive));
-
-            if (Hide)
-            {
-                element.Add(new XAttribute(nameof(Hide), true));
-            }
-            if (ItemPos.HasValue)
-            {
-                element.Add(new XAttribute(nameof(ItemPos), ItemPos.Value));
-            }
-
-            if (ExcludedIdentifiers.Count > 0)
-            {
-                element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
-            }
-
-            if (!Msg.IsNullOrWhiteSpace()) { element.Add(new XAttribute("msg", MsgTag.IsEmpty ? Msg : MsgTag.Value)); }
-        }
-
-        public static RelatedItem Load(ContentXElement element, bool returnEmpty, string parentDebugName)
+        public RelatedItem(ContentXElement element, string parentDebugName)
         {
             Identifier[] identifiers;
             if (element.GetAttribute("name") != null)
             {
                 //backwards compatibility + a console warning
-                DebugConsole.ThrowError("Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.");
+                DebugConsole.ThrowError($"Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.", contentPackage: element.ContentPackage);
                 Identifier[] itemNames = element.GetAttributeIdentifierArray("name", Array.Empty<Identifier>());
                 //attempt to convert to identifiers and tags
                 List<Identifier> convertedIdentifiers = new List<Identifier>();
@@ -337,6 +259,7 @@ namespace Barotrauma
                     }
                 }
             }
+            this.Identifiers = identifiers.ToImmutableHashSet();
 
             Identifier[] excludedIdentifiers = element.GetAttributeIdentifierArray("excludeditems", null) ?? element.GetAttributeIdentifierArray("excludeditem", null);
             if (excludedIdentifiers == null)
@@ -347,25 +270,25 @@ namespace Barotrauma
                     excludedIdentifiers = element.GetAttributeIdentifierArray("excludedidentifier", null) ?? element.GetAttributeIdentifierArray("excludedtag", Array.Empty<Identifier>());
                 }
             }
+            this.ExcludedIdentifiers = excludedIdentifiers.ToImmutableHashSet();
 
-            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
+            ExcludeBroken = element.GetAttributeBool("excludebroken", true);
+            RequireEmpty = element.GetAttributeBool("requireempty", false);
+            ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false);
+            AllowVariants = element.GetAttributeBool("allowvariants", true);
+            Rotation = element.GetAttributeFloat("rotation", 0f);
+            SetActive = element.GetAttributeBool("setactive", false);
+            BlameEquipperForDeath = element.GetAttributeBool(nameof(BlameEquipperForDeath), false);
 
-            RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
-            {
-                ExcludeBroken = element.GetAttributeBool("excludebroken", true),
-                RequireEmpty = element.GetAttributeBool("requireempty", false),
-                ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
-                AllowVariants = element.GetAttributeBool("allowvariants", true),
-                Rotation = element.GetAttributeFloat("rotation", 0f),
-                SetActive = element.GetAttributeBool("setactive", false)
-            };
+            CharacterInventorySlotType = element.GetAttributeEnum(nameof(CharacterInventorySlotType), InvSlotType.None);
+
             if (element.GetAttribute(nameof(Hide)) != null)
             {
-                ri.Hide = element.GetAttributeBool(nameof(Hide), false);
+                Hide = element.GetAttributeBool(nameof(Hide), false);
             }
             if (element.GetAttribute(nameof(ItemPos)) != null)
             {
-                ri.ItemPos = element.GetAttributeVector2(nameof(ItemPos), Vector2.Zero);
+                ItemPos = element.GetAttributeVector2(nameof(ItemPos), Vector2.Zero);
             }
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
@@ -381,17 +304,17 @@ namespace Barotrauma
                         break;
                 }
             }
-            if (!Enum.TryParse(typeStr, true, out ri.type))
+            if (!Enum.TryParse(typeStr, true, out type))
             {
-                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - \"" + typeStr + "\" is not a valid relation type.");
-                return null;
+                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - \"" + typeStr + "\" is not a valid relation type.", contentPackage: element.ContentPackage);
+                type = RelationType.Invalid;
             }
 
-            ri.MsgTag = element.GetAttributeIdentifier("msg", Identifier.Empty);
-            LocalizedString msg = TextManager.Get(ri.MsgTag);
+            MsgTag = element.GetAttributeIdentifier("msg", Identifier.Empty);
+            LocalizedString msg = TextManager.Get(MsgTag);
             if (!msg.Loaded)
             {
-                ri.Msg = ri.MsgTag.Value;
+                Msg = MsgTag.Value;
             }
             else
             {
@@ -400,21 +323,137 @@ namespace Barotrauma
                 {
                     msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType));
                 }
-                ri.Msg = msg;
+                Msg = msg;
 #endif
             }
 
             foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase)) { continue; }
-                ri.statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
+                StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
             }
 
-            ri.IsOptional = element.GetAttributeBool("optional", false);
-            ri.IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
-            ri.MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
-            ri.TargetSlot = element.GetAttributeInt("targetslot", -1);
+            IsOptional = element.GetAttributeBool("optional", false);
+            IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
+            MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
+            TargetSlot = element.GetAttributeInt("targetslot", -1);
 
+        }
+
+        public bool CheckRequirements(Character character, Item parentItem)
+        {
+            switch (type)
+            {
+                case RelationType.Contained:
+                    if (parentItem == null) { return false; }
+                    return CheckContained(parentItem);
+                case RelationType.Container:
+                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty || RequireEmpty; }
+                    return CheckItem(parentItem.Container, this);
+                case RelationType.Equipped:
+                    if (character == null) { return false; }
+                    var heldItems = character.HeldItems;
+                    if (RequireOrMatchOnEmpty && heldItems.None()) { return true; }
+                    foreach (Item equippedItem in heldItems)
+                    {
+                        if (equippedItem == null) { continue; }
+                        if (CheckItem(equippedItem, this))
+                        {
+                            if (RequireEmpty && equippedItem.Condition > 0) { return false; }
+                            return true;
+                        }
+                    }
+                    break;
+                case RelationType.Picked:
+                    if (character == null) { return false; }
+                    if (character.Inventory == null) { return MatchOnEmpty || RequireEmpty; }
+                    var allItems = character.Inventory.AllItems;
+                    if (RequireOrMatchOnEmpty && allItems.None()) { return true; }
+                    foreach (Item pickedItem in allItems)
+                    {
+                        if (pickedItem == null) { continue; }
+                        if (CheckItem(pickedItem, this))
+                        {
+                            if (RequireEmpty && pickedItem.Condition > 0) { return false; }
+                            return true;
+                        }
+                    }
+                    break;
+                default:
+                    return true;
+            }
+
+            static bool CheckItem(Item i, RelatedItem ri) => (!ri.ExcludeBroken || ri.RequireEmpty || i.Condition > 0.0f) && (!ri.ExcludeFullCondition || !i.IsFullCondition) && ri.MatchesItem(i);
+
+            return false;
+        }
+
+        private bool CheckContained(Item parentItem)
+        {
+            if (parentItem.OwnInventory == null) { return false; }
+
+            if (TargetSlot == -1 && RequireOrMatchOnEmpty)
+            {
+                bool isEmpty = parentItem.OwnInventory.IsEmpty();
+                if (RequireEmpty) { return isEmpty; }
+                if (MatchOnEmpty && isEmpty) { return true; }
+            }
+            foreach (var container in parentItem.GetComponents<Items.Components.ItemContainer>())
+            {
+                if (TargetSlot > -1 && RequireOrMatchOnEmpty)
+                {
+                    var itemInSlot = container.Inventory.GetItemAt(TargetSlot);
+                    if (RequireEmpty) { return itemInSlot == null; }
+                    if (MatchOnEmpty && itemInSlot == null) { return true; }
+                }
+                foreach (Item contained in container.Inventory.AllItems)
+                {
+                    if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
+                    if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
+                    if (CheckContained(contained)) { return true; }
+                }
+            }
+            return false;
+        }
+
+        public void Save(XElement element)
+        {
+            element.Add(
+                new XAttribute("items", JoinedIdentifiers),
+                new XAttribute("type", type.ToString()), 
+                new XAttribute("characterinventoryslottype", CharacterInventorySlotType.ToString()),
+                new XAttribute("optional", IsOptional),
+                new XAttribute("ignoreineditor", IgnoreInEditor),
+                new XAttribute("excludebroken", ExcludeBroken),
+                new XAttribute("requireempty", RequireEmpty),
+                new XAttribute("excludefullcondition", ExcludeFullCondition),
+                new XAttribute("targetslot", TargetSlot),
+                new XAttribute("allowvariants", AllowVariants),
+                new XAttribute("rotation", Rotation),
+                new XAttribute("setactive", SetActive));
+
+            if (Hide)
+            {
+                element.Add(new XAttribute(nameof(Hide), true));
+            }
+            if (ItemPos.HasValue)
+            {
+                element.Add(new XAttribute(nameof(ItemPos), ItemPos.Value));
+            }
+
+            if (ExcludedIdentifiers.Count > 0)
+            {
+                element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
+            }
+
+            if (!Msg.IsNullOrWhiteSpace()) { element.Add(new XAttribute("msg", MsgTag.IsEmpty ? Msg : MsgTag.Value)); }
+        }
+
+        public static RelatedItem Load(ContentXElement element, bool returnEmpty, string parentDebugName)
+        {           
+            RelatedItem ri = new RelatedItem(element, parentDebugName);
+            if (ri.Type == RelationType.Invalid) { return null; }
+            if (ri.Identifiers.None() && ri.ExcludedIdentifiers.None() && !returnEmpty) { return null; }
             return ri;
         }
     }

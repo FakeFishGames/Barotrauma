@@ -773,7 +773,7 @@ namespace Barotrauma
             subItems ??= GetSubItems();
             return subItems.Any(i =>
                 i.Prefab.SwappableItem != null &&
-                !i.HiddenInGame && i.AllowSwapping &&
+                !i.IsHidden && i.AllowSwapping &&
                 (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) &&
                 Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
         }
@@ -876,7 +876,7 @@ namespace Barotrauma
         {
             parent.Content.ClearChildren();
             currentUpgradeCategory = category;
-            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.HiddenInGame && i.AllowSwapping && i.Prefab.SwappableItem != null && category.ItemTags.Any(t => i.HasTag(t))).ToList();
+            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.IsHidden && i.AllowSwapping && i.Prefab.SwappableItem != null && category.ItemTags.Any(t => i.HasTag(t))).ToList();
 
             foreach (Item item in entitiesOnSub)
             {
@@ -1110,7 +1110,7 @@ namespace Barotrauma
 
         public static UpgradeFrame CreateUpgradeFrame(UpgradePrefab prefab, UpgradeCategory category, CampaignMode campaign, RectTransform rectTransform, bool addBuyButton = true)
         {
-            int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation, characterList);
+            int price = prefab.Price.GetBuyPrice(prefab, campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation, characterList);
             return CreateUpgradeEntry(rectTransform, prefab.Sprite, prefab.Name, prefab.Description, price, new CategoryData(category, prefab), addBuyButton, upgradePrefab: prefab, currentLevel: campaign.UpgradeManager.GetUpgradeLevel(prefab, category));
         }
 
@@ -1267,7 +1267,7 @@ namespace Barotrauma
             {
                 LocalizedString promptBody = TextManager.GetWithVariables("Upgrades.PurchasePromptBody",
                     ("[upgradename]", prefab.Name),
-                    ("[amount]", prefab.Price.GetBuyPrice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation, characterList).ToString()));
+                    ("[amount]", prefab.Price.GetBuyPrice(prefab, Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation, characterList).ToString()));
                 currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
                 {
                     if (GameMain.NetworkMember != null)
@@ -1305,7 +1305,7 @@ namespace Barotrauma
             const int maxUpgrades = 4;
 
             Item? item = entity as Item;
-            itemName.Text = item?.Name ?? TextManager.Get("upgradecategory.walls");
+            itemName.Text = item?.Prefab.Name ?? TextManager.Get("upgradecategory.walls");
             if (slotIndex > -1)
             {
                 itemName.Text = TextManager.GetWithVariables("weaponslotwithname", ("[number]", slotIndex.ToString()), ("[weaponname]", itemName.Text));
@@ -1682,7 +1682,7 @@ namespace Barotrauma
 
             GUITextBlock priceLabel = (GUITextBlock)buttonParent.FindChild(UpgradeStoreUserData.PriceLabel, recursive: true);
             priceLabel.Visible = true;
-            int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation, characterList);
+            int price = prefab.Price.GetBuyPrice(prefab, campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation, characterList);
 
             if (!WaitForServerUpdate)
             {
@@ -1722,7 +1722,7 @@ namespace Barotrauma
             static void CreateMaterialCosts(GUIListBox list, UpgradePrefab prefab, int targetLevel)
             {
                 list.Content.ClearChildren();
-                List<Item> allItems = Character.Controlled?.Inventory?.FindAllItems(recursive: true) ?? new List<Item>();
+                var allItems = CargoManager.FindAllItemsOnPlayerAndSub(Character.Controlled);
 
                 var resources = prefab.GetApplicableResources(targetLevel);
 

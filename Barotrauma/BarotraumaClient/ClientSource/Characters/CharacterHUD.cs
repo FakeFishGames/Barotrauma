@@ -99,7 +99,7 @@ namespace Barotrauma
             public override bool Interrupted => Character.Removed || !Character.Enabled;
 
             public override Color Color => 
-                Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.PoisonType) > 0 || Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.ParalysisType) > 0 ? 
+                Character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.PoisonType) > 0 || Character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.ParalysisType) > 0 ? 
                     GUIStyle.HealthBarColorPoisoned : GUIStyle.Red;
 
             public override string NumberToDisplay => string.Empty;
@@ -207,7 +207,7 @@ namespace Barotrauma
             {
                 cachedHudTexts.Clear();
             }
-            Identifier key = (textTag + keyBind).ToIdentifier();
+            Identifier key = (textTag + keyBind + GameSettings.CurrentConfig.KeyMap.KeyBindText(keyBind)).ToIdentifier();
             if (cachedHudTexts.TryGetValue(key, out LocalizedString text)) { return text; }
             text = TextManager.GetWithVariable(textTag, "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(keyBind)).Value;
             cachedHudTexts.Add(key, text);
@@ -246,6 +246,7 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character, Camera cam)
         {
+            
             UpdateBossProgressBars(deltaTime);
 
             if (GUI.DisableHUD)
@@ -255,6 +256,11 @@ namespace Barotrauma
                     character.Inventory.UpdateSlotInput();
                 }
                 return;
+            }
+            
+            if (character.ShowInteractionLabels && character.ViewTarget == null)
+            {
+                InteractionLabelManager.Update(character, cam);
             }
 
             if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
@@ -283,7 +289,7 @@ namespace Barotrauma
 
                 if (character.Params.CanInteract && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter.IsInventoryAccessibleTo(character))
                     {
                         character.SelectedCharacter.Inventory.Update(deltaTime, cam);
                     }
@@ -375,7 +381,7 @@ namespace Barotrauma
 
                 static bool DrawIcon(Order o) =>
                     o != null &&
-                    (!(o.TargetEntity is Item i) ||
+                    (o.TargetEntity is not Item i ||
                      o.DrawIconWhenContained ||
                      i.GetRootInventoryOwner() == i);
             }
@@ -405,8 +411,22 @@ namespace Barotrauma
                 if (!brokenItem.IsInteractable(character)) { continue; }
                 float alpha = GetDistanceBasedIconAlpha(brokenItem);
                 if (alpha <= 0.0f) { continue; }
-                GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUIStyle.BrokenIcon.Value.Sprite, 
+                GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUIStyle.BrokenIcon.Value.Sprite,
                     Color.Lerp(GUIStyle.Red, GUIStyle.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);
+            }
+
+            if (OrderPrefab.Prefabs.TryGet(Tags.DeconstructThis, out OrderPrefab deconstructOrder))
+            {
+                foreach (Item deconstructItem in Item.DeconstructItems)
+                {
+                    if (deconstructItem.ParentInventory != null) { continue; }
+                    if (deconstructItem.OrderedToBeIgnored) { continue; }
+                    if (deconstructItem.Submarine != character.Submarine || !deconstructItem.IsInteractable(character)) { continue; }
+                    float alpha = GetDistanceBasedIconAlpha(deconstructItem, maxDistance: 450) * 0.7f;
+                    if (alpha <= 0.0f) { continue; }
+                    GUI.DrawIndicator(spriteBatch, deconstructItem.DrawPosition, cam, 100.0f, deconstructOrder.SymbolSprite,
+                        GUIStyle.Red, scaleMultiplier: 0.5f, overrideAlpha: alpha);
+                }
             }
 
             float GetDistanceBasedIconAlpha(ISpatialEntity target, float maxDistance = 1000.0f)
@@ -414,81 +434,92 @@ namespace Barotrauma
                 float dist = Vector2.Distance(character.WorldPosition, target.WorldPosition);
                 return Math.Min((maxDistance - dist) / maxDistance * 2.0f, 1.0f);
             }
-
+            
             if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen && (!character.IsKeyDown(InputType.Aim) || character.HeldItems.None(it => it?.GetComponent<Sprayer>() != null)))
             {
-                if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
+                if (!character.ShowInteractionLabels)
                 {
-                    DrawCharacterHoverTexts(spriteBatch, cam, character);
-                }
-
-                if (character.FocusedItem != null)
-                {
-                    if (focusedItem != character.FocusedItem)
+                    if (character.FocusedCharacter is { CanBeSelected: true })
                     {
-                        focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
-                        RecreateHudTexts = true;
+                        DrawCharacterHoverTexts(spriteBatch, cam, character);
                     }
-                    focusedItem = character.FocusedItem;
-                }
-
-                if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
-                {
-                    Vector2 circlePos = cam.WorldToScreen(focusedItem.DrawPosition);
-                    float circleSize = Math.Max(focusedItem.Rect.Width, focusedItem.Rect.Height) * 1.5f;
-                    circleSize = MathHelper.Clamp(circleSize, 45.0f, 100.0f) * Math.Min((focusedItemOverlayTimer - 1.0f) * 5.0f, 1.0f);
-                    if (circleSize > 0.0f)
+                    
+                    if (character.FocusedItem != null)
                     {
-                        Vector2 scale = new Vector2(circleSize / GUIStyle.FocusIndicator.FrameSize.X);
-                        GUIStyle.FocusIndicator.Draw(spriteBatch,
-                            (int)((focusedItemOverlayTimer - 1.0f) * GUIStyle.FocusIndicator.FrameCount * 3.0f),
-                            circlePos,
-                            Color.LightBlue * 0.3f,
-                            origin: GUIStyle.FocusIndicator.FrameSize.ToVector2() / 2,
-                            rotate: (float)Timing.TotalTime,
-                            scale: scale);
-                    }
-
-                    if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
-                    {
-                        bool hudTextsContextual = PlayerInput.IsShiftDown();
-                        if (RecreateHudTexts || lastHudTextsContextual != hudTextsContextual)
+                        if (focusedItem != character.FocusedItem)
                         {
+                            focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
                             RecreateHudTexts = true;
-                            lastHudTextsContextual = hudTextsContextual;
                         }
-                        var hudTexts = focusedItem.GetHUDTexts(character, RecreateHudTexts);
-                        RecreateHudTexts = false;
-
-                        int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
-
-                        Vector2 textSize = GUIStyle.Font.MeasureString(hudTexts.First().Text);
-                        Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString(hudTexts.First().Text);
-
-                        Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
-                        startPos.Y -= (hudTexts.Count + 1) * textSize.Y;
-                        if (focusedItem.Sprite != null)
+                        focusedItem = character.FocusedItem;
+                    }
+                    
+                    if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
+                    {
+                        Vector2 circlePos = cam.WorldToScreen(focusedItem.DrawPosition);
+                        float circleSize = Math.Max(focusedItem.Rect.Width, focusedItem.Rect.Height) * 1.5f;
+                        circleSize = MathHelper.Clamp(circleSize, 45.0f, 100.0f) * Math.Min((focusedItemOverlayTimer - 1.0f) * 5.0f, 1.0f);
+                        if (circleSize > 0.0f)
                         {
-                            startPos.X += (int)(circleSize * 0.4f * dir);
-                            startPos.Y -= (int)(circleSize * 0.4f);
+                            Vector2 scale = new Vector2(circleSize / GUIStyle.FocusIndicator.FrameSize.X);
+                            GUIStyle.FocusIndicator.Draw(spriteBatch,
+                                (int)((focusedItemOverlayTimer - 1.0f) * GUIStyle.FocusIndicator.FrameCount * 3.0f),
+                                circlePos,
+                                Color.LightBlue * 0.3f,
+                                origin: GUIStyle.FocusIndicator.FrameSize.ToVector2() / 2,
+                                rotate: (float)Timing.TotalTime,
+                                scale: scale);
                         }
 
-                        Vector2 textPos = startPos;
-                        if (dir == -1) { textPos.X -= largeTextSize.X; }
-
-                        float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
-
-                        GUI.DrawString(spriteBatch, textPos, hudTexts.First().Text, hudTexts.First().Color * alpha, Color.Black * alpha * 0.7f, 2, font: GUIStyle.SubHeadingFont, ForceUpperCase.No);
-                        startPos.X += dir * 10.0f * GUI.Scale;
-                        textPos.X += dir * 10.0f * GUI.Scale;
-                        textPos.Y += largeTextSize.Y;
-                        foreach (ColoredText coloredText in hudTexts.Skip(1))
+                        if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                         {
-                            if (dir == -1) textPos.X = (int)(startPos.X - GUIStyle.SmallFont.MeasureString(coloredText.Text).X);
-                            GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUIStyle.SmallFont);
-                            textPos.Y += textSize.Y;
-                        }
-                    }                    
+                            bool hudTextsContextual = PlayerInput.KeyDown(InputType.ContextualCommand);
+                            if (RecreateHudTexts || lastHudTextsContextual != hudTextsContextual)
+                            {
+                                RecreateHudTexts = true;
+                                lastHudTextsContextual = hudTextsContextual;
+                            }
+                            var hudTexts = focusedItem.GetHUDTexts(character, RecreateHudTexts);
+                            RecreateHudTexts = false;
+
+                            int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
+
+                            Vector2 textSize = GUIStyle.Font.MeasureString(hudTexts.First().Text);
+                            Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString(hudTexts.First().Text);
+
+                            Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
+                            startPos.Y -= (hudTexts.Count + 1) * textSize.Y;
+                            if (focusedItem.Sprite != null)
+                            {
+                                startPos.X += (int)(circleSize * 0.4f * dir);
+                                startPos.Y -= (int)(circleSize * 0.4f);
+                            }
+
+                            Vector2 textPos = startPos;
+                            if (dir == -1) { textPos.X -= largeTextSize.X; }
+
+                            float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
+
+                            GUI.DrawString(spriteBatch, textPos, hudTexts.First().Text, hudTexts.First().Color * alpha, Color.Black * alpha * 0.7f, 2, font: GUIStyle.SubHeadingFont, ForceUpperCase.No);
+                            startPos.X += dir * 10.0f * GUI.Scale;
+                            textPos.X += dir * 10.0f * GUI.Scale;
+                            textPos.Y += largeTextSize.Y;
+                            foreach (ColoredText coloredText in hudTexts.Skip(1))
+                            {
+                                if (dir == -1)
+                                {
+                                    textPos.X = (int)(startPos.X - GUIStyle.SmallFont.MeasureString(coloredText.Text).X);
+                                }
+                                GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUIStyle.SmallFont);
+                                textPos.Y += textSize.Y;
+                            }
+                        }                    
+                    }
+                }
+
+                if (character.ShowInteractionLabels && character.ViewTarget == null)
+                {
+                    InteractionLabelManager.DrawLabels(spriteBatch, cam, character);
                 }
 
                 foreach (HUDProgressBar progressBar in character.HUDProgressBars.Values)
@@ -646,7 +677,7 @@ namespace Barotrauma
             {
                 if (character.Params.CanInteract && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter.IsInventoryAccessibleTo(character))
                     {
                         character.SelectedCharacter.Inventory.Locked = false;
                         character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Left;
@@ -672,6 +703,8 @@ namespace Barotrauma
                     HUDLayoutSettings.PortraitArea);
             }
         }
+
+        
 
         public static bool MouseOnCharacterPortrait()
         {
@@ -726,7 +759,7 @@ namespace Barotrauma
                 textPos.Y += largeTextSize.Y;
             }
 
-            if (character.FocusedCharacter.CanBeDragged)
+            if (character.FocusedCharacter.CanBeDraggedBy(character))
             {
                 string text = character.CanEat ? "EatHint" : "GrabHint";
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText(text, InputType.Grab),
@@ -734,10 +767,7 @@ namespace Barotrauma
                 textPos.Y += largeTextSize.Y;
             }
 
-            if (!character.DisableHealthWindow &&
-                character.IsFriendly(character.FocusedCharacter) && 
-                character.FocusedCharacter.CharacterHealth.UseHealthWindow &&
-                character.CanInteractWith(character.FocusedCharacter, 160f, false))
+            if (character.FocusedCharacter.CanBeHealedBy(character))
             {
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", InputType.Health),
                     GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);
@@ -893,7 +923,7 @@ namespace Barotrauma
 
             if (!orderIndicatorCount.ContainsKey(target)) { orderIndicatorCount.Add(target, 0); }
 
-            Vector2 drawPos = target is Entity ? (target as Entity).DrawPosition :
+            Vector2 drawPos = target is Entity entity ? entity.DrawPosition :
                 target.Submarine == null ? target.Position : target.Position + target.Submarine.DrawPosition;
             drawPos += Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha,

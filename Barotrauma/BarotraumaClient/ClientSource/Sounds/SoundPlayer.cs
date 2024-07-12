@@ -26,7 +26,6 @@ namespace Barotrauma
         private static BackgroundMusic previousDefaultMusic;
 
         private static float updateMusicTimer;
-        private static bool increaseUpdateMusicTimer;
 
         //ambience
         private static Sound waterAmbienceIn => SoundPrefab.WaterAmbienceIn.ActivePrefab.Sound;
@@ -157,6 +156,12 @@ namespace Barotrauma
                     insideSubFactor = 1.0f;
                 }
 
+                if (Character.Controlled != null && Character.Controlled.PressureTimer > 0.0f && !Character.Controlled.IsDead)
+                {
+                    //make the sound lerp to the "outside" sound when under pressure
+                    insideSubFactor -= Character.Controlled.PressureTimer / 100.0f;
+                }
+
                 movementSoundVolume = Math.Max(movementSoundVolume, movementFactor);
                 if (!MathUtils.IsValid(movementSoundVolume))
                 {
@@ -184,7 +189,7 @@ namespace Barotrauma
                 if (chn is null || !chn.IsPlaying)
                 {
                     if (volume < 0.01f) { return; }
-                    if (!(chn is null)) { waterAmbienceChannels.Remove(chn); }
+                    if (chn is not null) { waterAmbienceChannels.Remove(chn); }
                     chn = sound.Play(volume, "waterambience");
                     chn.Looping = true;
                     waterAmbienceChannels.Add(chn);
@@ -195,6 +200,15 @@ namespace Barotrauma
                     if (chn.Gain < 0.01f)
                     {
                         chn.FadeOutAndDispose();
+                    }
+                    if (Character.Controlled != null && Character.Controlled.PressureTimer > 0.0f && !Character.Controlled.IsDead)
+                    {
+                        //make the sound decrease in pitch when under pressure
+                        chn.FrequencyMultiplier = MathHelper.Clamp(Character.Controlled.PressureTimer / 200.0f, 0.75f, 1.0f);
+                    }
+                    else
+                    {
+                        chn.FrequencyMultiplier = Math.Min(chn.frequencyMultiplier + deltaTime, 1.0f);
                     }
                 }
             }
@@ -543,7 +557,6 @@ namespace Barotrauma
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
-                increaseUpdateMusicTimer = false;
                 //find appropriate music for the current situation
                 Identifier currentMusicType = GetCurrentMusicType();
                 float currentIntensity = GameMain.GameSession?.EventManager != null ?
@@ -619,7 +632,8 @@ namespace Barotrauma
                 }
 
                 IEnumerable<BackgroundMusic> suitableIntensityMusic = Enumerable.Empty<BackgroundMusic>();
-                if (targetMusic[mainTrackIndex] is { MuteIntensityTracks: false } mainTrack && Screen.Selected == GameMain.GameScreen)
+                BackgroundMusic mainTrack = targetMusic[mainTrackIndex];
+                if (mainTrack is not { MuteIntensityTracks: true } && Screen.Selected == GameMain.GameScreen)
                 {
                     float intensity = currentIntensity;
                     if (mainTrack?.ForceIntensityTrack != null)
@@ -641,19 +655,6 @@ namespace Barotrauma
 
                 foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
                 {
-                    //if the current maintrack is meant to mute all intensity music, loop through all the intensity channels and set them to null, then continue
-                    if ((targetMusic[mainTrackIndex] != null) && (targetMusic[mainTrackIndex].MuteIntensityMusic))
-                    {
-                        for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
-                        {
-                            if (targetMusic[i] != null)
-                            {
-                                targetMusic[i] = null;
-                                break;
-                            }
-                        }
-                        continue;
-                    }
                     //already playing, do nothing
                     if (targetMusic.Any(m => m != null && m == intensityMusic)) { continue; }
 
@@ -667,11 +668,8 @@ namespace Barotrauma
                     }
                 }
 
+                LogCurrentMusic();
                 updateMusicTimer = UpdateMusicInterval;
-                if (increaseUpdateMusicTimer)
-                {
-                    updateMusicTimer += (targetMusic[mainTrackIndex].MinimumRequiredTimeToPlay);
-                }
             }
 
             int activeTrackCount = targetMusic.Count(m => m != null);
@@ -712,6 +710,11 @@ namespace Barotrauma
                         {
                             musicChannel[i].StreamSeekPos = targetMusic[i].PreviousTime;
                         }
+                        else if (targetMusic[i].StartFromRandomTime)
+                        {
+                            musicChannel[i].StreamSeekPos =
+                                (int)(musicChannel[i].MaxStreamSeekPos * Rand.Range(0.0f, 1.0f, Rand.RandSync.Unsynced));
+                        }
                         musicChannel[i].Looping = true;
                     }
                 }
@@ -734,6 +737,26 @@ namespace Barotrauma
             } 
         }
 
+        private static double lastMusicLogTime;
+        const double MusicLogInterval = 60.0;
+        private static void LogCurrentMusic()
+        {
+            if (Screen.Selected != GameMain.GameScreen) { return; }
+            if (Timing.TotalTime < lastMusicLogTime + MusicLogInterval) { return; }
+            for (int i = 0; i < musicChannel.Length; i++)
+            {
+                if (musicChannel[i] != null &&
+                    musicChannel[i].IsPlaying &&
+                    musicChannel[i].Sound?.Filename != null)
+                {
+                    GameAnalyticsManager.AddDesignEvent(
+                        "BackgroundMusic:" + 
+                        Path.GetFileNameWithoutExtension(musicChannel[i].Sound.Filename.Replace(":", string.Empty).Replace(" ", string.Empty)));
+                }
+            }
+            lastMusicLogTime = Timing.TotalTime;
+        }
+
         private static void DisposeMusicChannel(int index)
         {
             var clip = musicClips.FirstOrDefault(m => m.Sound == musicChannel[index]?.Sound);
@@ -748,11 +771,16 @@ namespace Barotrauma
         
         private static IEnumerable<BackgroundMusic> GetSuitableMusicClips(Identifier musicType, float currentIntensity)
         {
-            return musicClips.Where(music => 
-                music != null && 
-                music.Type == musicType && 
+            return musicClips.Where(music => IsSuitableMusicClip(music, musicType, currentIntensity));
+        }
+
+        private static bool IsSuitableMusicClip(BackgroundMusic music, Identifier musicType, float currentIntensity)
+        {
+            return
+                music != null &&
+                music.Type == musicType &&
                 currentIntensity >= music.IntensityRange.X &&
-                currentIntensity <= music.IntensityRange.Y);
+                currentIntensity <= music.IntensityRange.Y;
         }
 
         private static Identifier GetCurrentMusicType()
@@ -813,44 +841,6 @@ namespace Barotrauma
             }
 
             Submarine targetSubmarine = Character.Controlled?.Submarine;
-            float enemyDistThreshold = 5000.0f;
-
-            if (targetSubmarine != null)
-            {
-                enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
-            }
-
-            List<Character> MonsterMusicCharacters = new List<Character>();
-
-            foreach (Character character in Character.CharacterList)
-            {
-                if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || !enemyAI.Enabled || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
-
-                if (targetSubmarine != null)
-                {
-                    if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold * character.MusicRangeMultiplier)
-                    {
-                        MonsterMusicCharacters.Add(character);
-                    }
-                }
-                else if (Character.Controlled != null)
-                {
-                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold * character.MusicRangeMultiplier)
-                    {
-                        MonsterMusicCharacters.Add(character);
-                    }
-                }
-            }
-
-            if (MonsterMusicCharacters.Any())
-            {
-                Character chosencharacter = MonsterMusicCharacters.RandomElementByWeight(c => c.MusicWeight);
-                // Allow the music to play for some time instead of constantly changing if multiple monsters with similiar music weight and different music types are present.
-                increaseUpdateMusicTimer = true;
-                return chosencharacter.MusicType.ToIdentifier();
-            }
-
             if (targetSubmarine != null && targetSubmarine.AtDamageDepth)
             {
                 return "deep".ToIdentifier();
@@ -872,7 +862,41 @@ namespace Barotrauma
                     totalArea += hull.Volume;
                 }
 
-                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded".ToIdentifier(); }
+                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded".ToIdentifier(); }        
+            }
+
+            float intensity = (GameMain.GameSession?.EventManager?.MusicIntensity ?? 0) * 100.0f;
+            bool anyMonsterMusicAvailable =
+                musicClips.Any(m => IsSuitableMusicClip(m, "monster".ToIdentifier(), intensity) || IsSuitableMusicClip(m, "monsterambience".ToIdentifier(), intensity));
+
+            if (anyMonsterMusicAvailable)
+            {
+                float enemyDistThreshold = 5000.0f;
+                if (targetSubmarine != null)
+                {
+                    enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
+                }
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (character.IsDead || !character.Enabled) { continue; }
+                    if (character.AIController is not EnemyAIController { Enabled: true } enemyAI) { continue; }
+                    if (!enemyAI.AttackHumans && !enemyAI.AttackRooms) { continue; }
+
+                    if (targetSubmarine != null)
+                    {
+                        if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                        {
+                            return "monster".ToIdentifier();
+                        }
+                    }
+                    else if (Character.Controlled != null)
+                    {
+                        if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                        {
+                            return "monster".ToIdentifier();
+                        }
+                    }
+                }
             }
 
 

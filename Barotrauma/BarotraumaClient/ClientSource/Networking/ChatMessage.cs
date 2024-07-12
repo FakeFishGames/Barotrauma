@@ -30,6 +30,7 @@ namespace Barotrauma.Networking
             txt = msg.ReadString();
 
             string senderName = msg.ReadString();
+            Entity sender = null;
             Character senderCharacter = null;
             Client senderClient = null;
             bool hasSenderClient = msg.ReadBoolean();
@@ -40,13 +41,14 @@ namespace Barotrauma.Networking
                     => c.SessionOrAccountIdMatches(userId));
                 if (senderClient != null) { senderName = senderClient.Name; }
             }
-            bool hasSenderCharacter = msg.ReadBoolean();
-            if (hasSenderCharacter)
+            bool hasSender = msg.ReadBoolean();
+            if (hasSender)
             {
-                senderCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
-                if (senderCharacter != null)
+                sender = Entity.FindEntityByID(msg.ReadUInt16());
+                senderCharacter = sender as Character;
+                if (sender is Character or Item)
                 {
-                    senderName = senderCharacter.Name;
+                    senderName = OrderChatMessage.NameFromEntityOrNull(sender);
                 }
             }
 
@@ -180,7 +182,7 @@ namespace Barotrauma.Networking
                         GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
                         break;
                     default:
-                        GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType, textColor: textColor);
+                        GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, sender, changeType, textColor: textColor);
                         if (type == ChatMessageType.Radio && CanUseRadio(senderCharacter, out WifiComponent radio))
                         {
                             Signal s = new Signal(txt, sender: senderCharacter, source: radio.Item);

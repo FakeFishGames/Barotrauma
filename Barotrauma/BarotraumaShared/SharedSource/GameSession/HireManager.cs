@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -20,20 +21,46 @@ namespace Barotrauma
             AvailableCharacters.Remove(character);
         }
 
+        public static int GetSalaryFor(IReadOnlyCollection<CharacterInfo> hires)
+        {
+            return hires.Sum(hire => GetSalaryFor(hire));
+        }
+
+        public static int GetSalaryFor(CharacterInfo hire)
+        {
+            IEnumerable<Character> crew = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            float multiplier = 0;
+            foreach (var character in crew)
+            {
+                multiplier += character?.Info?.GetSavedStatValueWithAll(StatTypes.HireCostMultiplier, hire.Job.Prefab.Identifier) ?? 0;
+            }
+            float finalMultiplier = 1f + MathF.Max(multiplier, -1f);
+            return (int)(hire.Salary * finalMultiplier);
+        }
+
         public void GenerateCharacters(Location location, int amount)
         {
             AvailableCharacters.ForEach(c => c.Remove());
             AvailableCharacters.Clear();
+
+            foreach (var missingJob in location.Type.GetHireablesMissingFromCrew())
+            {
+                AddCharacter(missingJob);
+                amount--;
+            }
             for (int i = 0; i < amount; i++)
             {
-                JobPrefab job = location.Type.GetRandomHireable();
-                if (job == null) { return; }
-
-                var variant = Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient);
-                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant));
+                AddCharacter(location.Type.GetRandomHireable());
             }
             if (location.Faction != null) { GenerateFactionCharacters(location.Faction.Prefab); }
             if (location.SecondaryFaction != null) { GenerateFactionCharacters(location.SecondaryFaction.Prefab); }
+
+            void AddCharacter(JobPrefab job)
+            {
+                if (job == null) { return; }
+                int variant = Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient);
+                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant));
+            }
         }
 
         private void GenerateFactionCharacters(FactionPrefab faction)

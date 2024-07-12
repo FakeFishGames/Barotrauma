@@ -55,7 +55,7 @@ namespace Barotrauma
             /// </summary>
             public readonly bool RequireHuntingGrounds;
 
-            public Requirement(XElement element, LocationTypeChange change)
+            public Requirement(ContentXElement element, LocationTypeChange change)
             {
                 RequiredLocations = element.GetAttributeIdentifierArray("requiredlocations", element.GetAttributeIdentifierArray("requiredadjacentlocations", Array.Empty<Identifier>())).ToImmutableArray();
                 RequiredProximity = Math.Max(element.GetAttributeInt("requiredproximity", 1), 0);
@@ -80,13 +80,15 @@ namespace Barotrauma
                     {
                         DebugConsole.AddWarning(
                             $"Invalid location type change in location type \"{change.CurrentType}\". " +
-                            "Probability is configured to increase when near some other type of location, but the RequiredLocations attribute is not set.");
+                            "Probability is configured to increase when near some other type of location, but the RequiredLocations attribute is not set.",
+                            element.ContentPackage);
                     }
                     if (Probability >= 1.0f)
                     {
                         DebugConsole.AddWarning(
                             $"Invalid location type change in location type \"{change.CurrentType}\". " +
-                            "Probability is configured to increase when near some other type of location, but the base probability is already 100%");
+                            "Probability is configured to increase when near some other type of location, but the base probability is already 100%",
+                            element.ContentPackage);
                     }
                 }
             }
@@ -173,7 +175,7 @@ namespace Barotrauma
 
         public readonly Point RequiredDurationRange;
 
-        public LocationTypeChange(Identifier currentType, XElement element, bool requireChangeMessages, float defaultProbability = 0.0f)
+        public LocationTypeChange(Identifier currentType, ContentXElement element, bool requireChangeMessages, float defaultProbability = 0.0f)
         {
             CurrentType = currentType;
             ChangeToType = element.GetAttributeIdentifier("type", element.GetAttributeIdentifier("to", ""));
@@ -190,13 +192,13 @@ namespace Barotrauma
             CooldownAfterChange = Math.Max(element.GetAttributeInt("cooldownafterchange", 0), 0);
 
             //backwards compatibility
-            if (element.Attribute("requiredlocations") != null)
+            if (element.GetAttribute("requiredlocations") != null)
             {
                 Requirements.Add(new Requirement(element, this));
             }
 
             //backwards compatibility
-            if (element.Attribute("requiredduration") != null)
+            if (element.GetAttribute("requiredduration") != null)
             {
                 RequiredDurationRange = new Point(element.GetAttributeInt("requiredduration", 0));
             }

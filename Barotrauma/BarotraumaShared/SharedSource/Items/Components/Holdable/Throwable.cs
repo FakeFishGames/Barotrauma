@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
         {
             if (aimPos == Vector2.Zero)
             {
-                aimPos = new Vector2(0.6f, 0.1f);
+                aimPos = new Vector2(0.45f, 0.1f);
             }
         }
 
@@ -56,9 +56,9 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
             throwState = ThrowState.None;
             throwAngle = ThrowAngleStart;
             Item.ResetWaterDragCoefficient();
@@ -149,7 +149,7 @@ namespace Barotrauma.Items.Components
                 if (aim || throwState == ThrowState.Initiated)
                 {
                     throwAngle = System.Math.Min(throwAngle + deltaTime * 8.0f, ThrowAngleEnd);
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: aimPos, aim: false, throwAngle);
                     if (throwAngle >= ThrowAngleEnd && throwState == ThrowState.Initiated)
                     {
                         throwState = ThrowState.Throwing;
@@ -158,13 +158,13 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     throwAngle = ThrowAngleStart;
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle);
                 }
             }
             else
             {
                 throwAngle = MathUtils.WrapAnglePi(throwAngle - deltaTime * 15.0f);
-                ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwAngle);
+                ac.HoldItem(deltaTime, item, handlePos, itemPos: aimPos, aim: false, throwAngle);
 
                 if (throwAngle < 0)
                 {

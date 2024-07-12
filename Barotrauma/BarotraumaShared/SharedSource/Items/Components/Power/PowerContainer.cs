@@ -138,6 +138,8 @@ namespace Barotrauma.Items.Components
             set { flipIndicator = value; }
         }
 
+        public bool OutputDisabled { get; private set; }
+
         public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
 
         public const float aiRechargeTargetRatio = 0.5f;
@@ -162,19 +164,19 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            adjustedCapacity = GetCapacity();
             if (item.Connections == null) 
             {
                 IsActive = false;
                 return; 
             }
 
+            adjustedCapacity = GetCapacity();
             isRunning = true;
             float chargeRatio = charge / adjustedCapacity;
             
             if (chargeRatio > 0.0f)
             {
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);
             }
 
             float loadReading = 0;
@@ -242,6 +244,7 @@ namespace Barotrauma.Items.Components
         /// <returns>Minimum and maximum power output for the connection</returns>
         public override PowerRange MinMaxPowerOut(Connection connection, float load = 0)
         {
+            if (OutputDisabled) { return PowerRange.Zero; }
             if (connection == powerOut)
             {
                 float maxOutput;
@@ -275,6 +278,7 @@ namespace Barotrauma.Items.Components
         /// <returns></returns>
         public override float GetConnectionPowerOut(Connection connection, float power, PowerRange minMaxPower, float load)
         {
+            if (OutputDisabled) { return 0; }
             //Only power out connection can provide power and Max poweroutput can't be negative
             if (connection == powerOut && minMaxPower.Max > 0)
             {
@@ -367,25 +371,30 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection.IsPower) { return; }
-
-            if (connection.Name == "set_rate")
+            switch (connection.Name)
             {
-                if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
-                {
-                    if (!MathUtils.IsValid(tempSpeed)) { return; }
-
-                    float rechargeRate = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f);
-                    RechargeSpeed = rechargeRate * MaxRechargeSpeed;
-#if CLIENT
-                    if (rechargeSpeedSlider != null)
+                case "disable_output":
+                    OutputDisabled = signal.value != "0";
+                    break;
+                case "set_rate":
+                    if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                     {
-                        rechargeSpeedSlider.BarScroll = rechargeRate;
-                    }
+                        if (!MathUtils.IsValid(tempSpeed)) { return; }
+
+                        float rechargeRate = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f);
+                        RechargeSpeed = rechargeRate * MaxRechargeSpeed;
+#if CLIENT
+                        if (rechargeSpeedSlider != null)
+                        {
+                            rechargeSpeedSlider.BarScroll = rechargeRate;
+                        }
 #endif
-                }
+                    }
+                    break;
+
             }
         }
 
-        public float GetCapacity() => item.StatManager.GetAdjustedValue(ItemTalentStats.BatteryCapacity, Capacity);
+        public float GetCapacity() => item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.BatteryCapacity, Capacity);
     }
 }

@@ -261,10 +261,9 @@ namespace Barotrauma
 
             foreach (var endLocation in EndLocations)
             {
-                if (endLocation.Type?.ForceLocationName != null &&
-                    !endLocation.Type.ForceLocationName.IsNullOrEmpty())
+                if (endLocation.Type?.ForceLocationName is { IsEmpty: false })
                 {
-                    endLocation.ForceName(endLocation.Type.ForceLocationName.Value);
+                    endLocation.ForceName(endLocation.Type.ForceLocationName);
                 }
             }
 
@@ -294,47 +293,57 @@ namespace Barotrauma
                 throw new Exception($"Generating a campaign map failed (no locations created). Width: {Width}, height: {Height}");
             }
 
-            foreach (Location location in Locations)
-            {
-                if (location.Type.Identifier != "outpost") { continue; }
-                SetStartLocation(location);
-            }
+            FindStartLocation(l => l.Type.Identifier == "outpost");
             //if no outpost was found (using a mod that replaces the outpost location type?), find any type of outpost
             if (CurrentLocation == null)
             {
+                FindStartLocation(l => l.Type.HasOutpost && l.Type.OutpostTeam == CharacterTeamType.FriendlyNPC);
+            }
+
+            void FindStartLocation(Func<Location, bool> predicate)
+            {
                 foreach (Location location in Locations)
                 {
-                    if (!location.Type.HasOutpost) { continue; }
-                    SetStartLocation(location);
+                    if (!predicate(location)) { continue; }
+                    if (CurrentLocation == null || location.MapPosition.X < CurrentLocation.MapPosition.X)
+                    {
+                        CurrentLocation = StartLocation = furthestDiscoveredLocation = location;
+                    }
                 }
             }
-            
-            void SetStartLocation(Location location)
+
+            StartLocation.SecondaryFaction = null;
+            var startOutpostFaction = campaign?.Factions.FirstOrDefault(f => f.Prefab.StartOutpost);
+            if (startOutpostFaction != null)
             {
-                if (CurrentLocation == null || location.MapPosition.X < CurrentLocation.MapPosition.X)
+                StartLocation.Faction = startOutpostFaction;
+            }
+            foreach (var connection in StartLocation.Connections)
+            {
+                //force locations adjacent to the start location to have an outpost
+                //non-inhabited locations seem to be confusing to new players, particularly
+                //on the first round/mission when they still don't know how transitions between levels work
+                var otherLocation = connection.OtherLocation(StartLocation);
+                if (!otherLocation.HasOutpost())
                 {
-                    CurrentLocation = StartLocation = furthestDiscoveredLocation = location;
-                    StartLocation.SecondaryFaction = null;             
-                    var startOutpostFaction = campaign?.Factions.FirstOrDefault(f => f.Prefab.StartOutpost);
-                    if (startOutpostFaction != null)
+                    if (LocationType.Prefabs.TryGet("outpost".ToIdentifier(), out LocationType outpostLocationType))
                     {
-                        StartLocation.Faction = startOutpostFaction;
-                        foreach (var connection in StartLocation.Connections)
-                        {
-                            var otherLocation = connection.OtherLocation(StartLocation);
-                            if (otherLocation.HasOutpost() && otherLocation.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
-                            {
-                                otherLocation.Faction = startOutpostFaction;
-                            }
-                        }
-                    }                    
+                        otherLocation.ChangeType(campaign, outpostLocationType);
+                    }
+                }
+
+                if (otherLocation.HasOutpost() &&
+                    otherLocation.Type.OutpostTeam == CharacterTeamType.FriendlyNPC &&
+                    otherLocation.Type.Faction.IsEmpty)
+                {
+                    otherLocation.Faction = startOutpostFaction;
                 }
             }
 
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
             int loops = campaign.CampaignMetadata.GetInt("campaign.endings".ToIdentifier(), 0);
-            if (loops == 0 && (campaign.Settings.Difficulty == GameDifficulty.Easy || campaign.Settings.Difficulty == GameDifficulty.Medium))
+            if (loops == 0 && (campaign.Settings.WorldHostility == WorldHostilityOption.Low || campaign.Settings.WorldHostility == WorldHostilityOption.Medium))
             {
                 if (StartLocation != null)
                 {
@@ -617,13 +626,20 @@ namespace Barotrauma
                         Connections[i].Locations[0].MapPosition.X < Connections[i].Locations[1].MapPosition.X ?
                         Connections[i].Locations[0] :
                         Connections[i].Locations[1];
-                    if (!leftMostLocation.Type.HasOutpost || leftMostLocation.Type.Identifier == "abandoned")
+                    if (!AllowAsBiomeGate(leftMostLocation.Type))
                     {
                         leftMostLocation.ChangeType(
                             campaign,
-                            LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => lt.HasOutpost && lt.Identifier != "abandoned"),
+                            LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => AllowAsBiomeGate(lt)),
                             createStores: false);
                     }
+                    static bool AllowAsBiomeGate(LocationType lt)
+                    {
+                        //checking for "abandoned" is not strictly necessary here because it's now configured to not be allowed as a biome gate
+                        //but might be better to keep it for backwards compatibility (previously we relied only on that check)
+                        return lt.HasOutpost && lt.Identifier != "abandoned" && lt.AllowAsBiomeGate;
+                    }
+
                     leftMostLocation.IsGateBetweenBiomes = true;
                     Connections[i].Locked = true;
 
@@ -701,10 +717,19 @@ namespace Barotrauma
             foreach (Location location in Locations)
             {
                 location.LevelData = new LevelData(location, this, CalculateDifficulty(location.MapPosition.X, location.Biome));
+                location.TryAssignFactionBasedOnLocationType(campaign);
                 if (location.Type.HasOutpost && campaign != null && location.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
                 {
-                    location.Faction ??= campaign.GetRandomFaction(Rand.RandSync.ServerAndClient);
-                    location.SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.ServerAndClient);
+                    if (location.Type.Faction.IsEmpty)
+                    {
+                        //no faction defined in the location type, assign a random one
+                        location.Faction ??= campaign.GetRandomFaction(Rand.RandSync.ServerAndClient);
+                    }
+                    if (location.Type.SecondaryFaction.IsEmpty)
+                    {
+                        //no secondary faction defined in the location type, assign a random one
+                        location.SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.ServerAndClient);
+                    }
                 }
                 location.CreateStores(force: true);
             }
@@ -787,6 +812,28 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Connections.All(c => c.Biome != null));
         }
 
+        private Location GetPreviousToEndLocation()
+        {
+            Location previousToEndLocation = null;
+            foreach (Location location in Locations)
+            {
+                if (!location.Biome.IsEndBiome && (previousToEndLocation == null || location.MapPosition.X > previousToEndLocation.MapPosition.X))
+                {
+                    previousToEndLocation = location;
+                }
+            }
+            return previousToEndLocation;
+        }
+
+        private void ForceLocationTypeToNone(CampaignMode campaign, Location location)
+        {
+            if (LocationType.Prefabs.TryGet("none", out LocationType locationType))
+            {
+                location.ChangeType(campaign, locationType, createStores: false);
+            }
+            location.DisallowLocationTypeChanges = true;
+        }
+
         private void CreateEndLocation(CampaignMode campaign)
         {
             float zoneWidth = Width / generationParams.DifficultyZones;
@@ -803,15 +850,7 @@ namespace Barotrauma
                 }
             }
 
-            Location previousToEndLocation = null;
-            foreach (Location location in Locations)
-            {
-                if (!location.Biome.IsEndBiome && (previousToEndLocation == null || location.MapPosition.X > previousToEndLocation.MapPosition.X))
-                {
-                    previousToEndLocation = location;
-                }
-            }
-
+            var previousToEndLocation = GetPreviousToEndLocation();
             if (endLocation == null || previousToEndLocation == null) { return; }
 
             endLocations = new List<Location>() { endLocation };
@@ -836,10 +875,7 @@ namespace Barotrauma
                 }
             }
 
-            if (LocationType.Prefabs.TryGet("none", out LocationType locationType))
-            {
-                previousToEndLocation.ChangeType(campaign, locationType, createStores: false);
-            }
+            ForceLocationTypeToNone(campaign, previousToEndLocation);
 
             //remove all locations from the end biome except the end location
             for (int i = Locations.Count - 1; i >= 0; i--)
@@ -990,10 +1026,10 @@ namespace Barotrauma
             CurrentLocation.CreateStores();
             OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
 
-            if (GameMain.GameSession is { Campaign: { CampaignMetadata: { } metadata } })
+            if (GameMain.GameSession is { Campaign.CampaignMetadata: { } metadata })
             {
                 metadata.SetValue("campaign.location.id".ToIdentifier(), CurrentLocationIndex);
-                metadata.SetValue("campaign.location.name".ToIdentifier(), CurrentLocation.Name);
+                metadata.SetValue("campaign.location.name".ToIdentifier(), CurrentLocation.NameIdentifier.Value);
                 metadata.SetValue("campaign.location.biome".ToIdentifier(), CurrentLocation.Biome?.Identifier ?? "null".ToIdentifier());
                 metadata.SetValue("campaign.location.type".ToIdentifier(), CurrentLocation.Type?.Identifier ?? "null".ToIdentifier());
             }
@@ -1062,7 +1098,7 @@ namespace Barotrauma
             if (SelectedConnection?.Locked ?? false)
             {
                 string errorMsg =
-                    $"A locked connection was selected ({SelectedConnection.Locations[0].Name} -> {SelectedConnection.Locations[1].Name}." +
+                    $"A locked connection was selected ({SelectedConnection.Locations[0].DisplayName} -> {SelectedConnection.Locations[1].DisplayName}." +
                     $" Current location: {CurrentLocation}, current display location: {currentDisplayLocation}).\n"
                     + Environment.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("MapSelectLocation:LockedConnectionSelected", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
@@ -1078,7 +1114,7 @@ namespace Barotrauma
         {
             if (!Locations.Contains(location))
             {
-                string errorMsg = "Failed to select a location. " + (location?.Name ?? "null") + " not found in the map.";
+                string errorMsg = $"Failed to select a location. {location?.DisplayName ?? "null"} not found in the map.";
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
@@ -1286,11 +1322,11 @@ namespace Barotrauma
 
         private bool ChangeLocationType(CampaignMode campaign, Location location, LocationTypeChange change)
         {
-            string prevName = location.Name;
+            LocalizedString prevName = location.DisplayName;
 
             if (!LocationType.Prefabs.TryGet(change.ChangeToType, out var newType))
             {
-                DebugConsole.ThrowError($"Failed to change the type of the location \"{location.Name}\". Location type \"{change.ChangeToType}\" not found.");
+                DebugConsole.ThrowError($"Failed to change the type of the location \"{location.DisplayName}\". Location type \"{change.ChangeToType}\" not found.");
                 return false;
             }
 
@@ -1357,7 +1393,7 @@ namespace Barotrauma
         }
 
 
-        partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change);
+        partial void ChangeLocationTypeProjSpecific(Location location, LocalizedString prevName, LocationTypeChange change);
 
         partial void ClearAnimQueue();
 
@@ -1483,10 +1519,14 @@ namespace Barotrauma
                         }
 
                         Identifier locationType = subElement.GetAttributeIdentifier("type", Identifier.Empty);
-                        string prevLocationName = location.Name;
+                        LocalizedString prevLocationName = location.DisplayName;
                         LocationType prevLocationType = location.Type;
                         LocationType newLocationType = LocationType.Prefabs.Find(lt => lt.Identifier == locationType) ?? LocationType.Prefabs.First();
                         location.ChangeType(campaign, newLocationType);
+
+                        var factionIdentifier = subElement.GetAttributeIdentifier("faction", Identifier.Empty);
+                        location.Faction = factionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == factionIdentifier);
+
                         if (showNotifications && prevLocationType != location.Type)
                         {
                             var change = prevLocationType.CanChangeTo.Find(c => c.ChangeToType == location.Type.Identifier);
@@ -1496,9 +1536,6 @@ namespace Barotrauma
                                 location.TimeSinceLastTypeChange = 0;
                             }
                         }
-
-                        var factionIdentifier = subElement.GetAttributeIdentifier("faction", Identifier.Empty);
-                        location.Faction = factionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == factionIdentifier);
 
                         var secondaryFactionIdentifier = subElement.GetAttributeIdentifier("secondaryfaction", Identifier.Empty);
                         location.SecondaryFaction = secondaryFactionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == secondaryFactionIdentifier);
@@ -1558,6 +1595,7 @@ namespace Barotrauma
                     if (index < 0) { return null; }
                     return Locations[index];
                 }
+
             }
 
             void Discover(Location location)
@@ -1603,9 +1641,15 @@ namespace Barotrauma
                 //this should not be possible, you can't enter non-outpost locations (= natural formations)
                 if (CurrentLocation != null && !CurrentLocation.Type.HasOutpost && SelectedConnection == null)
                 {
-                    DebugConsole.AddWarning($"Error while loading campaign map state. Submarine in a location with no outpost ({CurrentLocation.Name}). Loading the first adjacent connection...");
+                    DebugConsole.AddWarning($"Error while loading campaign map state. Submarine in a location with no outpost ({CurrentLocation.DisplayName}). Loading the first adjacent connection...");
                     SelectLocation(CurrentLocation.Connections[0].OtherLocation(CurrentLocation));
                 }
+            }
+
+            var previousToEndLocation = GetPreviousToEndLocation();
+            if (previousToEndLocation != null)
+            {
+                ForceLocationTypeToNone(campaign, previousToEndLocation);
             }
         }
 

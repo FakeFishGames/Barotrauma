@@ -9,6 +9,19 @@ namespace Barotrauma
         public override bool DisplayAsCompleted => State > 0 && !requireDelivery;
         public override bool DisplayAsFailed => false;
 
+        public override int State
+        {
+            get => base.State;
+            set
+            {
+                base.State = value;
+                if (base.State > 0 && selectedCave != null)
+                {
+                    selectedCave.MissionsToDisplayOnSonar.Remove(this);
+                }
+            }
+        }
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);
@@ -20,8 +33,9 @@ namespace Barotrauma
             {
                 if (selectedCaveIndex < Level.Loaded.Caves.Count)
                 {
-                    Level.Loaded.Caves[selectedCaveIndex].DisplayOnSonar = true;
-                    SpawnNestObjects(Level.Loaded, Level.Loaded.Caves[selectedCaveIndex]);
+                    selectedCave = Level.Loaded.Caves[selectedCaveIndex];
+                    selectedCave.MissionsToDisplayOnSonar.Add(this);
+                    SpawnNestObjects(Level.Loaded, selectedCave);
                 }
                 else
                 {

@@ -106,24 +106,6 @@ namespace Barotrauma
             }
         }
 
-        public void ChangeServerName(string n)
-        {
-            GameMain.Server.ServerSettings.ServerName = n; lastUpdateID++;
-        }
-
-        public void ChangeServerMessage(string m)
-        {
-            GameMain.Server.ServerSettings.ServerMessageText = m; lastUpdateID++;
-        }
-        
-        public List<JobPrefab> JobPreferences
-        {
-            get
-            {
-                return null;
-            }
-        }
-
         public NetLobbyScreen()
         {
             LevelSeed = ToolBox.RandomSeed(8);
@@ -170,7 +152,7 @@ namespace Barotrauma
             }
             set
             {
-                if (levelSeed == value) return;
+                if (levelSeed == value) { return; }
 
                 lastUpdateID++;
                 levelSeed = value;
@@ -199,6 +181,12 @@ namespace Barotrauma
             if (SelectedMode != GameModePreset.MultiPlayerCampaign && GameMain.GameSession?.GameMode is CampaignMode && Selected == this)
             {
                 GameMain.GameSession = null;
+            }
+            if (GameMain.Server.ServerSettings.SelectedSubmarine.IsNullOrEmpty())
+            {
+                //if no sub is selected in the settings,
+                //select the random sub we selected in the constructor
+                GameMain.Server.ServerSettings.SelectedSubmarine = SelectedSub?.Name;
             }
         }
 

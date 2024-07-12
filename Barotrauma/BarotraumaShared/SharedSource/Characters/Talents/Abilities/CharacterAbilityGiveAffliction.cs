@@ -16,27 +16,47 @@
 
             if (afflictionId.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveAffliction - affliction identifier not set.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveAffliction - affliction identifier not set.",
+                    contentPackage: abilityElement.ContentPackage);
             }
+        }
+
+        protected override void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)
+        {
+            if (conditionsMatched)
+            {
+                ApplyEffect();
+            }
+        }
+        
+        protected override void ApplyEffect()
+        {
+            ApplyAfflictionToCharacter(Character);
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
             if (abilityObject is IAbilityCharacter character)
             {
-                var afflictionPrefab = AfflictionPrefab.Prefabs.Find(a => a.Identifier == afflictionId);
-                if (afflictionPrefab == null)
-                {
-                    DebugConsole.ThrowError($"Error in CharacterAbilityGiveAffliction - could not find an affliction with the identifier \"{afflictionId}\".");
-                    return;
-                }
-                float strength = this.strength;
-                if (!string.IsNullOrEmpty(multiplyStrengthBySkill))
-                {
-                    strength *= Character.GetSkillLevel(multiplyStrengthBySkill);
-                }
-                character.Character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(strength), allowStacking: !setValue);
+                ApplyAfflictionToCharacter(character.Character);
             }
+        }
+
+        private void ApplyAfflictionToCharacter(Character character)
+        {
+            var afflictionPrefab = AfflictionPrefab.Prefabs.Find(a => a.Identifier == afflictionId);
+            if (afflictionPrefab == null)
+            {
+                DebugConsole.ThrowError($"Error in CharacterAbilityGiveAffliction - could not find an affliction with the identifier \"{afflictionId}\".",
+                    contentPackage: CharacterTalent.Prefab.ContentPackage);
+                return;
+            }
+            float strength = this.strength;
+            if (!string.IsNullOrEmpty(multiplyStrengthBySkill))
+            {
+                strength *= Character.GetSkillLevel(multiplyStrengthBySkill);
+            }
+            character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(strength), allowStacking: !setValue);
         }
     }
 }

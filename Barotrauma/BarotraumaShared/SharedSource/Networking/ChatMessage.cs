@@ -32,6 +32,12 @@ namespace Barotrauma.Networking
 
         public const float SpeakRange = 2000.0f;
 
+        /// <summary>
+        /// This is shorter than the text chat speak range, because the voice chat is still intelligible (just quiet) close to the maximum range,
+        /// while the text chat (which drops letters from the message) becomes unintelligible sooner
+        /// </summary>
+        public const float SpeakRangeVOIP = 1000.0f;
+
         private static readonly string dateTimeFormatLongTimePattern = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern;
 
         public static Color[] MessageColor = 
@@ -54,6 +60,15 @@ namespace Barotrauma.Networking
         {
             get
             {
+                if (Type == ChatMessageType.Radio && Sender is Item)
+                {
+                    if (translatedText.IsNullOrEmpty())
+                    {
+                        translatedText = TextManager.Get(Text).Fallback(Text).Value;
+                    }
+
+                    return translatedText;
+                }
                 if (Type.HasFlag(ChatMessageType.Server) || Type.HasFlag(ChatMessageType.Error) || Type.HasFlag(ChatMessageType.ServerLog))
                 {
                     if (translatedText.IsNullOrEmpty())
@@ -74,7 +89,8 @@ namespace Barotrauma.Networking
         public PlayerConnectionChangeType ChangeType;
         public string IconStyle;
 
-        public readonly Character Sender;
+        public Character SenderCharacter => Sender as Character;
+        public readonly Entity Sender;
         public readonly Client SenderClient;
 
         public readonly string SenderName;
@@ -119,7 +135,7 @@ namespace Barotrauma.Networking
 
         public ChatMode ChatMode { get; set; } = ChatMode.None; 
 
-        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
+        protected ChatMessage(string senderName, string text, ChatMessageType type, Entity sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             Text = text;
             Type = type;
@@ -133,7 +149,7 @@ namespace Barotrauma.Networking
             customTextColor = textColor;
         }
 
-        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
+        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Entity sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character != null && c.Character == sender), changeType, textColor);
         }
@@ -282,12 +298,12 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public static bool CanUseRadio(Character sender)
+        public static bool CanUseRadio(Character sender, bool ignoreJamming = false)
         {
-            return CanUseRadio(sender, out _);
+            return CanUseRadio(sender, out _, ignoreJamming);
         }
 
-        public static bool CanUseRadio(Character sender, out WifiComponent radio)
+        public static bool CanUseRadio(Character sender, out WifiComponent radio, bool ignoreJamming = false)
         {
             radio = null;
             if (sender?.Inventory == null || sender.Removed) { return false; }
@@ -295,7 +311,7 @@ namespace Barotrauma.Networking
             foreach (Item item in sender.Inventory.AllItems)
             {
                 var wifiComponent = item.GetComponent<WifiComponent>();
-                if (wifiComponent == null || !wifiComponent.LinkToChat || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
+                if (wifiComponent == null || !wifiComponent.LinkToChat || !wifiComponent.CanTransmit(ignoreJamming) || !sender.HasEquippedItem(item)) { continue; }
                 if (radio == null || wifiComponent.Range > radio.Range)
                 {
                     radio = wifiComponent;

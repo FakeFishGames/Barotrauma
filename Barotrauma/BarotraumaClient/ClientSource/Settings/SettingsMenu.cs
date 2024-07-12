@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using Barotrauma.Eos;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
@@ -14,7 +15,7 @@ using OpenAL;
 
 namespace Barotrauma
 {
-    class SettingsMenu
+    sealed class SettingsMenu
     {
         public static SettingsMenu? Instance { get; private set; }
         
@@ -269,6 +270,7 @@ namespace Barotrauma
 
             Tickbox(left, TextManager.Get("EnableVSync"), TextManager.Get("EnableVSyncTooltip"), unsavedConfig.Graphics.VSync, v => unsavedConfig.Graphics.VSync = v);
             Tickbox(left, TextManager.Get("EnableTextureCompression"), TextManager.Get("EnableTextureCompressionTooltip"), unsavedConfig.Graphics.CompressTextures, v => unsavedConfig.Graphics.CompressTextures = v);
+            Spacer(right);  
             
             Label(right, TextManager.Get("LOSEffect"), GUIStyle.SubHeadingFont);
             DropdownEnum(right, (m) => TextManager.Get($"LosMode{m}"), null, unsavedConfig.Graphics.LosMode, v => unsavedConfig.Graphics.LosMode = v);
@@ -683,21 +685,21 @@ namespace Barotrauma
         {
             GUIFrame content = CreateNewContentFrame(Tab.Gameplay);
             
-            GUILayoutGroup layout = CreateCenterLayout(content);
+            var (leftColumn, rightColumn) = CreateSidebars(content, split: true);
 
             var languages = TextManager.AvailableLanguages
                 .OrderBy(l => TextManager.GetTranslatedLanguageName(l).ToIdentifier())
                 .ToArray();
-            Label(layout, TextManager.Get("Language"), GUIStyle.SubHeadingFont);
-            Dropdown(layout, v => TextManager.GetTranslatedLanguageName(v), null, languages, unsavedConfig.Language, v => unsavedConfig.Language = v);
-            Spacer(layout);
+            Label(leftColumn, TextManager.Get("Language"), GUIStyle.SubHeadingFont);
+            Dropdown(leftColumn, v => TextManager.GetTranslatedLanguageName(v), null, languages, unsavedConfig.Language, v => unsavedConfig.Language = v);
+            Spacer(leftColumn);
             
-            Tickbox(layout, TextManager.Get("PauseOnFocusLost"), TextManager.Get("PauseOnFocusLostTooltip"), unsavedConfig.PauseOnFocusLost, v => unsavedConfig.PauseOnFocusLost = v);
-            Spacer(layout);
+            Tickbox(leftColumn, TextManager.Get("PauseOnFocusLost"), TextManager.Get("PauseOnFocusLostTooltip"), unsavedConfig.PauseOnFocusLost, v => unsavedConfig.PauseOnFocusLost = v);
+            Spacer(leftColumn);
             
-            Tickbox(layout, TextManager.Get("DisableInGameHints"), TextManager.Get("DisableInGameHintsTooltip"), unsavedConfig.DisableInGameHints, v => unsavedConfig.DisableInGameHints = v);
+            Tickbox(leftColumn, TextManager.Get("DisableInGameHints"), TextManager.Get("DisableInGameHintsTooltip"), unsavedConfig.DisableInGameHints, v => unsavedConfig.DisableInGameHints = v);
             var resetInGameHintsButton =
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), layout.RectTransform),
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), leftColumn.RectTransform),
                     TextManager.Get("ResetInGameHints"), style: "GUIButtonSmall")
                 {
                     OnClicked = (button, o) =>
@@ -715,29 +717,54 @@ namespace Barotrauma
                         return false;
                     }
                 };
-            Spacer(layout);
 
-            Label(layout, TextManager.Get("ShowEnemyHealthBars"), GUIStyle.SubHeadingFont);
-            DropdownEnum(layout, v => TextManager.Get($"ShowEnemyHealthBars.{v}"), null, unsavedConfig.ShowEnemyHealthBars, v => unsavedConfig.ShowEnemyHealthBars = v);
-            Spacer(layout);
+            Spacer(leftColumn);
 
-            Label(layout, TextManager.Get("HUDScale"), GUIStyle.SubHeadingFont);
-            Slider(layout, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
-            Label(layout, TextManager.Get("InventoryScale"), GUIStyle.SubHeadingFont);
-            Slider(layout, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
-            Label(layout, TextManager.Get("TextScale"), GUIStyle.SubHeadingFont);
-            Slider(layout, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.TextScale, v => unsavedConfig.Graphics.TextScale = v);
-            
+            Tickbox(leftColumn, TextManager.Get("ChatSpeechBubbles"), TextManager.Get("ChatSpeechBubbles.Tooltip"), unsavedConfig.ChatSpeechBubbles, v => unsavedConfig.ChatSpeechBubbles = v);
+
+            Label(leftColumn, TextManager.Get("ShowEnemyHealthBars"), GUIStyle.SubHeadingFont);
+            DropdownEnum(leftColumn, v => TextManager.Get($"ShowEnemyHealthBars.{v}"), null, unsavedConfig.ShowEnemyHealthBars, v => unsavedConfig.ShowEnemyHealthBars = v);
+            Spacer(leftColumn);
+            Label(leftColumn, TextManager.Get("InteractionLabels"), GUIStyle.SubHeadingFont);
+            DropdownEnum(leftColumn, v => TextManager.Get($"InteractionLabels.{v}"), null, unsavedConfig.InteractionLabelDisplayMode, v => unsavedConfig.InteractionLabelDisplayMode = v);
+
+            Label(rightColumn, TextManager.Get("HUDScale"), GUIStyle.SubHeadingFont);
+            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
+            Label(rightColumn, TextManager.Get("InventoryScale"), GUIStyle.SubHeadingFont);
+            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
+            Label(rightColumn, TextManager.Get("TextScale"), GUIStyle.SubHeadingFont);
+            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.TextScale, v => unsavedConfig.Graphics.TextScale = v);
+            Spacer(rightColumn);
+            var resetSpamListFilter =
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform),
+                    TextManager.Get("clearserverlistfilters"), style: "GUIButtonSmall")
+                {
+                    OnClicked = static (_, _) =>
+                    {
+                        GUI.AskForConfirmation(
+                            header: TextManager.Get("clearserverlistfilters"),
+                            body: TextManager.Get("clearserverlistfiltersconfirmation"),
+                            onConfirm: SpamServerFilters.ClearLocalSpamFilter);
+                        return true;
+                    }
+                };
+            Spacer(rightColumn);
 #if !OSX
-            Spacer(layout);
-            var statisticsTickBox = new GUITickBox(NewItemRectT(layout), TextManager.Get("statisticsconsenttickbox"))
+            Spacer(rightColumn);
+            var statisticsTickBox = new GUITickBox(NewItemRectT(rightColumn), TextManager.Get("statisticsconsenttickbox"))
             {
                 OnSelected = tickBox =>
                 {
+                    GUIMessageBox? loadingBox = null;
+                    if (!tickBox.Selected)
+                    {
+                        loadingBox = GUIMessageBox.CreateLoadingBox(TextManager.Get("PleaseWait"));
+                    }
                     GameAnalyticsManager.SetConsent(
                         tickBox.Selected
                             ? GameAnalyticsManager.Consent.Ask
-                            : GameAnalyticsManager.Consent.No);
+                            : GameAnalyticsManager.Consent.No,
+                        onAnswerSent: () => loadingBox?.Close());
                     return false;
                 }
             };
@@ -747,7 +774,7 @@ namespace Barotrauma
             void updateGATickBoxToolTip()
                 => statisticsTickBox.ToolTip = TextManager.Get($"GameAnalyticsStatus.{GameAnalyticsManager.UserConsented}");
             updateGATickBoxToolTip();
-            
+
             var cachedConsent = GameAnalyticsManager.Consent.Unknown;
             var statisticsTickBoxUpdater = new GUICustomComponent(
                 new RectTransform(Vector2.Zero, statisticsTickBox.RectTransform),
@@ -766,9 +793,25 @@ namespace Barotrauma
                 statisticsTickBox.OnSelected = null;
                 statisticsTickBox.Selected = shouldTickBoxBeSelected;
                 statisticsTickBox.OnSelected = prevHandler;
-                statisticsTickBox.Enabled = GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
+                statisticsTickBox.Enabled &= GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
             });
 #endif
+            //Steam version supports hosting/joining servers using EOS networking
+            if (SteamManager.IsInitialized)
+            {
+                bool shouldCrossplayBeEnabled = unsavedConfig.CrossplayChoice is Eos.EosSteamPrimaryLogin.CrossplayChoice.Enabled;
+                var crossplayTickBox = Tickbox(rightColumn, TextManager.Get("EosAllowCrossplay"), TextManager.Get("EosAllowCrossplayTooltip"), shouldCrossplayBeEnabled, v =>
+                {
+                    unsavedConfig.CrossplayChoice = v
+                        ? Eos.EosSteamPrimaryLogin.CrossplayChoice.Enabled
+                        : Eos.EosSteamPrimaryLogin.CrossplayChoice.Disabled;
+                });
+                if (GameMain.NetworkMember != null)
+                {
+                    crossplayTickBox.Enabled = false;
+                    crossplayTickBox.ToolTip = TextManager.Get("CantAccessEOSSettingsInMP");
+                }
+            }
         }
 
         private void CreateModsTab(out WorkshopMenu workshopMenu)
@@ -812,9 +855,9 @@ namespace Barotrauma
 
         public void ApplyInstalledModChanges()
         {
+            EosSteamPrimaryLogin.HandleCrossplayChoiceChange(unsavedConfig.CrossplayChoice);
             GameSettings.SetCurrentConfig(unsavedConfig);
-            if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu &&
-                mutableWorkshopMenu.CurrentTab == MutableWorkshopMenu.Tab.InstalledMods)
+            if (WorkshopMenu is MutableWorkshopMenu { CurrentTab: MutableWorkshopMenu.Tab.InstalledMods } mutableWorkshopMenu)
             {
                 mutableWorkshopMenu.Apply();
             }

@@ -10,13 +10,15 @@ namespace Barotrauma.Items.Components
             get { return new Vector2(rangeX, rangeY) * 2.0f; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
-            if (!editing || !MapEntity.SelectedList.Contains(item)) { return; }
-
-            Vector2 pos = item.WorldPosition + TransformedDetectOffset;
-            pos.Y = -pos.Y;
-            GUI.DrawRectangle(spriteBatch, pos - new Vector2(rangeX, rangeY), new Vector2(rangeX, rangeY) * 2.0f, Color.Cyan * 0.5f, isFilled: false, thickness: 2);
+            if ((editing && MapEntity.SelectedList.Contains(item)) || 
+                (ConnectionPanel.ShouldDebugDrawWiring && Character.Controlled?.SelectedItem == item))
+            {
+                Vector2 pos = item.WorldPosition + TransformedDetectOffset;
+                pos.Y = -pos.Y;
+                GUI.DrawRectangle(spriteBatch, pos - new Vector2(rangeX, rangeY), new Vector2(rangeX, rangeY) * 2.0f, Color.Cyan * 0.5f, isFilled: false, thickness: 2);
+            }
         }
     }
 }

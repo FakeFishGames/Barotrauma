@@ -48,7 +48,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".",
+                        contentPackage: prefab.ContentPackage);
                 }
             }
 
@@ -78,7 +79,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".",
+                        contentPackage: prefab.ContentPackage);
                 }
             }
 
@@ -118,19 +120,19 @@ namespace Barotrauma
                 float minDistBetweenMonsterMissions = 10000;
                 float mindDistFromSub = Level.Loaded.Size.X * 0.3f;
                 var monsterMissions = GameMain.GameSession.Missions.Select(e => e as MonsterMission).Where(m => m != null && m != this && m.spawnPos.HasValue);
-                if (!Level.Loaded.TryGetInterestingPosition(useSyncedRand: true, spawnPosType, mindDistFromSub, out Vector2 spawnPos, 
+                if (!Level.Loaded.TryGetInterestingPosition(useSyncedRand: true, spawnPosType, mindDistFromSub, out Level.InterestingPosition spawnPos, 
                         filter: p => monsterMissions.None(m => Vector2.DistanceSquared(p.Position.ToVector2(), m.spawnPos.Value) < minDistBetweenMonsterMissions * minDistBetweenMonsterMissions), 
                         suppressWarning: true))
                 {
                     Level.Loaded.TryGetInterestingPosition(useSyncedRand: true, spawnPosType, mindDistFromSub, out spawnPos);
                 }
-                this.spawnPos = spawnPos;
+                this.spawnPos = spawnPos.Position.ToVector2();
                 foreach (var (character, amountRange) in monsterPrefabs)
                 {
                     int amount = Rand.Range(amountRange.X, amountRange.Y + 1);
                     for (int i = 0; i < amount; i++)
                     {
-                        monsters.Add(Character.Create(character.Identifier, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
+                        monsters.Add(Character.Create(character.Identifier, this.spawnPos.Value, ToolBox.RandomSeed(8), createNetworkEvent: false));
                     }
                 }
                 InitializeMonsters(monsters);
@@ -147,7 +149,7 @@ namespace Barotrauma
                     monster.Params.AI.FleeHealthThreshold = 0;
                     foreach (var targetParam in monster.Params.AI.Targets)
                     {
-                        if (targetParam.Tag.Equals("engine", StringComparison.OrdinalIgnoreCase)) { continue; }
+                        if (targetParam.Tag == "engine") { continue; }
                         switch (targetParam.State)
                         {
                             case AIState.Avoid:

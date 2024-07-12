@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
     public class GUIMessageBox : GUIFrame
     {
-        #warning TODO: change this to List<GUIMessageBox> and fix incorrect uses of this list
         public readonly static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
         private static int DefaultWidth
         {
@@ -81,7 +81,14 @@ namespace Barotrauma
 
         public bool FlashOnAutoCloseCondition { get; set; }
 
+        public Action OnEnterPressed { get; set; }
+
         public Type MessageBoxType => type;
+
+        /// <summary>
+        /// If enabled, the box is always drawn in front of all other elements.
+        /// </summary>
+        public bool DrawOnTop;
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
 
@@ -89,6 +96,10 @@ namespace Barotrauma
             : this(headerText, text, new LocalizedString[] { "OK" }, relativeSize, minSize, type: type)
         {
             this.Buttons[0].OnClicked = Close;
+            OnEnterPressed = () =>
+            {
+                Buttons[0].OnClicked(Buttons[0], Buttons[0].UserData);
+            };
         }
 
         public GUIMessageBox(RichString headerText, RichString text, LocalizedString[] buttons,
@@ -470,13 +481,13 @@ namespace Barotrauma
                 for (int i = 0; i < MessageBoxes.Count; i++)
                 {
                     if (MessageBoxes[i] == null) { continue; }
-                    if (!(MessageBoxes[i] is GUIMessageBox messageBox))
+                    if (MessageBoxes[i] is not GUIMessageBox messageBox)
                     {
                         if (type == Type.Default)
                         {
                             // Message box not of type GUIMessageBox is likely the round summary
                             MessageBoxes[i].AddToGUIUpdateList();
-                            if (!(MessageBoxes[i].UserData is RoundSummary)) { break; }
+                            if (MessageBoxes[i].UserData is not RoundSummary) { break; }
                         }
                         continue;
                     }
@@ -487,8 +498,7 @@ namespace Barotrauma
                     }
 
                     // These are handled separately in GUI.HandlePersistingElements()
-                    if (MessageBoxes[i].UserData as string == "verificationprompt") { continue; }
-                    if (MessageBoxes[i].UserData as string == "bugreporter") { continue; }
+                    if (messageBox.DrawOnTop) { continue; }
 
                     messageBox.AddToGUIUpdateList();
                     break;
@@ -516,6 +526,11 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
+            if (PlayerInput.KeyHit(Keys.Enter))
+            {
+                OnEnterPressed?.Invoke();
+            }
+
             if (Draggable)
             {
                 GUIComponent parent = GUI.MouseOn?.Parent?.Parent;
@@ -692,6 +707,53 @@ namespace Barotrauma
         {
             rectT.Parent = RectTransform;
             Buttons.Add(new GUIButton(rectT, text) { OnClicked = onClick });
+        }
+
+        public static GUIMessageBox CreateLoadingBox(LocalizedString text, (LocalizedString Label, Action<GUIMessageBox> Action)[] buttons = null, Vector2? relativeSize = null)
+        {
+            buttons ??= Array.Empty<(LocalizedString Label, Action<GUIMessageBox> Action)>();
+            var relativeSizeFallback = relativeSize ?? (0.7f, 0.5f);
+            var newMessageBox = new GUIMessageBox(
+                headerText: "",
+                text: "",
+                relativeSize: relativeSizeFallback,
+                buttons: buttons.Select(b => b.Label).ToArray());
+            newMessageBox.InnerFrame.RectTransform.ScaleBasis = ScaleBasis.BothHeight;
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var capturedIndex = i;
+                newMessageBox.Buttons[i].OnClicked = (_, _) =>
+                {
+                    buttons[capturedIndex].Action(newMessageBox);
+                    return false;
+                };
+            }
+
+            const float throbberSize = 0.25f;
+
+            new GUITextBlock(
+                new RectTransform((0.9f, 0f), newMessageBox.InnerFrame.RectTransform, Anchor.Center, Pivot.BottomCenter) { RelativeOffset = (0f, -throbberSize * 0.5f) },
+                text: text, textAlignment: Alignment.Center, wrap: true);
+
+            // Throbber
+            new GUICustomComponent(
+                new RectTransform(Vector2.One * throbberSize, newMessageBox.InnerFrame.RectTransform, Anchor.Center, scaleBasis: ScaleBasis.BothHeight),
+                onDraw: static (sb, component) =>
+                {
+                    GUIStyle.GenericThrobber.Draw(
+                        sb,
+                        spriteIndex: (int)(Timing.TotalTime * 20f) % GUIStyle.GenericThrobber.FrameCount,
+                        pos: component.Rect.Center.ToVector2(),
+                        color: Color.White,
+                        origin: GUIStyle.GenericThrobber.FrameSize.ToVector2() * 0.5f,
+                        rotate: 0f,
+                        scale: component.Rect.Size.ToVector2() / GUIStyle.GenericThrobber.FrameSize.ToVector2());
+                });
+
+            MessageBoxes.Remove(newMessageBox);
+            MessageBoxes.Insert(0, newMessageBox);
+            return newMessageBox;
         }
     }
 }

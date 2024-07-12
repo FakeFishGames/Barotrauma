@@ -205,7 +205,7 @@ namespace Voronoi2
             Vector2 transformedPoint = point - Translation;
             foreach (GraphEdge edge in Edges)
             {
-                if (MathUtils.LinesIntersect(transformedPoint, Center - Translation, edge.Point1, edge.Point2)) { return false; }
+                if (MathUtils.LineSegmentsIntersect(transformedPoint, Center - Translation, edge.Point1, edge.Point2)) { return false; }
             }
             return true;
         }
@@ -267,7 +267,7 @@ namespace Voronoi2
         {
             Vector2 dir = Vector2.Normalize(Point1 - Point2);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
-            if (cell != null && Vector2.Dot(normal, Vector2.Normalize(Center - cell.Center)) < 0)
+            if (cell != null && Vector2.Dot(normal, Vector2.Normalize(Center - (cell.Center - cell.Translation))) < 0)
             {
                 normal = -normal;
             }

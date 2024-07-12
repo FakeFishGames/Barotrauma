@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -16,8 +17,23 @@ namespace Barotrauma
             CONVERSATION_SELECTED_OPTION,
             STATUSEFFECT,
             MISSION,
-            UNLOCKPATH
+            UNLOCKPATH,
+            EVENTLOG,
+            EVENTOBJECTIVE,
         }
+
+        [NetworkSerialize]
+        public readonly record struct NetEventLogEntry(Identifier EventPrefabId, Identifier LogEntryId, string Text) : INetSerializableStruct;
+
+        [NetworkSerialize]
+        public readonly record struct NetEventObjective(
+            EventObjectiveAction.SegmentActionType Type, 
+            Identifier Identifier, 
+            Identifier ObjectiveTag,
+            Identifier TextTag,
+            Identifier ParentObjectiveId,
+            bool CanBeCompleted) : INetSerializableStruct;
+
 
         const float IntensityUpdateInterval = 5.0f;
 
@@ -75,7 +91,6 @@ namespace Barotrauma
 
         private readonly HashSet<Event> finishedEvents = new HashSet<Event>();
         private readonly HashSet<Identifier> nonRepeatableEvents = new HashSet<Identifier>();
-        private readonly HashSet<EventSet> usedUniqueSets = new HashSet<EventSet>();
 
 
 #if DEBUG && SERVER
@@ -95,14 +110,16 @@ namespace Barotrauma
             get { return musicIntensity; }
         }
 
-        public List<Event> ActiveEvents
+        public IEnumerable<Event> ActiveEvents
         {
             get { return activeEvents; }
         }
         
         public readonly Queue<Event> QueuedEvents = new Queue<Event>();
 
-        private struct TimeStamp
+        public readonly Queue<Identifier> QueuedEventsForNextRound = new Queue<Identifier>();
+
+        private readonly struct TimeStamp
         {
             public readonly double Time;
             public readonly Event Event;
@@ -117,6 +134,8 @@ namespace Barotrauma
         private readonly List<TimeStamp> timeStamps = new List<TimeStamp>();
         public void AddTimeStamp(Event e) => timeStamps.Add(new TimeStamp(e));
 
+        public readonly EventLog EventLog = new EventLog();
+
         public EventManager()
         {
             isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
@@ -125,7 +144,7 @@ namespace Barotrauma
         public bool Enabled = true;
 
         private MTRandom random;
-        private int randomSeed;
+        public int RandomSeed { get; private set; }
 
         public void StartRound(Level level)
         {
@@ -152,13 +171,13 @@ namespace Barotrauma
            
             if (level != null)
             {
-                randomSeed = ToolBox.StringToInt(level.Seed);
+                RandomSeed = ToolBox.StringToInt(level.Seed);
                 foreach (var previousEvent in level.LevelData.EventHistory)
                 {
-                    randomSeed ^= ToolBox.IdentifierToInt(previousEvent);
+                    RandomSeed ^= ToolBox.IdentifierToInt(previousEvent);
                 }
             }
-            random = new MTRandom(randomSeed);
+            random = new MTRandom(RandomSeed);
 
             bool playingCampaign = GameMain.GameSession?.GameMode is CampaignMode;
             EventSet initialEventSet = SelectRandomEvents(
@@ -195,8 +214,8 @@ namespace Barotrauma
                         var unlockPathEventPrefab = EventPrefab.GetUnlockPathEvent(level.LevelData.Biome.Identifier, level.StartLocation.Faction);
                         if (unlockPathEventPrefab != null)
                         {
-                            var newEvent = unlockPathEventPrefab.CreateInstance();
-                            ActiveEvents.Add(newEvent);
+                            var newEvent = unlockPathEventPrefab.CreateInstance(RandomSeed);
+                            activeEvents.Add(newEvent);
                         }
                         else
                         {
@@ -223,6 +242,21 @@ namespace Barotrauma
                 }                
             }
 
+            while (QueuedEventsForNextRound.TryDequeue(out var id))
+            {
+                var eventPrefab = EventSet.GetEventPrefab(id);
+                if (eventPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Error in EventManager.StartRound - could not find an event with the identifier {id}.");
+                    continue;
+                }
+                var ev = eventPrefab.CreateInstance(RandomSeed);
+                if (ev != null)
+                {
+                    QueuedEvents.Enqueue(ev);
+                }
+            }
+
             PreloadContent(GetFilesToPreload());
 
             roundDuration = 0.0f;
@@ -238,8 +272,20 @@ namespace Barotrauma
             CumulativeMonsterStrengthRuins = 0;
             CumulativeMonsterStrengthWrecks = 0;
             CumulativeMonsterStrengthCaves = 0;
+            distanceTraveled = 0;
         }
-        
+
+        public void ActivateEvent(Event newEvent)
+        {
+            activeEvents.Add(newEvent);
+            newEvent.Init();
+        }
+
+        public void ClearEvents()
+        {
+            activeEvents.Clear();
+        }
+
         private void SelectSettings()
         {
             if (!EventManagerSettings.Prefabs.Any())
@@ -347,6 +393,14 @@ namespace Barotrauma
             }
         }
 
+        public void TriggerOnEndRoundActions()
+        {
+            foreach (var ev in activeEvents)
+            {
+                (ev as ScriptedEvent)?.OnRoundEndAction?.Update(1.0f);
+            }
+        }
+
         public void EndRound()
         {
             pendingEventSets.Clear();
@@ -355,11 +409,11 @@ namespace Barotrauma
             QueuedEvents.Clear();
             finishedEvents.Clear();
             nonRepeatableEvents.Clear();
-            usedUniqueSets.Clear();
 
             preloadedSprites.ForEach(s => s.Remove());
             preloadedSprites.Clear();
 
+            timeStamps.Clear();
 
             pathFinder = null;
         }
@@ -370,7 +424,7 @@ namespace Barotrauma
         public void RegisterEventHistory(bool registerFinishedOnly = false)
         {
             if (level?.LevelData == null) { return; }
-
+            
             level.LevelData.EventsExhausted = !registerFinishedOnly;
 
             if (level.LevelData.Type == LevelData.LevelType.Outpost)
@@ -379,15 +433,15 @@ namespace Barotrauma
                 {
                     foreach (var finishedEvent in finishedEvents)
                     {
-                        var key = finishedEvent.ParentSet;
-                        if (key == null) { continue; }
-                        if (level.LevelData.FinishedEvents.ContainsKey(key))
+                        EventSet parentSet = finishedEvent.ParentSet;
+                        if (parentSet == null) { continue; }
+                        if (parentSet.Exhaustible)
                         {
-                            level.LevelData.FinishedEvents[key] += 1;
+                            level.LevelData.EventsExhausted = true;
                         }
-                        else
+                        if (!level.LevelData.FinishedEvents.TryAdd(parentSet, 1))
                         {
-                            level.LevelData.FinishedEvents.Add(key, 1);
+                            level.LevelData.FinishedEvents[parentSet] += 1;
                         }
                     }
                 }
@@ -462,24 +516,17 @@ namespace Barotrauma
                 }
             }
 
-            bool isPrefabSuitable(EventPrefab e) =>
-                (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
-                !level.LevelData.NonRepeatableEvents.Contains(e.Identifier) &&
-                isFactionSuitable(e.Faction);
-
-            bool isFactionSuitable(Identifier factionId) =>
-                factionId.IsEmpty || factionId == level.StartLocation?.Faction?.Prefab.Identifier || factionId == level.StartLocation?.SecondaryFaction?.Prefab.Identifier;
-
             foreach (var subEventPrefab in eventSet.EventPrefabs)
             {
                 foreach (Identifier missingId in subEventPrefab.GetMissingIdentifiers())
                 {
-                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".");
+                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".",
+                        contentPackage: eventSet.ContentPackage);
                 }
             }
 
             var suitablePrefabSubsets = eventSet.EventPrefabs.Where(
-                e => isFactionSuitable(e.Faction) && e.EventPrefabs.Any(isPrefabSuitable)).ToArray();
+                e => IsFactionSuitable(e.Faction, level) && e.EventPrefabs.Any(ep => IsSuitable(ep, level))).ToArray();
 
             for (int i = 0; i < applyCount; i++)
             {
@@ -496,10 +543,9 @@ namespace Barotrauma
                             (IEnumerable<EventPrefab> eventPrefabs, float commonness, float probability) = subEventPrefab;
                             if (eventPrefabs != null && random.NextDouble() <= probability)
                             {
-                                var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, random);
-                                var newEvent = eventPrefab.CreateInstance();
+                                var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(e => IsSuitable(e, level)), e => e.Commonness, random);
+                                var newEvent = eventPrefab.CreateInstance(RandomSeed);
                                 if (newEvent == null) { continue; }
-                                newEvent.RandomSeed = randomSeed;
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                                 DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                                 if (!selectedEvents.ContainsKey(eventSet))
@@ -513,10 +559,25 @@ namespace Barotrauma
                     }
                     if (eventSet.ChildSets.Any())
                     {
-                        var newEventSet = SelectRandomEvents(eventSet.ChildSets, random: random);
-                        if (newEventSet != null)
+                        int setCount = eventSet.SubSetCount;
+                        if (setCount > 1)
                         {
-                            CreateEvents(newEventSet);
+                            var unusedSets = eventSet.ChildSets.ToList();
+                            for (int j = 0; j < setCount; j++)
+                            {
+                                var newEventSet = SelectRandomEvents(unusedSets, random: random);
+                                if (newEventSet == null) { break; }
+                                unusedSets.Remove(newEventSet);
+                                CreateEvents(newEventSet);
+                            }
+                        }
+                        else
+                        {
+                            var newEventSet = SelectRandomEvents(eventSet.ChildSets, random: random);
+                            if (newEventSet != null)
+                            {
+                                CreateEvents(newEventSet);
+                            }
                         }
                     }
                 }
@@ -526,9 +587,10 @@ namespace Barotrauma
                     {
                         if (random.NextDouble() > probability) { continue; }
 
-                        var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, random);
-                        var newEvent = eventPrefab.CreateInstance();
+                        var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(e => IsSuitable(e, level)), e => e.Commonness, random);
+                        var newEvent = eventPrefab.CreateInstance(RandomSeed);
                         if (newEvent == null) { continue; }
+                        if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
                             selectedEvents.Add(eventSet, new List<Event>());
@@ -620,11 +682,30 @@ namespace Barotrauma
             return null;
         }
 
+        public static bool IsSuitable(EventPrefab e, Level level)
+        {
+            return IsLevelSuitable(e, level) && IsFactionSuitable(e.Faction, level);
+        }
+
+        public static bool IsLevelSuitable(EventPrefab e, Level level)
+        {
+            return
+                (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
+                (e.RequiredLayer.IsEmpty || Submarine.LayerExistsInAnySub(e.RequiredLayer)) &&
+                !level.LevelData.NonRepeatableEvents.Contains(e.Identifier);
+        }
+
+        private static bool IsFactionSuitable(Identifier factionId, Level level)
+        {
+            return factionId.IsEmpty || factionId == level.StartLocation?.Faction?.Prefab.Identifier || factionId == level.StartLocation?.SecondaryFaction?.Prefab.Identifier;
+        }
+
         private static bool IsValidForLevel(EventSet eventSet, Level level)
         {
             return
-                level.Difficulty >= eventSet.MinLevelDifficulty && level.Difficulty <= eventSet.MaxLevelDifficulty &&
+                level.IsAllowedDifficulty(eventSet.MinLevelDifficulty, eventSet.MaxLevelDifficulty) &&
                 level.LevelData.Type == eventSet.LevelType &&
+                (eventSet.RequiredLayer.IsEmpty || Submarine.LayerExistsInAnySub(eventSet.RequiredLayer)) &&
                 (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier);
         }
 
@@ -648,16 +729,12 @@ namespace Barotrauma
 
         private bool CanStartEventSet(EventSet eventSet)
         {
-            ISpatialEntity refEntity = GetRefEntity();
-            float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
-            float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
-
-            //don't create new events if within 50 meters of the start/end of the level
             if (!eventSet.AllowAtStart)
             {
-                if (distanceTraveled <= 0.0f ||
-                    distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
-                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
+                ISpatialEntity refEntity = GetRefEntity();
+                float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+                float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+                if (distFromStart * Physics.DisplayToRealWorldRatio < 50.0f || distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
                 {
                     return false;
                 }
@@ -689,7 +766,7 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            if (!Enabled || level == null) { return; }
+            if (!Enabled) { return; }
             if (GameMain.GameSession.Campaign?.DisableEvents ?? false) { return; }
 
             if (!eventsInitialized)
@@ -793,6 +870,10 @@ namespace Barotrauma
                                 {
                                     pendingEventSets.Add(eventSet);
                                     CreateEvents(eventSet);
+                                    foreach (Event newEvent in selectedEvents[eventSet])
+                                    {
+                                        if (!newEvent.Initialized) { newEvent.Init(eventSet); }
+                                    }
                                 };
                             }
                         }
@@ -828,7 +909,18 @@ namespace Barotrauma
                 activeEvents.Add(QueuedEvents.Dequeue());
             }
         }
-                
+
+        public void EntitySpawned(Entity entity)
+        {
+            foreach (var ev in activeEvents)
+            {
+                if (ev is ScriptedEvent scriptedEvent)
+                {
+                    scriptedEvent.EntitySpawned(entity);
+                }
+            }
+        }
+
         private void CalculateCurrentIntensity(float deltaTime)
         {
             intensityUpdateTimer -= deltaTime;
@@ -863,7 +955,7 @@ namespace Barotrauma
             monsterStrength = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsIncapacitated || character.IsArrested || !character.Enabled || character.IsPet) { continue; }
+                if (character.IsIncapacitated || character.IsHandcuffed || !character.Enabled || character.IsPet) { continue; }
 
                 if (character.AIController is EnemyAIController enemyAI)
                 {
@@ -1016,35 +1108,6 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Finds all actions in a ScriptedEvent
-        /// </summary>
-        private static List<Tuple<int, EventAction>> FindActions(ScriptedEvent scriptedEvent)
-        {
-            var list = new List<Tuple<int, EventAction>>();
-            foreach (EventAction eventAction in scriptedEvent.Actions)
-            {
-                list.AddRange(FindActionsRecursive(eventAction));
-            }
-
-            return list;
-
-            static List<Tuple<int, EventAction>> FindActionsRecursive(EventAction eventAction, int ident = 1)
-            {
-                var eventActions = new List<Tuple<int, EventAction>> { Tuple.Create(ident, eventAction) };
-
-                ident++;
-                
-                foreach (var action in eventAction.GetSubActions())
-                {
-                    eventActions.AddRange(FindActionsRecursive(action, ident));
-                }
-
-                return eventActions;
-            }
-        }
-
-
-        /// <summary>
         /// Get the entity that should be used in determining how far the player has progressed in the level.
         /// = The submarine or player character that has progressed the furthest. 
         /// </summary>
@@ -1152,6 +1215,21 @@ namespace Barotrauma
             }
 
             return false;
+        }
+
+        public void Load(XElement element)
+        {
+            foreach (var id in element.GetAttributeIdentifierArray(nameof(QueuedEventsForNextRound), Array.Empty<Identifier>()))
+            {
+                QueuedEventsForNextRound.Enqueue(id);
+            }
+        }
+
+        public XElement Save()
+        {
+            return new XElement("eventmanager",
+                new XAttribute(nameof(QueuedEventsForNextRound),
+                    string.Join(',', QueuedEventsForNextRound)));
         }
     }
 }

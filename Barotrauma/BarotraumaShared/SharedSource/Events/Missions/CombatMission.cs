@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -56,7 +57,7 @@ namespace Barotrauma
             {
                 for (int n = 0; n < 2; n++)
                 {
-                    descriptions[i] = descriptions[i].Replace("[location" + (n + 1) + "]", locations[n].Name);
+                    descriptions[i] = descriptions[i].Replace("[location" + (n + 1) + "]", locations[n].DisplayName);
                 }
             }
 

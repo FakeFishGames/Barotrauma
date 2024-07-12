@@ -93,13 +93,13 @@ namespace Barotrauma.Items.Components
         [Editable(0.0f, 10.0f), Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public float TextScale
         {
-            get { return textBlock == null ? 1.0f : textBlock.TextScale; }
+            get { return textBlock == null ? 1.0f : textBlock.TextScale / BaseToRealTextScaleFactor; }
             set
             {
                 if (textBlock != null) 
                 {
                     float prevScale = TextBlock.TextScale;
-                    textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f); 
+                    textBlock.TextScale = MathHelper.Clamp(value * BaseToRealTextScaleFactor, 0.1f, 10.0f); 
                     if (!MathUtils.NearlyEqual(prevScale, TextBlock.TextScale))
                     {
                         SetScrollingText();
@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
-                scrollingText = DisplayText.Value;
+                TextBlock.Text = scrollingText = DisplayText.Value;
                 scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
@@ -210,6 +210,8 @@ namespace Barotrauma.Items.Components
             SetScrollingText();
         }
 
+        private const float BaseTextSize = 12.0f;
+        private float BaseToRealTextScaleFactor => BaseTextSize / GUIStyle.UnscaledSmallFont.Size;
         private void RecreateTextBlock()
         {
             textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
@@ -217,7 +219,7 @@ namespace Barotrauma.Items.Components
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,
-                TextScale = TextScale,
+                TextScale = TextScale * BaseToRealTextScaleFactor,
                 Padding = padding * item.Scale
             };
         }
@@ -227,7 +229,7 @@ namespace Barotrauma.Items.Components
             switch (text)
             {
                 case "[CurrentLocationName]":
-                    SetDisplayText(Level.Loaded?.StartLocation?.Name ?? string.Empty);
+                    SetDisplayText(Level.Loaded?.StartLocation?.DisplayName.Value ?? string.Empty);
                     break;
                 case "[CurrentBiomeName]":
                     SetDisplayText(Level.Loaded?.LevelData?.Biome?.DisplayName.Value ?? string.Empty);
@@ -311,7 +313,7 @@ namespace Barotrauma.Items.Components
             prevRect = item.Rect;
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
         {
             if (item.ParentInventory != null) { return; }
             if (editing)

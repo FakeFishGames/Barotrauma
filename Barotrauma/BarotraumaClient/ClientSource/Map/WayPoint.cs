@@ -20,13 +20,13 @@ namespace Barotrauma
 
         public override bool SelectableInEditor
         {
-            get { return !IsHidden(); }
+            get { return ShouldDrawIcon(); }
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing && (!GameMain.DebugDraw || Screen.Selected.Cam.Zoom < 0.1f)) { return; }
-            if (IsHidden()) { return; }
+            if (!ShouldDrawIcon()) { return; }
 
             Vector2 drawPos = Position;
             if (Submarine != null) { drawPos += Submarine.DrawPosition; }
@@ -59,7 +59,10 @@ namespace Barotrauma
                     Color.White);
             }
 
-            Sprite sprite = iconSprites[SpawnType.ToString()];
+            Sprite sprite2 = null;
+            //there are no sprites for all possible combinations of SpawnType flags, but in the vanilla game the only possible combination is
+            //SpawnType.Disabled + some other flag, in which case it's fine to just not show the icon.
+            iconSprites.TryGetValue(SpawnType.ToString(), out Sprite sprite);
             if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
             {
                 sprite = iconSprites["Path"];
@@ -67,13 +70,32 @@ namespace Barotrauma
             else if (ConnectedDoor != null)
             {
                 sprite = iconSprites["Door"];
+                if (Ladders != null)
+                {
+                    sprite2 = iconSprites["Ladder"];
+                }
+                else if (ConnectedDoor.IsHorizontal)
+                {
+                    //connected to a hatch but not ladders, something's probably off here
+                    clr = Color.Yellow;
+                }
+                if (!Submarine.RectContains(ConnectedDoor.Item.WorldRect, WorldPosition))
+                {
+                    clr = Color.Red;
+                }
             }
             else if (Ladders != null)
             {
                 sprite = iconSprites["Ladder"];
             }
-            sprite.Draw(spriteBatch, drawPos, clr, scale: iconSize / (float)sprite.SourceRect.Width, depth: 0.001f);
-            sprite.RelativeOrigin = Vector2.One * 0.5f;
+
+            if (sprite != null)
+            {
+                float spriteScale = iconSize / (float)sprite.SourceRect.Width;
+                sprite.Draw(spriteBatch, drawPos, clr, origin: sprite.size / 2, scale: spriteScale, depth: 0.001f);
+                sprite2?.Draw(spriteBatch, drawPos + sprite.size * spriteScale * 0.5f, clr, origin: sprite2.size / 2, scale: spriteScale, depth: 0.001f);
+            }
+
             if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
             {
                 AssignedJob.Icon.Draw(spriteBatch, drawPos, AssignedJob.UIColor, scale: iconSize / (float)AssignedJob.Icon.SourceRect.Width * 0.8f, depth: 0.0f);
@@ -143,22 +165,22 @@ namespace Barotrauma
 
         public override bool IsMouseOn(Vector2 position)
         {
-            if (IsHidden()) { return false; }
+            if (!ShouldDrawIcon()) { return false; }
             float dist = Vector2.DistanceSquared(position, WorldPosition);
             float radius = (SpawnType == SpawnType.Path ? WaypointSize : SpawnPointSize) * 0.6f;
             return dist < radius * radius;
         }
 
-        private bool IsHidden()
+        private bool ShouldDrawIcon()
         {
             if (!SubEditorScreen.IsLayerVisible(this)) { return false; }
             if (spawnType == SpawnType.Path)
             {
-                return (!GameMain.DebugDraw && !ShowWayPoints);
+                return GameMain.DebugDraw || ShowWayPoints;
             }
             else
             {
-                return (!GameMain.DebugDraw && !ShowSpawnPoints);
+                return GameMain.DebugDraw || ShowSpawnPoints;
             }
         }
 
@@ -299,6 +321,11 @@ namespace Barotrauma
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Spawnpoint"), font: GUIStyle.LargeFont);
                 
+                if (!Layer.IsNullOrEmpty())
+                {
+                    var layerText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("editor.layer"), Layer));
+                }
+
                 var spawnTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,

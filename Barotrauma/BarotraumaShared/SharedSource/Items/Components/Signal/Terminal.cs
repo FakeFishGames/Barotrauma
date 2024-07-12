@@ -10,11 +10,13 @@ namespace Barotrauma.Items.Components
     {
         public readonly string Text;
         public readonly Color Color;
+        public readonly bool IsWelcomeMessage;
 
-        public TerminalMessage(string text, Color color)
+        public TerminalMessage(string text, Color color, bool isWelcomeMessage)
         {
             Text = text;
             Color = color;
+            IsWelcomeMessage = isWelcomeMessage;
         }
 
         public void Deconstruct(out string text, out Color color)
@@ -60,7 +62,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (string.IsNullOrEmpty(value)) { return; }
-                ShowOnDisplay(value, addToHistory: true, TextColor);
+                ShowOnDisplay(value, addToHistory: true, TextColor, isWelcomeMessage: false);
             }
         }
 
@@ -113,7 +115,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
-        partial void ShowOnDisplay(string input, bool addToHistory, Color color);
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color, bool isWelcomeMessage);
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
@@ -127,7 +129,7 @@ namespace Barotrauma.Items.Components
                         signal.value = signal.value.Substring(0, MaxMessageLength);
                     }
                     string inputSignal = signal.value.Replace("\\n", "\n");
-                    ShowOnDisplay(inputSignal, addToHistory: true, TextColor);
+                    ShowOnDisplay(inputSignal, addToHistory: true, TextColor, isWelcomeMessage: false);
                     break;
                 case "set_text_color":
                     if (signal.value != prevColorSignal)
@@ -160,7 +162,7 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             if (!DisplayedWelcomeMessage.IsNullOrEmpty() && !WelcomeMessageDisplayed)
             {
-                ShowOnDisplay(DisplayedWelcomeMessage.Value, addToHistory: !isSubEditor, TextColor);
+                ShowOnDisplay(DisplayedWelcomeMessage.Value, addToHistory: !isSubEditor, TextColor, isWelcomeMessage: true);
                 DisplayedWelcomeMessage = "";
                 //disable welcome message if a game session is running so it doesn't reappear on successive rounds
                 if (GameMain.GameSession != null && !isSubEditor)
@@ -175,21 +177,27 @@ namespace Barotrauma.Items.Components
             var componentElement = base.Save(parentElement);
             for (int i = 0; i < messageHistory.Count; i++)
             {
-                componentElement.Add(new XAttribute("msg" + i, messageHistory[i].Text));
-                componentElement.Add(new XAttribute("color" + i, messageHistory[i].Color.ToStringHex()));
+                var msg = messageHistory[i];
+                componentElement.Add(new XAttribute("msg" + i, msg.Text));
+                componentElement.Add(new XAttribute("color" + i, msg.Color.ToStringHex()));
+                if (msg.IsWelcomeMessage)
+                {
+                    componentElement.Add(new XAttribute("welcomemessage" + i, true));
+                }
             }
             return componentElement;
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             for (int i = 0; i < MaxMessages; i++)
             {
                 string msg = componentElement.GetAttributeString("msg" + i, null);
                 if (msg is null) { break; }
                 Color color = componentElement.GetAttributeColor("color" + i, TextColor);
-                ShowOnDisplay(msg, addToHistory: true, color);
+                bool isWelcomeMessage = componentElement.GetAttributeBool("welcomemessage" + i, false);
+                ShowOnDisplay(msg, addToHistory: true, color, isWelcomeMessage);
             }
         }
     }

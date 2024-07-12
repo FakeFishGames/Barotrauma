@@ -1,11 +1,15 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
+    /// <summary>
+    /// Triggers another scripted event.
+    /// </summary>
     class TriggerEventAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)] 
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the event to trigger.")] 
         public Identifier Identifier { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "If set to true, the event will trigger at the beginning of the next round. Useful for e.g. triggering some scripted event in the outpost after you finish a mission.")]
+        public bool NextRound { get; set; }
 
         private bool isFinished;
 
@@ -26,17 +30,25 @@ namespace Barotrauma
 
             if (GameMain.GameSession?.EventManager != null)
             {
-                var eventPrefab = EventSet.GetEventPrefab(Identifier);
-                if (eventPrefab == null)
+                if (NextRound)
                 {
-                    DebugConsole.ThrowError($"Error in TriggerEventAction - could not find an event with the identifier {Identifier}.");
+                    GameMain.GameSession.EventManager.QueuedEventsForNextRound.Enqueue(Identifier);
                 }
                 else
                 {
-                    var ev = eventPrefab.CreateInstance();
-                    if (ev != null)
+                    var eventPrefab = EventSet.GetEventPrefab(Identifier);
+                    if (eventPrefab == null)
                     {
-                        GameMain.GameSession.EventManager.QueuedEvents.Enqueue(ev);
+                        DebugConsole.ThrowError($"Error in TriggerEventAction - could not find an event with the identifier {Identifier}.",
+                            contentPackage: ParentEvent.Prefab.ContentPackage);
+                    }
+                    else
+                    {
+                        var ev = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
+                        if (ev != null)
+                        {
+                            GameMain.GameSession.EventManager.QueuedEvents.Enqueue(ev);                            
+                        }
                     }
                 }
             }

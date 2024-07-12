@@ -1,6 +1,8 @@
-﻿using Barotrauma.Tutorials;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Barotrauma
 {
@@ -15,8 +17,6 @@ namespace Barotrauma
         public static bool IsTabMenuOpen => GameMain.GameSession?.tabMenu != null;
         public static TabMenu TabMenuInstance => GameMain.GameSession?.tabMenu;
 
-        private float prevHudScale;
-
         private TabMenu tabMenu;
 
         public bool ToggleTabMenu()
@@ -27,7 +27,7 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.CharacterAppearanceCustomizationMenu = null;
                 if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
             }
-            if (tabMenu == null && !(GameMode is TutorialMode) && !ConversationAction.IsDialogOpen)
+            if (tabMenu == null && GameMode is not TutorialMode && !ConversationAction.IsDialogOpen)
             {
                 tabMenu = new TabMenu();
                 HintManager.OnShowTabMenu();
@@ -45,9 +45,19 @@ namespace Barotrauma
         private GUIButton crewListButton, commandButton, tabMenuButton;
         private GUIImage talentPointNotification;
 
-        private GUIComponent respawnInfoFrame, respawnButtonContainer;
+        private GUIComponent deathChoiceInfoFrame, deathChoiceButtonContainer;
         private GUITextBlock respawnInfoText;
-        private GUITickBox respawnTickBox;
+        private GUITickBox deathChoiceTickBox;
+        private GUIButton takeOverBotButton;
+        private GUIButton hrManagerButton;
+        public DeathPrompt DeathPrompt;
+
+        private GUIImage eventLogNotification;
+
+        private Point prevTopLeftButtonsResolution;
+        
+        public bool AllowHrManagerBotTakeover => GameMain.NetworkMember?.ServerSettings is { RespawnMode: RespawnMode.Permadeath, IronmanMode: false }
+                                                 && Level.IsLoadedFriendlyOutpost;
 
         private void CreateTopLeftButtons()
         {
@@ -61,10 +71,6 @@ namespace Barotrauma
             {
                 AbsoluteSpacing = HUDLayoutSettings.Padding,
                 CanBeFocused = false
-            };
-            topLeftButtonGroup.RectTransform.ParentChanged += (_) =>
-            {
-                GameMain.Instance.ResolutionChanged -= CreateTopLeftButtons;
             };
             int buttonHeight = GUI.IntScale(40);
             Vector2 buttonSpriteSize = GUIStyle.GetComponentStyle("CrewListToggleButton").GetDefaultSprite().size;
@@ -96,32 +102,66 @@ namespace Barotrauma
                 OnClicked = (button, userData) => ToggleTabMenu()
             };
 
-            talentPointNotification = CreateTalentIconNotification(tabMenuButton);
-
-            GameMain.Instance.ResolutionChanged += CreateTopLeftButtons;
-
-            respawnInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), parent: topLeftButtonGroup.RectTransform)
-            { MaxSize = new Point(HUDLayoutSettings.ButtonAreaTop.Width / 3, int.MaxValue) }, style: null)
+            talentPointNotification = CreateNotificationIcon(tabMenuButton);
+            eventLogNotification = CreateNotificationIcon(tabMenuButton);
+            
+            // The visibility of the following contents of deathChoiceInfoFrame is controlled by SetRespawnInfo()
+            
+            deathChoiceInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), parent: topLeftButtonGroup.RectTransform)
+                { MaxSize = new Point(HUDLayoutSettings.ButtonAreaTop.Width / 3, int.MaxValue) }, style: null)
             {
                 Visible = false
             };
-            respawnInfoText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), respawnInfoFrame.RectTransform), "", wrap: true);
-            respawnButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), respawnInfoFrame.RectTransform, Anchor.CenterRight), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            respawnInfoText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), deathChoiceInfoFrame.RectTransform), "", wrap: true);
+            deathChoiceButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), deathChoiceInfoFrame.RectTransform, Anchor.CenterRight), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 AbsoluteSpacing = HUDLayoutSettings.Padding,
                 Stretch = true,
                 Visible = false
             };
-            respawnTickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, respawnButtonContainer.RectTransform, Anchor.Center), TextManager.Get("respawnquestionpromptrespawn"))
+
+            takeOverBotButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, deathChoiceButtonContainer.RectTransform, Anchor.Center),
+                TextManager.Get("takeoverbotquestionprompttakeoverbot"), style: "GUIButtonSmall")
             {
-                ToolTip = TextManager.Get("respawnquestionprompt"),
-                OnSelected = (tickbox) =>
+                OnClicked = (btn, userdata) =>
                 {
-                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: !tickbox.Selected);
+                    DeathPrompt.CreateTakeOverBotPanel();
                     return true;
                 }
             };
-            prevHudScale = GameSettings.CurrentConfig.Graphics.HUDScale;
+            takeOverBotButton.TextBlock.AutoScaleHorizontal = true;
+
+            hrManagerButton = new GUIButton(new RectTransform(Vector2.One * 0.9f, deathChoiceButtonContainer.RectTransform, Anchor.Center), 
+                TextManager.Get("npctitle.hrmanager"), style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (GameMain.GameSession?.Campaign is { } campaign)
+                    {
+                        campaign.ShowCampaignUI = true;
+                        campaign.CampaignUI?.SelectTab(CampaignMode.InteractionType.Crew);
+                    }
+                    return true;
+                }
+            };
+            hrManagerButton.TextBlock.AutoScaleHorizontal = true;
+
+            var questionText = 
+                TextManager.GetWithVariable(
+                    "respawnquestionprompt", "[percentage]",
+                    ((int)Math.Round(RespawnManager.SkillLossPercentageOnImmediateRespawn)).ToString());
+            deathChoiceTickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, deathChoiceButtonContainer.RectTransform, Anchor.Center),
+                TextManager.Get("respawnquestionpromptrespawn"))
+            {
+                ToolTip = questionText,
+                OnSelected = (tickbox) =>
+                {
+                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: !tickbox.Selected);                        
+                    return true;
+                }
+            };
+
+            prevTopLeftButtonsResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         public void AddToGUIUpdateList()
@@ -134,7 +174,8 @@ namespace Barotrauma
             if ((GameMode is not CampaignMode campaign || (!campaign.ForceMapUI && !campaign.ShowCampaignUI)) &&
                 !CoroutineManager.IsCoroutineRunning("LevelTransition") && !CoroutineManager.IsCoroutineRunning("SubmarineTransition"))
             {
-                if (topLeftButtonGroup == null)
+                if (topLeftButtonGroup == null ||
+                    prevTopLeftButtonsResolution.X != GameMain.GraphicsWidth || prevTopLeftButtonsResolution.Y != GameMain.GraphicsHeight)
                 {
                     CreateTopLeftButtons();
                 }
@@ -150,9 +191,11 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.CharacterAppearanceCustomizationMenu?.AddToGUIUpdateList();
                 GameMain.NetLobbyScreen?.JobSelectionFrame?.AddToGUIUpdateList();
             }
+
+            DeathPrompt?.AddToGUIUpdateList();
         }
 
-        public static GUIImage CreateTalentIconNotification(GUIComponent parent, bool offset = true)
+        public static GUIImage CreateNotificationIcon(GUIComponent parent, bool offset = true)
         {
             GUIImage indicator = new GUIImage(new RectTransform(new Vector2(0.45f), parent.RectTransform, anchor: Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth), style: "TalentPointNotification")
             {
@@ -167,19 +210,22 @@ namespace Barotrauma
             return indicator;
         }
 
+        public void EnableEventLogNotificationIcon(bool enabled)
+        {
+            if (eventLogNotification == null) { return; }
+            if (!eventLogNotification.Visible && enabled)
+            {
+                eventLogNotification.Pulsate(Vector2.One, Vector2.One * 2, 1.0f);
+            }
+            eventLogNotification.Visible = enabled;
+        }
+
         public static void UpdateTalentNotificationIndicator(GUIImage indicator)
         {
-            if (indicator != null)
-            {
-                if (Character.Controlled?.Info == null)
-                {
-                    indicator.Visible = false;
-                }
-                else
-                {
-                    indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0 && !Character.Controlled.HasUnlockedAllTalents();
-                }
-            }
+            if (indicator == null) { return; }
+            indicator.Visible =
+                Character.Controlled?.Info != null &&
+                Character.Controlled.Info.GetAvailableTalentPoints() > 0 && !Character.Controlled.HasUnlockedAllTalents();
         }
 
         public void HUDScaleChanged()
@@ -227,16 +273,67 @@ namespace Barotrauma
             HintManager.Update();
             ObjectiveManager.VideoPlayer.Update();
         }
-
-        public void SetRespawnInfo(bool visible, string text, Color textColor, bool buttonsVisible, bool waitForNextRoundRespawn)
+        
+        /// <summary>
+        /// This method controls the content and visibility logic of the respawn-related GUI elements at the top left of the game screen.
+        /// </summary>
+        /// <param name="waitForNextRoundRespawn">Has the player chosen to wait until next round</param>
+        /// <param name="hideButtons">Hide the respawn buttons even if they would otherwise be visible</param>
+        public void SetRespawnInfo(string text, Color textColor, bool waitForNextRoundRespawn, bool hideButtons = false)
         {
             if (topLeftButtonGroup == null) { return; }
-            respawnInfoFrame.Visible = visible;
-            if (!visible) { return; }
+            
+            bool permadeathMode = GameMain.NetworkMember?.ServerSettings is { RespawnMode: RespawnMode.Permadeath };
+            bool ironmanMode = GameMain.NetworkMember is { ServerSettings: { RespawnMode: RespawnMode.Permadeath, IronmanMode: true } };
+            
+            bool hasRespawnOptions;
+            if (permadeathMode)
+            {
+                // In permadeath mode you can (in ironman, must) always at least wait, and possibly buy a new character from HR or take control of a bot
+                hasRespawnOptions = !ironmanMode &&
+                                    GameMain.Client is GameClient client && (client.CharacterInfo == null || client.CharacterInfo.PermanentlyDead);
+            }
+            else // "classic" respawn modes
+            {
+                //can choose between midround respawning with a penalty or waiting
+                //if we're in a non-outpost level, and either don't have an existing character or have already spawned during the round
+                //(otherwise, e.g. when joining a campaign in which we have an existing character, we can respawn mid-round "for free" and there's no reason to make a choice)
+                hasRespawnOptions = Level.Loaded?.Type != LevelData.LevelType.Outpost &&
+                                    (GameMain.Client is GameClient client && (client.CharacterInfo == null || client.HasSpawned));
+            }
+            
+            // Are the death choice elements shown at all, at least with the text? 
+            deathChoiceInfoFrame.Visible = !text.IsNullOrEmpty() || hasRespawnOptions;
+            if (!deathChoiceInfoFrame.Visible) { return; }
             respawnInfoText.Text = text;
             respawnInfoText.TextColor = textColor;
-            respawnButtonContainer.Visible = buttonsVisible;
-            respawnTickBox.Selected = !waitForNextRoundRespawn;
+            
+            // Determine if we even bother considering showing the buttons 
+            if (GameMain.GameSession.GameMode is not CampaignMode || Character.Controlled != null)
+            {
+                // Disable the button container in case it was left visible earlier
+                deathChoiceButtonContainer.Visible = false;
+                return;
+            }
+
+            deathChoiceButtonContainer.Visible = hasRespawnOptions && !hideButtons;
+            if (deathChoiceButtonContainer.Visible)
+            {
+                hrManagerButton.Visible = AllowHrManagerBotTakeover;
+                
+                if (permadeathMode && ironmanMode)
+                {
+                    takeOverBotButton.Visible = false;
+                    deathChoiceTickBox.Visible = false;
+                    deathChoiceTickBox.Selected = false;
+                }
+                else
+                {
+                    takeOverBotButton.Visible = permadeathMode && GameMain.NetworkMember?.ServerSettings is { AllowBotTakeoverOnPermadeath: true };
+                    deathChoiceTickBox.Visible = !permadeathMode;
+                    deathChoiceTickBox.Selected = !waitForNextRoundRespawn;    
+                }
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)

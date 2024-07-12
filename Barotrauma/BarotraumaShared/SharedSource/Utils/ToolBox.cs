@@ -27,6 +27,31 @@ namespace Barotrauma
         }
     }
 
+    internal readonly record struct SquareLine(Vector2[] Points, SquareLine.LineType Type)
+    {
+        internal enum LineType
+        {
+            /// <summary>
+            /// Normal 4 point line
+            /// </summary>
+            /// <example>
+            ///          ┏━━━ end
+            ///          ┃
+            /// start ━━━┛
+            /// </example>
+            FourPointForwardsLine,
+            /// <summary>
+            /// A line where the end is behind the start and 2 extra points are used to draw it
+            /// </summary>
+            /// <example>
+            /// start ━┓
+            /// ┏━━━━━━┛
+            /// ┗━ end
+            /// </example>
+            SixPointBackwardsLine
+        }
+    }
+
     static partial class ToolBox
     {
         public static bool IsProperFilenameCase(string filename)
@@ -172,38 +197,6 @@ namespace Barotrauma
             if (inputType == "SecondaryHit" || inputType == "Secondary") return "Aim";
 
             return inputType;
-        }
-
-        /// <summary>
-        /// Convert a HSV value into a RGB value.
-        /// </summary>
-        /// <param name="hue">Value between 0 and 360</param>
-        /// <param name="saturation">Value between 0 and 1</param>
-        /// <param name="value">Value between 0 and 1</param>
-        /// <see href="https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB">Reference</see>
-        /// <returns></returns>
-        public static Color HSVToRGB(float hue, float saturation, float value)
-        {
-            float c = value * saturation;
-
-            float h = Math.Clamp(hue, 0, 360) / 60f;
-
-            float x = c * (1 - Math.Abs(h % 2 - 1));
-
-            float r = 0,
-                  g = 0,
-                  b = 0;
-
-            if (0 <= h && h <= 1)     { r = c; g = x; b = 0; }
-            else if (1 < h && h <= 2) { r = x; g = c; b = 0; }
-            else if (2 < h && h <= 3) { r = 0; g = c; b = x; }
-            else if (3 < h && h <= 4) { r = 0; g = x; b = c; }
-            else if (4 < h && h <= 5) { r = x; g = 0; b = c; }
-            else if (5 < h && h <= 6) { r = c; g = 0; b = x; }
-
-            float m = value - c;
-
-            return new Color(r + m, g + m, b + m);
         }
 
         /// <summary>
@@ -396,8 +389,12 @@ namespace Barotrauma
 
         public static T SelectWeightedRandom<T>(IEnumerable<T> objects, Func<T, float> weightMethod, Random random)
         {
+            if (typeof(PrefabWithUintIdentifier).IsAssignableFrom(typeof(T)))
+            {
+                objects = objects.OrderBy(p => (p as PrefabWithUintIdentifier)?.UintIdentifier ?? 0);
+            }
             List<T> objectList = objects.ToList();
-            List<float> weights = objectList.Select(o => weightMethod(o)).ToList();
+            List<float> weights = objectList.Select(weightMethod).ToList();
             return SelectWeightedRandom(objectList, weights, random);
         }
 
@@ -408,7 +405,7 @@ namespace Barotrauma
 
         public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Random random)
         {
-            if (objects.Count == 0) { return default(T); }
+            if (objects.Count == 0) { return default; }
 
             if (objects.Count != weights.Count)
             {
@@ -427,25 +424,7 @@ namespace Barotrauma
                 }
                 randomNum -= weights[i];
             }
-            return default(T);
-        }
-
-        public static UInt32 IdentifierToUint32Hash(Identifier id, MD5 md5)
-            => StringToUInt32Hash(id.Value.ToLowerInvariant(), md5);
-
-        public static UInt32 StringToUInt32Hash(string str, MD5 md5)
-        {
-            //calculate key based on MD5 hash instead of string.GetHashCode
-            //to ensure consistent results across platforms
-            byte[] inputBytes = Encoding.UTF8.GetBytes(str);
-            byte[] hash = md5.ComputeHash(inputBytes);
-
-            UInt32 key = (UInt32)((str.Length & 0xff) << 24); //could use more of the hash here instead?
-            key |= (UInt32)(hash[hash.Length - 3] << 16);
-            key |= (UInt32)(hash[hash.Length - 2] << 8);
-            key |= (UInt32)(hash[hash.Length - 1]);
-
-            return key;
+            return default;
         }
 
         /// <summary>
@@ -511,14 +490,6 @@ namespace Barotrauma
                 }
                 list[to] = elem;
             }
-        }
-
-        public static string ByteArrayToString(byte[] ba)
-        {
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
-                hex.AppendFormat("{0:x2}", b);
-            return hex.ToString();
         }
 
         public static string EscapeCharacters(string str)
@@ -663,18 +634,14 @@ namespace Barotrauma
             return new Rectangle(topLeft, size);
         }
 
-        public static Exception GetInnermost(this Exception e)
-        {
-            while (e.InnerException != null) { e = e.InnerException; }
-
-            return e;
-        }
-
         public static void ThrowIfNull<T>([NotNull] T o)
         {
             if (o is null) { throw new ArgumentNullException(); }
         }
 
+        /// <summary>
+        /// Converts a percentage value in the 0-1 range to a string representation in the format "x %" according to the grammar rules of the selected language
+        /// </summary>
         public static string GetFormattedPercentage(float v)
         {
             return TextManager.GetWithVariable("percentageformat", "[value]", ((int)MathF.Round(v * 100)).ToString()).Value;
@@ -805,6 +772,104 @@ namespace Barotrauma
             if (self.IsIPv4MappedToIPv6) { self = self.MapToIPv4(); }
             if (other.IsIPv4MappedToIPv6) { other = other.MapToIPv4(); }
             return self.Equals(other);
+        }
+
+        /// <summary>
+        /// Converts a 16-bit audio sample to float value between -1 and 1.
+        /// </summary>
+        public static float ShortAudioSampleToFloat(short value)
+        {
+            return value / 32767f;
+        }
+
+        /// <summary>
+        /// Converts a float value between -1 and 1 to a 16-bit audio sample.
+        /// </summary>
+        public static short FloatToShortAudioSample(float value)
+        {
+            int temp = (int)(32767 * value);
+            if (temp > short.MaxValue)
+            {
+                temp = short.MaxValue;
+            }
+            else if (temp < short.MinValue)
+            {
+                temp = short.MinValue;
+            }
+            return (short)temp;
+        }
+
+        /// <summary
+        public static SquareLine GetSquareLineBetweenPoints(Vector2 start, Vector2 end, float knobLength = 24f)
+        {
+            Vector2[] points = new Vector2[6];
+
+            // set the start and end points
+            points[0] = points[1] = points[2] = start;
+            points[5] = points[4] = points[3] = end;
+
+            points[2].X += (points[3].X - points[2].X) / 2;
+            points[2].X = Math.Max(points[2].X, points[0].X + knobLength);
+            points[3].X = points[2].X;
+
+            bool isBehind = false;
+
+            // if the node is "behind" us do some magic to make the line curve to prevent overlapping
+            if (points[2].X <= points[0].X + knobLength)
+            {
+                isBehind = true;
+                points[1].X += knobLength;
+                points[2].X = points[2].X;
+                points[2].Y += (points[4].Y - points[1].Y) / 2;
+            }
+
+            if (points[3].X >= points[5].X - knobLength)
+            {
+                isBehind = true;
+                points[4].X -= knobLength;
+                points[3].X = points[4].X;
+                points[3].Y -= points[3].Y - points[2].Y;
+            }
+
+            SquareLine.LineType type = isBehind
+                ? SquareLine.LineType.SixPointBackwardsLine
+                : SquareLine.LineType.FourPointForwardsLine;
+
+            return new SquareLine(points, type);
+        }
+
+        /// <summary>
+        /// Returns closest point on a rectangle to a given point.
+        /// If the point is inside the rectangle, the point itself is returned.
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static Vector2 GetClosestPointOnRectangle(RectangleF rect, Vector2 point)
+        {
+            Vector2 closest = new Vector2(
+                MathHelper.Clamp(point.X, rect.Left, rect.Right),
+                MathHelper.Clamp(point.Y, rect.Top, rect.Bottom));
+
+            if (point.X < rect.Left)
+            {
+                closest.X = rect.Left;
+            }
+            else if (point.X > rect.Right)
+            {
+                closest.X = rect.Right;
+            }
+
+            if (point.Y < rect.Top)
+            {
+                closest.Y = rect.Top;
+            }
+            else if (point.Y > rect.Bottom)
+            {
+                closest.Y = rect.Bottom;
+            }
+
+            return closest;
         }
     }
 }

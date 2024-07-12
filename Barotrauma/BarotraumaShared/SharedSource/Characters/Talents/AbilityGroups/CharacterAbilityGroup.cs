@@ -31,7 +31,7 @@ namespace Barotrauma.Abilities
         public CharacterAbilityGroup(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup)
         {
             AbilityEffectType = abilityEffectType;
-            CharacterTalent = characterTalent;
+            CharacterTalent = characterTalent ?? throw new ArgumentNullException(nameof(characterTalent));
             Character = CharacterTalent.Character;
             maxTriggerCount = abilityElementGroup.GetAttributeInt("maxtriggercount", int.MaxValue);
             foreach (var subElement in abilityElementGroup.Elements())
@@ -44,8 +44,12 @@ namespace Barotrauma.Abilities
                     case "fallbackabilities":
                         LoadFallbackAbilities(subElement);
                         break;
+                    case "condition":
                     case "conditions":
                         LoadConditions(subElement);
+                        break;
+                    default:
+                        DebugConsole.ThrowError($"Error in talent {characterTalent.Prefab.Identifier}: unrecognized xml element \"{subElement.Name}\".");
                         break;
                 }
             }
@@ -55,7 +59,8 @@ namespace Barotrauma.Abilities
                 case AbilityEffectType.OnDieToCharacter:
                     if (characterAbilities.Any(a => a.RequiresAlive))
                     {
-                        DebugConsole.AddWarning($"Potential error in talent {characterTalent}: an ability group has the type {AbilityEffectType.OnDieToCharacter}, but includes abilities that require the character to be alive, meaning they will never execute.");
+                        DebugConsole.AddWarning($"Potential error in talent {characterTalent}: an ability group has the type {AbilityEffectType.OnDieToCharacter}, but includes abilities that require the character to be alive, meaning they will never execute.",
+                            characterTalent.Prefab.ContentPackage);
                     }
                     break;
             }
@@ -90,7 +95,8 @@ namespace Barotrauma.Abilities
 
                 if (newCondition == null)
                 {
-                    DebugConsole.ThrowError($"AbilityCondition was not found in talent {CharacterTalent.DebugIdentifier}!");
+                    DebugConsole.ThrowError($"AbilityCondition was not found in talent {CharacterTalent.DebugIdentifier}!",
+                        contentPackage: conditionElement.ContentPackage);
                     return;
                 }
 
@@ -107,7 +113,8 @@ namespace Barotrauma.Abilities
         {
             if (characterAbility == null)
             {
-                DebugConsole.ThrowError($"Trying to add null ability for talent {CharacterTalent.DebugIdentifier}!");
+                DebugConsole.ThrowError($"Trying to add null ability for talent {CharacterTalent.DebugIdentifier}!",
+                    contentPackage: CharacterTalent.Prefab.ContentPackage);
                 return;
             }
 
@@ -118,7 +125,8 @@ namespace Barotrauma.Abilities
         {
             if (characterAbility == null)
             {
-                DebugConsole.ThrowError($"Trying to add null ability for talent {CharacterTalent.DebugIdentifier}!");
+                DebugConsole.ThrowError($"Trying to add null ability for talent {CharacterTalent.DebugIdentifier}!",
+                    contentPackage: CharacterTalent.Prefab.ContentPackage);
                 return;
             }
 
@@ -132,16 +140,24 @@ namespace Barotrauma.Abilities
             string type = conditionElement.Name.ToString().ToLowerInvariant();
             try
             {
-                conditionType = Type.GetType("Barotrauma.Abilities." + type + "", false, true);
+                conditionType = ReflectionUtils.GetTypeWithBackwardsCompatibility("Barotrauma.Abilities", type, false, true);
                 if (conditionType == null)
                 {
-                    if (errorMessages) DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + characterTalent.DebugIdentifier + ")");
+                    if (errorMessages)
+                    {
+                        DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + characterTalent.DebugIdentifier + ")",
+                            contentPackage: characterTalent.Prefab.ContentPackage);
+                    }
                     return null;
                 }
             }
             catch (Exception e)
             {
-                if (errorMessages) DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + characterTalent.DebugIdentifier + ")", e);
+                if (errorMessages)
+                {
+                    DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + characterTalent.DebugIdentifier + ")", e,
+                        contentPackage: characterTalent.Prefab.ContentPackage);
+                }
                 return null;
             }
 
@@ -154,13 +170,15 @@ namespace Barotrauma.Abilities
             }
             catch (TargetInvocationException e)
             {
-                DebugConsole.ThrowError("Error while creating an instance of an ability condition of the type " + conditionType + ".", e.InnerException);
+                DebugConsole.ThrowError("Error while creating an instance of an ability condition of the type " + conditionType + ".", e.InnerException,
+                    contentPackage: characterTalent.Prefab.ContentPackage);
                 return null;
             }
 
             if (newCondition == null)
             {
-                DebugConsole.ThrowError("Error while creating an instance of an ability condition of the type " + conditionType + ", instance was null");
+                DebugConsole.ThrowError("Error while creating an instance of an ability condition of the type " + conditionType + ", instance was null",
+                    contentPackage: characterTalent.Prefab.ContentPackage);
                 return null;
             }
 
@@ -189,7 +207,8 @@ namespace Barotrauma.Abilities
 
             if (newAbility == null)
             {
-                DebugConsole.ThrowError($"Unable to create an ability for {characterTalent.DebugIdentifier}!");
+                DebugConsole.ThrowError($"Unable to create an ability for {characterTalent.DebugIdentifier}!",
+                    contentPackage: characterTalent.Prefab.ContentPackage);
                 return null;
             }
 
@@ -200,7 +219,8 @@ namespace Barotrauma.Abilities
         {
             if (statusEffectElements == null)
             {
-                DebugConsole.ThrowError("StatusEffect list was not found in talent " + characterTalent.DebugIdentifier);
+                DebugConsole.ThrowError("StatusEffect list was not found in talent " + characterTalent.DebugIdentifier,
+                    contentPackage: characterTalent.Prefab.ContentPackage);
                 return null;
             }
 
@@ -233,7 +253,8 @@ namespace Barotrauma.Abilities
         {
             if (afflictionElements == null)
             {
-                DebugConsole.ThrowError("Affliction list was not found in talent " + characterTalent.DebugIdentifier);
+                DebugConsole.ThrowError("Affliction list was not found in talent " + characterTalent.DebugIdentifier,
+                    contentPackage: characterTalent.Prefab.ContentPackage);
                 return null;
             }
 
@@ -248,7 +269,8 @@ namespace Barotrauma.Abilities
                 AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier);
                 if (afflictionPrefab == null)
                 {
-                    DebugConsole.ThrowError("Error in CharacterTalent (" + characterTalent.DebugIdentifier + ") - Affliction prefab with the identifier \"" + afflictionIdentifier + "\" not found.");
+                    DebugConsole.ThrowError("Error in CharacterTalent (" + characterTalent.DebugIdentifier + ") - Affliction prefab with the identifier \"" + afflictionIdentifier + "\" not found.",
+                        contentPackage: characterTalent.Prefab.ContentPackage);
                     continue;
                 }
 

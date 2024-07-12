@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Barotrauma.Steam;
+using System.Globalization;
 
 namespace Barotrauma.Networking
 {
@@ -21,9 +22,9 @@ namespace Barotrauma.Networking
             public abstract void Write(XElement element);
         }
 
-        public Endpoint Endpoint { get; private set; }
+        public ImmutableArray<Endpoint> Endpoints { get; }
 
-        public Option<DataSource> MetadataSource = Option<DataSource>.None();
+        public Option<DataSource> MetadataSource = Option.None;
 
         [Serialize("", IsPropertySaveable.Yes)]
         public string ServerName { get; set; } = "";
@@ -65,8 +66,8 @@ namespace Barotrauma.Networking
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool AllowRespawn { get; set; }
         
-        [Serialize(YesNoMaybe.No, IsPropertySaveable.Yes)]
-        public YesNoMaybe TraitorsEnabled { get; set; }
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float TraitorProbability { get; set; }
         
         [Serialize(PlayStyle.Casual, IsPropertySaveable.Yes)]
         public PlayStyle PlayStyle { get; set; }
@@ -74,53 +75,41 @@ namespace Barotrauma.Networking
         [Serialize("", IsPropertySaveable.Yes)]
         public LanguageIdentifier Language { get; set; }
 
+        public bool EosCrossplay { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string SelectedSub { get; set; } = string.Empty;
+
         public Version GameVersion { get; set; } = new Version(0, 0, 0, 0);
 
         public Option<int> Ping = Option<int>.None();
 
         public bool Checked = false;
 
-        public readonly struct ContentPackageInfo
-        {
-            public readonly string Name;
-            public readonly string Hash;
-            public readonly Option<ContentPackageId> Id;
+        public ImmutableArray<ServerListContentPackageInfo> ContentPackages;
 
-            public ContentPackageInfo(string name, string hash, Option<ContentPackageId> id)
-            {
-                Name = name;
-                Hash = hash;
-                Id = id;
-            }
-
-            public ContentPackageInfo(ContentPackage pkg)
-            {
-                Name = pkg.Name;
-                Hash = pkg.Hash.StringRepresentation;
-                Id = pkg.UgcId;
-            }
-        }
-
-        public ImmutableArray<ContentPackageInfo> ContentPackages;
+        public int ContentPackageCount;
 
         public bool IsModded => ContentPackages.Any(p => !GameMain.VanillaContent.NameMatches(p.Name));
 
-        public ServerInfo(Endpoint endpoint)
+        public ServerInfo(params Endpoint[] endpoint) : this(endpoint.ToImmutableArray()) { }
+
+        public ServerInfo(ImmutableArray<Endpoint> endpoints)
         {
             SerializableProperties = SerializableProperty.GetProperties(this);
-            Endpoint = endpoint;
-            ContentPackages = ImmutableArray<ContentPackageInfo>.Empty;
+            Endpoints = endpoints;
+            ContentPackages = ImmutableArray<ServerListContentPackageInfo>.Empty;
         }
 
-        public static ServerInfo FromServerConnection(NetworkConnection connection, ServerSettings serverSettings)
+        public static ServerInfo FromServerEndpoints(ImmutableArray<Endpoint> endpoints, ServerSettings serverSettings)
         {
-            var serverInfo = new ServerInfo(connection.Endpoint)
+            var serverInfo = new ServerInfo(endpoints)
             {
                 GameMode = GameMain.NetLobbyScreen.SelectedMode?.Identifier ?? Identifier.Empty,
                 GameStarted = Screen.Selected != GameMain.NetLobbyScreen,
                 GameVersion = GameMain.Version,
                 PlayerCount = GameMain.Client.ConnectedClients.Count,
-                ContentPackages = ContentPackageManager.EnabledPackages.All.Select(p => new ContentPackageInfo(p)).ToImmutableArray(),
+                ContentPackages = ContentPackageManager.EnabledPackages.All.Select(p => new ServerListContentPackageInfo(p)).ToImmutableArray(),
                 Ping = GameMain.Client.Ping,
                 
                 // -------------------------------------
@@ -175,33 +164,6 @@ namespace Barotrauma.Networking
             };
             title.Text = ToolBox.LimitString(title.Text, title.Font, (int)(title.Rect.Width * 0.85f));
 
-            bool isFavorite = serverListScreen.IsFavorite(this);
-
-            static LocalizedString favoriteTickBoxToolTip(bool isFavorite)
-                => TextManager.Get(isFavorite ? "RemoveFromFavorites" : "AddToFavorites");
-            
-            GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.8f), title.RectTransform, Anchor.CenterRight), 
-                "", null, "GUIServerListFavoriteTickBox")
-            {
-                UserData = this,
-                Selected = isFavorite,
-                ToolTip = favoriteTickBoxToolTip(isFavorite),
-                OnSelected = tickbox =>
-                {
-                    ServerInfo info = (ServerInfo)tickbox.UserData;
-                    if (tickbox.Selected)
-                    {
-                        GameMain.ServerListScreen.AddToFavoriteServers(info);
-                    }
-                    else
-                    {
-                        GameMain.ServerListScreen.RemoveFromFavoriteServers(info);
-                    }
-                    tickbox.ToolTip = favoriteTickBoxToolTip(tickbox.Selected);
-                    return true;
-                }
-            };
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
                 TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"),
                     GameVersion == new Version(0, 0, 0, 0) ? TextManager.Get("Unknown") : GameVersion.ToString()))
@@ -246,7 +208,7 @@ namespace Barotrauma.Networking
             playStyleName.RectTransform.IsFixedSize = true;
 
             var serverType = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
-                Endpoint?.ServerTypeString ?? string.Empty,
+                Endpoints.First().ServerTypeString,
                 textAlignment: Alignment.TopLeft)
             {
                 CanBeFocused = false
@@ -257,6 +219,59 @@ namespace Barotrauma.Networking
             {
                 Stretch = true
             };
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.25f), playStyleBanner.RectTransform, Anchor.BottomRight), 
+                isHorizontal: true, childAnchor: Anchor.BottomRight);
+
+            //shadow behind the buttons
+            new GUIFrame(new RectTransform(new Vector2(3.15f, 1.05f), buttonContainer.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest), style: null)
+            {
+                Color = Color.Black * 0.7f,
+                IgnoreLayoutGroups = true
+            };
+
+            bool isFavorite = serverListScreen.IsFavorite(this);
+            static LocalizedString favoriteTickBoxToolTip(bool isFavorite)
+                => TextManager.Get(isFavorite ? "RemoveFromFavorites" : "AddToFavorites");
+
+            GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest),
+                "", null, "GUIServerListFavoriteTickBox")
+            {
+                UserData = this,
+                Selected = isFavorite,
+                ToolTip = favoriteTickBoxToolTip(isFavorite),
+                OnSelected = tickbox =>
+                {
+                    ServerInfo info = (ServerInfo)tickbox.UserData;
+                    if (tickbox.Selected)
+                    {
+                        GameMain.ServerListScreen.AddToFavoriteServers(info);
+                    }
+                    else
+                    {
+                        GameMain.ServerListScreen.RemoveFromFavoriteServers(info);
+                    }
+                    tickbox.ToolTip = favoriteTickBoxToolTip(tickbox.Selected);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "GUIServerListReportServer")
+            {
+                ToolTip = TextManager.Get("reportserver"),
+                OnClicked = (_, _) => {ServerListScreen.CreateReportPrompt(this); return true; }
+            };
+
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "GUIServerListHideServer")
+            {
+                ToolTip = TextManager.Get("filterserver"),
+                OnClicked = (_, _) =>
+                {
+                    ServerListScreen.CreateFilterServerPrompt(this);
+                    return true;
+                }
+            };
+
             // playstyle tags -----------------------------------------------------------------------------
 
             var playStyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform), isHorizontal: true)
@@ -307,6 +322,14 @@ namespace Barotrauma.Networking
             new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform),
                 TextManager.Get(GameMode.IsEmpty ? "Unknown" : "GameMode." + GameMode).Fallback(GameMode.Value),
                 textAlignment: Alignment.Right);
+
+            if (!string.IsNullOrEmpty(SelectedSub))
+            {
+                var submarineText = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("Submarine"));
+                new GUITextBlock(new RectTransform(Vector2.One, submarineText.RectTransform),
+                    SelectedSub,
+                    textAlignment: Alignment.Right);
+            }
 
             GUITextBlock playStyleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("serverplaystyle"));
             new GUITextBlock(new RectTransform(Vector2.One, playStyleText.RectTransform), TextManager.Get("servertag." + playStyle), textAlignment: Alignment.Right);
@@ -384,6 +407,15 @@ namespace Barotrauma.Networking
                         }
                     }
                 }
+                if (ContentPackageCount > ContentPackages.Length)
+                {
+                    new GUITextBlock(
+                        new RectTransform(new Vector2(1.0f, 0.15f), contentPackageList.Content.RectTransform) { MinSize = new Point(0, 15) },
+                        TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (ContentPackageCount - ContentPackages.Length).ToString()))
+                    {
+                        CanBeFocused = false
+                    };
+                }
             }
 
             // -----------------------------------------------------------------------------
@@ -397,10 +429,10 @@ namespace Barotrauma.Networking
         public IEnumerable<Identifier> GetPlayStyleTags()
         {
             yield return $"Karma.{KarmaEnabled}".ToIdentifier();
-            yield return (TraitorsEnabled == YesNoMaybe.Yes ? $"Traitors.True" : $"Traitors.False").ToIdentifier();
+            yield return (TraitorProbability > 0.0f ? $"Traitors.True" : $"Traitors.False").ToIdentifier();
             yield return $"VoIP.{VoipEnabled}".ToIdentifier();
             yield return $"FriendlyFire.{FriendlyFireEnabled}".ToIdentifier();
-            yield return $"Modded.{ContentPackages.Any()}".ToIdentifier();
+            yield return $"Modded.{IsModded}".ToIdentifier();
         }
 
         public void UpdateInfo(Func<string, string?> valueGetter)
@@ -411,8 +443,12 @@ namespace Barotrauma.Networking
                 GameVersion = version;
             }
             if (int.TryParse(valueGetter("playercount"), out int playerCount)) { PlayerCount = playerCount; }
-            if (int.TryParse(valueGetter("maxplayernum"), out int maxPlayers)) { MaxPlayers = maxPlayers; }
+            
+            if (int.TryParse(valueGetter("maxplayers"), out int maxPlayers)) { MaxPlayers = maxPlayers; }
+            else if (int.TryParse(valueGetter("maxplayernum"), out maxPlayers)) { MaxPlayers = maxPlayers; }
+            
             if (Enum.TryParse(valueGetter("modeselectionmode"), out SelectionMode modeSelectionMode)) { ModeSelectionMode = modeSelectionMode; }
+            
             if (Enum.TryParse(valueGetter("subselectionmode"), out SelectionMode subSelectionMode)) { SubSelectionMode = subSelectionMode; }
 
             HasPassword = getBool("haspassword");
@@ -422,14 +458,18 @@ namespace Barotrauma.Networking
             AllowSpectating = getBool("allowspectating");
             AllowRespawn = getBool("allowrespawn");
             VoipEnabled = getBool("voicechatenabled");
+            EosCrossplay = getBool("eoscrossplay");
 
             GameMode = valueGetter("gamemode")?.ToIdentifier() ?? Identifier.Empty;
-            if (Enum.TryParse(valueGetter("traitors"), out YesNoMaybe traitorsEnabled)) { TraitorsEnabled = traitorsEnabled; }
+            if (float.TryParse(valueGetter("traitors"), NumberStyles.Any, CultureInfo.InvariantCulture, out float traitorProbability)) { TraitorProbability = traitorProbability; }
             if (Enum.TryParse(valueGetter("playstyle"), out PlayStyle playStyle)) { PlayStyle = playStyle; }
             Language = valueGetter("language")?.ToLanguageIdentifier() ?? LanguageIdentifier.None;
+            SelectedSub = valueGetter("submarine") ?? string.Empty;
 
             ContentPackages = ExtractContentPackageInfo(ServerName, valueGetter).ToImmutableArray();
-            
+            ContentPackageCount = ContentPackages.Length;
+            if (int.TryParse(valueGetter("packagecount"), out int packageCount)) { ContentPackageCount = packageCount; }
+
             bool getBool(string key)
             {
                 string? data = valueGetter(key);
@@ -437,27 +477,21 @@ namespace Barotrauma.Networking
             }
         }
 
-        private static ContentPackageInfo[] ExtractContentPackageInfo(string serverName, Func<string, string?> valueGetter)
+        private static ServerListContentPackageInfo[] ExtractContentPackageInfo(string serverName, Func<string, string?> valueGetter)
         {
             //workaround to ServerRules queries truncating the values to 255 bytes
             int individualPackageIndex = 0;
             string? individualPackage = valueGetter($"contentpackage{individualPackageIndex}");
             if (!individualPackage.IsNullOrEmpty())
             {
-                List<ContentPackageInfo> contentPackages = new List<ContentPackageInfo>();
+                List<ServerListContentPackageInfo> contentPackages = new List<ServerListContentPackageInfo>();
                 do
                 {
-                    string[] splitPackageInfo = individualPackage.Split(',');
-                    if (splitPackageInfo.Length != 3)
+                    if (!ServerListContentPackageInfo.ParseSingleEntry(individualPackage).TryUnwrap(out var info))
                     {
-                        DebugConsole.Log(
-                            $"Error in a server's content package list: malformed content package info ({individualPackage}).");
-                        return Array.Empty<ContentPackageInfo>();
+                        return Array.Empty<ServerListContentPackageInfo>();
                     }
-                    string name = splitPackageInfo[0];
-                    string hash = splitPackageInfo[1];
-                    ulong.TryParse(splitPackageInfo[2], out ulong id);
-                    contentPackages.Add(new ContentPackageInfo(name, hash, Option<ContentPackageId>.Some(new SteamWorkshopId(id))));
+                    contentPackages.Add(info);
 
                     individualPackageIndex++;
                     individualPackage = valueGetter($"contentpackage{individualPackageIndex}");
@@ -467,43 +501,58 @@ namespace Barotrauma.Networking
 
             string? joinedNames = valueGetter("contentpackage");
             string? joinedHashes = valueGetter("contentpackagehash");
-            string? joinedWorkshopIds = valueGetter("contentpackageid");
+            string? joinedUgcIds = valueGetter("contentpackageid");
             
-            string[] contentPackageNames = joinedNames.IsNullOrEmpty() ? Array.Empty<string>() : joinedNames.Split(',');
-            string[] contentPackageHashes = joinedHashes.IsNullOrEmpty() ? Array.Empty<string>() : joinedHashes.Split(',');
-            #warning TODO: genericize
-            ulong[] contentPackageIds = joinedWorkshopIds.IsNullOrEmpty() ? new ulong[1] : SteamManager.ParseWorkshopIds(joinedWorkshopIds).ToArray();
+            var contentPackageNames = joinedNames.IsNullOrEmpty() ? Array.Empty<string>() : joinedNames.SplitEscaped(',');
+            var contentPackageHashes = joinedHashes.IsNullOrEmpty() ? Array.Empty<string>() : joinedHashes.SplitEscaped(',');
+            var contentPackageIds = joinedUgcIds.IsNullOrEmpty() ? new string[1] { string.Empty } : joinedUgcIds.SplitEscaped(',');
 
-            if (contentPackageNames.Length != contentPackageHashes.Length || contentPackageHashes.Length != contentPackageIds.Length)
+            if (contentPackageNames.Count != contentPackageHashes.Count || contentPackageHashes.Count != contentPackageIds.Count)
             {
                 DebugConsole.Log(
-                    $"The number of names, hashes and Workshop IDs on server \"{serverName}\"" +
-                    $" doesn't match: {contentPackageNames.Length} names ({string.Join(", ", contentPackageNames)}), {contentPackageHashes.Length} hashes, {contentPackageIds.Length} ids)");
-                return Array.Empty<ContentPackageInfo>();
+                    $"The number of names, hashes and UGC IDs on server \"{serverName}\"" +
+                    $" doesn't match: {contentPackageNames.Count} names ({string.Join(", ", contentPackageNames)}), {contentPackageHashes.Count} hashes, {contentPackageIds.Count} ids)");
+                return Array.Empty<ServerListContentPackageInfo>();
             }
 
             return contentPackageNames
                 .Zip(contentPackageHashes, (name, hash) => (name, hash))
                 .Zip(contentPackageIds, (t1, id) =>
-                    new ContentPackageInfo(
+                    new ServerListContentPackageInfo(
                         t1.name,
                         t1.hash,
-                        Option<ContentPackageId>.Some(new SteamWorkshopId(id))))
+                        ContentPackageId.Parse(id)))
                 .ToArray();
         }
 
         public static Option<ServerInfo> FromXElement(XElement element)
         {
+            var endpoints = new List<Endpoint>();
+            
             string endpointStr
                 = element.GetAttributeString("Endpoint", null)
                   ?? element.GetAttributeString("OwnerID", null)
                   ?? $"{element.GetAttributeString("IP", "")}:{element.GetAttributeInt("Port", 0)}";
+
+            if (Endpoint.Parse(endpointStr).TryUnwrap(out var endpoint))
+            {
+                endpoints.Add(endpoint);
+            }
+            else
+            {
+                var multipleEndpointStrs
+                    = element.GetAttributeStringArray("Endpoints", Array.Empty<string>());
+                endpoints.AddRange(
+                    multipleEndpointStrs
+                        .Select(Endpoint.Parse)
+                        .NotNone());
+            }
             
-            if (!Endpoint.Parse(endpointStr).TryUnwrap(out var endpoint)) { return Option<ServerInfo>.None(); }
+            if (endpoints.Count == 0) { return Option.None; }
 
             var gameVersionStr = element.GetAttributeString("GameVersion", "");
             if (!Version.TryParse(gameVersionStr, out var gameVersion)) { gameVersion = GameMain.Version; }
-            var info = new ServerInfo(endpoint)
+            var info = new ServerInfo(endpoints.ToImmutableArray())
             {
                 GameVersion = gameVersion
             };
@@ -511,14 +560,14 @@ namespace Barotrauma.Networking
 
             info.MetadataSource = DataSource.Parse(element);
             
-            return Option<ServerInfo>.Some(info);
+            return Option.Some(info);
         }
 
         public XElement ToXElement()
         {
             XElement element = new XElement(GetType().Name);
 
-            element.SetAttributeValue("Endpoint", Endpoint.ToString());
+            element.SetAttributeValue("Endpoints", string.Join(",", Endpoints.Select(e => e.StringRepresentation)));
             element.SetAttributeValue("GameVersion", GameVersion.ToString());
 
             SerializableProperty.SerializeProperties(this, element, saveIfDefault: true);
@@ -537,9 +586,9 @@ namespace Barotrauma.Networking
         }
 
         public bool Equals(ServerInfo other)
-            => other.Endpoint == Endpoint;
+            => other.Endpoints.Any(e => Endpoints.Contains(e));
 
-        public override int GetHashCode() => Endpoint.GetHashCode();
+        public override int GetHashCode() => Endpoints.First().GetHashCode();
 
         string ISerializableEntity.Name => "ServerInfo";
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; }

@@ -27,7 +27,7 @@ namespace Barotrauma.Steam
         }
 
         public Tab CurrentTab { get; private set; }
-        
+
         private readonly GUILayoutGroup tabber;
         private readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
 
@@ -36,10 +36,12 @@ namespace Barotrauma.Steam
         private CancellationTokenSource taskCancelSrc = new CancellationTokenSource();
         private readonly HashSet<SteamManager.Workshop.ItemThumbnail> itemThumbnails = new HashSet<SteamManager.Workshop.ItemThumbnail>();
 
-        private readonly GUIListBox popularModsList;
-        private readonly GUIListBox selfModsList;
+        private readonly Option<GUIListBox> popularModsListOption;
+        private readonly Option<GUIListBox> selfModsListOption;
 
         private uint memSubscribedModCount = 0;
+
+        private static bool EnableWorkshopSupport => SteamManager.IsInitialized;
 
         public MutableWorkshopMenu(GUIFrame parent) : base(parent)
         {
@@ -50,25 +52,34 @@ namespace Barotrauma.Steam
                     AbsoluteSpacing = GUI.IntScale(4)
                 };
 
-            tabber = new GUILayoutGroup(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), isHorizontal: true)
+            Vector2 tabberSize = EnableWorkshopSupport ? (1.0f, 0.05f) : Vector2.Zero;
+
+            tabber = new GUILayoutGroup(new RectTransform(tabberSize, mainLayout.RectTransform), isHorizontal: true)
                 { Stretch = true };
             tabContents = new Dictionary<Tab, (GUIButton Button, GUIFrame Content)>();
 
-            new GUIButton(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform, Anchor.BottomLeft),
-                style: "GUIButtonSmall", text: TextManager.Get("FindModsButton"))
+            if (EnableWorkshopSupport)
             {
-                OnClicked = (button, o) =>
+                new GUIButton(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform, Anchor.BottomLeft),
+                    style: "GUIButtonSmall", text: TextManager.Get("FindModsButton"))
                 {
-                    SteamManager.OverlayCustomUrl($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
-                    return false;
-                }
-            };
+                    OnClicked = (button, o) =>
+                    {
+                        SteamManager.OverlayCustomUrl($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
+                        return false;
+                    }
+                };
+            }
+            else
+            {
+                tabber.Visible = false;
+            }
 
             contentFrame = new GUIFrame(new RectTransform((1.0f, 0.95f), mainLayout.RectTransform), style: null);
 
             new GUICustomComponent(new RectTransform(Vector2.Zero, mainLayout.RectTransform),
                 onUpdate: (f, component) => UpdateSubscribedModInstalls());
-            
+
             CreateInstalledModsTab(
                 out enabledCoreDropdown,
                 out enabledRegularModsList,
@@ -76,9 +87,21 @@ namespace Barotrauma.Steam
                 out onInstalledInfoButtonHit,
                 out modsListFilter,
                 out modsListFilterTickboxes,
-                out bulkUpdateButton);
-            CreatePopularModsTab(out popularModsList);
-            CreatePublishTab(out selfModsList);
+                out bulkUpdateButtonOption);
+
+            if (EnableWorkshopSupport)
+            {
+                CreatePopularModsTab(out GUIListBox popularModList);
+                CreatePublishTab(out GUIListBox selfModsList);
+
+                popularModsListOption = Option<GUIListBox>.Some(popularModList);
+                selfModsListOption = Option<GUIListBox>.Some(selfModsList);
+            }
+            else
+            {
+                popularModsListOption = Option.None;
+                selfModsListOption = Option.None;
+            }
 
             SelectTab(Tab.InstalledMods);
         }
@@ -105,10 +128,10 @@ namespace Barotrauma.Steam
                 case Tab.InstalledMods:
                     PopulateInstalledModLists();
                     break;
-                case Tab.PopularMods:
+                case Tab.PopularMods when popularModsListOption.TryUnwrap(out var popularModsList):
                     PopulateItemList(popularModsList, SteamManager.Workshop.GetPopularItems(), includeSubscribeButton: true);
                     break;
-                case Tab.Publish:
+                case Tab.Publish when selfModsListOption.TryUnwrap(out var selfModsList):
                     PopulateItemList(selfModsList, SteamManager.Workshop.GetPublishedItems(), includeSubscribeButton: false, onFill: AddUnpublishedMods);
                     break;
             }
@@ -120,7 +143,10 @@ namespace Barotrauma.Steam
             {
                 OnClicked = (b, _) =>
                 {
-                    SelectTab(tab);
+                    if (tab != CurrentTab)
+                    {
+                        SelectTab(tab);
+                    }
                     return false;
                 }
             };

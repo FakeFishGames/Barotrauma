@@ -321,10 +321,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (ResizeHorizontal)
-                        placeSize.X = Math.Max(position.X - placePosition.X, Size.X);
-                    if (ResizeVertical)
-                        placeSize.Y = Math.Max(placePosition.Y - position.Y, Size.Y);
+                    if (ResizeHorizontal) { placeSize.X = Math.Max(position.X - placePosition.X, Size.X); }
+                    if (ResizeVertical) { placeSize.Y = Math.Max(placePosition.Y - position.Y, Size.Y); }
 
                     if (PlayerInput.PrimaryMouseButtonReleased())
                     {
@@ -369,15 +367,31 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, SpriteEffects spriteEffects = SpriteEffects.None)
+        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, float rotation = 0.0f, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                Sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor * 0.8f, scale: scale);
+                sprite.Draw(
+                    spriteBatch: spriteBatch,
+                    pos: new Vector2(placeRect.Center.X,
+                        -(placeRect.Y - placeRect.Height / 2)),
+                    color: SpriteColor * 0.8f,
+                    scale: scale,
+                    rotate: rotation,
+                    spriteEffect: spriteEffects ^ sprite.effects);
             }
             else
             {
-                Sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), SpriteColor * 0.8f);
+                Vector2 position = placeRect.Location.ToVector2();
+                Vector2 placeSize = placeRect.Size.ToVector2();
+                sprite?.DrawTiled(
+                    spriteBatch: spriteBatch,
+                    position: new Vector2(position.X, -position.Y),
+                    targetSize: placeSize,
+                    rotation: rotation,
+                    textureScale: Vector2.One * scale,
+                    color: SpriteColor * 0.8f,
+                    spriteEffects: spriteEffects ^ sprite.effects);
             }
         }
 

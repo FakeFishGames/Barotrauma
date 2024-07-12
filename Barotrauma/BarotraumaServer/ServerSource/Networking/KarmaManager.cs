@@ -240,19 +240,20 @@ namespace Barotrauma
         {
             Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == inventory.Owner);
             
-            Character yoinkerCharacter = yoinker?.Character;
+            Character thiefCharacter = yoinker?.Character;
             Character targetCharacter = inventory.Owner as Character;
 
-            if (yoinker == null || item == null || yoinkerCharacter == null || targetCharacter == null || yoinkerCharacter == targetCharacter) { return; }
+            if (yoinker == null || item == null || thiefCharacter == null || targetCharacter == null || thiefCharacter == targetCharacter) { return; }
             
             if (targetClient == null && (!DangerousItemStealBots || targetCharacter.AIController == null)) { return; }
 
             // Only if the target is alive and they are stunned, unconscious or handcuffed
             if (targetCharacter.IsDead || targetCharacter.Removed || !(targetCharacter.Stun > 0) && !targetCharacter.IsUnconscious && !targetCharacter.LockHands) { return; }
             
-            if (GameMain.Server.TraitorManager?.Traitors != null)
+            if (GameMain.Server.TraitorManager != null)
             {
-                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == targetCharacter ||  t.Character == yoinkerCharacter))
+                if (GameMain.Server.TraitorManager.IsTraitor(targetCharacter) ||
+                    GameMain.Server.TraitorManager.IsTraitor(thiefCharacter))
                 {
                     // Don't penalize traitors
                     return;
@@ -299,7 +300,7 @@ namespace Barotrauma
                 }
 
                 // Name tag doesn't belong to anyone in particular or we own the ID card
-                if (name == null || name == yoinkerCharacter.Name) { return; }
+                if (name == null || name == thiefCharacter.Name) { return; }
             }
 
             if (MathUtils.NearlyEqual(DangerousItemStealKarmaDecrease, 0)) { return; }
@@ -329,7 +330,7 @@ namespace Barotrauma
                 karmaDecrease *= 0.5f;
             }
 
-            AdjustKarma(yoinkerCharacter, -karmaDecrease, "Stolen dangerous item");
+            AdjustKarma(thiefCharacter, -karmaDecrease, "Stolen dangerous item");
         }
 
         public void OnCharacterHealthChanged(Character target, Character attacker, float damage, float stun, IEnumerable<Affliction> appliedAfflictions = null)
@@ -341,27 +342,23 @@ namespace Barotrauma
             if (target.IsDead || target.Removed) { return; }
 
             bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
-            if (GameMain.Server.TraitorManager?.Traitors != null)
+            if (GameMain.Server.TraitorManager != null)
             {
-                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == target))
+                if (GameMain.Server.TraitorManager.IsTraitor(target))
                 {
                     //traitors always count as enemies
                     isEnemy = true;
                 }
-                if (GameMain.Server.TraitorManager.Traitors.Any(t => 
-                    t.Character == attacker &&
-                    t.CurrentObjective != null &&
-                    t.CurrentObjective.IsEnemy(target)))
+                if (GameMain.Server.TraitorManager.IsTraitor(attacker))
                 {
-                    //target counts as an enemy to the traitor
+                    //others count as an enemies to the traitor
                     isEnemy = true;
                 }
             }
 
-            bool targetIsHusk = target.CharacterHealth?.GetAffliction<AfflictionHusk>(AfflictionPrefab.HuskInfectionType)?.State == AfflictionHusk.InfectionState.Active;
-            bool attackerIsHusk = attacker.CharacterHealth?.GetAffliction<AfflictionHusk>(AfflictionPrefab.HuskInfectionType)?.State == AfflictionHusk.InfectionState.Active;
+            static bool IsHusk(Character c) => c.IsHusk || c.IsHuskInfected;
             //huskified characters count as enemies to healthy characters and vice versa
-            if (targetIsHusk != attackerIsHusk) { isEnemy = true; }
+            if (IsHusk(attacker) != IsHusk(target)) { isEnemy = true; }
 
             if (appliedAfflictions != null)
             {
@@ -478,14 +475,11 @@ namespace Barotrauma
             if (damageAmount > 0)
             {
                 if (StructureDamageKarmaDecrease <= 0.0f) { return; }
-                 if (GameMain.Server.TraitorManager?.Traitors != null)
+                 if (GameMain.Server.TraitorManager != null)
                 {
-                    if (GameMain.Server.TraitorManager.Traitors.Any(t =>
-                        t.Character == attacker &&
-                        t.CurrentObjective != null &&
-                        t.CurrentObjective.IsAllowedToDamage(structure)))
+                    if (GameMain.Server.TraitorManager.IsTraitor(attacker))
                     {
-                        //traitor tasked to flood the sub -> damaging structures is ok
+                        //traitors are allowed to damage structures
                         return;
                     }
                 }
@@ -580,7 +574,7 @@ namespace Barotrauma
         public void OnItemContained(Item containedItem, Item container, Character character)
         {
             if (containedItem == null || container == null || character == null || character.IsTraitor) { return; }
-            if (container.Prefab.Identifier == "weldingtool" && containedItem.HasTag("oxygensource"))
+            if (container.Prefab.Identifier == Tags.WeldingFuel && containedItem.HasTag(Tags.OxygenSource))
             {
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
                 if (client == null) { return; }
@@ -614,7 +608,7 @@ namespace Barotrauma
 
             if (amount < 0.0f)
             {
-                float? herpesStrength = client.Character?.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.SpaceHerpesType);
+                float? herpesStrength = client.Character?.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.SpaceHerpesType);
                 var clientMemory = GetClientMemory(client);
                 clientMemory.KarmaDecreasesInPastMinute.RemoveAll(ta => ta.Time + 60.0f < Timing.TotalTime);
                 float aggregate = clientMemory.KarmaDecreasesInPastMinute.Select(ta => ta.Amount).DefaultIfEmpty().Aggregate((a, b) => a + b);

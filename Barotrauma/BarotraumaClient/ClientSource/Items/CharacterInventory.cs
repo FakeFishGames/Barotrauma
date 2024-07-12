@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -42,16 +43,29 @@ namespace Barotrauma
                 if (limbSlotIcons == null)
                 {
                     limbSlotIcons = new Dictionary<InvSlotType, Sprite>();
-                    int margin = 2;
-                    limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                    limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                    limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    foreach (InvSlotType invSlotType in Enum.GetValues(typeof(InvSlotType)))
+                    {
+                        var sprite = GUIStyle.GetComponentStyle($"InventorySlot.{invSlotType}")?.GetDefaultSprite();
+                        if (sprite != null)
+                        {
+                            limbSlotIcons.Add(invSlotType, sprite);
+                        }
+                    }
 
-                    limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                    limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
-                    limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));
-                    limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                    limbSlotIcons.Add(InvSlotType.Bag, new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(639, 926, 128,80)));
+                    int margin = 2;
+                    AddIfMissing(InvSlotType.Headset, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    AddIfMissing(InvSlotType.InnerClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    AddIfMissing(InvSlotType.Card, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    AddIfMissing(InvSlotType.Head, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    AddIfMissing(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
+                    AddIfMissing(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));
+                    AddIfMissing(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    AddIfMissing(InvSlotType.Bag, new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(639, 926, 128,80)));
+
+                    static void AddIfMissing(InvSlotType slotType, Sprite sprite)
+                    {
+                        limbSlotIcons.TryAdd(slotType, sprite);
+                    }
                 }
                 return limbSlotIcons;
             }
@@ -179,11 +193,30 @@ namespace Barotrauma
             BackgroundFrame = frame;
         }
 
-        protected override bool HideSlot(int i)
+        public override bool HideSlot(int i)
         {
             if (visualSlots[i].Disabled || (slots[i].HideIfEmpty && slots[i].Empty())) { return true; }
 
-            if (CharacterHealth.OpenHealthWindow != Character.Controlled?.CharacterHealth && SlotTypes[i] == InvSlotType.HealthInterface) { return true; }
+            if (SlotTypes[i] == InvSlotType.HealthInterface)
+            {
+                //hide health interface slot unless this character's health window is open
+                if (CharacterHealth.OpenHealthWindow == null || Character.Controlled == null)
+                {
+                    return true;
+                }
+                if (character == Character.Controlled)
+                {
+                    bool ownHealthWindowOpen = CharacterHealth.OpenHealthWindow == Character.Controlled.CharacterHealth;
+                    if (!ownHealthWindowOpen) { return true; }
+                }
+                else if (character == Character.Controlled.SelectedCharacter)
+                {
+                    bool otherCharacterHealthWindowOpen = CharacterHealth.OpenHealthWindow == Character.Controlled?.SelectedCharacter?.CharacterHealth;
+                    if (!otherCharacterHealthWindowOpen) { return true; }
+                    //can't access the health interface slot of a non-incapacitated player (bots are fine though)
+                    if (character.IsPlayer && !character.IsIncapacitated) { return true; }
+                }
+            }
 
             if (layout == Layout.Default)
             {
@@ -214,6 +247,11 @@ namespace Barotrauma
             }
 
             return false;
+        }
+
+        public void RefreshSlotPositions()
+        {
+            SetSlotPositions(CurrentLayout);
         }
 
         private void SetSlotPositions(Layout layout)
@@ -450,6 +488,9 @@ namespace Barotrauma
                 ((s.SlotIndex < 0 || s.SlotIndex >= slots.Length || slots[s.SlotIndex] == null) || (Character.Controlled != null && !Character.Controlled.CanAccessInventory(s.Inventory))));
             //remove highlighted subinventory slots that refer to items no longer in this inventory
             highlightedSubInventorySlots.RemoveWhere(s => s.Item != null && s.ParentInventory == this && s.Item.ParentInventory != this);
+            //remove highlighted subinventory slots if we're dragging that item out of the inventory
+            highlightedSubInventorySlots.RemoveWhere(s => s.Item != null && s.ParentInventory == this && DraggingItems.Contains(s.Item));
+
             tempHighlightedSubInventorySlots.Clear();
             tempHighlightedSubInventorySlots.AddRange(highlightedSubInventorySlots);
             foreach (var highlightedSubInventorySlot in tempHighlightedSubInventorySlots)
@@ -525,8 +566,9 @@ namespace Barotrauma
                             var itemContainer = item.GetComponent<ItemContainer>();
                             if (itemContainer != null && 
                                 itemContainer.KeepOpenWhenEquippedBy(character) && 
+                                !DraggingItems.Contains(item) &&
                                 character.CanAccessInventory(itemContainer.Inventory) &&
-                                !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
+                                !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory && s.SlotIndex == i))
                             {
                                 ShowSubInventory(new SlotReference(this, visualSlots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
                             }
@@ -538,9 +580,11 @@ namespace Barotrauma
             if (doubleClickedItems.Any())
             {
                 var quickUseAction = GetQuickUseAction(doubleClickedItems.First(), true, true, true);
+                int itemCount = 0;
                 foreach (Item doubleClickedItem in doubleClickedItems)
                 {
                     QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: doubleClickedItem == doubleClickedItems.First());
+                    itemCount++;
                     //only use one item if we're equipping or using it as a treatment
                     if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)
                     {
@@ -553,6 +597,12 @@ namespace Barotrauma
                     }
                     //if putting an item to a container with a max stack size of 1, only put one item from the stack
                     if (quickUseAction == QuickUseAction.PutToContainer && (character.SelectedItem?.GetComponent<ItemContainer>()?.MaxStackSize ?? 0) <= 1)
+                    {
+                        break;
+                    }
+                    if ((quickUseAction == QuickUseAction.TakeFromContainer || quickUseAction == QuickUseAction.PutToEquippedItem) &&
+                        doubleClickedItem.ParentInventory != null &&
+                        itemCount >= doubleClickedItem.Prefab.GetMaxStackSize(doubleClickedItem.ParentInventory))
                     {
                         break;
                     }
@@ -575,7 +625,7 @@ namespace Barotrauma
             //cancel dragging if too far away from the container of the dragged item
             if (DraggingItems.Any())
             {
-                var rootContainer = DraggingItems.First().GetRootContainer();
+                var rootContainer = DraggingItems.First().RootContainer;
                 var rootInventory = DraggingItems.First().ParentInventory;
 
                 if (rootContainer != null)
@@ -659,11 +709,11 @@ namespace Barotrauma
         private void ShowSubInventory(SlotReference slotRef, float deltaTime, Camera cam, List<SlotReference> hideSubInventories, bool isEquippedSubInventory)
         {
             Rectangle hoverArea = GetSubInventoryHoverArea(slotRef);
-            if (isEquippedSubInventory)
+            if (isEquippedSubInventory && slotRef.Inventory is not ItemInventory { Container.MovableFrame: true, Container.KeepOpenWhenEquipped: true })
             {
                 foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
                 {
-                    if (highlightedSubInventorySlot == slotRef) continue;
+                    if (highlightedSubInventorySlot == slotRef) { continue; }
                     if (hoverArea.Intersects(GetSubInventoryHoverArea(highlightedSubInventorySlot)))
                     {
                         return; // If an equipped one intersects with a currently active hover one, do not open
@@ -721,7 +771,7 @@ namespace Barotrauma
             {
                 if (Screen.Selected == GameMain.GameScreen)
                 {
-                    if (item.NonInteractable || item.NonPlayerTeamInteractable)
+                    if (!item.IsInteractable(Character.Controlled))
                     {
                         return QuickUseAction.None;
                     }
@@ -735,7 +785,7 @@ namespace Barotrauma
                 {
                     if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory
                     {
-                        if (character.HeldItems.Any(i => i.OwnInventory != null && i.OwnInventory.CanBePut(item)))
+                        if (character.HeldItems.Any(i => i.OwnInventory != null && i.OwnInventory.CanBePut(item) && character.CanAccessInventory(i.OwnInventory)))
                         {
                             return QuickUseAction.PutToEquippedItem;
                         }
@@ -768,7 +818,8 @@ namespace Barotrauma
 
                 if (selectedContainer != null && 
                     selectedContainer.Inventory != null && 
-                    !selectedContainer.Inventory.Locked && 
+                    !selectedContainer.Inventory.Locked &&
+                    selectedContainer.DrawInventory &&
                     allowInventorySwap)
                 {
                     //player has selected the inventory of another item -> attempt to move the item there
@@ -789,10 +840,32 @@ namespace Barotrauma
                 {
                     return QuickUseAction.TakeFromCharacter;
                 }
-                else if (character.HeldItems.Any(i => 
+                else if (character.HeldItems.FirstOrDefault(i =>
                     i.OwnInventory != null &&
-                    (i.OwnInventory.CanBePut(item) || ((i.OwnInventory.Capacity == 1 || i.OwnInventory.Container.HasSubContainers) && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
+                    i.OwnInventory.Container.DrawInventory &&
+                    character.CanAccessInventory(i.OwnInventory) &&
+                    (i.OwnInventory.CanBePut(item) || ((i.OwnInventory.Capacity == 1 || i.OwnInventory.Container.HasSubContainers) && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))) is { } equippedContainer)
                 {
+                    if (allowEquip)
+                    {
+                        if (!character.HasEquippedItem(item))
+                        {
+                            if (equippedContainer.GetComponent<ItemContainer>() is { QuickUseMovesItemsInside: false })
+                            {
+                                //put the item in a hand slot if that hand is free
+                                if ((item.AllowedSlots.Contains(InvSlotType.RightHand) && character.Inventory.GetItemInLimbSlot(InvSlotType.RightHand) == null) ||
+                                    (item.AllowedSlots.Contains(InvSlotType.LeftHand) && character.Inventory.GetItemInLimbSlot(InvSlotType.LeftHand) == null))
+                                {
+                                    return QuickUseAction.Equip;
+                                }
+                            }
+                        }
+                        //equipped -> attempt to unequip
+                        else if (item.AllowedSlots.Contains(InvSlotType.Any))
+                        {
+                            return QuickUseAction.Unequip;
+                        }
+                    }
                     return QuickUseAction.PutToEquippedItem;
                 }
                 else if (allowEquip) //doubleclicked and no other inventory is selected
@@ -957,7 +1030,7 @@ namespace Barotrauma
                     //order by the condition of the contained item to prefer putting into the item with the emptiest ammo/battery/tank
                     foreach (Item heldItem in character.HeldItems.OrderByDescending(heldItem => GetContainPriority(item, heldItem)))
                     {
-                        if (heldItem.OwnInventory == null) { continue; }
+                        if (heldItem.OwnInventory == null || !heldItem.OwnInventory.Container.DrawInventory) { continue; }
                         //don't allow swapping if we're moving items into an item with 1 slot holding a stack of items
                         //(in that case, the quick action should just fill up the stack)
                         bool disallowSwapping = 
@@ -1170,6 +1243,12 @@ namespace Barotrauma
             {
                 GUIComponent.DrawToolTip(spriteBatch, highlightedQuickUseSlot.QuickUseButtonToolTip, highlightedQuickUseSlot.EquipButtonRect);
             }
+        }
+
+        public void ClientEventWrite(IWriteMessage msg, Character.InventoryStateEventData extraData)
+        {
+            SharedWrite(msg, extraData.SlotRange);
+            syncItemsDelay = 1.0f;
         }
     }
 }

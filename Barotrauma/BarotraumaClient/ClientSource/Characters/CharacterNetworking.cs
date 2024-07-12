@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Immutable;
@@ -201,9 +202,9 @@ namespace Barotrauma
                 keys[(int)InputType.Use].Held = useInput;
                 keys[(int)InputType.Use].SetState(false, useInput);
 
+                bool crouching = msg.ReadBoolean();
                 if (AnimController is HumanoidAnimController)
                 {
-                    bool crouching = msg.ReadBoolean();
                     keys[(int)InputType.Crouch].Held = crouching;
                     keys[(int)InputType.Crouch].SetState(false, crouching);
                 }
@@ -214,7 +215,6 @@ namespace Barotrauma
 
                 double aimAngle = msg.ReadUInt16() / 65535.0 * 2.0 * Math.PI;
                 cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 500.0f;
-                TransformCursorPos();
 
                 bool ragdollInput = msg.ReadBoolean();
                 keys[(int)InputType.Ragdoll].Held = ragdollInput;
@@ -270,7 +270,34 @@ namespace Barotrauma
             if (readStatus)
             {
                 ReadStatus(msg);
-                AIController?.ClientRead(msg);
+                bool isEnemyAi = msg.ReadBoolean();
+                if (isEnemyAi)
+                {
+                    byte aiState = msg.ReadByte();
+                    if (AIController is EnemyAIController enemyAi)
+                    {
+                        enemyAi.State = (AIState)aiState;
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"Received enemy AI data for a character with no {nameof(EnemyAIController)}. Ignoring...");
+                    }
+                    bool isPet = msg.ReadBoolean();
+                    if (isPet)
+                    {
+                        byte happiness = msg.ReadByte();
+                        byte hunger = msg.ReadByte();
+                        if ((AIController as EnemyAIController)?.PetBehavior is PetBehavior petBehavior)
+                        {
+                            petBehavior.Happiness = (float)happiness / byte.MaxValue * petBehavior.MaxHappiness;
+                            petBehavior.Hunger = (float)hunger / byte.MaxValue * petBehavior.MaxHunger;
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Received pet AI data for a character with no {nameof(PetBehavior)}. Ignoring...");
+                        }
+                    }
+                }
             }
 
             msg.ReadPadBits();
@@ -324,12 +351,13 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Inventory.ClientEventRead(msg, sendingTime);
+                        Inventory.ClientEventRead(msg);
                     }
                     break;
                 case EventType.Control:
                     bool myCharacter = msg.ReadBoolean();
                     byte ownerID = msg.ReadByte();
+                    bool renamingEnabled = msg.ReadBoolean();
                     ResetNetState();
                     if (myCharacter)
                     {
@@ -358,6 +386,10 @@ namespace Barotrauma
                         }
                         IsRemotePlayer = ownerID > 0;
                     }
+                    if (info != null)
+                    {
+                        info.RenamingEnabled = renamingEnabled;
+                    }
                     break;
                 case EventType.Status:
                     ReadStatus(msg);
@@ -380,7 +412,7 @@ namespace Barotrauma
                     float targetY = msg.ReadSingle();
                     Vector2 targetSimPos = new Vector2(targetX, targetY);
                     //255 = entity already removed, no need to do anything
-                    if (attackLimbIndex == 255 || Removed) { break; }
+                    if (attackLimbIndex == 255 || targetEntityID == NullEntityID || Removed) { break; }
                     if (attackLimbIndex >= AnimController.Limbs.Length)
                     {
                         //it's possible to get these errors when mid-round syncing, as the client may not
@@ -506,6 +538,47 @@ namespace Barotrauma
                         bool removeOnDeath = msg.ReadBoolean();
                         info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
                     }
+                    break;
+                case EventType.LatchOntoTarget:
+                    bool attached = msg.ReadBoolean();
+                    if (attached)
+                    {
+                        Vector2 characterSimPos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        Vector2 attachSurfaceNormal = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        Vector2 attachPos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        int attachWallIndex = msg.ReadInt32();
+                        UInt16 attachTargetId = msg.ReadUInt16();
+
+                        if (AIController is EnemyAIController { LatchOntoAI: { } latchOntoAi })
+                        {
+                            var attachTargetEntity = FindEntityByID(attachTargetId);
+                            switch (attachTargetEntity)
+                            {
+                                case Character attachTargetCharacter:
+                                    latchOntoAi.SetAttachTarget(attachTargetCharacter);
+                                    break;
+                                case Structure attachTargetStructure:
+                                    latchOntoAi.SetAttachTarget(attachTargetStructure, attachPos, attachSurfaceNormal);
+                                    break;
+                                default:                                    
+                                    var allLevelWalls = Level.Loaded.GetAllCells();
+                                    if (attachWallIndex >= 0 && attachWallIndex <= allLevelWalls.Count)
+                                    {
+                                        latchOntoAi.SetAttachTarget(allLevelWalls[attachWallIndex]);
+                                    }
+                                    break;                                    
+                            }
+                            latchOntoAi.AttachToBody(attachPos, attachSurfaceNormal, characterSimPos);
+                        }
+                    }
+                    else
+                    {
+                        if (AIController is EnemyAIController { LatchOntoAI: { } latchOntoAi })
+                        {
+                            latchOntoAi.DeattachFromBody(reset: false);
+                        }
+                    }
+
                     break;
             }
             msg.ReadPadBits();
@@ -640,7 +713,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            DebugConsole.ThrowError("Could not set order \"" + orderPrefab.Identifier + "\" for character \"" + character.Name + "\" because required target entity was not found.");
+                            DebugConsole.AddSafeError("Could not set order \"" + orderPrefab.Identifier + "\" for character \"" + character.Name + "\" because required target entity was not found.");
                         }
                     }
                     else
@@ -655,11 +728,19 @@ namespace Barotrauma
                     character.ReadStatus(inc);
                 }
 
-                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None && !character.IsDead)
+                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
-                    GameMain.GameSession.CrewManager.AddCharacter(character);
+                    if (character.isDead)
+                    {
+                        //just add the info if dead (displayed in the round summary, and crew list if the character is revived)
+                        GameMain.GameSession.CrewManager.AddCharacterInfo(character.info);
+                    }
+                    else
+                    {
+                        GameMain.GameSession.CrewManager.AddCharacter(character);
+                    }
                 }
 
                 if (GameMain.Client.SessionId == ownerId)

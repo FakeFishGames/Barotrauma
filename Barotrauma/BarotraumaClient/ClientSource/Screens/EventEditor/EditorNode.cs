@@ -25,7 +25,7 @@ namespace Barotrauma
 
         public bool CanAddConnections { get; set; }
 
-        public readonly List<NodeConnection> Connections = new List<NodeConnection>();
+        public readonly List<EventEditorNodeConnection> Connections = new List<EventEditorNodeConnection>();
 
         public readonly List<NodeConnectionType> RemovableTypes = new List<NodeConnectionType>();
 
@@ -47,7 +47,7 @@ namespace Barotrauma
         public XElement SaveConnections()
         {
             XElement allConnections = new XElement("Connections", new XAttribute("i", ID));
-            foreach (NodeConnection connection in Connections)
+            foreach (EventEditorNodeConnection connection in Connections)
             {
                 XElement connectionElement = new XElement("Connection");
                 connectionElement.Add(new XAttribute("i", connection.ID));
@@ -93,12 +93,12 @@ namespace Barotrauma
 
                 if (id < 0) { continue; }
 
-                NodeConnection? connection = Connections.Find(c => c.ID == id);
+                EventEditorNodeConnection? connection = Connections.Find(c => c.ID == id);
                 if (connection == null)
                 {
                     if (string.Equals(connectionType, NodeConnectionType.Option.Label, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        connection = new NodeConnection(this, NodeConnectionType.Option) { ID = id, EndConversation = endConversation };
+                        connection = new EventEditorNodeConnection(this, NodeConnectionType.Option) { ID = id, EndConversation = endConversation };
                         Connections.Add(connection);
                     }
                     else
@@ -143,7 +143,7 @@ namespace Barotrauma
                     if (id2 < 0 || node < 0) { continue; }
 
                     EditorNode? otherNode = EventEditorScreen.nodeList.Find(editorNode => editorNode.ID == node);
-                    NodeConnection? otherConnection = otherNode?.Connections.Find(c => c.ID == id2);
+                    EventEditorNodeConnection? otherConnection = otherNode?.Connections.Find(c => c.ID == id2);
                     if (otherConnection != null)
                     {
                         connection.ConnectedTo.Add(otherConnection);
@@ -184,20 +184,20 @@ namespace Barotrauma
 
         public void Connect(EditorNode otherNode, NodeConnectionType type)
         {
-            NodeConnection? conn = Connections.Find(connection => connection.Type == type && !connection.ConnectedTo.Any());
-            NodeConnection? found = otherNode.Connections.Find(connection => connection.Type == NodeConnectionType.Activate);
+            EventEditorNodeConnection? conn = Connections.Find(connection => connection.Type == type && !connection.ConnectedTo.Any());
+            EventEditorNodeConnection? found = otherNode.Connections.Find(connection => connection.Type == NodeConnectionType.Activate);
             if (found != null)
             {
                 conn?.ConnectedTo.Add(found);
             }
         }
 
-        public void Connect(NodeConnection connection, NodeConnection ownConnection)
+        public static void Connect(EventEditorNodeConnection connection, EventEditorNodeConnection ownConnection)
         {
             connection.ConnectedTo.Add(ownConnection);
         }
 
-        public void Disconnect(NodeConnection conn)
+        public static void Disconnect(EventEditorNodeConnection conn)
         {
             foreach (var connection in EventEditorScreen.nodeList.SelectMany(editorNode => editorNode.Connections.Where(connection => connection.ConnectedTo.Contains(conn))))
             {
@@ -207,7 +207,7 @@ namespace Barotrauma
 
         public void ClearConnections()
         {
-            foreach (NodeConnection conn in Connections)
+            foreach (EventEditorNodeConnection conn in Connections)
             {
                 conn.ClearConnections();
             }
@@ -218,7 +218,7 @@ namespace Barotrauma
             return Rectangle;
         }
 
-        public NodeConnection? GetConnectionOnMouse(Vector2 mousePos)
+        public EventEditorNodeConnection? GetConnectionOnMouse(Vector2 mousePos)
         {
             return Connections.FirstOrDefault(eventNodeConnection => eventNodeConnection.DrawRectangle.Contains(mousePos));
         }
@@ -254,7 +254,7 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch, bodyRect, outlineColor, isFilled: false, depth: 1.0f, thickness: (int) Math.Max(1, 1.25f / camZoom));
 
             int x = 0, y = 0;
-            foreach (NodeConnection connection in Connections)
+            foreach (EventEditorNodeConnection connection in Connections)
             {
                 switch (connection.Type.NodeSide)
                 {
@@ -273,12 +273,17 @@ namespace Barotrauma
             GUIStyle.SubHeadingFont.DrawString(spriteBatch, Name, HeaderRectangle.Location.ToVector2() + (HeaderRectangle.Size.ToVector2() / 2) - (headerSize / 2), fontColor);
         }
 
-        public virtual void AddOption()
+        public void AddConnection(NodeConnectionType connectionType)
         {
-            Connections.Add(new NodeConnection(this, NodeConnectionType.Option));
+            Connections.Add(new EventEditorNodeConnection(this, connectionType));
         }
 
-        public void RemoveOption(NodeConnection connection)
+        public virtual void AddOption()
+        {
+            Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Option));
+        }
+
+        public void RemoveOption(EventEditorNodeConnection connection)
         {
             int index = Connections.IndexOf(connection);
             foreach (var nodeConnection in Connections.Skip(index))
@@ -313,7 +318,7 @@ namespace Barotrauma
 
             foreach (EditorNode editorNode in EventEditorScreen.nodeList)
             {
-                List<NodeConnection> childConnection = editorNode.Connections.Where(connection => connection.Type == NodeConnectionType.Next ||
+                List<EventEditorNodeConnection> childConnection = editorNode.Connections.Where(connection => connection.Type == NodeConnectionType.Next ||
                                                                                                   connection.Type == NodeConnectionType.Option ||
                                                                                                   connection.Type == NodeConnectionType.Failure ||
                                                                                                   connection.Type == NodeConnectionType.Success ||
@@ -338,18 +343,18 @@ namespace Barotrauma
             Size = new Vector2(256, 256);
             PropertyInfo[] properties = type.GetProperties().Where(info => info.CustomAttributes.Any(data => data.AttributeType == typeof(Serialize))).ToArray();
 
-            Connections.Add(new NodeConnection(this, NodeConnectionType.Activate));
-            Connections.Add(new NodeConnection(this, NodeConnectionType.Next));
+            Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Activate));
+            Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Next));
 
             foreach (PropertyInfo property in properties)
             {
-                Connections.Add(new NodeConnection(this, NodeConnectionType.Value, property.Name, property.PropertyType, property));
+                Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Value, property.Name, property.PropertyType, property));
             }
 
             if (IsInstanceOf(type, typeof(BinaryOptionAction)))
             {
-                Connections.Add(new NodeConnection(this, NodeConnectionType.Success));
-                Connections.Add(new NodeConnection(this, NodeConnectionType.Failure));
+                Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Success));
+                Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Failure));
             }
             
             if (IsInstanceOf(type, typeof(ConversationAction)))
@@ -360,7 +365,7 @@ namespace Barotrauma
 
             if (IsInstanceOf(type, typeof(StatusEffectAction)) || IsInstanceOf(type, typeof(MissionAction)))
             {
-                Connections.Add(new NodeConnection(this, NodeConnectionType.Add));
+                Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Add));
             }
         }
 
@@ -395,7 +400,7 @@ namespace Barotrauma
             return ScaleRectFromConnections(Connections, Rectangle);
         }
 
-        public static Rectangle ScaleRectFromConnections(List<NodeConnection> connections, Rectangle baseRect)
+        public static Rectangle ScaleRectFromConnections(List<EventEditorNodeConnection> connections, Rectangle baseRect)
         {
             // determine how big this box should get based on how many input/output nodes the sides have
             int y = connections.Count(connection => connection.Type.NodeSide == NodeConnectionType.Side.Left),
@@ -409,15 +414,15 @@ namespace Barotrauma
 
         public Tuple<EditorNode?, string?, bool>[] GetOptions()
         {
-            IEnumerable<NodeConnection> myNode = Connections.Where(connection => connection.Type == NodeConnectionType.Option).ToArray();
+            IEnumerable<EventEditorNodeConnection> myNode = Connections.Where(connection => connection.Type == NodeConnectionType.Option).ToArray();
             List<Tuple<EditorNode?, string?, bool>> list = new List<Tuple<EditorNode?, string?, bool>>();
             if (myNode != null)
             {
-                foreach (NodeConnection connection in myNode)
+                foreach (EventEditorNodeConnection connection in myNode)
                 {
                     if (connection.ConnectedTo.Any())
                     {
-                        foreach (NodeConnection nodeConnection in connection.ConnectedTo)
+                        foreach (EventEditorNodeConnection nodeConnection in connection.ConnectedTo)
                         {
                             list.Add(Tuple.Create((EditorNode?) nodeConnection.Parent, connection.OptionText, connection.EndConversation));
                         }
@@ -464,7 +469,7 @@ namespace Barotrauma
             Type = type;
             Value = type.IsValueType ? Activator.CreateInstance(type) : null;
             Size = new Vector2(256, 32);
-            Connections.Add(new NodeConnection(this, NodeConnectionType.Out, "Output", Type));
+            Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Out, "Output", Type));
         }
 
         public override XElement Save()
@@ -545,7 +550,10 @@ namespace Barotrauma
                     width -= 16;
                 }
 
-                valueText = ToolBox.WrapText(valueText, width, GUIStyle.SubHeadingFont.Value);
+                if (GUIStyle.SubHeadingFont.Value != null)
+                {
+                    valueText = ToolBox.WrapText(valueText, width, GUIStyle.SubHeadingFont.Value);
+                }
                 wrappedText = valueText;
             }
         }
@@ -564,7 +572,7 @@ namespace Barotrauma
             Vector2 pos = GetDrawRectangle().Location.ToVector2() + (GetDrawRectangle().Size.ToVector2() / 2) - (valueTextSize / 2);
             Rectangle drawRect = Rectangle;
             drawRect.Inflate(-1, -1);
-            GUI.DrawString(spriteBatch, pos, WrappedText, NodeConnection.GetPropertyColor(Type), font: GUIStyle.SubHeadingFont);
+            GUI.DrawString(spriteBatch, pos, WrappedText, EventEditorNodeConnection.GetPropertyColor(Type), font: GUIStyle.SubHeadingFont);
         }
     }
 
@@ -587,9 +595,9 @@ namespace Barotrauma
         {
             CanAddConnections = true;
             RemovableTypes.Add(NodeConnectionType.Value);
-            Connections.Add(new NodeConnection(this, NodeConnectionType.Activate));
-            Connections.Add(new NodeConnection(this, NodeConnectionType.Next));
-            Connections.Add(new NodeConnection(this, NodeConnectionType.Add));
+            Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Activate));
+            Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Next));
+            Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Add));
         }
 
         public CustomNode() : this("Custom")
@@ -605,7 +613,7 @@ namespace Barotrauma
         {
             Prompt(s =>
             {
-                Connections.Add(new NodeConnection(this, NodeConnectionType.Value, s, typeof(string)));
+                Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Value, s, typeof(string)));
                 return true;
             });
         }
@@ -617,7 +625,7 @@ namespace Barotrauma
             newElement.Add(new XAttribute("name", Name));
             newElement.Add(new XAttribute("xpos", Position.X));
             newElement.Add(new XAttribute("ypos", Position.Y));
-            foreach (NodeConnection connection in Connections.FindAll(connection => connection.Type == NodeConnectionType.Value))
+            foreach (EventEditorNodeConnection connection in Connections.FindAll(connection => connection.Type == NodeConnectionType.Value))
             {
                 newElement.Add(new XElement("Value", new XAttribute("name", connection.Attribute)));
             }
@@ -634,7 +642,7 @@ namespace Barotrauma
             newNode.Position = new Vector2(posX, posY);
             foreach (XElement valueElement in element.Elements())
             {
-                newNode.Connections.Add(new NodeConnection(newNode, NodeConnectionType.Value, valueElement.GetAttributeString("name", string.Empty), typeof(string)));
+                newNode.Connections.Add(new EventEditorNodeConnection(newNode, NodeConnectionType.Value, valueElement.GetAttributeString("name", string.Empty), typeof(string)));
             }
             return newNode;
         }

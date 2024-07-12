@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using static Barotrauma.MissionPrefab;
 
 namespace Barotrauma
 {
@@ -27,7 +28,11 @@ namespace Barotrauma
 
         public Color GetDifficultyColor()
         {
-            int v = Difficulty ?? MissionPrefab.MinDifficulty;
+            return GetDifficultyColor(Difficulty ?? MissionPrefab.MinDifficulty);
+        }
+        public static Color GetDifficultyColor(int difficulty)
+        {
+            int v = difficulty;
             float t = MathUtils.InverseLerp(MissionPrefab.MinDifficulty, MissionPrefab.MaxDifficulty, v);
             return ToolBox.GradientLerp(t, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
         }
@@ -61,36 +66,48 @@ namespace Barotrauma
             List<LocalizedString> reputationRewardTexts = new List<LocalizedString>();
             foreach (var reputationReward in ReputationRewards)
             {
-                FactionPrefab targetFactionPrefab;
-                if (reputationReward.Key == "location" )
+                FactionPrefab factionPrefab;
+                if (reputationReward.FactionIdentifier == "location" )
                 {
-                    targetFactionPrefab = OriginLocation.Faction?.Prefab;
+                    factionPrefab = OriginLocation.Faction?.Prefab;
                 }
                 else
                 {
-                    FactionPrefab.Prefabs.TryGet(reputationReward.Key, out targetFactionPrefab);
-                }         
-                
-                if (targetFactionPrefab == null)
-                {
-                    return string.Empty;
+                    FactionPrefab.Prefabs.TryGet(reputationReward.FactionIdentifier, out factionPrefab);
                 }
 
-                float totalReputationChange = reputationReward.Value;
-                if (GameMain.GameSession?.Campaign?.Factions.Find(f => f.Prefab == targetFactionPrefab) is Faction faction)
+                if (factionPrefab != null)
                 {
-                    totalReputationChange = reputationReward.Value * faction.Reputation.GetReputationChangeMultiplier(reputationReward.Value);
+                    AddReputationText(factionPrefab, reputationReward.Amount);
+                    if (!MathUtils.NearlyEqual(reputationReward.AmountForOpposingFaction, 0.0f) &&
+                        FactionPrefab.Prefabs.TryGet(factionPrefab.OpposingFaction, out var opposingFactionPrefab))
+                    {
+                        AddReputationText(opposingFactionPrefab, reputationReward.AmountForOpposingFaction);
+                    }
+                }
+            }
+
+            void AddReputationText(FactionPrefab factionPrefab, float amount)
+            {
+                if (factionPrefab == null) { return; }
+
+                float totalReputationChange = amount;
+                if (GameMain.GameSession?.Campaign?.Factions.Find(f => f.Prefab == factionPrefab) is Faction faction)
+                {
+                    totalReputationChange = amount * faction.Reputation.GetReputationChangeMultiplier(amount);
                 }
 
-                LocalizedString name = $"‖color:{XMLExtensions.ToStringHex(targetFactionPrefab.IconColor)}‖{targetFactionPrefab.Name}‖end‖";
+                LocalizedString name = $"‖color:{XMLExtensions.ToStringHex(factionPrefab.IconColor)}‖{factionPrefab.Name}‖end‖";
                 float normalizedValue = MathUtils.InverseLerp(-100.0f, 100.0f, totalReputationChange);
                 string formattedValue = ((int)Math.Round(totalReputationChange)).ToString("+#;-#;0"); //force plus sign for positive numbers
                 LocalizedString rewardText = TextManager.GetWithVariables(
                     "reputationformat",
                     ("[reputationname]", name),
-                    ("[reputationvalue]", $"‖color:{XMLExtensions.ToStringHex(Reputation.GetReputationColor(normalizedValue))}‖{formattedValue}‖end‖" ));
+                    ("[reputationvalue]", $"‖color:{XMLExtensions.ToStringHex(Reputation.GetReputationColor(normalizedValue))}‖{formattedValue}‖end‖"));
                 reputationRewardTexts.Add(rewardText.Value);
             }
+
+
             if (reputationRewardTexts.Any())
             {
                 return RichString.Rich(TextManager.AddPunctuation(':', TextManager.Get("reputation"), LocalizedString.Join(", ", reputationRewardTexts)));
@@ -98,6 +115,26 @@ namespace Barotrauma
             else
             {
                 return string.Empty;
+            }
+        }
+        partial void DistributeExperienceToCrew(IEnumerable<Character> crew, int experienceGain)
+        {
+            foreach (Character character in crew)
+            {
+                GiveMissionExperience(character.Info);
+            }
+            void GiveMissionExperience(CharacterInfo info)
+            {
+                if (info == null) { return; }
+                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f, info.Character);
+                //check if anyone else in the crew has talents that could give a bonus to this one
+                foreach (var c in crew)
+                {
+                    if (c == info.Character) { continue; }
+                    c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplierIndividual);
+                }
+                info.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
+                info.GiveExperience((int)(experienceGain * experienceGainMultiplierIndividual.Value));
             }
         }
 
@@ -114,10 +151,10 @@ namespace Barotrauma
                 message = ModifyMessage(message);
             }
 
-            CoroutineManager.StartCoroutine(ShowMessageBoxAfterRoundSummary(header, message));
+            CoroutineManager.StartCoroutine(ShowMessageBoxWhenRoundSummaryIsNotActive(header, message));
         }
 
-        private IEnumerable<CoroutineStatus> ShowMessageBoxAfterRoundSummary(LocalizedString header, LocalizedString message)
+        private IEnumerable<CoroutineStatus> ShowMessageBoxWhenRoundSummaryIsNotActive(LocalizedString header, LocalizedString message)
         {
             while (GUIMessageBox.VisibleBox?.UserData is RoundSummary)
             {

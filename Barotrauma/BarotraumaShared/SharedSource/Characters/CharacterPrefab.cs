@@ -18,6 +18,21 @@ namespace Barotrauma
         public string Name => Identifier.Value;
         public Identifier VariantOf { get; }
         public CharacterPrefab ParentPrefab { get; set; }
+        
+        public Identifier GetBaseCharacterSpeciesName(Identifier speciesName)
+        {
+            if (!VariantOf.IsEmpty)
+            {
+                speciesName = VariantOf;
+                if (ParentPrefab is { VariantOf.IsEmpty: false } parentPrefab)
+                {
+                    speciesName = parentPrefab.GetBaseCharacterSpeciesName(speciesName);
+                }   
+            }
+            return speciesName;
+        }
+
+        public bool HasCharacterInfo { get; private set; }
 
         public void InheritFrom(CharacterPrefab parent)
         {
@@ -32,9 +47,10 @@ namespace Barotrauma
             var menuCategoryElement = ConfigElement.GetChildElement("MenuCategory");
             var pronounsElement = ConfigElement.GetChildElement("Pronouns");
 
-            if (headsElement != null)
+            HasCharacterInfo = headsElement != null || ConfigElement.GetAttributeBool(nameof(HasCharacterInfo), false);
+            if (HasCharacterInfo)
             {
-                CharacterInfoPrefab = new CharacterInfoPrefab(headsElement, varsElement, menuCategoryElement, pronounsElement);
+                CharacterInfoPrefab = new CharacterInfoPrefab(this, headsElement, varsElement, menuCategoryElement, pronounsElement);
             }
         }
 
@@ -46,6 +62,8 @@ namespace Barotrauma
         public static IEnumerable<ContentXElement> ConfigElements => Prefabs.Select(p => p.ConfigElement);
 
         public static readonly Identifier HumanSpeciesName = "human".ToIdentifier();
+        public static readonly Identifier HumanGroup = "human".ToIdentifier();
+
         public static CharacterFile HumanConfigFile => HumanPrefab.ContentFile as CharacterFile;
         public static CharacterPrefab HumanPrefab => FindBySpeciesName(HumanSpeciesName);
 
@@ -93,7 +111,8 @@ namespace Barotrauma
             name = ParseName(mainElement, file);
             if (name == Identifier.Empty)
             {
-                DebugConsole.ThrowError($"No species name defined for: {file.Path}");
+                DebugConsole.ThrowError($"No species name defined for: {file.Path}",
+                    contentPackage: file.ContentPackage);
                 return false;
             }
             return true;

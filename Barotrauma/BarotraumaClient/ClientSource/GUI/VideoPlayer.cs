@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, Identifier contentId, bool startPlayback)
         {
-            LoadContent(contentPath, videoSettings, textSettings, contentId, startPlayback, new RawLString(""), null);
+            LoadContent(contentPath, videoSettings, textSettings, contentId, startPlayback, LocalizedString.EmptyString, null);
         }
 
         public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, Identifier contentId, bool startPlayback, LocalizedString objective, Action onStop = null)

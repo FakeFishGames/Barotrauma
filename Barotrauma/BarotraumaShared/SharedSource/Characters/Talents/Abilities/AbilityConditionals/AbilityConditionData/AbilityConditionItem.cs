@@ -19,7 +19,8 @@ namespace Barotrauma.Abilities
 
             if (identifiers.None() && tags.None() && category == MapEntityCategory.None)
             {
-                DebugConsole.ThrowError($"Error in talent \"{characterTalent}\". No identifiers, tags or category defined.");
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent}\". No identifiers, tags or category defined.",
+                    contentPackage: conditionElement.ContentPackage);
             }
         }
 

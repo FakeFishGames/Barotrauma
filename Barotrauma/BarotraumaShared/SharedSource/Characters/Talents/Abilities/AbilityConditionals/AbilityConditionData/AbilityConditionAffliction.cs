@@ -1,7 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
+﻿using System.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -15,9 +12,9 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityAffliction)?.Affliction is Affliction affliction)
+            if (abilityObject is IAbilityAffliction { Affliction: Affliction affliction })
             {
-                return afflictions.Any(a => a == affliction.Identifier);
+                return afflictions.Any(a => a == affliction.Identifier || a == affliction.Prefab.AfflictionType);
             }
             else
             {

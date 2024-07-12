@@ -2,31 +2,81 @@
 <CampaignSettingPresets>
   <CampaignSettingDefinitions>
     <StartingBalanceAmount high="10000" medium="8500" low="6000" />
-    <ExtraEventManagerDifficulty easy="-15.0" medium="0.0" hard="20.0" hellish="60.0" />
-    <LevelDifficultyMultiplier easy="0.6" medium="1.0" hard="1.6" hellish="10.0" />
+    <ExtraEventManagerDifficulty low="-15.0" medium="0.0" high="20.0" hellish="60.0" />
+    <LevelDifficultyMultiplier low="0.6" medium="1.0" high="1.6" hellish="10.0" />
+    <PatdownProbabilityMin off="0" low="0.2" medium="0.3" high="0.4" />
+    <PatdownProbabilityMax off="0" low="0.9" medium="0.9" high="1.0" />
   </CampaignSettingDefinitions>
   <CampaignSettings
     presetname="Easy"
     TutorialEnabled="true"
     RadiationEnabled="false"
-    StartingBalanceAmount="High"
+    StartingBalanceAmount="high"
     StartItemSet="easy"
-    MaxMissionCount="3"
-    Difficulty="Easy"/>
+    MaxMissionCount="2"
+    WorldHostility="low"
+    CrewVitalityMultiplier="1.1"
+    NonCrewVitalityMultiplier="1.0"
+    OxygenMultiplier="1.2"
+    FuelMultiplier="1.2"
+    MissionRewardMultiplier="1.0"
+    ShopPriceMultiplier="0.9"
+    ShipyardPriceMultiplier="0.9"
+    RepairFailMultiplier="1.0"
+    PatdownProbability="low"
+    ShowHuskWarning="true"/>
   <CampaignSettings
     presetname="Normal"
     TutorialEnabled="true"
     RadiationEnabled="false"
-    StartingBalanceAmount="Medium"
+    StartingBalanceAmount="medium"
     StartItemSet="normal"
     MaxMissionCount="2"
-    Difficulty="Medium"/>
+    WorldHostility="medium"
+    CrewVitalityMultiplier="1.0"
+    NonCrewVitalityMultiplier="1.0"
+    OxygenMultiplier="1.0"
+    FuelMultiplier="1.0"
+    MissionRewardMultiplier="1.0"
+    ShopPriceMultiplier="1.0"
+    ShipyardPriceMultiplier="1.0"
+    RepairFailMultiplier="1.0"
+    PatdownProbability="medium"
+    ShowHuskWarning="true"/>
   <CampaignSettings
     presetname="Hard"
     TutorialEnabled="false"
     RadiationEnabled="false"
-    StartingBalanceAmount="Low"
+    StartingBalanceAmount="low"
     StartItemSet="hard"
-    MaxMissionCount="1"
-    Difficulty="Hard"/>
+    MaxMissionCount="2"
+    WorldHostility="high"
+    CrewVitalityMultiplier="1.0"
+    NonCrewVitalityMultiplier="1.0"
+    OxygenMultiplier="0.7"
+    FuelMultiplier="0.9"
+    MissionRewardMultiplier="1.0"
+    ShopPriceMultiplier="1.5"
+    ShipyardPriceMultiplier="1.5"
+    RepairFailMultiplier="2.0"
+    PatdownProbability="high"
+    ShowHuskWarning="false"/>
+  <CampaignSettings
+    presetname="Abyssal"
+    TutorialEnabled="false"
+    RadiationEnabled="false"
+    StartingBalanceAmount="low"
+    StartItemSet="hard"
+    MaxMissionCount="2"
+    WorldHostility="high"
+    CrewVitalityMultiplier="0.9"
+    NonCrewVitalityMultiplier="1.1"
+    OxygenMultiplier="0.4"
+    FuelMultiplier="0.8"
+    MissionRewardMultiplier="0.8"
+    ShopPriceMultiplier="2.0"
+    ShipyardPriceMultiplier="2.0"
+    RepairFailMultiplier="5.0"
+    PatdownProbability="high"
+    ShowHuskWarning="false"/>
 </CampaignSettingPresets>

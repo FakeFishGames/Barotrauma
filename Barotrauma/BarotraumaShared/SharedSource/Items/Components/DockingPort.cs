@@ -1,13 +1,15 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.IO;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
+#if CLIENT
+using Barotrauma.Lights;
+#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -243,10 +245,12 @@ namespace Barotrauma.Items.Components
             if (!target.item.Submarine.DockedTo.Contains(item.Submarine))
             {
                 target.item.Submarine.ConnectedDockingPorts.Add(item.Submarine, target);
+                target.item.Submarine.RefreshConnectedSubs();
             }
             if (!item.Submarine.DockedTo.Contains(target.item.Submarine))
             {
                 item.Submarine.ConnectedDockingPorts.Add(target.item.Submarine, this);
+                item.Submarine.RefreshConnectedSubs();
             }
 
             DockingTarget = target;
@@ -322,6 +326,8 @@ namespace Barotrauma.Items.Components
 
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
+                item.SendSignal("1", "on_dock");
+                DockingTarget.Item.SendSignal("1", "on_dock");
 
 #if SERVER
                 if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
@@ -507,9 +513,9 @@ namespace Barotrauma.Items.Components
             wire.RemoveConnection(DockingTarget.item);
 
             powerConnection.TryAddLink(wire);
-            wire.Connect(powerConnection, false, false);
+            wire.TryConnect(powerConnection, addNode: false);
             recipient.TryAddLink(wire);
-            wire.Connect(recipient, false, false);
+            wire.TryConnect(recipient, addNode: false);
 
             //Flag connections to be updated
             Powered.ChangedConnections.Add(powerConnection);
@@ -558,6 +564,7 @@ namespace Barotrauma.Items.Components
             var subs = new Submarine[] { item.Submarine, DockingTarget.item.Submarine };
 
             bodies = new Body[4];
+            RemoveConvexHulls();
 
             if (DockingTarget.Door != null)
             {
@@ -648,8 +655,12 @@ namespace Barotrauma.Items.Components
                     hullRects[i].X -= expand;
                     hullRects[i].Width += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint(subs[i].WorldPosition - subs[i].HiddenSubPosition);
-                    hulls[i] = new Hull(hullRects[i], subs[i]);
-                    hulls[i].RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch";
+                    hulls[i] = new Hull(hullRects[i], subs[i])
+                    {
+                        RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch",
+                        AvoidStaying = true,
+                        IsWetRoom = true
+                    };
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
 
@@ -661,6 +672,15 @@ namespace Barotrauma.Items.Components
                             BodyType.Static);
                     }
                 }
+#if CLIENT
+                for (int i = 0; i < 2; i++)
+                {
+                    convexHulls[i] =
+                        new ConvexHull(new Rectangle(
+                            new Point((int)item.Position.X, item.Rect.Y - item.Rect.Height * i),
+                            new Point((int)(DockingTarget.item.WorldPosition.X - item.WorldPosition.X), 0)), IsHorizontal, item);                    
+                }
+#endif
 
                 if (rightHullDiff <= 100 && hulls[0].Submarine != null)
                 {
@@ -764,15 +784,17 @@ namespace Barotrauma.Items.Components
                     hullRects[1].Height += midHullDiff / 2 + 1;
                 }
 
-
                 int expand = 5;
                 for (int i = 0; i < 2; i++)
                 {
                     hullRects[i].Y += expand;
                     hullRects[i].Height += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint(subs[i].WorldPosition - subs[i].HiddenSubPosition);
-                    hulls[i] = new Hull(hullRects[i], subs[i]);
-                    hulls[i].RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch";
+                    hulls[i] = new Hull(hullRects[i], subs[i])
+                    {
+                        RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch",
+                        AvoidStaying = true
+                    };
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
 
@@ -784,6 +806,15 @@ namespace Barotrauma.Items.Components
                             BodyType.Static);
                     }
                 }
+#if CLIENT
+                for (int i = 0; i < 2; i++)
+                {
+                    convexHulls[i] =
+                        new ConvexHull(new Rectangle(
+                            new Point(item.Rect.X + item.Rect.Width * i, (int)item.Position.Y), 
+                            new Point(0, (int)(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y))), IsHorizontal, item);
+                }
+#endif
 
                 if (midHullDiff <= 100 && hulls[0].Submarine != null)
                 {
@@ -821,6 +852,8 @@ namespace Barotrauma.Items.Components
                 body.Friction = 0.5f;
             }
         }
+
+        partial void RemoveConvexHulls();
 
         private void LinkHullsToGaps()
         {
@@ -916,7 +949,9 @@ namespace Barotrauma.Items.Components
             }
 
             DockingTarget.item.Submarine.ConnectedDockingPorts.Remove(item.Submarine);
+            DockingTarget.item.Submarine.RefreshConnectedSubs();
             item.Submarine.ConnectedDockingPorts.Remove(DockingTarget.item.Submarine);
+            item.Submarine.RefreshConnectedSubs();
 
             if (Door != null && DockingTarget.Door != null)
             {
@@ -943,10 +978,11 @@ namespace Barotrauma.Items.Components
             item.linkedTo.Clear();
 
             docked = false;
+            item.SendSignal("1", "on_undock");
 
+            Item.Submarine.RefreshOutdoorNodes();
             Item.Submarine.EnableObstructedWaypoints(DockingTarget.Item.Submarine);
             obstructedWayPointsDisabled = false;
-            Item.Submarine.RefreshOutdoorNodes();
 
             DockingTarget.Undock();
             DockingTarget = null;
@@ -975,6 +1011,8 @@ namespace Barotrauma.Items.Components
             
             hulls[0]?.Remove(); hulls[0] = null;
             hulls[1]?.Remove(); hulls[1] = null;
+
+            RemoveConvexHulls();
 
             if (gap != null)
             {
@@ -1078,8 +1116,8 @@ namespace Barotrauma.Items.Components
             }
             if (!obstructedWayPointsDisabled && dockingState >= 0.99f)
             {
-                Item.Submarine.DisableObstructedWayPoints(DockingTarget?.Item.Submarine);
                 Item.Submarine.RefreshOutdoorNodes();
+                Item.Submarine.DisableObstructedWayPoints(DockingTarget?.Item.Submarine);
                 obstructedWayPointsDisabled = true;
             }
         }
@@ -1091,6 +1129,7 @@ namespace Barotrauma.Items.Components
             hulls[0]?.Remove(); hulls[0] = null;
             hulls[1]?.Remove(); hulls[1] = null;
             gap?.Remove(); gap = null;
+            RemoveConvexHulls();
 
             overlaySprite?.Remove();
             overlaySprite = null;

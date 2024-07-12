@@ -1,4 +1,4 @@
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -46,6 +46,7 @@ namespace Barotrauma
             }
 
             sonarLabel = TextManager.Get("beaconstationsonarlabel");
+            DebugConsole.NewMessage("Initialized beacon mission: " + prefab.Identifier, Color.LightSkyBlue, debugOnly: true);
         }
 
         private void LoadMonsters(XElement monsterElement, MonsterSet set)
@@ -65,7 +66,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Error in beacon mission \"{Prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                DebugConsole.ThrowError($"Error in beacon mission \"{Prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".",
+                    contentPackage: Prefab.ContentPackage);
             }
         }
 
@@ -73,7 +75,7 @@ namespace Barotrauma
         {
             get
             {
-                if (level.BeaconStation == null)
+                if (level.BeaconStation == null || state > 0)
                 {
                     yield break;
                 }
@@ -91,13 +93,14 @@ namespace Barotrauma
             if (IsClient) { return; }
             if (!swarmSpawned && level.CheckBeaconActive())
             {
-                List<Submarine> connectedSubs = level.BeaconStation.GetConnectedSubs();
+                IEnumerable<Submarine> connectedSubs = level.BeaconStation.GetConnectedSubs();
                 foreach (Item item in Item.ItemList)
                 {
                     if (!connectedSubs.Contains(item.Submarine) || item.Submarine?.Info is { IsPlayer: true  }) { continue; }
-                    if (item.GetComponent<PowerTransfer>() != null ||
+                    bool isReactor = item.GetComponent<Reactor>() != null;
+                    if ((isReactor && GameMain.GameSession is not { TraitorsEnabled: true }) ||
+                        item.GetComponent<PowerTransfer>() != null ||
                         item.GetComponent<PowerContainer>() != null ||
-                        item.GetComponent<Reactor>() != null ||
                         item.GetComponent<Sonar>() != null)
                     {
                         item.InvulnerableToDamage = true;
@@ -134,18 +137,21 @@ namespace Barotrauma
                     }
                 }
 
-                var monsterSet = ToolBox.SelectWeightedRandom(monsterSets, m => m.Commonness, Rand.RandSync.Unsynced);
-                foreach ((CharacterPrefab monsterSpecies, Point monsterCountRange) in monsterSet.MonsterPrefabs)
+                if (monsterSets.Any())
                 {
-                    int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
-                    for (int i = 0; i < amount; i++)
+                    var monsterSet = ToolBox.SelectWeightedRandom(monsterSets, m => m.Commonness, Rand.RandSync.Unsynced);
+                    foreach ((CharacterPrefab monsterSpecies, Point monsterCountRange) in monsterSet.MonsterPrefabs)
                     {
-                        CoroutineManager.Invoke(() =>
+                        int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
+                        for (int i = 0; i < amount; i++)
                         {
-                            //round ended before the coroutine finished
-                            if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-                            Entity.Spawner.AddCharacterToSpawnQueue(monsterSpecies.Identifier, spawnPos);
-                        }, Rand.Range(0f, amount));
+                            CoroutineManager.Invoke(() =>
+                            {
+                                //round ended before the coroutine finished
+                                if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+                                Entity.Spawner.AddCharacterToSpawnQueue(monsterSpecies.Identifier, spawnPos);
+                            }, Rand.Range(0f, amount));
+                        }
                     }
                 }
 

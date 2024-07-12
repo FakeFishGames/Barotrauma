@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Abilities;
-using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -9,12 +8,24 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    interface IDeteriorateUnderStress
+    {
+        public float CurrentStress { get; }
+    }
+
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
         private readonly LocalizedString header;
 
         private float deteriorationTimer;
-        private float deteriorateAlwaysResetTimer;
+        public float ForceDeteriorationTimer
+        {
+            get;
+            private set;
+        }
 
         private int updateDeteriorationCounter;
         private const int UpdateDeteriorationInterval = 10;
@@ -62,8 +73,43 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(60f, IsPropertySaveable.Yes, description: "How long will the item spontaneously deteriorate after being sabotaged.")]
+        public float SabotageDeteriorationDuration
+        {
+            get;
+            set;
+        }
+
         [Serialize(80.0f, IsPropertySaveable.Yes, description: "The condition of the item has to be below this for it to become repairable. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float RepairThreshold
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "How much faster the device can deteriorate when under stress (e.g. when operating at full speed/power)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float MaxStressDeteriorationMultiplier
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "At what speed/power must the device be operating at to be considered \"under stress\"."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float StressDeteriorationThreshold
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "How fast the deterioration speed increases when under stress."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float StressDeteriorationIncreaseSpeed
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "How fast the deterioration speed decreases when not under stress."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float StressDeteriorationDecreaseSpeed
         {
             get;
             set;
@@ -78,13 +124,6 @@ namespace Barotrauma.Items.Components
 
         [Serialize(10.0f, IsPropertySaveable.Yes, description: "The amount of time it takes to fix the item with sufficient skill levels."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float FixDurationHighSkill
-        {
-            get;
-            set;
-        }
-
-        [Serialize(false, IsPropertySaveable.No, description: "If set to true, the deterioration timer will always run regardless if the item is being used or not.")]
-        public bool DeteriorateAlways
         {
             get;
             set;
@@ -135,13 +174,16 @@ namespace Barotrauma.Items.Components
         private float tinkeringDuration;
         private float tinkeringStrength;
 
+        public float StressDeteriorationMultiplier { get; private set; } = 1.0f;
+
         public float TinkeringStrength => tinkeringStrength;
 
         private bool tinkeringPowersDevices;
         public bool TinkeringPowersDevices => tinkeringPowersDevices;
 
-        public bool IsBelowRepairThreshold => item.ConditionPercentage <= RepairThreshold;
-        public bool IsBelowRepairIconThreshold => item.ConditionPercentage <= RepairThreshold / 2;
+        public bool IsBelowRepairThreshold => item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold;
+
+        public bool IsBelowRepairIconThreshold => item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold / 2;
 
         public enum FixActions : int
         {
@@ -182,6 +224,21 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            // Modify damage (not stun) caused by repair failure based on campaign settings
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign
+                && statusEffectLists != null
+                && statusEffectLists.TryGetValue(ActionType.OnFailure, out var onFailureEffects))
+            {
+                foreach (var effect in onFailureEffects)
+                {
+                    foreach (Affliction affliction in effect.Afflictions)
+                    {
+                        if (affliction.Prefab.AfflictionType == Tags.Stun) { continue; }
+                        affliction.Strength *= campaign.Settings.RepairFailMultiplier;
+                    }
+                }
+            }
+
             InitProjSpecific(element);
         }
 
@@ -199,12 +256,12 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) { return false; }
 
-            if (statusEffectLists == null || statusEffectLists.None(s => s.Key == ActionType.OnFailure)) { return true; }
+            if (statusEffectLists == null) { return true; }
 
             if (bestRepairItem != null && bestRepairItem.Prefab.CannotRepairFail) { return true; }
 
             // unpowered (electrical) items can be repaired without a risk of electrical shock
-            if (requiredSkills.Any(s => s != null && s.Identifier == "electrical"))
+            if (RequiredSkills.Any(s => s != null && s.Identifier == "electrical"))
             {
                 if (item.GetComponent<Reactor>() is Reactor reactor)
                 {
@@ -212,18 +269,29 @@ namespace Barotrauma.Items.Components
                 }
                 else if (item.GetComponent<Powered>() is Powered powered && powered.Voltage < 0.1f) 
                 {
-                    return true; 
+                    return true;
                 }
             }
 
-            if (Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, requiredSkills)) { return true; }
+            bool success = Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, RequiredSkills);
+            ActionType actionType = success ? ActionType.OnSuccess : ActionType.OnFailure;
 
-            ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
-            if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
+            ApplyStatusEffectsAndCreateEntityEvent(this, actionType, character);
+            ApplyStatusEffectsAndCreateEntityEvent(this, ActionType.OnUse, character);
+            if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable holdable)
             {
-                h.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+                ApplyStatusEffectsAndCreateEntityEvent(holdable, actionType, character);
+                ApplyStatusEffectsAndCreateEntityEvent(holdable, ActionType.OnUse, character);
             }
-            return false;
+            static void ApplyStatusEffectsAndCreateEntityEvent(ItemComponent ic, ActionType actionType, Character character)
+            {
+                ic.ApplyStatusEffects(actionType, 1.0f, character);
+                if (GameMain.NetworkMember is { IsServer: true } && ic.statusEffectLists != null && ic.statusEffectLists.ContainsKey(actionType))
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(ic.Item, new Item.ApplyStatusEffectEventData(actionType, ic, character));
+                }
+            }
+            return success;
         }
 
         public override float GetSkillMultiplier()
@@ -247,9 +315,9 @@ namespace Barotrauma.Items.Components
             if (CurrentFixer == null) { return; }
             if (qteSuccess)
             {
-                item.Condition += RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
+                item.Condition += RepairDegreeOfSuccess(CurrentFixer, RequiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
             }
-            else if (Rand.Range(0.0f, 2.0f) > RepairDegreeOfSuccess(CurrentFixer, requiredSkills))
+            else if (Rand.Range(0.0f, 2.0f) > RepairDegreeOfSuccess(CurrentFixer, RequiredSkills))
             {
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, CurrentFixer);
 #if SERVER
@@ -279,12 +347,6 @@ namespace Barotrauma.Items.Components
                     if (!CheckCharacterSuccess(character, bestRepairItem))
                     {
                         GameServer.Log($"{GameServer.CharacterLogName(character)} failed to {(action == FixActions.Sabotage ? "sabotage" : "repair")} {item.Name}", ServerLog.MessageType.ItemInteraction);
-                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, this, character));
-                        if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
-                        {
-                            GameMain.Server?.CreateEntityEvent(bestRepairItem, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, h, character));
-                        }
-
                         return false;
                     }
 
@@ -394,20 +456,34 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(conditionSignal, "condition_out");
 
-            if (CurrentFixer == null)
+            foreach (var component in item.Components)
             {
-                if (deteriorateAlwaysResetTimer > 0.0f)
+                if (component is IDeteriorateUnderStress deteriorateUnderStress)
                 {
-                    deteriorateAlwaysResetTimer -= deltaTime;
-                    if (deteriorateAlwaysResetTimer <= 0.0f)
+                    if (deteriorateUnderStress.CurrentStress >= StressDeteriorationThreshold)
                     {
-                        DeteriorateAlways = false;
-#if SERVER
-                        //let the clients know the deterioration delay
-                        item.CreateServerEvent(this);
-#endif
+                        StressDeteriorationMultiplier = Math.Min(StressDeteriorationMultiplier + deltaTime * StressDeteriorationIncreaseSpeed, MaxStressDeteriorationMultiplier);
+                    }
+                    else
+                    {
+                        StressDeteriorationMultiplier = Math.Max(StressDeteriorationMultiplier - deltaTime * StressDeteriorationDecreaseSpeed, 1.0f);
                     }
                 }
+            }
+
+            if (ForceDeteriorationTimer > 0.0f)
+            {
+                ForceDeteriorationTimer -= deltaTime;
+                if (ForceDeteriorationTimer <= 0.0f)
+                {
+#if SERVER
+                    //let the clients know the deterioration delay
+                    item.CreateServerEvent(this);
+#endif
+                }
+            }
+            if (CurrentFixer == null)
+            {
                 updateDeteriorationCounter++;
                 if (updateDeteriorationCounter >= UpdateDeteriorationInterval)
                 {
@@ -446,7 +522,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            float successFactor = requiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, requiredSkills);
+            float successFactor = RequiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, RequiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
             if (IsBelowRepairThreshold)
@@ -459,9 +535,16 @@ namespace Barotrauma.Items.Components
             }
 
             float talentMultiplier = CurrentFixer.GetStatValue(StatTypes.RepairSpeed);
-            if (requiredSkills.Any(static skill => skill.Identifier == "mechanical"))
+            foreach (Skill skill in RequiredSkills)
             {
-                talentMultiplier += CurrentFixer.GetStatValue(StatTypes.MechanicalRepairSpeed);
+                if (skill.Identifier == "mechanical")
+                {
+                    talentMultiplier += CurrentFixer.GetStatValue(StatTypes.MechanicalRepairSpeed);
+                }
+                else if (skill.Identifier == "electrical")
+                {
+                    talentMultiplier += CurrentFixer.GetStatValue(StatTypes.ElectricalRepairSpeed);
+                }
             }
 
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
@@ -490,13 +573,11 @@ namespace Barotrauma.Items.Components
                 {
                     if (wasBroken)
                     {
-                        foreach (Skill skill in requiredSkills)
+                        foreach (Skill skill in RequiredSkills)
                         {
-                            float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
-                                SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f));
+                            CurrentFixer.Info?.ApplySkillGain(skill.Identifier, SkillSettings.Current.SkillIncreasePerRepair);
                         }
-                        SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
+                        AchievementManager.OnItemRepaired(item, CurrentFixer);
                         CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete, new AbilityRepairable(item));
                     }
                     if (CurrentFixer?.SelectedItem == item) { CurrentFixer.SelectedItem = null; }
@@ -526,7 +607,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (wasGoodCondition)
                     {
-                        foreach (Skill skill in requiredSkills)
+                        foreach (Skill skill in RequiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
                             CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
@@ -534,8 +615,7 @@ namespace Barotrauma.Items.Components
                         }
 
                         deteriorationTimer = 0.0f;
-                        deteriorateAlwaysResetTimer = item.Condition / DeteriorationSpeed;
-                        DeteriorateAlways = true;
+                        ForceDeteriorationTimer = SabotageDeteriorationDuration;
                         item.Condition = item.MaxCondition * (MinSabotageCondition / 100);
                         wasGoodCondition = false;
                     }
@@ -553,7 +633,8 @@ namespace Barotrauma.Items.Components
             if (item.Condition <= 0.0f) { return; }
             if (!ShouldDeteriorate()) { return; }
 
-            if (deteriorationTimer > 0.0f)
+            //forced deterioration doesn't tick down the timer for spontaneous deterioration
+            if (deteriorationTimer > 0.0f && ForceDeteriorationTimer <= 0.0f)
             {
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
@@ -567,8 +648,9 @@ namespace Barotrauma.Items.Components
 
             if (item.ConditionPercentage > MinDeteriorationCondition)
             {
-                float deteriorationSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
-                item.Condition -= deteriorationSpeed * deltaTime;
+                float deteriorationSpeed = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
+                if (ForceDeteriorationTimer > 0.0f) { deteriorationSpeed = Math.Max(deteriorationSpeed, 1.0f); }
+                item.Condition -= deteriorationSpeed * StressDeteriorationMultiplier * deltaTime;
             }            
         }
 
@@ -576,11 +658,11 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) { return 1.0f; }
             // kind of rough to keep this in update, but seems most robust
-            if (requiredSkills.Any(s => s != null && s.Identifier == "mechanical"))
+            if (RequiredSkills.Any(s => s != null && s.Identifier == "mechanical"))
             {
                 return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierMechanical);
             }
-            if (requiredSkills.Any(s => s != null && s.Identifier == "electrical"))
+            if (RequiredSkills.Any(s => s != null && s.Identifier == "electrical"))
             {
                 return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierElectrical);
             }
@@ -592,7 +674,7 @@ namespace Barotrauma.Items.Components
             if (!character.HasAbilityFlag(AbilityFlags.CanTinker)) { return false; }
             if (item.GetComponent<Engine>() != null) { return true; }
             if (item.GetComponent<Pump>() != null) { return true; }
-            if (item.HasTag("turretammosource")) { return true; }
+            if (item.HasTag(Tags.TurretAmmoSource)) { return true; }
             if (!character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors)) { return false; }
             if (item.GetComponent<Fabricator>() != null) { return true; }
             if (item.GetComponent<Deconstructor>() != null) { return true; }
@@ -623,6 +705,8 @@ namespace Barotrauma.Items.Components
 
         private bool ShouldDeteriorate()
         {
+            if (ForceDeteriorationTimer > 0.0f) { return true; }
+
             if (Level.IsLoadedFriendlyOutpost) { return false; }
 #if CLIENT
             if (GameMain.GameSession?.GameMode is TutorialMode) { return false; }
@@ -666,13 +750,13 @@ namespace Barotrauma.Items.Components
                     //oxygen generators don't deteriorate if they're not running
                     if (oxyGenerator.CurrFlow > 0.1f) { return true; }
                 }
-                else if (ic is Powered powered && !(powered is LightComponent))
+                else if (ic is Powered powered && powered is not LightComponent)
                 {
                     if (powered.Voltage >= powered.MinVoltage) { return true; }
                 }
             }
 
-            return DeteriorateAlways;
+            return false;
         }
 
         private float GetDeteriorationDelayMultiplier()

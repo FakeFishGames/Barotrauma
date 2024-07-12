@@ -24,7 +24,8 @@ namespace Barotrauma.Abilities
             JobPrefab? apprentice = CharacterAbilityApplyStatusEffectsToApprenticeship.GetApprenticeJob(Character, JobPrefab.Prefabs.ToImmutableHashSet());
             if (apprentice is null)
             {
-                DebugConsole.ThrowError($"{nameof(CharacterAbilityUnlockApprenticeshipTalentTree)}: Could not find apprentice job for character {Character.Name}");
+                DebugConsole.ThrowError($"{nameof(CharacterAbilityUnlockApprenticeshipTalentTree)}: Could not find apprentice job for character {Character.Name}",
+                    contentPackage: CharacterTalent.Prefab.ContentPackage);
                 return;
             }
 

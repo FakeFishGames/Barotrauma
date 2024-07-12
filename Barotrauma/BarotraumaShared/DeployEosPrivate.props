@@ -1,0 +1,19 @@
+<Project>
+
+  <!-- Build EosInterface.Implementation for Release/Unstable builds -->
+  <Target Name="DeployEosPrivateBuildRelease" AfterTargets="CoreCompile" Condition="'$(Configuration)'!='Debug'" >
+    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/BarotraumaLibs/EosInterfacePrivate/EosInterface.Implementation.$(ProjectFileNamePlatformSuffix).csproj -c Release -r $(ManualDeployRuntime) --no-self-contained --nologo -o $(ProjectDir)$(OutputPath)" ContinueOnError="true" />
+  </Target>
+  <Target Name="DeployEosPrivatePublishRelease" AfterTargets="PrepareForPublish" Condition="'$(Configuration)'!='Debug'" >
+    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/BarotraumaLibs/EosInterfacePrivate/EosInterface.Implementation.$(ProjectFileNamePlatformSuffix).csproj -c Release -r $(ManualDeployRuntime) --no-self-contained --nologo -o &quot;$(PublishDir)&quot;" ContinueOnError="true" />
+  </Target>
+
+  <!-- Build EosInterface.Implementation for Debug builds -->
+  <Target Name="DeployEosPrivateBuildDebug" AfterTargets="CoreCompile" Condition="'$(Configuration)'=='Debug'" >
+    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/BarotraumaLibs/EosInterfacePrivate/EosInterface.Implementation.$(ProjectFileNamePlatformSuffix).csproj -c Debug -r $(ManualDeployRuntime) --no-self-contained --nologo -o $(ProjectDir)$(OutputPath)" ContinueOnError="true" />
+  </Target>
+  <Target Name="DeployEosPrivatePublishDebug" AfterTargets="PrepareForPublish" Condition="'$(Configuration)'=='Debug'" >
+    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/BarotraumaLibs/EosInterfacePrivate/EosInterface.Implementation.$(ProjectFileNamePlatformSuffix).csproj -c Debug -r $(ManualDeployRuntime) --no-self-contained --nologo -o &quot;$(PublishDir)&quot;" ContinueOnError="true" />
+  </Target>
+
+</Project>

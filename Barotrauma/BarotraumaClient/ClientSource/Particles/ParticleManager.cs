@@ -27,10 +27,9 @@ namespace Barotrauma.Particles
             get { return maxParticles; }
             set
             {
-                if (maxParticles == value || value < 4) return;
+                if (maxParticles == value || value < 4) { return; }
 
                 Particle[] newParticles = new Particle[value];
-
                 for (int i = 0; i < Math.Min(maxParticles, value); i++)
                 {
                     newParticles[i] = particles[i];
@@ -39,9 +38,26 @@ namespace Barotrauma.Particles
                 particleCount = Math.Min(particleCount, value);
                 particles = newParticles;
                 maxParticles = value;
+
+                var oldParticlesInCreationOrder = particlesInCreationOrder.ToList();
+                particlesInCreationOrder.Clear();
+                foreach (var particle in oldParticlesInCreationOrder)
+                {
+                    if (particles.Contains(particle))
+                    {
+                        particlesInCreationOrder.AddLast(particle);
+                    }
+                }
             }
         }
         private Particle[] particles;
+
+        /// <summary>
+        /// Used for rendering the particles in the order in which they were created (starting from the most recent one) 
+        /// to avoid the order of the particles shuffling around when particles are removed from the pool.
+        /// Linked list for fast additions and removals at the middle of the list.
+        /// </summary>
+        private readonly LinkedList<Particle> particlesInCreationOrder = new LinkedList<Particle>();
 
         private Camera cam;
 
@@ -75,7 +91,7 @@ namespace Barotrauma.Particles
             return CreateParticle(prefab, position, velocity, rotation, hullGuess, collisionIgnoreTimer: collisionIgnoreTimer, tracerPoints:tracerPoints);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             if (prefab == null || prefab.Sprites.Count == 0) { return null; }
             if (particleCount >= MaxParticles)
@@ -116,12 +132,13 @@ namespace Barotrauma.Particles
             }
 
             if (particles[particleCount] == null) { particles[particleCount] = new Particle(); }
+            Particle particle = particles[particleCount];
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, prefab.DrawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
-
+            particle.Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
             particleCount++;
+            particlesInCreationOrder.AddFirst(particle);
 
-            return particles[particleCount - 1];
+            return particle;
         }
 
         public static List<ParticlePrefab> GetPrefabList()
@@ -137,11 +154,10 @@ namespace Barotrauma.Particles
 
         private void RemoveParticle(int index)
         {
+            particlesInCreationOrder.Remove(particles[index]);
             particleCount--;
 
-            Particle swap = particles[index];
-            particles[index] = particles[particleCount];
-            particles[particleCount] = swap;
+            (particles[particleCount], particles[index]) = (particles[index], particles[particleCount]);
         }
 
 
@@ -201,9 +217,8 @@ namespace Barotrauma.Particles
         {
             ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;
 
-            for (int i = 0; i < particleCount; i++)
+            foreach (var particle in particlesInCreationOrder)
             {
-                var particle = particles[i];
                 if (particle.BlendState != blendState) { continue; }
                 //equivalent to !particles[i].DrawTarget.HasFlag(drawTarget) but garbage free and faster
                 if ((particle.DrawTarget & drawTarget) == 0) { continue; } 
@@ -215,14 +230,15 @@ namespace Barotrauma.Particles
                         continue;
                     }
                 }
-                
-                particles[i].Draw(spriteBatch);
+
+                particle.Draw(spriteBatch);
             }
         }
 
         public void ClearParticles()
         {
             particleCount = 0;
+            particlesInCreationOrder.Clear();
         }
 
         public void RemoveByPrefab(ParticlePrefab prefab)
@@ -234,6 +250,7 @@ namespace Barotrauma.Particles
                 {
                     if (i < particleCount) { particleCount--; }
 
+                    particlesInCreationOrder.Remove(particles[particleCount]);   
                     Particle swap = particles[particleCount];
                     particles[particleCount] = null;
                     particles[i] = swap;

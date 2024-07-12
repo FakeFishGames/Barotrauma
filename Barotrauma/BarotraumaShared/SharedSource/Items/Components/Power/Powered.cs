@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 #if CLIENT
 using Barotrauma.Sounds;
 #endif
@@ -101,6 +102,7 @@ namespace Barotrauma.Items.Components
 
         protected virtual PowerPriority Priority { get { return PowerPriority.Default; } }
 
+        [Header(localizedTextTag: "sp.powered.propertyheader")]
         [Editable, Serialize(0.5f, IsPropertySaveable.Yes, description: "The minimum voltage required for the device to function. " +
             "The voltage is calculated as power / powerconsumption, meaning that a device " +
             "with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.")]
@@ -193,13 +195,13 @@ namespace Barotrauma.Items.Components
             {
                 //if the item consumes no power, ignore the voltage requirement and
                 //apply OnActive statuseffects as long as this component is active
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);                
                 return;
             }
 
             if (Voltage > minVoltage)
             {
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);
             }
 #if CLIENT
             if (Voltage > minVoltage)
@@ -666,7 +668,7 @@ namespace Barotrauma.Items.Components
             return 
                 conn1.IsPower && conn2.IsPower && 
                 conn1.Item.Condition > 0.0f && conn2.Item.Condition > 0.0f &&
-                (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.Item.HasTag("dock") || conn2.Item.HasTag("dock") || conn1.IsOutput != conn2.IsOutput);
+                (conn1.Item.HasTag(Tags.JunctionBox) || conn2.Item.HasTag(Tags.JunctionBox) || conn1.Item.HasTag(Tags.DockingPort) || conn2.Item.HasTag(Tags.DockingPort) || conn1.IsOutput != conn2.IsOutput);
         }
 
         /// <summary>
@@ -682,6 +684,7 @@ namespace Barotrauma.Items.Components
                 if (!recipient.IsPower || !recipient.IsOutput) { continue; }
                 var battery = recipient.Item?.GetComponent<PowerContainer>();
                 if (battery == null || battery.Item.Condition <= 0.0f) { continue; }
+                if (battery.OutputDisabled) { continue; }
                 float maxOutputPerFrame = battery.MaxOutPut / 60.0f;
                 float framesPerMinute = 3600.0f;
                 availablePower += Math.Min(battery.Charge * framesPerMinute, maxOutputPerFrame);
@@ -689,23 +692,19 @@ namespace Barotrauma.Items.Components
             return availablePower;
         }
 
-        /// <summary>
-        /// Returns a list of batteries directly connected to the item
-        /// </summary>
-        protected List<PowerContainer> GetDirectlyConnectedBatteries()
+        protected IEnumerable<PowerContainer> GetDirectlyConnectedBatteries()
         {
-            List<PowerContainer> batteries = new List<PowerContainer>();
-            if (item.Connections == null || powerIn == null) { return batteries; }
-            foreach (Connection recipient in powerIn.Recipients)
+            if (item.Connections != null && powerIn != null)
             {
-                if (!recipient.IsPower || !recipient.IsOutput) { continue; }
-                var battery = recipient.Item?.GetComponent<PowerContainer>();
-                if (battery != null) 
+                foreach (Connection recipient in powerIn.Recipients)
                 {
-                    batteries.Add(battery); 
+                    if (!recipient.IsPower || !recipient.IsOutput) { continue; }
+                    if (recipient.Item?.GetComponent<PowerContainer>() is PowerContainer battery)
+                    {
+                        yield return battery;
+                    }
                 }
             }
-            return batteries;
         }
 
         protected override void RemoveComponentSpecific()

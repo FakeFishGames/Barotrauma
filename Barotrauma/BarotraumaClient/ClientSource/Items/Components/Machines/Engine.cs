@@ -66,13 +66,18 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), sliderArea.RectTransform, Anchor.TopCenter), "", textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center)
             {
                 AutoScaleHorizontal = true,
-                TextGetter = () => { return TextManager.AddPunctuation(':', powerLabel, (int)(targetForce) + " %"); }
+                TextGetter = () => 
+                { 
+                    return TextManager.AddPunctuation(':', powerLabel, 
+                        TextManager.GetWithVariable("percentageformat", "[value]", ((int)MathF.Round(targetForce)).ToString())); 
+                }
             };
             forceSlider = new GUIScrollBar(new RectTransform(new Vector2(0.95f, 0.45f), sliderArea.RectTransform, Anchor.Center), barSize: 0.1f, style: "DeviceSlider")
             {
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
                 {
+                    lastReceivedTargetForce = null;
                     float newTargetForce = barScroll * 200.0f - 100.0f;
                     if (Math.Abs(newTargetForce - targetForce) < 0.01) { return false; }
 
@@ -107,7 +112,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             powerIndicator.Selected = hasPower && IsActive;
             autoControlIndicator.Selected = controlLockTimer > 0.0f;
@@ -129,22 +134,22 @@ namespace Barotrauma.Items.Components
             spriteIndex += (force / 100.0f) * AnimSpeed * deltaTime;
             if (spriteIndex < 0)
             {
-                spriteIndex = propellerSprite.FrameCount;
+                spriteIndex = propellerSprite.FrameCount - Math.Abs(spriteIndex) % propellerSprite.FrameCount;
             }
-            if (spriteIndex >= propellerSprite.FrameCount)
+            else
             {
-                spriteIndex = 0.0f;
+                spriteIndex = spriteIndex % propellerSprite.FrameCount;
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (propellerSprite != null)
             {
                 Vector2 drawPos = item.DrawPosition;
                 drawPos += PropellerPos;
                 drawPos.Y = -drawPos.Y;
-                propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
+                propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, overrideColor ?? Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
             }
 
             if (editing && !DisablePropellerDamage && propellerDamage != null && !GUI.DisableHUD)

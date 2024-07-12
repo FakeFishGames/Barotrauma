@@ -59,7 +59,8 @@ namespace Barotrauma.Items.Components
                         StatusEffect effect = StatusEffect.Load(subElement, Prefab?.Name.Value);
                         if (effect.type != ActionType.OnProduceSpawned)
                         {
-                            DebugConsole.ThrowError("Only OnProduceSpawned type can be used in <ProducedItem>.");
+                            DebugConsole.ThrowError("Only OnProduceSpawned type can be used in <ProducedItem>.", 
+                                contentPackage: element.ContentPackage);
                             continue;
                         }
 
@@ -76,6 +77,9 @@ namespace Barotrauma.Items.Components
     {
         Stem = 0b0000,
         CrossJunction = 0b1111,
+        HorizontalLine = 0b1010,
+        VerticalLine = 0b0101,
+        /*backwards compatibility, the vertical and horizontal "lane" used to be backwards*/
         VerticalLane = 0b1010,
         HorizontalLane = 0b0101,
         TurnTopRight = 0b1001,
@@ -300,7 +304,7 @@ namespace Barotrauma.Items.Components
                 var (x, y, z, w) = Parent.GrowthWeights;
                 float[] weights = { x, y, z, w };
 
-                value = pool.RandomElementByWeight(i => weights[i]);
+                value = pool.GetRandomByWeight(i => weights[i], Rand.RandSync.Unsynced);
             }
             
             return (TileSide) (1 << value);
@@ -409,14 +413,15 @@ namespace Barotrauma.Items.Components
         private int leafVariants;
         private int[] flowerTiles;
 
+        [Serialize(100.0f, IsPropertySaveable.Yes)]
         public float Health
         {
             get => health;
             set => health = Math.Clamp(value, 0, MaxHealth);
         }
 
-        public bool Decayed;
-        public bool FullyGrown;
+        public bool Decayed { get; set; }
+        public bool FullyGrown { get; set; }
 
         private const int maxProductDelay = 10,
                           maxVineGrowthDelay = 10;
@@ -561,7 +566,7 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct && ProducedItems.Any())
             {
-                SpawnItem(Item, ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
+                SpawnItem(Item, ProducedItems.GetRandomByWeight(it => it.Probability, Rand.RandSync.Unsynced), spawnPos);
                 return;
             }
 
@@ -891,9 +896,9 @@ namespace Barotrauma.Items.Components
             return element;
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             flowerTiles = componentElement.GetAttributeIntArray("flowertiles", Array.Empty<int>())!;
             Decayed = componentElement.GetAttributeBool("decayed", false);
 

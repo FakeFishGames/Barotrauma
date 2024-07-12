@@ -14,7 +14,24 @@ namespace Barotrauma.Networking
         /// <summary>
         /// How much skills drop towards the job's default skill levels when dying
         /// </summary>
-        const float SkillReductionOnDeath = 0.75f;
+        public static float SkillLossPercentageOnDeath => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnDeath ?? 20.0f;
+
+        /// <summary>
+        /// How much more the skills drop towards the job's default skill levels
+        /// when dying, in addition to SkillLossPercentageOnDeath, if the player
+        /// chooses to respawn in the middle of the round
+        /// </summary>
+        public static float SkillLossPercentageOnImmediateRespawn => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnImmediateRespawn ?? 10.0f;
+
+        public static RespawnMode RespawnMode => GameMain.NetworkMember?.ServerSettings?.RespawnMode ?? RespawnMode.MidRound;
+
+        public static bool UseDeathPrompt
+        {
+            get
+            {
+                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null;
+            }
+        }
 
         public enum State
         {
@@ -26,7 +43,6 @@ namespace Barotrauma.Networking
         private readonly NetworkMember networkMember;
         private readonly Steering shuttleSteering;
         private readonly List<Door> shuttleDoors;
-        private const string RespawnContainerTag = "respawncontainer";
         private readonly ItemContainer respawnContainer;
 
         //items created during respawn
@@ -65,17 +81,13 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
-        public static bool UseRespawnPrompt
-        {
-            get
-            {
-                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
-            }
-        }
-
         private float maxTransportTime;
 
         private float updateReturnTimer;
+
+        public bool CanRespawnAgain =>
+            /*can never respawn again if we're currently transporting and transport time is set to be infinite*/
+            !(CurrentState == State.Transporting && maxTransportTime <= 0.0f);
 
         public Submarine RespawnShuttle { get; private set; }
 
@@ -84,12 +96,12 @@ namespace Barotrauma.Networking
         {
             this.networkMember = networkMember;
 
-            if (shuttleInfo != null)
+            if (shuttleInfo != null && networkMember.ServerSettings is not { RespawnMode: RespawnMode.Permadeath })
             {
                 RespawnShuttle = new Submarine(shuttleInfo, true);
                 RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
                 //set crush depth slightly deeper than the main sub's
-                RespawnShuttle.RealWorldCrushDepth = Math.Max(RespawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f);
+                RespawnShuttle.SetCrushDepth(Math.Max(RespawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f));
 
                 //prevent wifi components from communicating between the respawn shuttle and other subs
                 List<WifiComponent> wifiComponents = new List<WifiComponent>();
@@ -109,7 +121,7 @@ namespace Barotrauma.Networking
                 {
                     if (item.Submarine != RespawnShuttle) { continue; }
 
-                    if (item.HasTag(RespawnContainerTag))
+                    if (item.HasTag(Tags.RespawnContainer))
                     {
                         respawnContainer = item.GetComponent<ItemContainer>();
                     }
@@ -253,6 +265,13 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
+#if CLIENT
+                foreach (var itemComponent in item.Components)
+                {
+                    itemComponent.StopLoopingSound();
+                }
+#endif
+
                 //restore other items to full condition and recharge batteries
                 item.Condition = item.MaxCondition;
                 item.GetComponent<Repairable>()?.ResetDeterioration();
@@ -326,6 +345,14 @@ namespace Barotrauma.Networking
             {
                 characterPosition.Key.TeleportTo(characterPosition.Value);
             }
+        }
+
+        public static float GetReducedSkill(CharacterInfo characterInfo, Skill skill, float skillLossPercentage, float? currentSkillLevel = null)
+        {
+            var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
+            float currentLevel = currentSkillLevel ?? skill.Level;
+            if (skillPrefab == null || currentLevel < skillPrefab.LevelRange.End) { return currentLevel; }
+            return MathHelper.Lerp(currentLevel, skillPrefab.LevelRange.End, skillLossPercentage / 100.0f);
         }
 
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos);

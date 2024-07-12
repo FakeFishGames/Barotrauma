@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -53,7 +53,9 @@ namespace Barotrauma
             base.Select();
             DeletePrevDownloads();
             Reset();
-            
+
+            bool allowDownloads = GameMain.Client.ClientPeer is { AllowModDownloads: true };
+
             Frame.ClearChildren();
 
             var mainVisibleFrame = new GUIFrame(new RectTransform((0.6f, 0.8f), Frame.RectTransform, Anchor.Center));
@@ -66,7 +68,7 @@ namespace Barotrauma
                 "", font: GUIStyle.LargeFont,
                 textAlignment: Alignment.CenterLeft)
             {
-                TextGetter = () => GameMain.NetLobbyScreen.ServerName.Text
+                TextGetter = () => GameMain.Client.ServerName
             };
             mainLayoutSpacing();
             var downloadList = new GUIListBox(new RectTransform((1.0f, 0.76f), mainLayout.RectTransform));
@@ -163,7 +165,7 @@ namespace Barotrauma
             var msgBoxModList = new GUIListBox(new RectTransform(Vector2.One, innerLayout.RectTransform));
             
             innerLayoutSpacing(0.05f);
-            var footer = textBlock(TextManager.Get("ModDownloadFooter"), GUIStyle.Font, Alignment.Center);
+            var footer = textBlock(TextManager.Get(allowDownloads ? "ModDownloadFooter" : "ModDownloadFooterFail"), GUIStyle.Font, Alignment.Center);
             
             innerLayoutSpacing(0.05f);
             GUILayoutGroup buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), innerLayout.RectTransform), isHorizontal: true);
@@ -182,15 +184,28 @@ namespace Barotrauma
                     }
                 };
 
-            buttonContainerSpacing(0.1f);
-            button(TextManager.Get("Yes"), () => confirmDownload = true);
-            buttonContainerSpacing(0.2f);
-            button(TextManager.Get("No"), () =>
+            if (allowDownloads)
             {
-                GameMain.Client?.Quit();
-                GameMain.MainMenuScreen.Select();
-            });
-            buttonContainerSpacing(0.1f);
+                buttonContainerSpacing(0.1f);
+                button(TextManager.Get("Yes"), () => confirmDownload = true);
+                buttonContainerSpacing(0.2f);
+                button(TextManager.Get("No"), () =>
+                {
+                    GameMain.Client?.Quit();
+                    GameMain.MainMenuScreen.Select();
+                });
+                buttonContainerSpacing(0.1f);
+            }
+            else
+            {
+                buttonContainerSpacing(0.15f);
+                button(TextManager.Get("Cancel"), () =>
+                {
+                    GameMain.Client?.Quit();
+                    GameMain.MainMenuScreen.Select();
+                }, width: 0.7f);
+                buttonContainerSpacing(0.15f);
+            }
 
             var missingIds = missingPackages
                 .Where(p => p.IsMandatory)
@@ -378,7 +393,7 @@ namespace Barotrauma
             }
             string dir = path.RemoveFromEnd(ModReceiver.Extension, StringComparison.OrdinalIgnoreCase);
             
-            SaveUtil.DecompressToDirectory(path, dir, file => { });
+            SaveUtil.DecompressToDirectory(path, dir);
             var result = ContentPackage.TryLoad(Path.Combine(dir, ContentPackage.FileListFileName));
 
             if (!result.TryUnwrapSuccess(out var newPackage))

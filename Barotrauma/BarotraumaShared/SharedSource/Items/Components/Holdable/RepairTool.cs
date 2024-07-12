@@ -90,12 +90,11 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.No, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
-
         [Serialize(100.0f, IsPropertySaveable.No, description: "How far two walls need to not be considered overlapping and to stop the ray.")]
-        public float MaxOverlappingWallDist
-        {
-            get; set;
-        }
+        public float MaxOverlappingWallDist { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How fast the tool detaches level resources (e.g. minerals). Acts as a multiplier on the speed: with a value of 2, detaching an item whose DeattachDuration is set to 30 seconds would take 15 seconds.")]
+        public float DeattachSpeed { get; set; }
 
         [Serialize(true, IsPropertySaveable.No, description: "Can the item hit doors.")]
         public bool HitItems { get; set; }
@@ -137,7 +136,8 @@ namespace Barotrauma.Items.Components
 
             if (element.GetAttribute("limbfixamount") != null)
             {
-                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.");
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.",
+                    contentPackage: element.ContentPackage);
             }
 
             fixableEntities = new HashSet<Identifier>();
@@ -149,7 +149,8 @@ namespace Barotrauma.Items.Components
                     case "fixable":
                         if (subElement.GetAttribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.");
+                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.",
+                                contentPackage: element.ContentPackage);
                             fixableEntities.Add(subElement.GetAttribute("name").Value.ToIdentifier());
                         }
                         else
@@ -169,7 +170,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             item.IsShootable = true;
-            item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
+            item.RequireAimToUse = element.Parent.GetAttributeBool(nameof(item.RequireAimToUse), true);
             InitProjSpecific(element);
         }
 
@@ -319,7 +320,7 @@ namespace Barotrauma.Items.Components
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepairableWall;
             if (!IgnoreCharacters)
             {
                 collisionCategories |= Physics.CollisionCharacter;
@@ -412,7 +413,7 @@ namespace Barotrauma.Items.Components
                         break;
                     }
                     pickedPosition = rayStart + (rayEnd - rayStart) * thisBodyFraction;
-                    if (FixBody(user, deltaTime, degreeOfSuccess, body))
+                    if (FixBody(user, pickedPosition, deltaTime, degreeOfSuccess, body))
                     {
                         lastPickedFraction = thisBodyFraction;
                         if (bodyType != null) { lastHitType = bodyType; }
@@ -450,7 +451,7 @@ namespace Barotrauma.Items.Components
                     },
                     allowInsideFixture: true);
                 pickedPosition = Submarine.LastPickedPosition;
-                FixBody(user, deltaTime, degreeOfSuccess, pickedBody);                    
+                FixBody(user, pickedPosition, deltaTime, degreeOfSuccess, pickedBody);                    
                 lastPickedFraction = Submarine.LastPickedFraction;
             }
             
@@ -536,12 +537,12 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
-                    new FireSource(displayPos);
+                    new FireSource(displayPos, sourceCharacter: user);
                 }
             }
         }
 
-        private bool FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
+        private bool FixBody(Character user, Vector2 hitPosition, float deltaTime, float degreeOfSuccess, Body targetBody)
         {
             if (targetBody?.UserData == null) { return false; }
 
@@ -570,7 +571,14 @@ namespace Barotrauma.Items.Components
                     structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureDamageMultiplier);
                 }
 
+                var didLeak = targetStructure.SectionIsLeakingFromOutside(sectionIndex);
+
                 targetStructure.AddDamage(sectionIndex, -structureFixAmount * degreeOfSuccess, user);
+
+                if (didLeak && !targetStructure.SectionIsLeakingFromOutside(sectionIndex))
+                {
+                    user.CheckTalents(AbilityEffectType.OnRepairedOutsideLeak);
+                }
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -591,7 +599,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Level.Loaded?.ExtraWalls.Find(w => w.Body == cell.Body) is DestructibleLevelWall levelWall)
                 {
-                    levelWall.AddDamage(-LevelWallFixAmount * deltaTime, item.WorldPosition);
+                    levelWall.AddDamage(-LevelWallFixAmount * deltaTime, ConvertUnits.ToDisplayUnits(hitPosition));
                 }
                 return true;
             }
@@ -608,6 +616,7 @@ namespace Barotrauma.Items.Components
                 float closestDist = float.MaxValue;
                 foreach (Limb limb in targetCharacter.AnimController.Limbs)
                 {
+                    if (limb.Removed || limb.IgnoreCollisions || limb.Hidden || limb.IsSevered) { continue; }
                     float dist = Vector2.DistanceSquared(item.SimPosition, limb.SimPosition);
                     if (dist < closestDist)
                     {
@@ -651,15 +660,19 @@ namespace Barotrauma.Items.Components
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
-                    levelResource.requiredItems.Any() &&
+                    levelResource.RequiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
-                    float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
+                    float addedDetachTime = deltaTime *
+                        DeattachSpeed *
+                        (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * 
+                        (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    if (targetItem.Prefab.ShowHealthBar)
+                    if (targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
+                        (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
                     {
-                        Character.Controlled?.UpdateHUDProgressBar(
+                        Character.Controlled.UpdateHUDProgressBar(
                             this,
                             targetItem.WorldPosition,
                             levelResource.DeattachTimer / levelResource.DeattachDuration,
@@ -716,7 +729,7 @@ namespace Barotrauma.Items.Components
         private readonly float repairTimeOut = 5;
         public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (!(objective.OperateTarget is Gap leak))
+            if (objective.OperateTarget is not Gap leak)
             {
                 Reset();
                 return true;
@@ -806,36 +819,50 @@ namespace Barotrauma.Items.Components
                 // Press the trigger only when the tool is approximately facing the target.
                 Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
                 var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
+                bool repair = true;
                 if (angle < MathHelper.PiOver4)
                 {
                     if (Submarine.PickBody(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionWall, allowInsideFixture: true)?.UserData is Item i)
-                    {
-                        var door = i.GetComponent<Door>();
-                        // Hit a door, abandon so that we don't weld it shut.
-                        return door != null && !door.CanBeTraversed;
+                    { 
+                        if (i.GetComponent<Door>() is Door door && !door.CanBeTraversed )
+                        {
+                            // Hit a door, don't repair so that we don't weld it shut.
+                            if (door.Stuck > 90)
+                            {
+                                // Almost stuck -> just abandon.
+                                return false;
+                            }
+                            if (door.Stuck > 50)
+                            {
+                                repair = false;
+                            }
+                        }
                     }
-                    // Check that we don't hit any friendlies
-                    if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
+                    if (repair)
                     {
-                        if (hit.UserData is Character c)
+                        // Check that we don't hit any friendlies
+                        if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
                         {
-                            if (c == character) { return false; }
-                            return HumanAIController.IsFriendly(character, c);
+                            if (hit.UserData is Character c)
+                            {
+                                if (c == character) { return false; }
+                                return HumanAIController.IsFriendly(character, c);
+                            }
+                            return false;
+                        }))
+                        {
+                            character.SetInput(InputType.Shoot, false, true);
+                            Use(deltaTime, character);
                         }
-                        return false;
-                    }))
+                    }
+                    repairTimer += deltaTime;
+                    if (repairTimer > repairTimeOut)
                     {
-                        character.SetInput(InputType.Shoot, false, true);
-                        Use(deltaTime, character);
-                        repairTimer += deltaTime;
-                        if (repairTimer > repairTimeOut)
-                        {
 #if DEBUG
-                            DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
+                        DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
 #endif
-                            Reset();
-                            return true;
-                        }
+                        Reset();
+                        return true;
                     }
                 }
             }
@@ -912,17 +939,16 @@ namespace Barotrauma.Items.Components
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
                 foreach (ISerializableEntity target in currentTargets)
                 {
-                    if (!(target is Door door)) { continue; }                    
+                    if (target is not Door door) { continue; }
                     if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
-                    for (int i = 0; i < effect.propertyNames.Length; i++)
+                    foreach (var propertyEffect in effect.PropertyEffects)
                     {
-                        Identifier propertyName = effect.propertyNames[i];
-                        if (propertyName != "stuck") { continue; }
-                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
+                        if (propertyEffect.propertyName != "stuck") { continue; }
+                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyEffect.propertyName, out SerializableProperty property)) { continue; }
                         object value = property.GetValue(target);
                         if (door.Stuck > 0)
                         {
-                            bool isCutting = effect.propertyEffects[i].GetType() == typeof(float) && (float)effect.propertyEffects[i] < 0;
+                            bool isCutting = propertyEffect.value is float and < 0;
                             var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
                                 textTag: isCutting ? "progressbar.cutting" : "progressbar.welding");
                             if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }

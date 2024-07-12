@@ -1,6 +1,6 @@
-﻿using System;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -47,6 +47,8 @@ namespace Barotrauma
         public readonly static GUISprite SubmarineLocationIcon = new GUISprite("SubmarineLocationIcon");
         public readonly static GUISprite Arrow = new GUISprite("Arrow");
         public readonly static GUISprite SpeechBubbleIcon = new GUISprite("SpeechBubbleIcon");
+        public readonly static GUISprite SpeechBubbleIconSliced = new GUISprite("SpeechBubbleIconSliced");
+        public readonly static GUISprite InteractionLabelBackground = new GUISprite("InteractionLabelBackground");
         public readonly static GUISprite BrokenIcon = new GUISprite("BrokenIcon");
         public readonly static GUISprite YouAreHereCircle = new GUISprite("YouAreHereCircle");
 
@@ -75,78 +77,83 @@ namespace Barotrauma
         /// <summary>
         /// General green color used for elements whose colors are set from code
         /// </summary>
-        public readonly static GUIColor Green = new GUIColor("Green");
+        public readonly static GUIColor Green = new GUIColor("Green", new Color(154, 213, 163, 255));
 
         /// <summary>
         /// General red color used for elements whose colors are set from code
         /// </summary>
-        public readonly static GUIColor Orange = new GUIColor("Orange");
+        public readonly static GUIColor Orange = new GUIColor("Orange", new Color(243, 162, 50, 255));
 
         /// <summary>
         /// General red color used for elements whose colors are set from code
         /// </summary>
-        public readonly static GUIColor Red = new GUIColor("Red");
+        public readonly static GUIColor Red = new GUIColor("Red", new Color(245, 105, 105, 255));
 
         /// <summary>
         /// General blue color used for elements whose colors are set from code
         /// </summary>
-        public readonly static GUIColor Blue = new GUIColor("Blue");
+        public readonly static GUIColor Blue = new GUIColor("Blue", new Color(126, 211, 224, 255));
 
         /// <summary>
         /// General yellow color used for elements whose colors are set from code
         /// </summary>
-        public readonly static GUIColor Yellow = new GUIColor("Yellow");
+        public readonly static GUIColor Yellow = new GUIColor("Yellow", new Color(255, 255, 0, 255));
 
         /// <summary>
         /// Color to display the name of modded servers in the server list.
         /// </summary>
-        public readonly static GUIColor ModdedServerColor = new GUIColor("ModdedServerColor");
+        public readonly static GUIColor ModdedServerColor = new GUIColor("ModdedServerColor", new Color(154, 185, 160, 255));
 
-        public readonly static GUIColor ColorInventoryEmpty = new GUIColor("ColorInventoryEmpty");
-        public readonly static GUIColor ColorInventoryHalf = new GUIColor("ColorInventoryHalf");
-        public readonly static GUIColor ColorInventoryFull = new GUIColor("ColorInventoryFull");
-        public readonly static GUIColor ColorInventoryBackground = new GUIColor("ColorInventoryBackground");
-        public readonly static GUIColor ColorInventoryEmptyOverlay = new GUIColor("ColorInventoryEmptyOverlay");
+        public readonly static GUIColor ColorInventoryEmpty = new GUIColor("ColorInventoryEmpty", new Color(245, 105, 105, 255));
+        public readonly static GUIColor ColorInventoryHalf = new GUIColor("ColorInventoryHalf", new Color(243, 162, 50, 255));
+        public readonly static GUIColor ColorInventoryFull = new GUIColor("ColorInventoryFull", new Color(96, 222, 146, 255));
+        public readonly static GUIColor ColorInventoryBackground = new GUIColor("ColorInventoryBackground", new Color(56, 56, 56, 255));
+        public readonly static GUIColor ColorInventoryEmptyOverlay = new GUIColor("ColorInventoryEmptyOverlay", new Color(125, 125, 125, 255));
 
-        public readonly static GUIColor TextColorNormal = new GUIColor("TextColorNormal");
-        public readonly static GUIColor TextColorBright = new GUIColor("TextColorBright");
-        public readonly static GUIColor TextColorDark = new GUIColor("TextColorDark");
-        public readonly static GUIColor TextColorDim = new GUIColor("TextColorDim");
+        public readonly static GUIColor TextColorNormal = new GUIColor("TextColorNormal", new Color(228, 217, 167, 255));
+        public readonly static GUIColor TextColorBright = new GUIColor("TextColorBright", new Color(255, 255, 255, 255));
+        public readonly static GUIColor TextColorDark = new GUIColor("TextColorDark", new Color(0, 0, 0, 230));
+        public readonly static GUIColor TextColorDim = new GUIColor("TextColorDim", new Color(153, 153, 153, 153));
 
-        public readonly static GUIColor ItemQualityColorPoor = new GUIColor("ItemQualityColorPoor");
-        public readonly static GUIColor ItemQualityColorNormal = new GUIColor("ItemQualityColorNormal");
-        public readonly static GUIColor ItemQualityColorGood = new GUIColor("ItemQualityColorGood");
-        public readonly static GUIColor ItemQualityColorExcellent = new GUIColor("ItemQualityColorExcellent");
-        public readonly static GUIColor ItemQualityColorMasterwork = new GUIColor("ItemQualityColorMasterwork");
+        public readonly static GUIColor ItemQualityColorPoor = new GUIColor("ItemQualityColorPoor", new Color(128, 128, 128, 255));
+        public readonly static GUIColor ItemQualityColorNormal = new GUIColor("ItemQualityColorNormal", new Color(255, 255, 255, 255));
+        public readonly static GUIColor ItemQualityColorGood = new GUIColor("ItemQualityColorGood", new Color(144, 238, 144, 255));
+        public readonly static GUIColor ItemQualityColorExcellent = new GUIColor("ItemQualityColorExcellent", new Color(173, 216, 230, 255));
+        public readonly static GUIColor ItemQualityColorMasterwork = new GUIColor("ItemQualityColorMasterwork", new Color(147, 112, 219, 255));
             
-        public readonly static GUIColor ColorReputationVeryLow = new GUIColor("ColorReputationVeryLow");
-        public readonly static GUIColor ColorReputationLow = new GUIColor("ColorReputationLow");
-        public readonly static GUIColor ColorReputationNeutral = new GUIColor("ColorReputationNeutral");
-        public readonly static GUIColor ColorReputationHigh = new GUIColor("ColorReputationHigh");
-        public readonly static GUIColor ColorReputationVeryHigh = new GUIColor("ColorReputationVeryHigh");
+        public readonly static GUIColor ColorReputationVeryLow = new GUIColor("ColorReputationVeryLow", new Color(192, 60, 60, 255));
+        public readonly static GUIColor ColorReputationLow = new GUIColor("ColorReputationLow", new Color(203, 145, 23, 255));
+        public readonly static GUIColor ColorReputationNeutral = new GUIColor("ColorReputationNeutral", new Color(228, 217, 167, 255));
+        public readonly static GUIColor ColorReputationHigh = new GUIColor("ColorReputationHigh", new Color(51, 152, 64, 255));
+        public readonly static GUIColor ColorReputationVeryHigh = new GUIColor("ColorReputationVeryHigh", new Color(71, 160, 164, 255));
+        
+        public readonly static GUIColor InteractionLabelColor = new GUIColor("InteractionLabelColor", new Color(255, 255, 255, 255));
+        public readonly static GUIColor InteractionLabelHoverColor = new GUIColor("InteractionLabelHoverColor", new Color(0, 255, 255, 255));
 
         // Inventory
-        public readonly static GUIColor EquipmentSlotIconColor = new GUIColor("EquipmentSlotIconColor");
+        public readonly static GUIColor EquipmentSlotIconColor = new GUIColor("EquipmentSlotIconColor", new Color(99, 70, 64, 255));
 
         // Health HUD
-        public readonly static GUIColor BuffColorLow = new GUIColor("BuffColorLow");
-        public readonly static GUIColor BuffColorMedium = new GUIColor("BuffColorMedium");
-        public readonly static GUIColor BuffColorHigh = new GUIColor("BuffColorHigh");
+        public readonly static GUIColor BuffColorLow = new GUIColor("BuffColorLow", new Color(66, 170, 73, 255));
+        public readonly static GUIColor BuffColorMedium = new GUIColor("BuffColorMedium", new Color(110, 168, 118, 255));
+        public readonly static GUIColor BuffColorHigh = new GUIColor("BuffColorHigh", new Color(154, 213, 163, 255));
 
-        public readonly static GUIColor DebuffColorLow = new GUIColor("DebuffColorLow");
-        public readonly static GUIColor DebuffColorMedium = new GUIColor("DebuffColorMedium");
-        public readonly static GUIColor DebuffColorHigh = new GUIColor("DebuffColorHigh");
+        public readonly static GUIColor DebuffColorLow = new GUIColor("DebuffColorLow", new Color(243, 162, 50, 255));
+        public readonly static GUIColor DebuffColorMedium = new GUIColor("DebuffColorMedium", new Color(155, 55, 55, 255));
+        public readonly static GUIColor DebuffColorHigh = new GUIColor("DebuffColorHigh", new Color(228, 27, 27, 255));
 
-        public readonly static GUIColor HealthBarColorLow = new GUIColor("HealthBarColorLow");
-        public readonly static GUIColor HealthBarColorMedium = new GUIColor("HealthBarColorMedium");
-        public readonly static GUIColor HealthBarColorHigh = new GUIColor("HealthBarColorHigh");
-        public readonly static GUIColor HealthBarColorPoisoned = new GUIColor("HealthBarColorPoisoned");
+        public readonly static GUIColor HealthBarColorLow = new GUIColor("HealthBarColorLow", new Color(255, 0, 0, 255));
+        public readonly static GUIColor HealthBarColorMedium = new GUIColor("HealthBarColorMedium", new Color(255, 165, 0, 255));
+        public readonly static GUIColor HealthBarColorHigh = new GUIColor("HealthBarColorHigh", new Color(78, 114, 88));
+        public readonly static GUIColor HealthBarColorPoisoned = new GUIColor("HealthBarColorPoisoned", new Color(100, 150, 0, 255));
+
+        private readonly static Point defaultItemFrameMargin = new Point(50, 56);
 
         public static Point ItemFrameMargin 
         {
             get 
             { 
-                Point size = new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
+                Point size = defaultItemFrameMargin.Multiply(GUI.SlicedSpriteScale);
 
                 var style = GetComponentStyle("ItemUI"); 
                 var sprite = style?.Sprites[GUIComponent.ComponentState.None].First();
@@ -157,6 +164,16 @@ namespace Barotrauma
                 }
                 return size;
             } 
+        }
+
+        public static int ItemFrameTopBarHeight
+        {
+            get
+            {
+                var style = GetComponentStyle("ItemUI");
+                var sprite = style?.Sprites[GUIComponent.ComponentState.None].First();
+                return (int)Math.Min(sprite?.Slices[0].Height ?? 0, defaultItemFrameMargin.Y / 2 * GUI.SlicedSpriteScale);   
+            }
         }
 
         public static Point ItemFrameOffset => new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
@@ -183,8 +200,7 @@ namespace Barotrauma
 
                 if (parentStyle == null)
                 {
-                    Identifier parentStyleName = parent.GetType().Name.ToIdentifier();
-
+                    Identifier parentStyleName = ReflectionUtils.GetTypeNameWithoutGenericArity(parent.GetType());
                     if (!ComponentStyles.ContainsKey(parentStyleName))
                     {
                         DebugConsole.ThrowError($"Couldn't find a GUI style \"{parentStyleName}\"");
@@ -192,7 +208,7 @@ namespace Barotrauma
                     }
                     parentStyle = ComponentStyles[parentStyleName];
                 }
-                Identifier childStyleName = styleName.IsEmpty ? targetComponent.GetType().Name.ToIdentifier() : styleName;
+                Identifier childStyleName = styleName.IsEmpty ? ReflectionUtils.GetTypeNameWithoutGenericArity(targetComponent.GetType()) : styleName;
                 parentStyle.ChildStyles.TryGetValue(childStyleName, out componentStyle);
             }
             else
@@ -200,7 +216,7 @@ namespace Barotrauma
                 Identifier styleIdentifier = styleName.ToIdentifier();
                 if (styleIdentifier == Identifier.Empty)
                 {
-                    styleIdentifier = targetComponent.GetType().Name.ToIdentifier();
+                    styleIdentifier = ReflectionUtils.GetTypeNameWithoutGenericArity(targetComponent.GetType());
                 }
                 if (!ComponentStyles.ContainsKey(styleIdentifier))
                 {

@@ -23,9 +23,8 @@ namespace Barotrauma
 
         public CharacterTalent(TalentPrefab talentPrefab, Character character)
         {
-            Character = character;
-
-            Prefab = talentPrefab;
+            Character = character ?? throw new ArgumentNullException(nameof(character));
+            Prefab = talentPrefab ?? throw new ArgumentNullException(nameof(talentPrefab));
             var element = talentPrefab.ConfigElement;
             DebugIdentifier = talentPrefab.OriginalName;
 
@@ -46,7 +45,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            DebugConsole.ThrowError($"No recipe identifier defined for talent {DebugIdentifier}");
+                            DebugConsole.ThrowError($"No recipe identifier defined for talent {DebugIdentifier}",
+                                contentPackage: element.ContentPackage);
                         }
                         break;
                     case "addedstoreitem":
@@ -56,7 +56,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            DebugConsole.ThrowError($"No store item identifier defined for talent {DebugIdentifier}");
+                            DebugConsole.ThrowError($"No store item identifier defined for talent {DebugIdentifier}",
+                                contentPackage: element.ContentPackage);
                         }
                         break;
                 }
@@ -146,11 +147,13 @@ namespace Barotrauma
         {
             if (!Enum.TryParse(abilityEffectTypeString, true, out AbilityEffectType abilityEffectType))
             {
-                DebugConsole.ThrowError("Invalid ability effect type \"" + abilityEffectTypeString + "\" in CharacterTalent (" + characterTalent.DebugIdentifier + ")");
+                DebugConsole.ThrowError("Invalid ability effect type \"" + abilityEffectTypeString + "\" in CharacterTalent (" + characterTalent.DebugIdentifier + ")",
+                    contentPackage: characterTalent?.Prefab?.ContentPackage);
             }
             if (abilityEffectType == AbilityEffectType.Undefined)
             {
-                DebugConsole.ThrowError("Ability effect type not defined in CharacterTalent (" + characterTalent.DebugIdentifier + ")");
+                DebugConsole.ThrowError("Ability effect type not defined in CharacterTalent (" + characterTalent.DebugIdentifier + ")",
+                    contentPackage: characterTalent?.Prefab?.ContentPackage);
             }
 
             return abilityEffectType;

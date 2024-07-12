@@ -8,6 +8,13 @@ namespace Barotrauma.Networking
         Disconnected = 0x2
     }
 
+    abstract class NetworkConnection<T> : NetworkConnection where T : Endpoint
+    {
+        protected NetworkConnection(T endpoint) : base(endpoint) { }
+
+        public new T Endpoint => (base.Endpoint as T)!;
+    }
+    
     abstract class NetworkConnection
     {
         public const double TimeoutThreshold = 60.0; //full minute for timeout because loading screens can take quite a while
@@ -23,7 +30,7 @@ namespace Barotrauma.Networking
             get; set;
         }
 
-        public NetworkConnection(Endpoint endpoint)
+        protected NetworkConnection(Endpoint endpoint)
         {
             Endpoint = endpoint;
         }
@@ -35,9 +42,9 @@ namespace Barotrauma.Networking
 
         public void SetAccountInfo(AccountInfo newInfo)
         {
-            AccountInfo = newInfo;
+            if (AccountInfo.IsNone) { AccountInfo = newInfo; }
         }
-        
+
         public sealed override string ToString()
             => Endpoint.StringRepresentation;
     }

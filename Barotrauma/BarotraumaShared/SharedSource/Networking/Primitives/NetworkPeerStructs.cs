@@ -25,34 +25,42 @@ namespace Barotrauma.Networking
     }
 
     [NetworkSerialize(ArrayMaxSize = ushort.MaxValue)]
-    internal struct ClientSteamTicketAndVersionPacket : INetSerializableStruct
+    internal struct ClientAuthTicketAndVersionPacket : INetSerializableStruct
     {
         public string Name;
         public Option<int> OwnerKey;
-        
-        #warning TODO: do something about the type of this
-        // It probably should be Option<SteamId> but we shouldn't build support for
-        // writing SteamIDs to INetSerializableStruct; we should consider adding
-        // attributes to give custom behaviors to specific members of a struct
-        public Option<AccountId> SteamId;
-        
-        public Option<byte[]> SteamAuthTicket;
+        public Option<AccountId> AccountId;
+        public Option<AuthenticationTicket> AuthTicket;
         public string GameVersion;
         public Identifier Language;
     }
 
     [NetworkSerialize]
-    internal struct SteamP2PInitializationRelayPacket : INetSerializableStruct
+    internal readonly record struct P2POwnerToServerHeader
+        (string? EndpointStr, AccountInfo AccountInfo) : INetSerializableStruct
+    {
+        public Option<P2PEndpoint> Endpoint => P2PEndpoint.Parse(EndpointStr ?? "");
+    }
+
+    [NetworkSerialize]
+    internal readonly record struct P2PServerToOwnerHeader
+        (string? EndpointStr) : INetSerializableStruct
+    {
+        public Option<P2PEndpoint> Endpoint => P2PEndpoint.Parse(EndpointStr ?? "");
+    }
+
+    [NetworkSerialize]
+    internal struct P2PInitializationRelayPacket : INetSerializableStruct
     {
         public ulong LobbyID;
         public PeerPacketMessage Message;
     }
 
     [NetworkSerialize]
-    internal struct SteamP2PInitializationOwnerPacket : INetSerializableStruct
-    {
-        public string OwnerName;
-    }
+    internal readonly record struct P2PInitializationOwnerPacket(
+        string Name,
+        AccountId AccountId)
+    : INetSerializableStruct;
 
 
     [NetworkSerialize(ArrayMaxSize = ushort.MaxValue)]
@@ -60,6 +68,7 @@ namespace Barotrauma.Networking
     {
         public string ServerName;
         public ImmutableArray<ServerContentPackage> ContentPackages;
+        public bool AllowModDownloads;
     }
 
     [NetworkSerialize(ArrayMaxSize = ushort.MaxValue)]
@@ -68,7 +77,7 @@ namespace Barotrauma.Networking
         public byte[] Buffer;
         public readonly int Length => Buffer.Length;
 
-        public readonly IReadMessage GetReadMessageUncompressed() => new ReadWriteMessage(Buffer, 0, Length, copyBuf: false);
+        public readonly IReadMessage GetReadMessageUncompressed() => new ReadWriteMessage(Buffer, 0, Length * 8, copyBuf: false);
         public readonly IReadMessage GetReadMessage(bool isCompressed, NetworkConnection conn) => new ReadOnlyMessage(Buffer, isCompressed, 0, Length, conn);
     }
 
@@ -140,7 +149,8 @@ namespace Barotrauma.Networking
                 DisconnectReason.ExcessiveDesyncOldEvent => ServerMessage,
                 DisconnectReason.ExcessiveDesyncRemovedEvent => ServerMessage,
                 DisconnectReason.SyncTimeout => ServerMessage,
-                _ => TextManager.Get($"DisconnectReason.{DisconnectReason}").Fallback(TextManager.Get("ConnectionLost"))
+                DisconnectReason.AuthenticationFailed => TextManager.Get($"DisconnectReason.{DisconnectReason}").Fallback(TextManager.Get("ChatMsg.DisconnectReason.AuthenticationRequired")),
+                _ => TextManager.Get($"DisconnectReason.{DisconnectReason}").Fallback($"{TextManager.Get("ConnectionLost")} ({DisconnectReason})")
             };
 
         public LocalizedString ReconnectMessage
@@ -178,15 +188,12 @@ namespace Barotrauma.Networking
                    or DisconnectReason.TooManyFailedLogins
                    or DisconnectReason.InvalidVersion);
 
-        private const string lidgrenSeparator = ":hankey:";
-
         /// <summary>
-        /// This exists because Lidgren is a piece of shit and
-        /// doesn't readily support sending anything other than
-        /// a string through a disconnect packet, so this thing
-        /// needs a sufficiently nasty string representation that
-        /// can be decoded with some certainty that it won't get
-        /// mangled by user input.
+        /// This exists because Lidgren doesn't readily support
+        /// sending anything other than a string through a disconnect
+        /// packet, so this thing needs a sufficiently nasty string
+        /// representation that can be decoded with some certainty
+        /// that it won't get mangled by user input.
         /// </summary>
         public string ToLidgrenStringRepresentation()
         {
@@ -194,7 +201,7 @@ namespace Barotrauma.Networking
                 => Convert.ToBase64String(Encoding.UTF8.GetBytes(str));
 
             return DisconnectReason
-                   + lidgrenSeparator
+                   + NetworkMagicStrings.LidgrenDisconnectSeparator
                    + strToBase64(AdditionalInformation);
         }
 
@@ -209,16 +216,16 @@ namespace Barotrauma.Networking
                 case Lidgren.Network.NetConnection.NoResponseMessage:
                 case "Connection timed out":
                 case "Reconnecting":
-                    return Option<PeerDisconnectPacket>.Some(WithReason(DisconnectReason.Timeout));
+                    return Option.Some(WithReason(DisconnectReason.Timeout));
             }
             
             static string base64ToStr(string base64)
                 => Encoding.UTF8.GetString(Convert.FromBase64String(base64));
 
-            string[] split = str.Split(lidgrenSeparator);
-            if (split.Length != 2) { return Option<PeerDisconnectPacket>.None(); }
-            if (!Enum.TryParse(split[0], out DisconnectReason disconnectReason)) { return Option<PeerDisconnectPacket>.None(); }
-            return Option<PeerDisconnectPacket>.Some(new PeerDisconnectPacket(disconnectReason, base64ToStr(split[1])));
+            string[] split = str.Split(NetworkMagicStrings.LidgrenDisconnectSeparator);
+            if (split.Length != 2) { return Option.None; }
+            if (!Enum.TryParse(split[0], out DisconnectReason disconnectReason)) { return Option.None; }
+            return Option.Some(new PeerDisconnectPacket(disconnectReason, base64ToStr(split[1])));
         }
         
         public static PeerDisconnectPacket Custom(string customMessage)
@@ -247,12 +254,12 @@ namespace Barotrauma.Networking
         
         public static PeerDisconnectPacket SteamAuthError(Steamworks.BeginAuthResult error)
             => new PeerDisconnectPacket(
-                DisconnectReason.SteamAuthenticationFailed,
+                DisconnectReason.AuthenticationFailed,
                 $"{nameof(Steamworks.BeginAuthResult)}.{error}");
         
         public static PeerDisconnectPacket SteamAuthError(Steamworks.AuthResponse error)
             => new PeerDisconnectPacket(
-                DisconnectReason.SteamAuthenticationFailed,
+                DisconnectReason.AuthenticationFailed,
                 $"{nameof(Steamworks.AuthResponse)}.{error}");
     }
 

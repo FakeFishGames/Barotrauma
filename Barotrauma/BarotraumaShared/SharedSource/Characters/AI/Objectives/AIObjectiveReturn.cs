@@ -12,15 +12,15 @@ namespace Barotrauma
         private AIObjectiveGoTo moveInsideObjective, moveOutsideObjective;
         private bool usingEscapeBehavior, isSteeringThroughGap;
 
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
 
         public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
         {
             ReturnTarget = GetReturnTarget(Submarine.MainSubs) ?? GetReturnTarget(Submarine.Loaded);
             if (ReturnTarget == null)
             {
-                DebugConsole.ThrowError("Error with a Return objective: no suitable return target found");
+                DebugConsole.AddSafeError("Error with a Return objective: no suitable return target found");
                 Abandon = true;
             }
 
@@ -47,8 +47,7 @@ namespace Barotrauma
             }
             else
             {
-                // TODO: Consider if this needs to be addressed
-                Priority = 0;
+                Priority = AIObjectiveManager.LowestOrderPriority - 1;
             }
             return Priority;
         }
@@ -91,7 +90,7 @@ namespace Barotrauma
                             targetHull = d.Item.CurrentHull;
                             break;
                         }
-                        if (targetHull != null && !targetHull.IsTaggedAirlock())
+                        if (targetHull != null && !targetHull.IsAirlock)
                         {
                             // Target the closest airlock
                             float closestDist = 0;
@@ -99,7 +98,7 @@ namespace Barotrauma
                             foreach (Hull hull in Hull.HullList)
                             {
                                 if (hull.Submarine != targetHull.Submarine) { continue; }
-                                if (!hull.IsTaggedAirlock()) { continue; }
+                                if (!hull.IsAirlock) { continue; }
                                 float dist = Vector2.DistanceSquared(targetHull.Position, hull.Position);
                                 if (airlock == null || closestDist <= 0 || dist < closestDist)
                                 {
@@ -146,7 +145,7 @@ namespace Barotrauma
                 bool targetIsAirlock = false;
                 foreach (var hull in ReturnTarget.GetHulls(false))
                 {
-                    bool hullIsAirlock = hull.IsTaggedAirlock();
+                    bool hullIsAirlock = hull.IsAirlock;
                     if(hullIsAirlock || (!targetIsAirlock && hull.LeadsOutside(character)))
                     {
                         float distanceSquared = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);

@@ -143,6 +143,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// When enabled, clips the left side of the text if it's too long to fit in the box (i.e. allows you to enter longer texts without the text overflowing from the box).
+        /// </summary>
         public bool OverflowClip
         {
             get { return textBlock.OverflowClip; }
@@ -325,7 +328,7 @@ namespace Barotrauma
             textBlock.Text = text;
             ClearSelection();
             if (Text == null) textBlock.Text = "";
-            if (Text != "" && !Wrap)
+            if (Text != "")
             {
                 if (maxTextLength != null)
                 {
@@ -334,7 +337,7 @@ namespace Barotrauma
                         textBlock.Text = Text.Substring(0, (int)maxTextLength);
                     }
                 }
-                else
+                else if (!Wrap)
                 {
                     while (ClampText && textBlock.Text.Length > 0 && Font.MeasureString(textBlock.Text).X * TextBlock.TextScale > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
                     {
@@ -353,6 +356,10 @@ namespace Barotrauma
         {
             CaretIndex = Math.Clamp(CaretIndex, 0, textBlock.Text.Length);
             var caretPositions = textBlock.GetAllCaretPositions();
+            if (CaretIndex >= caretPositions.Length)
+            {
+                throw new Exception($"Caret index was outside the bounds of the calculated caret positions. Index: {CaretIndex}, caret positions: {caretPositions.Length}, text: {textBlock.Text}");
+            }
             caretPos = caretPositions[CaretIndex];
             caretPosDirty = false;
         }
@@ -532,6 +539,7 @@ namespace Barotrauma
             void drawRect(Vector2 topLeft, Vector2 bottomRight)
             {
                 int minWidth = GUI.IntScale(5);
+                if (OverflowClip) { topLeft.X = Math.Max(topLeft.X, 0.0f); }
                 if (bottomRight.X - topLeft.X < minWidth) { bottomRight.X = topLeft.X + minWidth; }
                 GUI.DrawRectangle(spriteBatch,
                     Rect.Location.ToVector2() + topLeft,

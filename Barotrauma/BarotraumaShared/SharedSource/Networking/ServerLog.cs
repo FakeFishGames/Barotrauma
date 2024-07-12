@@ -42,6 +42,7 @@ namespace Barotrauma.Networking
             DoSProtection,
             Karma,
             Talent,
+            Traitors,
             Error,
         }
 
@@ -59,6 +60,7 @@ namespace Barotrauma.Networking
             { MessageType.DoSProtection, Color.OrangeRed },
             { MessageType.Karma, new Color(75, 88, 255) },
             { MessageType.Talent, new Color(125, 125, 255) },
+            { MessageType.Traitors, new Color(107, 69, 158) },
             { MessageType.Error, Color.Red }
         };
 
@@ -76,6 +78,7 @@ namespace Barotrauma.Networking
             { MessageType.DoSProtection, "DoSProtection" },
             { MessageType.Karma, "Karma" },
             { MessageType.Talent, "Talent" },
+            { MessageType.Traitors, "Traitors" },
             { MessageType.Error, "Error" }
         };
 
@@ -129,7 +132,7 @@ namespace Barotrauma.Networking
                 listBox.UpdateScrollBarSize();
             }
 #endif
-            if (unsavedLines.Count() >= LinesPerFile)
+            if (unsavedLines.Count >= LinesPerFile)
             {
                 Save();
                 unsavedLines.Clear();
@@ -143,7 +146,7 @@ namespace Barotrauma.Networking
 #if CLIENT
             while (listBox != null && listBox.Content.CountChildren > LinesPerFile)
             {
-                listBox.RemoveChild(reverseOrder ? listBox.Content.Children.First() : listBox.Content.Children.Last());
+                listBox.Content.RemoveChild(!reverseOrder ? listBox.Content.Children.First() : listBox.Content.Children.Last());
             }
 #endif
         }

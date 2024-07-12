@@ -5,12 +5,12 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionHasItem : AbilityConditionDataless
     {
-        private readonly string[] tags;
+        private readonly Identifier[] tags;
         readonly bool requireAll;
 
         public AbilityConditionHasItem(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>());
+            tags = conditionElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>());
             requireAll = conditionElement.GetAttributeBool("requireall", false);
         }
 
@@ -18,12 +18,12 @@ namespace Barotrauma.Abilities
         {
             if (tags.None())
             {
-                return character.GetEquippedItem(null) != null;
+                return character.GetEquippedItem(Identifier.Empty) != null;
             }
 
             if (requireAll)
             {
-                foreach (string tag in tags)
+                foreach (Identifier tag in tags)
                 {
                     if (character.GetEquippedItem(tag) == null) { return false; }
                 }
@@ -31,7 +31,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                foreach (string tag in tags)
+                foreach (Identifier tag in tags)
                 {
                     if (character.GetEquippedItem(tag) != null) { return true; }
                 }

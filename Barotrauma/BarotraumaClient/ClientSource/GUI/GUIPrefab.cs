@@ -1,14 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿#nullable enable
+using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -19,6 +18,26 @@ namespace Barotrauma
         protected override Identifier DetermineIdentifier(XElement element)
         {
             return element.NameAsIdentifier();
+        }
+
+        protected int ParseSize(XElement element, string attributeName)
+        {
+            string valueStr = element.GetAttributeString(attributeName, string.Empty);
+            bool relativeToWidth = valueStr.EndsWith("vw");
+            bool relativeToHeight = valueStr.EndsWith("vh");
+            if (relativeToWidth || relativeToHeight)
+            {
+                string floatStr = valueStr.Substring(0, valueStr.Length - 2);
+                if (!float.TryParse(floatStr, NumberStyles.Any, CultureInfo.InvariantCulture, out float relativeHeight))
+                {
+                    DebugConsole.ThrowError($"Error while parsing a {nameof(GUIComponentStyle)}: {valueStr} is not a valid size.");
+                }
+                return (int)(relativeHeight / 100.0f * (relativeToWidth ? GameMain.GraphicsWidth : GameMain.GraphicsHeight));
+            }
+            else
+            {
+                return element.GetAttributeInt(attributeName, 0);
+            }
         }
     }
 
@@ -36,8 +55,8 @@ namespace Barotrauma
     public class GUIFontPrefab : GUIPrefab
     {
         private readonly ContentXElement element;
-        private ScalableFont font;
-        public ScalableFont Font
+        private ScalableFont? font;
+        public ScalableFont? Font
         {
             get
             {
@@ -46,11 +65,13 @@ namespace Barotrauma
             }
         }
 
-        private ImmutableDictionary<TextManager.SpeciallyHandledCharCategory, ScalableFont> specialHandlingFonts;
+        private ImmutableDictionary<TextManager.SpeciallyHandledCharCategory, ScalableFont>? specialHandlingFonts;
 
-        public ScalableFont GetFontForCategory(TextManager.SpeciallyHandledCharCategory category)
+        public ScalableFont? GetFontForCategory(TextManager.SpeciallyHandledCharCategory category)
         {
             if (Language != GameSettings.CurrentConfig.Language) { LoadFont(); }
+            if (font is null) { return null; }
+            if (specialHandlingFonts is null) { return font; }
             if (font.SpeciallyHandledCharCategory.HasFlag(category)) { return font; }
             return specialHandlingFonts.TryGetValue(category, out var resultFont)
                 ? resultFont
@@ -69,7 +90,7 @@ namespace Barotrauma
 
         public void LoadFont()
         {
-            string fontPath = GetFontFilePath(element);
+            string? fontPath = GetFontFilePath(element);
             uint size = GetFontSize(element);
             bool dynamicLoading = GetFontDynamicLoading(element);
             var shcc = GetShcc(element);
@@ -107,21 +128,22 @@ namespace Barotrauma
             specialHandlingFonts = null;
         }
 
-        private ScalableFont ExtractFont(TextManager.SpeciallyHandledCharCategory flag, ContentXElement element)
+        private ScalableFont? ExtractFont(TextManager.SpeciallyHandledCharCategory flag, ContentXElement element)
         {
             foreach (var subElement in element.Elements().Reverse())
             {
                 if (subElement.NameAsIdentifier() != "override") { continue; }
                 if (ScalableFont.ExtractShccFromXElement(subElement).HasFlag(flag))
                 {
-                    return new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                    uint overrideFontSize = GetFontSize(subElement, defaultSize: font?.Size ?? 14);
+                    return new ScalableFont(subElement, overrideFontSize, GameMain.Instance.GraphicsDevice);
                 }
             }
 
             ScalableFont hardcodedFallback(string path)
                 => new ScalableFont(
                     path,
-                    font.Size,
+                    font?.Size ?? 0,
                     GameMain.Instance.GraphicsDevice,
                     dynamicLoading: true,
                     speciallyHandledCharCategory: flag);
@@ -136,7 +158,7 @@ namespace Barotrauma
             };
         }
         
-        private string GetFontFilePath(ContentXElement element)
+        private string? GetFontFilePath(ContentXElement element)
         {
             foreach (var subElement in element.Elements())
             {
@@ -166,7 +188,8 @@ namespace Barotrauma
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {
-                    return (uint)Math.Round(subElement.GetAttributeInt("size", 14) * GameSettings.CurrentConfig.Graphics.TextScale);
+                    int rawSize = ParseSize(subElement, "size");
+                    return (uint)Math.Round(rawSize * GameSettings.CurrentConfig.Graphics.TextScale);
                 }
             }
             return (uint)Math.Round(defaultSize * GameSettings.CurrentConfig.Graphics.TextScale);
@@ -208,20 +231,20 @@ namespace Barotrauma
     {
         public GUIFont(string identifier) : base(identifier) { }
 
-        public bool HasValue => !Prefabs.IsEmpty;
-        
-        public ScalableFont Value => Prefabs.ActivePrefab.Font;
+        public bool HasValue => Value is not null;
 
-        public static implicit operator ScalableFont(GUIFont reference) => reference.Value;
+        public ScalableFont? Value => Prefabs.ActivePrefab?.Font;
+
+        public static implicit operator ScalableFont?(GUIFont reference) => reference.Value;
 
         public bool ForceUpperCase => Prefabs.ActivePrefab?.Font is { ForceUpperCase: true };
 
-        public uint Size => HasValue ? Value.Size : 0;
+        public uint Size => Value?.Size ?? 0;
 
-        private ScalableFont GetFontForStr(LocalizedString str) => GetFontForStr(str.Value);
+        private ScalableFont? GetFontForStr(LocalizedString str) => GetFontForStr(str.Value);
         
-        public ScalableFont GetFontForStr(string str) =>
-            Prefabs.ActivePrefab.GetFontForCategory(TextManager.GetSpeciallyHandledCategories(str));
+        public ScalableFont? GetFontForStr(string str) =>
+            Prefabs.ActivePrefab?.GetFontForCategory(TextManager.GetSpeciallyHandledCategories(str));
         
         public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth)
         {
@@ -230,7 +253,7 @@ namespace Barotrauma
 
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth)
         {
-            GetFontForStr(text).DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth);
+            GetFontForStr(text)?.DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth);
         }
 
         public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft)
@@ -240,7 +263,7 @@ namespace Barotrauma
 
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
-            GetFontForStr(text).DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase);
+            GetFontForStr(text)?.DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase);
         }
 
         public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false)
@@ -250,34 +273,46 @@ namespace Barotrauma
 
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false)
         {
-            GetFontForStr(text).DrawString(sb, text, position, color, forceUpperCase, italics);
+            GetFontForStr(text)?.DrawString(sb, text, position, color, forceUpperCase, italics);
         }
 
         public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
-            GetFontForStr(text).DrawStringWithColors(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase);
+            GetFontForStr(text)?.DrawStringWithColors(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase);
         }
 
         public Vector2 MeasureString(LocalizedString str, bool removeExtraSpacing = false)
         {
-            return GetFontForStr(str).MeasureString(str, removeExtraSpacing);
+            return GetFontForStr(str)?.MeasureString(str, removeExtraSpacing) ?? Vector2.Zero;
         }
 
         public Vector2 MeasureChar(char c)
         {
-            return GetFontForStr($"{c}").MeasureChar(c);
+            return GetFontForStr($"{c}")?.MeasureChar(c) ?? Vector2.Zero;
         }
 
         public string WrapText(string text, float width)
-            => GetFontForStr(text).WrapText(text, width);
+            => GetFontForStr(text)?.WrapText(text, width) ?? text;
         
         public string WrapText(string text, float width, int requestCharPos, out Vector2 requestedCharPos)
-            => GetFontForStr(text).WrapText(text, width, requestCharPos, out requestedCharPos);
-        
-        public string WrapText(string text, float width, out Vector2[] allCharPositions)
-            => GetFontForStr(text).WrapText(text, width, out allCharPositions);
+        {
+            requestedCharPos = default;
+            return GetFontForStr(text)?.WrapText(text, width, requestCharPos, out requestedCharPos) ?? text;
+        }
 
-        public float LineHeight => Value.LineHeight;
+        public string WrapText(string text, float width, out Vector2[] allCharPositions)
+        {
+            var scalableFont = GetFontForStr(text);
+            if (scalableFont != null)
+            {
+                return scalableFont.WrapText(text, width, out allCharPositions);
+            }
+
+            allCharPositions = Enumerable.Range(0, text.Length + 1).Select(_ => Vector2.Zero).ToArray();
+            return text;
+        }
+
+        public float LineHeight => Value?.LineHeight ?? 0;
     }
 
     public class GUIColorPrefab : GUIPrefab
@@ -294,13 +329,18 @@ namespace Barotrauma
 
     public class GUIColor : GUISelector<GUIColorPrefab>
     {
-        public GUIColor(string identifier) : base(identifier) { }
+        private readonly Color fallbackColor;
+
+        public GUIColor(string identifier, Color fallbackColor) : base(identifier) 
+        { 
+            this.fallbackColor = fallbackColor;
+        }
 
         public Color Value
         {
             get
             {
-                return Prefabs.ActivePrefab.Color;
+                return Prefabs?.ActivePrefab?.Color ?? fallbackColor;
             }
         }
 
@@ -331,19 +371,24 @@ namespace Barotrauma
     {
         public GUISprite(string identifier) : base(identifier) { }
 
-        public UISprite Value
+        public UISprite? Value
         {
             get
             {
-                return Prefabs.ActivePrefab.Sprite;
+                return Prefabs.ActivePrefab?.Sprite;
             }
         }
 
-        public static implicit operator UISprite(GUISprite reference) => reference.Value;
+        public static implicit operator UISprite?(GUISprite reference) => reference.Value;
+
+        public void Draw(SpriteBatch spriteBatch, RectangleF rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
+        {
+            Value?.Draw(spriteBatch, rect, color, spriteEffects);
+        }
 
         public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            Value.Draw(spriteBatch, rect, color, spriteEffects);
+            Value?.Draw(spriteBatch, rect, color, spriteEffects);
         }
     }
 
@@ -366,33 +411,33 @@ namespace Barotrauma
     {
         public GUISpriteSheet(string identifier) : base(identifier) { }
 
-        public SpriteSheet Value
+        public SpriteSheet? Value
         {
             get
             {
-                return Prefabs.ActivePrefab.SpriteSheet;
+                return Prefabs.ActivePrefab?.SpriteSheet;
             }
         }
 
-        public int FrameCount => Value.FrameCount;
-        public Point FrameSize => Value.FrameSize;
+        public int FrameCount => Value?.FrameCount ?? 1;
+        public Point FrameSize => Value?.FrameSize ?? Point.Zero;
 
         public void Draw(ISpriteBatch spriteBatch, Vector2 pos, float rotate = 0, float scale = 1, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            Value.Draw(spriteBatch, pos, rotate, scale, spriteEffects);
+            Value?.Draw(spriteBatch, pos, rotate, scale, spriteEffects);
         }
 
         public void Draw(ISpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate = 0, float scale = 1, SpriteEffects spriteEffects = SpriteEffects.None, float? depth = null)
         {
-            Value.Draw(spriteBatch, pos, color, origin, rotate, scale, spriteEffects, depth);
+            Value?.Draw(spriteBatch, pos, color, origin, rotate, scale, spriteEffects, depth);
         }
 
         public void Draw(ISpriteBatch spriteBatch, int spriteIndex, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffects = SpriteEffects.None, float? depth = null)
         {
-            Value.Draw(spriteBatch, spriteIndex, pos, color, origin, rotate, scale, spriteEffects, depth);
+            Value?.Draw(spriteBatch, spriteIndex, pos, color, origin, rotate, scale, spriteEffects, depth);
         }
 
-        public static implicit operator SpriteSheet(GUISpriteSheet reference) => reference.Value;
+        public static implicit operator SpriteSheet?(GUISpriteSheet reference) => reference.Value;
     }
 
     public class GUICursorPrefab : GUIPrefab
@@ -422,6 +467,6 @@ namespace Barotrauma
     {
         public GUICursor(string identifier) : base(identifier) { }
 
-        public Sprite this[CursorState k] => Prefabs.ActivePrefab.Sprites[(int)k];
+        public Sprite? this[CursorState k] => Prefabs.ActivePrefab?.Sprites[(int)k];
     }
 }

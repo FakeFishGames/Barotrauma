@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -25,6 +24,15 @@ namespace Barotrauma
                 client.HasPermission(ClientPermissions.ManageCampaign) ||
                 IsOwner(client) ||
                 AnyOneAllowedToManageCampaign(permissions);
+        }
+
+        public static bool AllowImmediateItemDelivery(Client client)
+        {
+            if (client == null || GameMain.Server == null) { return false; }
+            return
+                GameMain.Server.ServerSettings.AllowImmediateItemDelivery ||
+                client.HasPermission(ClientPermissions.ManageCampaign) ||
+                client.Connection == GameMain.Server.OwnerConnection;
         }
 
         public static bool AllowedToManageWallets(Client client)

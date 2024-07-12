@@ -215,7 +215,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) { return; }
+                    //do not emit particles unless water is flowing towards the target hull
+                    //(using lerpedFlowForce smooths out "flickers" when the direction of flow is rapidly changing)
+                    if (Math.Sign(flowTargetHull.WorldPosition.Y - WorldPosition.Y) != Math.Sign(lerpedFlowForce.Y)) { return; }
 
                     float particlesPerSec = Math.Max(open * rect.Width * particleAmountMultiplier, 10.0f);
                     float emitInterval = 1.0f / particlesPerSec;
@@ -331,7 +333,6 @@ namespace Barotrauma
         }
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.15f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) })
             {
                 UserData = this

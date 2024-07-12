@@ -19,7 +19,10 @@ namespace Barotrauma
         public override bool Loaded => nestedStr.Loaded;
         public override void RetrieveValue()
         {
-            cachedValue = ToolBox.WrapText(nestedStr.Value, lineLength, font.GetFontForStr(nestedStr.Value), textScale);
+            cachedValue = 
+                font.GetFontForStr(nestedStr.Value) is ScalableFont scalableFont
+                    ? ToolBox.WrapText(nestedStr.Value, lineLength, scalableFont, textScale)
+                    : nestedStr.Value;
             UpdateLanguage();
         }
     }

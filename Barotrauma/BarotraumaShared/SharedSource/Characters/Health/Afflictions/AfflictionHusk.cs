@@ -75,7 +75,8 @@ namespace Barotrauma
             HuskPrefab = prefab as AfflictionPrefabHusk;
             if (HuskPrefab == null)
             {
-                DebugConsole.ThrowError("Error in husk affliction definition: the prefab is of wrong type!");
+                DebugConsole.ThrowError("Error in husk affliction definition: the prefab is of wrong type!",
+                    contentPackage: prefab.ContentPackage);
             }
         }
 
@@ -140,6 +141,9 @@ namespace Barotrauma
             if (prevDisplayedMessage.HasValue && prevDisplayedMessage.Value == State) { return; }
             if (highestStrength > Strength) { return; }
 
+            // Show initial husk warning by default, and disable it only if campaign difficulty settings explicitly disable it
+            bool showHuskWarning = GameMain.GameSession?.Campaign?.Settings.ShowHuskWarning ?? true;
+
             switch (State)
             {
                 case InfectionState.Dormant:
@@ -147,15 +151,18 @@ namespace Barotrauma
                     {
                         return;
                     }
-                    if (character == Character.Controlled)
+                    if (showHuskWarning)
                     {
+                        if (character == Character.Controlled)
+                        {
 #if CLIENT
-                        GUI.AddMessage(TextManager.Get("HuskDormant"), GUIStyle.Red);
+                            GUI.AddMessage(TextManager.Get("HuskDormant"), GUIStyle.Red);
 #endif
-                    }
-                    else if (character.IsBot)
-                    {
-                        character.Speak(TextManager.Get("dialoghuskdormant").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskdormant".ToIdentifier());
+                        }
+                        else if (character.IsBot)
+                        {
+                            character.Speak(TextManager.Get("dialoghuskdormant").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskdormant".ToIdentifier());
+                        }
                     }
                     break;
                 case InfectionState.Transition:
@@ -197,7 +204,7 @@ namespace Barotrauma
                 huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * 10 * deltaTime / limbCount));
                 character.LastDamageSource = null;
                 float force = applyForce ? random * 0.5f * limb.Mass : 0;
-                character.DamageLimb(limb.WorldPosition, limb, huskInfection, 0, false, force);
+                character.DamageLimb(limb.WorldPosition, limb, huskInfection, 0, false, Rand.Vector(force));
             }
         }
 
@@ -205,7 +212,7 @@ namespace Barotrauma
         {
             if (huskAppendage == null && character.Params.UseHuskAppendage)
             {
-                huskAppendage = AttachHuskAppendage(character, Prefab.Identifier);
+                huskAppendage = AttachHuskAppendage(character, Prefab as AfflictionPrefabHusk);
             }
 
             if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
@@ -285,13 +292,14 @@ namespace Barotrauma
 
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.");
+                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.",
+                    contentPackage: Prefab.ContentPackage);
                 yield return CoroutineStatus.Success;
             }
 
             XElement parentElement = new XElement("CharacterInfo");
             XElement infoElement = character.Info?.Save(parentElement);
-            CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(infoElement);
+            CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(new ContentXElement(Prefab.ContentPackage, infoElement));
 
             if (huskCharacterInfo != null)
             {
@@ -371,31 +379,28 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public static List<Limb> AttachHuskAppendage(Character character, Identifier afflictionIdentifier, ContentXElement appendageDefinition = null, Ragdoll ragdoll = null)
+        public static List<Limb> AttachHuskAppendage(Character character, AfflictionPrefabHusk matchingAffliction, ContentXElement appendageDefinition = null, Ragdoll ragdoll = null)
         {
             var appendage = new List<Limb>();
-            if (!(AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier) is AfflictionPrefabHusk matchingAffliction))
-            {
-                DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the affliction '{afflictionIdentifier}'!");
-                return appendage;
-            }
             Identifier nonhuskedSpeciesName = GetNonHuskedSpeciesName(character.SpeciesName, matchingAffliction);
             Identifier huskedSpeciesName = GetHuskedSpeciesName(nonhuskedSpeciesName, matchingAffliction);
             CharacterPrefab huskPrefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
             if (huskPrefab?.ConfigElement == null)
             {
-                DebugConsole.ThrowError($"Failed to find the config file for the husk infected species with the species name '{huskedSpeciesName}'!");
+                DebugConsole.ThrowError($"Failed to find the config file for the husk infected species with the species name '{huskedSpeciesName}'!",
+                    contentPackage: matchingAffliction.ContentPackage);
                 return appendage;
             }
             var mainElement = huskPrefab.ConfigElement;
             var element = appendageDefinition;
             if (element == null)
             {
-                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeIdentifier("affliction", Identifier.Empty) == afflictionIdentifier);
+                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeIdentifier("affliction", Identifier.Empty) == matchingAffliction.Identifier);
             }
             if (element == null)
             {
-                DebugConsole.ThrowError($"Error in '{huskPrefab.FilePath}': Failed to find a huskappendage that matches the affliction with an identifier '{afflictionIdentifier}'!");
+                DebugConsole.ThrowError($"Error in '{huskPrefab.FilePath}': Failed to find a huskappendage that matches the affliction with an identifier '{matchingAffliction.Identifier}'!",
+                    contentPackage: matchingAffliction.ContentPackage);
                 return appendage;
             }
             ContentPath pathToAppendage = element.GetAttributeContentPath("path") ?? ContentPath.Empty;

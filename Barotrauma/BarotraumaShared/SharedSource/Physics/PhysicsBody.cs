@@ -68,7 +68,7 @@ namespace Barotrauma
 
         public void TransformInToOutside()
         {
-            var sub = Submarine.FindContaining(ConvertUnits.ToDisplayUnits(Position));
+            var sub = Submarine.FindContainingInLocalCoordinates(ConvertUnits.ToDisplayUnits(Position));
             if (sub != null)
             {
                 Position += ConvertUnits.ToSimUnits(sub.Position);
@@ -247,6 +247,11 @@ namespace Barotrauma
         {
             get { return ConvertUnits.ToDisplayUnits(FarseerBody.Position); }
         }
+
+        /// <summary>
+        /// Offset of the DrawPosition from the Position (i.e. how much the interpolated draw position is offset from the "actual position"). In display units.
+        /// </summary>
+        public Vector2 DrawPositionOffset => DrawPosition - Position;
 
         public Vector2 PrevPosition
         {
@@ -869,11 +874,21 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateDrawPosition()
+        public void UpdateDrawPosition(bool interpolate = true)
         {
-            drawPosition = Timing.Interpolate(prevPosition, FarseerBody.Position);
-            drawPosition = ConvertUnits.ToDisplayUnits(drawPosition + drawOffset);
-            drawRotation = Timing.InterpolateRotation(prevRotation, FarseerBody.Rotation) + rotationOffset;
+            if (interpolate)
+            {
+                drawPosition = Timing.Interpolate(prevPosition, FarseerBody.Position);
+                drawPosition = ConvertUnits.ToDisplayUnits(drawPosition + drawOffset);
+                drawRotation = Timing.InterpolateRotation(prevRotation, FarseerBody.Rotation) + rotationOffset;
+            }
+            else
+            {
+                drawPosition = prevPosition = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
+                drawRotation = prevRotation = FarseerBody.Rotation;
+                drawOffset = Vector2.Zero;
+                drawRotation = 0.0f;
+            }
         }
         
         public void CorrectPosition<T>(List<T> positionBuffer,
@@ -925,6 +940,24 @@ namespace Barotrauma
             {
                 ApplyTorque(FarseerBody.Mass * torque);
             }
+        }
+
+        /// <summary>
+        /// Wraps the angle so it has "has the same number of revolutions" as this body, i.e. that the angles are at most 180 degrees apart.
+        /// For example, if the angle of this body was 720, an angle of 5 would get wrapped to 725.
+        /// </summary>
+        public float WrapAngleToSameNumberOfRevolutions(float angle)
+        {
+            if (float.IsInfinity(angle)) { return angle; }
+            while (Rotation - angle > MathHelper.TwoPi)
+            {
+                angle += MathHelper.TwoPi;
+            }
+            while (Rotation - angle < -MathHelper.TwoPi)
+            {
+                angle -= MathHelper.TwoPi;
+            }
+            return angle;
         }
         
         public void Remove()

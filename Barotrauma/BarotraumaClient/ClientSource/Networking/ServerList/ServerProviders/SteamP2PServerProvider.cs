@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.Networking;
@@ -24,7 +25,7 @@ namespace Barotrauma
 
         private object? queryRef = null;
         
-        protected override void RetrieveServersImpl(Action<ServerInfo> onServerDataReceived, Action onQueryCompleted)
+        protected override void RetrieveServersImpl(Action<ServerInfo, ServerProvider> onServerDataReceived, Action onQueryCompleted)
         {
             if (!SteamManager.IsInitialized)
             {
@@ -61,7 +62,7 @@ namespace Barotrauma
                 // If queryRef != selfQueryRef, this query was cancelled
                 if (!ReferenceEquals(selfQueryRef, queryRef)) { return; }
                 
-                if (!t.TryGetResult(out Steamworks.Data.Lobby[] lobbies)
+                if (!t.TryGetResult(out Steamworks.Data.Lobby[]? lobbies)
                     || lobbies is null
                     || lobbies.Length == 0)
                 {
@@ -74,16 +75,23 @@ namespace Barotrauma
                     string lobbyOwnerStr = lobby.GetData("lobbyowner") ?? "";
                     lobbyQuery = lobbyQuery.WithoutKeyValue("lobbyowner", lobbyOwnerStr);
 
-                    string serverName = lobby.GetData("name") ?? "";
+                    string serverName = lobby.GetData("servername").FallbackNullOrEmpty(lobby.GetData("name")) ?? "";
                     if (string.IsNullOrEmpty(serverName)) { continue; }
 
                     var ownerId = SteamId.Parse(lobbyOwnerStr);
                     if (!ownerId.TryUnwrap(out var lobbyOwnerId)) { continue; }
+
+                    var eosP2PEndpointOption = EosP2PEndpoint
+                        .Parse(lobby.GetData("EosEndpoint") ?? "")
+                        .Select(e => (Endpoint)e);
                     
                     if (retrieved.Contains(lobbyOwnerId)) { continue; }
                     retrieved.Add(lobbyOwnerId);
 
-                    var serverInfo = new ServerInfo(new SteamP2PEndpoint(lobbyOwnerId))
+                    var endpoints = new List<Endpoint> { new SteamP2PEndpoint(lobbyOwnerId) };
+                    if (eosP2PEndpointOption.TryUnwrap(out var eosP2PEndpoint)) { endpoints.Add(eosP2PEndpoint); }
+                    
+                    var serverInfo = new ServerInfo(endpoints.ToImmutableArray())
                     {
                         ServerName = serverName,
                         MetadataSource = Option<ServerInfo.DataSource>.Some(new DataSource(lobby))
@@ -91,7 +99,7 @@ namespace Barotrauma
                     serverInfo.UpdateInfo(key => lobby.GetData(key));
                     serverInfo.Checked = true;
                     
-                    onServerDataReceived(serverInfo);
+                    onServerDataReceived(serverInfo, this);
                 }
                 startQuery();
             }

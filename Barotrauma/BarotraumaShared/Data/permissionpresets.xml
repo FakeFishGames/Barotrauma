@@ -33,6 +33,7 @@
     <Command name="togglekarmatestmode"/>
     <Command name="respawnnow"/>
     <Command name="traitorlist"/>
+    <Command name="setsalary"/>
   </Preset>
 
   <Preset 
@@ -94,5 +95,6 @@
     <Command name="togglecampaignteleport"/>
     <Command name="respawnnow"/>
     <Command name="traitorlist"/>
+    <Command name="setsalary"/>
   </Preset>
 </PermissionPresets>

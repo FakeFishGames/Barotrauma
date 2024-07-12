@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace Barotrauma
 {
@@ -130,7 +129,7 @@ namespace Barotrauma
                         //remove linked subs too
                         if (otherSub.Submarine == sub) { connectedSubs.Add(otherSub); }
                     }
-                    List<MapEntity> entities = MapEntity.mapEntityList.FindAll(e => connectedSubs.Contains(e.Submarine));
+                    List<MapEntity> entities = MapEntity.MapEntityList.FindAll(e => connectedSubs.Contains(e.Submarine));
                     entities.ForEach(e => e.Remove());
                     foreach (Submarine otherSub in connectedSubs)
                     {
@@ -201,7 +200,14 @@ namespace Barotrauma
 
                 selectedModules.Add(new PlacedModule(initialModule, null, OutpostModuleInfo.GapPosition.None));
                 selectedModules.Last().FulfilledModuleTypes.Add(initialModuleFlag);
-                AppendToModule(selectedModules.Last(), outpostModules.ToList(), pendingModuleFlags, selectedModules, locationType, allowExtendBelowInitialModule: generationParams is RuinGeneration.RuinGenerationParams);
+
+                AppendToModule(
+                    selectedModules.Last(), outpostModules.ToList(), pendingModuleFlags, 
+                    selectedModules, 
+                    locationType, 
+                    allowExtendBelowInitialModule: generationParams is RuinGeneration.RuinGenerationParams,
+                    allowDifferentLocationType: remainingTries == 1);
+
                 if (pendingModuleFlags.Any(flag => flag != "none"))
                 {
                     if (!allowInvalidOutpost)
@@ -232,8 +238,7 @@ namespace Barotrauma
                     foreach (Hull hull in Hull.HullList)
                     {
                         if (hull.Submarine != sub) { continue; }
-                        if (string.IsNullOrEmpty(hull.RoomName) || 
-                            hull.RoomName.Contains("RoomName.", StringComparison.OrdinalIgnoreCase))
+                        if (string.IsNullOrEmpty(hull.RoomName))
                         {
                             hull.RoomName = hull.CreateRoomName();
                         }
@@ -442,7 +447,6 @@ namespace Barotrauma
                         }
                     }
                     AlignLadders(selectedModules, entities);
-                    PowerUpOutpost(entities.SelectMany(e => e.Value));
                     if (generationParams.MaxWaterPercentage > 0.0f)
                     {
                         foreach (var entity in allEntities)
@@ -485,8 +489,8 @@ namespace Barotrauma
                 foreach (var moduleCount in generationParams.ModuleCounts)
                 {
                     if (!moduleCount.RequiredFaction.IsEmpty && 
-                        location.Faction?.Prefab.Identifier != moduleCount.RequiredFaction && 
-                        location.SecondaryFaction?.Prefab.Identifier != moduleCount.RequiredFaction)
+                        location?.Faction?.Prefab.Identifier != moduleCount.RequiredFaction && 
+                        location?.SecondaryFaction?.Prefab.Identifier != moduleCount.RequiredFaction)
                     {
                         continue;
                     }
@@ -533,67 +537,67 @@ namespace Barotrauma
         /// Attaches additional modules to all the available gaps of the given module, 
         /// and continues recursively through the attached modules until all the pending module types have been placed.
         /// </summary>
-        /// <param name="currentModule">The module to attach to</param>
-        /// <param name="availableModules">Which modules we can choose from</param>
-        /// <param name="pendingModuleFlags">Which types of modules we still need in the outpost</param>
+        /// <param name="currentModule">The module to attach to.</param>
+        /// <param name="availableModules">Which modules we can choose from.</param>
+        /// <param name="pendingModuleFlags">Which types of modules we still need in the outpost.</param>
         /// <param name="selectedModules">The modules we've already selected to be used in the outpost.</param>
+        /// <param name="locationType">The type of the location we're generating the outpost for.</param>
+        /// <param name="tryReplacingCurrentModule">If we fail to append to the current module, should we try replacing it with something else and see if we can append to it then?</param>
+        /// <param name="allowExtendBelowInitialModule">Is the module allowed to be placed further down than the initial module (usually the airlock module)?</param>
+        /// <param name="allowDifferentLocationType">If we fail to find a module suitable for the location type, should we use a module that's meant for a different location type instead?</param>
         private static bool AppendToModule(PlacedModule currentModule,
             List<SubmarineInfo> availableModules,
             List<Identifier> pendingModuleFlags,
             List<PlacedModule> selectedModules, 
             LocationType locationType,
-            bool retry = true,
-            bool allowExtendBelowInitialModule = false)
+            bool tryReplacingCurrentModule = true,
+            bool allowExtendBelowInitialModule = false,
+            bool allowDifferentLocationType = false)
         {
             if (pendingModuleFlags.Count == 0) { return true; }
 
             List<PlacedModule> placedModules = new List<PlacedModule>();
-            for (int i = 0; i < 2; i++)
+            foreach (OutpostModuleInfo.GapPosition gapPosition in GapPositions.Randomize(Rand.RandSync.ServerAndClient))
             {
-                //try placing a module meant for this location type first, and if that fails, try choosing whatever fits
-                bool allowDifferentLocationType = i > 0;
-                foreach (OutpostModuleInfo.GapPosition gapPosition in GapPositions.Randomize(Rand.RandSync.ServerAndClient))
+                if (currentModule.UsedGapPositions.HasFlag(gapPosition)) { continue; }
+                if (DisallowBelowAirlock(allowExtendBelowInitialModule, gapPosition, currentModule)) { continue; }
+
+                PlacedModule newModule = null;
+                //try appending to the current module if possible
+                if (currentModule.Info.OutpostModuleInfo.GapPositions.HasFlag(gapPosition))
                 {
-                    if (currentModule.UsedGapPositions.HasFlag(gapPosition)) { continue; }
-                    if (DisallowBelowAirlock(allowExtendBelowInitialModule, gapPosition, currentModule)) { continue; }
-
-                    PlacedModule newModule = null;
-                    //try appending to the current module if possible
-                    if (currentModule.Info.OutpostModuleInfo.GapPositions.HasFlag(gapPosition))
-                    {
-                        newModule = AppendModule(currentModule, GetOpposingGapPosition(gapPosition), availableModules, pendingModuleFlags, selectedModules, locationType, allowDifferentLocationType);
-                    }
-
-                    if (newModule != null) 
-                    { 
-                        placedModules.Add(newModule); 
-                    }
-                    else
-                    {
-                        //couldn't append to current module, try one of the other placed modules
-                        foreach (PlacedModule otherModule in selectedModules)
-                        {
-                            if (otherModule == currentModule) { continue; }
-                            foreach (OutpostModuleInfo.GapPosition otherGapPosition in 
-                                GapPositions.Where(g => !otherModule.UsedGapPositions.HasFlag(g) && otherModule.Info.OutpostModuleInfo.GapPositions.HasFlag(g)))
-                            {
-                                if (DisallowBelowAirlock(allowExtendBelowInitialModule, otherGapPosition, otherModule)) { continue; }
-                                newModule = AppendModule(otherModule, GetOpposingGapPosition(otherGapPosition), availableModules, pendingModuleFlags, selectedModules, locationType, allowDifferentLocationType);
-                                if (newModule != null)
-                                {
-                                    placedModules.Add(newModule);
-                                    break;
-                                }
-                            }
-                            if (newModule != null) { break; }
-                        }
-                    }
-                    if (pendingModuleFlags.Count == 0) { return true; }                    
+                    newModule = AppendModule(currentModule, GetOpposingGapPosition(gapPosition), availableModules, pendingModuleFlags, selectedModules, locationType, allowDifferentLocationType);
                 }
-            }
+
+                if (newModule != null) 
+                { 
+                    placedModules.Add(newModule); 
+                }
+                else
+                {
+                    //couldn't append to current module, try one of the other placed modules
+                    foreach (PlacedModule otherModule in selectedModules)
+                    {
+                        if (otherModule == currentModule) { continue; }
+                        foreach (OutpostModuleInfo.GapPosition otherGapPosition in 
+                            GapPositions.Where(g => !otherModule.UsedGapPositions.HasFlag(g) && otherModule.Info.OutpostModuleInfo.GapPositions.HasFlag(g)))
+                        {
+                            if (DisallowBelowAirlock(allowExtendBelowInitialModule, otherGapPosition, otherModule)) { continue; }
+                            newModule = AppendModule(otherModule, GetOpposingGapPosition(otherGapPosition), availableModules, pendingModuleFlags, selectedModules, locationType, allowDifferentLocationType);
+                            if (newModule != null)
+                            {
+                                placedModules.Add(newModule);
+                                break;
+                            }
+                        }
+                        if (newModule != null) { break; }
+                    }
+                }
+                if (pendingModuleFlags.Count == 0) { return true; }                    
+            }            
 
             //couldn't place a module anywhere, we're probably fucked!
-            if (placedModules.Count == 0 && retry && currentModule.PreviousModule != null && !selectedModules.Any(m => m != currentModule && m.PreviousModule == currentModule))
+            if (placedModules.Count == 0 && tryReplacingCurrentModule && currentModule.PreviousModule != null && !selectedModules.Any(m => m != currentModule && m.PreviousModule == currentModule))
             {
                 //try to replace the previously placed module with something else that we can append to
                 for (int i = 0; i < 10; i++)
@@ -607,7 +611,7 @@ namespace Barotrauma
                     currentModule = AppendModule(currentModule.PreviousModule, currentModule.ThisGapPosition, availableModules, pendingModuleFlags, selectedModules, locationType, allowDifferentLocationType: true);
                     assertAllPreviousModulesPresent();
                     if (currentModule == null) { break; }
-                    if (AppendToModule(currentModule, availableModules, pendingModuleFlags, selectedModules, locationType, retry: false, allowExtendBelowInitialModule: allowExtendBelowInitialModule))
+                    if (AppendToModule(currentModule, availableModules, pendingModuleFlags, selectedModules, locationType, tryReplacingCurrentModule: false, allowExtendBelowInitialModule, allowDifferentLocationType))
                     {
                         assertAllPreviousModulesPresent();
                         return true;
@@ -618,7 +622,7 @@ namespace Barotrauma
 
             foreach (PlacedModule placedModule in placedModules)
             {
-                AppendToModule(placedModule, availableModules, pendingModuleFlags, selectedModules, locationType, allowExtendBelowInitialModule: allowExtendBelowInitialModule);
+                AppendToModule(placedModule, availableModules, pendingModuleFlags, selectedModules, locationType, tryReplacingCurrentModule: true, allowExtendBelowInitialModule, allowDifferentLocationType);
             }
             return placedModules.Count > 0;
 
@@ -786,7 +790,7 @@ namespace Barotrauma
                         //check if the connection overlaps with this module's connection
                         if (selfGapPos1.HasValue && selfGapPos2.HasValue &&
                             !gapPos1.NearlyEquals(gapPos2) && !selfGapPos1.Value.NearlyEquals(selfGapPos2.Value) &&
-                            MathUtils.LinesIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
+                            MathUtils.LineSegmentsIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
                         {
                             return true;
                         }
@@ -872,16 +876,16 @@ namespace Barotrauma
                 }
             }
 
-            if (availableModules.Count() == 0) { return null; }
+            if (!availableModules.Any()) { return null; }
 
             //try to search for modules made specifically for this location type first
             var modulesSuitableForLocationType =
-                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
+                availableModules.Where(m => m.OutpostModuleInfo.IsAllowedInLocationType(locationType));
 
             //if not found, search for modules suitable for any location type
             if (!modulesSuitableForLocationType.Any())
             {
-                modulesSuitableForLocationType = availableModules.Where(m => !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+                modulesSuitableForLocationType = availableModules.Where(m => m.OutpostModuleInfo.IsAllowedInAnyLocationType());
             }
 
             if (!modulesSuitableForLocationType.Any())
@@ -929,10 +933,8 @@ namespace Barotrauma
 
             if (!suitableModules.Any())
             {
-                if (allowDifferentLocationType)
+                if (allowDifferentLocationType && modulesWithCorrectFlags.Any())
                 {
-                    if (modulesWithCorrectFlags.Any())
-
                     DebugConsole.NewMessage($"Could not find a suitable module for the location type {locationType}. Module flag: {moduleFlag}.", Color.Orange);
                     return ToolBox.SelectWeightedRandom(modulesWithCorrectFlags.ToList(), modulesWithCorrectFlags.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
                 }
@@ -953,11 +955,12 @@ namespace Barotrauma
                 {
                     if (disallowNonLocationTypeSpecific)
                     {
+                        //don't use OutpostModuleInfo.IsLocationTypeAllowed here - we're trying to choose a module specifically for this location type, not modules suitable for any location type
                         suitable = modules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
                     }
                     else
                     {
-                        suitable = modules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier) || !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+                        suitable = modules.Where(m => m.OutpostModuleInfo.IsAllowedInLocationType(locationType));
                     }
                 }
                 if (requireAllowAttachToPrevious && prevModule != null)
@@ -1105,8 +1108,8 @@ namespace Barotrauma
                             DebugConsole.AddWarning($"Failed to connect junction boxes between outpost modules (not enough free connections in module \"{module.PreviousModule.Info.Name}\")");
                             continue;
                         }
-                        wire.Connect(thisJunctionBox.Connections[i], addNode: false);
-                        wire.Connect(previousJunctionBox.Connections[i], addNode: false);
+                        wire.TryConnect(thisJunctionBox.Connections[i], addNode: false);
+                        wire.TryConnect(previousJunctionBox.Connections[i], addNode: false);
                         wire.SetNodes(new List<Vector2>());
                     }
                 }
@@ -1353,20 +1356,27 @@ namespace Barotrauma
 
                     if (startWaypoint.WorldPosition.X > endWaypoint.WorldPosition.X)
                     {
-                        var temp = startWaypoint;
-                        startWaypoint = endWaypoint;
-                        endWaypoint = temp;
+                        (endWaypoint, startWaypoint) = (startWaypoint, endWaypoint);
                     }
 
                     if (hallwayLength > 100 && isHorizontal)
                     {
+                        //if the hallway is longer than 100 pixels, generate some waypoints inside it
+                        //for vertical hallways this isn't necessarily, it's done as a part of the ladder generation in AlignLadders
                         WayPoint prevWayPoint = startWaypoint;
+                        WayPoint firstWayPoint = null;
                         for (float x = leftHull.Rect.Right + 50; x < rightHull.Rect.X - 50; x += 100.0f)
                         {
                             var newWayPoint = new WayPoint(new Vector2(x, hullBounds.Y + 110.0f), SpawnType.Path, sub);
+                            firstWayPoint ??= newWayPoint;
                             prevWayPoint.linkedTo.Add(newWayPoint);
                             newWayPoint.linkedTo.Add(prevWayPoint);
                             prevWayPoint = newWayPoint;
+                        }
+                        if (firstWayPoint != null)
+                        {
+                            firstWayPoint.linkedTo.Add(startWaypoint);
+                            startWaypoint.linkedTo.Add(firstWayPoint);
                         }
                         if (prevWayPoint != null)
                         {
@@ -1377,25 +1387,7 @@ namespace Barotrauma
                     else
                     {
                         startWaypoint.linkedTo.Add(endWaypoint);
-                        endWaypoint.linkedTo.Add(startWaypoint);
-                    }
-
-                    WayPoint closestWaypoint = null;
-                    float closestDistSqr = 30.0f * 30.0f;
-                    foreach (WayPoint waypoint in WayPoint.WayPointList)
-                    {
-                        if (waypoint == startWaypoint) { continue; }
-                        float dist = Vector2.DistanceSquared(waypoint.WorldPosition, startWaypoint.WorldPosition);
-                        if (dist < closestDistSqr)
-                        {
-                            closestWaypoint = waypoint;
-                            closestDistSqr = dist;
-                        }
-                    }
-                    if (closestWaypoint != null)
-                    {
-                        startWaypoint.linkedTo.Add(closestWaypoint);
-                        closestWaypoint.linkedTo.Add(startWaypoint);
+                        endWaypoint.linkedTo.Add(startWaypoint);                    
                     }
                 }                
             }
@@ -1449,7 +1441,7 @@ namespace Barotrauma
             {
                 foreach (MapEntity me in entities[module])
                 {
-                    if (!(me is Gap gap)) { continue; }
+                    if (me is not Gap gap) { continue; }
                     var door = gap.ConnectedDoor;
                     if (door != null && !door.UseBetweenOutpostModules) { continue; }
                     if (placedModules.Any(m => m.PreviousGap == gap || m.ThisGap == gap)) 
@@ -1529,14 +1521,37 @@ namespace Barotrauma
 
             static void RemoveLinkedEntity(MapEntity linked)
             {
-                if (linked is Item linkedItem && linkedItem.Connections != null)
+                if (linked is Item linkedItem)
                 {
-                    foreach (Connection connection in linkedItem.Connections)
+                    if (linkedItem.Connections != null)
                     {
-                        foreach (Wire w in connection.Wires.ToArray())
+                        foreach (Connection connection in linkedItem.Connections)
                         {
-                            w?.Item.Remove();
+                            foreach (Wire w in connection.Wires.ToArray())
+                            {
+                                w?.Item.Remove();
+                            }
                         }
+                    }
+                    //if we end up removing a ladder, remove its waypoints too
+                    if (linkedItem.GetComponent<Ladder>() is Ladder ladder)
+                    {
+                        var ladderWaypoints = WayPoint.WayPointList.FindAll(wp => wp.Ladders == ladder);
+                        foreach (var ladderWaypoint in ladderWaypoints)
+                        {
+                            //got through all waypoints linked to the ladder waypoints, and link them together
+                            //so we don't end up breaking up any paths by removing the ladder waypoints
+                            for (int i = 0; i < ladderWaypoint.linkedTo.Count; i++)
+                            {
+                                if (ladderWaypoint.linkedTo[i] is not WayPoint waypoint1 || waypoint1.Ladders == ladder) { continue; }
+                                for (int j = i + 1; j < ladderWaypoint.linkedTo.Count; j++)
+                                {
+                                    if (ladderWaypoint.linkedTo[j] is not WayPoint waypoint2 || waypoint2.Ladders == ladder) { continue; }
+                                    waypoint1.ConnectTo(waypoint2);
+                                }
+                            }
+                        }
+                        ladderWaypoints.ForEach(wp => wp.Remove());
                     }
                 }
                 linked.Remove();
@@ -1595,10 +1610,11 @@ namespace Barotrauma
                     {
                         var startWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == bottomGap);
                         var endWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == topGap);
+                        float margin = 100;
                         if (startWaypoint != null && endWaypoint != null)
                         {
                             WayPoint prevWaypoint = startWaypoint;
-                            for (float y = startWaypoint.Position.Y + WayPoint.LadderWaypointInterval; y <= endWaypoint.Position.Y - WayPoint.LadderWaypointInterval; y += WayPoint.LadderWaypointInterval)
+                            for (float y = bottomGap.Position.Y + margin; y <= topGap.Position.Y - margin; y += WayPoint.LadderWaypointInterval)
                             {
                                 var wayPoint = new WayPoint(new Vector2(startWaypoint.Position.X, y), SpawnType.Path, ladder.Item.Submarine)
                                 {
@@ -1614,11 +1630,15 @@ namespace Barotrauma
             }
         }
 
-        private static void PowerUpOutpost(IEnumerable<MapEntity> entities)
+        public static void PowerUpOutpost(Submarine sub)
         {
-            foreach (Entity e in entities)
+            //create a copy of the list, because EntitySpawner may not exist yet we're generating the level,
+            //which can cause items to be removed/instantiated directly 
+            var entities = MapEntity.MapEntityList.Where(me => me.Submarine == sub).ToList();
+
+            foreach (MapEntity e in entities)
             {
-                if (!(e is Item item)) { continue; }
+                if (e is not Item item) { continue; }
                 var reactor = item.GetComponent<Reactor>();
                 if (reactor != null)
                 {
@@ -1630,9 +1650,9 @@ namespace Barotrauma
             for (int i = 0; i < 600; i++)
             {
                 Powered.UpdatePower((float)Timing.Step);
-                foreach (Entity e in entities)
+                foreach (MapEntity e in entities)
                 {
-                    if (!(e is Item item) || item.GetComponent<Powered>() == null) { continue; }
+                    if (e is not Item item || item.GetComponent<Powered>() == null) { continue; }
                     item.Update((float)Timing.Step, GameMain.GameScreen.Cam);
                 }
             }
@@ -1687,7 +1707,7 @@ namespace Barotrauma
                     gotoTarget = outpost.GetHulls(true).GetRandom(Rand.RandSync.ServerAndClient);
                 }
                 characterInfo.TeamID = CharacterTeamType.FriendlyNPC;
-                var npc = Character.Create(CharacterPrefab.HumanSpeciesName, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
+                var npc = Character.Create(characterInfo.SpeciesName, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
                 npc.AnimController.FindHull(gotoTarget.WorldPosition, setSubmarine: true);
                 npc.TeamID = CharacterTeamType.FriendlyNPC;
                 npc.HumanPrefab = humanPrefab;

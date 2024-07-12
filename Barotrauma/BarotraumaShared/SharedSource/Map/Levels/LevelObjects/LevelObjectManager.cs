@@ -20,6 +20,8 @@ namespace Barotrauma
         private List<LevelObject> updateableObjects;
         private List<LevelObject>[,] objectGrid;
 
+        const float ParallaxStrength = 0.0001f;
+
         public float GlobalForceDecreaseTimer
         {
             get;
@@ -101,7 +103,7 @@ namespace Barotrauma
 
             foreach (Structure structure in Structure.WallList)
             {
-                if (!structure.HasBody || structure.HiddenInGame) { continue; }
+                if (!structure.HasBody || structure.IsHidden) { continue; }
 
                 LevelObjectPrefab.SpawnPosType spawnPosType = LevelObjectPrefab.SpawnPosType.None;
                 if (level.Ruins.Any(r => r.Submarine == structure.Submarine))
@@ -235,9 +237,21 @@ namespace Barotrauma
                     SpawnPosition spawnPosition = ToolBox.SelectWeightedRandom(suitableSpawnPositions[prefab], spawnPositionWeights[prefab], Rand.RandSync.ServerAndClient);
                     if (spawnPosition == null && prefab.SpawnPos != LevelObjectPrefab.SpawnPosType.None) { continue; }
                     PlaceObject(prefab, spawnPosition, level, cave);
-                    if (prefab.MaxCount < amount)
+                    if (amount > prefab.MaxCount && objects.Count > prefab.MaxCount)
                     {
-                        if (objects.Count(o => o.Prefab == prefab && o.ParentCave == cave) >= prefab.MaxCount)
+                        int objectCount = 0;
+                        for (int j = 0; j < objects.Count; j++)
+                        {
+                            if (objects[j].Prefab == prefab && objects[j].ParentCave == cave)
+                            {
+                                objectCount++;
+                                if (objectCount >= prefab.MaxCount)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        if (objectCount >= prefab.MaxCount)
                         {
                             availablePrefabs.Remove(prefab);
                         }
@@ -350,8 +364,8 @@ namespace Barotrauma
 
         private void AddObject(LevelObject newObject, Level level)
         {
-            if (newObject.Triggers != null) 
-            { 
+            if (newObject.Triggers != null)
+            {
                 foreach (LevelTrigger trigger in newObject.Triggers)
                 {
                     trigger.OnTriggered += (levelTrigger, obj) =>
@@ -360,7 +374,7 @@ namespace Barotrauma
                     };
                 }
             }
-            
+
             var spriteCorners = new List<Vector2>
             {
                 Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero
@@ -393,11 +407,11 @@ namespace Barotrauma
                 }
             }
 
-            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z;
-            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z;
+            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z * ParallaxStrength;
+            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z * ParallaxStrength;
 
-            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z - level.BottomPos;
-            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z - level.BottomPos;
+            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z * ParallaxStrength - level.BottomPos;
+            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z * ParallaxStrength - level.BottomPos;
 
             if (newObject.Triggers != null)
             {
@@ -436,11 +450,11 @@ namespace Barotrauma
 
             int xStart = (int)Math.Floor(minX / GridSize);
             int xEnd = (int)Math.Floor(maxX / GridSize);
-            if (xEnd < 0 || xStart >= objectGrid.GetLength(0)) return;
+            if (xEnd < 0 || xStart >= objectGrid.GetLength(0)) { return; }
 
             int yStart = (int)Math.Floor(minY / GridSize);
             int yEnd = (int)Math.Floor(maxY / GridSize);
-            if (yEnd < 0 || yStart >= objectGrid.GetLength(1)) return;
+            if (yEnd < 0 || yStart >= objectGrid.GetLength(1)) { return; }
 
             xStart = Math.Max(xStart, 0);
             xEnd = Math.Min(xEnd, objectGrid.GetLength(0) - 1);
@@ -451,15 +465,23 @@ namespace Barotrauma
             {
                 for (int y = yStart; y <= yEnd; y++)
                 {
-                    if (objectGrid[x, y] == null) objectGrid[x, y] = new List<LevelObject>();
-                    objectGrid[x, y].Add(newObject);
+                    var list = objectGrid[x, y];
+                    if (list == null) { objectGrid[x, y] = list = new List<LevelObject>(); }
+
+                    //insertion sort in ascending order (= prefer rendering objects in front)
+                    int drawOrderIndex = 0;
+                    while (drawOrderIndex < list.Count && list[drawOrderIndex].Position.Z < newObject.Position.Z)
+                    {
+                        drawOrderIndex++;
+                    }
+                    list.Insert(drawOrderIndex, newObject);
                 }
             }            
         }
 
-        public Microsoft.Xna.Framework.Point GetGridIndices(Vector2 worldPosition)        
+        public static Point GetGridIndices(Vector2 worldPosition)        
         {
-            return new Microsoft.Xna.Framework.Point(
+            return new Point(
                 (int)Math.Floor(worldPosition.X / GridSize),
                 (int)Math.Floor((worldPosition.Y - Level.Loaded.BottomPos) / GridSize));
         }
@@ -500,16 +522,17 @@ namespace Barotrauma
             return objectsInRange;
         }
 
-        private List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType, bool checkFlags = true)
+        private static List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType)
         {
             List<LevelObjectPrefab.SpawnPosType> spawnPosTypes = new List<LevelObjectPrefab.SpawnPosType>(4);
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
+            bool requireCaveSpawnPos = spawnPosType == LevelObjectPrefab.SpawnPosType.CaveWall;
             foreach (var cell in cells)
             {
                 foreach (var edge in cell.Edges)
                 {
                     if (!edge.IsSolid || edge.OutsideLevel) { continue; }
-                    if (spawnPosType != LevelObjectPrefab.SpawnPosType.CaveWall && edge.NextToCave) { continue; } 
+                    if (requireCaveSpawnPos != edge.NextToCave) { continue; } 
                     Vector2 normal = edge.GetNormal(cell);
 
                     Alignment edgeAlignment = 0;
@@ -593,12 +616,12 @@ namespace Barotrauma
                 if (obj == triggeredObject || obj.Triggers == null) { continue; }
                 foreach (LevelTrigger otherTrigger in obj.Triggers)
                 {
-                    otherTrigger.OtherTriggered(triggeredObject, trigger);
+                    otherTrigger.OtherTriggered(trigger, triggerer);
                 }
             }
         }
 
-        private LevelObjectPrefab GetRandomPrefab(Level level, IList<LevelObjectPrefab> availablePrefabs)
+        private static LevelObjectPrefab GetRandomPrefab(Level level, IList<LevelObjectPrefab> availablePrefabs)
         {
             if (availablePrefabs.Sum(p => p.GetCommonness(level.LevelData)) <= 0.0f) { return null; }
             return ToolBox.SelectWeightedRandom(
@@ -606,7 +629,7 @@ namespace Barotrauma
                 availablePrefabs.Select(p => p.GetCommonness(level.LevelData)).ToList(), Rand.RandSync.ServerAndClient);
         }
 
-        private LevelObjectPrefab GetRandomPrefab(CaveGenerationParams caveParams, IList<LevelObjectPrefab> availablePrefabs, bool requireCaveSpecificOverride)
+        private static LevelObjectPrefab GetRandomPrefab(CaveGenerationParams caveParams, IList<LevelObjectPrefab> availablePrefabs, bool requireCaveSpecificOverride)
         {
             if (availablePrefabs.Sum(p => p.GetCommonness(caveParams, requireCaveSpecificOverride)) <= 0.0f) { return null; }
             return ToolBox.SelectWeightedRandom(
@@ -616,6 +639,7 @@ namespace Barotrauma
 
         public override void Remove()
         {
+            objectsInRange.Clear();
             if (objects != null)
             {
                 foreach (LevelObject obj in objects)
@@ -634,7 +658,7 @@ namespace Barotrauma
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            if (!(extraData is EventData eventData)) { throw new Exception($"Malformed LevelObjectManager event: expected {nameof(LevelObjectManager)}.{nameof(EventData)}"); }
+            if (extraData is not EventData eventData) { throw new Exception($"Malformed LevelObjectManager event: expected {nameof(LevelObjectManager)}.{nameof(EventData)}"); }
             LevelObject obj = eventData.LevelObject;
             msg.WriteRangedInteger(objects.IndexOf(obj), 0, objects.Count);
             obj.ServerWrite(msg, c);

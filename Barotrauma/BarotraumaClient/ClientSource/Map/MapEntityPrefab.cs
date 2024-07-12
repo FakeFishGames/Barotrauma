@@ -1,12 +1,32 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {
     abstract partial class MapEntityPrefab : PrefabWithUintIdentifier
     {
+        public RichString CreateTooltipText()
+        {
+            LocalizedString name = Category.HasFlag(MapEntityCategory.Legacy) ? TextManager.GetWithVariable("legacyitemformat", "[name]", Name) : Name;
+            LocalizedString tooltip = $"‖color:{XMLExtensions.ToStringHex(GUIStyle.TextColorBright)}‖{name}‖color:end‖";
+
+            if (!Description.IsNullOrEmpty())
+            {
+                tooltip += '\n' + Description;
+            }
+
+            if (IsModded)
+            {
+                tooltip = $"{tooltip}\n‖color:{Color.MediumPurple.ToStringHex()}‖{ContentPackage?.Name}‖color:end‖";
+            }
+
+            return RichString.Rich(tooltip);
+        }
+
+        public bool IsModded
+            => ContentPackage != GameMain.VanillaContent && ContentPackage != null;
+
         public virtual void UpdatePlacing(Camera cam)
         {
             if (PlayerInput.SecondaryMouseButtonClicked())
@@ -84,7 +104,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void DrawPlacing(SpriteBatch spriteBatch, Rectangle drawRect, float scale = 1.0f, SpriteEffects spriteEffects = SpriteEffects.None)
+        public virtual void DrawPlacing(SpriteBatch spriteBatch, Rectangle drawRect, float scale = 1.0f, float rotation = 0.0f, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (Submarine.MainSub != null)
             {

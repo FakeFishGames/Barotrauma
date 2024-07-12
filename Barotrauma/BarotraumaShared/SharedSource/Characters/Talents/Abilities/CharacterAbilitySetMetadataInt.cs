@@ -13,7 +13,8 @@ namespace Barotrauma.Abilities
             value = abilityElement.GetAttributeInt("value", 0);
             if (identifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilitySetMetadataInt)} - identifier is empty.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilitySetMetadataInt)} - identifier is empty.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

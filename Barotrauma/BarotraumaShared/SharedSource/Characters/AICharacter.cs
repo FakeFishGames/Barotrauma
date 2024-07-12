@@ -51,7 +51,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (!IsRemotePlayer && !(AIController is HumanAIController))
+            if (!IsRemotePlayer && AIController is not HumanAIController)
             {
                 float characterDistSqr = GetDistanceSqrToClosestPlayer();
                 if (characterDistSqr > MathUtils.Pow2(Params.DisableDistance * 0.5f))
@@ -62,6 +62,10 @@ namespace Barotrauma
                 {
                     AnimController.SimplePhysicsEnabled = false;
                 }
+            }
+            else
+            {
+                AnimController.SimplePhysicsEnabled = false;
             }
 
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }

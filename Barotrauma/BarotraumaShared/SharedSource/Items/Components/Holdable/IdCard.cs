@@ -37,7 +37,20 @@ namespace Barotrauma.Items.Components
 
         [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public string OwnerName { get; set; }
-        
+
+        private string ownerNameLocalized;
+        [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public string OwnerNameLocalized 
+        {
+            get { return ownerNameLocalized; }
+            set 
+            { 
+                if (value.IsNullOrWhiteSpace()) { return; }
+                ownerNameLocalized = value;
+                OwnerName = TextManager.Get(value).Fallback(value).Value;
+            }
+        }
+
         [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public Identifier OwnerJobId { get; set; }
 

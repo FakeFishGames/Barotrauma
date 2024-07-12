@@ -130,7 +130,7 @@ namespace Barotrauma
             };
 
             content = new GUILayoutGroup(new RectTransform(new Point(background.Rect.Width - HUDLayoutSettings.Padding * 4, background.Rect.Height - HUDLayoutSettings.Padding * 4), background.RectTransform, Anchor.Center)) { AbsoluteSpacing = (int)(HUDLayoutSettings.Padding * 1.5f) };
-            GUITextBlock header = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), content.RectTransform), transferService ? TextManager.Get("switchsubmarineheader") : TextManager.GetWithVariable("outpostshipyard", "[location]", GameMain.GameSession.Map.CurrentLocation.Name), font: GUIStyle.LargeFont);
+            GUITextBlock header = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), content.RectTransform), transferService ? TextManager.Get("switchsubmarineheader") : TextManager.GetWithVariable("outpostshipyard", "[location]", GameMain.GameSession.Map.CurrentLocation.DisplayName), font: GUIStyle.LargeFont);
             header.CalculateHeightFromText(0, true);
             playerBalanceElement = CampaignUI.AddBalanceElement(header, new Vector2(1.0f, 1.5f));
 
@@ -742,8 +742,8 @@ namespace Barotrauma
 
         private (LocalizedString header, LocalizedString body) GetItemTransferWarningText()
         {
-            var header = TextManager.Get("itemtransferheader").Fallback("lowfuelheader");
-            var body = TextManager.Get("itemtransferwarning").Fallback("lowfuelwarning");
+            var header = TextManager.Get("itemtransferheader").Fallback("lowfuelheader", useDefaultLanguageIfFound: false);
+            var body = TextManager.Get("itemtransferwarning").Fallback("lowfuelwarning", useDefaultLanguageIfFound: false);
             return (header, body);
         }
 
@@ -807,8 +807,10 @@ namespace Barotrauma
                 {
                     if (GameMain.Client == null)
                     {
-                        GameMain.GameSession.PurchaseSubmarine(selectedSubmarine);
-                        GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch);
+                        if (GameMain.GameSession.TryPurchaseSubmarine(selectedSubmarine))
+                        {
+                            GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch);
+                        }
                         RefreshSubmarineDisplay(true);
                     }
                     else
@@ -829,7 +831,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Client == null)
                     {
-                        GameMain.GameSession.PurchaseSubmarine(selectedSubmarine);
+                        GameMain.GameSession.TryPurchaseSubmarine(selectedSubmarine);
                         RefreshSubmarineDisplay(true);
                     }
                     else

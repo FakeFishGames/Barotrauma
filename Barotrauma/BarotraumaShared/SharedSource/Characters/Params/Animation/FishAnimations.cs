@@ -9,12 +9,12 @@ namespace Barotrauma
         {
             return Check(character) ? GetDefaultAnimParams<FishWalkParams>(character, AnimationType.Walk) : Empty;
         }
-        public static FishWalkParams GetAnimParams(Character character, string fileName = null)
+        public static FishWalkParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return Check(character) ? GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk, fileName) : Empty;
+            return Check(character) ? GetAnimParams<FishWalkParams>(character, AnimationType.Walk, file, throwErrors) : null;
         }
 
-        protected static FishWalkParams Empty = new FishWalkParams();
+        protected static readonly FishWalkParams Empty = new FishWalkParams();
 
         public override void StoreSnapshot() => StoreSnapshot<FishWalkParams>();
     }
@@ -25,12 +25,12 @@ namespace Barotrauma
         {
             return Check(character) ? GetDefaultAnimParams<FishRunParams>(character, AnimationType.Run) : Empty;
         }
-        public static FishRunParams GetAnimParams(Character character, string fileName = null)
+        public static FishRunParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return Check(character) ? GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run, fileName) : Empty;
+            return Check(character) ? GetAnimParams<FishRunParams>(character, AnimationType.Run, file, throwErrors) : null;
         }
 
-        protected static FishRunParams Empty = new FishRunParams();
+        protected static readonly FishRunParams Empty = new FishRunParams();
 
         public override void StoreSnapshot() => StoreSnapshot<FishRunParams>();
     }
@@ -38,9 +38,9 @@ namespace Barotrauma
     class FishSwimFastParams : FishSwimParams
     {
         public static FishSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimFastParams>(character, AnimationType.SwimFast);
-        public static FishSwimFastParams GetAnimParams(Character character, string fileName = null)
+        public static FishSwimFastParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
+            return GetAnimParams<FishSwimFastParams>(character, AnimationType.SwimFast, file, throwErrors);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<FishSwimFastParams>();
@@ -49,9 +49,9 @@ namespace Barotrauma
     class FishSwimSlowParams : FishSwimParams
     {
         public static FishSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimSlowParams>(character, AnimationType.SwimSlow);
-        public static FishSwimSlowParams GetAnimParams(Character character, string fileName = null)
+        public static FishSwimSlowParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
         {
-            return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
+            return GetAnimParams<FishSwimSlowParams>(character, AnimationType.SwimSlow, file, throwErrors);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<FishSwimSlowParams>();
@@ -63,7 +63,8 @@ namespace Barotrauma
         {
             if (!character.AnimController.CanWalk)
             {
-                DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!");
+                DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!", 
+                    contentPackage: character.Prefab.ContentPackage);
                 return false;
             }
             return true;

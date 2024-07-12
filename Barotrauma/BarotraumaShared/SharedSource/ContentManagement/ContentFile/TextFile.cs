@@ -1,9 +1,10 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    [NotSyncedInMultiplayer]
     public sealed class TextFile : ContentFile
     {
         public TextFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
@@ -18,13 +19,12 @@ namespace Barotrauma
             LanguageIdentifier language = languageName.ToLanguageIdentifier();
             if (!TextManager.TextPacks.ContainsKey(language))
             {
-                TextManager.TextPacks.TryAdd(language, ImmutableHashSet<TextPack>.Empty);
+                TextManager.TextPacks.TryAdd(language, ImmutableList<TextPack>.Empty);
             }
-
             var newPack = new TextPack(this, mainElement, language);
-            var newHashSet = TextManager.TextPacks[language].Add(newPack);
+            var newList = TextManager.TextPacks[language].Add(newPack);
             TextManager.TextPacks.TryRemove(language, out _);
-            TextManager.TextPacks.TryAdd(language, newHashSet);
+            TextManager.TextPacks.TryAdd(language, newList);
             TextManager.IncrementLanguageVersion();
         }
 
@@ -32,16 +32,28 @@ namespace Barotrauma
         {
             foreach (var kvp in TextManager.TextPacks.ToArray())
             {
-                var newHashSet = kvp.Value.Where(p => p.ContentFile != this).ToImmutableHashSet();
+                var newList = kvp.Value.Where(p => p.ContentFile != this).ToImmutableList();
                 TextManager.TextPacks.TryRemove(kvp.Key, out _);
-                if (newHashSet.Count != 0) { TextManager.TextPacks.TryAdd(kvp.Key, newHashSet); }
+                if (newList.Count != 0) { TextManager.TextPacks.TryAdd(kvp.Key, newList); }
             }
             TextManager.IncrementLanguageVersion();
+            if (!TextManager.TextPacks.ContainsKey(GameSettings.CurrentConfig.Language) && 
+                GameSettings.CurrentConfig.Language != TextManager.DefaultLanguage)
+            {
+                DebugConsole.AddWarning($"The language {GameSettings.CurrentConfig.Language} is no longer available. Switching to {TextManager.DefaultLanguage}...");
+                var config = GameSettings.CurrentConfig;
+                config.Language = TextManager.DefaultLanguage;
+                GameSettings.SetCurrentConfig(config);
+            }
         }
 
         public override void Sort()
         {
-            //Overrides for text packs don't exist! Should we change this?
+            foreach (var language in TextManager.TextPacks.Keys.ToList())
+            {
+                TextManager.TextPacks[language] =
+                    TextManager.TextPacks[language].Sort((t1, t2) => (t1.ContentFile.ContentPackage?.Index ?? int.MaxValue) - (t2.ContentFile.ContentPackage?.Index ?? int.MaxValue));                
+            }
         }
     }
 }

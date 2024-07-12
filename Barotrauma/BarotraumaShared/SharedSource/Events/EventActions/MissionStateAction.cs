@@ -1,8 +1,12 @@
 namespace Barotrauma
 {
+
+    /// <summary>
+    /// Changes the state of a specific active mission. The way the states are used depends on the type of mission.
+    /// </summary>
     class MissionStateAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the mission whose state to change.")]
         public Identifier MissionIdentifier { get; set; }
 
         public enum OperationType
@@ -11,10 +15,10 @@ namespace Barotrauma
             Add
         }
 
-        [Serialize(OperationType.Set, IsPropertySaveable.Yes)]
+        [Serialize(OperationType.Set, IsPropertySaveable.Yes, description: "Should the value be added to the state of the mission, or should the state be set to the specified value.")]
         public OperationType Operation { get; set; }
 
-        [Serialize(0, IsPropertySaveable.Yes)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "The state to set the mission to, or how much to add to the state of the mission.")]
         public int State { get; set; }
 
         private bool isFinished;
@@ -24,7 +28,8 @@ namespace Barotrauma
             State = element.GetAttributeInt("value", State);
             if (MissionIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": MissionIdentifier has not been configured.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": MissionIdentifier has not been configured.",
+                    contentPackage: element.ContentPackage);
             }
         }
 

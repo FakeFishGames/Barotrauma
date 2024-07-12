@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Voronoi2;
 
 namespace Barotrauma
 {
@@ -27,9 +28,10 @@ namespace Barotrauma
             UpdateMoney = 13,
             UpdatePermanentStats = 14,
             RemoveFromCrew = 15,
+            LatchOntoTarget = 16,
             
             MinValue = 0,
-            MaxValue = 15
+            MaxValue = 16
         }
         
         private interface IEventData : NetEntityEvent.IData
@@ -37,12 +39,18 @@ namespace Barotrauma
             public EventType EventType { get; }
         }
 
-        public struct InventoryStateEventData : IEventData
+        public readonly struct InventoryStateEventData : IEventData
         {
             public EventType EventType => EventType.InventoryState;
+            public readonly Range SlotRange;
+
+            public InventoryStateEventData(Range slotRange)
+            {
+                SlotRange = slotRange;
+            }
         }
         
-        public struct ControlEventData : IEventData
+        public readonly struct ControlEventData : IEventData
         {
             public EventType EventType => EventType.Control;
             public readonly Client Owner;
@@ -129,7 +137,56 @@ namespace Barotrauma
                 ObjectiveType = objectiveType;
             }
         }
-        
+
+        public readonly struct LatchedOntoTargetEventData : IEventData
+        {
+            public EventType EventType => EventType.LatchOntoTarget;
+            public readonly bool IsLatched;
+            public readonly UInt16 TargetCharacterID = NullEntityID;
+            public readonly UInt16 TargetStructureID = NullEntityID;
+            public readonly int TargetLevelWallIndex = -1;
+
+            public readonly Vector2 AttachSurfaceNormal = Vector2.Zero;
+            public readonly Vector2 AttachPos = Vector2.Zero;
+
+            public readonly Vector2 CharacterSimPos;
+
+            private LatchedOntoTargetEventData(Character character, Vector2 attachSurfaceNormal, Vector2 attachPos)
+            {
+                CharacterSimPos = character.SimPosition;
+                IsLatched = true;
+                AttachSurfaceNormal = attachSurfaceNormal;
+                AttachPos = attachPos;
+            }
+
+            public LatchedOntoTargetEventData(Character character, Character targetCharacter, Vector2 attachSurfaceNormal, Vector2 attachPos)
+                : this(character, attachSurfaceNormal, attachPos)
+            {
+                TargetCharacterID = targetCharacter.ID;
+            }
+
+            public LatchedOntoTargetEventData(Character character, Structure targetStructure, Vector2 attachSurfaceNormal, Vector2 attachPos)
+                : this(character, attachSurfaceNormal, attachPos)
+            {
+                TargetStructureID = targetStructure.ID;
+            }
+
+            public LatchedOntoTargetEventData(Character character, VoronoiCell levelWall, Vector2 attachSurfaceNormal, Vector2 attachPos)
+                : this(character, attachSurfaceNormal, attachPos)
+            {
+                TargetLevelWallIndex = Level.Loaded.GetAllCells().IndexOf(levelWall);
+            }
+
+            /// <summary>
+            /// Signifies detaching (not attached to any target)
+            /// </summary>
+            public LatchedOntoTargetEventData()
+            {
+                CharacterSimPos = Vector2.Zero;
+                IsLatched = false;
+            }
+        }
+
         private struct TeamChangeEventData : IEventData
         {
             public EventType EventType => EventType.TeamChange;

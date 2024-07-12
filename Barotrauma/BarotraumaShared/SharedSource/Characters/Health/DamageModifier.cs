@@ -79,12 +79,13 @@ namespace Barotrauma
 
         public ref readonly ImmutableArray<Identifier> ParsedAfflictionTypes => ref parsedAfflictionTypes;
 
-        public DamageModifier(XElement element, string parentDebugName, bool checkErrors = true)
+        public DamageModifier(ContentXElement element, string parentDebugName, bool checkErrors = true)
         {
             Deserialize(element);
-            if (element.Attribute("afflictionnames") != null)
+            if (element.GetAttribute("afflictionnames") != null)
             {
-                DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
+                DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.",
+                    contentPackage: element.ContentPackage);
             }
             if (checkErrors)
             {
@@ -108,12 +109,12 @@ namespace Barotrauma
                 }
             }
 
-            static void createWarningOrError(string msg)
+            void createWarningOrError(string msg)
             {
 #if DEBUG
-                DebugConsole.ThrowError(msg);
+                DebugConsole.ThrowError(msg, contentPackage: element.ContentPackage);
 #else
-                DebugConsole.AddWarning(msg);
+                DebugConsole.AddWarning(msg, contentPackage: element.ContentPackage);
 #endif
             }
         }

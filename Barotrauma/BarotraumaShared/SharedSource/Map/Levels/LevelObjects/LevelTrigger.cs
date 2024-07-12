@@ -405,25 +405,35 @@ namespace Barotrauma
             }
         }
 
-        public static bool CheckContactsForOtherFixtures(PhysicsBody triggerBody, Fixture otherFixture, Entity separatingEntity)
+        /// <summary>
+        /// Checks whether any fixture of the trigger body is in contact with any fixture belonging to the physics bodies of separatingEntity
+        /// </summary>
+        /// <param name="triggerBody">Physics body of the trigger</param>
+        /// <param name="separatingFixture">Fixture that got separated from the trigger</param>
+        /// <param name="separatingEntity">Entity that got separated from the trigger</param>
+        /// <returns></returns>
+        public static bool CheckContactsForOtherFixtures(PhysicsBody triggerBody, Fixture separatingFixture, Entity separatingEntity)
         {
             //check if there are contacts with any other fixture of the trigger
             //(the OnSeparation callback happens when two fixtures separate, 
             //e.g. if a body stops touching the circular fixture at the end of a capsule-shaped body)
-            foreach (Fixture fixture in triggerBody.FarseerBody.FixtureList)
+            foreach (Fixture triggerFixture in triggerBody.FarseerBody.FixtureList)
             {
-                ContactEdge contactEdge = fixture.Body.ContactList;
+                ContactEdge contactEdge = triggerFixture.Body.ContactList;
                 while (contactEdge != null)
                 {
                     if (contactEdge.Contact != null &&
                         contactEdge.Contact.Enabled &&
                         contactEdge.Contact.IsTouching)
                     {
-                        if (contactEdge.Contact.FixtureA != fixture && contactEdge.Contact.FixtureB != fixture)
-                        {
-                            var otherEntity = GetEntity(contactEdge.Contact.FixtureB == otherFixture ?
+                        //which fixture of this contact belongs to the "other" body (not the trigger itself)
+                        Fixture otherFixture =
+                            contactEdge.Contact.FixtureA == triggerFixture ? 
                                 contactEdge.Contact.FixtureB :
-                                contactEdge.Contact.FixtureA);
+                                contactEdge.Contact.FixtureA;
+                        if (otherFixture != separatingFixture)
+                        {
+                            var otherEntity = GetEntity(otherFixture);
                             if (otherEntity == separatingEntity) { return true; }
                         }
                     }
@@ -471,7 +481,7 @@ namespace Barotrauma
         /// <summary>
         /// Another trigger was triggered, check if this one should react to it
         /// </summary>
-        public void OtherTriggered(LevelObject levelObject, LevelTrigger otherTrigger)
+        public void OtherTriggered(LevelTrigger otherTrigger, Entity triggerer)
         {
             if (!triggeredBy.HasFlag(TriggererType.OtherTrigger) || stayTriggeredDelay <= 0.0f) { return; }
 
@@ -487,7 +497,16 @@ namespace Barotrauma
                 triggeredTimer = stayTriggeredDelay;
                 if (!wasAlreadyTriggered)
                 {
-                    OnTriggered?.Invoke(this, null);
+                    if (!IsTriggeredByEntity(triggerer, triggeredBy, mustBeOutside: true)) { return; }
+                    if (!triggerers.Contains(triggerer))
+                    {
+                        if (!IsTriggered)
+                        {
+                            OnTriggered?.Invoke(this, triggerer);
+                        }
+                        TriggererPosition[triggerer] = triggerer.WorldPosition;
+                        triggerers.Add(triggerer);
+                    }
                 }
             }
         }

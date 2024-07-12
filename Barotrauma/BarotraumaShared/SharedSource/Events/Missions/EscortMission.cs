@@ -61,7 +61,7 @@ namespace Barotrauma
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
-        public override int GetReward(Submarine sub)
+        public override int GetBaseReward(Submarine sub)
         {
             if (sub != missionSub)
             {
@@ -77,7 +77,8 @@ namespace Barotrauma
             {
                 if (inMission)
                 {
-                    DebugConsole.ThrowError("MainSub was null when trying to retrieve submarine size for determining escorted character count!");
+                    DebugConsole.ThrowError("MainSub was null when trying to retrieve submarine size for determining escorted character count!",
+                        contentPackage: Prefab.ContentPackage);
                 }
                 return 1;
             }
@@ -117,7 +118,10 @@ namespace Barotrauma
                         {
                             characterStatusEffects[humanPrefab] = new List<StatusEffect> { newEffect };
                         }
-                        characterStatusEffects[humanPrefab].Add(newEffect);                             
+                        else
+                        {
+                            characterStatusEffects[humanPrefab].Add(newEffect);
+                        }                           
                     }
                 }
             }
@@ -156,14 +160,13 @@ namespace Barotrauma
 
             if (terroristChance > 0f)
             {
-                int terroristCount = (int)Math.Ceiling(terroristChance * Rand.Range(0.8f, 1.2f) * characters.Count);
+                int terroristCount = (int)Math.Ceiling(terroristChance * Rand.Range(0.8f, 1.2f) * characters.Count); 
                 terroristCount = Math.Clamp(terroristCount, 1, characters.Count);
 
                 terroristCharacters.Clear();
                 characters.GetRange(0, terroristCount).ForEach(c => terroristCharacters.Add(c));
-
+                terroristCharacters.ForEach(c => c.IsHostileEscortee = true);
                 terroristDistanceSquared = Vector2.DistanceSquared(Level.Loaded.StartPosition, Level.Loaded.EndPosition) * Rand.Range(0.35f, 0.65f);
-
 #if DEBUG
                 DebugConsole.AddWarning("Terrorists will trigger at range  " + Math.Sqrt(terroristDistanceSquared));
                 foreach (Character character in terroristCharacters)
@@ -180,7 +183,8 @@ namespace Barotrauma
 
             if (scalingCharacterCount * characterConfig.Elements().Count() != characters.Count)
             {
-                DebugConsole.AddWarning("Character count did not match expected character count in InitCharacters of EscortMission");
+                DebugConsole.AddWarning("Character count did not match expected character count in InitCharacters of EscortMission",
+                    Prefab.ContentPackage);
                 return;
             }
             int i = 0;
@@ -220,7 +224,8 @@ namespace Barotrauma
 
             if (characterConfig == null)
             {
-                DebugConsole.ThrowError("Failed to initialize characters for escort mission (characterConfig == null)");
+                DebugConsole.ThrowError("Failed to initialize characters for escort mission (characterConfig == null)",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -245,6 +250,7 @@ namespace Barotrauma
                 // decoupled from range check to prevent from weirdness if players handcuff a terrorist and move backwards
                 foreach (Character character in terroristCharacters)
                 {
+                    character.IsHostileEscortee = true;
                     if (character.HasTeamChange(TerroristTeamChangeIdentifier))
                     {
                         // already triggered
@@ -258,7 +264,7 @@ namespace Barotrauma
                         {
                             character.Speak(TextManager.Get("dialogterroristannounce").Value, null, Rand.Range(0.5f, 3f));
                         }
-                        XElement randomElement = itemConfig.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
+                        ContentXElement randomElement = itemConfig.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
                         if (randomElement != null)
                         {
                             HumanPrefab.InitializeItem(character, randomElement, character.Submarine, humanPrefab: null, createNetworkEvents: true);
@@ -315,27 +321,21 @@ namespace Barotrauma
             }
         }
 
-        private bool Survived(Character character)
+        private static bool Survived(Character character)
         {
             return IsAlive(character) && character.CurrentHull?.Submarine != null && 
                 (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine));
         }
 
-        private bool IsAlive(Character character)
+        private static bool IsAlive(Character character)
         {
             return character != null && !character.Removed && !character.IsDead;
-        }
-
-        private bool IsCaptured(Character character)
-        {
-            return character.LockHands && character.HasTeamChange(TerroristTeamChangeIdentifier);
         }
 
         protected override bool DetermineCompleted()
         {
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
-                bool terroristsSurvived = terroristCharacters.Any(c => Survived(c) && !IsCaptured(c));
                 bool friendliesSurvived = characters.Except(terroristCharacters).All(c => Survived(c));
                 bool vipDied = false;
 
@@ -345,7 +345,7 @@ namespace Barotrauma
                     vipDied = !Survived(vipCharacter);
                 }
 
-                if (friendliesSurvived && !terroristsSurvived && !vipDied)
+                if (friendliesSurvived && !vipDied)
                 {
                     return true;
                 }

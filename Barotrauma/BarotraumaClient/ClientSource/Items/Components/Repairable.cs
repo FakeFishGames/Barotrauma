@@ -60,13 +60,10 @@ namespace Barotrauma.Items.Components
 
         public override bool ShouldDrawHUD(Character character)
         {
-            if (item.HiddenInGame) { return false; }
+            if (item.IsHidden) { return false; }
             if (!HasRequiredItems(character, false) || character.SelectedItem != item) { return false; }
             if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
-
-            float defaultMaxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
-
-            if (MathUtils.Percentage(item.Condition, defaultMaxCondition) < RepairThreshold) { return true; }
+            if (item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold) { return true; }
 
             if (CurrentFixer == character)
             {
@@ -135,13 +132,13 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 TextManager.Get("RequiredRepairSkills"), font: GUIStyle.SubHeadingFont);
             skillTextContainer = paddedFrame;
-            for (int i = 0; i < requiredSkills.Count; i++)
+            for (int i = 0; i < RequiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillTextContainer.RectTransform),
-                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int) Math.Round(requiredSkills[i].Level * SkillRequirementMultiplier)).ToString()),
+                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + RequiredSkills[i].Identifier), ((int) Math.Round(RequiredSkills[i].Level * SkillRequirementMultiplier)).ToString()),
                     font: GUIStyle.SmallFont)
                 {
-                    UserData = requiredSkills[i]
+                    UserData = RequiredSkills[i]
                 };
             }
 
@@ -227,7 +224,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (item.HiddenInGame) { return; }
+            if (item.IsHidden) { return; }
             if (FakeBrokenTimer > 0.0f)
             {
                 item.FakeBroken = true;
@@ -262,7 +259,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float conditionPercentage = item.Condition / (item.MaxCondition / item.MaxRepairConditionMultiplier) * 100f;
+            float conditionPercentage = item.ConditionPercentageRelativeToDefaultMaxCondition;
 
             for (int i = 0; i < particleEmitters.Count; i++)
             {
@@ -373,12 +370,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (GameMain.DebugDraw && Character.Controlled?.FocusedItem == item)
             {
-                bool paused = !ShouldDeteriorate();
-                if (deteriorationTimer > 0.0f)
+                bool paused = !ShouldDeteriorate() && ForceDeteriorationTimer <= 0.0f;
+                if (ForceDeteriorationTimer > 0.0f)
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), "Forced deterioration for " + ((int)ForceDeteriorationTimer) + " s",
+                        Color.Red, Color.Black * 0.5f);
+
+                }
+                else if (deteriorationTimer > 0.0f)
                 {
                     GUI.DrawString(spriteBatch,
                         new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), "Deterioration delay " + ((int)deteriorationTimer) + (paused ? " [PAUSED]" : ""),
@@ -393,6 +397,12 @@ namespace Barotrauma.Items.Components
                 GUI.DrawString(spriteBatch,
                     new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
                     GUIStyle.Orange);
+                if (MaxStressDeteriorationMultiplier > 1.0f)
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 40), "Stress multiplier: " + StressDeteriorationMultiplier.ToString("0.00"),
+                        GUIStyle.Red);
+                }
             }
         }
 
@@ -430,8 +440,7 @@ namespace Barotrauma.Items.Components
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             deteriorationTimer = msg.ReadSingle();
-            deteriorateAlwaysResetTimer = msg.ReadSingle();
-            DeteriorateAlways = msg.ReadBoolean();
+            ForceDeteriorationTimer = msg.ReadSingle();
             tinkeringDuration = msg.ReadSingle();
             tinkeringStrength = msg.ReadSingle();
             tinkeringPowersDevices = msg.ReadBoolean();

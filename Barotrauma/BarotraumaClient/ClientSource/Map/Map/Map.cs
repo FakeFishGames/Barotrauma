@@ -184,7 +184,8 @@ namespace Barotrauma
             connection.CrackSegments.Clear();
             connection.CrackSegments.AddRange(MathUtils.GenerateJaggedLine(
                 connectionStart, connectionEnd,
-                iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier));
+                iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier,
+                rng: Rand.GetRNG(Rand.RandSync.ServerAndClient)));
         }
 
         private void LocationChanged(Location prevLocation, Location newLocation)
@@ -291,14 +292,14 @@ namespace Barotrauma
 
         private readonly List<MapNotification> mapNotifications = new List<MapNotification>();
 
-        partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change)
+        partial void ChangeLocationTypeProjSpecific(Location location, LocalizedString prevName, LocationTypeChange change)
         {
             var messages = change.GetMessages(location.Faction);
             if (!messages.Any()) { return; }
 
             string msg = messages.GetRandom(Rand.RandSync.Unsynced)
                 .Replace("[previousname]", $"‖color:gui.yellow‖{prevName}‖end‖")
-                .Replace("[name]", $"‖color:gui.yellow‖{location.Name}‖end‖");
+                .Replace("[name]", $"‖color:gui.yellow‖{location.DisplayName}‖end‖");
             location.LastTypeChangeMessage = msg;
 
             mapNotifications.Add(new MapNotification(msg, GUIStyle.SubHeadingFont, mapNotifications, location));           
@@ -377,7 +378,7 @@ namespace Barotrauma
 
             bool showReputation = hudVisibility > 0.0f && location.Type.HasOutpost && location.Reputation != null;
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Name, font: GUIStyle.LargeFont) { Padding = Vector4.Zero };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.DisplayName, font: GUIStyle.LargeFont) { Padding = Vector4.Zero };
             if (!location.Type.Name.IsNullOrEmpty())
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
@@ -460,7 +461,9 @@ namespace Barotrauma
                 new GUICustomComponent(new RectTransform(new Vector2(0.6f, 1.0f), repBarHolder.RectTransform), onDraw: (sb, component) =>
                 {
                     if (location.Reputation == null) { return; }
-                    RoundSummary.DrawReputationBar(sb, component.Rect, location.Reputation.NormalizedValue);
+                    RoundSummary.DrawReputationBar(sb, component.Rect, 
+                        location.Reputation.NormalizedValue, 
+                        location.Reputation.MinReputation, location.Reputation.MaxReputation);
                 });
 
                 new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), repBarHolder.RectTransform),
@@ -738,8 +741,8 @@ namespace Barotrauma
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, rect);
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
 
-            Vector2 topLeft = rectCenter + viewOffset;
-            Vector2 bottomRight = rectCenter + (viewOffset + new Vector2(Width, Height));
+            Vector2 topLeft = rectCenter + viewOffset - rect.Location.ToVector2();
+            Vector2 bottomRight = topLeft + new Vector2(Width, Height);
             Vector2 mapTileSize = mapTiles[0, 0].size * generationParams.MapTileScale;
 
             int startX = (int)Math.Floor(-topLeft.X / mapTileSize.X) - 1;
@@ -1080,6 +1083,7 @@ namespace Barotrauma
                 }
                 float dist = Vector2.Distance(start, end);
                 var connectionSprite = connection.Passed ? generationParams.PassedConnectionSprite : generationParams.ConnectionSprite;
+                if (connectionSprite?.Texture == null) { continue; }
 
                 Color segmentColor = connectionColor;
                 int segmentWidth = width;
@@ -1091,9 +1095,6 @@ namespace Barotrauma
                     { 
                         segmentWidth /= 2; 
                         segmentColor = connection.Passed ? generationParams.ConnectionColor : generationParams.UnvisitedConnectionColor; 
-                    }
-                    else 
-                    { 
                     }
                 }
 
@@ -1114,13 +1115,23 @@ namespace Barotrauma
 
                 float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
                 string crushDepthWarningIconStyle = null;
-                if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
+
+                var levelData = connection.LevelData;
+                float spawnDepth =
+                    levelData.InitialDepth +
+                    //base the warning on the start or end position of the level, whichever is deeper
+                    levelData.Size.Y * Math.Max(levelData.GenerationParams.StartPosition.Y, levelData.GenerationParams.EndPosition.Y);
+
+                //"high warning" if the sub spawns at/below crush depth
+                if (spawnDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
                     iconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningHighIcon";
                     tooltip = "crushdepthwarninghigh";
                 }
-                else if ((connection.LevelData.InitialDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
+                //"low warning" if the spawn position is less than the level's height away from crush depth
+                //(i.e. the crush depth is pretty close to the spawn pos, possibly inside the level or at least close enough that many parts of the abyss are unreachable)
+                else if ((spawnDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
                     iconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningLowIcon";
@@ -1129,8 +1140,11 @@ namespace Barotrauma
 
                 if (connection.LevelData.HasBeaconStation)
                 {
-                    var beaconStationIconStyle = connection.LevelData.IsBeaconActive ? "BeaconStationActive" : "BeaconStationInactive";
-                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), connection.LevelData.IsBeaconActive ? beaconStationActiveText : beaconStationInactiveText);
+                    bool beaconActive =
+                        connection.LevelData.IsBeaconActive ||
+                        (Level.Loaded?.LevelData == connection.LevelData && Level.Loaded.CheckBeaconActive());
+                    var beaconStationIconStyle = beaconActive ? "BeaconStationActive" : "BeaconStationInactive";
+                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), beaconActive ? beaconStationActiveText : beaconStationInactiveText);
                 }
 
                 if (connection.Locked)

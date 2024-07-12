@@ -1,11 +1,10 @@
-﻿using Barotrauma.Extensions; 
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Steamworks.ServerList;
 
 namespace Barotrauma
 {
@@ -111,7 +110,7 @@ namespace Barotrauma
 
             public void OnSpawned(Entity spawnedItem)
             {
-                if (!(spawnedItem is Item item)) { throw new ArgumentException($"The entity passed to ItemSpawnInfo.OnSpawned must be an Item (value was {spawnedItem?.ToString() ?? "null"})."); }
+                if (spawnedItem is not Item item) { throw new ArgumentException($"The entity passed to ItemSpawnInfo.OnSpawned must be an Item (value was {spawnedItem?.ToString() ?? "null"})."); }
                 onSpawned?.Invoke(item);
             }
         }
@@ -194,8 +193,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly Queue<IEntitySpawnInfo> spawnQueue;
-        private readonly Queue<Entity> removeQueue;
+        private readonly Queue<Either<IEntitySpawnInfo, Entity>> spawnOrRemoveQueue;
 
         public abstract class SpawnOrRemove : NetEntityEvent.IData
         {
@@ -255,8 +253,7 @@ namespace Barotrauma
         public EntitySpawner()
             : base(null, Entity.EntitySpawnerID)
         {
-            spawnQueue = new Queue<IEntitySpawnInfo>();
-            removeQueue = new Queue<Entity>();
+            spawnOrRemoveQueue = new Queue<Either<IEntitySpawnInfo, Entity>>();
         }
 
         public override string ToString()
@@ -274,7 +271,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue1:ItemPrefabNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, onSpawned, condition, quality));
+            spawnOrRemoveQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, onSpawned, condition, quality));
         }
 
         public void AddItemToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null, int? quality = null, Action<Item> onSpawned = null)
@@ -287,7 +284,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue2:ItemPrefabNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition, quality));
+            spawnOrRemoveQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition, quality));
         }
 
         public void AddItemToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, int? quality = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false, InvSlotType slot = InvSlotType.None)
@@ -300,7 +297,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition, quality) 
+            spawnOrRemoveQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition, quality) 
             { 
                 SpawnIfInventoryFull = spawnIfInventoryFull, 
                 IgnoreLimbSlots = ignoreLimbSlots,
@@ -318,7 +315,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, onSpawn));
+            spawnOrRemoveQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, onSpawn));
         }
 
         public void AddCharacterToSpawnQueue(Identifier speciesName, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
@@ -331,7 +328,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue5:SpeciesNameNullOrEmpty", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub, onSpawn));
+            spawnOrRemoveQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub, onSpawn));
         }
 
         public void AddCharacterToSpawnQueue(Identifier speciesName, Vector2 worldPosition, CharacterInfo characterInfo, Action<Character> onSpawn = null)
@@ -344,13 +341,13 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, characterInfo, onSpawn));
+            spawnOrRemoveQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, characterInfo, onSpawn));
         }
 
         public void AddEntityToRemoveQueue(Entity entity)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (removeQueue.Contains(entity) || entity.Removed || entity == null || entity.IdFreed) { return; }
+            if (entity == null || IsInRemoveQueue(entity) || entity.Removed || entity.IdFreed) { return; }
             if (entity is Item item) { AddItemToRemoveQueue(item); return; }
             if (entity is Character)
             {
@@ -364,15 +361,15 @@ namespace Barotrauma
 #endif
             }
 
-            removeQueue.Enqueue(entity);
+            spawnOrRemoveQueue.Enqueue(entity);
         }
 
         public void AddItemToRemoveQueue(Item item)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (removeQueue.Contains(item) || item.Removed) { return; }
+            if (IsInRemoveQueue(item) || item.Removed) { return; }
 
-            removeQueue.Enqueue(item);
+            spawnOrRemoveQueue.Enqueue(item);
             var containedItems = item.OwnInventory?.AllItems;
             if (containedItems == null) { return; }
             foreach (Item containedItem in containedItems)
@@ -389,7 +386,11 @@ namespace Barotrauma
         /// </summary>
         public bool IsInSpawnQueue(Predicate<IEntitySpawnInfo> predicate)
         {
-            return spawnQueue.Any(s => predicate(s));
+            foreach (var spawnOrRemove in spawnOrRemoveQueue)
+            {
+                if (spawnOrRemove.TryGet(out IEntitySpawnInfo spawnInfo) && predicate(spawnInfo)) { return true; }
+            }
+            return false;
         }
 
         /// <summary>
@@ -397,43 +398,52 @@ namespace Barotrauma
         /// </summary>
         public int CountSpawnQueue(Predicate<IEntitySpawnInfo> predicate)
         {
-            return spawnQueue.Count(s => predicate(s));
+            int count = 0;
+            foreach (var spawnOrRemove in spawnOrRemoveQueue)
+            {
+                if (spawnOrRemove.TryGet(out IEntitySpawnInfo spawnInfo) && predicate(spawnInfo)) { count++; }
+            }
+            return count;
         }
 
         public bool IsInRemoveQueue(Entity entity)
         {
-            return removeQueue.Contains(entity);
+            foreach (var spawnOrRemove in spawnOrRemoveQueue)
+            {
+                if (spawnOrRemove.TryGet(out Entity entityToRemove) && entityToRemove == entity) { return true; }
+            }
+            return false;
         }
 
         public void Update(bool createNetworkEvents = true)
         {
             if (GameMain.NetworkMember is { IsClient: true }) { return; }
-            while (spawnQueue.Count > 0)
+            while (spawnOrRemoveQueue.Count > 0)
             {
-                var entitySpawnInfo = spawnQueue.Dequeue();
-
-                var spawnedEntity = entitySpawnInfo.Spawn();
-                if (spawnedEntity == null) { continue; }
-
-                if (createNetworkEvents) 
+                var spawnOrRemove = spawnOrRemoveQueue.Dequeue();
+                if (spawnOrRemove.TryGet(out Entity entityToRemove))
+                {
+                    if (entityToRemove is Item item)
+                    {
+                        item.SendPendingNetworkUpdates();
+                    }
+                    if (createNetworkEvents)
+                    {
+                        CreateNetworkEventProjSpecific(new RemoveEntity(entityToRemove));
+                    }
+                    entityToRemove.Remove();
+                }
+                else if (spawnOrRemove.TryGet(out IEntitySpawnInfo spawnInfo))
                 { 
-                    CreateNetworkEventProjSpecific(new SpawnEntity(spawnedEntity)); 
+                    var spawnedEntity = spawnInfo.Spawn();
+                    if (spawnedEntity == null) { continue; }
+                    if (createNetworkEvents) 
+                    { 
+                        CreateNetworkEventProjSpecific(new SpawnEntity(spawnedEntity)); 
+                    }
+                    spawnInfo.OnSpawned(spawnedEntity);
+                    GameMain.GameSession?.EventManager?.EntitySpawned(spawnedEntity);
                 }
-                entitySpawnInfo.OnSpawned(spawnedEntity);
-            }
-
-            while (removeQueue.Count > 0)
-            {
-                var removedEntity = removeQueue.Dequeue();
-                if (removedEntity is Item item)
-                {
-                    item.SendPendingNetworkUpdates();
-                }
-                if (createNetworkEvents)
-                {
-                    CreateNetworkEventProjSpecific(new RemoveEntity(removedEntity));
-                }
-                removedEntity.Remove();
             }
         }
 
@@ -441,8 +451,7 @@ namespace Barotrauma
 
         public void Reset()
         {
-            removeQueue.Clear();
-            spawnQueue.Clear();
+            spawnOrRemoveQueue.Clear();
 #if CLIENT
             receivedEvents.Clear();
 #endif

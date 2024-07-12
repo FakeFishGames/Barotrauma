@@ -1,10 +1,9 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -53,13 +52,17 @@ namespace Barotrauma
                 foreach (InterestingPosition pos in PositionsOfInterest)
                 {
                     Color color = Color.Yellow;
-                    if (pos.PositionType == PositionType.Cave)
+                    if (pos.PositionType == PositionType.Cave || pos.PositionType == PositionType.AbyssCave)
                     {
                         color = Color.DarkOrange;
                     }
                     else if (pos.PositionType == PositionType.Ruin)
                     {
                         color = Color.LightGray;
+                    }
+                    if (!pos.IsValid)
+                    {
+                        color = Color.Red;
                     }
                     
                     GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X - 15.0f, -pos.Position.Y - 15.0f), new Vector2(30.0f, 30.0f), color, true);
@@ -92,6 +95,7 @@ namespace Barotrauma
                         }
                     }
                 }
+
                 foreach (var rects in blockedRects.Values)
                 {
                     foreach (var rect in rects)

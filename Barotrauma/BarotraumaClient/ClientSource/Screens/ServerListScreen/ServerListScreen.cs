@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -44,70 +46,6 @@ namespace Barotrauma
             Disabled
         }
 
-        //friends list
-        public sealed class FriendInfo
-        {
-            public string Name;
-
-            public readonly AccountId Id;
-
-            public enum Status
-            {
-                Offline,
-                NotPlaying,
-                PlayingAnotherGame,
-                PlayingBarotrauma
-            }
-
-            public readonly Status CurrentStatus;
-
-            public string ServerName;
-
-            public Option<ConnectCommand> ConnectCommand;
-            public Option<Sprite> Avatar;
-
-            public bool IsInServer
-                => CurrentStatus == Status.PlayingBarotrauma && ConnectCommand.IsSome();
-
-            public bool IsPlayingBarotrauma
-                => CurrentStatus == Status.PlayingBarotrauma;
-
-            public bool PlayingAnotherGame
-                => CurrentStatus == Status.PlayingAnotherGame;
-
-            public bool IsOnline
-                => CurrentStatus != Status.Offline;
-
-            public LocalizedString StatusText
-                => CurrentStatus switch
-                {
-                    Status.Offline => "",
-                    _ when ConnectCommand.IsSome()
-                        => TextManager.GetWithVariable("FriendPlayingOnServer", "[servername]", ServerName),
-                    _ => TextManager.Get($"Friend{CurrentStatus}")
-                };
-
-            public FriendInfo(string name, AccountId id, Status status)
-            {
-                Name = name;
-                Id = id;
-                CurrentStatus = status;
-                ConnectCommand = Option<ConnectCommand>.None();
-                Avatar = Option<Sprite>.None();
-            }
-        }
-
-        private GUILayoutGroup friendsButtonHolder;
-
-        private GUIButton friendsDropdownButton;
-        private GUIListBox friendsDropdown;
-
-        private readonly FriendProvider friendProvider = new SteamFriendProvider();
-
-        private List<FriendInfo> friendsList;
-        private GUIFrame friendPopup;
-        private double friendsListUpdateTime;
-
         public enum TabEnum
         {
             All,
@@ -115,7 +53,7 @@ namespace Barotrauma
             Recent
         }
 
-        public struct Tab
+        public readonly struct Tab
         {
             public readonly string Storage;
             public readonly GUIButton Button;
@@ -127,7 +65,7 @@ namespace Barotrauma
             {
                 Storage = storage;
                 servers = new List<ServerInfo>();
-                Button = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), tabber.RectTransform),
+                Button = new GUIButton(new RectTransform(new Vector2(0.33f, 1.0f), tabber.RectTransform),
                     TextManager.Get($"ServerListTab.{tabEnum}"), style: "GUITabButton")
                 {
                     OnClicked = (_,__) =>
@@ -187,8 +125,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly ServerProvider serverProvider
-            = new CompositeServerProvider(new SteamDedicatedServerProvider(), new SteamP2PServerProvider());
+        private ServerProvider serverProvider = null;
 
         public GUITextBox ClientNameBox { get; private set; }
 
@@ -257,16 +194,16 @@ namespace Barotrauma
         private bool sortedAscending = true;
 
         private const float sidebarWidth = 0.2f;
-        public ServerListScreen()
+        public ServerListScreen() : base()
         {
             selectedServer = Option<ServerInfo>.None();
             GameMain.Instance.ResolutionChanged += CreateUI;
             CreateUI();
         }
 
-        private string GetDefaultUserName()
+        private static Task<string> GetDefaultUserName()
         {
-            return friendProvider.GetUserName();
+            return new CompositeFriendProvider(new SteamFriendProvider(), new EpicFriendProvider()).GetSelfUserName();
         }
 
         private void AddTernaryFilter(RectTransform parent, float elementHeight, Identifier tag, Action<TernaryOption> valueSetter)
@@ -331,11 +268,30 @@ namespace Barotrauma
 
             var topRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform)) { Stretch = true };
 
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUIStyle.LargeFont)
+            var titleContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.995f, 0.33f), topRow.RectTransform), isHorizontal: true) { Stretch = true };
+            
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), titleContainer.RectTransform), TextManager.Get("JoinServer"), font: GUIStyle.LargeFont)
             {
                 Padding = Vector4.Zero,
                 ForceUpperCase = ForceUpperCase.Yes,
                 AutoScaleHorizontal = true
+            };
+
+            var friendsButton = new GUIButton(
+                new RectTransform(Vector2.One * 0.9f, titleContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                style: "FriendsButton")
+            {
+                OnClicked = (_, _) =>
+                {
+                    if (SocialOverlay.Instance is { } socialOverlay) { socialOverlay.IsOpen = true; }
+                    return false;
+                },
+                ToolTip = TextManager.GetWithVariable("SocialOverlayShortcutHint", "[shortcut]", SocialOverlay.ShortcutBindText)
+            };
+            new GUIFrame(new RectTransform(Vector2.One, friendsButton.RectTransform, Anchor.Center),
+                style: "FriendsButtonIcon")
+            {
+                CanBeFocused = false
             };
 
             var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true, Anchor.BottomLeft) { RelativeSpacing = 0.01f,  Stretch = false };
@@ -350,29 +306,11 @@ namespace Barotrauma
                 OverflowClip = true
             };
 
-            if (string.IsNullOrEmpty(ClientNameBox.Text))
-            {
-                ClientNameBox.Text = GetDefaultUserName();
-            }
-            ClientNameBox.OnTextChanged += (textbox, text) =>
-            {
-                MultiplayerPreferences.Instance.PlayerName = text;
-                return true;
-            };
-
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - sidebarWidth - infoHolder.RelativeSpacing, 0.5f), infoHolder.RectTransform), isHorizontal: true);
 
             tabs[TabEnum.All] = new Tab(TabEnum.All, this, tabButtonHolder, "");
             tabs[TabEnum.Favorites] = new Tab(TabEnum.Favorites, this, tabButtonHolder, "Data/favoriteservers.xml");
             tabs[TabEnum.Recent] = new Tab(TabEnum.Recent, this, tabButtonHolder, "Data/recentservers.xml");
-
-            var friendsButtonFrame = new GUIFrame(new RectTransform(new Vector2(0.31f, 2.0f), tabButtonHolder.RectTransform, Anchor.BottomRight), style: "InnerFrame")
-            {
-                IgnoreLayoutGroups = true
-            };
-
-            friendsButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.9f), friendsButtonFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopLeft) { RelativeSpacing = 0.01f, IsHorizontal = true };
-            friendsList = new List<FriendInfo>();
 
             //-------------------------------------------------------------------------------------
             // Bottom row
@@ -655,7 +593,8 @@ namespace Barotrauma
                 ScrollBarVisible = true,
                 OnSelected = (btn, obj) =>
                 {
-                    if (!(obj is ServerInfo serverInfo)) { return false; }
+                    if (GUI.MouseOn is GUIButton) { return false; }
+                    if (obj is not ServerInfo serverInfo) { return false; }
 
                     joinButton.Enabled = true;
                     selectedServer = Option<ServerInfo>.Some(serverInfo);
@@ -739,7 +678,7 @@ namespace Barotrauma
                 {
                     if (selectedServer.TryUnwrap(out var serverInfo))
                     {
-                        JoinServer(serverInfo.Endpoint, serverInfo.ServerName);
+                        JoinServer(serverInfo.Endpoints, serverInfo.ServerName);
                     }
                     return true;
                 },
@@ -777,7 +716,7 @@ namespace Barotrauma
         {
             GUIComponent existingElement = serverList.Content.FindChild(d => 
                 d.UserData is ServerInfo existingServerInfo &&
-                existingServerInfo.Endpoint == serverInfo.Endpoint);
+                existingServerInfo.Endpoints.Any(serverInfo.Endpoints.Contains));
             if (existingElement == null)
             {
                 AddToServerList(serverInfo);
@@ -790,7 +729,7 @@ namespace Barotrauma
 
         public void AddToRecentServers(ServerInfo info)
         {
-            if (info.Endpoint.Address.IsLocalHost) { return; }
+            if (info.Endpoints.First().Address.IsLocalHost) { return; }
             tabs[TabEnum.Recent].AddOrUpdate(info);
             tabs[TabEnum.Recent].Save();
         }
@@ -812,7 +751,7 @@ namespace Barotrauma
 
         private bool SortList(GUIButton button, object obj)
         {
-            if (!(obj is ColumnLabel sortBy)) { return false; }
+            if (obj is not ColumnLabel sortBy) { return false; }
             SortList(sortBy, toggle: true);
             return true;
         }
@@ -848,31 +787,46 @@ namespace Barotrauma
             {
                 if (c1.GUIComponent.UserData is not ServerInfo s1) { return 0; }
                 if (c2.GUIComponent.UserData is not ServerInfo s2) { return 0; }
-                int comparison = sortedAscending ? 1 : -1;
-                return CompareServer(sortBy, s1, s2) * comparison;
+                return CompareServer(sortBy, s1, s2, sortedAscending);
             });
+        }
+
+        public void HideServerPreview()
+        {
+            serverPreviewContainer.Visible = false;
+            panelAnimator.RightEnabled = false;
+            panelAnimator.RightVisible = false;
         }
 
         private void InsertServer(ServerInfo serverInfo, GUIComponent component)
         {
             var children = serverList.Content.RectTransform.Children.Reverse().ToList();
 
-            int comparison = sortedAscending ? 1 : -1;
             foreach (var child in children)
             {
                 if (child.GUIComponent.UserData is not ServerInfo serverInfo2 || serverInfo.Equals(serverInfo2)) { continue; }
-                if (CompareServer(sortedBy, serverInfo, serverInfo2) * comparison >= 0)
+                if (CompareServer(sortedBy, serverInfo, serverInfo2, sortedAscending) >= 0)
                 {
                     var index = serverList.Content.RectTransform.GetChildIndex(child);
-                    component.RectTransform.RepositionChildInHierarchy(index + 1);
+                    component.RectTransform.RepositionChildInHierarchy(Math.Min(index + 1, serverList.Content.CountChildren - 1));
                     return;
                 }
             }
             component.RectTransform.SetAsFirstChild();
         }
 
-        private static int CompareServer(ColumnLabel sortBy, ServerInfo s1, ServerInfo s2)
+        private static int CompareServer(ColumnLabel sortBy, ServerInfo s1, ServerInfo s2, bool ascending)
         {
+            //always put servers with unknown ping at the bottom (unless we're specifically sorting by ping)
+            //servers without a ping are often unreachable/spam
+            bool s1HasPing = s1.Ping.IsSome();
+            bool s2HasPing = s2.Ping.IsSome();
+            if (s1HasPing != s2HasPing)
+            {
+                return s1HasPing ? -1 : 1;
+            }            
+
+            int comparison = ascending ? 1 : -1;
             switch (sortBy)
             {
                 case ColumnLabel.ServerListCompatible:
@@ -880,18 +834,18 @@ namespace Barotrauma
                     bool s2Compatible = NetworkMember.IsCompatible(GameMain.Version, s2.GameVersion);
 
                     if (s1Compatible == s2Compatible) { return 0; }
-                    return s1Compatible ? -1 : 1;
+                    return (s1Compatible ? -1 : 1) * comparison;
                 case ColumnLabel.ServerListHasPassword:
                     if (s1.HasPassword == s2.HasPassword) { return 0; }
-                    return s1.HasPassword ? 1 : -1;
+                    return (s1.HasPassword ? 1 : -1) * comparison;
                 case ColumnLabel.ServerListName:
                     // I think we actually want culture-specific sorting here?
-                    return string.Compare(s1.ServerName, s2.ServerName, StringComparison.CurrentCulture);
+                    return string.Compare(s1.ServerName, s2.ServerName, StringComparison.CurrentCulture) * comparison;
                 case ColumnLabel.ServerListRoundStarted:
                     if (s1.GameStarted == s2.GameStarted) { return 0; }
-                    return s1.GameStarted ? 1 : -1;
+                    return (s1.GameStarted ? 1 : -1) * comparison;
                 case ColumnLabel.ServerListPlayers:
-                    return s2.PlayerCount.CompareTo(s1.PlayerCount);
+                    return s2.PlayerCount.CompareTo(s1.PlayerCount) * comparison;
                 case ColumnLabel.ServerListPing:
                     return (s1.Ping.TryUnwrap(out var s1Ping), s2.Ping.TryUnwrap(out var s2Ping)) switch
                     {
@@ -899,16 +853,74 @@ namespace Barotrauma
                         (true, true) => s2Ping.CompareTo(s1Ping),
                         (false, true) => 1,
                         (true, false) => -1
-                    };
+                    } * comparison;
                 default:
                     return 0;
             }
         }
-        
+
         public override void Select()
         {
             base.Select();
-            
+          
+            if (string.IsNullOrEmpty(ClientNameBox.Text))
+            {
+                TaskPool.Add("GetDefaultUserName",
+                    GetDefaultUserName(),
+                    t =>
+                    {
+                        if (!t.TryGetResult(out string name)) { return; }
+                        if (ClientNameBox.Text.IsNullOrEmpty())
+                        {
+                            ClientNameBox.Text = name;
+                            string nameWithoutInvisibleSymbols = string.Empty;
+                            foreach (char c in ClientNameBox.Text)
+                            {
+                                Vector2 size = ClientNameBox.Font.MeasureChar(c);
+                                if (size.X > 0 && size.Y > 0)
+                                {
+                                    nameWithoutInvisibleSymbols += c;
+                                }
+                            }
+                            if (nameWithoutInvisibleSymbols != ClientNameBox.Text)
+                            {
+                                MultiplayerPreferences.Instance.PlayerName = ClientNameBox.Text = nameWithoutInvisibleSymbols;
+                                new GUIMessageBox(TextManager.Get("Warning"), TextManager.GetWithVariable("NameContainsInvisibleSymbols", "[name]", nameWithoutInvisibleSymbols));
+                            }
+                        }
+                    });
+            }
+
+            ClientNameBox.OnTextChanged += (textbox, text) =>
+            {
+                MultiplayerPreferences.Instance.PlayerName = text;
+                return true;
+            };
+            if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
+            {
+                if (SteamManager.IsInitialized)
+                {
+                    serverProvider = new CompositeServerProvider(
+                        new EosServerProvider(),
+                        new SteamDedicatedServerProvider(),
+                        new SteamP2PServerProvider());
+                }
+                else
+                {
+                    serverProvider = new EosServerProvider();
+                }
+            }
+            else if (SteamManager.IsInitialized)
+            {
+                serverProvider = new CompositeServerProvider(
+                    new SteamDedicatedServerProvider(),
+                    new SteamP2PServerProvider());
+            }
+            else
+            {
+                serverProvider = null;
+            }
+
             Steamworks.SteamMatchmaking.ResetActions();
 
             selectedTab = TabEnum.All;
@@ -941,6 +953,7 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+            serverProvider?.Cancel();
             GameSettings.SaveCurrentConfig();
         }
 
@@ -948,24 +961,12 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            UpdateFriendsList();
             panelAnimator?.Update();
 
             scanServersButton.Enabled = (DateTime.Now - lastRefreshTime) >= AllowedRefreshInterval;
-
-            if (PlayerInput.PrimaryMouseButtonClicked())
-            {
-                friendPopup = null;
-                if (friendsDropdown != null && friendsDropdownButton != null &&
-                    !friendsDropdown.Rect.Contains(PlayerInput.MousePosition) &&
-                    !friendsDropdownButton.Rect.Contains(PlayerInput.MousePosition))
-                {
-                    friendsDropdown.Visible = false;
-                }
-            }
         }
 
-        private void FilterServers()
+        public void FilterServers()
         {
             RemoveMsgFromServerList(MsgUserData.NoMatchingServers);
             foreach (GUIComponent child in serverList.Content.Children)
@@ -1005,6 +1006,7 @@ namespace Barotrauma
                 return false;
             }
 #endif
+            if (SpamServerFilters.IsFiltered(serverInfo)) { return false; }
 
             if (!string.IsNullOrEmpty(searchBox.Text) && !serverInfo.ServerName.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase)) { return false; }
 
@@ -1039,7 +1041,7 @@ namespace Barotrauma
             }
             if (filterTraitorValue != TernaryOption.Any)
             {
-                if ((serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) != (filterTraitorValue == TernaryOption.Enabled)) 
+                if ((serverInfo.TraitorProbability > 0.0f) != (filterTraitorValue == TernaryOption.Enabled)) 
                 { 
                     return false; 
                 }
@@ -1096,7 +1098,8 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get("ServerEndpoint"), textAlignment: Alignment.Center);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform),
+                SteamManager.IsInitialized ? TextManager.Get("ServerEndpoint") : TextManager.Get("ServerIP"), textAlignment: Alignment.Center);
             var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform));
 
             content.RectTransform.NonScaledSize = new Point(content.Rect.Width, (int)(content.RectTransform.Children.Sum(c => c.Rect.Height)));
@@ -1109,11 +1112,18 @@ namespace Barotrauma
             {
                 if (Endpoint.Parse(endpointBox.Text).TryUnwrap(out var endpoint))
                 {
-                    JoinServer(endpoint, "");
+                    if (endpoint is SteamP2PEndpoint && !SteamManager.IsInitialized)
+                    {
+                        new GUIMessageBox(TextManager.Get("error"), TextManager.Get("CannotJoinSteamServer.SteamNotInitialized"));
+                    }
+                    else
+                    {
+                        JoinServer(endpoint.ToEnumerable().ToImmutableArray(), "");
+                    }
                 }
                 else if (LidgrenEndpoint.ParseFromWithHostNameCheck(endpointBox.Text, tryParseHostName: true).TryUnwrap(out var lidgrenEndpoint))
                 {
-                    JoinServer(lidgrenEndpoint, "");
+                    JoinServer(((Endpoint)lidgrenEndpoint).ToEnumerable().ToImmutableArray(), "");
                 }
                 else
                 {
@@ -1154,8 +1164,6 @@ namespace Barotrauma
                 selectedTab = TabEnum.Favorites;
                 FilterServers();
 
-                #warning Interface with server providers to get up-to-date info on the given server
-
                 msgBox.Close();
                 return false;
             };
@@ -1168,222 +1176,6 @@ namespace Barotrauma
                 okButton.Enabled = favoriteButton.Enabled = !string.IsNullOrEmpty(text);                
                 return true;
             };
-        }
-
-        private bool JoinFriend(GUIButton button, object userdata)
-        {
-            if (!(userdata is FriendInfo { IsInServer: true } info)) { return false; }
-
-            GameMain.Instance.ConnectCommand = info.ConnectCommand;
-            return false;
-        }
-
-        private bool OpenFriendPopup(GUIButton button, object userdata)
-        {
-            if (!(userdata is FriendInfo { IsInServer: true } info)) { return false; }
-
-            if (info.IsInServer
-                && info.ConnectCommand.TryUnwrap(out var command)
-                && command.EndpointOrLobby.TryGet(out ConnectCommand.NameAndEndpoint nameAndEndpoint))
-            {
-                const int framePadding = 5;
-
-                friendPopup = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas));
-
-                var serverNameText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), friendPopup.RectTransform, Anchor.CenterLeft), nameAndEndpoint.ServerName ?? "[Unnamed]");
-                serverNameText.RectTransform.AbsoluteOffset = new Point(framePadding, 0);
-
-                var joinButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), friendPopup.RectTransform, Anchor.CenterRight), TextManager.Get("ServerListJoin"))
-                {
-                    UserData = info
-                };
-                joinButton.OnClicked = JoinFriend;
-                joinButton.RectTransform.AbsoluteOffset = new Point(framePadding, 0);
-
-                Point joinButtonTextSize = joinButton.Font.MeasureString(joinButton.Text).ToPoint();
-                int joinButtonHeight = joinButton.RectTransform.NonScaledSize.Y;
-                int totalAdditionalTextPadding = (joinButtonHeight - joinButtonTextSize.Y);
-
-                // Make the final button sized so that the space between the text and the edges in the X direction is the same as the Y direction.
-                Point finalButtonSize = new Point(joinButtonTextSize.X + totalAdditionalTextPadding, joinButtonHeight);
-
-                // Add padding to the server name to match the padding on the button text.
-                serverNameText.Padding = new Vector4(totalAdditionalTextPadding / 2);
-
-                // Get the dimensions of the text we want to show, plus the extra padding we added.
-                Point serverNameSize = serverNameText.Font.MeasureString(serverNameText.Text).ToPoint() + new Point(totalAdditionalTextPadding, totalAdditionalTextPadding);
-
-                // Now determine how large the parent frame has to be to exactly fit our two controls.
-                Point frameDims = new Point(serverNameSize.X + finalButtonSize.X + framePadding*2, Math.Max(serverNameSize.Y, finalButtonSize.Y) + framePadding * 2);
-
-                var popupPos = PlayerInput.MousePosition.ToPoint();
-                if(popupPos.X+frameDims.X > GUI.Canvas.NonScaledSize.X)
-                {
-                    // Prevent the Join button from going off the end of the screen if the server name is long or we click a user towards the edge.
-                    popupPos.X = GUI.Canvas.NonScaledSize.X - frameDims.X;
-                }
-
-                // Apply the size and position changes.
-                friendPopup.RectTransform.NonScaledSize = frameDims;
-                friendPopup.RectTransform.RelativeOffset = Vector2.Zero;
-                friendPopup.RectTransform.AbsoluteOffset = popupPos;
-
-                joinButton.RectTransform.NonScaledSize = finalButtonSize;
-
-                friendPopup.RectTransform.RecalculateChildren(true);
-                friendPopup.RectTransform.SetPosition(Anchor.TopLeft);
-            }
-
-            return false;
-        }
-
-        public enum AvatarSize
-        {
-            Small,
-            Medium,
-            Large
-        }
-
-        private void UpdateFriendsList()
-        {
-            if (friendsListUpdateTime > Timing.TotalTime) { return; }
-            friendsListUpdateTime = Timing.TotalTime + 5.0;
-
-            float prevDropdownScroll = friendsDropdown?.ScrollBar.BarScrollValue ?? 0.0f;
-
-            friendsDropdown ??= new GUIListBox(new RectTransform(Vector2.One, GUI.Canvas))
-            {
-                OutlineColor = Color.Black,
-                Visible = false
-            };
-            friendsDropdown.ClearChildren();
-
-            var avatarSize = friendsButtonHolder.RectTransform.Rect.Height switch
-            {
-                var h when h <= 24 => AvatarSize.Small,
-                var h when h <= 48 => AvatarSize.Medium,
-                _ => AvatarSize.Large
-            };
-            
-            FriendInfo[] friends = friendProvider.RetrieveFriends();
-
-            foreach (var friend in friends)
-            {
-                int existingIndex = friendsList.FindIndex(f => f.Id == friend.Id);
-                if (existingIndex >= 0)
-                {
-                    friend.Avatar = friend.Avatar.Fallback(friendsList[existingIndex].Avatar);
-                }
-
-                if (friend.Avatar.IsNone())
-                {
-                    friendProvider.RetrieveAvatar(friend, avatarSize);
-                }
-            }
-
-            friendsList.Clear(); friendsList.AddRange(friends.OrderByDescending(f => f.CurrentStatus));
-
-            friendsButtonHolder.ClearChildren();
-
-            if (friendsList.Count > 0)
-            {
-                friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: "GUIButtonFriendsDropdown")
-                {
-                    OnClicked = (button, udt) =>
-                    {
-                        friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5 * 166 / 100, friendsButtonHolder.Rect.Height * 4 * 166 / 100);
-                        friendsDropdown.RectTransform.AbsoluteOffset = new Point(friendsButtonHolder.Rect.X, friendsButtonHolder.Rect.Bottom);
-                        friendsDropdown.RectTransform.RecalculateChildren(true);
-                        friendsDropdown.Visible = !friendsDropdown.Visible;
-                        return false;
-                    }
-                };
-            }
-            else
-            {
-                friendsDropdownButton = null;
-                friendsDropdown.Visible = false;
-            }
-
-            for (int i = 0; i < friendsList.Count; i++)
-            {
-                var friend = friendsList[i];
-
-                if (i < 5)
-                {
-                    string style = friend.IsPlayingBarotrauma
-                        ? "GUIButtonFriendPlaying"
-                        : "GUIButtonFriendNotPlaying";
-
-                    var guiButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: style)
-                    {
-                        UserData = friend,
-                        OnClicked = OpenFriendPopup
-                    };
-                    guiButton.ToolTip = friend.Name + "\n" + friend.StatusText;
-
-                    if (friend.Avatar.TryUnwrap(out Sprite sprite))
-                    {
-                        new GUICustomComponent(new RectTransform(Vector2.One, guiButton.RectTransform, Anchor.Center),
-                            onDraw: (sb, component) =>
-                            {
-                                var destinationRect = component.Rect;
-                                destinationRect.Inflate(-GUI.IntScale(4), -GUI.IntScale(4));
-                                sb.Draw(sprite.Texture, destinationRect, Color.White);
-
-                                if (!GUI.IsMouseOn(guiButton))
-                                {
-                                    return;
-                                }
-
-                                sb.End();
-                                sb.Begin(
-                                    SpriteSortMode.Deferred,
-                                    blendState: BlendState.Additive,
-                                    samplerState: GUI.SamplerState,
-                                    rasterizerState: GameMain.ScissorTestEnable);
-                                sb.Draw(sprite.Texture, destinationRect, Color.White * 0.5f);
-                                sb.End();
-                                sb.Begin(
-                                    SpriteSortMode.Deferred,
-                                    samplerState: GUI.SamplerState,
-                                    rasterizerState: GameMain.ScissorTestEnable);
-                            }) { CanBeFocused = false };
-                    }
-                }
-
-                var friendFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.167f), friendsDropdown.Content.RectTransform), style: "GUIFrameFriendsDropdown");
-                if (friend.Avatar.TryUnwrap(out var avatar))
-                {
-                    GUIImage guiImage =
-                        new GUIImage(
-                            new RectTransform(Vector2.One * 0.9f, friendFrame.RectTransform, Anchor.CenterLeft,
-                                scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(0.02f, 0.02f) },
-                            avatar, null, true);
-                }
-
-                var textBlock = new GUITextBlock(new RectTransform(Vector2.One * 0.8f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(1.0f / 7.7f, 0.0f) }, friend.Name + "\n" + friend.StatusText)
-                {
-                    Font = GUIStyle.SmallFont
-                };
-                if (friend.IsPlayingBarotrauma) { textBlock.TextColor = GUIStyle.Green; }
-                if (friend.PlayingAnotherGame) { textBlock.TextColor = GUIStyle.Blue; }
-
-                if (friend.IsInServer)
-                {
-                    var joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.6f), friendFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, TextManager.Get("ServerListJoin"), style: "GUIButtonJoinFriend")
-                    {
-                        UserData = friend,
-                        OnClicked = JoinFriend
-                    };
-                }
-            }
-
-            friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5 * 166 / 100, friendsButtonHolder.Rect.Height * 4 * 166 / 100);
-            friendsDropdown.RectTransform.AbsoluteOffset = new Point(friendsButtonHolder.Rect.X, friendsButtonHolder.Rect.Bottom);
-            friendsDropdown.RectTransform.RecalculateChildren(true);
-
-            friendsDropdown.ScrollBar.BarScrollValue = prevDropdownScroll;
         }
 
         private void RemoveMsgFromServerList()
@@ -1412,7 +1204,7 @@ namespace Barotrauma
         private void RefreshServers()
         {
             lastRefreshTime = DateTime.Now;
-            serverProvider.Cancel();
+            serverProvider?.Cancel();
             currentServerDataRecvCallbackObj = null;
 
             PingUtils.QueryPingData();
@@ -1445,7 +1237,7 @@ namespace Barotrauma
             }
 
             var (onServerDataReceived, onQueryCompleted) = MakeServerQueryCallbacks();
-            serverProvider.RetrieveServers(onServerDataReceived, onQueryCompleted);
+            serverProvider?.RetrieveServers(onServerDataReceived, onQueryCompleted);
         }
 
         private GUIComponent FindFrameMatchingServerInfo(ServerInfo serverInfo)
@@ -1457,7 +1249,7 @@ namespace Barotrauma
 #if DEBUG
             if (serverList.Content.Children.Count(matches) > 1)
             {
-                DebugConsole.ThrowError($"There are several entries in the server list for endpoint {serverInfo.Endpoint}");
+                DebugConsole.ThrowError($"There are several entries in the server list for endpoints {string.Join(", ", serverInfo.Endpoints)}");
             }
 #endif
 
@@ -1465,7 +1257,7 @@ namespace Barotrauma
         }
 
         private object currentServerDataRecvCallbackObj = null;
-        private (Action<ServerInfo> OnServerDataReceived, Action OnQueryCompleted) MakeServerQueryCallbacks()
+        private (Action<ServerInfo, ServerProvider> OnServerDataReceived, Action OnQueryCompleted) MakeServerQueryCallbacks()
         {
             var uniqueObject = new object();
             currentServerDataRecvCallbackObj = uniqueObject;
@@ -1480,9 +1272,20 @@ namespace Barotrauma
             }
             
             return (
-                serverInfo =>
+                (serverInfo, serverProvider) =>
                 {
                     if (!shouldRunCallback()) { return; }
+
+                    if (serverProvider is not EosServerProvider
+                        && EosInterface.IdQueries.IsLoggedIntoEosConnect)
+                    {
+                        if (serverInfo.EosCrossplay)
+                        {
+                            // EosServerProvider should get us this server,
+                            // don't add it again
+                            return;
+                        }
+                    }
 
                     if (selectedTab == TabEnum.All)
                     {
@@ -1504,25 +1307,210 @@ namespace Barotrauma
 
         private void AddToServerList(ServerInfo serverInfo, bool skipPing = false)
         {
+            const int MaxAllowedPlayers = 1000;
+            const int MaxAllowedSimilarServers = 10;
+            const float MinSimilarityPercentage = 0.8f;
+
+            if (string.IsNullOrWhiteSpace(serverInfo.ServerName)) { return; }
             if (serverInfo.PlayerCount > serverInfo.MaxPlayers) { return; }
             if (serverInfo.PlayerCount < 0) { return; }
             if (serverInfo.MaxPlayers <= 0) { return; }
+            //no way a legit server can have this many players
+            if (serverInfo.MaxPlayers > MaxAllowedPlayers) { return; }
+
+            int similarServerCount = 0;
+            string serverInfoStr = getServerInfoStr(serverInfo);
+            foreach (var serverElement in serverList.Content.Children)
+            {
+                if (!serverElement.Visible) { continue; }
+                if (serverElement.UserData is not ServerInfo otherServer || otherServer == serverInfo) { continue; }
+                if (ToolBox.LevenshteinDistance(serverInfoStr, getServerInfoStr(otherServer)) < serverInfoStr.Length * (1.0f - MinSimilarityPercentage))
+                {
+                    similarServerCount++;
+                    if (similarServerCount > MaxAllowedSimilarServers) 
+                    {  
+                        DebugConsole.Log($"Server {serverInfo.ServerName} seems to be almost identical to {otherServer.ServerName}. Hiding as a potential spam server.");
+                        break;
+                    }
+                }
+            }
+            if (similarServerCount > MaxAllowedSimilarServers) { return; }
+
+            static string getServerInfoStr(ServerInfo serverInfo)
+            {
+                string str = serverInfo.ServerName + serverInfo.ServerMessage + serverInfo.MaxPlayers;
+                if (str.Length > 200) { return str.Substring(0, 200); }
+                return str;
+            }
 
             RemoveMsgFromServerList(MsgUserData.RefreshingServerList);
             RemoveMsgFromServerList(MsgUserData.NoServers);
             var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 35) },
                 style: "ListBoxElement")
             {
-                UserData = serverInfo
+                UserData = serverInfo,
             };
+
+            serverFrame.OnSecondaryClicked += (_, data) =>
+            {
+                if (data is not ServerInfo info) { return false; }
+                CreateContextMenu(info);
+                return true;
+            };
+
             new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = false
             };
             UpdateServerInfoUI(serverInfo);
             if (!skipPing) { PingUtils.GetServerPing(serverInfo, UpdateServerInfoUI); }
+        }
 
-            InsertServer(serverInfo, serverFrame);
+        private static readonly Vector2 confirmPopupSize = new Vector2(0.2f, 0.2625f);
+        private static readonly Point confirmPopupMinSize = new Point(300, 300);
+
+        private void CreateContextMenu(ServerInfo info)
+        {
+            var favoriteOption = new ContextMenuOption(IsFavorite(info) ? "removefromfavorites" : "addtofavorites", isEnabled: true, () =>
+            {
+                if (IsFavorite(info))
+                {
+                    RemoveFromFavoriteServers(info);
+                }
+                else
+                {
+                    AddToFavoriteServers(info);
+                }
+                FilterServers();
+            });
+            var reportOption = new ContextMenuOption("reportserver", isEnabled: true, () => { CreateReportPrompt(info); });
+            var filterOption = new ContextMenuOption("filterserver", isEnabled: true, () =>
+            {
+                CreateFilterServerPrompt(info);
+            })
+            {
+                Tooltip = TextManager.Get("filterservertooltip")
+            };
+
+            GUIContextMenu.CreateContextMenu(favoriteOption, filterOption, reportOption);
+        }
+
+        public static void CreateFilterServerPrompt(ServerInfo info)
+        {
+            GUI.AskForConfirmation(
+                header: TextManager.Get("filterserver"),
+                body: TextManager.GetWithVariables("filterserverconfirm", ("[server]", info.ServerName), ("[filepath]", SpamServerFilter.SavePath)),
+                onConfirm: () =>
+                {
+                    SpamServerFilters.AddServerToLocalSpamList(info);
+
+                    if (GameMain.ServerListScreen is not { } serverListScreen) { return; }
+
+                    if (serverListScreen.selectedServer.TryUnwrap(out var selectedServer) && selectedServer.Equals(info))
+                    {
+                        serverListScreen.HideServerPreview();
+                    }
+                    serverListScreen.FilterServers();
+                }, relativeSize: confirmPopupSize, minSize: confirmPopupMinSize);
+        }
+
+        private enum ReportReason
+        {
+            Spam,
+            Advertising,
+            Inappropriate
+        }
+
+        public static void CreateReportPrompt(ServerInfo info)
+        {
+            if (!GameAnalyticsManager.SendUserStatistics)
+            {
+                GUI.NotifyPrompt(TextManager.Get("reportserver"), TextManager.Get("reportserverdisabled"));
+                return;
+            }
+
+            var msgBox = new GUIMessageBox(
+                headerText: TextManager.Get("reportserver"),
+                text: string.Empty,
+                relativeSize: new Vector2(0.2f, 0.4f),
+                minSize: new Point(380, 430),
+                buttons: Array.Empty<LocalizedString>());
+
+            var layout = new GUILayoutGroup(new RectTransform(Vector2.One, msgBox.Content.RectTransform, Anchor.Center));
+
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.3f), layout.RectTransform), TextManager.GetWithVariable("reportserverexplanation", "[server]", info.ServerName), wrap: true)
+            {
+                ToolTip = TextManager.Get("reportserverprompttooltip")
+            };
+
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.3f), layout.RectTransform));
+
+            var enums = Enum.GetValues<ReportReason>();
+            foreach (ReportReason reason in enums)
+            {
+                new GUITickBox(new RectTransform(new Vector2(1f, 1f / enums.Length), listBox.Content.RectTransform), TextManager.Get($"reportreason.{reason}"))
+                {
+                    UserData = reason
+                };
+            }
+
+            // padding
+            new GUIFrame(new RectTransform(new Vector2(1f, 0.05f), layout.RectTransform), style: null);
+
+            var buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), layout.RectTransform))
+            {
+                Stretch = true
+            };
+
+            var reportAndHideButton = new GUIButton(new RectTransform(new Vector2(1f, 0.333f), buttonLayout.RectTransform), TextManager.Get("reportoption.reportandhide"))
+            {
+                Enabled = false,
+                OnClicked = (_, _) =>
+                {
+                    CreateFilterServerPrompt(info);
+                    msgBox.Close();
+                    return true;
+                }
+            };
+            var reportButton = new GUIButton(new RectTransform(new Vector2(1f, 0.333f), buttonLayout.RectTransform), TextManager.Get("reportoption.report"))
+            {
+                Enabled = false,
+                OnClicked = (_, _) =>
+                {
+                    ReportServer(info, GetUserSelectedReasons());
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1f, 0.333f), buttonLayout.RectTransform), TextManager.Get("cancel"))
+            {
+                OnClicked = (_, _) =>
+                {
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            foreach (var child in listBox.Content.GetAllChildren<GUITickBox>())
+            {
+                child.OnSelected += _ =>
+                {
+                    reportAndHideButton.Enabled = reportButton.Enabled = GetUserSelectedReasons().Any();
+                    return true;
+                };
+            }
+
+            IEnumerable<ReportReason> GetUserSelectedReasons()
+                => listBox.Content.Children
+                          .Where(static c => c.UserData is ReportReason && c.Selected)
+                          .Select(static c => (ReportReason)c.UserData).ToArray();
+        }
+
+        private static void ReportServer(ServerInfo info, IEnumerable<ReportReason> reasons)
+        {
+            if (!reasons.Any()) { return; }
+            GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Info, $"[Spam] Reported server: Name: \"{info.ServerName}\", Message: \"{info.ServerMessage}\", Endpoint: \"{info.Endpoints.First().StringRepresentation}\". Reason: \"{string.Join(", ", reasons)}\".");
         }
 
         private void UpdateServerInfoUI(ServerInfo serverInfo)
@@ -1532,7 +1520,6 @@ namespace Barotrauma
 
             serverFrame.UserData = serverInfo;
 
-            serverFrame.ToolTip = "";
             var serverContent = serverFrame.Children.First() as GUILayoutGroup;
             serverContent.ClearChildren();
 
@@ -1544,15 +1531,14 @@ namespace Barotrauma
                         new RectTransform(new Vector2(columns[label].RelativeWidth, 1.0f), serverContent.RectTransform),
                         style: null);
             }
-            
-            void errorTooltip(RichString toolTip)
+
+            void disableElementFocus()
             {
                 sections.Values.ForEach(c =>
                 {
                     c.CanBeFocused = false;
                     c.Children.First().CanBeFocused = false;
                 });
-                serverFrame.ToolTip = toolTip;
             }
 
             RectTransform columnRT(ColumnLabel label, float scale = 0.95f)
@@ -1572,7 +1558,7 @@ namespace Barotrauma
                     NetworkMember.IsCompatible(GameMain.Version, serverInfo.GameVersion),
                 UserData = "compatible"
             };
-            
+
             var passwordBox = new GUITickBox(columnRT(ColumnLabel.ServerListHasPassword, scale: 0.6f), label: "", style: "GUIServerListPasswordTickBox")
             {
 				Selected = serverInfo.HasPassword,
@@ -1584,7 +1570,7 @@ namespace Barotrauma
 
             var serverName = new GUITextBlock(columnRT(ColumnLabel.ServerListName),
 #if DEBUG
-                $"[{serverInfo.Endpoint.GetType().Name}] " +
+                $"[{serverInfo.Endpoints.First().GetType().Name}] " +
 #endif
                 serverInfo.ServerName,
                 style: "GUIServerListTextBox") { CanBeFocused = false };
@@ -1619,15 +1605,23 @@ namespace Barotrauma
                 serverPingText.Text = ping.ToString();
                 serverPingText.TextColor = GetPingTextColor(ping);
             }
+            else if ((serverInfo.Endpoints.Length == 1 && serverInfo.Endpoints.First() is EosP2PEndpoint)
+                     || (!SteamManager.IsInitialized && serverInfo.Endpoints.Any(e => e is P2PEndpoint)))
+            {
+                serverPingText.Text = "-";
+                serverPingText.ToolTip = TextManager.Get("EosPingUnavailable");
+                serverPingText.TextAlignment = Alignment.Center;
+            }
             else
             {
                 serverPingText.Text = "?";
                 serverPingText.TextColor = Color.DarkRed;
             }
 
+            LocalizedString toolTip = "";
             if (!serverInfo.Checked)
             {
-                errorTooltip(TextManager.Get("ServerOffline"));
+                toolTip = TextManager.Get("ServerOffline");
                 serverName.TextColor *= 0.8f;
                 serverPlayers.TextColor *= 0.8f;
             }
@@ -1642,7 +1636,6 @@ namespace Barotrauma
             }
             else if (!compatibleBox.Selected)
             {
-                LocalizedString toolTip = "";
                 if (serverInfo.GameVersion != GameMain.Version)
                 {
                     toolTip = TextManager.GetWithVariable("ServerListIncompatibleVersion", "[version]", serverInfo.GameVersion.ToString());
@@ -1668,14 +1661,12 @@ namespace Barotrauma
                         toolTip += '\n' + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (incompatibleModNames.Count - maxIncompatibleToList).ToString());
                     }
                 }
-                errorTooltip(toolTip);
 
                 serverName.TextColor *= 0.5f;
                 serverPlayers.TextColor *= 0.5f;
             }
             else
             {
-                LocalizedString toolTip = "";
                 foreach (var contentPackage in serverInfo.ContentPackages)
                 {
                     if (ContentPackageManager.EnabledPackages.All.None(cp => cp.Hash.StringRepresentation == contentPackage.Hash))
@@ -1685,8 +1676,11 @@ namespace Barotrauma
                         break;
                     }
                 }
-                errorTooltip(toolTip);
             }
+            disableElementFocus();
+
+            string separator = toolTip.IsNullOrWhiteSpace() ? "" : "\n\n";
+            serverFrame.ToolTip = RichString.Rich(toolTip + separator + $"‖color:gui.blue‖{TextManager.GetWithVariable("serverlisttooltip", "[button]", PlayerInput.SecondaryMouseLabel)}‖end‖");
 
             foreach (var section in sections.Values)
             {
@@ -1736,7 +1730,7 @@ namespace Barotrauma
                 AddToFavoriteServers(serverInfo);
             }
 
-            SortList(sortedBy, toggle: false);
+            InsertServer(serverInfo, serverFrame);
             FilterServers();
         }
 
@@ -1753,7 +1747,7 @@ namespace Barotrauma
             }
         }
 
-        public void JoinServer(Endpoint endpoint, string serverName)
+        public void JoinServer(ImmutableArray<Endpoint> endpoints, string serverName)
         {
             if (string.IsNullOrWhiteSpace(ClientNameBox.Text))
             {
@@ -1766,20 +1760,38 @@ namespace Barotrauma
             MultiplayerPreferences.Instance.PlayerName = ClientNameBox.Text;
             GameSettings.SaveCurrentConfig();
 
-#if !DEBUG
-            try
+            if (MultiplayerPreferences.Instance.PlayerName.IsNullOrEmpty())
             {
-#endif
-            GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(GetDefaultUserName()), endpoint, serverName, Option<int>.None());
-#if !DEBUG
+                TaskPool.Add("GetDefaultUserName",
+                    GetDefaultUserName(),
+                    t =>
+                    {
+                        if (!t.TryGetResult(out string name)) { return; }
+                        startClient(name);
+                    });
             }
-            catch (Exception e)
+            else
             {
-                DebugConsole.ThrowError("Failed to start the client", e);
+                startClient(MultiplayerPreferences.Instance.PlayerName);
             }
+
+            void startClient(string name)
+            {
+#if !DEBUG
+                try
+                {
 #endif
+                    GameMain.Client = new GameClient(name, endpoints, serverName, Option.None);
+#if !DEBUG
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to start the client", e);
+                }
+#endif
+            }
         }
-        
+
         private static Color GetPingTextColor(int ping)
         {
             if (ping < 0) { return Color.DarkRed; }
@@ -1790,8 +1802,6 @@ namespace Barotrauma
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            GameMain.TitleScreen.DrawLoadingText = false;
-
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
             GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);            
             GUI.Draw(Cam, spriteBatch);
@@ -1801,12 +1811,11 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             menu.AddToGUIUpdateList();
-            friendPopup?.AddToGUIUpdateList();
-            friendsDropdown?.AddToGUIUpdateList();
         }
 
         public void StoreServerFilters()
         {
+            if (loadingServerFilters) { return; }
             foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
             {
                 ServerListFilters.Instance.SetAttribute(filterBox.Key, filterBox.Value.Selected.ToString());
@@ -1818,8 +1827,10 @@ namespace Barotrauma
             GameSettings.SaveCurrentConfig();
         }
 
+        private bool loadingServerFilters;
         public void LoadServerFilters()
         {
+            loadingServerFilters = true;
             XDocument currentConfigDoc = XMLExtensions.TryLoadXml(GameSettings.PlayerConfigPath);
             ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
             foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
@@ -1837,6 +1848,7 @@ namespace Barotrauma
                 var child = ternaryFilter.Value.ListBox.Content.GetChildByUserData(ternaryOption);
                 ternaryFilter.Value.Select(ternaryFilter.Value.ListBox.Content.GetChildIndex(child));
             }
+            loadingServerFilters = false;
         }
         
     }

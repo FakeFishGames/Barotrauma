@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Sets a campaign metadata value. The metadata can be any arbitrary data you want to save: for example, whether some event has been completed, the number of times something has been done during the campaign, or at what stage of some multi-part event chain the crew is at.
+    /// </summary>
     class SetDataAction : EventAction
     {
         public enum OperationType
@@ -14,13 +16,13 @@ namespace Barotrauma
         
         public SetDataAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        [Serialize(OperationType.Set, IsPropertySaveable.Yes)]
+        [Serialize(OperationType.Set, IsPropertySaveable.Yes, description: "Do you want to set the metadata to a specific value, multiply it, or add to it.")]
         public OperationType Operation { get; set; }
 
-        [Serialize(null, IsPropertySaveable.Yes)]
+        [Serialize(null, IsPropertySaveable.Yes, description: "Depending on the operation, the value you want to set the metadata to, multiply it with, or add to it.")]
         public string Value { get; set; } = null!;
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the metadata to set. Can be any arbitrary identifier, e.g. itemscollected, my_custom_event_state, specialnpckilled...")]
         public Identifier Identifier { get; set; }
 
         private bool isFinished;

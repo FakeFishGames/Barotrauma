@@ -60,6 +60,10 @@ namespace Barotrauma
             {
                 distance = Math.Min(distance, Vector2.Distance(recipient.Character.ViewTarget.WorldPosition, WorldPosition));
             }
+            if (ViewTarget != null && ViewTarget != this)
+            {
+                distance = Math.Min(distance, Vector2.Distance(comparePosition, ViewTarget.WorldPosition));
+            }
 
             float priority = 1.0f - MathUtils.InverseLerp(
                 NetConfig.HighPrioCharacterPositionUpdateDistance, 
@@ -71,7 +75,7 @@ namespace Barotrauma
                 NetConfig.HighPrioCharacterPositionUpdateInterval,
                 priority);
 
-            if (IsDead)
+            if (IsDead && !AnimController.IsDraggedWithRope)
             {
                 interval = Math.Max(interval * 2, 0.1f);
             }
@@ -154,8 +158,6 @@ namespace Barotrauma
                     }
 
                     memInput.RemoveAt(memInput.Count - 1);
-
-                    TransformCursorPos();
 
                     if ((dequeuedInput == InputNetFlags.None || dequeuedInput == InputNetFlags.FacingLeft) && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
                     {
@@ -374,10 +376,9 @@ namespace Barotrauma
                 tempBuffer.WriteBoolean(aiming);
                 tempBuffer.WriteBoolean(shoot);
                 tempBuffer.WriteBoolean(use);
-                if (AnimController is HumanoidAnimController)
-                {
-                    tempBuffer.WriteBoolean(((HumanoidAnimController)AnimController).Crouching);
-                }
+
+                tempBuffer.WriteBoolean(AnimController is HumanoidAnimController { Crouching: true });
+                
                 tempBuffer.WriteBoolean(attack);
 
                 Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
@@ -428,26 +429,37 @@ namespace Barotrauma
             if (writeStatus)
             {
                 WriteStatus(tempBuffer);
-                AIController?.ServerWrite(tempBuffer);
+                tempBuffer.WriteBoolean(AIController is EnemyAIController);
+                if (AIController is EnemyAIController enemyAi)
+                {
+                    tempBuffer.WriteByte((byte)enemyAi.State);
+                    tempBuffer.WriteBoolean(enemyAi.PetBehavior is PetBehavior);
+                    if (enemyAi.PetBehavior is PetBehavior petBehavior)
+                    {
+                        tempBuffer.WriteByte((byte)((petBehavior.Happiness / petBehavior.MaxHappiness) * byte.MaxValue));
+                        tempBuffer.WriteByte((byte)((petBehavior.Hunger / petBehavior.MaxHunger) * byte.MaxValue));
+                    }
+                }
                 HealthUpdatePending = false;
             }
         }
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            if (!(extraData is IEventData eventData)) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}, got {extraData?.GetType().Name ?? "[NULL]"}"); }
+            if (extraData is not IEventData eventData) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}, got {extraData?.GetType().Name ?? "[NULL]"}"); }
 
             msg.WriteRangedInteger((int)eventData.EventType, (int)EventType.MinValue, (int)EventType.MaxValue);
             switch (eventData)
             {
-                case InventoryStateEventData _:
+                case InventoryStateEventData inventoryData:
                     msg.WriteUInt16(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
-                    Inventory.ServerEventWrite(msg, c);
+                    Inventory.ServerEventWrite(msg, c, inventoryData);
                     break;
                 case ControlEventData controlEventData:
                     Client owner = controlEventData.Owner;
                     msg.WriteBoolean(owner == c && owner.Character == this);
                     msg.WriteByte(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.SessionId : (byte)0);
+                    msg.WriteBoolean(info is { RenamingEnabled: true });
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);
@@ -471,12 +483,12 @@ namespace Barotrauma
                 case IAttackEventData attackEventData:
                     {
                         int attackLimbIndex = Removed ? -1 : Array.IndexOf(AnimController.Limbs, attackEventData.AttackLimb);
-                        ushort targetEntityId = 0;
+                        ushort targetEntityId = NullEntityID;
                         int targetLimbIndex = -1;
                         if (attackEventData.TargetEntity is Entity { Removed: false } targetEntity)
                         {
                             targetEntityId = targetEntity.ID;
-                            if (targetEntity is Character { AnimController: { Limbs: var targetLimbsArray } })
+                            if (targetEntity is Character { AnimController.Limbs: var targetLimbsArray })
                             {
                                 targetLimbIndex = targetLimbsArray.IndexOf(attackEventData.TargetLimb);
                             }
@@ -576,6 +588,31 @@ namespace Barotrauma
                             msg.WriteIdentifier(savedStatValue.StatIdentifier);
                             msg.WriteSingle(savedStatValue.StatValue);
                             msg.WriteBoolean(savedStatValue.RemoveOnDeath);
+                        }
+                    }
+                    break;
+                case LatchedOntoTargetEventData latchedOntoTargetEventData:
+                    msg.WriteBoolean(latchedOntoTargetEventData.IsLatched);
+                    if (latchedOntoTargetEventData.IsLatched)
+                    {
+                        msg.WriteSingle(SimPosition.X);
+                        msg.WriteSingle(SimPosition.Y);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachSurfaceNormal.X);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachSurfaceNormal.Y);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachPos.X);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachPos.Y);
+                        msg.WriteInt32(latchedOntoTargetEventData.TargetLevelWallIndex);
+                        if (latchedOntoTargetEventData.TargetStructureID != NullEntityID)
+                        {
+                            msg.WriteUInt16(latchedOntoTargetEventData.TargetStructureID);
+                        }
+                        else if (latchedOntoTargetEventData.TargetCharacterID != NullEntityID)
+                        {
+                            msg.WriteUInt16(latchedOntoTargetEventData.TargetCharacterID);
+                        }
+                        else
+                        {
+                            msg.WriteUInt16(NullEntityID);
                         }
                     }
                     break;

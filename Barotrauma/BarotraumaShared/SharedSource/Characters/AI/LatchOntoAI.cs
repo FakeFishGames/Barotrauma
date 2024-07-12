@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
+using Voronoi2;
 
 namespace Barotrauma
 {
@@ -32,13 +33,20 @@ namespace Barotrauma
 
         private Vector2 _attachPos;
 
+        /// <summary>
+        /// The character won't latch onto anything when the cooldown is active (activates after the character deattaches for whatever reason).
+        /// </summary>
         private float attachCooldown;
 
-        private Limb attachLimb;
+        private readonly Limb attachLimb;
         private Vector2 localAttachPos;
-        private float attachLimbRotation;
+        private readonly float attachLimbRotation;
 
         private float jointDir;
+
+        private float latchedDuration;
+
+        private readonly bool freezeWhenLatched;
 
         public List<Joint> AttachJoints { get; } = new List<Joint>();
 
@@ -54,18 +62,19 @@ namespace Barotrauma
 
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
         {
-            AttachToWalls = element.GetAttributeBool("attachtowalls", false);
-            AttachToSub = element.GetAttributeBool("attachtosub", false);
-            AttachToCharacters = element.GetAttributeBool("attachtocharacters", false);
-            minDeattachSpeed = element.GetAttributeFloat("mindeattachspeed", 5.0f);
-            maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat("maxdeattachspeed", 8.0f));
-            maxAttachDuration = element.GetAttributeFloat("maxattachduration", -1.0f);
-            coolDown = element.GetAttributeFloat("cooldown", 2f);
-            damageOnDetach = element.GetAttributeFloat("damageondetach", 0.0f);
-            detachStun = element.GetAttributeFloat("detachstun", 0.0f);
-            localAttachPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("localattachpos", Vector2.Zero));
-            attachLimbRotation = MathHelper.ToRadians(element.GetAttributeFloat("attachlimbrotation", 0.0f));
-            weld = element.GetAttributeBool("weld", true);
+            AttachToWalls = element.GetAttributeBool(nameof(AttachToWalls), false);
+            AttachToSub = element.GetAttributeBool(nameof(AttachToSub), false);
+            AttachToCharacters = element.GetAttributeBool(nameof(AttachToCharacters), false);
+            minDeattachSpeed = element.GetAttributeFloat(nameof(minDeattachSpeed), 5.0f);
+            maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat(nameof(maxDeattachSpeed), 8.0f));
+            maxAttachDuration = element.GetAttributeFloat(nameof(maxAttachDuration), -1.0f);
+            coolDown = element.GetAttributeFloat(nameof(coolDown), 2f);
+            damageOnDetach = element.GetAttributeFloat(nameof(damageOnDetach), 0.0f);
+            detachStun = element.GetAttributeFloat(nameof(detachStun), 0.0f);
+            localAttachPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2(nameof(localAttachPos), Vector2.Zero));
+            attachLimbRotation = MathHelper.ToRadians(element.GetAttributeFloat(nameof(attachLimbRotation), 0.0f));
+            weld = element.GetAttributeBool(nameof(weld), true);
+            freezeWhenLatched = element.GetAttributeBool(nameof(freezeWhenLatched), false);
 
             string limbString = element.GetAttributeString("attachlimb", null);
             attachLimb = enemyAI.Character.AnimController.Limbs.FirstOrDefault(l => string.Equals(l.Name, limbString, StringComparison.OrdinalIgnoreCase));
@@ -108,7 +117,23 @@ namespace Barotrauma
             targetBody = target.AnimController.Collider.FarseerBody;
             attachSurfaceNormal = Vector2.Normalize(character.WorldPosition - target.WorldPosition);
         }
-        
+
+        public void SetAttachTarget(VoronoiCell levelWall)
+        {
+            if (!AttachToWalls) { return; }
+            Reset();
+            foreach (Voronoi2.GraphEdge edge in levelWall.Edges)
+            {
+                if (MathUtils.GetLineSegmentIntersection(edge.Point1, edge.Point2, character.WorldPosition, levelWall.Center, out Vector2 intersection))
+                {
+                    attachSurfaceNormal = edge.GetNormal(levelWall);
+                    targetBody = levelWall.Body;
+                    _attachPos = ConvertUnits.ToSimUnits(intersection);
+                    return;
+                }
+            }
+        }
+
         public void Update(EnemyAIController enemyAI, float deltaTime)
         {
             if (TargetCharacter != null && character.Submarine != TargetCharacter.Submarine ||
@@ -119,6 +144,17 @@ namespace Barotrauma
             }
             if (IsAttached)
             {
+                latchedDuration += deltaTime;
+                if (freezeWhenLatched && targetBody is { BodyType: BodyType.Static } &&
+                    /*brief delay to let the ragdoll "settle"*/
+                    latchedDuration > 5.0f)
+                {
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        limb.body.LinearVelocity = Vector2.Zero;
+                        limb.body.AngularVelocity = 0.0f;
+                    }
+                }
                 if (Math.Sign(attachLimb.Dir) != Math.Sign(jointDir))
                 {
                     var attachJoint = AttachJoints[0];
@@ -213,7 +249,7 @@ namespace Barotrauma
                                     {
                                         foreach (Voronoi2.GraphEdge edge in cell.Edges)
                                         {
-                                            if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
+                                            if (MathUtils.GetLineSegmentIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
                                             {
                                                 Vector2 potentialAttachPos = ConvertUnits.ToSimUnits(intersection);
                                                 float distSqr = Vector2.DistanceSquared(character.SimPosition, potentialAttachPos);
@@ -241,7 +277,7 @@ namespace Barotrauma
                     {
                         DeattachFromBody(reset: false);
                     }
-                    else
+                    else if (attachCooldown <= 0.0f)
                     {
                         float squaredDistance = Vector2.DistanceSquared(character.SimPosition, _attachPos);
                         float targetDistance = Math.Max(Math.Max(character.AnimController.Collider.Radius, character.AnimController.Collider.Width), character.AnimController.Collider.Height) * 1.2f;
@@ -258,6 +294,10 @@ namespace Barotrauma
                             enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
                             enemyAI.SteeringManager.SteeringSeek(_attachPos);
                         }
+                    }
+                    else if (IsAttached)
+                    {
+                        enemyAI.SteeringManager.Reset();
                     }
                     break;
                 case AIState.Attack:
@@ -281,11 +321,11 @@ namespace Barotrauma
 
             if (IsAttached && targetBody != null && deattachCheckTimer <= 0.0f)
             {
+                attachCooldown = coolDown;
                 bool deattach = false;
                 if (maxAttachDuration > 0)
                 {
                     deattach = true;
-                    attachCooldown = coolDown;
                 }
                 if (!deattach && TargetWall != null && TargetSubmarine != null)
                 {
@@ -294,7 +334,6 @@ namespace Barotrauma
                     if (enemyAI.CanPassThroughHole(TargetWall, targetSection))
                     {
                         deattach = true;
-                        attachCooldown = coolDown;
                     }
                     if (!deattach)
                     {
@@ -327,7 +366,7 @@ namespace Barotrauma
             }
         }
 
-        private void AttachToBody(Vector2 attachPos)
+        public void AttachToBody(Vector2 attachPos, Vector2? forceAttachSurfaceNormal = null, Vector2? forceColliderSimPosition = null)
         {
             if (attachLimb == null) { return; }
             if (targetBody == null) { return; }
@@ -343,6 +382,13 @@ namespace Barotrauma
 
             jointDir = attachLimb.Dir;
 
+            if (forceAttachSurfaceNormal.HasValue) { attachSurfaceNormal = forceAttachSurfaceNormal.Value; }
+            if (forceColliderSimPosition.HasValue)
+            {
+                character.TeleportTo(ConvertUnits.ToDisplayUnits(forceColliderSimPosition.Value));
+            }
+
+            // TODO: Shouldn't multiply by LimbScale here, because it's already applied in attachLimb.Scale!
             Vector2 transformedLocalAttachPos = localAttachPos * attachLimb.Scale * attachLimb.Params.Ragdoll.LimbScale;
             if (jointDir < 0.0f)
             {
@@ -350,6 +396,9 @@ namespace Barotrauma
             }
 
             float angle = MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2 + attachLimbRotation * attachLimb.Dir;
+            //make sure the angle "has the same number of revolutions" as the reference limb
+            //(e.g. we don't want to rotate the legs to 0 if the torso is at 360, because that'd blow up the hip joints) 
+            angle = attachLimb.body.WrapAngleToSameNumberOfRevolutions(angle);
             attachLimb.body.SetTransform(attachPos + attachSurfaceNormal * transformedLocalAttachPos.Length(), angle);
 
             var limbJoint = new WeldJoint(attachLimb.body.FarseerBody, targetBody,
@@ -392,10 +441,26 @@ namespace Barotrauma
             {
                 deattachCheckTimer = maxAttachDuration;
             }
+
+#if SERVER
+            if (TargetCharacter != null)
+            {
+                GameMain.Server.CreateEntityEvent(character, new Character.LatchedOntoTargetEventData(character, TargetCharacter, attachSurfaceNormal, attachPos));
+            }
+            else if (TargetWall != null)
+            {
+                GameMain.Server.CreateEntityEvent(character, new Character.LatchedOntoTargetEventData(character, TargetWall, attachSurfaceNormal, attachPos));
+            }
+            else if (targetBody.UserData is Voronoi2.VoronoiCell cell)
+            {
+                GameMain.Server.CreateEntityEvent(character, new Character.LatchedOntoTargetEventData(character, cell, attachSurfaceNormal, attachPos));
+            }
+#endif
         }
 
         public void DeattachFromBody(bool reset, float cooldown = 0)
         {
+            bool wasAttached = IsAttached;
             foreach (Joint joint in AttachJoints)
             {
                 GameMain.World.Remove(joint);
@@ -410,6 +475,12 @@ namespace Barotrauma
             {
                 Reset();
             }
+#if SERVER
+            if (wasAttached)
+            {
+                GameMain.Server.CreateEntityEvent(character, new Character.LatchedOntoTargetEventData());
+            }
+#endif
         }
 
         private void Reset()

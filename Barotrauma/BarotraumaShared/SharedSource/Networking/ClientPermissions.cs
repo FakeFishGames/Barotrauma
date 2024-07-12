@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
             string permissionsStr = element.GetAttributeString("permissions", "");
             if (!Enum.TryParse(permissionsStr, out Permissions))
             {
-                DebugConsole.ThrowError("Error in permission preset \"" + DisplayName + "\" - " + permissionsStr + " is not a valid permission!");
+                DebugConsole.ThrowErrorLocalized("Error in permission preset \"" + DisplayName + "\" - " + permissionsStr + " is not a valid permission!");
             }
 
             PermittedCommands = new HashSet<DebugConsole.Command>();
@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
                     if (command == null)
                     {
 #if SERVER
-                        DebugConsole.ThrowError("Error in permission preset \"" + DisplayName + "\" - " + commandName + "\" is not a valid console command.");
+                        DebugConsole.ThrowErrorLocalized("Error in permission preset \"" + DisplayName + "\" - " + commandName + "\" is not a valid console command.");
 #endif
                         continue;
                     }

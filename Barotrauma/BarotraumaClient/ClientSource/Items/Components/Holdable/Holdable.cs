@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
             get { return item.Rect.Size.ToVector2(); }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled)
             {
@@ -50,11 +50,22 @@ namespace Barotrauma.Items.Components
 
             Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.4f);
 
-            item.Sprite.Draw(
+            Sprite sprite = item.Sprite;
+            foreach (ContainedItemSprite containedSprite in item.Prefab.ContainedSprites)
+            {
+                if (containedSprite.UseWhenAttached)
+                {
+                    sprite = containedSprite.Sprite;
+                    break;
+                }
+            }
+
+            sprite.Draw(
                 spriteBatch,
                 new Vector2(attachPos.X, -attachPos.Y),
                 item.SpriteColor * 0.5f,
-                0.0f, item.Scale, SpriteEffects.None, 0.0f);
+                item.RotationRad, 
+                item.Scale, SpriteEffects.None, 0.0f);
 
             GUI.DrawRectangle(spriteBatch, new Vector2(attachPos.X - 2, -attachPos.Y - 2), Vector2.One * 5, GUIStyle.Red, thickness: 3);
         }

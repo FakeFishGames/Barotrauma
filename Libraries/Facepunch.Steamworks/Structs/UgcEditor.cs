@@ -44,7 +44,12 @@ namespace Steamworks.Ugc
 		/// Workshop item that is meant to be voted on for the purpose of selling in-game
 		/// </summary>
 		public static Editor NewMicrotransactionFile => new Editor( WorkshopFileType.Microtransaction );
-		
+
+		/// <summary>
+		/// Workshop item that is meant to be managed by the game. It is queryable by the API, but isn't visible on the web browser.
+		/// </summary>
+		public static Editor NewGameManagedFile => new Editor(WorkshopFileType.GameManagedItem);
+
 		public Editor ForAppId( AppId id ) { this.consumerAppId = id; return this; }
 
 		public string? Title { get; private set; }
@@ -136,14 +141,7 @@ namespace Steamworks.Ugc
 			return this;
 		}
 
-		public bool HasTag( string tag )
-		{
-			if (Tags != null && Tags.Contains(tag)) { return true; }
-
-			return false;
-		}
-
-		public async Task<PublishResult> SubmitAsync( IProgress<float>? progress = null )
+		public async Task<PublishResult> SubmitAsync( IProgress<float>? progress = null, Action<PublishResult>? onItemCreated = null )
 		{
 			var result = default( PublishResult );
 			if (SteamUGC.Internal is null) { return result; }
@@ -184,6 +182,9 @@ namespace Steamworks.Ugc
                 FileId = created.Value.PublishedFileId;
 				result.NeedsWorkshopAgreement = created.Value.UserNeedsToAcceptWorkshopLegalAgreement;
 				result.FileId = FileId;
+
+				if ( onItemCreated != null )
+					onItemCreated( result );
 			}
 
 			result.FileId = FileId;
@@ -260,7 +261,7 @@ namespace Steamworks.Ugc
 							case ItemUpdateStatus.UploadingContent:
 								{
 									var uploaded = total > 0 ? ((float)processed / (float)total) : 0.0f;
-									progress?.Report( 0.2f + uploaded * 0.7f );
+									progress?.Report( 0.2f + uploaded * 0.6f );
 									break;
 								}
 							case ItemUpdateStatus.UploadingPreviewFile:

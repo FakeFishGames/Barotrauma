@@ -1,25 +1,27 @@
-using Microsoft.Xna.Framework;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Increases the skill level of a specific character.
+    /// </summary>
     class GiveSkillExpAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the skill to increase.")]
         public Identifier Skill { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much the skill should increase.")]
         public float Amount { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character(s) whose skill to increase.")]
         public Identifier TargetTag { get; set; }
 
         public GiveSkillExpAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
             if (TargetTag.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": GiveSkillExpAction without a target tag (the action needs to know whose skill to check).");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": {nameof(GiveSkillExpAction)} without a target tag (the action needs to know whose skill to check).",
+                    contentPackage: element.ContentPackage);
             }
         }
 

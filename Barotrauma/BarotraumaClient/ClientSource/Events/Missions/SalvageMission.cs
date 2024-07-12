@@ -8,6 +8,22 @@ namespace Barotrauma
         public override bool DisplayAsCompleted => false;
         public override bool DisplayAsFailed => false;
 
+        private void TryShowRetrievedMessage()
+        {
+            if (DetermineCompleted())
+            {
+                if (!allRetrievedMessage.IsNullOrEmpty()) { CreateMessageBox(string.Empty, allRetrievedMessage); }
+                //no need to show this again, clear it
+                allRetrievedMessage = string.Empty;
+            }
+            else
+            {
+                if (!partiallyRetrievedMessage.IsNullOrEmpty()) { CreateMessageBox(string.Empty, partiallyRetrievedMessage); }
+                //no need to show this again, clear it
+                partiallyRetrievedMessage = string.Empty;
+            }
+        }
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);
@@ -30,6 +46,15 @@ namespace Barotrauma
                 else
                 {
                     target.Item = Item.ReadSpawnData(msg);
+                    target.Item.HighlightColor = GUIStyle.Orange;
+                    target.Item.ExternalHighlight = true;
+
+                    ushort parentTargetId = msg.ReadUInt16();
+                    if (parentTargetId != Entity.NullEntityID)
+                    {
+                        target.OriginalContainer = Entity.FindEntityByID(parentTargetId) as Item;
+                    }
+
                     if (target.Item == null)
                     {
                         throw new System.Exception("Error in SalvageMission.ClientReadInitial: spawned item was null (mission: " + Prefab.Identifier + ")");
@@ -45,7 +70,7 @@ namespace Barotrauma
                     target.Item.ApplyStatusEffect(selectedEffect, selectedEffect.type, deltaTime: 1.0f, worldPosition: target.Item.Position);
                 }
 
-                if (target.Item.body != null)
+                if (target.Item.body != null && target.Item.CurrentHull == null)
                 {
                     target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
                 }
@@ -55,14 +80,24 @@ namespace Barotrauma
         public override void ClientRead(IReadMessage msg)
         {
             base.ClientRead(msg);
+            bool atLeastOneTargetWasRetrieved = false;
             int targetCount = msg.ReadByte();
             for (int i = 0; i < targetCount; i++)
             {
                 var state = (Target.RetrievalState)msg.ReadByte();
                 if (i < targets.Count)
                 {
+                    bool wasRetrieved = targets[i].Retrieved;
                     targets[i].State = state;
+                    if (!wasRetrieved && targets[i].Retrieved)
+                    {
+                        atLeastOneTargetWasRetrieved = true;
+                    }
                 }
+            }
+            if (atLeastOneTargetWasRetrieved)
+            {
+                TryShowRetrievedMessage();
             }
         }
     }

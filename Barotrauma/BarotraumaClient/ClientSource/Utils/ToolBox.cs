@@ -1,9 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿#nullable enable
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Barotrauma.Networking;
 using Color = Microsoft.Xna.Framework.Color;
 
@@ -421,6 +423,39 @@ namespace Barotrauma
             return str;
         }
 
+        /// <summary>
+        /// Removes lines on a multi-line string until it fits within the specified height and adds "..." to the end if the string is too long.
+        /// Doesn't really do anything if the string is only one line, should mostly be used with <see cref="GUITextBlock.WrappedText"/>.
+        /// </summary>
+        public static string LimitStringHeight(string str, ScalableFont font, int maxHeight)
+        {
+            if (maxHeight <= 0 || string.IsNullOrWhiteSpace(str)) { return string.Empty; }
+
+            float currHeight = font.MeasureString("...").Y;
+            var lines = str.Split('\n');
+
+            var sb = new StringBuilder();
+            foreach (string line in lines)
+            {
+                var (lineX, lineY) = font.MeasureString(line);
+                currHeight += lineY;
+                if (currHeight > maxHeight)
+                {
+                    var modifiedLine = line;
+                    while (font.MeasureString($"{modifiedLine}...").X > lineX)
+                    {
+                        if (modifiedLine.Length == 0) { break; }
+                        modifiedLine = modifiedLine[..^1];
+                    }
+                    sb.AppendLine($"{modifiedLine}...");
+                    return sb.ToString();
+                }
+                sb.AppendLine(line);
+            }
+
+            return str;
+        }
+
         public static Color GradientLerp(float t, params Color[] gradient)
         {
             if (!MathUtils.IsValid(t)) { return Color.Purple; }
@@ -450,28 +485,6 @@ namespace Barotrauma
 
         public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f)
             => font.WrapText(text, lineLength / textScale);
-
-        public static Option<ConnectCommand> ParseConnectCommand(string[] args)
-        {
-            if (args == null || args.Length < 2) { return Option<ConnectCommand>.None(); }
-
-            if (args[0].Equals("-connect", StringComparison.OrdinalIgnoreCase))
-            {
-                if (args.Length < 3) { return Option<ConnectCommand>.None(); }
-                if (!(Endpoint.Parse(args[2]).TryUnwrap(out var endpoint))) { return Option<ConnectCommand>.None(); }
-                return Option<ConnectCommand>.Some(
-                    new ConnectCommand(
-                        serverName: args[1],
-                        endpoint: endpoint));
-            }
-            else if (args[0].Equals("+connect_lobby", StringComparison.OrdinalIgnoreCase))
-            {
-                return UInt64.TryParse(args[1], out var lobbyId)
-                    ? Option<ConnectCommand>.Some(new ConnectCommand(lobbyId))
-                    : Option<ConnectCommand>.None();
-            }
-            return Option<ConnectCommand>.None();
-        }
 
         public static bool VersionNewerIgnoreRevision(Version a, Version b)
         {
@@ -540,6 +553,33 @@ namespace Barotrauma
             return stichedString;
 
             static string ColorString(string text, Color color) => $"‖color:{color.ToStringHex()}‖{text}‖end‖";
+        }
+
+        /// <summary>
+        /// Converts a string of hex values to a byte array.
+        /// </summary>
+        /// <example>
+        /// 04 03 4b 50 -> { 4, 3, 75, 80 }
+        /// </example>
+        /// <param name="raw"></param>
+        /// <returns></returns>
+        public static byte[] HexStringToBytes(string raw)
+        {
+            string value = string.Join(string.Empty, raw.Split(" "));
+            List<byte> bytes = new List<byte>();
+            for (int i = 0; i < value.Length; i += 2)
+            {
+                string hex = value.Substring(i, 2);
+                byte b = Convert.ToByte(hex, 16);
+                bytes.Add(b);
+
+                static bool IsHexChar(char c) => c is 
+                    >= '0' and <= '9' or
+                    >= 'A' and <= 'F' or
+                    >= 'a' and <= 'f';
+            }
+
+            return bytes.ToArray();
         }
     }
 }

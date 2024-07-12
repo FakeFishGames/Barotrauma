@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Lights;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
 using Microsoft.Xna.Framework;
@@ -10,13 +11,15 @@ namespace Barotrauma.Items.Components
     {
         private GUIMessageBox autodockingVerification;
 
+        private readonly ConvexHull[] convexHulls = new ConvexHull[2];
+
         public Vector2 DrawSize
         {
             //use the extents of the item as the draw size
             get { return Vector2.Zero; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (dockingState == 0.0f) return;
 
@@ -36,7 +39,8 @@ namespace Barotrauma.Items.Components
                             drawPos,
                             new Rectangle(
                                 rect.Center.X + (int)(rect.Width / 2 * (1.0f - dockingState)), rect.Y,
-                                (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
+                                (int)(rect.Width / 2 * dockingState), rect.Height),
+                            overrideColor ?? Color.White);
 
                     }
                     else
@@ -45,7 +49,8 @@ namespace Barotrauma.Items.Components
                             drawPos - Vector2.UnitX * (rect.Width / 2 * dockingState),
                             new Rectangle(
                                 rect.X, rect.Y,
-                                (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
+                                (int)(rect.Width / 2 * dockingState), rect.Height),
+                            overrideColor ?? Color.White);
                     }
                 }
                 else
@@ -58,7 +63,8 @@ namespace Barotrauma.Items.Components
                             drawPos - Vector2.UnitY * (rect.Height / 2 * dockingState),
                             new Rectangle(
                                 rect.X, rect.Y,
-                                rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
+                                rect.Width, (int)(rect.Height / 2 * dockingState)), 
+                            overrideColor ?? Color.White);
                     }
                     else
                     {
@@ -66,7 +72,8 @@ namespace Barotrauma.Items.Components
                             drawPos,
                             new Rectangle(
                                 rect.X, rect.Y + rect.Height / 2 + (int)(rect.Height / 2 * (1.0f - dockingState)),
-                                rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
+                                rect.Width, (int)(rect.Height / 2 * dockingState)), 
+                            overrideColor ?? Color.White);
                     }
                 }
             }
@@ -106,6 +113,15 @@ namespace Barotrauma.Items.Components
                     bodyDrawPos,
                     ConvertUnits.ToDisplayUnits(aabb.Extents * 2),
                     Color.Gray, false, 0, 8);
+            }
+        }
+
+        partial void RemoveConvexHulls()
+        {
+            for (int i = 0; i < convexHulls.Length; i++)
+            {
+                convexHulls[i]?.Remove();
+                convexHulls[i] = null;
             }
         }
 

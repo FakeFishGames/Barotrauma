@@ -124,7 +124,7 @@ namespace Barotrauma
                         out NetworkFireSource[] newFireSources);
 
                     if (!c.HasPermission(ClientPermissions.ConsoleCommands) ||
-                        !c.PermittedConsoleCommands.Any(command => command.names.Contains("fire") || command.names.Contains("editfire")))
+                        !c.PermittedConsoleCommands.Any(command => command.Names.Contains("fire".ToIdentifier()) || command.Names.Contains("editfire".ToIdentifier())))
                     {
                         return;
                     }
@@ -138,7 +138,7 @@ namespace Barotrauma
 
                         var newFire = i < FireSources.Count ?
                             FireSources[i] :
-                            new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
+                            new FireSource(Submarine == null ? pos : pos + Submarine.Position, sourceCharacter: null, isNetworkMessage: true);
                         newFire.Position = pos;
                         newFire.Size = new Vector2(size, newFire.Size.Y);
 
@@ -176,6 +176,7 @@ namespace Barotrauma
                             BackgroundSections[i].SetColor(color);
                         },
                         out int sectorToUpdate);
+                    RefreshAveragePaintedColor();
                     //add to pending updates to notify other clients as well
                     pendingSectionUpdates.Add(sectorToUpdate);
                     break;

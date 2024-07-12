@@ -9,8 +9,8 @@ namespace Barotrauma
     {
         private static readonly LocalizedString radiationTooltip = TextManager.Get("RadiationTooltip");
         private static float spriteIndex;
-        private readonly SpriteSheet sheet = GUIStyle.RadiationAnimSpriteSheet;
-        private int maxFrames => sheet.FrameCount + 1;
+        private readonly SpriteSheet? sheet = GUIStyle.RadiationAnimSpriteSheet;
+        private int maxFrames => (sheet?.FrameCount ?? 0) + 1;
 
         private bool isHovingOver;
 
@@ -18,7 +18,7 @@ namespace Barotrauma
         {
             if (!Enabled) { return; }
 
-            UISprite uiSprite = GUIStyle.Radiation;
+            UISprite? uiSprite = GUIStyle.Radiation;
             var (offsetX, offsetY) = Map.DrawOffset * zoom;
             var (centerX, centerY) = container.Center.ToVector2();
             var (halfSizeX, halfSizeY) = new Vector2(container.Width / 2f, container.Height / 2f) * zoom;
@@ -29,18 +29,21 @@ namespace Barotrauma
 
             Vector2 spriteScale = new Vector2(zoom);
 
-            uiSprite.Sprite.DrawTiled(spriteBatch, topLeft, size, Params.RadiationAreaColor, Vector2.Zero, textureScale: spriteScale);
+            uiSprite?.Sprite.DrawTiled(spriteBatch, topLeft, size, color: Params.RadiationAreaColor, startOffset: Vector2.Zero, textureScale: spriteScale);
 
             Vector2 topRight = topLeft + Vector2.UnitX * size.X;
 
             int index = 0;
-            for (float i = 0; i <= size.Y; i += sheet.FrameSize.Y / 2f * zoom)
+            if (sheet != null)
             {
-                bool isEven = ++index % 2 == 0;
-                Vector2 origin = new Vector2(0.5f, 0) * sheet.FrameSize.X;
-                // every other sprite's animation is reversed to make it seem more chaotic
-                int sprite = (int) MathF.Floor(isEven ? spriteIndex : maxFrames - spriteIndex);
-                sheet.Draw(spriteBatch, sprite, topRight + new Vector2(0, i), Params.RadiationBorderTint, origin, 0f, spriteScale);
+                for (float i = 0; i <= size.Y; i += sheet.FrameSize.Y / 2f * zoom)
+                {
+                    bool isEven = ++index % 2 == 0;
+                    Vector2 origin = new Vector2(0.5f, 0) * sheet.FrameSize.X;
+                    // every other sprite's animation is reversed to make it seem more chaotic
+                    int sprite = (int) MathF.Floor(isEven ? spriteIndex : maxFrames - spriteIndex);
+                    sheet.Draw(spriteBatch, sprite, topRight + new Vector2(0, i), Params.RadiationBorderTint, origin, 0f, spriteScale);
+                }
             }
 
             isHovingOver = container.Contains(PlayerInput.MousePosition) && PlayerInput.MousePosition.X < topLeft.X + size.X;

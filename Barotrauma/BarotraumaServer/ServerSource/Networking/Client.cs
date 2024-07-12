@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,6 +9,8 @@ namespace Barotrauma.Networking
     {
         public bool VoiceEnabled = true;
 
+        public VoipServerDecoder VoipServerDecoder;
+
         public UInt16 LastRecvClientListUpdate
             = NetIdUtils.GetIdOlderThan(GameMain.Server.LastClientListUpdateID);
 
@@ -15,7 +18,7 @@ namespace Barotrauma.Networking
             = NetIdUtils.GetIdOlderThan(GameMain.Server.ServerSettings.LastUpdateIdForFlag[ServerSettings.NetFlags.Properties]);
         public UInt16 LastRecvServerSettingsUpdate
             = NetIdUtils.GetIdOlderThan(GameMain.Server.ServerSettings.LastUpdateIdForFlag[ServerSettings.NetFlags.Properties]);
-        
+
         public UInt16 LastRecvLobbyUpdate
             = NetIdUtils.GetIdOlderThan(GameMain.NetLobbyScreen.LastUpdateID);
 
@@ -41,8 +44,6 @@ namespace Barotrauma.Networking
         public int ChatSpamCount;
 
         public string RejectedName;
-
-        public int RoundsSincePlayedAsTraitor;
 
         public float KickAFKTimer;
 
@@ -131,6 +132,7 @@ namespace Barotrauma.Networking
             JobPreferences = new List<JobVariant>();
 
             VoipQueue = new VoipQueue(SessionId, true, true);
+            VoipServerDecoder = new VoipServerDecoder(VoipQueue, this);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
 
             //initialize to infinity, gets set to a proper value when initializing midround syncing
@@ -278,6 +280,57 @@ namespace Barotrauma.Networking
         public bool HasPermission(ClientPermissions permission)
         {
             return Permissions.HasFlag(permission);
+        }
+
+        public bool TryTakeOverBot(Character botCharacter)
+        {
+            if (GameMain.Server == null)
+            {
+                DebugConsole.ThrowError($"TryTakeOverBot: Client {Name} requested to take over a bot but GameMain.Server is null!");
+                return false;
+            }
+            if (GameMain.NetworkMember is not { ServerSettings.RespawnMode: RespawnMode.Permadeath })
+            {
+                DebugConsole.ThrowError($"Client {Name} requested to take over a bot but Permadeath is not enabled!");
+                GameMain.Server.SendConsoleMessage($"Permadeath mode is not enabled, cannot take over a bot.", this, Color.Red);
+                return false;
+            }
+            if (CharacterInfo == null)
+            {
+                DebugConsole.ThrowError($"Permadeath: Client {Name} requested to take over a bot, but they don't seem to have a character at all yet.");
+                GameMain.Server.SendConsoleMessage($"Permadeath: Taking over a bot requires having a character that died first.", this, Color.Red);
+                return false;
+            }
+            if (CharacterInfo is not { PermanentlyDead: true })
+            {
+                DebugConsole.ThrowError($"Permadeath: Client {Name} requested to take over a bot, but their character has not been permanently killed.");
+                GameMain.Server.SendConsoleMessage($"Permadeath: Could not take over the bot, previous character not permanently killed.", this, Color.Red);
+                return false;
+            }
+            if (!botCharacter.IsBot)
+            {
+                DebugConsole.ThrowError($"Permadeath: {Name} requested to take over a bot character, but the target character is not a bot!");
+                GameMain.Server.SendConsoleMessage($"Permadeath: Could not take over the target character because it is not a bot.", this, Color.Red);
+                return false;
+            }
+
+            if (botCharacter.Info != null)
+            {
+                botCharacter.Info.RenamingEnabled = true; // Grant one opportunity to rename a taken over bot
+            }
+
+            // Now that the old permanently killed character will be replaced, we can fully discard it
+            var mpCampaign = GameMain.GameSession?.Campaign as MultiPlayerCampaign;
+            mpCampaign?.DiscardClientCharacterData(this);
+            GameMain.Server.SetClientCharacter(this, botCharacter);
+            if (mpCampaign?.SetClientCharacterData(this) is CharacterCampaignData characterData)
+            {
+                //the bot has spawned, but the new CharacterCampaignData technically hasn't, because we just created it
+                characterData.HasSpawned = true;
+            }
+
+            SpectateOnly = false;
+            return true;
         }
     }
 }

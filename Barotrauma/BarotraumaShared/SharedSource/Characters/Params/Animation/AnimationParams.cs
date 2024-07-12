@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Barotrauma.IO;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
@@ -21,6 +22,7 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
+        [Header("Legs")]
         [Serialize("1.0, 1.0", IsPropertySaveable.Yes, description: "How big steps the character takes."), Editable(DecimalCount = 2, ValueStep = 0.01f)]
         public Vector2 StepSize
         {
@@ -28,12 +30,14 @@ namespace Barotrauma
             set;
         }
 
+        [Header("Standing")]
         [Serialize(0f, IsPropertySaveable.Yes, description: "How high above the ground the character's head is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float HeadPosition { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "How high above the ground the character's torso is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float TorsoPosition { get; set; }
 
+        [Header("Step lift")]
         [Serialize(1f, IsPropertySaveable.Yes, description: "Separate multiplier for the head lift"), Editable(MinValueFloat = 0, MaxValueFloat = 2, ValueStep = 0.1f)]
         public float StepLiftHeadMultiplier { get; set; }
 
@@ -49,6 +53,7 @@ namespace Barotrauma
         [Serialize(2f, IsPropertySaveable.Yes, description: "How frequently the body raises when taking a step. The default is 2 (after every step)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f)]
         public float StepLiftFrequency { get; set; }
 
+        [Header("Movement")]
         [Serialize(0.75f, IsPropertySaveable.Yes, description: "The character's movement speed is multiplied with this value when moving backwards."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2)]
         public float BackwardsMovementMultiplier { get; set; }
     }
@@ -65,27 +70,29 @@ namespace Barotrauma
     abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
     {
         public Identifier SpeciesName { get; private set; }
-        public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run || AnimationType == AnimationType.Crouch;
-        public bool IsSwimAnimation => AnimationType == AnimationType.SwimSlow || AnimationType == AnimationType.SwimFast;
+        public bool IsGroundedAnimation => AnimationType is AnimationType.Walk or AnimationType.Run or AnimationType.Crouch;
+        public bool IsSwimAnimation => AnimationType is AnimationType.SwimSlow or AnimationType.SwimFast;
 
-        protected static Dictionary<Identifier, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<Identifier, Dictionary<string, AnimationParams>>();
-        ///    allAnimations[speciesName][fileName]
+        [Header("General")]
+        [Serialize(AnimationType.NotDefined, IsPropertySaveable.Yes), Editable]
+        public virtual AnimationType AnimationType { get; protected set; }
+        /// <summary>
+        /// The cached animations of all the characters that have been loaded.
+        /// </summary>
+        private static readonly Dictionary<Identifier, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<Identifier, Dictionary<string, AnimationParams>>();
 
-        private float _movementSpeed;
+        [Header("Movement")]
         [Serialize(1.0f, IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED, ValueStep = 0.1f)]
-        public float MovementSpeed
-        {
-            get => _movementSpeed;
-            set => _movementSpeed = value;
-        }
-
-        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)"),
-            Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
+        public float MovementSpeed { get; set; }
+        
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)"), 
+        Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
         public float CycleSpeed { get; set; }
 
         /// <summary>
         /// In degrees.
         /// </summary>
+        [Header("Standing")]
         [Serialize(float.NaN, IsPropertySaveable.Yes), Editable(-360f, 360f)]
         public float HeadAngle
         {
@@ -124,12 +131,11 @@ namespace Barotrauma
         [Serialize(50.0f, IsPropertySaveable.Yes, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float TorsoTorque { get; set; }
 
+        [Header("Legs")]
         [Serialize(25.0f, IsPropertySaveable.Yes, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float FootTorque { get; set; }
 
-        [Serialize(AnimationType.NotDefined, IsPropertySaveable.Yes), Editable]
-        public virtual AnimationType AnimationType { get; protected set; }
-
+        [Header("Arms")]
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to rotate the arms to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float ArmIKStrength { get; set; }
 
@@ -152,168 +158,214 @@ namespace Barotrauma
 
         private static string GetFolder(ContentXElement root, string filePath)
         {
-            var folder = root?.GetChildElement("animations")?.GetAttributeContentPath("folder")?.Value;
+            Debug.Assert(filePath != null);
+            Debug.Assert(root != null);
+            string folder = root.GetChildElement("animations")?.GetAttributeContentPath("folder")?.Value;
             if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
             {
                 folder = IO.Path.Combine(IO.Path.GetDirectoryName(filePath), "Animations");
             }
-            return folder.CleanUpPathCrossPlatform(true);
+            return folder.CleanUpPathCrossPlatform(correctFilenameCase: true);
         }
 
         /// <summary>
-        /// Selects a random filepath from multiple paths, matching the specified animation type.
+        /// Selects all file paths that match the specified animation type and filters them alphabetically.
         /// </summary>
-        public static string GetRandomFilePath(IReadOnlyList<string> filePaths, AnimationType type)
+        public static IEnumerable<string> FilterAndSortFiles(IEnumerable<string> filePaths, AnimationType type)
         {
-            return filePaths.GetRandom(f => AnimationPredicate(f, type), Rand.RandSync.ServerAndClient);
-        }
-
-        /// <summary>
-        /// Selects all file paths that match the specified animation type.
-        /// </summary>
-        public static IEnumerable<string> FilterFilesByType(IEnumerable<string> filePaths, AnimationType type)
-        {
-            return filePaths.Where(f => AnimationPredicate(f, type));
-        }
-
-        private static bool AnimationPredicate(string filePath, AnimationType type)
-        {
-            var doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null) { return false; }
-            var typeString = doc.Root.GetAttributeString("animationtype", null);
-            if (string.IsNullOrWhiteSpace(typeString))
+            return filePaths.Where(f => AnimationPredicate(f, type)).OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
+            
+            static bool AnimationPredicate(string filePath, AnimationType type)
             {
-                typeString = doc.Root.GetAttributeString("AnimationType", "NotDefined");
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc == null) { return false; }
+                return doc.GetRootExcludingOverride().GetAttributeEnum("animationtype", AnimationType.NotDefined) == type;
             }
-            return Enum.TryParse(typeString, out AnimationType fileType) && fileType == type;
         }
 
-        public static T GetDefaultAnimParams<T>(Character character, AnimationType animType) where T : AnimationParams, new()
+        protected static T GetDefaultAnimParams<T>(Character character, AnimationType animType) where T : AnimationParams, new()
+        {
+            // Using a null file definition means we are taking a first matching file from the folder.
+            return GetAnimParams<T>(character, animType, file: null, throwErrors: true);
+        }
+        
+        protected static T GetAnimParams<T>(Character character, AnimationType animType, Either<string, ContentPath> file, bool throwErrors = true) where T : AnimationParams, new()
         {
             Identifier speciesName = character.SpeciesName;
-            if (!character.VariantOf.IsEmpty
-                && (character.Params.VariantFile?.Root?.GetChildElement("animations")?.GetAttributeStringUnrestricted("folder", null)).IsNullOrEmpty())
+            Identifier animSpecies = speciesName;
+            if (!character.VariantOf.IsEmpty)
             {
-                // Use the base animations defined in the base definition file.
-                speciesName = character.VariantOf;
-            }
-            return GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
-        }
-
-        /// <summary>
-        /// If the file name is left null, default file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
-        /// If a custom folder is used, it's defined in the character info file.
-        /// </summary>
-        public static T GetAnimParams<T>(Identifier speciesName, AnimationType animType, string fileName = null) where T : AnimationParams, new()
-        {
-            if (!allAnimations.TryGetValue(speciesName, out Dictionary<string, AnimationParams> anims))
-            {
-                anims = new Dictionary<string, AnimationParams>();
-                allAnimations.Add(speciesName, anims);
-            }
-            if (fileName == null || !anims.TryGetValue(fileName, out AnimationParams anim))
-            {
-                string selectedFile = null;
-                string folder = GetFolder(speciesName);
-                if (Directory.Exists(folder))
+                string folder = character.Params.VariantFile?.GetRootExcludingOverride().GetChildElement("animations")?.GetAttributeContentPath("folder", character.Prefab.ContentPackage)?.Value;
+                if (folder.IsNullOrEmpty() || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
                 {
-                    var files = Directory.GetFiles(folder);
-                    if (files.None())
+                    // Use the animations defined in the base definition file.
+                    animSpecies = character.Prefab.GetBaseCharacterSpeciesName(speciesName);
+                }
+            }
+            return GetAnimParams<T>(speciesName, animSpecies, fallbackSpecies: character.Prefab.GetBaseCharacterSpeciesName(speciesName), animType, file, throwErrors);
+        }
+        
+        private static readonly List<string> errorMessages = new List<string>();
+
+        private static T GetAnimParams<T>(Identifier speciesName, Identifier animSpecies, Identifier fallbackSpecies, AnimationType animType, Either<string, ContentPath> file, bool throwErrors = true) where T : AnimationParams, new()
+        {
+            Debug.Assert(!speciesName.IsEmpty);
+            Debug.Assert(!animSpecies.IsEmpty);
+            ContentPath contentPath = null;
+            string fileName = null;
+            if (file != null)
+            {
+                if (!file.TryGet(out fileName))
+                {
+                    file.TryGet(out contentPath);
+                }
+                Debug.Assert(!fileName.IsNullOrWhiteSpace() || !contentPath.IsNullOrWhiteSpace());
+            }
+            ContentPackage contentPackage = contentPath?.ContentPackage ?? CharacterPrefab.FindBySpeciesName(speciesName)?.ContentPackage;
+            Debug.Assert(contentPackage != null);
+            if (!allAnimations.TryGetValue(speciesName, out Dictionary<string, AnimationParams> animations))
+            {
+                animations = new Dictionary<string, AnimationParams>();
+                allAnimations.Add(speciesName, animations);
+            }
+            string key = fileName ?? contentPath?.Value ?? GetDefaultFileName(animSpecies, animType);
+            if (animations.TryGetValue(key, out AnimationParams anim) && anim.AnimationType == animType)
+            {
+                // Already cached.
+                return (T)anim;
+            }
+            if (!contentPath.IsNullOrEmpty())
+            {
+                // Load the animation from path.
+                T animInstance = new T();
+                if (animInstance.Load(contentPath, speciesName))
+                {
+                    if (animInstance.AnimationType == animType)
                     {
-                        DebugConsole.ThrowError($"[AnimationParams] Could not find any animation files from the folder: {folder}. Using the default animation.");
-                        selectedFile = GetDefaultFile(speciesName, animType);
-                    }
-                    var filteredFiles = FilterFilesByType(files, animType);
-                    if (filteredFiles.None())
-                    {
-                        DebugConsole.ThrowError($"[AnimationParams] Could not find any animation files that match the animation type {animType} from the folder: {folder}. Using the default animation.");
-                        selectedFile = GetDefaultFile(speciesName, animType);
-                    }
-                    else if (string.IsNullOrEmpty(fileName))
-                    {
-                        // Files found, but none specified.
-                        selectedFile = GetDefaultFile(speciesName, animType);
+                        animations.TryAdd(contentPath.Value, animInstance);
+                        return animInstance;
                     }
                     else
                     {
-                        selectedFile = filteredFiles.FirstOrDefault(f => IO.Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                        errorMessages.Add($"[AnimationParams] Animation type mismatch. Expected: {animType}, Actual: {animInstance.AnimationType}. Using the default animation.");
+                    }
+                }
+                else
+                {
+                    errorMessages.Add($"[AnimationParams] Failed to load an animation {animInstance} of type {animType} from {contentPath.Value} for the character {speciesName}. Using the default animation.");
+                }
+            }
+            // Seek the correct animation from the character's animation folder.
+            string selectedFile = null;
+            string folder = GetFolder(animSpecies);
+            if (Directory.Exists(folder))
+            {
+                string[] files = Directory.GetFiles(folder);
+                if (files.None())
+                {
+                    errorMessages.Add($"[AnimationParams] Could not find any animation files from the folder: {folder}. Using the default animation.");
+                }
+                else
+                {
+                    var filteredFiles = FilterAndSortFiles(files, animType);
+                    if (filteredFiles.None())
+                    {
+                        errorMessages.Add($"[AnimationParams] Could not find any animation files that match the animation type {animType} from the folder: {folder}. Using the default animation.");
+                    }
+                    else if (string.IsNullOrEmpty(fileName))
+                    {
+                        // Files found, but none specified -> Get a matching animation from the specified folder.
+                        // First try to find a file that matches the default file name. If that fails, just take any file.
+                        string defaultFileName = GetDefaultFileName(animSpecies, animType);
+                        selectedFile = filteredFiles.FirstOrDefault(path => PathMatchesFile(path, defaultFileName)) ?? filteredFiles.First();
+                    }
+                    else
+                    {
+                        selectedFile = filteredFiles.FirstOrDefault(path => PathMatchesFile(path, fileName));
                         if (selectedFile == null)
                         {
-                            DebugConsole.ThrowError($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.");
-                            selectedFile = GetDefaultFile(speciesName, animType);
+                            errorMessages.Add($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.");
                         }
-                    }
+                    }   
                 }
-                else
-                {
-                    DebugConsole.ThrowError($"[Animationparams] Invalid directory: {folder}. Using the default animation.");
-                    selectedFile = GetDefaultFile(speciesName, animType);
-                }
-                if (selectedFile == null)
-                {
-                    throw new Exception("[AnimationParams] Selected file null!");
-                }
-                DebugConsole.Log($"[AnimationParams] Loading animations from {selectedFile}.");
-                var characterPrefab = CharacterPrefab.Prefabs[speciesName];
-                T a = new T();
-                if (a.Load(ContentPath.FromRaw(characterPrefab.ContentPackage, selectedFile), speciesName))
-                {
-                    fileName = IO.Path.GetFileNameWithoutExtension(selectedFile);
-                    if (!anims.ContainsKey(fileName))
-                    {
-                        anims.Add(fileName, a);
-                    }
-                }
-                else
-                {
-                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {a} at {selectedFile} of type {animType} for the character {speciesName}");
-                }
-                return a;
             }
-            return (T)anim;
+            else
+            {
+                errorMessages.Add($"[AnimationParams] Invalid directory: {folder}. Using the default animation.");
+            }
+            selectedFile ??= GetDefaultFile(fallbackSpecies, animType);
+            Debug.Assert(selectedFile != null);
+            if (errorMessages.None())
+            {
+                DebugConsole.Log($"[AnimationParams] Loading animations from {selectedFile}.");
+            }
+            T animationInstance = new T();
+            if (animationInstance.Load(ContentPath.FromRaw(contentPackage, selectedFile), speciesName))
+            {
+                animations.TryAdd(key, animationInstance);
+            }
+            else
+            {
+                errorMessages.Add($"[AnimationParams] Failed to load an animation {animationInstance} at {selectedFile} of type {animType} for the character {speciesName}");
+            }
+            foreach (string errorMsg in errorMessages)
+            {
+                if (throwErrors)
+                {
+                    DebugConsole.ThrowError(errorMsg, contentPackage: contentPackage);
+                }
+                else
+                {
+                    DebugConsole.Log("Logging a supressed (potential) error: " + errorMsg);
+                }
+            }
+            errorMessages.Clear();
+            return animationInstance;
+            
+            static bool PathMatchesFile(string p, string f) => IO.Path.GetFileNameWithoutExtension(p).Equals(f, StringComparison.OrdinalIgnoreCase);
         }
 
         public static void ClearCache() => allAnimations.Clear();
 
-        public static AnimationParams Create(string fullPath, Identifier speciesName, AnimationType animationType, Type type)
+        public static AnimationParams Create(string fullPath, Identifier speciesName, AnimationType animationType, Type animationParamsType)
         {
-            if (type == typeof(HumanWalkParams))
+            if (animationParamsType == typeof(HumanWalkParams))
             {
                 return Create<HumanWalkParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(HumanRunParams))
+            if (animationParamsType == typeof(HumanRunParams))
             {
                 return Create<HumanRunParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(HumanSwimSlowParams))
+            if (animationParamsType == typeof(HumanSwimSlowParams))
             {
                 return Create<HumanSwimSlowParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(HumanSwimFastParams))
+            if (animationParamsType == typeof(HumanSwimFastParams))
             {
                 return Create<HumanSwimFastParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(HumanCrouchParams))
+            if (animationParamsType == typeof(HumanCrouchParams))
             {
                 return Create<HumanCrouchParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(FishWalkParams))
+            if (animationParamsType == typeof(FishWalkParams))
             {
                 return Create<FishWalkParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(FishRunParams))
+            if (animationParamsType == typeof(FishRunParams))
             {
                 return Create<FishRunParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(FishSwimSlowParams))
+            if (animationParamsType == typeof(FishSwimSlowParams))
             {
                 return Create<FishSwimSlowParams>(fullPath, speciesName, animationType);
             }
-            if (type == typeof(FishSwimFastParams))
+            if (animationParamsType == typeof(FishSwimFastParams))
             {
                 return Create<FishSwimFastParams>(fullPath, speciesName, animationType);
             }
-            throw new NotImplementedException(type.ToString());
+            throw new NotImplementedException(animationParamsType.ToString());
         }
 
         /// <summary>
@@ -330,7 +382,7 @@ namespace Barotrauma
                 anims = new Dictionary<string, AnimationParams>();
                 allAnimations.Add(speciesName, anims);
             }
-            var fileName = IO.Path.GetFileNameWithoutExtension(fullPath);
+            string fileName = IO.Path.GetFileNameWithoutExtension(fullPath);
             if (anims.ContainsKey(fileName))
             {
                 DebugConsole.NewMessage($"[AnimationParams] Removing the old animation of type {animationType}.", Color.Red);
@@ -339,7 +391,8 @@ namespace Barotrauma
             var instance = new T();
             XElement animationElement = new XElement(GetDefaultFileName(speciesName, animationType), new XAttribute("animationtype", animationType.ToString()));
             instance.doc = new XDocument(animationElement);
-            var characterPrefab = CharacterPrefab.Prefabs[speciesName];
+            var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+            Debug.Assert(characterPrefab != null);
             var contentPath = ContentPath.FromRaw(characterPrefab.ContentPackage, fullPath);
             instance.UpdatePath(contentPath);
             instance.IsLoaded = instance.Deserialize(animationElement);
@@ -372,16 +425,17 @@ namespace Barotrauma
             else
             {
                 // Update the key by removing and re-adding the animation.
+                string fileName = FileNameWithoutExtension;
                 if (allAnimations.TryGetValue(SpeciesName, out Dictionary<string, AnimationParams> animations))
                 {
-                    animations.Remove(Name);
+                    animations.Remove(fileName);
                 }
                 base.UpdatePath(newPath);
                 if (animations != null)
                 {
-                    if (!animations.ContainsKey(Name))
+                    if (!animations.ContainsKey(fileName))
                     {
-                        animations.Add(Name, this);
+                        animations.Add(fileName, this);
                     }
                 }
             }
@@ -420,37 +474,26 @@ namespace Barotrauma
         {
             if (isHumanoid)
             {
-                switch (type)
+                return type switch
                 {
-                    case AnimationType.Walk:
-                        return typeof(HumanWalkParams);
-                    case AnimationType.Run:
-                        return typeof(HumanRunParams);
-                    case AnimationType.Crouch:
-                        return typeof(HumanCrouchParams);
-                    case AnimationType.SwimSlow:
-                        return typeof(HumanSwimSlowParams);
-                    case AnimationType.SwimFast:
-                        return typeof(HumanSwimFastParams);
-                    default:
-                        throw new NotImplementedException(type.ToString());
-                }
+                    AnimationType.Walk => typeof(HumanWalkParams),
+                    AnimationType.Run => typeof(HumanRunParams),
+                    AnimationType.Crouch => typeof(HumanCrouchParams),
+                    AnimationType.SwimSlow => typeof(HumanSwimSlowParams),
+                    AnimationType.SwimFast => typeof(HumanSwimFastParams),
+                    _ => throw new NotImplementedException(type.ToString())
+                };
             }
             else
             {
-                switch (type)
+                return type switch
                 {
-                    case AnimationType.Walk:
-                        return typeof(FishWalkParams);
-                    case AnimationType.Run:
-                        return typeof(FishRunParams);
-                    case AnimationType.SwimSlow:
-                        return typeof(FishSwimSlowParams);
-                    case AnimationType.SwimFast:
-                        return typeof(FishSwimFastParams);
-                    default:
-                        throw new NotImplementedException(type.ToString());
-                }
+                    AnimationType.Walk => typeof(FishWalkParams),
+                    AnimationType.Run => typeof(FishRunParams),
+                    AnimationType.SwimSlow => typeof(FishSwimSlowParams),
+                    AnimationType.SwimFast => typeof(FishSwimFastParams),
+                    _ => throw new NotImplementedException(type.ToString())
+                };
             }
         }
 

@@ -178,8 +178,9 @@ namespace Barotrauma.Items.Components
             var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.62f), paddedControlContainer.RectTransform, Anchor.BottomCenter), "OutlineFrame");
             var paddedAutoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.92f, 0.88f), autoPilotControls.RectTransform, Anchor.Center), style: null);
 
+            int textLimit = (int)(paddedAutoPilotControls.Rect.Width * 0.75f);
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.TopCenter),
-                TextManager.Get("SteeringMaintainPos"), font: GUIStyle.SmallFont, style: "GUIRadioButton")
+                ToolBox.LimitString(TextManager.Get("SteeringMaintainPos"), GUIStyle.SmallFont, textLimit), font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 UserData = UIHighlightAction.ElementId.MaintainPosTickBox,
                 Enabled = autoPilot,
@@ -214,9 +215,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            int textLimit = (int)(paddedAutoPilotControls.Rect.Width * 0.75f);
             levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.Center),
-                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, GUIStyle.SmallFont, textLimit),
+                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.DisplayName, GUIStyle.SmallFont, textLimit),
                 font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = autoPilot,
@@ -243,7 +243,7 @@ namespace Barotrauma.Items.Components
             };
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.BottomCenter),
-                (GameMain.GameSession?.EndLocation == null || Level.IsLoadedOutpost) ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, GUIStyle.SmallFont, textLimit),
+                (GameMain.GameSession?.EndLocation == null || Level.IsLoadedOutpost) ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.DisplayName, GUIStyle.SmallFont, textLimit),
                 font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = autoPilot,
@@ -316,28 +316,28 @@ namespace Barotrauma.Items.Components
                 {
                     case 0:
                         leftText = TextManager.Get("DescentVelocity");
-                        centerText = $"({TextManager.Get("KilometersPerHour")})";
+                        centerText = TextManager.Get("KilometersPerHour");
                         rightTextGetter = () =>
                         {
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
-                            return ((int)(-realWorldVel)).ToString();
+                            return (-realWorldVel).ToString("0.0");
                         };
                         break;
                     case 1:
                         leftText = TextManager.Get("Velocity");
-                        centerText = $"({TextManager.Get("KilometersPerHour")})";
+                        centerText = TextManager.Get("KilometersPerHour");
                         rightTextGetter = () =>
                         {
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
                             if (controlledSub != null && controlledSub.FlippedX) { realWorldVel *= -1; }
-                            return ((int)realWorldVel).ToString();
+                            return realWorldVel.ToString("0.0");
                         };
                         break;
                     case 2:
                         leftText = TextManager.Get("Depth");
-                        centerText = $"({TextManager.Get("Meter")})";
+                        centerText = TextManager.Get("Meter");
                         rightTextGetter = () =>
                         {
                             if (Level.Loaded is { IsEndBiome: true })
@@ -389,7 +389,7 @@ namespace Barotrauma.Items.Components
                             if (!ObjectiveManager.AllActiveObjectivesCompleted())
                             {
                                 exitOutpostPrompt = new GUIMessageBox("",
-                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.Name),
+                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.DisplayName),
                                     new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                                 exitOutpostPrompt.Buttons[0].OnClicked += (_, _) =>
                                 {
@@ -509,9 +509,9 @@ namespace Barotrauma.Items.Components
             noPowerTip = TextManager.Get("SteeringNoPowerTip");
             autoPilotMaintainPosTip = TextManager.Get("SteeringAutoPilotMaintainPosTip");
             autoPilotLevelStartTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
-                GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.Name);
+                GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.DisplayName);
             autoPilotLevelEndTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
-                GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.Name);
+                GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.DisplayName);
         }
 
         protected override void OnResolutionChanged()
@@ -532,6 +532,22 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        /// <summary>
+        /// Map the rectangular steering vector to a circular area using FG-Squircular Mapping which preserves the angle of the vector.
+        /// </summary>
+        private static Vector2 MapSquareToCircle(Vector2 steeringVector)
+        {
+            float xSqr = steeringVector.X * steeringVector.X;
+            float ySqr = steeringVector.Y * steeringVector.Y;
+            float length = MathF.Sqrt(ySqr + xSqr);
+            if (MathUtils.NearlyEqual(length, 0.0f)) { return Vector2.Zero; }
+
+            //FG-Squircular mapping formula from https://arxiv.org/ftp/arxiv/papers/1509/1509.06344.pdf
+            float x = steeringVector.X * MathF.Sqrt(xSqr + ySqr - xSqr * ySqr) / length;
+            float y = steeringVector.Y * MathF.Sqrt(xSqr + ySqr - xSqr * ySqr) / length;
+            return new Vector2(x, y);
+        }
+
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
             int width = rect.Width, height = rect.Height;
@@ -545,11 +561,9 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                Vector2 unitSteeringInput = steeringInput / 100.0f;
                 //map input from rectangle to circle
-                Vector2 steeringInputPos = new Vector2(
-                    steeringInput.X * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.Y * unitSteeringInput.Y),
-                    -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
+                Vector2 steeringInputPos = MapSquareToCircle(steeringInput / 100f) * 100.0f; 
+                steeringInputPos.Y = -steeringInputPos.Y;
                 steeringInputPos += steeringOrigin;
 
                 if (steeringIndicator != null)
@@ -575,7 +589,8 @@ namespace Barotrauma.Items.Components
                 Sonar sonar = item.GetComponent<Sonar>();
                 if (sonar != null && controlledSub != null)
                 {
-                    Vector2 displayPosToMaintain = ((posToMaintain.Value - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+                    Vector2 displayPosToMaintain = ((posToMaintain.Value - controlledSub.WorldPosition)) * sonar.DisplayScale;
+
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
                     displayPosToMaintain = steerArea.Rect.Center.ToVector2() + displayPosToMaintain;
@@ -604,10 +619,8 @@ namespace Barotrauma.Items.Components
             }
             
             //map velocity from rectangle to circle
-            Vector2 unitTargetVel = targetVelocity / 100.0f;
-            Vector2 steeringPos = new Vector2(
-                targetVelocity.X * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.Y * unitTargetVel.Y),
-                -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
+            Vector2 steeringPos = MapSquareToCircle(targetVelocity / 100f) * 90.0f; 
+            steeringPos.Y = -steeringPos.Y;
             steeringPos += steeringOrigin;
 
             if (steeringIndicator != null)
@@ -658,14 +671,14 @@ namespace Barotrauma.Items.Components
                 pos2.Y = -pos2.Y;
                 pos2 += center;
 
-                GUI.DrawLine(spriteBatch, 
-                    pos1, 
+                GUI.DrawLine(spriteBatch,
+                    pos1,
                     pos2,
                     GUIStyle.Red * 0.6f, width: 3);
 
                 if (obstacle.Intersection.HasValue)
                 {
-                    Vector2 intersectionPos = (obstacle.Intersection.Value - transducerCenter) *displayScale;
+                    Vector2 intersectionPos = (obstacle.Intersection.Value - transducerCenter) * displayScale;
                     intersectionPos.Y = -intersectionPos.Y;
                     intersectionPos += center;
                     GUI.DrawRectangle(spriteBatch, intersectionPos - Vector2.One * 2, Vector2.One * 4, GUIStyle.Red);
@@ -682,7 +695,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (swapDestinationOrder == null)
             {
@@ -776,9 +789,9 @@ namespace Barotrauma.Items.Components
             }
 
             pressureWarningText.Visible = item.Submarine != null && Timing.TotalTime % 1.0f < 0.8f;
-            float depthEffectThreshold = 500.0f;
             if (Level.Loaded != null && pressureWarningText.Visible && 
-                item.Submarine.RealWorldDepth > Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && item.Submarine.RealWorldDepth > item.Submarine.RealWorldCrushDepth - depthEffectThreshold)
+                item.Submarine.RealWorldDepth > Level.Loaded.RealWorldCrushDepth - PressureWarningThreshold && 
+                item.Submarine.RealWorldDepth > item.Submarine.RealWorldCrushDepth - PressureWarningThreshold)
             {
                 pressureWarningText.Visible = true;
                 pressureWarningText.Text =

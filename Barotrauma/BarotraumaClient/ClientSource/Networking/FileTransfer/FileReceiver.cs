@@ -538,7 +538,7 @@ namespace Barotrauma.Networking
                         {
                             string extension = Path.GetExtension(file);
                             if ((!extension.Equals(".sub", StringComparison.OrdinalIgnoreCase)
-                                && !file.Equals("gamesession.xml"))
+                                && !file.Equals(SaveUtil.GameSessionFileName))
                                 || file.CleanUpPathCrossPlatform(correctFilenameCase: false).Contains('/'))
                             {
                                 ErrorMessage = $"Found unexpected file in \"{fileTransfer.FileName}\"! ({file})";

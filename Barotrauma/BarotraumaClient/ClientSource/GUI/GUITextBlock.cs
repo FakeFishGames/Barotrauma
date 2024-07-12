@@ -433,20 +433,16 @@ namespace Barotrauma
                 return Font.MeasureString(" ");
             }
 
-            Vector2 size = Vector2.Zero;
-            while (size == Vector2.Zero)
-            {
-                try { size = Font.MeasureString(string.IsNullOrEmpty(text) ? " " : text); }
-                catch { text = text.Length > 0 ? text.Substring(0, text.Length - 1) : ""; }
-            }
-
-            return size;
+            return Font.MeasureString(string.IsNullOrEmpty(text) ? " " : text);
         }
 
         protected override void SetAlpha(float a)
         {
-            // base.SetAlpha(a);
-            textColor = new Color(TextColor.R / 255.0f, TextColor.G / 255.0f, TextColor.B / 255.0f, a);
+            textColor = new Color(TextColor, a);
+            if (hoverTextColor.HasValue)
+            {
+                hoverTextColor = new Color(hoverTextColor.Value, a);
+            }
         }
 
         /// <summary>
@@ -461,14 +457,16 @@ namespace Barotrauma
         }
 
         private ImmutableArray<Vector2> cachedCaretPositions = ImmutableArray<Vector2>.Empty;
-        
+        //which text were the cached caret positions calculated for?
+        private string cachedCaretPositionsText;
         public ImmutableArray<Vector2> GetAllCaretPositions()
         {
-            if (cachedCaretPositions.Any())
+            string textDrawn = Censor ? CensoredText : Text.SanitizedValue;
+            if (cachedCaretPositions.Any() &&
+                textDrawn == cachedCaretPositionsText)
             {
                 return cachedCaretPositions;
             }
-            string textDrawn = Censor ? CensoredText : Text.SanitizedValue;
             float w = Wrap
                 ? (Rect.Width - Padding.X - Padding.Z) / TextScale
                 : float.PositiveInfinity;
@@ -482,6 +480,7 @@ namespace Barotrauma
                 .Select(p => p - new Vector2(alignmentXDiff, 0))
                 .Select(p => p * TextScale + TextPos - Origin * TextScale)
                 .ToImmutableArray();
+            cachedCaretPositionsText = textDrawn;
             return cachedCaretPositions;
         }
 

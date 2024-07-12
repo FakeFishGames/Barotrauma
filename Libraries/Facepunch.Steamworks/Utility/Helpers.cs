@@ -12,38 +12,49 @@ namespace Steamworks
 		public const int MemoryBufferSize = 1024 * 32;
 
 		internal struct Memory : IDisposable
-        {
+		{
 			private const int MaxBagSize = 4;
-			private static readonly ConcurrentBag<IntPtr> BufferBag = new ConcurrentBag<IntPtr>();
+			private static readonly Queue<IntPtr> BufferBag = new Queue<IntPtr>();
 
 			public IntPtr Ptr { get; private set; }
 
 			public static implicit operator IntPtr(in Memory m) => m.Ptr;
 
-			internal unsafe Memory(int sz)
+			internal static unsafe Memory Take()
 			{
-				Ptr = BufferBag.TryTake(out IntPtr ptr) ? ptr : Marshal.AllocHGlobal(sz);
-				((byte*)Ptr)[0] = 0;
+				IntPtr ptr;
+				lock (BufferBag)
+				{
+					ptr = BufferBag.Count > 0 ? BufferBag.Dequeue() : Marshal.AllocHGlobal(MemoryBufferSize);
+				}
+				((byte*)ptr)[0] = 0;
+				return new Memory
+				{
+					Ptr = ptr
+				};
 			}
 
 			public void Dispose()
 			{
 				if (Ptr == IntPtr.Zero) { return; }
-				if (BufferBag.Count < MaxBagSize)
+				lock (BufferBag)
 				{
-					BufferBag.Add(Ptr);
+					if (BufferBag.Count < MaxBagSize)
+					{
+						BufferBag.Enqueue(Ptr);
+					}
+					else
+					{
+						Marshal.FreeHGlobal(Ptr);
+					}
 				}
-                else
-                {
-					Marshal.FreeHGlobal(Ptr);
-                }
 				Ptr = IntPtr.Zero;
 			}
-        }
-		
+		}
+
 		public static Memory TakeMemory()
 		{
-			return new Memory(MemoryBufferSize);
+			return Memory.Take();
 		}
 
 		private static byte[][] BufferPool = new byte[4][];

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -17,6 +16,12 @@ namespace Barotrauma
         private readonly HashSet<NetWalletTransaction> transactions = new HashSet<NetWalletTransaction>();
         private const float clientCheckInterval = 10;
         private float clientCheckTimer = clientCheckInterval;
+        
+        /// <summary>
+        /// Temporary backup storage for characters that have been overwritten by SaveSingleCharacter, this will be gone
+        /// once the round ends or the server closes. Currently needed to enable the console command "revive" in ironman mode.
+        /// </summary>
+        public List<CharacterCampaignData> replacedCharacterDataBackup = new List<CharacterCampaignData>();
 
         public override Wallet GetWallet(Client client = null)
         {
@@ -121,28 +126,41 @@ namespace Barotrauma
             SaveUtil.SaveGame(GameMain.GameSession.SavePath);
 
             DebugConsole.NewMessage("Campaign started!", Color.Cyan);
-            DebugConsole.NewMessage("Current location: " + GameMain.GameSession.Map.CurrentLocation.Name, Color.Cyan);
+            DebugConsole.NewMessage("Current location: " + GameMain.GameSession.Map.CurrentLocation.DisplayName, Color.Cyan);
             ((MultiPlayerCampaign)GameMain.GameSession.GameMode).LoadInitialLevel();
         }
 
-        public static void LoadCampaign(string selectedSave)
+        public static void LoadCampaign(string selectedSave, Client client)
         {
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-            SaveUtil.LoadGame(selectedSave);
-            if (GameMain.GameSession.GameMode is MultiPlayerCampaign mpCampaign)
+            try
             {
-                mpCampaign.LastSaveID++;
+                SaveUtil.LoadGame(selectedSave);
+                if (GameMain.GameSession.GameMode is MultiPlayerCampaign mpCampaign)
+                {
+                    mpCampaign.LastSaveID++;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Failed to load a campaign. Unexpected game mode: " + GameMain.GameSession.GameMode ?? "none");
+                    return;
+                }
             }
-            else
+            catch (Exception e)
             {
-                DebugConsole.ThrowError("Unexpected game mode: " + GameMain.GameSession.GameMode);
+                string errorMsg = $"Error while loading the save {selectedSave}";
+                if (client != null)
+                {
+                    GameMain.Server?.SendDirectChatMessage($"{errorMsg}: {e.Message}\n{e.StackTrace}", client, ChatMessageType.Error);
+                }
+                DebugConsole.ThrowError(errorMsg, e);
                 return;
             }
             DebugConsole.NewMessage("Campaign loaded!", Color.Cyan);
             DebugConsole.NewMessage(
                 GameMain.GameSession.Map.SelectedLocation == null ?
-                GameMain.GameSession.Map.CurrentLocation.Name :
-                GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
+                GameMain.GameSession.Map.CurrentLocation.DisplayName :
+                GameMain.GameSession.Map.CurrentLocation.DisplayName + " -> " + GameMain.GameSession.Map.SelectedLocation.DisplayName, Color.Cyan);
         }
 
         protected override void LoadInitialLevel()
@@ -189,7 +207,14 @@ namespace Barotrauma
                         }
                         else
                         {
-                            LoadCampaign(saveFiles[saveIndex].FilePath);
+                            try
+                            {
+                                LoadCampaign(saveFiles[saveIndex].FilePath, client: null);
+                            }
+                            catch (Exception ex)
+                            {
+                                DebugConsole.ThrowError("Failed to load the campaign.", ex);
+                            }
                         }
                     });
                 }
@@ -261,7 +286,7 @@ namespace Barotrauma
                     {
                         //character still alive (or killed by Disconnect) -> save it as-is
                         characterData.RemoveAll(cd => cd.IsDuplicate(data));
-                        data.Refresh(character);
+                        data.Refresh(character, refreshHealthData: character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected);
                         characterData.Add(data);
                     }
                     else
@@ -276,6 +301,12 @@ namespace Barotrauma
             MoveDiscardedCharacterBalancesToBank();
 
             characterData.ForEach(cd => cd.HasSpawned = false);
+            foreach (var cd in characterData)
+            {
+                //remove from crewmanager - we don't need to save the data there if it's been saved as CharacterCampaignData
+                //(e.g. if a client has taken over a bot, we need to do this to prevent it being saved twice)
+                CrewManager.RemoveCharacterInfo(cd.CharacterInfo);
+            }
 
             SavePets();
 
@@ -319,7 +350,7 @@ namespace Barotrauma
             discardedCharacters.Clear();
         }
 
-        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror)
         {
             IncrementAllLastUpdateIds();
 
@@ -361,7 +392,10 @@ namespace Barotrauma
                 GameMain.GameSession.EventManager.RegisterEventHistory();
             }
 
-            GameMain.GameSession.EndRound("", traitorResults, transitionType);
+            //store the currently active missions at this point so we can communicate their states to clients, they're cleared in EndRound
+            List<Mission> missions = GameMain.GameSession.Missions.ToList();
+
+            GameMain.GameSession.EndRound("", transitionType);
             
             //--------------------------------------
 
@@ -378,7 +412,7 @@ namespace Barotrauma
             {
                 PendingSubmarineSwitch = null;
                 GameMain.Server.EndGame(TransitionType.None, wasSaved: false);
-                LoadCampaign(GameMain.GameSession.SavePath);
+                LoadCampaign(GameMain.GameSession.SavePath, client: null);
                 LastSaveID++;
                 IncrementAllLastUpdateIds();
                 yield return CoroutineStatus.Success;
@@ -388,7 +422,7 @@ namespace Barotrauma
 
             //--------------------------------------
 
-            GameMain.Server.EndGame(transitionType, wasSaved: true);
+            GameMain.Server.EndGame(transitionType, wasSaved: true, missions);
 
             ForceMapUI = false;
 
@@ -451,6 +485,11 @@ namespace Barotrauma
             return characterData.Find(cd => cd.MatchesClient(client));
         }
 
+        public CharacterCampaignData GetCharacterData(CharacterInfo characterInfo)
+        {
+            return characterData.Find(cd => cd.CharacterInfo == characterInfo);
+        }
+
         public CharacterCampaignData SetClientCharacterData(Client client)
         {
             characterData.RemoveAll(cd => cd.MatchesClient(client));
@@ -489,6 +528,9 @@ namespace Barotrauma
             Map?.Radiation?.UpdateRadiation(deltaTime);
 
             base.Update(deltaTime);
+
+            MedicalClinic?.Update(deltaTime);
+
             if (Level.Loaded != null)
             {
                 if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
@@ -807,7 +849,7 @@ namespace Barotrauma
                 UInt16 itemToRemoveID = msg.ReadUInt16();
                 Identifier itemToInstallIdentifier = msg.ReadIdentifier();
                 ItemPrefab itemToInstall = itemToInstallIdentifier.IsEmpty ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-                if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
+                if (Entity.FindEntityByID(itemToRemoveID) is not Item itemToRemove) { continue; }
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
@@ -895,7 +937,7 @@ namespace Barotrauma
                     int availableQuantity = map.CurrentLocation.Stores[store.Key].Stock.Find(s => s.ItemPrefab == item.ItemPrefab)?.Quantity ?? 0;
                     int alreadyPurchasedQuantity = 
                         CargoManager.GetBuyCrateItem(store.Key, item.ItemPrefab)?.Quantity ?? 0 +
-                        CargoManager.GetPurchasedItem(store.Key, item.ItemPrefab)?.Quantity ?? 0;
+                        CargoManager.GetPurchasedItemCount(store.Key, item.ItemPrefab);
                     item.Quantity = MathHelper.Clamp(item.Quantity, 0, availableQuantity - alreadyPurchasedQuantity);
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                 }
@@ -906,9 +948,41 @@ namespace Barotrauma
             {
                 prevPurchasedItems.Add(kvp.Key, new List<PurchasedItem>(kvp.Value));
             }
-            foreach (var kvp in prevPurchasedItems)
+
+            foreach (var storeId in purchasedItems.Keys)
             {
-                CargoManager.SellBackPurchasedItems(kvp.Key, kvp.Value, sender);
+                DebugConsole.Log($"Purchased items ({storeId}):\n");
+                if (prevPurchasedItems.TryGetValue(storeId, out var alreadyPurchased))
+                {
+                    var delivered = alreadyPurchased.Where(it => it.Delivered);
+                    var notDelivered = alreadyPurchased.Where(it => !it.Delivered);
+                    if (delivered.Any())
+                    {
+                        DebugConsole.Log($"  Already delivered:\n" + string.Concat(delivered.Select(it => $"    - {it.ItemPrefab.Name} (x{it.Quantity})")));
+                    }
+                    if (notDelivered.Any())
+                    {
+                        DebugConsole.Log($"  Already purchased:\n" + string.Concat(notDelivered.Where(it => !it.Delivered).Select(it => $"    - {it.ItemPrefab.Name} (x{it.Quantity})")));
+                    }
+                }
+                DebugConsole.Log($"  New purchases:");
+                foreach (var purchasedItem in purchasedItems[storeId])
+                {
+                    if (purchasedItem.Delivered) { continue; }
+                    int quantity = purchasedItem.Quantity;
+                    if (alreadyPurchased != null)
+                    {
+                        quantity -= alreadyPurchased.Where(it => it.DeliverImmediately == purchasedItem.DeliverImmediately && it.ItemPrefab == purchasedItem.ItemPrefab).Sum(it => it.Quantity);
+                    }
+                    if (quantity > 0)
+                    {
+                        DebugConsole.Log($"    - {purchasedItem.ItemPrefab.Name} (x{quantity})");
+                    }
+                }
+            }
+            foreach (var storeId in soldItems.Keys)
+            {
+                DebugConsole.Log($"Sold items:\n" + string.Concat(soldItems[storeId].Select(it => $" - {it.ItemPrefab.Name}")));
             }
 
             foreach (var kvp in purchasedItems)
@@ -917,17 +991,23 @@ namespace Barotrauma
                 var purchasedItemList = kvp.Value;
                 foreach (var purchasedItem in purchasedItemList)
                 {
+                    int desiredQuantity = purchasedItem.Quantity;
+                    if (prevPurchasedItems.TryGetValue(storeId, out var alreadyPurchasedList) &&
+                        alreadyPurchasedList.FirstOrDefault(p => p.ItemPrefab == purchasedItem.ItemPrefab && p.DeliverImmediately == purchasedItem.DeliverImmediately) is { } alreadyPurchased)
+                    {
+                        desiredQuantity -= alreadyPurchased.Quantity;
+                    }
                     int availableQuantity = map.CurrentLocation.Stores[storeId].Stock.Find(s => s.ItemPrefab == purchasedItem.ItemPrefab)?.Quantity ?? 0;
-                    purchasedItem.Quantity = Math.Min(purchasedItem.Quantity, availableQuantity);
-                }                
-                CargoManager.PurchaseItems(storeId, purchasedItemList, false, sender);
+                    purchasedItem.Quantity = Math.Min(desiredQuantity, availableQuantity);
+                }
+                CargoManager.PurchaseItems(storeId, purchasedItemList, removeFromCrate: false, client: sender);
             }
 
             foreach (var (storeIdentifier, items) in CargoManager.PurchasedItems)
             {
                 if (!prevPurchasedItems.ContainsKey(storeIdentifier))
                 {
-                    CargoManager.OnNewItemsPurchased(storeIdentifier, items, sender);
+                    CargoManager.LogNewItemPurchases(storeIdentifier, items, sender);
                     continue;
                 }
 
@@ -942,7 +1022,6 @@ namespace Barotrauma
                         newItems.Add(item);
                         continue;
                     }
-
                     if (matching.Quantity < item.Quantity)
                     {
                         newItems.Add(new PurchasedItem(item.ItemPrefab, item.Quantity - matching.Quantity, sender));
@@ -951,7 +1030,7 @@ namespace Barotrauma
 
                 if (newItems.Any())
                 {
-                    CargoManager.OnNewItemsPurchased(storeIdentifier, newItems, sender);
+                    CargoManager.LogNewItemPurchases(storeIdentifier, newItems, sender);
                 }
             }
 
@@ -1016,7 +1095,7 @@ namespace Barotrauma
                 UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
-                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
+                int price = prefab.Price.GetBuyPrice(prefab, UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }
@@ -1104,52 +1183,73 @@ namespace Barotrauma
 
             if (!AllowedToManageWallets(sender)) { return; }
 
-            Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == update.Target);
-            targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
-            GameServer.Log($"{sender.Name} changed the salary of {targetCharacter?.Name ?? "the bank"} to {update.NewRewardDistribution}%.", ServerLog.MessageType.Money);
+            if (update.Target.TryUnwrap(out ushort id))
+            {
+                Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == id);
+                targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
+                GameServer.Log($"{sender.Name} changed the salary of {targetCharacter?.Name} to {update.NewRewardDistribution}%.", ServerLog.MessageType.Money);
+                return;
+            }
+
+            Bank.SetRewardDistribution(update.NewRewardDistribution);
+            GameServer.Log($"{sender.Name} changed the default salary to {update.NewRewardDistribution}%.", ServerLog.MessageType.Money);
+        }
+
+        public void ResetSalaries(Client sender)
+        {
+            if (!AllowedToManageWallets(sender)) { return; }
+
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Player))
+            {
+                character.Wallet.SetRewardDistribution(Bank.RewardDistribution);
+            }
         }
 
         public void ServerReadCrew(IReadMessage msg, Client sender)
         {
-            int[] pendingHires = null;
+            UInt16[] pendingHires = null;
 
             bool updatePending = msg.ReadBoolean();
             if (updatePending)
             {
                 ushort pendingHireLength = msg.ReadUInt16();
-                pendingHires = new int[pendingHireLength];
+                pendingHires = new UInt16[pendingHireLength];
                 for (int i = 0; i < pendingHireLength; i++)
                 {
-                    pendingHires[i] = msg.ReadInt32();
+                    pendingHires[i] = msg.ReadUInt16();
                 }
             }
 
             bool validateHires = msg.ReadBoolean();
 
             bool renameCharacter = msg.ReadBoolean();
-            int renamedIdentifier = -1;
+            UInt16 renamedIdentifier = 0;
             string newName = null;
             bool existingCrewMember = false;
             if (renameCharacter)
             {
-                renamedIdentifier = msg.ReadInt32();
+                renamedIdentifier = msg.ReadUInt16();
                 newName = msg.ReadString();
                 existingCrewMember = msg.ReadBoolean();
+                if (!GameMain.Server.IsNameValid(sender, newName))
+                {
+                    renameCharacter = false;
+                }
             }
 
             bool fireCharacter = msg.ReadBoolean();
             int firedIdentifier = -1;
-            if (fireCharacter) { firedIdentifier = msg.ReadInt32(); }
+            if (fireCharacter) { firedIdentifier = msg.ReadUInt16(); }
 
             Location location = map?.CurrentLocation;
-            List<CharacterInfo> hiredCharacters = new List<CharacterInfo>();
             CharacterInfo firedCharacter = null;
+            (ushort id, string newName) appliedRename = (Entity.NullEntityID, string.Empty);
 
-            if (location != null && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
+            if (location != null)
             {
-                if (fireCharacter)
+                if (fireCharacter && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
                 {
-                    firedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
+                    firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == firedIdentifier);
                     if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
                     {
                         CrewManager.FireCharacter(firedCharacter);
@@ -1163,29 +1263,45 @@ namespace Barotrauma
                 if (renameCharacter)
                 {
                     CharacterInfo characterInfo = null;
-                    if (existingCrewMember && CrewManager != null)
+                    if (AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
                     {
-                        characterInfo = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
+                        if (existingCrewMember && CrewManager != null)
+                        {
+                            characterInfo = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                        }
+                        else if (!existingCrewMember && location.HireManager != null)
+                        {
+                            characterInfo = location.HireManager.AvailableCharacters.FirstOrDefault(info => info.ID == renamedIdentifier);
+                        }
                     }
-                    else if(!existingCrewMember && location.HireManager != null)
+                    if (characterInfo == null && renamedIdentifier == sender.CharacterInfo?.ID)
                     {
-                        characterInfo = location.HireManager.AvailableCharacters.FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
+                        characterInfo = sender.CharacterInfo;
                     }
-                    
-                    if (characterInfo != null && (characterInfo.Character?.IsBot ?? true))
+                    if (characterInfo != null &&
+                        (characterInfo.Character == null || characterInfo.Character is { IsBot: true } || (characterInfo.RenamingEnabled && characterInfo == sender.CharacterInfo)))
                     {
+                        GameServer.Log($"{sender.Name} renamed the character \"{characterInfo.Name}\" as \"{newName}\".", ServerLog.MessageType.ServerMessage);
                         if (existingCrewMember)
                         {
                             CrewManager.RenameCharacter(characterInfo, newName);
+                            if (characterInfo == sender.CharacterInfo)
+                            {
+                                //renaming is only allowed once
+                                characterInfo.RenamingEnabled = false;
+                            }
                         }
                         else
                         {
                             location.HireManager.RenameCharacter(characterInfo, newName);
                         }
+                        appliedRename = (characterInfo.ID, newName);
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Tried to rename an invalid character ({renamedIdentifier})");
+                        string errorMsg = $"Tried to rename an invalid character ({renamedIdentifier}, {characterInfo?.Name ?? "null"})";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameMain.Server?.SendConsoleMessage(errorMsg, sender, Color.Red);
                     }
                 }
 
@@ -1195,19 +1311,16 @@ namespace Barotrauma
                     {
                         foreach (CharacterInfo hireInfo in location.HireManager.PendingHires)
                         {
-                            if (TryHireCharacter(location, hireInfo, sender))
-                            {
-                                hiredCharacters.Add(hireInfo);
-                            };
+                            TryHireCharacter(location, hireInfo, client: sender);
                         }
                     }
-                    
+
                     if (updatePending)
                     {
                         List<CharacterInfo> pendingHireInfos = new List<CharacterInfo>();
-                        foreach (int identifier in pendingHires)
+                        foreach (UInt16 identifier in pendingHires)
                         {
-                            CharacterInfo match = location.GetHireableCharacters().FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == identifier);
+                            CharacterInfo match = location.GetHireableCharacters().FirstOrDefault(info => info.ID == identifier);
                             if (match == null)
                             {
                                 DebugConsole.ThrowError($"Tried to add a character that doesn't exist ({identifier}) to pending hires");
@@ -1215,7 +1328,7 @@ namespace Barotrauma
                             }
 
                             pendingHireInfos.Add(match);
-                            if (pendingHireInfos.Count + CrewManager.CharacterInfos.Count() >= CrewManager.MaxCrewSize)
+                            if (pendingHireInfos.Count + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
                             {
                                 break;
                             }
@@ -1225,7 +1338,7 @@ namespace Barotrauma
 
                     location.HireManager.AvailableCharacters.ForEachMod(info =>
                     {
-                        if(!location.HireManager.PendingHires.Contains(info))
+                        if (!location.HireManager.PendingHires.Contains(info))
                         {
                             location.HireManager.RenameCharacter(info, info.OriginalName);
                         }
@@ -1236,11 +1349,11 @@ namespace Barotrauma
             // bounce back
             if (renameCharacter && existingCrewMember)
             {
-                SendCrewState(hiredCharacters, (renamedIdentifier, newName), firedCharacter);
+                SendCrewState(appliedRename, firedCharacter);
             }
             else
             {
-                SendCrewState(hiredCharacters, default, firedCharacter);
+                SendCrewState(firedCharacter: firedCharacter);
             }
         }
 
@@ -1254,7 +1367,7 @@ namespace Barotrauma
         /// the client and the server when there's only one person on the server but when a second person joins both of
         /// their available hires are different from the server.
         /// </remarks>
-        public void SendCrewState(List<CharacterInfo> hiredCharacters, (int id, string newName) renamedCrewMember, CharacterInfo firedCharacter)
+        public void SendCrewState((ushort id, string newName) renamedCrewMember = default, CharacterInfo firedCharacter = null, bool createNotification = true)
         {
             List<CharacterInfo> availableHires = new List<CharacterInfo>();
             List<CharacterInfo> pendingHires = new List<CharacterInfo>();
@@ -1270,39 +1383,39 @@ namespace Barotrauma
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.WriteByte((byte)ServerPacketHeader.CREW);
 
+                msg.WriteBoolean(createNotification);
+
                 msg.WriteUInt16((ushort)availableHires.Count);
                 foreach (CharacterInfo hire in availableHires)
                 {
                     hire.ServerWrite(msg);
                     msg.WriteInt32(hire.Salary);
                 }
-            
+
                 msg.WriteUInt16((ushort)pendingHires.Count);
                 foreach (CharacterInfo pendingHire in pendingHires)
                 {
-                    msg.WriteInt32(pendingHire.GetIdentifierUsingOriginalName());
+                    msg.WriteUInt16(pendingHire.ID);
                 }
 
-                msg.WriteUInt16((ushort)(hiredCharacters?.Count ?? 0));
-                if(hiredCharacters != null)
+                var hiredCharacters = CrewManager.GetCharacterInfos().Where(ci => ci.IsNewHire);
+                msg.WriteUInt16((ushort)hiredCharacters.Count());
+                foreach (CharacterInfo info in hiredCharacters)
                 {
-                    foreach (CharacterInfo info in hiredCharacters)
-                    {
-                        info.ServerWrite(msg);
-                        msg.WriteInt32(info.Salary);
-                    }
+                    info.ServerWrite(msg);
+                    msg.WriteInt32(info.Salary);
                 }
 
-                bool validRenaming = renamedCrewMember.id > -1 && !string.IsNullOrEmpty(renamedCrewMember.newName);
+                bool validRenaming = renamedCrewMember.id > 0 && !string.IsNullOrEmpty(renamedCrewMember.newName);
                 msg.WriteBoolean(validRenaming);
                 if (validRenaming)
                 {
-                    msg.WriteInt32(renamedCrewMember.id);
+                    msg.WriteUInt16(renamedCrewMember.id);
                     msg.WriteString(renamedCrewMember.newName);
                 }
 
                 msg.WriteBoolean(firedCharacter != null);
-                if (firedCharacter != null) { msg.WriteInt32(firedCharacter.GetIdentifier()); }
+                if (firedCharacter != null) { msg.WriteUInt16(firedCharacter.ID); }
 
                 GameMain.Server.ServerPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
@@ -1310,6 +1423,12 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
+            //disconnected clients can never purchase anything
+            //(can happen e.g. if someone starts a vote to buy something and then disconnects)
+            if (client != null && !GameMain.Server.ConnectedClients.Contains(client)) { return false; }
+
+            if (price == 0) { return true; }
+
             Wallet wallet = GetWallet(client);
             if (!AllowedToManageWallets(client))
             {
@@ -1358,7 +1477,17 @@ namespace Barotrauma
 
             modeElement.Add(Settings.Save());
             modeElement.Add(SaveStats());
+            if (GameMain.Server?.TraitorManager is TraitorManager traitorManager)
+            {
+                modeElement.Add(traitorManager.Save());
+            }
             modeElement.Add(Bank.Save());
+
+            if (GameMain.GameSession?.EventManager != null)
+            {
+                modeElement.Add(GameMain.GameSession?.EventManager.Save());
+            }
+
             CampaignMetadata?.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
@@ -1405,6 +1534,58 @@ namespace Barotrauma
 
             lastSaveID++;
             DebugConsole.Log("Campaign saved, save ID " + lastSaveID);
+        }
+
+        /// <summary>
+        /// Load the current character save file and add/replace a single character's data with a new version immediately.
+        /// </summary>
+        /// <param name="newData">New character to insert. If it matches one existing in the save, that will get replaced.</param>
+        /// <param name="skipBackup">By default, replaced characters will be temporarily backed up, but that might be unwanted
+        /// eg. when using this method to save a character itself restored from the backup.</param>
+        public void SaveSingleCharacter(CharacterCampaignData newData, bool skipBackup = false)
+        {
+            string characterDataPath = GetCharacterDataSavePath();
+            if (!File.Exists(characterDataPath))
+            {
+                DebugConsole.ThrowError($"Failed to load the character data for the campaign. Could not find the file \"{characterDataPath}\".");
+            }
+            else
+            {
+                var loadedCharacterData = XMLExtensions.TryLoadXml(characterDataPath);
+                if (loadedCharacterData?.Root == null) { return; }
+                var oldData = loadedCharacterData.Root.Elements()
+                    .FirstOrDefault(subElement => new CharacterCampaignData(subElement).IsDuplicate(newData));
+                
+                if (oldData != null)
+                {
+                    if (!skipBackup)
+                    {
+                        replacedCharacterDataBackup.Add(new CharacterCampaignData(oldData));    
+                    }
+                    oldData.Remove();
+                }
+                loadedCharacterData.Root.Add(newData.Save());
+                
+                try
+                {
+                    loadedCharacterData.SaveSafe(characterDataPath);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Saving multiplayer campaign characters to \"" + characterDataPath + "\" failed!", e);
+                }
+            }
+        }
+        
+        public CharacterCampaignData RestoreSingleCharacterFromBackup(Client client)
+        {
+            if (replacedCharacterDataBackup.Find(cd => cd.MatchesClient(client)) is CharacterCampaignData characterToRestore)
+            {
+                replacedCharacterDataBackup.Remove(characterToRestore);
+                return characterToRestore;
+            }
+            
+            return default;
         }
     }
 }

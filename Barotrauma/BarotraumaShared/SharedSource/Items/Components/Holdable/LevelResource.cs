@@ -97,11 +97,18 @@ namespace Barotrauma.Items.Components
         {
             if (holdable != null && !holdable.Attached)
             {
-                trigger.Enabled = false;
+                if (trigger != null)
+                {
+                    trigger.Enabled = false;
+                }
                 IsActive = false;
             }
             else
             {
+                if (trigger == null) 
+                { 
+                    CreateTriggerBody(); 
+                }
                 if (trigger != null && Vector2.DistanceSquared(item.SimPosition, trigger.SimPosition) > 0.01f)
                 {
                     trigger.SetTransform(item.SimPosition, 0.0f);
@@ -119,16 +126,19 @@ namespace Barotrauma.Items.Components
                 return;
             }
             holdable.Reattachable = false;
-            if (requiredItems.Any())
+            if (RequiredItems.Any())
             {
                 holdable.PickingTime = float.MaxValue;
             }
+        }
 
-            var body = item.body ?? holdable.Body;
-
-            if (body != null)
+        private void CreateTriggerBody()
+        {
+            System.Diagnostics.Debug.Assert(trigger == null, "LevelResource trigger already created!");
+            var body = item.body ?? holdable?.Body;
+            if (body != null && Attached)
             {
-                trigger = new PhysicsBody(body.Width, body.Height, body.Radius, 
+                trigger = new PhysicsBody(body.Width, body.Height, body.Radius,
                     body.Density,
                     BodyType.Static,
                     Physics.CollisionWall,
@@ -143,7 +153,6 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
-            base.RemoveComponentSpecific();
             if (trigger != null)
             {
                 trigger.Remove();

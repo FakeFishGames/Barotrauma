@@ -42,10 +42,10 @@ namespace Barotrauma
 
         public float Value
         {
-            get => Math.Min(MaxReputation, Metadata.GetFloat(metaDataIdentifier, InitialReputation));
+            get => Metadata == null ? 0 : Math.Min(MaxReputation, Metadata.GetFloat(metaDataIdentifier, InitialReputation));
             private set
             {
-                if (MathUtils.NearlyEqual(Value, value)) { return; }
+                if (MathUtils.NearlyEqual(Value, value) || Metadata == null) { return; }
 
                 float prevValue = Value;
 
@@ -57,7 +57,7 @@ namespace Barotrauma
                 if (increase != 0 && Character.Controlled != null)
                 {
                     Character.Controlled.AddMessage(
-                        TextManager.GetWithVariable("reputationgainnotification", "[reputationname]", Location?.Name ?? Faction.Prefab.Name).Value,
+                        TextManager.GetWithVariable("reputationgainnotification", "[reputationname]", Location?.DisplayName ?? Faction.Prefab.Name).Value,
                         increase > 0 ? GUIStyle.Green : GUIStyle.Red,
                         playSound: true, Identifier, increase, lifetime: 5.0f);                    
                 }
@@ -137,7 +137,6 @@ namespace Barotrauma
 
         private Reputation(CampaignMetadata metadata, Faction faction, Location location, Identifier identifier, int minReputation, int maxReputation, int initialReputation)
         {
-            System.Diagnostics.Debug.Assert(metadata != null);
             System.Diagnostics.Debug.Assert(faction != null || location != null);
             Metadata = metadata;
             Identifier = identifier;

@@ -12,21 +12,112 @@ namespace Barotrauma
         Exponential
     }
 
+    /// <summary>
+    /// ActionTypes define when a <see cref="StatusEffect"/> is executed.
+    /// </summary>
     public enum ActionType
     {
-        Always = 0, OnPicked = 1, OnUse = 2, OnSecondaryUse = 3,
-        OnWearing = 4, OnContaining = 5, OnContained = 6, OnNotContained = 7,
-        OnActive = 8, OnFailure = 9, OnBroken = 10,
-        OnFire = 11, InWater = 12, NotInWater = 13,
+        /// <summary>
+        /// Executes every frame regardless of the state of the entity.
+        /// </summary>
+        Always = 0,
+        /// <summary>
+        /// Executes when the item is picked up. Only valid for items.
+        /// </summary>
+        OnPicked = 1,
+        /// <summary>
+        /// Executes when the item is used. The meaning of "using" an item depends on the item, but generally it means the action that happens when holding the item and clicking LMB. Only valid for items.
+        /// </summary>
+        OnUse = 2,
+        /// <summary>
+        /// Executes when an item is held and the aim key is held. Only valid for items.
+        /// </summary>
+        OnSecondaryUse = 3,
+        /// <summary>
+        /// Executes continuously while the item is being worn. Only valid for wearable items.
+        /// </summary>
+        OnWearing = 4,
+        /// <summary>
+        /// Executes continuously when a specific Containable is inside an ItemContainer. Only valid for Containables defined in an ItemContainer component.
+        /// </summary>
+        OnContaining = 5,
+        /// <summary>
+        /// Executes continuously when the item is contained in some inventory. Only valid for items.
+        /// </summary>
+        OnContained = 6,
+        /// <summary>
+        /// Executes continuously when the item is NOT contained in an inventory. Only valid for items.
+        /// </summary>
+        OnNotContained = 7,
+        /// <summary>
+        /// Executes continuously when the item is active. The meaning of "active" depends on the item, but generally means the item is on, powered, and doing the thing it's intended for. Only valid for items.
+        /// </summary>
+        OnActive = 8,
+        /// <summary>
+        /// Executes when using the item fails due to a failed skill check. Only valid for items.
+        /// </summary>
+        OnFailure = 9,
+        /// <summary>
+        /// Executes when using the item's condition drops to 0. Only valid for items.
+        /// </summary>
+        OnBroken = 10,
+        /// <summary>
+        /// Executes continuously when the entity is within the damage range of fire. Valid for items and characters.
+        /// </summary>
+        OnFire = 11,
+        /// <summary>
+        /// Executes continuously when the entity is submerged. Valid for items and characters.
+        /// </summary>
+        InWater = 12,
+        /// <summary>
+        /// Executes continuously when the entity is NOT submerged. Valid for items and characters.
+        /// </summary>
+        NotInWater = 13,
+        /// <summary>
+        /// Executes when the entity hits something hard enough. For items, the threshold is determined by <see cref="ItemPrefab.ImpactTolerance"/>,
+        /// for characters by <see cref="Ragdoll.ImpactTolerance"/>. Valid for items and characters.
+        /// </summary>
         OnImpact = 14,
+        /// <summary>
+        /// Executes continuously when the character is eating another character. Only valid for characters.
+        /// </summary>
         OnEating = 15,
+        /// <summary>
+        /// Executes when the entity receives damage from an external source (i.e. an affliction that increases in severity, or an item degrading by itself don't count).
+        /// Valid for items and characters.
+        /// </summary>
         OnDamaged = 16,
+        /// <summary>
+        /// Executes when the limb gets severed. Only valid for limbs.
+        /// </summary>
         OnSevered = 17,
+        /// <summary>
+        /// Executes when a <see cref="Items.Components.Growable"/> produces an item (e.g. when a plant grows a fruit). Only valid for Growable items.
+        /// </summary>
         OnProduceSpawned = 18,
-        OnOpen = 19, OnClose = 20,
+        /// <summary>
+        /// Executes when a <see cref="Items.Components.Door"/> is opened. Only valid for doors.
+        /// </summary>
+        OnOpen = 19,
+        /// <summary>
+        /// Executes when a <see cref="Items.Components.Door"/> is closed. Only valid for doors.
+        /// </summary>
+        OnClose = 20,
+        /// <summary>
+        /// Executes when the entity spawns. Valid for items and characters.
+        /// </summary>
         OnSpawn = 21,
+        /// <summary>
+        /// Executes when using the item succeeds based on a skill check. Only valid for items.
+        /// </summary>
         OnSuccess = 22,
+        /// <summary>
+        /// Executes when an Ability (an effect from a talent) triggers the status effect. Only valid in Abilities, the target can be either a character or an item depending on the type of Ability.
+        /// </summary>
         OnAbility = 23,
+        /// <summary>
+        /// Executes when the character dies. Only valid for characters.
+        /// </summary>
         OnDeath = OnBroken
     }
 
@@ -61,6 +152,7 @@ namespace Barotrauma
         OnAllyGainMissionExperience,
         OnGainMissionExperience,
         OnGainMissionMoney,
+        OnCrewGainMissionReputation,
         OnLocationDiscovered,
         OnItemDeconstructed,
         OnItemDeconstructedByAlly,
@@ -68,11 +160,13 @@ namespace Barotrauma
         OnItemDeconstructedInventory,
         OnStopTinkering,
         OnItemPicked,
+        OnItemSelected,
         OnGeneticMaterialCombinedOrRefined,
         OnCrewGeneticMaterialCombinedOrRefined,
         AfterSubmarineAttacked,
         OnApplyTreatment,
         OnStatusEffectIdentifier,
+        OnRepairedOutsideLeak
     }
 
     /// <summary>
@@ -160,6 +254,11 @@ namespace Barotrauma
         SwimmingSpeed,
 
         /// <summary>
+        /// Increases the character's speed by a percentage when using an item that propels the character forwards (such as a diving scooter).
+        /// </summary>
+        PropulsionSpeed,
+
+        /// <summary>
         /// Decreases how long it takes for buffs applied to the character decay over time by a percentage.
         /// Buffs are afflictions that have isBuff set to true.
         /// </summary>
@@ -236,6 +335,11 @@ namespace Barotrauma
         /// Increases the repair speed of the character when repairing mechanical items by a percentage.
         /// </summary>
         MechanicalRepairSpeed,
+        
+        /// <summary>
+        /// Increases the repair speed of the character when repairing electrical items by a percentage.
+        /// </summary>
+        ElectricalRepairSpeed,
 
         /// <summary>
         /// Increase deconstruction speed of deconstructor operated by the character by a percentage.
@@ -459,7 +563,32 @@ namespace Barotrauma
         /// <summary>
         /// Can be used to prevent certain talents from being unlocked by specifying the talent's identifier via CharacterAbilityGivePermanentStat.
         /// </summary>
-        LockedTalents
+        LockedTalents,
+
+        /// <summary>
+        /// Used to reduce or increase the cost of hiring certain jobs by a percentage.
+        /// </summary>
+        HireCostMultiplier,
+
+        /// <summary>
+        /// Used to increase how much items can stack in the characters inventory.
+        /// </summary>
+        InventoryExtraStackSize,
+
+        /// <summary>
+        /// Modifies the range of the sounds emitted by the character (can be used to make the character easier or more difficult for monsters to hear)
+        /// </summary>
+        SoundRangeMultiplier,
+
+        /// <summary>
+        /// Modifies how far the character can be seen from (can be used to make the character easier or more difficult for monsters to see)
+        /// </summary>
+        SightRangeMultiplier,
+        
+        /// <summary>
+        /// Reduces the dual wielding penalty by a percentage.
+        /// </summary>
+        DualWieldingPenaltyReduction
     }
 
     internal enum ItemTalentStats
@@ -474,7 +603,8 @@ namespace Barotrauma
         ReactorMaxOutput,
         ReactorFuelConsumption,
         DeconstructorSpeed,
-        FabricationSpeed
+        FabricationSpeed,
+        ExtraStackSize
     }
 
     /// <summary>
@@ -558,18 +688,26 @@ namespace Barotrauma
         Both = Bot | Player
     }
 
-    public enum StartingBalanceAmount
+    public enum StartingBalanceAmountOption
     {
         Low,
         Medium,
         High,
     }
 
-    public enum GameDifficulty
+    public enum PatdownProbabilityOption
     {
-        Easy,
+        Off,
+        Low,
         Medium,
-        Hard,
+        High,
+    }
+
+    public enum WorldHostilityOption
+    {
+        Low,
+        Medium,
+        High,
         Hellish
     }
 

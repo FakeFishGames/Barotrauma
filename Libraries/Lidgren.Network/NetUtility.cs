@@ -98,8 +98,8 @@ namespace Lidgren.Network
 			NetAddress ipAddress = null;
 			if (NetAddress.TryParse(ipOrHost, out ipAddress))
 			{
-                if (ipAddress.AddressFamily == AddressFamily.InterNetwork || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
-                {
+				if (ipAddress.AddressFamily == AddressFamily.InterNetwork || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+				{
 					callback(ipAddress);
 					return;
 				}
@@ -163,7 +163,7 @@ namespace Lidgren.Network
 			}
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Get IPv4 address from notation (xxx.xxx.xxx.xxx) or hostname
 		/// </summary>
 		public static NetAddress Resolve(string ipOrHost)
@@ -176,22 +176,22 @@ namespace Lidgren.Network
 			NetAddress ipAddress = null;
 			if (NetAddress.TryParse(ipOrHost, out ipAddress))
 			{
-                if (ipAddress.AddressFamily == AddressFamily.InterNetwork || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
-                    return ipAddress;
-                throw new ArgumentException("This method will not currently resolve other than IPv4 or IPv6 addresses");
-            }
+				if (ipAddress.AddressFamily == AddressFamily.InterNetwork || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+					return ipAddress;
+				throw new ArgumentException("This method will not currently resolve other than IPv4 or IPv6 addresses");
+			}
 
-            // ok must be a host name
-            try
+			// ok must be a host name
+			try
 			{
 				var addresses = Dns.GetHostAddresses(ipOrHost);
 				if (addresses == null)
 					return null;
 				foreach (var address in addresses)
 				{
-                    if (address.AddressFamily == AddressFamily.InterNetwork || address.AddressFamily == AddressFamily.InterNetworkV6)
-                        return address;
-                }
+					if (address.AddressFamily == AddressFamily.InterNetwork || address.AddressFamily == AddressFamily.InterNetworkV6)
+						return address;
+				}
 				return null;
 			}
 			catch (SocketException ex)
@@ -240,7 +240,7 @@ namespace Lidgren.Network
 			}
 			return new string(c);
 		}
-	
+
 		/// <summary>
 		/// Returns true if the endpoint supplied is on the same subnet as this host
 		/// </summary>
@@ -275,6 +275,18 @@ namespace Lidgren.Network
 		/// </summary>
 		[CLSCompliant(false)]
 		public static int BitsToHoldUInt(uint value)
+		{
+			int bits = 1;
+			while ((value >>= 1) != 0)
+				bits++;
+			return bits;
+		}
+
+		/// <summary>
+		/// Returns how many bits are necessary to hold a certain number
+		/// </summary>
+		[CLSCompliant(false)]
+		public static int BitsToHoldUInt64(ulong value)
 		{
 			int bits = 1;
 			while ((value >>= 1) != 0)
@@ -401,7 +413,7 @@ namespace Lidgren.Network
 					{
 						if (j >= h)
 						{
-							if (string.Compare(list[j - h].Name, tmp.Name, StringComparison.OrdinalIgnoreCase) > 0)
+							if (string.Compare(list[j - h].Name, tmp.Name, StringComparison.InvariantCulture) > 0)
 							{
 								list[j] = list[j - h];
 								j -= h;
@@ -454,24 +466,28 @@ namespace Lidgren.Network
 			return ComputeSHAHash(bytes, 0, bytes.Length);
 		}
 
-		internal static IPAddress MapToFamily(this IPAddress address, AddressFamily family)
-		{
-		    switch (family)
-		    {
-		        case AddressFamily.InterNetworkV6:
-			        return address.MapToIPv6();
-		        case AddressFamily.InterNetwork:
-			        return address.MapToIPv4();
-		        default:
-			        throw new Exception($"Unsupported address family: {family}");
-		    }
-		}
+        /// <summary>
+        /// Copies from <paramref name="src"/> to <paramref name="dst"/>. Maps to an IPv6 address
+        /// </summary>
+        /// <param name="src">Source.</param>
+        /// <param name="dst">Destination.</param>
+        internal static void CopyEndpoint(IPEndPoint src, IPEndPoint dst)
+        {
+            dst.Port = src.Port;
+            if (src.AddressFamily == AddressFamily.InterNetwork)
+                dst.Address = src.Address.MapToIPv6();
+            else
+                dst.Address = src.Address;
+        }
 
-		internal static IPEndPoint MapToFamily(this IPEndPoint endpoint, AddressFamily family)
-		{
-		    return endpoint.Address.AddressFamily == family
-		        ? endpoint
-		        : new IPEndPoint(endpoint.Address.MapToFamily(family), endpoint.Port);
-		}
+        /// <summary>
+        /// Maps the IPEndPoint object to an IPv6 address. Has allocation
+        /// </summary>
+        internal static IPEndPoint MapToIPv6(IPEndPoint endPoint)
+        {
+            if (endPoint.AddressFamily == AddressFamily.InterNetwork)
+                return new IPEndPoint(endPoint.Address.MapToIPv6(), endPoint.Port);
+            return endPoint;
+        }
     }
 }

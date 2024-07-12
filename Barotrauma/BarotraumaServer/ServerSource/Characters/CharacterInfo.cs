@@ -16,7 +16,7 @@ namespace Barotrauma
 
         public void ApplyDeathEffects()
         {
-            RespawnManager.ReduceCharacterSkills(this);
+            RespawnManager.ReduceCharacterSkillsOnDeath(this);
             RemoveSavedStatValuesOnDeath();
             CauseOfDeath = null;
         }
@@ -56,6 +56,7 @@ namespace Barotrauma
             msg.WriteUInt16(ID);
             msg.WriteString(Name);
             msg.WriteString(OriginalName);
+            msg.WriteBoolean(RenamingEnabled);
             msg.WriteByte((byte)Head.Preset.TagSet.Count);
             foreach (Identifier tag in Head.Preset.TagSet)
             {
@@ -68,11 +69,10 @@ namespace Barotrauma
             msg.WriteColorR8G8B8(Head.SkinColor);
             msg.WriteColorR8G8B8(Head.HairColor);
             msg.WriteColorR8G8B8(Head.FacialHairColor);
-
-            msg.WriteString(ragdollFileName);
+            
             msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
             msg.WriteIdentifier(MinReputationToHire.factionId);
-            if (MinReputationToHire.factionId != default)
+            if (!MinReputationToHire.factionId.IsEmpty)
             {
                 msg.WriteSingle(MinReputationToHire.reputation);
             }
@@ -80,9 +80,13 @@ namespace Barotrauma
             {
                 msg.WriteUInt32(Job.Prefab.UintIdentifier);
                 msg.WriteByte((byte)Job.Variant);
-                foreach (SkillPrefab skillPrefab in Job.Prefab.Skills.OrderBy(s => s.Identifier))
+
+                var skills = Job.GetSkills().OrderBy(s => s.Identifier);
+                msg.WriteByte((byte)skills.Count());
+                foreach (var skill in skills)
                 {
-                    msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier)?.Level ?? 0.0f);
+                    msg.WriteIdentifier(skill.Identifier);
+                    msg.WriteSingle(skill.Level);
                 }
             }
             else
@@ -93,6 +97,7 @@ namespace Barotrauma
 
             msg.WriteInt32(ExperiencePoints);
             msg.WriteRangedInteger(AdditionalTalentPoints, 0, MaxAdditionalTalentPoints);
+            msg.WriteBoolean(PermanentlyDead);
         }
     }
 }

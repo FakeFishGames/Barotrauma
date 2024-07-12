@@ -49,7 +49,7 @@ static class ObjectiveManager
 
         public Identifier ParentId { get; set; }
 
-        public TutorialSegmentType SegmentType { get; private set; }
+        public SegmentType SegmentType { get; private set; }
 
         public static Segment CreateInfoBoxSegment(Identifier id, Identifier objectiveTextTag, AutoPlayVideo autoPlayVideo, Text textContent = default, Video videoContent = default)
         {
@@ -69,31 +69,31 @@ static class ObjectiveManager
         private Segment(Identifier id, Identifier objectiveTextTag, AutoPlayVideo autoPlayVideo, Text textContent = default, Video videoContent = default)
         {
             Id = id;
-            ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
+            ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag).Fallback(objectiveTextTag.Value));
             AutoPlayVideo = autoPlayVideo;
             TextContent = textContent;
             VideoContent = videoContent;
-            SegmentType = TutorialSegmentType.InfoBox;
+            SegmentType = SegmentType.InfoBox;
         }
 
         private Segment(Identifier id, Identifier objectiveTextTag, Action onClickObjective)
         {
             Id = id;
-            ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
+            ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag).Fallback(objectiveTextTag.Value));
             OnClickObjective = onClickObjective;
-            SegmentType = TutorialSegmentType.MessageBox;
+            SegmentType = SegmentType.MessageBox;
         }
 
         private Segment(Identifier id, Identifier objectiveTextTag)
         {
             Id = id;
-            ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
-            SegmentType = TutorialSegmentType.Objective;
+            ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag).Fallback(objectiveTextTag.Value));
+            SegmentType = SegmentType.Objective;
         }
 
         public void ConnectMessageBox(Segment messageBoxSegment)
         {
-            SegmentType = TutorialSegmentType.MessageBox;
+            SegmentType = SegmentType.MessageBox;
             OnClickObjective = messageBoxSegment.OnClickObjective;
         }
     }
@@ -139,9 +139,14 @@ static class ObjectiveManager
         VideoPlayer.AddToGUIUpdateList(order: 100);
     }
 
-    public static void TriggerTutorialSegment(Segment segment, bool connectObjective = false)
+    public static bool IsSegmentActive(Identifier segmentId)
     {
-        if (segment.SegmentType != TutorialSegmentType.InfoBox)
+        return activeObjectives.Any(o => o.Id == segmentId);
+    }
+
+    public static void TriggerSegment(Segment segment, bool connectObjective = false)
+    {
+        if (segment.SegmentType != SegmentType.InfoBox)
         {
             activeObjectives.Add(segment);
             AddToObjectiveList(segment, connectObjective);
@@ -153,15 +158,15 @@ static class ObjectiveManager
         ActiveContentSegment = segment;
 
         var title = TextManager.Get(segment.Id);
-        LocalizedString tutorialText = TextManager.GetFormatted(segment.TextContent.Tag);
-        tutorialText = TextManager.ParseInputTypes(tutorialText);
+        LocalizedString text = TextManager.GetFormatted(segment.TextContent.Tag).Fallback(segment.TextContent.Tag.Value);
+        text = TextManager.ParseInputTypes(text);
 
         switch (segment.AutoPlayVideo)
         {
             case AutoPlayVideo.Yes:
                 infoBox = CreateInfoFrame(
                     title,
-                    tutorialText,
+                    text,
                     segment.TextContent.Width,
                     segment.TextContent.Height,
                     segment.TextContent.Anchor,
@@ -171,7 +176,7 @@ static class ObjectiveManager
             case AutoPlayVideo.No:
                 infoBox = CreateInfoFrame(
                     title,
-                    tutorialText,
+                    text,
                     segment.TextContent.Width,
                     segment.TextContent.Height,
                     segment.TextContent.Anchor,
@@ -182,31 +187,54 @@ static class ObjectiveManager
         }
     }
 
-    public static void CompleteTutorialSegment(Identifier segmentId)
+    public static void CompleteSegment(Identifier segmentId)
     {
         if (GetActiveObjective(segmentId) is not Segment segment || !segment.CanBeCompleted || segment.IsCompleted)
         {
             return;
         }
-        if (!MarkSegmentCompleted(segment))
+        CompleteSegment(segment, failed: false);
+    }
+
+    public static void FailSegment(Identifier segmentId)
+    {
+        if (GetActiveObjective(segmentId) is not Segment segment)
         {
             return;
         }
+        CompleteSegment(segment, failed: true);
+    }
+
+    private static void CompleteSegment(Segment segment, bool failed = false)
+    {
+        if (failed)
+        {
+            if (!MarkSegmentFailed(segment)) { return; }
+        }
+        else
+        {
+            if (!MarkSegmentCompleted(segment)) { return; }
+        }
         if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode)
         {
-            GameAnalyticsManager.AddDesignEvent($"Tutorial:{tutorialMode.Tutorial?.Identifier}:{segmentId}:Completed");
-        }
-        else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
-        {
-            GameAnalyticsManager.AddDesignEvent($"Tutorial:CampaignMode:{segmentId}:Completed");
-            campaign?.CampaignMetadata?.SetValue(segmentId, true);
+            GameAnalyticsManager.AddDesignEvent($"Tutorial:{tutorialMode.Tutorial?.Identifier}:{segment.Id}:{(failed ? "Failed" : "Completed")}");
         }
     }
 
-    public static bool MarkSegmentCompleted(Segment segment, bool flash = true)
+    private static bool MarkSegmentCompleted(Segment segment, bool flash = true)
+    {
+        return MarkSegment(segment, "ObjectiveIndicatorCompleted", flash, flashColor: GUIStyle.Green);
+    }
+
+    private static bool MarkSegmentFailed(Segment segment, bool flash = true)
+    {
+        return MarkSegment(segment, "MissionFailedIcon", flash, flashColor: GUIStyle.Red);
+    }
+
+    private static bool MarkSegment(Segment segment, string iconStyleName, bool flash, Color flashColor)
     {
         segment.IsCompleted = true;
-        if (GUIStyle.GetComponentStyle("ObjectiveIndicatorCompleted") is GUIComponentStyle style)
+        if (GUIStyle.GetComponentStyle(iconStyleName) is GUIComponentStyle style)
         {
             if (segment.ObjectiveStateIndicator.Style == style)
             {
@@ -216,21 +244,17 @@ static class ObjectiveManager
         }
         if (flash)
         {
-            segment.ObjectiveStateIndicator.Parent.Flash(color: GUIStyle.Green, flashDuration: 0.35f, useRectangleFlash: true);
-        }
+            segment.ObjectiveStateIndicator.Parent.Flash(color: flashColor, flashDuration: 0.35f, useRectangleFlash: true);
+        }      
         segment.ObjectiveButton.OnClicked = null;
         segment.ObjectiveButton.CanBeFocused = false;
         return true;
     }
 
-    public static void RemoveTutorialSegment(Identifier segmentId)
+    public static void RemoveSegment(Identifier segmentId)
     {
         if (GetActiveObjective(segmentId) is not Segment segment)
         {
-            if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode)
-            {
-                DebugConsole.AddWarning($"Warning: tried to remove the tutorial segment \"{segmentId}\" in tutorial \"{tutorialMode.Tutorial?.Identifier}\" but it isn't active!");
-            }
             return;
         }
         segment.ObjectiveStateIndicator.FadeOut(ObjectiveComponentAnimationTime, false);
@@ -342,9 +366,18 @@ static class ObjectiveManager
                 activeObjectives.IndexOf(parentSegment) + activeObjectives.Count(s => s.ParentId == segment.ParentId);
             if (objectiveGroup.RectTransform.GetChildIndex(frameRt) != childIndex)
             {
-                frameRt.RepositionChildInHierarchy(childIndex);
-                activeObjectives.Remove(segment);
-                activeObjectives.Insert(childIndex, segment);
+                if (childIndex < 0 || childIndex >= frameRt.Parent.CountChildren)
+                {
+                    DebugConsole.ThrowError(
+                        $"Error in {nameof(ObjectiveManager.AddToObjectiveList)}. " +
+                        $"Failed to reposition an objective in the list. Text \"{segment.ObjectiveText}\", parentId: {segment.ParentId}, childIndex: {childIndex}");
+                }
+                else
+                {
+                    frameRt.RepositionChildInHierarchy(childIndex);
+                    activeObjectives.Remove(segment);
+                    activeObjectives.Insert(childIndex, segment);
+                }
             }
         }
         frameRt.AbsoluteOffset = GetObjectiveHiddenPosition();
@@ -400,10 +433,10 @@ static class ObjectiveManager
 
         void SetButtonBehavior(Segment segment)
         {
-            segment.ObjectiveButton.CanBeFocused = segment.SegmentType != TutorialSegmentType.Objective;
+            segment.ObjectiveButton.CanBeFocused = segment.SegmentType != SegmentType.Objective;
             segment.ObjectiveButton.OnClicked = (GUIButton btn, object userdata) =>
             {
-                if (segment.SegmentType == TutorialSegmentType.InfoBox)
+                if (segment.SegmentType == SegmentType.InfoBox)
                 {
                     if (segment.AutoPlayVideo == AutoPlayVideo.Yes)
                     {
@@ -414,7 +447,7 @@ static class ObjectiveManager
                         ShowSegmentText(segment);
                     }
                 }
-                else if (segment.SegmentType == TutorialSegmentType.MessageBox)
+                else if (segment.SegmentType == SegmentType.MessageBox)
                 {
                     segment.OnClickObjective?.Invoke();
                 }
@@ -438,8 +471,8 @@ static class ObjectiveManager
         ContentRunning = true;
         ActiveContentSegment = segment;
         infoBox = CreateInfoFrame(
-            TextManager.Get(segment.Id),
-            TextManager.Get(segment.TextContent.Tag),
+            TextManager.Get(segment.Id).Fallback(segment.Id.Value),
+            TextManager.Get(segment.TextContent.Tag).Fallback(segment.TextContent.Tag.Value),
             segment.TextContent.Width,
             segment.TextContent.Height,
             segment.TextContent.Anchor,

@@ -97,7 +97,8 @@ namespace Barotrauma.Items.Components
             string triggeredByAttribute = element.GetAttributeString("triggeredby", "Character");
             if (!Enum.TryParse(triggeredByAttribute, out triggeredBy))
             {
-                DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByAttribute}\" is not a valid triggerer type.");
+                DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByAttribute}\" is not a valid triggerer type.",
+                    contentPackage: element.ContentPackage);
             }
             triggerOnce = element.GetAttributeBool("triggeronce", false);
             string parentDebugName = $"TriggerComponent in {item.Name}";
@@ -142,7 +143,7 @@ namespace Barotrauma.Items.Components
 
         private bool OnCollision(Fixture sender, Fixture other, Contact contact)
         {
-            if (!(LevelTrigger.GetEntity(other) is Entity entity)) { return false; }
+            if (LevelTrigger.GetEntity(other) is not Entity entity) { return false; }
             if (!LevelTrigger.IsTriggeredByEntity(entity, triggeredBy, mustBeOnSpecificSub: (!MoveOutsideSub, item.Submarine))) { return false; }
             triggerers.Add(entity);
             return true;
@@ -150,7 +151,7 @@ namespace Barotrauma.Items.Components
 
         private void OnSeparation(Fixture sender, Fixture other, Contact contact)
         {
-            if (!(LevelTrigger.GetEntity(other) is Entity entity))
+            if (LevelTrigger.GetEntity(other) is not Entity entity)
             {
                 return;
             }
@@ -232,7 +233,17 @@ namespace Barotrauma.Items.Components
                 }
                 else if (triggerer is Character c)
                 {
-                    ApplyForce(c.AnimController.Collider);
+                    if (c.AnimController.Collider.BodyType == BodyType.Dynamic)
+                    {
+                        if (c.AnimController.Collider.Enabled)
+                        {
+                            ApplyForce(c.AnimController.Collider);
+                        }
+                        foreach (var limb in c.AnimController.Limbs)
+                        {
+                            ApplyForce(limb.body, multiplier: limb.Mass * c.AnimController.Collider.Mass / c.AnimController.Mass);
+                        }
+                    }
                 }
                 else if (triggerer is Submarine s)
                 {
@@ -247,13 +258,13 @@ namespace Barotrauma.Items.Components
             item.SendSignal(IsActive ? "1" : "0", "state_out");
         }
 
-        private void ApplyForce(PhysicsBody body)
+        private void ApplyForce(PhysicsBody body, float multiplier = 1.0f)
         {
             Vector2 diff = ConvertUnits.ToDisplayUnits(PhysicsBody.SimPosition - body.SimPosition);
             if (diff.LengthSquared() < 0.0001f) { return; }
             float distanceFactor = DistanceBasedForce ? LevelTrigger.GetDistanceFactor(body, PhysicsBody, RadiusInDisplayUnits) : 1.0f;
             if (distanceFactor <= 0.0f) { return; }
-            Vector2 force = distanceFactor * (CurrentForceFluctuation * Force) * Vector2.Normalize(diff);
+            Vector2 force = distanceFactor * (CurrentForceFluctuation * Force) * Vector2.Normalize(diff) * multiplier;
             if (force.LengthSquared() < 0.01f) { return; }
             body.ApplyForce(force);
         }
@@ -271,6 +282,15 @@ namespace Barotrauma.Items.Components
                     PhysicsBody.SetTransform(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
                 }
                 PhysicsBody.Submarine = item.Submarine;
+            }
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            if (PhysicsBody != null)
+            {
+                PhysicsBody.Remove();
+                PhysicsBody = null;
             }
         }
 

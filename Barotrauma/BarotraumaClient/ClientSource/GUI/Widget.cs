@@ -7,46 +7,46 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class Widget
+    public enum WidgetShape
     {
-        public enum Shape
-        {
-            Rectangle,
-            Circle,
-            Cross
-        }
+        Rectangle,
+        Circle,
+        Cross
+    }
 
-        public Shape shape;
-        public LocalizedString tooltip;
-        public bool showTooltip = true;
-        public Rectangle DrawRect => new Rectangle((int)(DrawPos.X - (float)size / 2), (int)(DrawPos.Y - (float)size / 2), size, size);
+    internal class Widget
+    {
+        public WidgetShape Shape;
+        public LocalizedString Tooltip;
+        public bool ShowTooltip = true;
+        public Rectangle DrawRect => new Rectangle((int)(DrawPos.X - (float)Size / 2), (int)(DrawPos.Y - (float)Size / 2), Size, Size);
         public Rectangle InputRect
         {
             get
             {
                 var inputRect = DrawRect;
-                inputRect.Inflate(inputAreaMargin, inputAreaMargin);
+                inputRect.Inflate(InputAreaMargin, InputAreaMargin);
                 return inputRect;
             }
         }
 
         public Vector2 DrawPos { get; set; }
-        public int size = 10;
-        public float thickness = 1f;
+        public int Size = 10;
+        public float Thickness = 1f;
         /// <summary>
         /// Used only for circles.
         /// </summary>
-        public int sides = 40;
+        public int Sides = 40;
         /// <summary>
         /// Currently used only for rectangles.
         /// </summary>
-        public bool isFilled;
-        public int inputAreaMargin;
-        public Color color = GUIStyle.Red;
-        public Color? secondaryColor;
-        public Color textColor = Color.White;
-        public Color textBackgroundColor = Color.Black * 0.5f;
-        public readonly string id;
+        public bool IsFilled;
+        public int InputAreaMargin;
+        public Color Color = GUIStyle.Red;
+        public Color? SecondaryColor;
+        public Color TextColor = Color.White;
+        public Color TextBackgroundColor = Color.Black * 0.5f;
+        public readonly string Id;
 
         public event Action Selected;
         public event Action Deselected;
@@ -61,11 +61,11 @@ namespace Barotrauma
 
         public bool RequireMouseOn = true;
 
-        public Action refresh;
+        public Action Refresh;
 
-        public object data;
+        public object Data;
 
-        public bool IsSelected => enabled && selectedWidgets.Contains(this);
+        public bool IsSelected => enabled && SelectedWidgets.Contains(this);
         public bool IsControlled => IsSelected && PlayerInput.PrimaryMouseButtonHeld();
         public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
         private bool enabled = true;
@@ -75,9 +75,9 @@ namespace Barotrauma
             set
             {
                 enabled = value;
-                if (!enabled && selectedWidgets.Contains(this))
+                if (!enabled && SelectedWidgets.Contains(this))
                 {
-                    selectedWidgets.Remove(this);
+                    SelectedWidgets.Remove(this);
                 }
             }
         }
@@ -89,46 +89,45 @@ namespace Barotrauma
             set
             {
                 multiselect = value;
-                if (!multiselect && selectedWidgets.Multiple())
+                if (!multiselect && SelectedWidgets.Multiple())
                 {
-                    selectedWidgets = selectedWidgets.Take(1).ToList();
+                    SelectedWidgets = SelectedWidgets.Take(1).ToList();
                 }
             }
         }
-        public Vector2? tooltipOffset;
+        public Vector2? TooltipOffset;
 
-        public Widget linkedWidget;
+        public Widget LinkedWidget;
 
-        public static List<Widget> selectedWidgets = new List<Widget>();
+        public static List<Widget> SelectedWidgets = new List<Widget>();
 
-        public Widget(string id, int size, Shape shape)
+        public Widget(string id, int size, WidgetShape shape)
         {
-            this.id = id;
-            this.size = size;
-            this.shape = shape;
+            Id = id;
+            Size = size;
+            Shape = shape;
         }
 
         public virtual void Update(float deltaTime)
         {
             PreUpdate?.Invoke(deltaTime);
             if (!enabled) { return; }
-            if (IsMouseOver || (!RequireMouseOn && selectedWidgets.Contains(this) && PlayerInput.PrimaryMouseButtonHeld()))
+            if (IsMouseOver || (!RequireMouseOn && SelectedWidgets.Contains(this) && PlayerInput.PrimaryMouseButtonHeld()))
             {
                 Hovered?.Invoke();
-                System.Diagnostics.Debug.WriteLine("hovered");
                 if (RequireMouseOn || PlayerInput.PrimaryMouseButtonDown())
                 {
-                    if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
+                    if ((multiselect && !SelectedWidgets.Contains(this)) || SelectedWidgets.None())
                     {
-                        selectedWidgets.Add(this);
+                        SelectedWidgets.Add(this);
                         Selected?.Invoke();
                     }
                 }
             }
-            else if (selectedWidgets.Contains(this))
+            else if (SelectedWidgets.Contains(this))
             {
                 System.Diagnostics.Debug.WriteLine("selectedWidgets.Contains(this) -> remove");
-                selectedWidgets.Remove(this);
+                SelectedWidgets.Remove(this);
                 Deselected?.Invoke();
             }
             if (IsSelected)
@@ -153,40 +152,40 @@ namespace Barotrauma
         {
             PreDraw?.Invoke(spriteBatch, deltaTime);
             var drawRect = DrawRect;
-            switch (shape)
+            switch (Shape)
             {
-                case Shape.Rectangle:
-                    if (secondaryColor.HasValue)
+                case WidgetShape.Rectangle:
+                    if (SecondaryColor.HasValue)
                     {
-                        GUI.DrawRectangle(spriteBatch, drawRect, secondaryColor.Value, isFilled, thickness: 2);
+                        GUI.DrawRectangle(spriteBatch, drawRect, SecondaryColor.Value, IsFilled, thickness: 2);
                     }
-                    GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? (int)(thickness * 3) : (int)thickness);
+                    GUI.DrawRectangle(spriteBatch, drawRect, Color, IsFilled, thickness: IsSelected ? (int)(Thickness * 3) : (int)Thickness);
                     break;
-                case Shape.Circle:
-                    if (secondaryColor.HasValue)
+                case WidgetShape.Circle:
+                    if (SecondaryColor.HasValue)
                     {
-                        ShapeExtensions.DrawCircle(spriteBatch, DrawPos, size / 2, sides, secondaryColor.Value, thickness: 2);
+                        ShapeExtensions.DrawCircle(spriteBatch, DrawPos, Size / 2, Sides, SecondaryColor.Value, thickness: 2);
                     }
-                    ShapeExtensions.DrawCircle(spriteBatch, DrawPos, size / 2, sides, color, thickness: IsSelected ? 3 : 1);
+                    ShapeExtensions.DrawCircle(spriteBatch, DrawPos, Size / 2, Sides, Color, thickness: IsSelected ? 3 : 1);
                     break;
-                case Shape.Cross:
-                    float halfSize = size / 2;
-                    if (secondaryColor.HasValue)
+                case WidgetShape.Cross:
+                    float halfSize = Size / 2;
+                    if (SecondaryColor.HasValue)
                     {
-                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, secondaryColor.Value, width: 2);
-                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, secondaryColor.Value, width: 2);
+                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, SecondaryColor.Value, width: 2);
+                        GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, SecondaryColor.Value, width: 2);
                     }
-                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, color, width: IsSelected ? 3 : 1);
-                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, color, width: IsSelected ? 3 : 1);
+                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitY * halfSize, DrawPos - Vector2.UnitY * halfSize, Color, width: IsSelected ? 3 : 1);
+                    GUI.DrawLine(spriteBatch, DrawPos + Vector2.UnitX * halfSize, DrawPos - Vector2.UnitX * halfSize, Color, width: IsSelected ? 3 : 1);
                     break;
-                default: throw new NotImplementedException(shape.ToString());
+                default: throw new NotImplementedException(Shape.ToString());
             }
             if (IsSelected)
             {
-                if (showTooltip && !tooltip.IsNullOrEmpty())
+                if (ShowTooltip && !Tooltip.IsNullOrEmpty())
                 {
-                    var offset = tooltipOffset ?? new Vector2(size, -size / 2f);
-                    GUI.DrawString(spriteBatch, DrawPos + offset, tooltip, textColor, textBackgroundColor);
+                    var offset = TooltipOffset ?? new Vector2(Size, -Size / 2f);
+                    GUIComponent.DrawToolTip(spriteBatch, Tooltip, DrawPos + offset, TextColor, TextBackgroundColor);
                 }
             }
             PostDraw?.Invoke(spriteBatch, deltaTime);

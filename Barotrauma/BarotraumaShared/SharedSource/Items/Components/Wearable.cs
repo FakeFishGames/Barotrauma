@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Barotrauma.Abilities;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -55,6 +56,11 @@ namespace Barotrauma
         public bool HideOtherWearables => ObscureOtherWearables == ObscuringMode.Hide;
         public bool AlphaClipOtherWearables => ObscureOtherWearables == ObscuringMode.AlphaClip;
         public bool CanBeHiddenByOtherWearables { get; private set; }
+
+        /// <summary>
+        /// Tags or identifiers of items that can hide this one.
+        /// </summary>
+        public ImmutableHashSet<Identifier> CanBeHiddenByItem { get; private set; }
         public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
         /// <summary>
@@ -139,11 +145,6 @@ namespace Barotrauma
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;
-                    ObscureOtherWearables = ObscuringMode.None;
-                    InheritLimbDepth = true;
-                    InheritScale = true;
-                    InheritOrigin = true;
-                    InheritSourceRect = true;
                     break;
             }
         }
@@ -177,6 +178,10 @@ namespace Barotrauma
 
         public void ParsePath(bool parseSpritePath)
         {
+#if SERVER
+            // Server doesn't care about texture paths at all
+            return;
+#endif
             SpritePath = UnassignedSpritePath.Value;
             if (_picker?.Info != null)
             {
@@ -196,7 +201,7 @@ namespace Barotrauma
             }
             if (parseSpritePath)
             {
-                Sprite.ParseTexturePath(file: SpritePath);
+                Sprite?.ParseTexturePath(file: SpritePath);
             }
         }
 
@@ -222,22 +227,23 @@ namespace Barotrauma
             }
 
             CanBeHiddenByOtherWearables = SourceElement.GetAttributeBool("canbehiddenbyotherwearables", true);
+            CanBeHiddenByItem = SourceElement.GetAttributeIdentifierArray(nameof(CanBeHiddenByItem), Array.Empty<Identifier>()).ToImmutableHashSet();
             InheritLimbDepth = SourceElement.GetAttributeBool("inheritlimbdepth", true);
             var scale = SourceElement.GetAttribute("inheritscale");
             if (scale != null)
             {
-                InheritScale = scale.GetAttributeBool(false);
+                InheritScale = scale.GetAttributeBool(Type != WearableType.Item);
             }
             else
             {
-                InheritScale = SourceElement.GetAttributeBool("inherittexturescale", false);
+                InheritScale = SourceElement.GetAttributeBool("inherittexturescale", Type != WearableType.Item);
             }
             IgnoreLimbScale = SourceElement.GetAttributeBool("ignorelimbscale", false);
             IgnoreTextureScale = SourceElement.GetAttributeBool("ignoretexturescale", false);
             IgnoreRagdollScale = SourceElement.GetAttributeBool("ignoreragdollscale", false);
             SourceElement.GetAttributeBool("inherittexturescale", false);
-            InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", false);
-            InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", false);
+            InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", Type != WearableType.Item);
+            InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", Type != WearableType.Item);
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
             Sound = SourceElement.GetAttributeString("sound", "");
             Scale = SourceElement.GetAttributeFloat("scale", 1.0f);
@@ -332,6 +338,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// How deep down does the item protect from pressure? Determined by status effects.
+        /// </summary>
+        public readonly float PressureProtection;
+
         public Wearable(Item item, ContentXElement element) : base(item, element)
         {
             this.item = item;
@@ -356,7 +367,8 @@ namespace Barotrauma.Items.Components
                     case "sprite":
                         if (subElement.GetAttribute("texture") == null)
                         {
-                            DebugConsole.ThrowError("Item \"" + item.Name + "\" doesn't have a texture specified!");
+                            DebugConsole.ThrowError("Item \"" + item.Name + "\" doesn't have a texture specified!",
+                                contentPackage: element.ContentPackage);
                             return;
                         }
 
@@ -408,6 +420,12 @@ namespace Barotrauma.Items.Components
                             WearableStatValues.TryAdd(statType, statValue);
                         }
                         break;
+                    case "statuseffect":
+                        if (subElement.GetAttributeString("Target", string.Empty).ToLowerInvariant().Contains("character"))
+                        {
+                            PressureProtection = Math.Max(subElement.GetAttributeFloat(nameof(PressureProtection), 0), PressureProtection);
+                        }
+                        break;
                 }
             }
         }
@@ -457,22 +475,20 @@ namespace Barotrauma.Items.Components
                 if (!equipLimb.WearingItems.Contains(wearableSprite))
                 {
                     equipLimb.WearingItems.Add(wearableSprite);
-                    equipLimb.WearingItems.Sort((i1, i2) => { return i2.Sprite.Depth.CompareTo(i1.Sprite.Depth); });
-                    equipLimb.WearingItems.Sort((i1, i2) => 
+                    equipLimb.WearingItems.Sort((wearable, nextWearable) =>
                     {
-                        if (i1?.WearableComponent == null && i2?.WearableComponent == null)
-                        {
-                            return 0;
-                        }
-                        else if (i1?.WearableComponent == null)
-                        {
-                            return -1;
-                        }
-                        else if (i2?.WearableComponent == null)
-                        {
-                            return 1;
-                        }
-                        return i1.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(i2.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
+                        float depth = wearable?.Sprite?.Depth ?? 0;
+                        float nextDepth = nextWearable?.Sprite?.Depth ?? 0;
+                        return nextDepth.CompareTo(depth);
+                    });
+                    equipLimb.WearingItems.Sort((wearable, nextWearable) => 
+                    {
+                        var wearableComponent = wearable?.WearableComponent;
+                        var nextWearableComponent = nextWearable?.WearableComponent;
+                        if (wearableComponent == null && nextWearableComponent == null) { return 0; }
+                        if (wearableComponent == null) { return -1; }
+                        if (nextWearableComponent == null) { return 1; }
+                        return wearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(nextWearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
                     });
                 }
 #if CLIENT
@@ -482,11 +498,11 @@ namespace Barotrauma.Items.Components
             character.OnWearablesChanged();
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             Character previousPicker = picker;
             Unequip(picker);
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
             previousPicker?.OnWearablesChanged();
             picker = null;
             IsActive = false;
@@ -553,10 +569,8 @@ namespace Barotrauma.Items.Components
 
             foreach (WearableSprite wearableSprite in wearableSprites)
             {
-                if (wearableSprite != null && wearableSprite.Sprite != null)
-                {
-                    wearableSprite.Sprite.Remove();
-                }
+                wearableSprite?.Sprite?.Remove();
+                wearableSprite.Picker = null;
             }
         }
 
@@ -568,9 +582,9 @@ namespace Barotrauma.Items.Components
         }
 
         private int loadedVariant = -1;
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             loadedVariant = componentElement.GetAttributeInt("variant", -1);
         }
         public override void OnItemLoaded()

@@ -30,6 +30,11 @@ namespace Barotrauma
             Noise
         }
 
+        [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
+        public float BlinkFrequency { get; private set; }
+
+        private float blinkTimer = 0.0f;
+
         [Serialize("0,0", IsPropertySaveable.Yes), Editable]
         public Vector2 Offset { get; private set; }
 
@@ -144,13 +149,7 @@ namespace Barotrauma
                     default:
                         continue;
                 }
-                foreach (XAttribute attribute in subElement.Attributes())
-                {
-                    if (PropertyConditional.IsValid(attribute))
-                    {
-                        conditionalList.Add(new PropertyConditional(attribute));
-                    }
-                }
+                conditionalList.AddRange(PropertyConditional.FromXElement(subElement));
             }
         }
 
@@ -248,7 +247,16 @@ namespace Barotrauma
                         }
                     }
                     if (!spriteState.IsActive) { continue; }
-
+                    if (decorativeSprite.BlinkFrequency > 0.0f)
+                    {
+                        decorativeSprite.blinkTimer += deltaTime * decorativeSprite.BlinkFrequency;
+                        decorativeSprite.blinkTimer %= 1.0f;
+                        if (decorativeSprite.blinkTimer > 0.5f)
+                        {
+                            spriteState.IsActive = false;
+                            continue;
+                        }
+                    }
                     //check if the sprite should be animated
                     bool animate = true;
                     foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)

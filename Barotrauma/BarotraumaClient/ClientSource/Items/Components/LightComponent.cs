@@ -40,6 +40,7 @@ namespace Barotrauma.Items.Components
         partial void SetLightSourceState(bool enabled, float brightness)
         {
             if (Light == null) { return; }
+            if (item.IsHidden) { enabled = false; }
             Light.Enabled = enabled;
             lightColorMultiplier = brightness;
             if (enabled)
@@ -67,7 +68,7 @@ namespace Barotrauma.Items.Components
                 Light.Position = item.Position;
             }
             PhysicsBody body = Light.ParentBody;
-            if (body != null)
+             if (body != null && body.Enabled)
             {
                 Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
                 Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
@@ -79,7 +80,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
         {
             if (Light?.LightSprite == null) { return; }
             if ((item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)

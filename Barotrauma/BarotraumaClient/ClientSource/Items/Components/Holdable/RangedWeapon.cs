@@ -18,10 +18,30 @@ namespace Barotrauma.Items.Components
         protected float currentCrossHairScale, currentCrossHairPointerScale;
 
         private RoundSound chargeSound;
+
         private SoundChannel chargeSoundChannel;
+        
+        [Serialize(defaultValue: "0.5, 1.5", IsPropertySaveable.No, description: "Pitch slides from X to Y over the charge time")]
+        public Vector2 ChargeSoundWindupPitchSlide
+        {
+            get => _chargeSoundWindupPitchSlide;
+            set
+            {
+                _chargeSoundWindupPitchSlide = new Vector2(
+                        Math.Max(value.X, SoundChannel.MinFrequencyMultiplier), 
+                        Math.Min(value.Y, SoundChannel.MaxFrequencyMultiplier));
+            }
+        }
+        private Vector2 _chargeSoundWindupPitchSlide;
 
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
+
+        /// <summary>
+        /// The orientation of the item is briefly wrong after the character holding it flips and before the holding logic forces it to the correct position.
+        /// We disable the crosshair briefly during that time to prevent it from momentarily jumping to an incorrect position.
+        /// </summary>
+        private float crossHairPosDirtyTimer;
 
         [Serialize(1.0f, IsPropertySaveable.No, description: "The scale of the crosshair sprite (if there is one).")]
         public float CrossHairScale
@@ -30,9 +50,9 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        partial void InitProjSpecific(ContentXElement element)
+        partial void InitProjSpecific(ContentXElement rangedWeaponElement)
         {
-            foreach (var subElement in element.Elements())
+            foreach (var subElement in rangedWeaponElement.Elements())
             {
                 string textureDir = GetTextureDirectory(subElement);
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -60,8 +80,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
+            crossHairPosDirtyTimer -= deltaTime;
             currentCrossHairScale = currentCrossHairPointerScale = cam == null ? 1.0f : cam.Zoom;
             if (crosshairSprite != null)
             {
@@ -92,6 +113,15 @@ namespace Barotrauma.Items.Components
             crosshairPointerPos = PlayerInput.MousePosition;
         }
 
+        public override void FlipX(bool relativeToSub)
+        {
+            crossHairPosDirtyTimer = 0.02f;
+        }
+        public override void FlipY(bool relativeToSub)
+        {
+            crossHairPosDirtyTimer = 0.02f;
+        }
+
         partial void UpdateProjSpecific(float deltaTime)
         {
             float chargeRatio = currentChargeTime / MaxChargeTime;
@@ -117,7 +147,8 @@ namespace Barotrauma.Items.Components
                     }
                     else if (chargeSoundChannel != null)
                     {
-                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(0.5f, 1.5f, chargeRatio);
+                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(ChargeSoundWindupPitchSlide.X, ChargeSoundWindupPitchSlide.Y, chargeRatio);
+                        chargeSoundChannel.Position = new Vector3(item.WorldPosition, 0.0f);
                     }
                     break;
                 default:
@@ -139,18 +170,22 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
+            if (character == null || !character.IsKeyDown(InputType.Aim) || !character.CanAim) { return; }
 
             //camera focused on some other item/device, don't draw the crosshair
-            if (character.ViewTarget != null && (character.ViewTarget is Item viewTargetItem) && viewTargetItem.Prefab.FocusOnSelected) { return; }
+            if (character.ViewTarget is Item viewTargetItem && viewTargetItem.Prefab.FocusOnSelected) { return; }
             //don't draw the crosshair if the item is in some other type of equip slot than hands (e.g. assault rifle in the bag slot)
             if (!character.HeldItems.Contains(item)) { return; }
 
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;
-            if (GUI.HideCursor)
+            
+            if (GUI.HideCursor && !character.AnimController.IsHoldingToRope)
             {
-                crosshairSprite?.Draw(spriteBatch, crosshairPos, ReloadTimer <= 0.0f ? Color.White : Color.White * 0.2f, 0, currentCrossHairScale);
+                if (crossHairPosDirtyTimer <= 0.0f)
+                {
+                    crosshairSprite?.Draw(spriteBatch, crosshairPos, ReloadTimer <= 0.0f ? Color.White : Color.White * 0.2f, 0, currentCrossHairScale);
+                }
                 crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairPointerScale);
             }
 

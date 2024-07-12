@@ -22,7 +22,7 @@ namespace Barotrauma
 
         public float CurrentRotation;
 
-        private List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
+        private readonly List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
 
         public Vector2 CurrentScale
         {
@@ -85,6 +85,8 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public bool CanBeVisible { get; private set; }
 
         partial void InitProjSpecific()
         {
@@ -156,6 +158,13 @@ namespace Barotrauma
             {
                 SonarRadius = Triggers.Select(t => t.ColliderRadius * 1.5f).Max();
             }
+
+            CanBeVisible =
+                Sprite != null ||
+                Prefab.DeformableSprite != null ||
+                ParticleEmitters is { Length: > 0 } ||
+                (GameMain.DebugDraw && Triggers is { Count: > 0 }) ||
+                Prefab.OverrideProperties.Any(p => p != null && (p.Sprites.Any() || p.DeformableSprite != null));
         }
 
         public void Update(float deltaTime)

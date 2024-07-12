@@ -11,7 +11,7 @@ using Barotrauma.Extensions;
 namespace Barotrauma
 {
     [Flags]
-    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 4, Corpse = 8, Submarine = 16, ExitPoint = 32 };
+    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 4, Corpse = 8, Submarine = 16, ExitPoint = 32, Disabled = 64 };
 
     partial class WayPoint : MapEntity
     {
@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public static bool ShowWayPoints = true, ShowSpawnPoints = true;
 
-        public const float LadderWaypointInterval = 55.0f;
+        public const float LadderWaypointInterval = 75.0f;
 
         protected SpawnType spawnType;
         private string[] idCardTags;
@@ -562,7 +562,7 @@ namespace Barotrauma
             removals.ForEach(wp => wp.Remove());
             removals.Clear();
             // Stairs
-            foreach (MapEntity mapEntity in mapEntityList.ToList())
+            foreach (MapEntity mapEntity in MapEntityList.ToList())
             {
                 if (!(mapEntity is Structure structure)) { continue; }
                 if (structure.StairDirection == Direction.None) { continue; }
@@ -932,6 +932,9 @@ namespace Barotrauma
         {
             return WayPointList.GetRandom(wp =>
                 (ignoreSubmarine || wp.Submarine == sub) && 
+                //checking for the disabled flag is not strictly necessary because we check for equality of the spawn type,
+                //but lets do that anyway in case we change the handling of the spawn type at some point
+                !wp.spawnType.HasFlag(SpawnType.Disabled) &&
                 wp.spawnType == spawnType &&
                 (spawnPointTag.IsNullOrEmpty() || wp.Tags.Any(t => t == spawnPointTag)) &&
                 (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob)), 
@@ -1060,7 +1063,8 @@ namespace Barotrauma
             Enum.TryParse(element.GetAttributeString("spawn", "Path"), out SpawnType spawnType);
             WayPoint w = new WayPoint(spawnType == SpawnType.Path ? Type.WayPoint : Type.SpawnPoint, rect, submarine, idRemap.GetOffsetId(element))
             {
-                spawnType = spawnType
+                spawnType = spawnType,
+                Layer = element.GetAttributeString(nameof(Layer), null)
             };
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
@@ -1115,7 +1119,8 @@ namespace Barotrauma
             element.Add(new XAttribute("ID", ID),
                 new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
                 new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
-                new XAttribute("spawn", spawnType));
+                new XAttribute("spawn", spawnType),
+                new XAttribute(nameof(Layer), Layer ?? string.Empty));
             if (SpawnType == SpawnType.ExitPoint)
             {
                 element.Add(new XAttribute("exitpointsize", XMLExtensions.PointToString(ExitPointSize)));

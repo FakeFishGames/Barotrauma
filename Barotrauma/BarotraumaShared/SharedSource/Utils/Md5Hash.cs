@@ -2,6 +2,7 @@
 
 using Barotrauma.IO;
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -43,26 +44,10 @@ namespace Barotrauma
         }
 
         private static string ByteRepresentationToStringRepresentation(byte[] byteHash)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < byteHash.Length; i++)
-            {
-                sb.Append(byteHash[i].ToString("X2"));
-            }
-
-            return sb.ToString();
-        }
+            => ToolBoxCore.ByteArrayToHexString(byteHash);
 
         private static byte[] StringRepresentationToByteRepresentation(string strHash)
-        {
-            var byteRepresentation = new byte[strHash.Length / 2];
-            for (int i = 0; i < byteRepresentation.Length; i++)
-            {
-                byteRepresentation[i] = Convert.ToByte(strHash.Substring(i * 2, 2), 16);
-            }
-
-            return byteRepresentation;
-        }
+            => ToolBoxCore.HexStringToByteArray(strHash);
 
         public static string GetShortHash(string fullHash)
         {
@@ -96,6 +81,16 @@ namespace Barotrauma
         {
             if (!stringHashRegex.IsMatch(hash)) { throw new ArgumentException($"{hash} is not a valid hash"); }
             return new Md5Hash(hash);
+        }
+
+        public static Md5Hash MergeHashes(IEnumerable<Md5Hash> hashes)
+        {
+            using IncrementalHash incrementalHash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
+            foreach (var hash in hashes)
+            {
+                incrementalHash.AppendData(hash.ByteRepresentation);
+            }
+            return BytesAsHash(incrementalHash.GetHashAndReset());
         }
 
         public static Md5Hash CalculateForBytes(byte[] bytes)

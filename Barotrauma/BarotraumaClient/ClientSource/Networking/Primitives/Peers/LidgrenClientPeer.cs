@@ -1,25 +1,25 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using Barotrauma.Extensions;
 using Lidgren.Network;
 using Barotrauma.Steam;
+using System.Net.Sockets;
 
 namespace Barotrauma.Networking
 {
-    internal sealed class LidgrenClientPeer : ClientPeer
+    internal sealed class LidgrenClientPeer : ClientPeer<LidgrenEndpoint>
     {
         private NetClient? netClient;
         private readonly NetPeerConfiguration netPeerConfiguration;
 
         private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
-        private LidgrenEndpoint lidgrenEndpoint =>
-            ServerConnection is LidgrenConnection { Endpoint: LidgrenEndpoint result }
-                ? result
-                : throw new InvalidOperationException();
-
-        public LidgrenClientPeer(LidgrenEndpoint endpoint, Callbacks callbacks, Option<int> ownerKey) : base(endpoint, callbacks, ownerKey)
+        public LidgrenClientPeer(LidgrenEndpoint endpoint, Callbacks callbacks, Option<int> ownerKey) : base(endpoint, ((Endpoint)endpoint).ToEnumerable().ToImmutableArray(), callbacks, ownerKey)
         {
             ServerConnection = null;
 
@@ -28,8 +28,12 @@ namespace Barotrauma.Networking
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma")
             {
-                UseDualModeSockets = GameSettings.CurrentConfig.UseDualModeSockets
+                DualStack = GameSettings.CurrentConfig.UseDualModeSockets
             };
+            if (endpoint.NetEndpoint.Address.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                netPeerConfiguration.LocalAddress = System.Net.IPAddress.IPv6Any;
+            }
 
             netPeerConfiguration.DisableMessageType(
                 NetIncomingMessageType.DebugMessage
@@ -51,18 +55,9 @@ namespace Barotrauma.Networking
 
             netClient = new NetClient(netPeerConfiguration);
 
-            if (SteamManager.IsInitialized)
-            {
-                steamAuthTicket = SteamManager.GetAuthSessionTicket();
-                if (steamAuthTicket == null)
-                {
-                    throw new Exception("GetAuthSessionTicket returned null");
-                }
-            }
+            initializationStep = ConnectionInitialization.AuthInfoAndVersion;
 
-            initializationStep = ConnectionInitialization.SteamTicketAndVersion;
-
-            if (!(ServerEndpoint is LidgrenEndpoint lidgrenEndpointValue))
+            if (ServerEndpoint is not { } lidgrenEndpointValue)
             {
                 throw new InvalidCastException($"Endpoint is not {nameof(LidgrenEndpoint)}");
             }
@@ -74,12 +69,25 @@ namespace Barotrauma.Networking
 
             netClient.Start();
 
-            var netConnection = netClient.Connect(lidgrenEndpointValue.NetEndpoint);
+            TaskPool.Add(
+                $"{nameof(LidgrenClientPeer)}.GetAuthTicket",
+                AuthenticationTicket.Create(ServerEndpoint),
+                t =>
+                {
+                    if (!t.TryGetResult(out Option<AuthenticationTicket> authenticationTicket))
+                    {
+                        Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+                        return;
+                    }
+                    authTicket = authenticationTicket;
 
-            ServerConnection = new LidgrenConnection(netConnection)
-            {
-                Status = NetworkConnectionStatus.Connected
-            };
+                    var netConnection = netClient.Connect(lidgrenEndpointValue.NetEndpoint);
+        
+                    ServerConnection = new LidgrenConnection(netConnection)
+                    {
+                        Status = NetworkConnectionStatus.Connected
+                    };
+                });
 
             isActive = true;
         }
@@ -91,7 +99,7 @@ namespace Barotrauma.Networking
             ToolBox.ThrowIfNull(netClient);
             ToolBox.ThrowIfNull(incomingLidgrenMessages);
 
-            if (isOwner && !ChildServerRelay.IsProcessAlive)
+            if (IsOwner && !ChildServerRelay.IsProcessAlive)
             {
                 var gameClient = GameMain.Client;
                 Close(PeerDisconnectPacket.WithReason(DisconnectReason.ServerCrashed));
@@ -107,9 +115,11 @@ namespace Barotrauma.Networking
 
             foreach (NetIncomingMessage inc in incomingLidgrenMessages)
             {
-                if (!inc.SenderConnection.RemoteEndPoint.EquivalentTo(lidgrenEndpoint.NetEndpoint))
+                var remoteEndpoint = new LidgrenEndpoint(inc.SenderEndPoint);
+                
+                if (remoteEndpoint != ServerEndpoint)
                 {
-                    DebugConsole.AddWarning($"Mismatched endpoint: expected {lidgrenEndpoint.NetEndpoint}, got {inc.SenderConnection.RemoteEndPoint}");
+                    DebugConsole.AddWarning($"Mismatched endpoint: expected {ServerEndpoint.NetEndpoint}, got {inc.SenderConnection.RemoteEndPoint}");
                     continue;
                 }
 
@@ -147,11 +157,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (initializationStep != ConnectionInitialization.Success)
-                {
-                    callbacks.OnInitializationComplete.Invoke();
-                    initializationStep = ConnectionInitialization.Success;
-                }
+                OnInitializationComplete();
 
                 var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
                 callbacks.OnMessageReceived.Invoke(packet.GetReadMessage(packetHeader.IsCompressed(), ServerConnection));
@@ -206,9 +212,6 @@ namespace Barotrauma.Networking
 
             netClient.Shutdown(peerDisconnectPacket.ToLidgrenStringRepresentation());
             netClient = null;
-
-            steamAuthTicket?.Cancel();
-            steamAuthTicket = null;
 
             callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
         }
@@ -265,11 +268,28 @@ namespace Barotrauma.Networking
             return netClient.SendMessage(msg.ToLidgren(netClient), deliveryMethod.ToLidgren());
         }
 
+        protected override async Task<Option<AccountId>> GetAccountId()
+        {
+            if (!EosInterface.Core.IsInitialized) { return SteamManager.GetSteamId().Select(id => (AccountId)id); }
+
+            var selfPuids = EosInterface.IdQueries.GetLoggedInPuids();
+            if (selfPuids.None()) { return Option.None; }
+            var accountIdsResult = await EosInterface.IdQueries.GetSelfExternalAccountIds(selfPuids.First());
+            return accountIdsResult.TryUnwrapSuccess(out var accountIds) && accountIds.Length > 0
+                ? Option.Some(accountIds[0])
+                : Option.None;
+        }
+
 #if DEBUG
+        
+
         public override void ForceTimeOut()
         {
             netClient?.ServerConnection?.ForceTimeOut();
         }
+
+        public override void DebugSendRawMessage(IWriteMessage msg)
+            => ForwardToLidgren(msg, DeliveryMethod.Reliable);
 #endif
     }
 }

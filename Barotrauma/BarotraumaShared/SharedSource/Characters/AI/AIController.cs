@@ -76,9 +76,9 @@ namespace Barotrauma
             get { return Character.AnimController.Collider.LinearVelocity; }
         }
 
-        public virtual bool CanEnterSubmarine
+        public virtual CanEnterSubmarine CanEnterSubmarine
         {
-            get { return true; }
+            get { return Character.AnimController.CanEnterSubmarine; }
         }
 
         public virtual bool CanFlip
@@ -91,14 +91,16 @@ namespace Barotrauma
         private IEnumerable<Hull> visibleHulls;
         private float hullVisibilityTimer;
         const float hullVisibilityInterval = 0.5f;
+
+        /// <summary>
+        /// Returns hulls that are visible to the character, including the current hull. 
+        /// Note that this is not an accurate visibility check, it only checks for open gaps between the adjacent and linked hulls.
+        /// </summary>
         public IEnumerable<Hull> VisibleHulls
         {
             get
             {
-                if (visibleHulls == null)
-                {
-                    visibleHulls = Character.GetVisibleHulls();
-                }
+                visibleHulls ??= Character.GetVisibleHulls();
                 return visibleHulls;
             }
             private set
@@ -325,8 +327,17 @@ namespace Barotrauma
                         {
                             if (otherItem.Prefab.Identifier == item.Prefab.Identifier || otherItem.HasIdentifierOrTags(targetTags))
                             {
-                                // Shouldn't try dropping identical items, because that causes infinite looping when trying to get multiple items of the same type and if can't fit them all in the inventory.
-                                return false;
+                                bool switchingToBetterSuit =
+                                    targetTags != null &&
+                                    targetTags.FirstOrDefault() == Tags.HeavyDivingGear &&
+                                    AIObjectiveFindDivingGear.IsSuitablePressureProtection(item, Tags.HeavyDivingGear, Character) &&
+                                    !AIObjectiveFindDivingGear.IsSuitablePressureProtection(otherItem, Tags.HeavyDivingGear, Character);
+                                // Shouldn't try dropping identical items, because that causes infinite looping when trying to get multiple items
+                                // of the same type and if can't fit them all in the inventory.
+                                if (!switchingToBetterSuit)
+                                {
+                                    return false;
+                                }
                             }
                             //if everything else fails, simply drop the existing item
                             otherItem.Drop(Character);
@@ -334,6 +345,11 @@ namespace Barotrauma
                     }
                 }
                 if (targetSlot < 0) { return false; }
+                //the item should always stay in the Any slot if it's containable in one
+                if (pickable.AllowedSlots.Contains(InvSlotType.Any))
+                {
+                    targetInventory.TryPutItem(item, Character, CharacterInventory.AnySlot);
+                }
                 return targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
             }
             else
@@ -351,7 +367,7 @@ namespace Barotrauma
         public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true, int? unequipMax = null)
         {
             var inventory = parentItem.OwnInventory;
-            if (inventory == null) { return; }
+            if (inventory == null || !inventory.Container.DrawInventory) { return; }
             int removed = 0;
             if (predicate == null || inventory.AllItems.Any(predicate))
             {
@@ -425,14 +441,9 @@ namespace Barotrauma
                         var door = gap.ConnectedDoor;
                         if (door != null)
                         {
-                            if (!door.CanBeTraversed)
+                            if (!pathSteering.CanAccessDoor(door))
                             {
-                                if (!door.HasAccess(Character))
-                                {
-                                    if (!canAttackDoors) { continue; }
-                                    // Treat doors that don't have access to like they were farther, because it will take time to break them.
-                                    multiplier = 5;
-                                }
+                                continue;
                             }
                         }
                         else
@@ -473,7 +484,7 @@ namespace Barotrauma
                 Vector2 diff = EscapeTarget.WorldPosition - Character.WorldPosition;
                 float sqrDist = diff.LengthSquared();
                 bool isClose = sqrDist < MathUtils.Pow2(100);
-                if (Character.CurrentHull == null || isClose && !isClosedDoor || pathSteering == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
+                if (Character.CurrentHull == null || (isClose && !isClosedDoor) || pathSteering == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
                 {
                     // Very close to the target, outside, or at the end of the path -> try to steer through the gap
                     Character.ReleaseSecondaryItem();
@@ -529,8 +540,5 @@ namespace Barotrauma
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
         protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }
-
-        public virtual void ClientRead(IReadMessage msg) { }
-        public virtual void ServerWrite(IWriteMessage msg) { }
     }
 }

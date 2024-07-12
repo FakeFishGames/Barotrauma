@@ -1,12 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class RemoteController : ItemComponent
     {
         [Serialize("", IsPropertySaveable.No, description: "Tag or identifier of the item that should be controlled.")]
-        public string Target
+        public Identifier Target
         {
             get;
             private set;
@@ -75,7 +74,7 @@ namespace Barotrauma.Items.Components
             float closestDist = float.PositiveInfinity;
             foreach (Item targetItem in Item.ItemList)
             {
-                if (targetItem.NonInteractable || targetItem.NonPlayerTeamInteractable || targetItem.HiddenInGame) { continue; }
+                if (targetItem.NonInteractable || targetItem.NonPlayerTeamInteractable || targetItem.IsHidden) { continue; }
                 if (OnlyInOwnSub)
                 {
                     if (targetItem.Submarine != item.Submarine) { continue; }

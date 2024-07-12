@@ -11,11 +11,15 @@ namespace Steamworks
 	{
 		internal static ISteamUserStats? Internal => Interface as ISteamUserStats;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamUserStats( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
+
 			InstallEvents();
 			RequestCurrentStats();
+
+			return true;
 		}
 
 		public static bool StatsRecieved { get; internal set; }
@@ -38,25 +42,25 @@ namespace Steamworks
 
 
 		/// <summary>
-		/// called when the achivement icon is loaded
+		/// Invoked when an achivement icon is loaded.
 		/// </summary>
 		internal static event Action<string, int>? OnAchievementIconFetched;
 
 		/// <summary>
-		/// called when the latests stats and achievements have been received
-		///	from the server
+		/// Invoked when the latests stats and achievements have been received
+		///	from the server.
 		/// </summary>
 		public static event Action<SteamId, Result>? OnUserStatsReceived;
 
 		/// <summary>
-		/// result of a request to store the user stats for a game
+		/// Result of a request to store the user stats for a game.
 		/// </summary>
 		public static event Action<Result>? OnUserStatsStored;
 
 		/// <summary>
-		/// result of a request to store the achievements for a game, or an 
+		/// Result of a request to store the achievements for a game, or an 
 		///	"indicate progress" call. If both m_nCurProgress and m_nMaxProgress
-		///	are zero, that means the achievement has been fully unlocked
+		///	are zero, that means the achievement has been fully unlocked.
 		/// </summary>
 		public static event Action<Achievement, int, int>? OnAchievementProgress;
 
@@ -67,7 +71,7 @@ namespace Steamworks
 		public static event Action<SteamId>? OnUserStatsUnloaded;
 
 		/// <summary>
-		/// Get the available achievements
+		/// Get all available achievements.
 		/// </summary>
 		public static IEnumerable<Achievement> Achievements
 		{
@@ -104,7 +108,7 @@ namespace Steamworks
 
 		/// <summary>
 		/// Tries to get the number of players currently playing this game.
-		/// Or -1 if failed.
+		/// Or <c>-1</c> if failed.
 		/// </summary>
 		public static async Task<int> PlayerCountAsync()
 		{
@@ -146,11 +150,11 @@ namespace Steamworks
 		/// <summary>
 		/// Asynchronously fetches global stats data, which is available for stats marked as 
 		/// "aggregated" in the App Admin panel of the Steamworks website.
-		/// You must have called RequestCurrentStats and it needs to return successfully via 
+		/// You must have called <see cref="RequestCurrentStats"/> and it needs to return successfully via 
 		/// its callback prior to calling this.
 		/// </summary>
-		/// <param name="days">How many days of day-by-day history to retrieve in addition to the overall totals. The limit is 60.</param>
-		/// <returns>OK indicates success, InvalidState means you need to call RequestCurrentStats first, Fail means the remote call failed</returns>
+		/// <param name="days">How many days of day-by-day history to retrieve in addition to the overall totals. The limit is <c>60</c>.</param>
+		/// <returns><see cref="Result.OK"/> indicates success, <see cref="Result.InvalidState"/> means you need to call <see cref="RequestCurrentStats"/> first, <see cref="Result.Fail"/> means the remote call failed</returns>
 		public static async Task<Result> RequestGlobalStatsAsync( int days )
 		{
 			if (Internal is null) { return Result.Fail; }
@@ -196,11 +200,11 @@ namespace Steamworks
 		/// to that value. Steam doesn't provide a mechanism for atomically increasing
 		/// stats like this, this functionality is added here as a convenience.
 		/// </summary>
-		public static bool AddStat( string name, int amount = 1 )
+		public static bool AddStatInt( string name, int amount = 1 )
 		{
 			var val = GetStatInt( name );
 			val += amount;
-			return SetStat( name, val );
+			return SetStatInt( name, val );
 		}
 
 		/// <summary>
@@ -208,33 +212,31 @@ namespace Steamworks
 		/// to that value. Steam doesn't provide a mechanism for atomically increasing
 		/// stats like this, this functionality is added here as a convenience.
 		/// </summary>
-		public static bool AddStat( string name, float amount = 1.0f )
+		public static bool AddStatFloat( string name, float amount = 1.0f )
 		{
 			var val = GetStatFloat( name );
 			val += amount;
-			return SetStat( name, val );
+			return SetStatFloat(name, val) || SetStatInt( name, (int)val );
 		}
 
 		/// <summary>
-		/// Set a stat value. This will automatically call StoreStats() after a successful call
-		/// unless you pass false as the last argument.
+		/// Set a stat value. This will automatically call <see cref="StoreStats"/> after a successful call.
 		/// </summary>
-		public static bool SetStat( string name, int value )
+		public static bool SetStatInt( string name, int value )
 		{
 			return Internal != null && Internal.SetStat( name, value );
 		}
 
 		/// <summary>
-		/// Set a stat value. This will automatically call StoreStats() after a successful call
-		/// unless you pass false as the last argument.
+		/// Set a stat value. This will automatically call <see cref="StoreStats"/> after a successful call.
 		/// </summary>
-		public static bool SetStat( string name, float value )
+		public static bool SetStatFloat( string name, float value )
 		{
 			return Internal != null && Internal.SetStat( name, value );
 		}
 
 		/// <summary>
-		/// Get a Int stat value
+		/// Get an <see langword="int"/> stat value.
 		/// </summary>
 		public static int GetStatInt( string name )
 		{
@@ -244,17 +246,20 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Get a float stat value
+		/// Get a <see langword="float"/> stat value.
 		/// </summary>
 		public static float GetStatFloat( string name )
 		{
-			float data = 0;
-			Internal?.GetStat( name, ref data );
-			return data;
+			float dataFloat = 0;
+			if (Internal?.GetStat(name, ref dataFloat) is true)
+			{
+				return dataFloat;
+			}
+			return GetStatInt(name);
 		}
 
 		/// <summary>
-		/// Practically wipes the slate clean for this user. If includeAchievements is true, will wipe
+		/// Practically wipes the slate clean for this user. If <paramref name="includeAchievements"/> is <see langword="true"/>, will also wipe
 		/// any achievements too.
 		/// </summary>
 		/// <returns></returns>

@@ -205,5 +205,11 @@ namespace Barotrauma
                 Recalculate();
             }
         }
+
+        public override void ForceLayoutRecalculation()
+        {
+            Recalculate();
+            base.ForceLayoutRecalculation();
+        }
     }
 }

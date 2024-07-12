@@ -32,6 +32,8 @@ namespace Barotrauma
         /// </summary>
         public bool IsDiagonal { get; }
 
+        public readonly float GlowEffectT;
+
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;
 
@@ -106,6 +108,8 @@ namespace Barotrauma
         }
 
         public float Size => IsHorizontal ? Rect.Height : Rect.Width;
+
+        public float PressureDistributionSpeed => Size / 100.0f * open;
 
         private Door connectedDoor;
         public Door ConnectedDoor
@@ -193,6 +197,8 @@ namespace Barotrauma
             GapList.Add(this);
             InsertToList();
 
+            GlowEffectT = Rand.Range(0.0f, 1.0f);
+
             float blockerSize = ConvertUnits.ToSimUnits(Math.Max(rect.Width, rect.Height)) / 2;
             outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize, 
                 BodyType.Static, 
@@ -215,7 +221,7 @@ namespace Barotrauma
             return new Gap(rect, IsHorizontal, Submarine);
         }
 
-        public override void Move(Vector2 amount, bool ignoreContacts = false)
+        public override void Move(Vector2 amount, bool ignoreContacts = true)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -223,7 +229,7 @@ namespace Barotrauma
                 return;
             }
 
-            base.Move(amount);
+            base.Move(amount, ignoreContacts);
 
             if (!DisableHullRechecks) { FindHulls(); }
         }
@@ -336,8 +342,28 @@ namespace Barotrauma
             }
         }
 
+        private int updateCount;
+
         public override void Update(float deltaTime, Camera cam)
         {
+            int updateInterval = 4;
+            float flowMagnitude = flowForce.LengthSquared();
+            if (flowMagnitude < 1.0f)
+            {
+                //very sparse updates if there's practically no water moving
+                updateInterval = 8;
+            }
+            else if (linkedTo.Count == 2 && flowMagnitude > 10.0f)
+            {
+                //frequent updates if water is moving between hulls
+                updateInterval = 1;
+            }
+
+            updateCount++;
+            if (updateCount < updateInterval) { return; }
+            deltaTime *= updateCount;
+            updateCount = 0;
+
             flowForce = Vector2.Zero;
             outsideColliderRaycastTimer -= deltaTime;
 
@@ -403,11 +429,9 @@ namespace Barotrauma
 
             if (hull1.WaterVolume <= 0.0 && hull2.WaterVolume <= 0.0) { return; }
 
-            float size = IsHorizontal ? rect.Height : rect.Width;
-
             //a variable affecting the water flow through the gap
             //the larger the gap is, the faster the water flows
-            float sizeModifier = size / 100.0f * open;
+            float sizeModifier = Size / 100.0f * open;
 
             //horizontal gap (such as a regular door)
             if (IsHorizontal)
@@ -416,7 +440,7 @@ namespace Barotrauma
                 float delta = 0.0f;
 
                 //water level is above the lower boundary of the gap
-                if (Math.Max(hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1], hull2.Surface + subOffset.Y + hull2.WaveY[0]) > rect.Y - size)
+                if (Math.Max(hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1], hull2.Surface + subOffset.Y + hull2.WaveY[0]) > rect.Y - Size)
                 {
                     int dir = (hull1.Pressure > hull2.Pressure + subOffset.Y) ? 1 : -1;
 
@@ -545,27 +569,35 @@ namespace Barotrauma
 
             if (open > 0.0f)
             {
-                if (hull1.WaterVolume > hull1.Volume / Hull.MaxCompress && hull2.WaterVolume > hull2.Volume / Hull.MaxCompress)
+                if (hull1.WaterVolume > hull1.Volume / Hull.MaxCompress && 
+                    hull2.WaterVolume > hull2.Volume / Hull.MaxCompress)
                 {
+                    //both hulls full -> distribute pressure
                     float avgLethality = (hull1.LethalPressure + hull2.LethalPressure) / 2.0f;
-                    hull1.LethalPressure = avgLethality;
-                    hull2.LethalPressure = avgLethality;
+                    changePressure(hull1, avgLethality, PressureDistributionSpeed, deltaTime);
+                    changePressure(hull2, avgLethality, PressureDistributionSpeed, deltaTime);
+
+                    static void changePressure(Hull hull, float target, float speed, float deltaTime)
+                    {
+                        float diff = target - hull.LethalPressure;
+                        float maxChange = Hull.PressureBuildUpSpeed * speed * deltaTime;
+                        hull.LethalPressure += MathHelper.Clamp(diff, -maxChange, maxChange);
+                    }
                 }
                 else
                 {
-                    hull1.LethalPressure = 0.0f;
-                    hull2.LethalPressure = 0.0f;
+                    //either hull not full -> pressure drops
+                    hull1.LethalPressure -= Hull.PressureDropSpeed * PressureDistributionSpeed * deltaTime;
+                    hull2.LethalPressure -= Hull.PressureDropSpeed * PressureDistributionSpeed * deltaTime;
                 }
             }
         }
 
         void UpdateRoomToOut(float deltaTime, Hull hull1)
         {
-            float size = IsHorizontal ? rect.Height : rect.Width;
-
             //a variable affecting the water flow through the gap
             //the larger the gap is, the faster the water flows
-            float sizeModifier = size * open * open;
+            float sizeModifier = Size * open * open;
 
             float delta = 500.0f * sizeModifier * deltaTime;
 
@@ -618,7 +650,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : 10.0f) * deltaTime;
+                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : Hull.PressureBuildUpSpeed) * PressureDistributionSpeed * deltaTime;
                 }
             }
             else
@@ -633,7 +665,7 @@ namespace Barotrauma
                 }
                 if (hull1.WaterVolume >= hull1.Volume / Hull.MaxCompress)
                 {
-                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : 10.0f) * deltaTime;
+                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : Hull.PressureBuildUpSpeed) * PressureDistributionSpeed * deltaTime;
                 }
             }
         }
@@ -724,11 +756,12 @@ namespace Barotrauma
             hull2.Oxygen -= deltaOxygen;
         }
 
-        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
+        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist, bool allowRoomToRoom = false)
         {
             foreach (Gap gap in gaps)
             {
-                if (gap.Open == 0.0f || gap.IsRoomToRoom) { continue; }
+                if (gap.Open == 0.0f) { continue; }
+                if (gap.IsRoomToRoom && !allowRoomToRoom) { continue; }
 
                 if (gap.ConnectedWall != null)
                 {
@@ -818,9 +851,9 @@ namespace Barotrauma
             Gap g = new Gap(rect, isHorizontal, submarine, id: idRemap.GetOffsetId(element))
             {
                 linkedToID = new List<ushort>(),
+                Layer = element.GetAttributeString(nameof(Layer), null)
             };
-
-            g.HiddenInGame = element.GetAttributeBool(nameof(HiddenInGame).ToLower(), g.HiddenInGame);
+            g.HiddenInGame = element.GetAttributeBool(nameof(HiddenInGame), g.HiddenInGame);
             return g;
         }
 
@@ -831,7 +864,8 @@ namespace Barotrauma
             element.Add(
                 new XAttribute("ID", ID),
                 new XAttribute("horizontal", IsHorizontal ? "true" : "false"),
-                new XAttribute(nameof(HiddenInGame).ToLower(), HiddenInGame));
+                new XAttribute(nameof(HiddenInGame), HiddenInGame),
+                new XAttribute(nameof(Layer), Layer ?? string.Empty));
 
             element.Add(new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +

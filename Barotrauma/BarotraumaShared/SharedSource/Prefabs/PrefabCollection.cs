@@ -386,7 +386,7 @@ namespace Barotrauma
                 {
                     using (MD5 md5 = MD5.Create())
                     {
-                        prefabWithUintIdentifier.UintIdentifier = ToolBox.IdentifierToUint32Hash(prefab.Identifier, md5);
+                        prefabWithUintIdentifier.UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(prefab.Identifier, md5);
 
                         //it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
                         T? findCollision()

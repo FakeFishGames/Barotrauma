@@ -47,7 +47,7 @@ namespace Barotrauma
             }
 
             float theoreticalMaxMonsterStrength = 10000;
-            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * (GameMain.GameSession?.LevelData?.Difficulty ?? 0f) / 100;
+            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * (GameMain.GameSession?.Level?.Difficulty ?? 0f) / 100;
             float absoluteMonsterStrength = monsterStrength / theoreticalMaxMonsterStrength;
             float relativeMonsterStrength = monsterStrength / relativeMaxMonsterStrength;
 
@@ -413,23 +413,9 @@ namespace Barotrauma
 
         private Rectangle DrawScriptedEvent(SpriteBatch spriteBatch, ScriptedEvent scriptedEvent, Rectangle? parentRect = null)
         {
-            EventAction? currentEvent = !scriptedEvent.IsFinished ? scriptedEvent.Actions[scriptedEvent.CurrentActionIndex] : null;
-
             List<DebugLine> positions = new List<DebugLine>();
 
-            string text = $"Finished: {scriptedEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Action index: {scriptedEvent.CurrentActionIndex.ColorizeObject()}\n" +
-                          $"Current action: {currentEvent?.ToDebugString() ?? ToolBox.ColorizeObject(null)}\n";
-
-            text += "All actions:\n";
-            text += FindActions(scriptedEvent).Aggregate(string.Empty, (current, action) => current + $"{new string(' ', action.Item1 * 6)}{action.Item2.ToDebugString()}\n");
-
-            text += "Targets:\n";
-            foreach (var (key, value) in scriptedEvent.Targets)
-            {
-                text += $"    {key.ColorizeObject()}: {value.Aggregate(string.Empty, (current, entity) => current + $"{entity.ColorizeObject()} ")}\n";
-            }
-
+            string text = scriptedEvent.GetDebugInfo();
             if (scriptedEvent.Targets != null)
             {
                 foreach ((_, List<Entity> entities) in scriptedEvent.Targets)
@@ -452,10 +438,7 @@ namespace Barotrauma
         {
             debugPositions.Clear();
 
-            string text = $"Finished: {artifactEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Item: {artifactEvent.Item.ColorizeObject()}\n" +
-                          $"Spawn pending: {artifactEvent.SpawnPending.ColorizeObject()}\n" +
-                          $"Spawn position: {artifactEvent.SpawnPos.ColorizeObject()}\n";
+            string text = artifactEvent.GetDebugInfo();
 
             if (artifactEvent.Item != null && !artifactEvent.Item.Removed)
             {
@@ -470,10 +453,7 @@ namespace Barotrauma
         {
             debugPositions.Clear();
 
-            string text = $"Finished: {monsterEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Amount: {monsterEvent.MinAmount.ColorizeObject()} - {monsterEvent.MaxAmount.ColorizeObject()}\n" +
-                          $"Spawn pending: {monsterEvent.SpawnPending.ColorizeObject()}\n" +
-                          $"Spawn position: {monsterEvent.SpawnPos.ColorizeObject()}\n";
+            string text = monsterEvent.GetDebugInfo();
 
             if (monsterEvent.SpawnPos != null && Submarine.MainSub != null)
             {
@@ -601,7 +581,14 @@ namespace Barotrauma
                             StatusEffect effect = StatusEffect.Load(subElement, $"EventManager.ClientRead ({eventIdentifier})");
                             foreach (Entity target in targets)
                             {
-                                effect.Apply(effect.type, 1.0f, target, target as ISerializableEntity);
+                                if (target is Item item)
+                                {
+                                    effect.Apply(effect.type, 1.0f, item, item.AllPropertyObjects);
+                                }
+                                else
+                                {
+                                    effect.Apply(effect.type, 1.0f, target, target as ISerializableEntity);
+                                }
                             }
                         }
                         break;
@@ -662,34 +649,36 @@ namespace Barotrauma
                     Identifier missionIdentifier = msg.ReadIdentifier();
                     int locationIndex = msg.ReadInt32();
                     int destinationIndex = msg.ReadInt32();
-
                     string missionName = msg.ReadString();
-                    MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
-                    if (prefab != null)
+                    if (Screen.Selected != GameMain.NetLobbyScreen)
                     {
-                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName),
-                            Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                        MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
+                        if (prefab != null)
                         {
-                            IconColor = prefab.IconColor
-                        };
-                        if (GameMain.GameSession?.Map is { } map && locationIndex >= 0 && locationIndex < map.Locations.Count)
-                        {
-                            Location location = map.Locations[locationIndex];
-                            map.Discover(location, checkTalents: false);
+                            new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName),
+                                Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                            {
+                                IconColor = prefab.IconColor
+                            };
+                            if (GameMain.GameSession?.Map is { } map && locationIndex >= 0 && locationIndex < map.Locations.Count)
+                            {
+                                Location location = map.Locations[locationIndex];
+                                map.Discover(location, checkTalents: false);
 
-                            LocationConnection? connection = null;
-                            if (destinationIndex != locationIndex && destinationIndex >= 0 && destinationIndex < map.Locations.Count)
-                            {
-                                Location destination = map.Locations[destinationIndex];
-                                connection = map.Connections.FirstOrDefault(c => c.Locations.Contains(location) && c.Locations.Contains(destination));
-                            }
-                            if (connection != null)
-                            {
-                                location.UnlockMission(prefab, connection);
-                            }
-                            else
-                            {
-                                location.UnlockMission(prefab);
+                                LocationConnection? connection = null;
+                                if (destinationIndex != locationIndex && destinationIndex >= 0 && destinationIndex < map.Locations.Count)
+                                {
+                                    Location destination = map.Locations[destinationIndex];
+                                    connection = map.Connections.FirstOrDefault(c => c.Locations.Contains(location) && c.Locations.Contains(destination));
+                                }
+                                if (connection != null)
+                                {
+                                    location.UnlockMission(prefab, connection);
+                                }
+                                else
+                                {
+                                    location.UnlockMission(prefab);
+                                }
                             }
                         }
                     }
@@ -710,7 +699,30 @@ namespace Barotrauma
                         }
                     }
                     break;
+                case NetworkEventType.EVENTLOG:
+                    ClientReadEventLog(GameMain.Client, msg);
+                    break;
+                case NetworkEventType.EVENTOBJECTIVE:
+                    ClientReadEventObjective(GameMain.Client, msg);
+                    break;
             }
+        }
+    
+        private void ClientReadEventLog(GameClient client, IReadMessage msg)
+        {
+            NetEventLogEntry entry = INetSerializableStruct.Read<NetEventLogEntry>(msg);
+            EventLog.AddEntry(entry.EventPrefabId, entry.LogEntryId, entry.Text.Replace("\\n", "\n"));
+        }
+        private static void ClientReadEventObjective(GameClient client, IReadMessage msg)
+        {
+            NetEventObjective entry = INetSerializableStruct.Read<NetEventObjective>(msg);
+            EventObjectiveAction.Trigger(
+                entry.Type,
+                entry.Identifier,
+                entry.ObjectiveTag,
+                entry.ParentObjectiveId,
+                entry.TextTag,
+                entry.CanBeCompleted);
         }
     }
 }

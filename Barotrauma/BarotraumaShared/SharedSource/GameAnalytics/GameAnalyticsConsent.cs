@@ -1,12 +1,21 @@
+﻿#nullable enable
 using Barotrauma.Steam;
 using RestSharp;
 using System;
+using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Barotrauma
 {
     static partial class GameAnalyticsManager
     {
+        /// <summary>
+        /// The protocol used to communicate with the remote consent server may change.
+        /// This number tells the server which version the game is using so we can implement backwards-compatibility.
+        /// </summary>
+        private const string RemoteRequestVersion = "3";
+
         public enum Consent
         {
             /// <summary>
@@ -39,18 +48,66 @@ namespace Barotrauma
 
         public static bool SendUserStatistics => UserConsented == Consent.Yes && loadedImplementation != null;
 
-        private static bool consentTextAvailable
+        private static bool ConsentTextAvailable
             => TextManager.ContainsTag("statisticsconsentheader")
                 && TextManager.ContainsTag("statisticsconsenttext");
+ 
+        private const string consentServerUrl = "https://barotraumagame.com/baromaster/";
+        private const string consentServerFile = "consentserver.php";
 
-        private readonly static string consentServerUrl = "https://barotraumagame.com/baromaster/";
-        private readonly static string consentServerFile = "consentserver.php";
-
-        private static string GetAuthTicket()
+        enum Platform
         {
-            Steamworks.AuthTicket authTicket = SteamManager.GetAuthSessionTicket();
-            //convert byte array to hex
-            return BitConverter.ToString(authTicket.Data).Replace("-", "");
+            Steam,
+            EOS,
+            None
+        }
+
+        private class AuthTicket
+        {
+            public readonly string Token;
+            public readonly Platform Platform;
+
+            public AuthTicket(string token, Platform platform)
+            {
+                Token = token ?? string.Empty;
+                Platform = platform;
+            }
+        }
+
+        private static async Task<AuthTicket> GetAuthTicket()
+        {
+            if (SteamManager.IsInitialized)
+            {
+                return await GetSteamAuthTicket();
+            }
+            else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
+            {
+                return await GetEOSAuthTicket();
+            }
+            return new AuthTicket(string.Empty, Platform.None);
+        }
+
+        private static async Task<AuthTicket> GetSteamAuthTicket()
+        {
+            var authTicket = await SteamManager.GetAuthTicketForGameAnalyticsConsent();
+            return authTicket.TryUnwrap(out var ticketUnwrapped) && ticketUnwrapped.Data is { Length: > 0 }
+                ? new AuthTicket(ToolBoxCore.ByteArrayToHexString(ticketUnwrapped.Data), Platform.Steam) //convert byte array to hex
+                : throw new Exception("Could not retrieve Steamworks authentication ticket for GameAnalytics");
+        }
+
+        private static async Task<AuthTicket> GetEOSAuthTicket()
+        {
+            var puid = EosInterface.IdQueries.GetLoggedInPuids().First();
+            var tokenResult = EosInterface.EosIdToken.FromProductUserId(puid);
+            if (tokenResult.TryUnwrapFailure(out var error))
+            {
+                throw new Exception($"Could not retrieve EOS authentication ticket for GameAnalytics. {error}");
+            }
+            else if (tokenResult.TryUnwrapSuccess(out var token))
+            {
+                return new AuthTicket(token.JsonWebToken.ToString(), Platform.EOS);
+            }
+            throw new UnreachableCodeException();
         }
 
         /// <summary>
@@ -59,27 +116,33 @@ namespace Barotrauma
         /// the database or the user accepting via the privacy policy
         /// prompt should enable it.
         /// </summary>
-        public static void SetConsent(Consent consent)
+        public static void SetConsent(Consent consent, Action? onAnswerSent = null)
         {
             if (consent == Consent.Yes)
             {
                 throw new Exception(
                     "Cannot call SetConsent with value Consent.Yes, must only be set to this value via consent prompt");
             }
-            SetConsentInternal(consent);
+            SetConsentInternal(consent, onAnswerSent);
         }
         
         /// <summary>
         /// Implementation of the bulk of SetConsent.
         /// DO NOT CALL THIS UNLESS NEEDED.
         /// </summary>
-        private static void SetConsentInternal(Consent consent)
+        private static void SetConsentInternal(Consent consent, Action? onAnswerSent)
         {
-            if (UserConsented == consent) { return; }
+            if (UserConsented == consent)
+            {
+                onAnswerSent?.Invoke();
+                return;
+            }
 
             if (consent == Consent.Ask)
             {
-                CreateConsentPrompt();
+#if CLIENT
+                GameMain.ExecuteAfterContentFinishedLoading(CreateConsentPrompt);
+#endif
             }
 
             if (consent != Consent.No && consent != Consent.Yes)
@@ -94,42 +157,96 @@ namespace Barotrauma
                 ShutDown();
             }
 
-            string authTicketStr;
+            TaskPool.Add(
+                "GameAnalyticsConsent.SendAnswerToRemoteDatabase",
+                SendAnswerToRemoteDatabase(consent),
+                t =>
+                {
+                    onAnswerSent?.Invoke();
+                    if (!t.TryGetResult(out bool success) || !success) { return; }
+
+                    UserConsented = consent;
+                    if (consent == Consent.Yes)
+                    {
+                        Init();
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Try to send the user's response to the remote consent server.
+        /// Returns true upon success, false otherwise.
+        /// </summary>
+        private static async Task<bool> SendAnswerToRemoteDatabase(Consent consent)
+        {
+            AuthTicket authTicket;
             try
             {
-                authTicketStr = GetAuthTicket();
+                authTicket = await GetAuthTicket();
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in GameAnalyticsManager.SetConsent. Could not get a Steam authentication ticket.", e);
-                return;
+                DebugConsole.ThrowError($"Error in {nameof(GameAnalyticsManager)}.{nameof(SendAnswerToRemoteDatabase)}. Could not get an authentication ticket.", e);
+                return false;
+            }
+            if (authTicket.Platform == Platform.None)
+            {
+                DebugConsole.AddWarning($"Error in {nameof(GameAnalyticsManager)}.{nameof(SendAnswerToRemoteDatabase)}. Not logged in to any platform.");
+                return false;
+            }
+            if (string.IsNullOrEmpty(authTicket.Token))
+            {
+                DebugConsole.ThrowError($"Error in {nameof(GameAnalyticsManager)}.{nameof(SendAnswerToRemoteDatabase)}. {authTicket.Platform} authentication ticket was empty.");
+                return false;
             }
 
-            RestClient client = null;
+            IRestResponse response;
             try
             {
-                client = new RestClient(consentServerUrl);
+                var client = new RestClient(consentServerUrl);
+
+                var request = new RestRequest(consentServerFile, Method.GET);
+                request.AddParameter("authticket", authTicket.Token);
+                if (consent == Consent.Ask)
+                {
+                    request.AddParameter("action", "resetconsent");
+                }
+                else
+                {
+                    request.AddParameter("action", "setconsent");
+                    request.AddParameter("consent", consent == Consent.Yes ? 1 : 0);
+                }
+                request.AddParameter("request_version", RemoteRequestVersion);
+                request.AddParameter("platform", authTicket.Platform);
+
+                response = await client.ExecuteAsync(request, Method.GET);
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error while connecting to consent server", e);
+                return false;
             }
-            if (client == null) { return; }
 
-            var request = new RestRequest(consentServerFile, Method.GET);
-            request.AddParameter("authticket", authTicketStr);
-            request.AddParameter("action", "setconsent");
-            request.AddParameter("consent", consent == Consent.Yes ? 1 : 0);
+            if (!CheckResponse(response)) { return false; }
 
-            var response = client.Execute(request, Method.GET);
-            if (CheckResponse(response))
+            if (!string.IsNullOrWhiteSpace(response.Content))
             {
-                UserConsented = consent;
-                if (consent == Consent.Yes)
-                {
-                    Init();
-                }
+                DebugConsole.ThrowError($"Error in GameAnalyticsManager.SetContent. Consent server reported an error: {response.Content.Trim()}");
+                return false;
             }
+            return true;
+        }
+
+        public static void ResetConsent()
+        {
+            TaskPool.Add(
+                "GameAnalyticsConsent.ResetConsentInternal",
+                SendAnswerToRemoteDatabase(Consent.Ask),
+                t =>
+                {
+                    if (!t.TryGetResult(out bool success) || !success) { return; }
+                    DebugConsole.NewMessage("Reset GameAnalytics consent.");
+                });
         }
 
         static partial void CreateConsentPrompt();
@@ -140,34 +257,51 @@ namespace Barotrauma
             return;
             #endif
             
-            if (!consentTextAvailable)
+            if (!ConsentTextAvailable)
             {
                 SetConsent(Consent.Unknown);
                 return;
             }
 
-            static void error(string reason, Exception exception)
+            if (!SteamManager.IsInitialized && EosInterface.IdQueries.GetLoggedInPuids() is not { Length: > 0 })
             {
-                DebugConsole.ThrowError($"Error in GameAnalyticsManager.GetConsent: {reason}", exception);
-                SetConsent(Consent.Error);
-            }
-
-            if (!SteamManager.IsInitialized)
-            {
-                DebugConsole.AddWarning("Error in GameAnalyticsManager.GetConsent: Could not get a Steam authentication ticket (not connected to Steam).");
+                DebugConsole.AddWarning("Error in GameAnalyticsManager.GetConsent: Could not get a Steam or EOS authentication ticket (not connected to Steam or EOS).");
                 SetConsent(Consent.Error);
                 return;
             }
 
-            string authTicketStr;
+            TaskPool.Add(
+                "GameAnalyticsConsent.RequestAnswerFromRemoteDatabase",
+                RequestAnswerFromRemoteDatabase(),
+                t =>
+                {
+                    if (!t.TryGetResult(out Consent consent)) { return; }
+                    SetConsentInternal(consent, onAnswerSent: null);
+                });
+        }
+
+        private static async Task<Consent> RequestAnswerFromRemoteDatabase()
+        {
+            static void error(string reason, Exception? exception)
+            {
+                DebugConsole.ThrowError($"Error in {nameof(GameAnalyticsManager)}.{nameof(RequestAnswerFromRemoteDatabase)}: {reason}", exception);
+                SetConsent(Consent.Error);
+            }
+            
+            AuthTicket authTicket;
             try
             {
-                authTicketStr = GetAuthTicket();
+                authTicket = await GetAuthTicket();
             }
             catch (Exception e)
             {
-                error("Could not get a Steam authentication ticket.", e);
-                return;
+                error("Could not get an authentication ticket.", e);
+                return Consent.Error;
+            }
+            if (authTicket.Platform == Platform.None)
+            {
+                error($"Could not get an authentication ticket. Not logged in to any platform.", exception: null);
+                return Consent.Error;
             }
 
             RestClient client;
@@ -178,64 +312,64 @@ namespace Barotrauma
             catch (Exception e)
             {
                 error("Error while connecting to consent server.", e);
-                return;
+                return Consent.Error;
             }
 
             var request = new RestRequest(consentServerFile, Method.GET);
-            request.AddParameter("authticket", authTicketStr);
+            request.AddParameter("authticket", authTicket.Token);
             request.AddParameter("action", "getconsent");
+            request.AddParameter("request_version", RemoteRequestVersion);
+            request.AddParameter("platform", authTicket.Platform);
 
-            TaskPool.Add($"{nameof(GameAnalyticsManager)}.{nameof(InitIfConsented)}", client.ExecuteAsync(request), (t) =>
+            IRestResponse response;
+            try
             {
-                if (t.Exception != null)
-                {
-                    error("Error executing the request to the consent server.", t.Exception.InnerException);
-                    return;
-                }
+                response = await client.ExecuteAsync(request);
+            }
+            catch (Exception e)
+            {
+                error("Error executing the request to the consent server.", e.GetInnermost());
+                return Consent.Error;
+            }
 
-                if (!t.TryGetResult(out IRestResponse response)) { return; }
-                if (!CheckResponse(response))
-                {
-                    SetConsent(Consent.Error);
-                }
-                else if (string.IsNullOrEmpty(response.Content))
-                {
-                    SetConsent(Consent.Ask);
-                }
-                else
-                {
-                    SetConsentInternal(response.Content[0] == '1'
-                        ? Consent.Yes
-                        : Consent.No);
-                }
-            });
+            if (!CheckResponse(response))
+            {
+                return Consent.Error;
+            }
+            if (string.IsNullOrEmpty(response.Content))
+            {
+                return Consent.Ask;
+            }
+            return response.Content[0] == '1'
+                ? Consent.Yes
+                : Consent.No;
         }
 
         private static bool CheckResponse(IRestResponse response)
         {
             if (response.ErrorException != null)
             {
-                DebugConsole.ThrowError(TextManager.GetWithVariable("MasterServerErrorException", "[error]", response.ErrorException.ToString()));
+                DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("MasterServerErrorException", "[error]", response.ErrorException.ToString()));
                 return false;
             }
-            else if (response.StatusCode != HttpStatusCode.OK)
+
+            if (response.StatusCode == HttpStatusCode.OK) { return true; }
+
+            switch (response.StatusCode)
             {
-                switch (response.StatusCode)
-                {
-                    case HttpStatusCode.NotFound:
-                        DebugConsole.ThrowError(TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", consentServerUrl));
-                        break;
-                    case HttpStatusCode.ServiceUnavailable:
-                        DebugConsole.ThrowError(TextManager.Get("MasterServerErrorUnavailable"));
-                        break;
-                    default:
-                        DebugConsole.ThrowError(TextManager.GetWithVariables("MasterServerErrorDefault", 
-                            ("[statuscode]", response.StatusCode.ToString()),
-                            ("[statusdescription]", response.StatusDescription)));
-                        break;
-                }
+                case HttpStatusCode.NotFound:
+                    DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", consentServerUrl));
+                    break;
+                case HttpStatusCode.ServiceUnavailable:
+                    DebugConsole.ThrowErrorLocalized(TextManager.Get("MasterServerErrorUnavailable"));
+                    break;
+                default:
+                    DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariables("MasterServerErrorDefault", 
+                        ("[statuscode]", response.StatusCode.ToString()),
+                        ("[statusdescription]", response.StatusDescription)));
+                    break;
             }
-            return response.StatusCode == HttpStatusCode.OK;
+            return false;
         }
     }
 }

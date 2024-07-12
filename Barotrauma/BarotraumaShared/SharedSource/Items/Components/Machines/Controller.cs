@@ -62,18 +62,58 @@ namespace Barotrauma.Items.Components
 
         public IEnumerable<LimbPos> LimbPositions { get { return limbPositions; } }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "When enabled, the item will continuously send out a signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out a signal when interacted with.", alwaysUseInstanceValues: true)]
         public bool IsToggle
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.", alwaysUseInstanceValues: true)]
+        private string output;
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.HasConnectionPanel, onlyInEditors: false), 
+            Serialize("1", IsPropertySaveable.Yes, description: "The signal sent when the controller is being activated or is toggled on. If empty, no signal is sent.", alwaysUseInstanceValues: true)]
+        public string Output
+        {
+            get { return output; }
+            set
+            {
+                if (value == null || value == output) { return; }
+                output = value;
+                //reactivate if signal isn't empty (we may not have been previously sending a signal, but might now)
+                if (!value.IsNullOrEmpty()) { IsActive = true; }
+            }
+        }
+
+        private string falseOutput;
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.IsToggleableController, onlyInEditors: false), 
+            Serialize("0", IsPropertySaveable.Yes, description: "The signal sent when the controller is toggled off. If empty, no signal is sent. Only valid if IsToggle is true.", alwaysUseInstanceValues: true)]
+        public string FalseOutput
+        {
+            get { return falseOutput; }
+            set
+            {
+                if (value == null || value == falseOutput) { return; }
+                falseOutput = value;
+                //reactivate if signal isn't empty (we may not have been previously sending a signal, but might now)
+                if (!value.IsNullOrEmpty()) { IsActive = true; }
+            }
+        }
+
+        private bool state;
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.IsToggleableController, onlyInEditors: true), 
+            Serialize(false, IsPropertySaveable.No, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.", alwaysUseInstanceValues: true)]
         public bool State
         {
-            get;
-            set;
+            get { return state; }
+            set
+            {
+                if (state != value)
+                {
+                    state = value;
+                    string newOutput = state ? output : falseOutput;
+                    IsActive = !string.IsNullOrEmpty(newOutput);
+                }
+            }
         }
 
         [Serialize(true, IsPropertySaveable.No, description: "Should the HUD (inventory, health bar, etc) be hidden when this item is selected.")]
@@ -93,6 +133,20 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, IsPropertySaveable.No, description: "Should the character using the item be drawn behind the item.")]
         public bool DrawUserBehind
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Can another character select this controller when another character has already selected it?")]
+        public bool AllowSelectingWhenSelectedByOther
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Can another character select this controller when a bot has already selected it?")]
+        public bool AllowSelectingWhenSelectedByBot
         {
             get;
             set;
@@ -150,10 +204,11 @@ namespace Barotrauma.Items.Components
             this.cam = cam;
             UserInCorrectPosition = false;
 
-            if (IsToggle)
+            string signal = IsToggle && State ? output : falseOutput;
+            if (item.Connections != null && IsToggle && !string.IsNullOrEmpty(signal))
             {
-                item.SendSignal(State ? "1" : "0", "signal_out");
-                item.SendSignal(State ? "1" : "0", "trigger_out");
+                item.SendSignal(signal, "signal_out");
+                item.SendSignal(signal, "trigger_out");
             }
 
             if (user == null 
@@ -169,7 +224,7 @@ namespace Barotrauma.Items.Components
                     CancelUsing(user);
                     user = null;
                 }
-                if (!IsToggle || item.Connections == null) { IsActive = false; }
+                if (item.Connections == null || !IsToggle || string.IsNullOrEmpty(signal)) { IsActive = false; }
                 return;
             }
 
@@ -299,9 +354,9 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(output))
             {
-                item.SendSignal(new Signal("1", sender: user), "trigger_out");
+                item.SendSignal(new Signal(output, sender: user), "trigger_out");
             }
 
             lastUsed = Timing.TotalTime;
@@ -405,9 +460,9 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(output))
             {
-                item.SendSignal(new Signal("1", sender: picker), "signal_out");
+                item.SendSignal(new Signal(output, sender: picker), "signal_out");
             }
 #if CLIENT
             PlaySound(ActionType.OnUse, picker);
@@ -468,6 +523,17 @@ namespace Barotrauma.Items.Components
                     user = null;
                     return false;
                 }
+                else if (user.IsBot && !activator.IsBot)
+                {
+                    if (AllowSelectingWhenSelectedByBot)
+                    {
+                        CancelUsing(user);
+                        user = activator;
+                        IsActive = true;
+                        return true;
+                    }
+                }
+                return AllowSelectingWhenSelectedByOther;
             }
             else
             {
@@ -476,8 +542,11 @@ namespace Barotrauma.Items.Components
             }
 #if SERVER
             item.CreateServerEvent(this);
-#endif
-            item.SendSignal(new Signal("1", sender: user), "signal_out");
+#endif            
+            if (!string.IsNullOrEmpty(output))
+            {
+                item.SendSignal(new Signal(output, sender: user), "signal_out");
+            }
             return true;
         }
 
@@ -520,9 +589,9 @@ namespace Barotrauma.Items.Components
             return SaveLimbPositions(base.Save(parentElement));
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode)
             {
                 LoadLimbPositions(componentElement);
@@ -553,7 +622,7 @@ namespace Barotrauma.Items.Components
             return element;
         }
 
-        private void LoadLimbPositions(XElement element)
+        private void LoadLimbPositions(ContentXElement element)
         {
             limbPositions.Clear();
             foreach (var subElement in element.Elements())
@@ -562,7 +631,8 @@ namespace Barotrauma.Items.Components
                 string limbStr = subElement.GetAttributeString("limb", "");
                 if (!Enum.TryParse(subElement.GetAttribute("limb").Value, out LimbType limbType))
                 {
-                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.");
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.",
+                        contentPackage: element.ContentPackage);
                 }
                 else
                 {

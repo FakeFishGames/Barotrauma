@@ -9,7 +9,7 @@ namespace Barotrauma.Items.Components
             currentTarget?.DrawHUD(spriteBatch, Screen.Selected.Cam, character);
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             currentTarget?.UpdateHUD(cam, character,deltaTime);
         }

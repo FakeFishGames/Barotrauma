@@ -17,11 +17,13 @@ namespace Steamworks
 	{
 		internal static ISteamMusic? Internal => Interface as ISteamMusic;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamMusic( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
 
 			InstallEvents();
+			return true;
 		}
 
 		internal static void InstallEvents()
@@ -31,22 +33,22 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Playback status changed
+		/// Invoked when playback status is changed.
 		/// </summary>
 		public static event Action? OnPlaybackChanged;
 
 		/// <summary>
-		/// Volume changed, parameter is new volume
+		/// Invoked when the volume of the music player is changed.
 		/// </summary>
 		public static event Action<float>? OnVolumeChanged;
 
 		/// <summary>
-		/// Checks if Steam Music is enabled
+		/// Checks if Steam Music is enabled.
 		/// </summary>
 		public static bool IsEnabled => Internal != null && Internal.BIsEnabled();
 
 		/// <summary>
-		/// true if a song is currently playing, paused, or queued up to play; otherwise false.
+		/// <see langword="true"/> if a song is currently playing, paused, or queued up to play; otherwise <see langword="false"/>.
 		/// </summary>
 		public static bool IsPlaying => Internal != null && Internal.BIsPlaying();
 
@@ -55,23 +57,28 @@ namespace Steamworks
 		/// </summary>
 		public static MusicStatus Status => Internal?.GetPlaybackStatus() ?? MusicStatus.Undefined;
 
-
+		/// <summary>
+		/// Plays the music player.
+		/// </summary>
 		public static void Play() => Internal?.Play();
 
+		/// <summary>
+		/// Pauses the music player.
+		/// </summary>
 		public static void Pause() => Internal?.Pause();
 
 		/// <summary>
-		/// Have the Steam Music player play the previous song.
+		/// Forces the music player to play the previous song.
 		/// </summary>
 		public static void PlayPrevious() => Internal?.PlayPrevious();
 
 		/// <summary>
-		/// Have the Steam Music player skip to the next song
+		/// Forces the music player to skip to the next song.
 		/// </summary>
 		public static void PlayNext() => Internal?.PlayNext();
 
 		/// <summary>
-		/// Gets/Sets the current volume of the Steam Music player
+		/// Gets and sets the current volume of the Steam Music player
 		/// </summary>
 		public static float Volume
 		{

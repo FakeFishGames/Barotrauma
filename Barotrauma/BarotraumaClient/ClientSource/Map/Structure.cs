@@ -51,30 +51,114 @@ namespace Barotrauma
             UpdateSpriteStates(0.0f);
         }
 
+        public static Vector2 UpgradeTextureOffset(
+            Vector2 targetSize,
+            Vector2 originalTextureOffset,
+            SubmarineInfo submarineInfo,
+            Rectangle sourceRect,
+            Vector2 scale,
+            bool flippedX,
+            bool flippedY)
+        {
+            if (submarineInfo.GameVersion <= Sprite.LastBrokenTiledSpriteGameVersion)
+            {
+                // Tiled sprite rendering was significantly changed after v1.2.3.0:
+                // Rendering flipped, scaled and offset textures was completely broken,
+                // but some existing community submarines depend on that old behavior,
+                // so let's redo some of the broken logic here if the sub is old enough
+
+                Vector2 flipper = (flippedX ? -1f : 1f, flippedY ? -1f : 1f);
+
+                var textureOffset = originalTextureOffset * flipper;
+
+                textureOffset = new Vector2(
+                    MathUtils.PositiveModulo((int)-textureOffset.X, sourceRect.Width),
+                    MathUtils.PositiveModulo((int)-textureOffset.Y, sourceRect.Height));
+
+                textureOffset.X = (textureOffset.X / scale.X) % sourceRect.Width;
+                textureOffset.Y = (textureOffset.Y / scale.Y) % sourceRect.Height;
+
+                Vector2 flippedDrawOffset = Vector2.Zero;
+                if (flippedX)
+                {
+                    float diff = targetSize.X % (sourceRect.Width * scale.X);
+                    flippedDrawOffset.X = (sourceRect.Width * scale.X - diff) / scale.X;
+                    flippedDrawOffset.X =
+                        MathUtils.NearlyEqual(flippedDrawOffset.X, MathF.Round(flippedDrawOffset.X)) ?
+                            MathF.Round(flippedDrawOffset.X) : flippedDrawOffset.X;
+                }
+                if (flippedY)
+                {
+                    float diff = targetSize.Y % (sourceRect.Height * scale.Y);
+                    flippedDrawOffset.Y = (sourceRect.Height * scale.Y - diff) / scale.Y;
+                    flippedDrawOffset.Y =
+                        MathUtils.NearlyEqual(flippedDrawOffset.Y, MathF.Round(flippedDrawOffset.Y)) ?
+                            MathF.Round(flippedDrawOffset.Y) : flippedDrawOffset.Y;
+                }
+
+                var textureOffsetPlusFlipBs = textureOffset + flippedDrawOffset;
+
+                if (textureOffsetPlusFlipBs.X > sourceRect.Width)
+                {
+                    var diff = textureOffsetPlusFlipBs.X - sourceRect.Width;
+                    textureOffset.X = (textureOffset.X + diff * (scale.X - 1f)) % sourceRect.Width;
+                }
+                if (textureOffsetPlusFlipBs.Y > sourceRect.Height)
+                {
+                    var diff = textureOffsetPlusFlipBs.Y - sourceRect.Height;
+                    textureOffset.Y = (textureOffset.Y + diff * (scale.Y - 1f)) % sourceRect.Height;
+                }
+
+                textureOffset *= scale * flipper;
+
+                return -textureOffset;
+            }
+
+            return originalTextureOffset;
+        }
+
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation)
         {
             if (!CastShadow) { return; }
 
-            if (convexHulls == null)
+            convexHulls ??= new List<ConvexHull>();
+
+            //if the convex hull is longer than this, we need to split it to multiple parts
+            //very large convex hulls don't play nicely with the lighting or LOS, because the shadow cast
+            //by the convex hull would need to be extruded very far to cover the whole screen
+            const float MaxConvexHullLength = 1024.0f;
+            float length = IsHorizontal ? size.X : size.Y;
+            int convexHullCount = (int)Math.Max(1, Math.Ceiling(length / MaxConvexHullLength));
+
+            Vector2 sectionSize = size;
+            if (convexHullCount > 1)
             {
-                convexHulls = new List<ConvexHull>();
+                if (IsHorizontal)
+                {
+                    sectionSize.X = length / convexHullCount;
+                }
+                else
+                {
+                    sectionSize.Y = length / convexHullCount;
+                }
             }
 
-            Vector2 halfSize = size / 2;
-            Vector2[] verts = new Vector2[]
+            for (int i = 0; i < convexHullCount; i++)
             {
-                position + new Vector2(-halfSize.X, halfSize.Y),
-                position + new Vector2(halfSize.X, halfSize.Y),
-                position + new Vector2(halfSize.X, -halfSize.Y),
-                position + new Vector2(-halfSize.X, -halfSize.Y),
-            };
+                Vector2 offset =
+                    (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) *
+                    (i * length / convexHullCount);
 
-            var h = new ConvexHull(verts, Color.Black, this);
-            if (Math.Abs(rotation) > 0.001f)
-            {
-                h.Rotate(position, rotation);
+                var h = new ConvexHull(
+                    new Rectangle((position - size / 2 + offset).ToPoint(), sectionSize.ToPoint()),
+                    IsHorizontal,
+                    this);
+                if (Math.Abs(rotation) > 0.001f)
+                {
+                    h.Rotate(position, rotation);
+                }
+                convexHulls.Add(h);
             }
-            convexHulls.Add(h);
         }
 
         public override void UpdateEditing(Camera cam, float deltaTime)
@@ -94,8 +178,8 @@ namespace Barotrauma
             foreach (LightSource light in Lights)
             {
                 Vector2 bgOffset = new Vector2(
-                    MathUtils.PositiveModulo((int)-textOffset.X, light.texture.Width),
-                    MathUtils.PositiveModulo((int)-textOffset.Y, light.texture.Height));
+                    MathUtils.PositiveModulo(-textOffset.X, light.texture.Width),
+                    MathUtils.PositiveModulo(-textOffset.Y, light.texture.Height));
 
                 light.LightTextureOffset = bgOffset;
             }
@@ -110,6 +194,16 @@ namespace Barotrauma
                 CanTakeKeyBoardFocus = false
             };
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont) { UserData = this };
+          
+            if (editor.Fields.TryGetValue(nameof(Scale).ToIdentifier(), out GUIComponent[] scaleFields) &&
+                scaleFields.FirstOrDefault() is GUINumberInput scaleInput)
+            {
+                //texture offset needs to be adjusted when scaling the entity to keep the look of the entity unchanged
+                scaleInput.OnValueChanged += (GUINumberInput numberInput) =>
+                {
+                    TextureOffset *= (Scale / ScaleWhenTextureOffsetSet);
+                };
+            }
 
             if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)
             {
@@ -127,12 +221,19 @@ namespace Barotrauma
                 editor.AddCustomContent(tickBox, 1);
             }
 
+            if (!Layer.IsNullOrEmpty())
+            {
+                var layerText = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)) { MinSize = new Point(0, heightScaled) }, TextManager.AddPunctuation(':', TextManager.Get("editor.layer"), Layer));
+                editor.AddCustomContent(layerText, 1);
+            }
+
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
+
+            var mirrorX = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                 OnClicked = (button, data) =>
@@ -142,10 +243,12 @@ namespace Barotrauma
                         me.FlipX(relativeToSub: false);
                     }
                     if (!SelectedList.Contains(this)) { FlipX(relativeToSub: false); }
+                    ColorFlipButton(button, FlippedX);
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
+            ColorFlipButton(mirrorX, FlippedX);
+            var mirrorY = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                 OnClicked = (button, data) =>
@@ -155,9 +258,11 @@ namespace Barotrauma
                         me.FlipY(relativeToSub: false);
                     }
                     if (!SelectedList.Contains(this)) { FlipY(relativeToSub: false); }
+                    ColorFlipButton(button, FlippedY);
                     return true;
                 }
             };
+            ColorFlipButton(mirrorY, FlippedY);
             new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"), style: "GUIButtonSmall")
             {
                 OnClicked = (button, data) =>
@@ -213,11 +318,14 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
-            Rectangle worldRect = WorldRect;
+            RectangleF worldRect = Quad2D.FromSubmarineRectangle(WorldRect).Rotated(
+                FlippedX != FlippedY
+                    ? rotationRad
+                    : -rotationRad).BoundingAxisAlignedRectangle;
             Vector2 worldPos = WorldPosition;
 
-            Vector2 min = new Vector2(worldRect.X, worldRect.Y - worldRect.Height);
-            Vector2 max = new Vector2(worldRect.Right, worldRect.Y);
+            Vector2 min = new Vector2(worldRect.X, worldRect.Y);
+            Vector2 max = new Vector2(worldRect.Right, worldRect.Y + worldRect.Height);
             foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
             {
                 float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
@@ -274,7 +382,10 @@ namespace Barotrauma
                 if (!HasBody && !ShowStructures) { return; }
                 if (HasBody && !ShowWalls) { return; }
             }
-            else if (HiddenInGame) { return; }
+            else if (IsHidden) 
+            {
+                return; 
+            }
 
             Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted ? GUIStyle.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
 
@@ -289,7 +400,12 @@ namespace Barotrauma
 
                 Vector2 bodyPos = WorldPosition + BodyOffset * Scale;
 
-                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White,
+                GUI.DrawRectangle(sb: spriteBatch,
+                    center: new Vector2(bodyPos.X, -bodyPos.Y),
+                    width: rectSize.X,
+                    height: rectSize.Y,
+                    rotation: BodyRotation,
+                    clr: Color.White,
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
@@ -303,8 +419,6 @@ namespace Barotrauma
             float depth = GetDrawDepth();
 
             Vector2 textureOffset = this.textureOffset;
-            if (FlippedX) { textureOffset.X = -textureOffset.X; }
-            if (FlippedY) { textureOffset.Y = -textureOffset.Y; }
 
             if (back && damageEffect == null && !isWiringMode)
             {
@@ -330,42 +444,52 @@ namespace Barotrauma
                         dropShadowOffset.Y = -dropShadowOffset.Y;
                     }
 
-                    SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
-                    Prefab.BackgroundSprite.effects ^= SpriteEffects;
-
                     Vector2 backGroundOffset = new Vector2(
-                        MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width),
-                        MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height));
+                        MathUtils.PositiveModulo(-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width * TextureScale.X * Scale),
+                        MathUtils.PositiveModulo(-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height * TextureScale.Y * Scale));
+
+                    float rotationRad = rotationForSprite(this.rotationRad, Prefab.BackgroundSprite);
 
                     Prefab.BackgroundSprite.DrawTiled(
                         spriteBatch,
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                        new Vector2(rect.X + rect.Width / 2 + drawOffset.X, -(rect.Y - rect.Height / 2 + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
+                        rotation: rotationRad,
+                        origin: rect.Size.ToVector2() * new Vector2(0.5f, 0.5f),
                         color: Prefab.BackgroundSpriteColor,
                         textureScale: TextureScale * Scale,
                         startOffset: backGroundOffset,
-                        depth: Math.Max(GetDrawDepth(Prefab.BackgroundSprite.Depth, Prefab.BackgroundSprite), depth + 0.000001f));
+                        depth: Math.Max(GetDrawDepth(Prefab.BackgroundSprite.Depth, Prefab.BackgroundSprite), depth + 0.000001f),
+                        spriteEffects: Prefab.BackgroundSprite.effects ^ SpriteEffects);
 
                     if (UseDropShadow)
                     {
                         Prefab.BackgroundSprite.DrawTiled(
                             spriteBatch,
-                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                            new Vector2(rect.X + rect.Width / 2 + drawOffset.X, -(rect.Y - rect.Height / 2 + drawOffset.Y)) + dropShadowOffset,
                             new Vector2(rect.Width, rect.Height),
+                            rotation: rotationRad,
+                            origin: rect.Size.ToVector2() * new Vector2(0.5f, 0.5f),
                             color: Color.Black * 0.5f,
                             textureScale: TextureScale * Scale,
                             startOffset: backGroundOffset,
-                            depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f);
+                            depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f,
+                            spriteEffects: Prefab.BackgroundSprite.effects ^ SpriteEffects);
                     }
-
-                    Prefab.BackgroundSprite.effects = oldEffects;
                 }
             }
 
             if (back == GetRealDepth() > 0.5f)
             {
-                SpriteEffects oldEffects = Prefab.Sprite.effects;
-                Prefab.Sprite.effects ^= SpriteEffects;
+                Vector2 advanceX = MathUtils.RotatedUnitXRadians(this.rotationRad).FlipY();
+                Vector2 advanceY = advanceX.YX().FlipX();
+                if (FlippedX != FlippedY)
+                {
+                    advanceX = advanceX.FlipY();
+                    advanceY = advanceY.FlipX();
+                }
+
+                float sectionSpriteRotationRad = rotationForSprite(this.rotationRad, Prefab.Sprite);
 
                 for (int i = 0; i < Sections.Length; i++)
                 {
@@ -391,7 +515,7 @@ namespace Barotrauma
                         drawSection = new Rectangle(
                             drawSection.X,
                             drawSection.Y,
-                            Sections[Sections.Length -1 ].rect.Right - drawSection.X,
+                            Sections[Sections.Length - 1].rect.Right - drawSection.X,
                             drawSection.Y - (Sections[Sections.Length - 1].rect.Y - Sections[Sections.Length - 1].rect.Height));
                         i = Sections.Length;
                     }
@@ -400,48 +524,72 @@ namespace Barotrauma
                         Math.Abs(rect.Location.X - drawSection.Location.X),
                         Math.Abs(rect.Location.Y - drawSection.Location.Y));
 
-                    if (FlippedX && IsHorizontal) { sectionOffset.X = drawSection.Right - rect.Right; }
-                    if (FlippedY && !IsHorizontal) { sectionOffset.Y = (rect.Y - rect.Height) - (drawSection.Y - drawSection.Height); }
+                    if (FlippedX && IsHorizontal) { sectionOffset.X = rect.Right - drawSection.Right; }
+                    if (FlippedY && !IsHorizontal) { sectionOffset.Y = (drawSection.Y - drawSection.Height) - (rect.Y - rect.Height); }
 
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.Sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.Sprite.SourceRect.Height);
+                    sectionOffset.X += MathUtils.PositiveModulo(-textureOffset.X, Prefab.Sprite.SourceRect.Width * TextureScale.X * Scale);
+                    sectionOffset.Y += MathUtils.PositiveModulo(-textureOffset.Y, Prefab.Sprite.SourceRect.Height * TextureScale.Y * Scale);
+
+                    Vector2 pos = new Vector2(drawSection.X, drawSection.Y);
+                    pos -= rect.Location.ToVector2();
+                    pos = advanceX * pos.X + advanceY * pos.Y;
+                    pos += rect.Location.ToVector2();
+                    pos = new Vector2(pos.X + rect.Width / 2 + drawOffset.X, -(pos.Y - rect.Height / 2 + drawOffset.Y));
 
                     Prefab.Sprite.DrawTiled(
                         spriteBatch,
-                        new Vector2(drawSection.X + drawOffset.X, -(drawSection.Y + drawOffset.Y)),
+                        pos,
                         new Vector2(drawSection.Width, drawSection.Height),
+                        rotation: sectionSpriteRotationRad,
+                        origin: rect.Size.ToVector2() * new Vector2(0.5f, 0.5f),
                         color: color,
                         startOffset: sectionOffset,
                         depth: depth,
-                        textureScale: TextureScale * Scale);
+                        textureScale: TextureScale * Scale,
+                        spriteEffects: Prefab.Sprite.effects ^ SpriteEffects);
                 }
 
                 foreach (var decorativeSprite in Prefab.DecorativeSprites)
                 {
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
+                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor) + this.rotationRad;
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
-                    decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, Prefab.Sprite.effects,
+                    Vector2 drawPos = DrawPosition + MathUtils.RotatePoint(offset, -this.rotationRad);
+                    decorativeSprite.Sprite.Draw(
+                        spriteBatch: spriteBatch,
+                        pos: drawPos.FlipY(),
+                        color: color,
+                        rotate: rotation,
+                        scale: decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale,
+                        spriteEffect: Prefab.Sprite.effects ^ SpriteEffects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - Prefab.Sprite.Depth), 0.999f));
                 }
-                Prefab.Sprite.effects = oldEffects;
+            }
+
+            static float rotationForSprite(float rotationRad, Sprite sprite)
+            {
+                if (sprite.effects.HasFlag(SpriteEffects.FlipHorizontally) != sprite.effects.HasFlag(SpriteEffects.FlipVertically))
+                {
+                    rotationRad = -rotationRad;
+                }
+                return rotationRad;
             }
 
             if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.5f)
             {
                 if (Bodies != null)
                 {
-                    for (int i = 0; i < Bodies.Count; i++)
+                    foreach (var body in Bodies)
                     {
-                        Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
+                        Vector2 pos = ConvertUnits.ToDisplayUnits(body.Position);
                         if (Submarine != null) { pos += Submarine.DrawPosition; }
                         pos.Y = -pos.Y;
+                        var dimensions = bodyDimensions[body];
                         GUI.DrawRectangle(spriteBatch,
                             pos,
-                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].X),
-                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].Y),
-                            -Bodies[i].Rotation, Color.White);
+                            ConvertUnits.ToDisplayUnits(dimensions.X),
+                            ConvertUnits.ToDisplayUnits(dimensions.Y),
+                            -body.Rotation, Color.White);
                     }
                 }
 
@@ -508,7 +656,7 @@ namespace Barotrauma
 
         private bool ConditionalMatches(PropertyConditional conditional)
         {
-            if (!string.IsNullOrEmpty(conditional.TargetItemComponentName))
+            if (!string.IsNullOrEmpty(conditional.TargetItemComponent))
             {
                 return false;
             }

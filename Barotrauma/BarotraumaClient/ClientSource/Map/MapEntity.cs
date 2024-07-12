@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Lights;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -25,7 +26,7 @@ namespace Barotrauma
 
         public event Action<Rectangle> Resized;
 
-        private static bool resizing;
+        public static bool Resizing { get; private set; }
         private int resizeDirX, resizeDirY;
         private Rectangle? prevRect;
 
@@ -65,9 +66,7 @@ namespace Barotrauma
                 disableSelect = value;
                 if (disableSelect)
                 {
-                    startMovingPos = Vector2.Zero;
-                    selectionSize = Vector2.Zero;
-                    selectionPos = Vector2.Zero;
+                    StopSelection();
                 }
             }
         }
@@ -122,11 +121,11 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateSelecting(Camera cam)
         {
-            if (resizing)
+            if (Resizing)
             {
                 if (!SelectedAny)
                 {
-                    resizing = false;
+                    Resizing = false;
                 }
                 return;
             }
@@ -164,9 +163,9 @@ namespace Barotrauma
                     if (SelectedAny)
                     {
                         SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(SelectedList), true));
+                        SelectedList.ForEachMod(static e => { if (!e.Removed) { e.Remove(); } });
+                        SelectedList.Clear();
                     }
-                    SelectedList.ForEach(e => { if (!e.Removed) { e.Remove(); } });
-                    SelectedList.Clear();
                 }
 
                 if (PlayerInput.IsCtrlDown())
@@ -243,7 +242,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    foreach (MapEntity e in mapEntityList)
+                    foreach (MapEntity e in MapEntityList)
                     {
                         if (!e.SelectableInEditor) { continue; }
                         if (e.IsMouseOn(position))
@@ -352,7 +351,7 @@ namespace Barotrauma
                 selectionSize.X = position.X - selectionPos.X;
                 selectionSize.Y = selectionPos.Y - position.Y;
 
-                foreach (MapEntity entity in mapEntityList)
+                foreach (MapEntity entity in MapEntityList)
                 {
                     entity.IsIncludedInSelection = false;
                 }
@@ -454,7 +453,7 @@ namespace Barotrauma
 
                     selectionPos = Vector2.Zero;
                     selectionSize = Vector2.Zero;
-                    foreach (MapEntity entity in mapEntityList)
+                    foreach (MapEntity entity in MapEntityList)
                     {
                         entity.IsIncludedInSelection = false;
                     }
@@ -480,6 +479,13 @@ namespace Barotrauma
                     Screen.Selected.Cam.StopMovement();
                 }
             }
+        }
+
+        public static void StopSelection()
+        {
+            startMovingPos = Vector2.Zero;
+            selectionSize = Vector2.Zero;
+            selectionPos = Vector2.Zero;
         }
 
         public static Vector2 GetNudgeAmount(bool doHold = true)
@@ -525,7 +531,7 @@ namespace Barotrauma
 
             if (!isShiftDown) { return null; }
 
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity e in MapEntityList)
             {
                 if (!e.SelectableInEditor || e is not Item potentialContainer) { continue; }
 
@@ -730,7 +736,7 @@ namespace Barotrauma
 
         static partial void UpdateAllProjSpecific(float deltaTime)
         {
-            var entitiesToRender = Submarine.VisibleEntities ?? mapEntityList;
+            var entitiesToRender = Submarine.VisibleEntities ?? MapEntityList;
             foreach (MapEntity me in entitiesToRender)
             {
                 if (me is Item item)
@@ -780,12 +786,16 @@ namespace Barotrauma
                     foreach (MapEntity e in SelectedList)
                     {
                         SpriteEffects spriteEffects = SpriteEffects.None;
+                        float spriteRotation = 0.0f;
+                        float rectangleRotation = 0.0f;
                         switch (e)
                         {
                             case Item item:
                                 {
                                     if (item.FlippedX && item.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
-                                    if (item.flippedY && item.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    if (item.FlippedY && item.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    spriteRotation = MathHelper.ToRadians(item.Rotation);
+                                    rectangleRotation = spriteRotation;
                                     var wire = item.GetComponent<Wire>();
                                     if (wire != null && wire.Item.body != null && !wire.Item.body.Enabled)
                                     {
@@ -797,7 +807,18 @@ namespace Barotrauma
                             case Structure structure:
                                 {
                                     if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
-                                    if (structure.flippedY && structure.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    if (structure.FlippedY && structure.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    rectangleRotation = MathHelper.ToRadians(structure.Rotation);
+
+                                    spriteRotation = rectangleRotation;
+                                    bool spriteIsFlippedHorizontally = structure.Sprite.effects.HasFlag(SpriteEffects.FlipHorizontally);
+                                    bool spriteIsFlippedVertically = structure.Sprite.effects.HasFlag(SpriteEffects.FlipVertically);
+                                    if (spriteIsFlippedHorizontally != spriteIsFlippedVertically)
+                                    {
+                                        spriteRotation = -spriteRotation;
+                                    }
+
+                                    if (structure.FlippedX != structure.FlippedY) { rectangleRotation = -rectangleRotation; }
                                     break;
                                 }
                             case WayPoint wayPoint:
@@ -819,11 +840,12 @@ namespace Barotrauma
                                 }
                         }
                         e.Prefab?.DrawPlacing(spriteBatch,
-                            new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);
+                            new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteRotation, spriteEffects: spriteEffects);
                         GUI.DrawRectangle(spriteBatch,
-                            new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount,
-                            new Vector2(e.rect.Width, e.rect.Height),
-                            Color.White, false, 0, (int)Math.Max(3.0f / GameScreen.Selected.Cam.Zoom, 2.0f));
+                            center: e.WorldRect.Center.ToVector2().FlipY() + moveAmount + new Vector2(0f, e.WorldRect.Height),
+                            width: e.WorldRect.Width, height: e.WorldRect.Height,
+                            rotation: rectangleRotation, clr: Color.White,
+                            depth: 0f, thickness: Math.Max(3.0f / GameScreen.Selected.Cam.Zoom, 2.0f));
                     }
 
                     //stop dragging the "selection rectangle"
@@ -832,33 +854,54 @@ namespace Barotrauma
             }
             if (selectionPos != Vector2.Zero)
             {
-                var (sizeX, sizeY) = selectionSize;
-                var (posX, posY) = selectionPos;
-
-                posY = -posY;
-
-                Vector2[] corners =
-                {
-                    new Vector2(posX, posY),
-                    new Vector2(posX + sizeX, posY),
-                    new Vector2(posX + sizeX, posY + sizeY),
-                    new Vector2(posX, posY + sizeY)
-                };
-
-                Color selectionColor = GUIStyle.Blue;
-                float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
-
-                GUI.DrawFilledRectangle(spriteBatch, corners[0], selectionSize, selectionColor * 0.1f);
-
-                Vector2 offset = new Vector2(0f, thickness / 2f);
-
-                if (sizeY < 0) { offset.Y = -offset.Y; }
-
-                spriteBatch.DrawLine(corners[0], corners[1], selectionColor, thickness);
-                spriteBatch.DrawLine(corners[1] - offset, corners[2] + offset, selectionColor, thickness);
-                spriteBatch.DrawLine(corners[2], corners[3], selectionColor, thickness);
-                spriteBatch.DrawLine(corners[3] + offset, corners[0] - offset, selectionColor, thickness);
+                DrawSelectionRect(spriteBatch, selectionPos, selectionSize, GUIStyle.Blue);
             }
+        }
+
+        public static void DrawSelectionRect(SpriteBatch spriteBatch, Vector2 pos, Vector2 size, Color color)
+        {
+            var (sizeX, sizeY) = size;
+            var (posX, posY) = pos;
+
+            posY = -posY;
+
+            Vector2[] corners =
+            {
+                new Vector2(posX, posY),
+                new Vector2(posX + sizeX, posY),
+                new Vector2(posX + sizeX, posY + sizeY),
+                new Vector2(posX, posY + sizeY)
+            };
+
+            float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
+
+            GUI.DrawFilledRectangle(spriteBatch, corners[0], size, color * 0.1f);
+
+            Vector2 offset = new Vector2(0f, thickness / 2f);
+
+            if (sizeY < 0) { offset.Y = -offset.Y; }
+
+            spriteBatch.DrawLine(corners[0], corners[1], color, thickness);
+            spriteBatch.DrawLine(corners[1] - offset, corners[2] + offset, color, thickness);
+            spriteBatch.DrawLine(corners[2], corners[3], color, thickness);
+            spriteBatch.DrawLine(corners[3] + offset, corners[0] - offset, color, thickness);
+        }
+
+        protected static void ColorFlipButton(GUIButton btn, bool flip)
+        {
+            var color = flip ? GUIStyle.Green : Color.White;
+            var hsv = ToolBox.RGBToHSV(color);
+
+            // Boost saturation and reduce value a bit because our default colors are too muted for this button's style
+            var hsvBase = hsv;
+            hsvBase.Y *= 4f;
+            hsvBase.Z *= 0.8f;
+            btn.Color = ToolBoxCore.HSVToRGB(hsvBase.X, hsvBase.Y, hsvBase.Z); 
+            btn.SelectedColor = ToolBoxCore.HSVToRGB(hsvBase.X, hsvBase.Y, hsvBase.Z); 
+
+            var hsvHover = hsv;
+            hsvHover.Z *= 1.2f;
+            btn.HoverColor = ToolBoxCore.HSVToRGB(hsvHover.X, hsvHover.Y, hsvHover.Z); 
         }
 
         public static List<MapEntity> FilteredSelectedList { get; private set; } = new List<MapEntity>();
@@ -943,6 +986,11 @@ namespace Barotrauma
             }
         }
 
+        public static void ResetEditingHUD()
+        {
+            editingHUD = null;
+        }
+
         public static void DrawEditor(SpriteBatch spriteBatch, Camera cam)
         {
             if (SelectedList.Count == 1)
@@ -995,10 +1043,10 @@ namespace Barotrauma
         {
             if (CopiedList.Count == 0) { return; }
 
-            List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+            List<MapEntity> prevEntities = new List<MapEntity>(MapEntityList);
             Clone(CopiedList);
 
-            var clones = mapEntityList.Except(prevEntities).ToList();
+            var clones = MapEntityList.Except(prevEntities).ToList();
             var nonWireClones = clones.Where(c => !(c is Item item) || item.GetComponent<Wire>() == null);
             if (!nonWireClones.Any()) { nonWireClones = clones; }
 
@@ -1027,12 +1075,12 @@ namespace Barotrauma
         /// </summary>
         public static List<MapEntity> CopyEntities(List<MapEntity> entities)
         {
-            List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+            List<MapEntity> prevEntities = new List<MapEntity>(MapEntityList);
 
             CopiedList = Clone(entities);
 
             //find all new entities created during cloning
-            var newEntities = mapEntityList.Except(prevEntities).ToList();
+            var newEntities = MapEntityList.Except(prevEntities).ToList();
 
             //do a "shallow remove" (removes the entities from the game without removing links between them)
             //  -> items will stay in their containers
@@ -1089,77 +1137,135 @@ namespace Barotrauma
 
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 
+        private float RotationRad
+            => MathHelper.ToRadians(
+                this switch
+                {
+                    Structure s => s.Rotation,
+                    Item it => it.Rotation,
+                    _ => 0.0f
+                });
+
+        private Vector2 GetEditingHandlePos(int x, int y, Camera cam)
+        {
+            Vector2 handleDiff = new Vector2(x * (rect.Width * 0.5f), y * (rect.Height * 0.5f));
+            var rotation = -RotationRad;
+            handleDiff = MathUtils.RotatePoint(handleDiff, rotation);
+            if (FlippedX) { handleDiff = handleDiff.FlipX(); }
+            if (FlippedY) { handleDiff = handleDiff.FlipY(); }
+            return cam.WorldToScreen(Position + handleDiff);
+        }
+
+        float ResizeHandleSize => 10 * GUI.Scale;
+        float ResizeHandleHighlightDistance => 8 * GUI.Scale;
+
         private void UpdateResizing(Camera cam)
         {
             IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
-            int StartY = ResizeVertical ? -1 : 0;
+            int startY = ResizeVertical ? -1 : 0;
 
             for (int x = startX; x < 2; x += 2)
             {
-                for (int y = StartY; y < 2; y += 2)
+                for (int y = startY; y < 2; y += 2)
                 {
-                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f + 5), y * (rect.Height * 0.5f + 5)));
+                    Vector2 handlePos = GetEditingHandlePos(x, y, cam);
 
-                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos) < 5.0f;
+                    bool highlighted = Vector2.DistanceSquared(PlayerInput.MousePosition, handlePos) < ResizeHandleHighlightDistance * ResizeHandleHighlightDistance;
 
                     if (highlighted && PlayerInput.PrimaryMouseButtonDown())
                     {
                         selectionPos = Vector2.Zero;
                         resizeDirX = x;
                         resizeDirY = y;
-                        resizing = true;
+                        Resizing = true;
                         startMovingPos = Vector2.Zero;
-                        foreach (var mapEntity in mapEntityList)
-                        {
-                            if (mapEntity != this) { mapEntity.isHighlighted = false; }
-                        }
+                        ClearHighlightedEntities();
                     }
                 }
             }
 
-            if (resizing)
+            if (Resizing)
             {
                 if (prevRect == null)
                 {
-                    prevRect = new Rectangle(Rect.Location, Rect.Size);
+                    prevRect = Rect;
                 }
 
-                Vector2 placePosition = new Vector2(rect.X, rect.Y);
-                Vector2 placeSize = new Vector2(rect.Width, rect.Height);
+                Vector2 placePosition = prevRect.Value.Location.ToVector2();
+                Vector2 placeSize = prevRect.Value.Size.ToVector2();
 
-                Vector2 mousePos = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
-                if (PlayerInput.IsShiftDown())
+                static Vector2 flipThenRotate(Vector2 point, Vector2 center, float angle, bool flipX, bool flipY)
                 {
-                    mousePos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (flipX) { point = (point - center).FlipX() + center; }
+                    if (flipY) { point = (point - center).FlipY() + center; }
+
+                    point = MathUtils.RotatePointAroundTarget(point, center, angle);
+
+                    return point;
+                }
+                
+                static Vector2 rotateThenFlip(Vector2 point, Vector2 center, float angle, bool flipX, bool flipY)
+                {
+                    point = MathUtils.RotatePointAroundTarget(point, center, angle);
+
+                    if (flipX) { point = (point - center).FlipX() + center; }
+                    if (flipY) { point = (point - center).FlipY() + center; }
+
+                    return point;
+                }
+                
+                Vector2 mousePos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                Vector2 prevPos = placePosition;
+                Vector2 prevOppositeCorner = prevPos + placeSize.FlipY();
+                Vector2 prevCenter = placePosition + placeSize.FlipY() * 0.5f;
+                mousePos = flipThenRotate(mousePos, prevCenter, RotationRad, FlippedX, FlippedY);
+
+                if (!PlayerInput.IsShiftDown())
+                {
+                    mousePos = Submarine.VectorToWorldGrid(mousePos, Submarine.MainSub, round: true);
                 }
 
                 if (resizeDirX > 0)
                 {
-                    mousePos.X = Math.Max(mousePos.X, rect.X + Submarine.GridSize.X);
+                    mousePos.X = Math.Max(mousePos.X, prevRect.Value.X + Submarine.GridSize.X);
                     placeSize.X = mousePos.X - placePosition.X;
                 }
                 else if (resizeDirX < 0)
                 {
-                    mousePos.X = Math.Min(mousePos.X, rect.Right - Submarine.GridSize.X);
+                    mousePos.X = Math.Min(mousePos.X, prevRect.Value.Right - Submarine.GridSize.X);
 
-                    placeSize.X = (placePosition.X + placeSize.X) - mousePos.X;
-                    placePosition.X = mousePos.X;
+                    placeSize.X = MathF.Round((placePosition.X + placeSize.X) - mousePos.X);
+                    placePosition.X = MathF.Round(mousePos.X);
                 }
                 if (resizeDirY < 0)
                 {
-                    mousePos.Y = Math.Min(mousePos.Y, rect.Y - Submarine.GridSize.Y);
+                    mousePos.Y = Math.Min(mousePos.Y, prevRect.Value.Y - Submarine.GridSize.Y);
                     placeSize.Y = placePosition.Y - mousePos.Y;
                 }
                 else if (resizeDirY > 0)
                 {
-                    mousePos.Y = Math.Max(mousePos.Y, rect.Y - rect.Height + Submarine.GridSize.X);
+                    mousePos.Y = Math.Max(mousePos.Y, prevRect.Value.Y - prevRect.Value.Height + Submarine.GridSize.Y);
 
-                    placeSize.Y = mousePos.Y - (rect.Y - rect.Height);
+                    placeSize.Y = mousePos.Y - (prevRect.Value.Y - prevRect.Value.Height);
                     placePosition.Y = mousePos.Y;
                 }
+
+                Vector2 newPos = placePosition;
+                Vector2 newOppositeCorner = placePosition + placeSize.FlipY();
+
+                Vector2 transformedCornerDiff = rotateThenFlip(newPos-prevPos, Vector2.Zero, -RotationRad, FlippedX, FlippedY);
+                Vector2 transformedOppositeCornerDiff = rotateThenFlip(newOppositeCorner-prevOppositeCorner, Vector2.Zero, -RotationRad, FlippedX, FlippedY);
+
+                Vector2 newPosTransformed = rotateThenFlip(prevPos, prevCenter, -RotationRad, FlippedX, FlippedY)
+                                            + transformedCornerDiff;
+                Vector2 newOppositeTransformed = rotateThenFlip(prevOppositeCorner, prevCenter, -RotationRad, FlippedX, FlippedY)
+                                                 + transformedOppositeCornerDiff;
+                Vector2 newTransformedCenter = (newPosTransformed + newOppositeTransformed) * 0.5f;
+
+                var newDiff = (newOppositeCorner - newPos) * 0.5f;
+                placePosition = newTransformedCenter - newDiff;
 
                 if ((int)placePosition.X != rect.X || (int)placePosition.Y != rect.Y || (int)placeSize.X != rect.Width || (int)placeSize.Y != rect.Height)
                 {
@@ -1168,7 +1274,7 @@ namespace Barotrauma
 
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    resizing = false;
+                    Resizing = false;
                     Resized?.Invoke(rect);
                     if (prevRect != null)
                     {
@@ -1195,20 +1301,24 @@ namespace Barotrauma
             IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
-            int StartY = ResizeVertical ? -1 : 0;
+            int startY = ResizeVertical ? -1 : 0;
 
             for (int x = startX; x < 2; x += 2)
             {
-                for (int y = StartY; y < 2; y += 2)
+                for (int y = startY; y < 2; y += 2)
                 {
-                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f + 5), y * (rect.Height * 0.5f + 5)));
+                    Vector2 handlePos = GetEditingHandlePos(x, y, cam);
 
-                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos) < 5.0f;
-
+                    bool highlighted = Vector2.DistanceSquared(PlayerInput.MousePosition, handlePos) < ResizeHandleHighlightDistance * ResizeHandleHighlightDistance;
+                    var color = Color.White * (highlighted ? 1.0f : 0.6f);
+                    if (highlighted && !PlayerInput.PrimaryMouseButtonHeld())
+                    {
+                        GUI.MouseCursor = CursorState.Hand;
+                    }
                     GUI.DrawRectangle(spriteBatch,
-                        handlePos - new Vector2(3.0f, 3.0f),
-                        new Vector2(6.0f, 6.0f),
-                        Color.White * (highlighted ? 1.0f : 0.6f),
+                        handlePos - new Vector2(ResizeHandleSize / 2),
+                        new Vector2(ResizeHandleSize),
+                        color,
                         true, 0,
                         (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
                 }
@@ -1223,12 +1333,15 @@ namespace Barotrauma
             HashSet<MapEntity> foundEntities = new HashSet<MapEntity>();
 
             Rectangle selectionRect = Submarine.AbsRect(pos, size);
+            Quad2D selectionQuad = Quad2D.FromSubmarineRectangle(selectionRect);
 
-            foreach (MapEntity entity in mapEntityList)
+            foreach (MapEntity entity in MapEntityList)
             {
                 if (!entity.SelectableInEditor) { continue; }
 
-                if (Submarine.RectsOverlap(selectionRect, entity.rect))
+                Quad2D entityQuad = entity.GetTransformedQuad();
+
+                if (selectionQuad.Intersects(entityQuad))
                 {
                     foundEntities.Add(entity);
                     entity.IsIncludedInSelection = true;

@@ -67,10 +67,11 @@ namespace Barotrauma
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), layout.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
             {
+                Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
-            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), layout.RectTransform, Anchor.BottomLeft), style: "InnerFrame")
+            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), layout.RectTransform, Anchor.BottomLeft), style: "GUIFrameListBox")
             {
                 CanBeFocused = false
             };
@@ -95,6 +96,7 @@ namespace Barotrauma
                 loadCampaignButton.Selected = false;
                 newCampaignContainer.Visible = true;
                 loadCampaignContainer.Visible = false;
+                GameMain.NetLobbyScreen?.RefreshStartButtonVisibility();
                 return true;
             };
             loadCampaignButton.OnClicked = (btn, obj) =>
@@ -103,6 +105,7 @@ namespace Barotrauma
                 loadCampaignButton.Selected = true;
                 newCampaignContainer.Visible = false;
                 loadCampaignContainer.Visible = true;
+                GameMain.NetLobbyScreen?.RefreshStartButtonVisibility();
                 return true;
             };
             loadCampaignContainer.Visible = false;
@@ -125,38 +128,25 @@ namespace Barotrauma
 
         private void CreateButtons()
         {
-            int buttonHeight = (int) (GUI.Scale * 40),
-                buttonWidth = GUI.IntScale(450),
-                buttonCenter = buttonHeight / 2,
-                screenMiddle = GameMain.GraphicsWidth / 2;
-
-            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle - buttonWidth / 2, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, buttonWidth, buttonHeight), GUI.Canvas),
-                TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
+            endRoundButton = CreateEndRoundButton();
+            endRoundButton.OnClicked = (btn, userdata) =>
             {
-                Pulse = true,
-                TextBlock =
-                {
-                    Shadow = true,
-                    AutoScaleHorizontal = true
-                },
-                OnClicked = (btn, userdata) =>
-                {
-                    TryEndRoundWithFuelCheck(
-                        onConfirm: () => GameMain.Client.RequestStartRound(),
-                        onReturnToMapScreen: () => 
-                        {
-                            ShowCampaignUI = true;
-                            if (CampaignUI == null) { InitCampaignUI(); }
-                            CampaignUI.SelectTab(InteractionType.Map);
-                        });
-                    return true;
-                }
+                TryEndRoundWithFuelCheck(
+                    onConfirm: () => GameMain.Client.RequestStartRound(),
+                    onReturnToMapScreen: () =>
+                    {
+                        ShowCampaignUI = true;
+                        if (CampaignUI == null) { InitCampaignUI(); }
+                        CampaignUI.SelectTab(InteractionType.Map);
+                    });
+                return true;
             };
 
-            int readyButtonHeight = buttonHeight;
-            int readyButtonWidth = (int) (GUI.Scale * 50);
-
-            ReadyCheckButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle + (buttonWidth / 2) + GUI.IntScale(16), HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, readyButtonWidth, readyButtonHeight), GUI.Canvas), 
+            int readyButtonWidth = (int)(GUI.Scale * 50 * (GUI.IsUltrawide ? 3.0f : 1.0f));
+            int readyButtonHeight = (int)(GUI.Scale * 40);
+            int readyButtonCenter = readyButtonHeight / 2,
+                screenMiddle = GameMain.GraphicsWidth / 2;
+            ReadyCheckButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle + (endRoundButton.Rect.Width / 2) + GUI.IntScale(16), HUDLayoutSettings.ButtonAreaTop.Center.Y - readyButtonCenter, readyButtonWidth, readyButtonHeight), GUI.Canvas), 
                 style: "RepairBuyButton")
             {
                 ToolTip = TextManager.Get("ReadyCheck.Tooltip"),
@@ -172,7 +162,7 @@ namespace Barotrauma
             };
         }
 
-        private void InitCampaignUI()
+        public void InitCampaignUI()
         {
             campaignUIContainer = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
             CampaignUI = new CampaignUI(this, campaignUIContainer)
@@ -206,7 +196,7 @@ namespace Barotrauma
 
             if (GameMain.Client == null)
             {
-                yield return CoroutineStatus.Failure;
+                yield return CoroutineStatus.Success;
             }
 
             if (GameMain.Client.LateCampaignJoin)
@@ -297,7 +287,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror)
         {
             yield return CoroutineStatus.Success;
         }
@@ -310,7 +300,7 @@ namespace Barotrauma
             Level prevLevel = Level.Loaded;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-            crewDead = false;
+            CrewDead = false;
 
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             if (continueButton != null)
@@ -493,7 +483,6 @@ namespace Barotrauma
             GameMain.CampaignEndScreen.OnFinished = () =>
             {
                 GameMain.NetLobbyScreen.Select();
-                if (GameMain.NetLobbyScreen.ContinueCampaignButton != null) { GameMain.NetLobbyScreen.ContinueCampaignButton.Enabled = false; }
                 if (GameMain.NetLobbyScreen.QuitCampaignButton != null) { GameMain.NetLobbyScreen.QuitCampaignButton.Enabled = false; }
             };
         }
@@ -548,7 +537,7 @@ namespace Barotrauma
 
             bool refreshCampaignUI = false;
 
-            if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaignID != campaign.CampaignID)
+            if (GameMain.GameSession?.GameMode is not MultiPlayerCampaign campaign || campaignID != campaign.CampaignID)
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
@@ -627,7 +616,7 @@ namespace Barotrauma
                         {
                             if (availableMission.ConnectionIndex < 0 || availableMission.ConnectionIndex >= campaign.Map.CurrentLocation.Connections.Count)
                             {
-                                DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.Identifier}\" out of range (index: {availableMission.ConnectionIndex}, current location: {campaign.Map.CurrentLocation.Name}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
+                                DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.Identifier}\" out of range (index: {availableMission.ConnectionIndex}, current location: {campaign.Map.CurrentLocation.DisplayName}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
                                 continue;
                             }
                             LocationConnection connection = campaign.Map.CurrentLocation.Connections[availableMission.ConnectionIndex];
@@ -660,7 +649,15 @@ namespace Barotrauma
                     {
                         if (ownedSubIndex >= GameMain.Client.ServerSubmarines.Count)
                         {
-                            string errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds. Index: {ownedSubIndex}, submarines: {string.Join(", ", GameMain.Client.ServerSubmarines.Select(s => s.Name))}";
+                            string errorMsg;
+                            if (GameMain.Client.ServerSubmarines.None())
+                            {
+                                errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds (list of server submarines is empty).";
+                            }
+                            else
+                            {
+                                errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds. Index: {ownedSubIndex}, submarines: {string.Join(", ", GameMain.Client.ServerSubmarines.Select(s => s.Name))}";
+                            }
                             DebugConsole.ThrowError(errorMsg);
                             GameAnalyticsManager.AddErrorEventOnce(
                                 "MultiPlayerCampaign.ClientRead.OwnerSubIndexOutOfBounds" + ownedSubIndex,
@@ -723,7 +720,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
+                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, isNetworkMessage: true);
                         }
                     }
                     foreach (Item item in Item.ItemList.ToList())
@@ -835,11 +832,12 @@ namespace Barotrauma
                 UInt16 id = msg.ReadUInt16();
                 bool hasCharacterData = msg.ReadBoolean();
                 CharacterInfo myCharacterInfo = null;
+                bool waitForModsDownloaded = Screen.Selected is ModDownloadScreen;
                 if (hasCharacterData)
                 {
-                    myCharacterInfo = CharacterInfo.ClientRead(CharacterPrefab.HumanSpeciesName, msg);
+                    myCharacterInfo = CharacterInfo.ClientRead(CharacterPrefab.HumanSpeciesName, msg, requireJobPrefabFound: !waitForModsDownloaded);
                 }
-                if (ShouldApply(NetFlags.CharacterInfo, id, requireUpToDateSave: true))
+                if (!waitForModsDownloaded && ShouldApply(NetFlags.CharacterInfo, id, requireUpToDateSave: true))
                 {
                     if (myCharacterInfo != null)
                     {
@@ -908,6 +906,8 @@ namespace Barotrauma
 
         public void ClientReadCrew(IReadMessage msg)
         {
+            bool createNotification = msg.ReadBoolean();
+
             ushort availableHireLength = msg.ReadUInt16();
             List<CharacterInfo> availableHires = new List<CharacterInfo>();
             for (int i = 0; i < availableHireLength; i++)
@@ -918,10 +918,10 @@ namespace Barotrauma
             }
 
             ushort pendingHireLength = msg.ReadUInt16();
-            List<int> pendingHires = new List<int>();
+            List<UInt16> pendingHires = new List<UInt16>();
             for (int i = 0; i < pendingHireLength; i++)
             {
-                pendingHires.Add(msg.ReadInt32());
+                pendingHires.Add(msg.ReadUInt16());
             }
 
             ushort hiredLength = msg.ReadUInt16();
@@ -936,30 +936,49 @@ namespace Barotrauma
             bool renameCrewMember = msg.ReadBoolean();
             if (renameCrewMember)
             {
-                int renamedIdentifier = msg.ReadInt32();
+                UInt16 renamedIdentifier = msg.ReadUInt16();
                 string newName = msg.ReadString();
-                CharacterInfo renamedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
-                if (renamedCharacter != null) { CrewManager.RenameCharacter(renamedCharacter, newName); }
+                CharacterInfo renamedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                if (renamedCharacter != null)
+                {
+                    CrewManager.RenameCharacter(renamedCharacter, newName);
+                    // Since renaming can only be done once in permadeath, we can safely set this to false to disable the renaming in the UI.
+                    renamedCharacter.RenamingEnabled = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Could not find a character to rename with the ID {renamedIdentifier}.");
+                }
             }
 
             bool fireCharacter = msg.ReadBoolean();
             if (fireCharacter)
             {
-                int firedIdentifier = msg.ReadInt32();
-                CharacterInfo firedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
+                UInt16 firedIdentifier = msg.ReadUInt16();
+                CharacterInfo firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == firedIdentifier);
                 // this one might and is allowed to be null since the character is already fired on the original sender's game
                 if (firedCharacter != null) { CrewManager.FireCharacter(firedCharacter); }
             }
 
-            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.CrewManagement != null && 
-                /*can't apply until we have the latest save file*/
-                !NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
+            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.HRManagerUI != null)
             {
-                CampaignUI.CrewManagement.SetHireables(map.CurrentLocation, availableHires);
-                if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters); }
-                CampaignUI.CrewManagement.SetPendingHires(pendingHires, map.CurrentLocation);
-                if (renameCrewMember || fireCharacter) { CampaignUI.CrewManagement.UpdateCrew(); }
+                //can't apply until we have the latest save file
+                if (!NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
+                {
+                    CampaignUI.HRManagerUI.SetHireables(map.CurrentLocation, availableHires);
+                    if (hiredCharacters.Any()) { CampaignUI.HRManagerUI.ValidateHires(hiredCharacters, takeMoney: false, createNotification: createNotification); }
+                    CampaignUI.HRManagerUI.SetPendingHires(pendingHires, map.CurrentLocation);
+                    if (renameCrewMember || fireCharacter) { CampaignUI.HRManagerUI.UpdateCrew(); }
+                }
             }
+            else
+            {
+                //This is pretty nasty: setting hireables is handled through CrewManagement,
+                //which is part of the Campaign UI that might not exist when the client is still initializing the round.
+                //If that's the case, let's force the available hires here so they're available when the UI is created
+                CurrentLocation?.ForceHireableCharacters(availableHires);
+            }
+            
         }
 
         public void ClientReadMoney(IReadMessage inc)
@@ -981,6 +1000,7 @@ namespace Barotrauma
                 else
                 {
                     Bank.Balance = info.Balance;
+                    Bank.RewardDistribution = info.RewardDistribution;
                     TryInvokeEvent(Bank, transaction.ChangedData, info);
                 }
             }
@@ -996,6 +1016,11 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
+            if (price == 0)
+            {
+                return true;
+            }
+
             if (!AllowedToManageCampaign(ClientPermissions.ManageMoney))
             {
                 return PersonalWallet.TryDeduct(price);
@@ -1027,9 +1052,9 @@ namespace Barotrauma
         public void LoadState(string filePath)
         {
             DebugConsole.Log($"Loading save file for an existing game session ({filePath})");
-            SaveUtil.DecompressToDirectory(filePath, SaveUtil.TempPath, null);
+            SaveUtil.DecompressToDirectory(filePath, SaveUtil.TempPath);
 
-            string gamesessionDocPath = Path.Combine(SaveUtil.TempPath, "gamesession.xml");
+            string gamesessionDocPath = Path.Combine(SaveUtil.TempPath, SaveUtil.GameSessionFileName);
             XDocument doc = XMLExtensions.TryLoadXml(gamesessionDocPath);
             if (doc == null)
             {

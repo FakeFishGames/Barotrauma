@@ -1,8 +1,10 @@
 using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Adjusts the price multiplier for stores or mechanical repairs in the current location.
+    /// </summary>
     class SetPriceMultiplierAction : EventAction
     {
         public enum OperationType
@@ -19,13 +21,13 @@ namespace Barotrauma
             Mechanical
         }
 
-        [Serialize(1.0f, IsPropertySaveable.Yes)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "Value to set as the multiplier, or to multiply, min or max the current multiplier with.")]
         public float Multiplier { get; set; }
 
-        [Serialize(OperationType.Set, IsPropertySaveable.Yes)]
+        [Serialize(OperationType.Set, IsPropertySaveable.Yes, description: "Do you want to set the value as the multiplier, multiply the existing multiplier with it, or take the smaller or larger of the values.")]
         public OperationType Operation { get; set; }
 
-        [Serialize(PriceMultiplierType.Store, IsPropertySaveable.Yes)]
+        [Serialize(PriceMultiplierType.Store, IsPropertySaveable.Yes, description: "Do you want to set the price multiplier for stores or for mechanical services (hull and item repairs and restoring lost shuttles)?")]
         public PriceMultiplierType TargetMultiplier { get; set; }
 
         public SetPriceMultiplierAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

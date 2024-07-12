@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 
@@ -110,10 +112,13 @@ namespace Barotrauma
     internal class AddOrDeleteCommand : Command
     {
         private readonly Dictionary<InventorySlotItem, Inventory> PreviousInventories = new Dictionary<InventorySlotItem, Inventory>();
-        private readonly List<MapEntity> Receivers;
+        public readonly List<MapEntity> Receivers;
         private readonly List<MapEntity> CloneList;
         private readonly bool WasDeleted;
         private readonly List<AddOrDeleteCommand> ContainedItemsCommand = new List<AddOrDeleteCommand>();
+
+        // We need to 'snapshot' the state of the circuit box and the best way to do that is to save it to XML. 
+        private readonly List<XElement> CircuitBoxData = new List<XElement>();
 
         /// <summary>
         /// Creates a command where all entities share the same state.
@@ -131,7 +136,7 @@ namespace Barotrauma
             {
                 foreach (MapEntity receiver in receivers)
                 {
-                    if (receiver is Item it && it.ParentInventory != null)
+                    if (receiver is Item { ParentInventory: not null } it)
                     {
                         PreviousInventories.Add(new InventorySlotItem(it.ParentInventory.FindIndex(it), it), it.ParentInventory);
                     }
@@ -142,13 +147,17 @@ namespace Barotrauma
                 List<MapEntity> itemsToDelete = new List<MapEntity>();
                 foreach (MapEntity receiver in Receivers)
                 {
-                    if (receiver is Item it)
+                    if (receiver is not Item it) { continue; }
+
+                    foreach (var cb in it.GetComponents<CircuitBox>())
                     {
-                        foreach (ItemContainer component in it.GetComponents<ItemContainer>())
-                        {
-                            if (component.Inventory == null) { continue; }
-                            itemsToDelete.AddRange(component.Inventory.AllItems.Where(item => !item.Removed));
-                        }
+                        CircuitBoxData.Add(cb.Save(new XElement("root")));
+                    }
+
+                    foreach (ItemContainer component in it.GetComponents<ItemContainer>())
+                    {
+                        if (component.Inventory == null) { continue; }
+                        itemsToDelete.AddRange(component.Inventory.AllItems.Where(static item => !item.Removed));
                     }
                 }
 
@@ -191,15 +200,52 @@ namespace Barotrauma
         }
 
         public override void Execute()
-        {
-            DeleteUndelete(true);
-            ContainedItemsCommand?.ForEach(cmd => cmd.Execute());
-        }
+            => Process(true);
 
         public override void UnExecute()
+            => Process(false);
+
+        private void Process(bool redo)
         {
-            DeleteUndelete(false);
-            ContainedItemsCommand?.ForEach(cmd => cmd.UnExecute());
+            var items = DeleteUndelete(redo);
+            foreach (var cmd in ContainedItemsCommand)
+            {
+                cmd.Process(redo);
+            }
+            ApplyCircuitBoxDataIfAny(items);
+        }
+
+        /// <summary>
+        /// We need to manually copy over the circuit box data because of how the undo handles inventory items.
+        /// The undo system recursively deletes inventory items and creates a separate command for each one.
+        /// This causes the circuit box to lose its internal inventory when it's cloned and then restored and make it
+        /// unable to load the state from XML.
+        ///
+        /// The workaround to this is to ignore the XML that is being loaded when the item is created and instead
+        /// save the XML into the command and then load it back after the undo system has restored the items which
+        /// is what this function does.
+        /// </summary>
+        private void ApplyCircuitBoxDataIfAny(ImmutableArray<Item> items)
+        {
+            int cbIndex = 0;
+            foreach (var newItem in items)
+            {
+                foreach (ItemComponent component in newItem.Components)
+                {
+                    if (component is not CircuitBox cb) { continue; }
+
+                    if (cbIndex < 0 || cbIndex >= CircuitBoxData.Count)
+                    {
+                        DebugConsole.ThrowError("Unable to restore wiring in circuit box, index out of range.");
+                        continue;
+                    }
+
+                    var cbData = CircuitBoxData[cbIndex];
+                    cbIndex++;
+
+                    cb.LoadFromXML(new ContentXElement(null, cbData));
+                }
+            }
         }
 
         public override void Cleanup()
@@ -215,28 +261,34 @@ namespace Barotrauma
             CloneList?.Clear();
             Receivers.Clear();
             PreviousInventories?.Clear();
-            ContainedItemsCommand?.ForEach(cmd => cmd.Cleanup());
+            ContainedItemsCommand?.ForEach(static cmd => cmd.Cleanup());
+            CircuitBoxData.Clear();
         }
 
-        private void DeleteUndelete(bool redo)
+        private ImmutableArray<Item> DeleteUndelete(bool redo)
         {
             bool wasDeleted = WasDeleted;
 
             // We are redoing instead of undoing, flip the behavior
             if (redo) { wasDeleted = !wasDeleted; }
 
+            // collect newly created items so we can update their circuit boxes if any
+            var builder = ImmutableArray.CreateBuilder<Item>();
+
             if (wasDeleted)
             {
-                Debug.Assert(Receivers.All(entity => entity.GetReplacementOrThis().Removed), "Tried to redo a deletion but some items were not deleted");
+                Debug.Assert(Receivers.All(static entity => entity.GetReplacementOrThis().Removed), "Tried to redo a deletion but some items were not deleted");
 
                 List<MapEntity> clones = MapEntity.Clone(CloneList);
                 int length = Math.Min(Receivers.Count, clones.Count);
                 for (int i = 0; i < length; i++)
                 {
-                    MapEntity clone = clones[i], receiver = Receivers[i];
+                    MapEntity clone = clones[i],
+                              receiver = Receivers[i];
 
                     if (receiver.GetReplacementOrThis() is Item item && clone is Item cloneItem)
                     {
+                        builder.Add(cloneItem);
                         foreach (ItemComponent ic in item.Components)
                         {
                             int index = item.GetComponentIndex(ic);
@@ -245,7 +297,7 @@ namespace Barotrauma
                             {
                                 case null:
                                     continue;
-                                case ItemContainer newContainer when newContainer.Inventory != null && ic is ItemContainer itemContainer && itemContainer.Inventory != null:
+                                case ItemContainer { Inventory: not null } newContainer when ic is ItemContainer { Inventory: not null } itemContainer:
                                     itemContainer.Inventory.GetReplacementOrThiS().ReplacedBy = newContainer.Inventory;
                                     goto default;
                                 default:
@@ -260,7 +312,8 @@ namespace Barotrauma
 
                 for (int i = 0; i < length; i++)
                 {
-                    MapEntity clone = clones[i], receiver = Receivers[i];
+                    MapEntity clone = clones[i],
+                              receiver = Receivers[i];
 
                     if (clone is Item it)
                     {
@@ -278,6 +331,8 @@ namespace Barotrauma
                 {
                     clone.Submarine = Submarine.MainSub;
                 }
+
+                return builder.ToImmutable();
             }
             else
             {
@@ -289,6 +344,8 @@ namespace Barotrauma
                         receiver.Remove();
                     }
                 }
+
+                return builder.ToImmutable();
             }
         }
 

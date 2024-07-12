@@ -9,7 +9,7 @@ namespace Barotrauma
         {
             using var md5 = MD5.Create();
             #warning TODO: this doesn't account for collisions, this should probably be using the PrefabCollection class like everything else
-            UintIdentifier = ToolBox.StringToUInt32Hash(Barotrauma.IO.Path.GetFileNameWithoutExtension(path.Value), md5);
+            UintIdentifier = ToolBoxCore.StringToUInt32Hash(Barotrauma.IO.Path.GetFileNameWithoutExtension(path.Value), md5);
         }
 
         public readonly UInt32 UintIdentifier;
@@ -28,6 +28,10 @@ namespace Barotrauma
         {
             //Overrides for subs don't exist! Should we change this?
         }
+
+        // Use byte-perfect hash because this is compressed, trimming whitespace is incorrect and needlessly slow here
+        public override Md5Hash CalculateHash()
+            => Md5Hash.CalculateForFile(Path.FullPath, Md5Hash.StringHashOptions.BytePerfect);
     }
 
     [NotSyncedInMultiplayer]

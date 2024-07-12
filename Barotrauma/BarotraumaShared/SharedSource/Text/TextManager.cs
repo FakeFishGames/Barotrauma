@@ -23,7 +23,7 @@ namespace Barotrauma
         public static bool DebugDraw;
 
         public readonly static LanguageIdentifier DefaultLanguage = "English".ToLanguageIdentifier();
-        public readonly static ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>> TextPacks = new ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>>();
+        public readonly static ConcurrentDictionary<LanguageIdentifier, ImmutableList<TextPack>> TextPacks = new ConcurrentDictionary<LanguageIdentifier, ImmutableList<TextPack>>();
         public static IEnumerable<LanguageIdentifier> AvailableLanguages => TextPacks.Keys;
 
         private readonly static Dictionary<Identifier, WeakReference<TagLString>> cachedStrings =
@@ -46,8 +46,9 @@ namespace Barotrauma
             
             CJK = 0x1,
             Cyrillic = 0x2,
-            
-            All = 0x3
+            Japanese = 0x4,
+
+            All = 0x7
         }
 
         public static readonly ImmutableArray<SpeciallyHandledCharCategory> SpeciallyHandledCharCategories
@@ -59,9 +60,9 @@ namespace Barotrauma
             = new[]
             {
                 (SpeciallyHandledCharCategory.CJK, UnicodeToIntRanges(
+                    UnicodeRanges.HalfwidthandFullwidthForms,
                     UnicodeRanges.HangulJamo,
-                    UnicodeRanges.Hiragana,
-                    UnicodeRanges.Katakana,
+                    UnicodeRanges.HangulCompatibilityJamo,
                     UnicodeRanges.CjkRadicalsSupplement,
                     UnicodeRanges.CjkSymbolsandPunctuation,
                     UnicodeRanges.EnclosedCjkLettersandMonths,
@@ -69,7 +70,13 @@ namespace Barotrauma
                     UnicodeRanges.CjkUnifiedIdeographsExtensionA,
                     UnicodeRanges.CjkUnifiedIdeographs,
                     UnicodeRanges.HangulSyllables,
-                    UnicodeRanges.CjkCompatibilityForms
+                    UnicodeRanges.CjkCompatibilityForms,
+                    //not really CJK symbols, but these seem to be present in the CJK fonts but not in the default ones, so we can use them as a fallback
+                    UnicodeRanges.BlockElements
+                )),
+                (SpeciallyHandledCharCategory.Japanese, UnicodeToIntRanges(
+                    UnicodeRanges.Hiragana,
+                    UnicodeRanges.Katakana
                 )),
                 (SpeciallyHandledCharCategory.Cyrillic, UnicodeToIntRanges(
                     UnicodeRanges.Cyrillic,
@@ -155,22 +162,56 @@ namespace Barotrauma
             return TextPacks[GameSettings.CurrentConfig.Language].Any(p => p.Texts.ContainsKey(tag));
         }
 
+        public static bool ContainsTag(Identifier tag, LanguageIdentifier language)
+        {
+            return TextPacks[language].Any(p => p.Texts.ContainsKey(tag));
+        }
         public static IEnumerable<string> GetAll(string tag)
             => GetAll(tag.ToIdentifier());
 
         public static IEnumerable<string> GetAll(Identifier tag)
         {
-            return TextPacks[GameSettings.CurrentConfig.Language]
+            var allTexts = TextPacks[GameSettings.CurrentConfig.Language]
                 .SelectMany(p => p.Texts.TryGetValue(tag, out var value)
-                    ? (IEnumerable<string>)value
-                    : Array.Empty<string>());
+                    ? (IEnumerable<TextPack.Text>)value
+                    : Array.Empty<TextPack.Text>()).ToList();
+
+            var firstOverride = allTexts.FirstOrDefault(t => t.IsOverride);
+            if (firstOverride != default)
+            {
+                return allTexts.Where(t => t.IsOverride && t.TextPack == firstOverride.TextPack).Select(t => t.String);
+            }
+            else
+            {
+                return allTexts.Select(t => t.String);
+            }
         }
-        
+
         public static IEnumerable<KeyValuePair<Identifier, string>> GetAllTagTextPairs()
         {
-            return TextPacks[GameSettings.CurrentConfig.Language]
-                .SelectMany(p => p.Texts)
-                .SelectMany(kvp => kvp.Value.Select(v => new KeyValuePair<Identifier, string>(kvp.Key, v)));
+            var allTexts = TextPacks[GameSettings.CurrentConfig.Language]
+                .SelectMany(p => p.Texts);
+
+            foreach (var textList in allTexts)
+            {
+                var firstOverride = textList.Value.FirstOrDefault(t => t.IsOverride);
+                if (firstOverride != default)
+                {
+                    //if there's any overrides for this tag, only return the overrides
+                    foreach (var text in textList.Value)
+                    {
+                        if (!text.IsOverride) { continue; }
+                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.String);
+                    }
+                }
+                else
+                {
+                    foreach (var text in textList.Value)
+                    {
+                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.String);
+                    }
+                }
+            }
         }
 
         public static IEnumerable<string> GetTextFiles()
@@ -209,12 +250,20 @@ namespace Barotrauma
 
         public static LocalizedString Get(params Identifier[] tags)
         {
+            if (tags.Length == 1)
+            {
+                return Get(tags[0]);
+            }
+            return new TagLString(tags);
+        }
+
+        public static LocalizedString Get(Identifier tag)
+        {
             TagLString? str = null;
             lock (cachedStrings)
             {
-                if (tags.Length == 1 && !nonCacheableTags.Contains(tags[0]))
+                if (!nonCacheableTags.Contains(tag))
                 {
-                    var tag = tags[0];
                     if (cachedStrings.TryGetValue(tag, out var strRef))
                     {
                         if (!strRef.TryGetTarget(out str))
@@ -241,15 +290,18 @@ namespace Barotrauma
                         }
                         else
                         {
-                            str = new TagLString(tags);
+                            str = new TagLString(tag);
                             cachedStrings.Add(tag, new WeakReference<TagLString>(str));
                         }
                     }
                 }
             }
-            return str ?? new TagLString(tags);
+            return str ?? new TagLString(tag);
         }
-        
+
+        public static LocalizedString Get(string tag)            
+            => Get(tag.ToIdentifier());
+
         public static LocalizedString Get(params string[] tags)
             => Get(tags.ToIdentifiers());
 
@@ -401,7 +453,7 @@ namespace Barotrauma
             return new ReplaceLString(new TagLString(tag), StringComparison.OrdinalIgnoreCase, replacements);
         }
         
-        public static void ConstructDescription(ref LocalizedString description, XElement descriptionElement)
+        public static void ConstructDescription(ref LocalizedString description, XElement descriptionElement, Func<string, string>? customTagReplacer = null)
         {
             /*
             <Description tag="talentdescription.simultaneousskillgain">
@@ -410,21 +462,28 @@ namespace Barotrauma
                 <Replace tag="[somevalue]" value="45.3"/>
             </Description>
             */
-
-            LocalizedString extraDescriptionLine = Get(descriptionElement.GetAttributeIdentifier("tag", Identifier.Empty));
+            Identifier tag = descriptionElement.GetAttributeIdentifier("tag", Identifier.Empty);
+            LocalizedString extraDescriptionLine = Get(tag).Fallback(tag.Value);
             foreach (XElement replaceElement in descriptionElement.Elements())
             {
                 if (replaceElement.NameAsIdentifier() != "replace") { continue; }
 
-                Identifier tag = replaceElement.GetAttributeIdentifier("tag", Identifier.Empty);
-                string[] replacementValues = replaceElement.GetAttributeStringArray("value", Array.Empty<string>());
+                Identifier variableTag = replaceElement.GetAttributeIdentifier("tag", Identifier.Empty);
                 LocalizedString replacementValue = string.Empty;
-                for (int i = 0; i < replacementValues.Length; i++)
+                if (customTagReplacer != null)
                 {
-                    replacementValue += Get(replacementValues[i]).Fallback(replacementValues[i]);
-                    if (i < replacementValues.Length - 1)
+                    replacementValue = customTagReplacer(replaceElement.GetAttributeString("value", string.Empty));
+                }
+                if (replacementValue.IsNullOrWhiteSpace())
+                {
+                    string[] replacementValues = replaceElement.GetAttributeStringArray("value", Array.Empty<string>());
+                    for (int i = 0; i < replacementValues.Length; i++)
                     {
-                        replacementValue += ", ";
+                        replacementValue += Get(replacementValues[i]).Fallback(replacementValues[i]);
+                        if (i < replacementValues.Length - 1)
+                        {
+                            replacementValue += ", ";
+                        }
                     }
                 }
                 if (replaceElement.Attribute("color") != null)
@@ -432,15 +491,18 @@ namespace Barotrauma
                     string colorStr = replaceElement.GetAttributeString("color", "255,255,255,255");
                     replacementValue = $"‖color:{colorStr}‖" + replacementValue + "‖color:end‖";
                 }
-                extraDescriptionLine = extraDescriptionLine.Replace(tag, replacementValue);
+                extraDescriptionLine = extraDescriptionLine.Replace(variableTag, replacementValue);
             }
             if (!(description is RawLString { Value: "" })) { description += "\n"; } //TODO: this is cursed
             description += extraDescriptionLine;
         }
 
-        public static LocalizedString FormatCurrency(int amount)
+        public static LocalizedString FormatCurrency(int amount, bool includeCurrencySymbol = true)
         {
-             return GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount));
+            string valueString = string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount);
+             return includeCurrencySymbol ? 
+                GetWithVariable("currencyformat", "[credits]", valueString) :
+                valueString;
         }
 
         public static LocalizedString GetServerMessage(string serverMessage)

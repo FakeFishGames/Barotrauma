@@ -15,6 +15,19 @@ namespace Barotrauma
 
     partial class CharacterInventory : Inventory
     {
+        /// <summary>
+        /// How much access other characters have to the inventory?
+        /// <see cref="Restricted"/> = Only accessible when character is knocked down or handcuffed.
+        /// <see cref="Limited"/> = Can also access inventories of bots on the same team and friendly pets.
+        /// <see cref="Allowed"/> = Can also access other players in the same team (used for drag and drop give).
+        /// </summary>
+        public enum AccessLevel
+        {
+            Restricted,
+            Limited,
+            Allowed
+        }
+        
         private readonly Character character;
 
         public InvSlotType[] SlotTypes
@@ -22,9 +35,10 @@ namespace Barotrauma
             get;
             private set;
         }
-
-
+        
         public static readonly List<InvSlotType> AnySlot = new List<InvSlotType>() { InvSlotType.Any };
+
+        public static bool IsHandSlotType(InvSlotType s) => s.HasFlag(InvSlotType.LeftHand) || s.HasFlag(InvSlotType.RightHand);
 
         protected bool[] IsEquipped;
 
@@ -46,13 +60,13 @@ namespace Barotrauma
             private set;
         }
 
-        private static string[] ParseSlotTypes(XElement element)
+        private static string[] ParseSlotTypes(ContentXElement element)
         {
             string slotString = element.GetAttributeString("slots", null);
             return slotString == null ? Array.Empty<string>() : slotString.Split(',');
         }
 
-        public CharacterInventory(XElement element, Character character, bool spawnInitialItems)
+        public CharacterInventory(ContentXElement element, Character character, bool spawnInitialItems)
             : base(character, ParseSlotTypes(element).Length)
         {
             this.character = character;
@@ -71,7 +85,8 @@ namespace Barotrauma
                 slotTypeNames[i] = slotTypeNames[i].Trim();
                 if (!Enum.TryParse(slotTypeNames[i], out parsedSlotType))
                 {
-                    DebugConsole.ThrowError("Error in the inventory config of \"" + character.SpeciesName + "\" - " + slotTypeNames[i] + " is not a valid inventory slot type.");
+                    DebugConsole.ThrowError("Error in the inventory config of \"" + character.SpeciesName + "\" - " + slotTypeNames[i] + " is not a valid inventory slot type.", 
+                        contentPackage: element.ContentPackage);
                 }
                 SlotTypes[i] = parsedSlotType;
                 switch (SlotTypes[i])
@@ -85,6 +100,23 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+            var itemElements = element.Elements().Where(e => e.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase));
+            int itemCount = itemElements.Count();
+            if (itemCount > capacity)
+            {
+                DebugConsole.ThrowError($"Character \"{character.SpeciesName}\" is configured to spawn with more items than it has inventory capacity for.");
+            }
+#if DEBUG
+            else if (itemCount > capacity - 2 && !character.IsPet && capacity > 0)
+            {
+                DebugConsole.ThrowError(
+                    $"Character \"{character.SpeciesName}\" is configured to spawn with so many items it will have less than 2 free inventory slots. " +
+                    "This can cause issues with talents that spawn extra loot in monsters' inventories."
+                    + " Consider increasing the inventory size.",
+                    contentPackage: element.ContentPackage);
+            }
+#endif
+
             if (!spawnInitialItems) { return; }
 
 #if CLIENT
@@ -92,14 +124,13 @@ namespace Barotrauma
             if (GameMain.Client != null) { return; }
 #endif
 
-            foreach (var subElement in element.Elements())
-            {
-                if (!subElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
-                
+            foreach (var subElement in itemElements)
+            {                
                 string itemIdentifier = subElement.GetAttributeString("identifier", "");
                 if (!ItemPrefab.Prefabs.TryGet(itemIdentifier, out var itemPrefab))
                 {
-                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemIdentifier + "\" not found.");
+                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemIdentifier + "\" not found.",
+                        contentPackage: element.ContentPackage);
                     continue;
                 }
 
@@ -115,8 +146,15 @@ namespace Barotrauma
                         if (item != null && item.ParentInventory != this)
                         {
                             string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
-                            DebugConsole.ThrowError(errorMsg);
+                            DebugConsole.ThrowError(errorMsg, contentPackage: element.ContentPackage);
                             GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        }
+                        else if (!character.Enabled)
+                        {
+                            foreach (var heldItem in character.HeldItems)
+                            {
+                                if (item.body != null) { item.body.Enabled = false; }
+                            }
                         }
                     });
                 }
@@ -124,6 +162,19 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific(XElement element);
+
+        public Item FindEquippedItemByTag(Identifier tag)
+        {
+            if (tag.IsEmpty) { return null; }
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (SlotTypes[i] == InvSlotType.Any) { continue; }
+
+                var item = slots[i].FirstOrDefault();
+                if (item != null && item.HasTag(tag)) { return item; }
+            }
+            return null;
+        }
 
         public int FindLimbSlot(InvSlotType limbSlot)
         {
@@ -193,6 +244,10 @@ namespace Barotrauma
             base.RemoveItem(item);
 #if CLIENT
             CreateSlots();
+            if (character == Character.Controlled)
+            {
+                character.SelectedItem?.GetComponent<CircuitBox>()?.OnViewUpdateProjSpecific();
+            }
 #endif
             CharacterHUD.RecreateHudTextsIfControlling(character);
             //if the item was equipped and there are more items in the same stack, equip one of those items
@@ -495,13 +550,20 @@ namespace Barotrauma
             if (character == Character.Controlled)
             {
                 HintManager.OnObtainedItem(character, item);
+                character.SelectedItem?.GetComponent<CircuitBox>()?.OnViewUpdateProjSpecific();
             }
 #endif
             CharacterHUD.RecreateHudTextsIfControlling(character);
             if (item.CampaignInteractionType == CampaignMode.InteractionType.Cargo)
             {
-                item.CampaignInteractionType = CampaignMode.InteractionType.None;
+                item.AssignCampaignInteractionType(CampaignMode.InteractionType.None);
             }
+            item.Equipper = user;            
+        }
+
+        protected override void CreateNetworkEvent(Range slotRange)
+        {
+            GameMain.NetworkMember?.CreateEntityEvent(character, new Character.InventoryStateEventData(slotRange));
         }
 
     }
