@@ -151,7 +151,11 @@ namespace Barotrauma
                 /// <summary>
                 /// The position of the entity the StatusEffect is targeting. If there are multiple targets, an item is spawned at all of them.
                 /// </summary>
-                Target
+                Target,
+                /// <summary>
+                /// The inventories of the entities the StatusEffect is targeting. If there are multiple targets, the items are spawned in all of them.
+                /// </summary>
+                TargetInventory
             }
 
             public enum SpawnRotationType
@@ -2138,7 +2142,7 @@ namespace Barotrauma
 
                     void ProcessItemSpawnInfo(ItemSpawnInfo spawnInfo)
                     {
-                        if (spawnInfo.SpawnPosition == ItemSpawnInfo.SpawnPositionType.Target)
+                        if (spawnInfo.SpawnPosition is ItemSpawnInfo.SpawnPositionType.Target or ItemSpawnInfo.SpawnPositionType.TargetInventory)
                         {
                             foreach (var target in targets)
                             {
@@ -2192,7 +2196,7 @@ namespace Barotrauma
                 SetUser(parentItem.GetComponent<Projectile>()?.User);
             }
 
-            if (chosenItemSpawnInfo.SpawnPosition == ItemSpawnInfo.SpawnPositionType.Target && targetEntity != null)
+            if (chosenItemSpawnInfo.SpawnPosition is ItemSpawnInfo.SpawnPositionType.Target or ItemSpawnInfo.SpawnPositionType.TargetInventory && targetEntity != null)
             {
                 entity = targetEntity;
                 position = entity.WorldPosition;
@@ -2318,6 +2322,7 @@ namespace Barotrauma
                     });
                     break;
                 case ItemSpawnInfo.SpawnPositionType.ThisInventory:
+                case ItemSpawnInfo.SpawnPositionType.TargetInventory:
                     {
                         Inventory inventory = null;
                         if (entity is Character character && character.Inventory != null)
@@ -2343,16 +2348,6 @@ namespace Barotrauma
                         {
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull, onSpawned: item =>
                             {
-                                if (chosenItemSpawnInfo.Equip && entity is Character character && character.Inventory != null)
-                                {
-                                    //if the item is both pickable and wearable, try to wear it instead of picking it up
-                                    List<InvSlotType> allowedSlots =
-                                       item.GetComponents<Pickable>().Count() > 1 ?
-                                       new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
-                                       new List<InvSlotType>(item.AllowedSlots);
-                                    allowedSlots.Remove(InvSlotType.Any);
-                                    character.Inventory.TryPutItem(item, null, allowedSlots);
-                                }
                                 OnItemSpawned(item, chosenItemSpawnInfo);
                             });
                         }
@@ -2419,8 +2414,19 @@ namespace Barotrauma
                     }
                     break;
             }
+
             void OnItemSpawned(Item newItem, ItemSpawnInfo itemSpawnInfo)
             {
+                if (itemSpawnInfo.SpawnPosition is not ItemSpawnInfo.SpawnPositionType.This or ItemSpawnInfo.SpawnPositionType.Target && itemSpawnInfo.Equip && entity is Character character && character.Inventory != null)
+                {
+                    //if the item is both pickable and wearable, try to wear it instead of picking it up
+                    List<InvSlotType> allowedSlots = newItem.GetComponents<Pickable>().Count() > 1
+                       ? new List<InvSlotType>(newItem.GetComponent<Wearable>()?.AllowedSlots ?? newItem.GetComponent<Pickable>().AllowedSlots)
+                       : new List<InvSlotType>(newItem.AllowedSlots);
+                    allowedSlots.Remove(InvSlotType.Any);
+                    character.Inventory.TryPutItem(newItem, null, allowedSlots);
+                }
+
                 newItem.Condition = newItem.MaxCondition * itemSpawnInfo.Condition;
                 if (itemSpawnInfo.InheritEventTags)
                 {
