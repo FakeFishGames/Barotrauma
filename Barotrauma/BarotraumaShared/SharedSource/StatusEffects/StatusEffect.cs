@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using static Barotrauma.EntitySpawner;
 
 namespace Barotrauma
 {
@@ -2348,6 +2349,7 @@ namespace Barotrauma
                         {
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull, onSpawned: item =>
                             {
+                                if (chosenItemSpawnInfo.Equip) TryEquipItem(item);
                                 OnItemSpawned(item, chosenItemSpawnInfo);
                             });
                         }
@@ -2368,6 +2370,7 @@ namespace Barotrauma
                         {
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull, onSpawned: (Item newItem) =>
                             {
+                                if (chosenItemSpawnInfo.Equip) TryEquipItem(newItem);
                                 OnItemSpawned(newItem, chosenItemSpawnInfo);
                             });
                         }
@@ -2415,18 +2418,20 @@ namespace Barotrauma
                     break;
             }
 
+            void TryEquipItem(Item newItem)
+            {
+                if (entity is not Character { Inventory: not null } character) return;
+
+                // If the item is both pickable and wearable, try to wear it instead of picking it up.
+                List<InvSlotType> allowedSlots = newItem.GetComponents<Pickable>().Count() > 1
+                    ? new List<InvSlotType>(newItem.GetComponent<Wearable>()?.AllowedSlots ?? newItem.GetComponent<Pickable>().AllowedSlots)
+                    : new List<InvSlotType>(newItem.AllowedSlots);
+                allowedSlots.Remove(InvSlotType.Any);
+                character.Inventory.TryPutItem(newItem, null, allowedSlots);
+            }
+
             void OnItemSpawned(Item newItem, ItemSpawnInfo itemSpawnInfo)
             {
-                if (itemSpawnInfo.SpawnPosition is not ItemSpawnInfo.SpawnPositionType.This or ItemSpawnInfo.SpawnPositionType.Target && itemSpawnInfo.Equip && entity is Character character && character.Inventory != null)
-                {
-                    //if the item is both pickable and wearable, try to wear it instead of picking it up
-                    List<InvSlotType> allowedSlots = newItem.GetComponents<Pickable>().Count() > 1
-                       ? new List<InvSlotType>(newItem.GetComponent<Wearable>()?.AllowedSlots ?? newItem.GetComponent<Pickable>().AllowedSlots)
-                       : new List<InvSlotType>(newItem.AllowedSlots);
-                    allowedSlots.Remove(InvSlotType.Any);
-                    character.Inventory.TryPutItem(newItem, null, allowedSlots);
-                }
-
                 newItem.Condition = newItem.MaxCondition * itemSpawnInfo.Condition;
                 if (itemSpawnInfo.InheritEventTags)
                 {
