@@ -11,6 +11,22 @@ namespace Barotrauma.Items.Components
 {
     partial class RangedWeapon : ItemComponent
     {
+        public enum BurstType
+        {
+            /// <summary>
+            /// The weapon will not perform a burst.
+            /// </summary>
+            None = 0,
+            /// <summary>
+            /// The burst count will not reset when the trigger is released.
+            /// </summary>
+            Save = 1,
+            /// <summary>
+            /// The burst will continue even if the trigger is released.
+            /// </summary>
+            Forced = 2
+        }
+
         private float reload;
         public float ReloadTimer { get; private set; }
 
@@ -46,6 +62,35 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, IsPropertySaveable.No, description: "Tells the AI to hold the trigger down when it uses this weapon")]
         public bool HoldTrigger
+        {
+            get;
+            set;
+        }
+
+        [Serialize("None", IsPropertySaveable.No, description: "The type of burst the weapon performs.")]
+        public BurstType Burst
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0, IsPropertySaveable.No, description: "The amount of shots fired in a single burst.")]
+        public int BurstCount
+        {
+            get;
+            set;
+        }
+
+        private float burstReload;
+        [Serialize(1f, IsPropertySaveable.No, description: "How long the user has to wait before they can fire the weapon again after a burst (in seconds).")]
+        public float BurstReload
+        {
+            get => burstReload;
+            set => burstReload = Math.Max(value, 0f);
+        }
+
+        [Serialize(1f, IsPropertySaveable.No, description: "Burst reload time at 0 skill level. Reload time scales with skill level up to the Weapons skill requirement.")]
+        public float BurstReloadNoSkill
         {
             get;
             set;
@@ -138,6 +183,10 @@ namespace Barotrauma.Items.Components
         private float currentChargeTime;
         private bool tryingToCharge;
 
+        private bool forceFireOnReload;
+        private Character prevUser;
+        private int burstRemaining;
+
         public RangedWeapon(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -149,11 +198,20 @@ namespace Barotrauma.Items.Components
 
             characterUsable = true;
             suitableProjectiles = element.GetAttributeIdentifierArray(nameof(suitableProjectiles), Array.Empty<Identifier>()).ToHashSet();
-            if (ReloadSkillRequirement > 0 && ReloadNoSkill <= reload)
+            if (ReloadSkillRequirement > 0)
             {
-                DebugConsole.AddWarning($"Invalid XML at {item.Name}: ReloadNoSkill is lower or equal than it's reload skill, despite having ReloadSkillRequirement.",
-                    item.Prefab.ContentPackage);
+                if (ReloadNoSkill <= Reload)
+                {
+                    DebugConsole.AddWarning($"Invalid XML in {item.Name}: ReloadNoSkill is less than or equal to Reload, despite having ReloadSkillRequirement.", item.Prefab.ContentPackage);
+                }
+                if (Burst != BurstType.None && BurstReloadNoSkill <= BurstReload)
+                {
+                    DebugConsole.AddWarning($"Invalid XML in {item.Name}: BurstReloadNoSkill is less than or equal to BurstReload, despite having ReloadSkillRequirement.", item.Prefab.ContentPackage);
+                }
             }
+
+            burstRemaining = BurstCount;
+
             InitProjSpecific(element);
         }
 
@@ -173,6 +231,24 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
+                if (forceFireOnReload)
+                {
+                    if (!HasRequiredContainedItems(prevUser, false))
+                    {
+                        forceFireOnReload = false;
+                        burstRemaining = BurstCount;
+                    }
+                    else if (Use(deltaTime, prevUser))
+                    {
+                        WasUsed = true;
+#if CLIENT
+                        PlaySound(ActionType.OnUse, prevUser);
+#endif
+                        ApplyStatusEffects(ActionType.OnUse, deltaTime, prevUser, user: prevUser);
+                        OnUsed.Invoke(new(item, prevUser));
+                        return;
+                    }
+                }
                 if (MaxChargeTime <= 0f)
                 {
                     IsActive = false;
@@ -233,34 +309,44 @@ namespace Barotrauma.Items.Components
             return reducedPenaltyMultiplier;
         }
 
-        private readonly List<Body> ignoredBodies = new List<Body>();
-        public override bool Use(float deltaTime, Character character = null)
+        private void SetReloadTimer(Character character, float skilledReload, float unskilledReload)
         {
-            tryingToCharge = true;
-            if (character == null || character.Removed) { return false; }
-            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || ReloadTimer > 0.0f) { return false; }
-            if (currentChargeTime < MaxChargeTime) { return false; }
-
-            IsActive = true;
-            float baseReloadTime = reload;
+            float newReload = skilledReload;
             float weaponSkill = character.GetSkillLevel("weapons");
-            
-            bool applyReloadFailure = ReloadSkillRequirement > 0 && ReloadNoSkill > reload && weaponSkill < ReloadSkillRequirement;
+
+            bool applyReloadFailure = ReloadSkillRequirement > 0 && unskilledReload > skilledReload && weaponSkill < ReloadSkillRequirement;
             if (applyReloadFailure)
             {
                 //Examples, assuming 40 weapon skill required: 1 - 40/40 = 0 ... 1 - 0/40 = 1 ... 1 - 20 / 40 = 0.5
-                float reloadFailure = MathHelper.Clamp(1 - (weaponSkill / ReloadSkillRequirement), 0, 1);
-                baseReloadTime = MathHelper.Lerp(reload, ReloadNoSkill, reloadFailure);
+                float reloadFailure = MathHelper.Clamp(1 - weaponSkill / ReloadSkillRequirement, 0, 1);
+                newReload = MathHelper.Lerp(skilledReload, unskilledReload, reloadFailure);
             }
 
-            if (character.IsDualWieldingRangedWeapons()) 
-            { 
-                baseReloadTime *= Math.Max(1f, ApplyDualWieldPenaltyReduction(character, DualWieldReloadTimePenaltyMultiplier, neutralValue: 1f));
+            if (character.IsDualWieldingRangedWeapons())
+            {
+                newReload *= Math.Max(1f, ApplyDualWieldPenaltyReduction(character, DualWieldReloadTimePenaltyMultiplier, 1f));
             }
-            
-            ReloadTimer = baseReloadTime / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
+
+            ReloadTimer = newReload / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
             ReloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.FiringRateMultiplier);
+        }
 
+        private readonly List<Body> ignoredBodies = new List<Body>();
+        public override bool Use(float deltaTime, Character character = null)
+        {
+            if (character == null || character.Removed) return false;
+            if (ReloadTimer > 0) return false;
+
+            if (!forceFireOnReload)
+            {
+                tryingToCharge = true;
+                if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) return false;
+                if (currentChargeTime < MaxChargeTime) return false;
+            }
+
+            IsActive = true;
+
+            SetReloadTimer(character, Reload, ReloadNoSkill);
             currentChargeTime = 0f;
 
             var abilityRangedWeapon = new AbilityRangedWeapon(item);
@@ -330,6 +416,23 @@ namespace Barotrauma.Items.Components
             }
 
             LaunchProjSpecific();
+            prevUser = character;
+
+            if (Burst != BurstType.None)
+            {
+                burstRemaining--;
+
+                if (burstRemaining <= 0)
+                {
+                    burstRemaining = BurstCount;
+                    forceFireOnReload = false;
+                    SetReloadTimer(character, BurstReload, BurstReloadNoSkill);
+                }
+                else if (Burst == BurstType.Forced)
+                {
+                    forceFireOnReload = true;
+                }
+            }
 
             return true;
         }
