@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize("None", IsPropertySaveable.No, description: "The type of burst the weapon performs.")]
-        public BurstType Burst
+        public BurstType BurstMode
         {
             get;
             set;
@@ -183,9 +183,8 @@ namespace Barotrauma.Items.Components
         private float currentChargeTime;
         private bool tryingToCharge;
 
-        private bool forceFireOnReload;
         private Character prevUser;
-        private int burstRemaining;
+        private int burstPos;
 
         public RangedWeapon(Item item, ContentXElement element)
             : base(item, element)
@@ -204,13 +203,11 @@ namespace Barotrauma.Items.Components
                 {
                     DebugConsole.AddWarning($"Invalid XML in {item.Name}: ReloadNoSkill is less than or equal to Reload, despite having ReloadSkillRequirement.", item.Prefab.ContentPackage);
                 }
-                if (Burst != BurstType.None && BurstReloadNoSkill <= BurstReload)
+                if (BurstMode != BurstType.None && BurstReloadNoSkill <= BurstReload)
                 {
                     DebugConsole.AddWarning($"Invalid XML in {item.Name}: BurstReloadNoSkill is less than or equal to BurstReload, despite having ReloadSkillRequirement.", item.Prefab.ContentPackage);
                 }
             }
-
-            burstRemaining = BurstCount;
 
             InitProjSpecific(element);
         }
@@ -231,12 +228,11 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                if (forceFireOnReload)
+                if (BurstMode == BurstType.Forced && burstPos > 0)
                 {
                     if (!HasRequiredContainedItems(prevUser, false))
                     {
-                        forceFireOnReload = false;
-                        burstRemaining = BurstCount;
+                        burstPos = 0;
                     }
                     else if (Use(deltaTime, prevUser))
                     {
@@ -418,19 +414,13 @@ namespace Barotrauma.Items.Components
             LaunchProjSpecific();
             prevUser = character;
 
-            if (Burst != BurstType.None)
+            if (BurstMode != BurstType.None)
             {
-                burstRemaining--;
-
-                if (burstRemaining <= 0)
+                burstPos++;
+                if (burstPos >= BurstCount)
                 {
-                    burstRemaining = BurstCount;
-                    forceFireOnReload = false;
+                    burstPos = 0;
                     SetReloadTimer(character, BurstReload, BurstReloadNoSkill);
-                }
-                else if (Burst == BurstType.Forced)
-                {
-                    forceFireOnReload = true;
                 }
             }
 
