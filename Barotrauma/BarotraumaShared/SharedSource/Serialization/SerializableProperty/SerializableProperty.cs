@@ -1082,7 +1082,7 @@ namespace Barotrauma
                 {
                     var componentElement = subElement.FirstElement();
                     if (componentElement == null) { continue; }
-                    ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
+                    ItemComponent itemComponent = item2.Components.FirstOrDefault(c => c.Name == componentElement.Name.ToString());
                     if (itemComponent == null) { continue; }
                     foreach (XAttribute attribute in componentElement.Attributes())
                     {
