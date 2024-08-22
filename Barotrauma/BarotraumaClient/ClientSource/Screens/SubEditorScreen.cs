@@ -27,38 +27,8 @@ namespace Barotrauma
             get => Submarine.MainSub;
             set => Submarine.MainSub = value;
         }
-        
-        private enum LayerVisibility
-        {
-            Visible,
-            Invisible
-        }
 
-        private enum LayerLinkage
-        {
-            Unlinked,
-            Linked
-        }
-
-        private readonly struct LayerData
-        {
-            public readonly LayerVisibility Visible;
-            public readonly LayerLinkage Linkage;
-
-            public static readonly LayerData Default = new LayerData(LayerVisibility.Visible, LayerLinkage.Unlinked);
-
-            public LayerData(LayerVisibility visible, LayerLinkage linkage)
-            {
-                Visible = visible;
-                Linkage = linkage;
-            }
-
-            public void Deconstruct(out LayerVisibility isvisible, out LayerLinkage islinked)
-            {
-                isvisible = Visible;
-                islinked = Linkage;
-            }
-        }
+        private readonly record struct LayerData(bool IsVisible = true, bool IsGrouped = false);
 
         public enum Mode
         {
@@ -1105,11 +1075,22 @@ namespace Barotrauma
 
             GameSession gameSession = new GameSession(backedUpSubInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
             gameSession.StartRound(null, false);
-            (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
+            
+            foreach ((string layerName, LayerData layerData) in Layers)
             {
-                Submarine.Unload();
-                GameMain.SubEditorScreen.Select();
-            };
+                Identifier identifier = layerName.ToIdentifier();
+                bool enabled = layerData.IsVisible;
+                MainSub.SetLayerEnabled(identifier, enabled);
+            }
+            
+            if (gameSession.GameMode is TestGameMode testGameMode)
+            {
+                testGameMode.OnRoundEnd = () =>
+                {
+                    Submarine.Unload();
+                    GameMain.SubEditorScreen.Select();
+                };
+            }
 
             return true;
         }
@@ -1469,6 +1450,7 @@ namespace Barotrauma
             {
                 var subInfo = new SubmarineInfo();
                 MainSub = new Submarine(subInfo, showErrorMessages: false);
+                ReconstructLayers();
             }
 
             MainSub.UpdateTransform(interpolate: false);
@@ -1504,7 +1486,10 @@ namespace Barotrauma
             }
 
             ImageManager.OnEditorSelected();
-            ReconstructLayers();
+            if (Layers.None())
+            {
+                ReconstructLayers();
+            }
         }
 
         public override void OnFileDropped(string filePath, string extension)
@@ -1661,7 +1646,6 @@ namespace Barotrauma
             });
 
             ClearFilter();
-            ClearLayers();
         }
 
         private void CreateDummyCharacter()
@@ -2165,32 +2149,32 @@ namespace Barotrauma
             if (Layers.Any())
             {
                 var layerVisibilityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.01f), leftColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                var visibleLayers = Layers.Where(l => !MainSub.Info.LayersHiddenByDefault.Contains(l.Key.ToIdentifier()));
+                LocalizedString visibleLayersString = LocalizedString.Join(", ", visibleLayers.Select(l => TextManager.Capitalize(l.Key)) ?? ((LocalizedString)"None").ToEnumerable());
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), layerVisibilityGroup.RectTransform), TextManager.Get("editor.layer.visiblebydefault"), textAlignment: Alignment.CenterLeft);
-                var layerVisibilityDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), layerVisibilityGroup.RectTransform),
-                    text: LocalizedString.Join(", ", Layers.Where(l => !Submarine.MainSub?.Info?.LayersHiddenByDefault?.Contains(l.ToIdentifier()) ?? false).Select(lt => TextManager.Capitalize(lt.Key)) ?? ((LocalizedString)"None").ToEnumerable()), selectMultiple: true);
-                foreach (string layerName in Layers.Keys)
+                var layerVisibilityDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), layerVisibilityGroup.RectTransform), text: visibleLayersString, selectMultiple: true);
+                foreach (var layer in Layers)
                 {
+                    string layerName = layer.Key;
                     layerVisibilityDropDown.AddItem(TextManager.Capitalize(layerName), layerName);
-                    if (MainSub?.Info == null) { continue; }
-                    if (!MainSub.Info.LayersHiddenByDefault.Contains(layerName.ToIdentifier()))
+                    if (visibleLayers.Contains(layer))
                     {
                         layerVisibilityDropDown.SelectItem(layerName);
                     }
                 }
-                layerVisibilityDropDown.OnSelected += (_, __) =>
+                layerVisibilityDropDown.OnSelected += (button, obj) =>
                 {
-                    if (MainSub.Info == null) { return false; }
-                    MainSub.Info.LayersHiddenByDefault.Clear();
-                    foreach (string layerName in Layers.Keys)
+                    string layerName = (string)obj;
+                    bool isVisible = layerVisibilityDropDown.SelectedDataMultiple.Contains(obj);
+                    if (isVisible)
                     {
-                        //selected as visible = not hidden
-                        if (layerVisibilityDropDown.SelectedDataMultiple.Any(o => o as string == layerName))
-                        {
-                            continue;
-                        }
-                        MainSub.Info.LayersHiddenByDefault.Add(layerName.ToIdentifier());                     
+                        MainSub.Info.LayersHiddenByDefault.Remove(layerName.ToIdentifier());
                     }
-
+                    else
+                    {
+                        MainSub.Info.LayersHiddenByDefault.Add(layerName.ToIdentifier());
+                    }
+                    UpdateLayerPanel();
                     layerVisibilityDropDown.Text = ToolBox.LimitString(layerVisibilityDropDown.Text.Value, layerVisibilityDropDown.Font, layerVisibilityDropDown.Rect.Width);
                     return true;
                 };
@@ -2505,6 +2489,15 @@ namespace Barotrauma
                 OnSelected = (tb) =>
                 {
                     MainSub.Info.BeaconStationInfo.AllowDamagedWalls = tb.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), TextManager.Get("allowdamageddevices"))
+            {
+                Selected = MainSub?.Info?.BeaconStationInfo?.AllowDamagedDevices ?? true,
+                OnSelected = (tb) =>
+                {
+                    MainSub.Info.BeaconStationInfo.AllowDamagedDevices = tb.Selected;
                     return true;
                 }
             };
@@ -3932,15 +3925,14 @@ namespace Barotrauma
                 MapEntity.HighlightedEntities.ToList() :
                 new List<MapEntity>(MapEntity.SelectedList);
 
-            Item target = null;
-
-            var single = targets.Count == 1 ? targets.Single() : null;
-            if (single is Item item && item.Components.Any(static ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
-            {
-                // Do not offer the ability to open the inventory if the inventory should never be drawn
-                var containers = item.GetComponents<ItemContainer>();
-                if (containers.Any(static c => c.DrawInventory) || item.GetComponent<CircuitBox>() is not null) { target = item; }
-            }
+            bool allowOpening = false;
+            var targetItem = (targets.Count == 1 ? targets.Single() : null) as Item;
+            // Do not offer the ability to open the inventory if the inventory should never be drawn
+            allowOpening = targetItem is not null && targetItem.Components.Any(static ic =>
+                ic is not ConnectionPanel &&
+                ic is not Repairable &&
+                ic is not ItemContainer { DrawInventory: false } &&
+                ic.GuiFrame != null);
 
             bool hasTargets = targets.Count > 0;
 
@@ -3984,7 +3976,6 @@ namespace Barotrauma
             }
             else
             {
-
                 List<ContextMenuOption> availableLayers = new List<ContextMenuOption>
                 {
                     new ContextMenuOption("editor.layer.nolayer", true, onSelected: () => { MoveToLayer(null, targets); })
@@ -3992,7 +3983,8 @@ namespace Barotrauma
                 availableLayers.AddRange(Layers.Select(layer => new ContextMenuOption(layer.Key, true, onSelected: () => { MoveToLayer(layer.Key, targets); })));
 
                 List<ContextMenuOption> availableLayerOptions = new List<ContextMenuOption>
-                {   new ContextMenuOption("editor.layer.movetolayer", isEnabled: hasTargets, availableLayers.ToArray()),
+                {
+                    new ContextMenuOption("editor.layer.movetolayer", isEnabled: hasTargets, availableLayers.ToArray()),
                     new ContextMenuOption("editor.layer.createlayer", isEnabled: hasTargets, onSelected: () => { CreateNewLayer(null, targets); }),
                     new ContextMenuOption("editor.layer.selectall", isEnabled: hasTargets, onSelected: () =>
                     {
@@ -4006,7 +3998,7 @@ namespace Barotrauma
                 availableLayerOptions.AddRange(Layers.Select(layer => new ContextMenuOption(layer.Key, true, onSelected: () => { MoveToLayer(layer.Key, targets); })));
 
                 GUIContextMenu.CreateContextMenu(
-                    new ContextMenuOption("label.openlabel", isEnabled: target != null, onSelected: () => OpenItem(target)),
+                    new ContextMenuOption("label.openlabel", isEnabled: allowOpening, onSelected: () => OpenItem(targetItem)),
                     new ContextMenuOption("editor.cut", isEnabled: hasTargets, onSelected: () => MapEntity.Cut(targets)),
                     new ContextMenuOption("editor.copytoclipboard", isEnabled: hasTargets, onSelected: () => MapEntity.Copy(targets)),
                     new ContextMenuOption("editor.paste", isEnabled: MapEntity.CopiedList.Any(), onSelected: () => MapEntity.Paste(cam.ScreenToWorld(PlayerInput.MousePosition))),
@@ -4061,13 +4053,13 @@ namespace Barotrauma
                 MoveToLayer(name, content);
             }
 
-            Layers.Add(name, LayerData.Default);
+            Layers.Add(name, new LayerData());
             UpdateLayerPanel();
         }
 
         private void RenameLayer(string original, string newName)
         {
-            Layers.Remove(original);
+            Layers.Remove(original, out LayerData originalData);
 
             foreach (MapEntity entity in MapEntity.MapEntityList.Where(entity => entity.Layer == original))
             {
@@ -4076,7 +4068,7 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(newName))
             {
-                Layers.TryAdd(newName, LayerData.Default);
+                Layers.TryAdd(newName, originalData);
             }
             UpdateLayerPanel();
         }
@@ -4088,7 +4080,7 @@ namespace Barotrauma
             {
                 if (!string.IsNullOrWhiteSpace(entity.Layer))
                 {
-                    Layers.TryAdd(entity.Layer, LayerData.Default);
+                    Layers.TryAdd(entity.Layer, new LayerData(!entity.IsLayerHidden));
                 }
             }
             UpdateLayerPanel();
@@ -4098,6 +4090,18 @@ namespace Barotrauma
         {
             Layers.Clear();
             UpdateLayerPanel();
+        }
+        
+        private static void SetLayerVisibility(string layerName, bool isVisible)
+        {
+            if (Layers.Remove(layerName, out LayerData layerData))
+            {
+                Layers.Add(layerName, layerData with { IsVisible = isVisible });
+            }
+            else
+            {
+                Layers.Add(layerName, new LayerData(isVisible));
+            }
         }
 
         private void PasteAssembly(string text = null, Vector2? pos = null)
@@ -4492,39 +4496,39 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Tries to open an item container in the submarine editor using the dummy character
+        /// Tries to open an item in the submarine editor using the dummy character
         /// </summary>
-        /// <param name="itemContainer">The item we want to open</param>
-        private void OpenItem(Item itemContainer)
+        /// <param name="item">The item we want to open</param>
+        private void OpenItem(Item item)
         {
-            if (dummyCharacter == null || itemContainer == null) { return; }
+            if (dummyCharacter == null || item == null) { return; }
 
-            if ((itemContainer.GetComponent<Holdable>() is { Attached: false } || itemContainer.GetComponent<Wearable>() != null) && itemContainer.GetComponent<ItemContainer>() != null)
+            if ((item.GetComponent<Holdable>() is { Attached: false } || item.GetComponent<Wearable>() != null) && item.GetComponent<ItemContainer>() != null)
             {
                 // We teleport our dummy character to the item so it appears as the entity stays still when in reality the dummy is holding it
-                oldItemPosition = itemContainer.SimPosition;
+                oldItemPosition = item.SimPosition;
                 TeleportDummyCharacter(oldItemPosition);
 
                 // Override this so we can be sure the container opens
-                var container = itemContainer.GetComponent<ItemContainer>();
+                var container = item.GetComponent<ItemContainer>();
                 if (container != null) { container.KeepOpenWhenEquipped = true; }
 
                 // We accept any slots except "Any" since that would take priority
                 List<InvSlotType> allowedSlots = new List<InvSlotType>();
-                itemContainer.AllowedSlots.ForEach(type =>
+                item.AllowedSlots.ForEach(type =>
                 {
                     if (type != InvSlotType.Any) { allowedSlots.Add(type); }
                 });
 
                 // Try to place the item in the dummy character's inventory
-                bool success = dummyCharacter.Inventory.TryPutItem(itemContainer, dummyCharacter, allowedSlots);
-                if (success) { OpenedItem = itemContainer; }
+                bool success = dummyCharacter.Inventory.TryPutItem(item, dummyCharacter, allowedSlots);
+                if (success) { OpenedItem = item; }
                 else { return; }
             }
             MapEntity.SelectedList.Clear();
             MapEntity.FilteredSelectedList.Clear();
-            MapEntity.SelectEntity(itemContainer);
-            dummyCharacter.SelectedItem = itemContainer;
+            MapEntity.SelectEntity(item);
+            dummyCharacter.SelectedItem = item;
             FilterEntities(entityFilterBox.Text);
             MapEntity.StopSelection();
         }
@@ -5176,7 +5180,7 @@ namespace Barotrauma
             };
             new GUIButton(new RectTransform(new Vector2(0.6f, 1f), buttonHeaders.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = ForceUpperCase.Yes };
 
-            foreach (var (layer, (visibility, linkage)) in Layers)
+            foreach ((string layer, (bool isVisible, bool isGrouped)) in Layers)
             {
                 GUIFrame parent = new GUIFrame(new RectTransform(new Vector2(1f, 0.1f), layerList.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -5188,7 +5192,7 @@ namespace Barotrauma
                 GUILayoutGroup layerVisibilityLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1f), layerGroup.RectTransform), childAnchor: Anchor.Center);
                 GUITickBox layerVisibleButton = new GUITickBox(new RectTransform(Vector2.One, layerVisibilityLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), string.Empty)
                 {
-                    Selected = visibility == LayerVisibility.Visible,
+                    Selected = isVisible,
                     OnSelected = box =>
                     {
                         if (!Layers.TryGetValue(layer, out LayerData data))
@@ -5196,12 +5200,15 @@ namespace Barotrauma
                             UpdateLayerPanel();
                             return false;
                         }
-                        //hiding a layer automatically deselects it (can't edit a hidden layer)
                         if (!box.Selected && layerList.SelectedData as string == layer)
                         {
-                            layerList.Deselect();
+                            //hiding a layer automatically deselects it (can't edit a hidden layer)
+                            if (!box.Selected)
+                            {
+                                layerList.Deselect();
+                            }
                         }
-                        Layers[layer] = new LayerData(box.Selected ? LayerVisibility.Visible : LayerVisibility.Invisible, data.Linkage);
+                        Layers[layer] = data with { IsVisible = box.Selected };
                         return true;
                     }
                 };
@@ -5209,7 +5216,7 @@ namespace Barotrauma
                 GUILayoutGroup layerChainLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1f), layerGroup.RectTransform), childAnchor: Anchor.Center);
                 GUITickBox layerChainButton = new GUITickBox(new RectTransform(Vector2.One, layerChainLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), string.Empty)
                 {
-                    Selected = linkage == LayerLinkage.Linked,
+                    Selected = isGrouped,
                     OnSelected = box =>
                     {
                         if (!Layers.TryGetValue(layer, out LayerData data))
@@ -5218,7 +5225,7 @@ namespace Barotrauma
                             return false;
                         }
 
-                        Layers[layer] = new LayerData(data.Visible, box.Selected ? LayerLinkage.Linked : LayerLinkage.Unlinked);
+                        Layers[layer] = data with { IsGrouped = box.Selected };
                         return true;
                     }
                 };
@@ -5249,7 +5256,6 @@ namespace Barotrauma
                     btn.ToolTip = originalBtnText;
                 }
             }
-
         }
 
         public void UpdateUndoHistoryPanel()
@@ -6303,11 +6309,11 @@ namespace Barotrauma
 
             if (!Layers.TryGetValue(entity.Layer, out LayerData data))
             {
-                Layers.TryAdd(entity.Layer, LayerData.Default);
+                Layers.TryAdd(entity.Layer, new LayerData(!entity.IsLayerHidden));
                 return true;
             }
 
-            return data.Visible == LayerVisibility.Visible;
+            return data.IsVisible;
         }
 
         public static bool IsLayerLinked(MapEntity entity)
@@ -6316,11 +6322,11 @@ namespace Barotrauma
 
             if (!Layers.TryGetValue(entity.Layer, out LayerData data))
             {
-                Layers.TryAdd(entity.Layer, LayerData.Default);
+                Layers.TryAdd(entity.Layer, new LayerData(!entity.IsLayerHidden));
                 return true;
             }
 
-            return data.Linkage == LayerLinkage.Linked;
+            return data.IsGrouped;
         }
 
         public static ImmutableHashSet<MapEntity> GetEntitiesInSameLayer(MapEntity entity)

@@ -13,18 +13,16 @@ namespace Barotrauma
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
-        public override bool ConcurrentObjectives => true;
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
-        public override bool AbandonWhenCannotCompleteSubjectives => false;
-        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
+        protected override bool ConcurrentObjectives => true;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
+        public override bool AbandonWhenCannotCompleteSubObjectives => false;
 
-        // TODO: expose?
-        const float priorityIncrease = 100;
-        const float priorityDecrease = 10;
-        const float SearchHullInterval = 3.0f;
+        private const float PriorityIncrease = 100;
+        private const float PriorityDecrease = 10;
+        private const float SearchHullInterval = 3.0f;
 
-        private float currenthullSafety;
+        private float currentHullSafety;
 
         private float searchHullTimer;
 
@@ -111,15 +109,15 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                currenthullSafety = 0;
+                currentHullSafety = 0;
             }
             else
             {
-                currenthullSafety = HumanAIController.CurrentHullSafety;
-                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
+                currentHullSafety = HumanAIController.CurrentHullSafety;
+                if (currentHullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
                 {
-                    Priority -= priorityDecrease * deltaTime;
-                    if (currenthullSafety >= 100 && !character.IsLowInOxygen)
+                    Priority -= PriorityDecrease * deltaTime;
+                    if (currentHullSafety >= 100 && !character.IsLowInOxygen)
                     {
                         // Reduce the priority to zero so that the bot can get switch to other objectives immediately, e.g. when entering the airlock.
                         Priority = 0;
@@ -127,8 +125,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float dangerFactor = (100 - currenthullSafety) / 100;
-                    Priority += dangerFactor * priorityIncrease * deltaTime;
+                    float dangerFactor = (100 - currentHullSafety) / 100;
+                    Priority += dangerFactor * PriorityIncrease * deltaTime;
                 }
                 Priority = MathHelper.Clamp(Priority, 0, AIObjectiveManager.MaxObjectivePriority);
             }
@@ -192,7 +190,7 @@ namespace Barotrauma
             }
             if (divingGearObjective == null || !divingGearObjective.CanBeCompleted)
             {
-                if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
+                if (currentHullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
                 {
                     searchHullTimer = Math.Min(1, searchHullTimer);
                 }
@@ -231,7 +229,7 @@ namespace Barotrauma
                         },
                         onCompleted: () =>
                         {
-                            if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD ||
+                            if (currentHullSafety > HumanAIController.HULL_SAFETY_THRESHOLD ||
                                 HumanAIController.NeedsDivingGear(currentHull, out bool needsSuit) && (needsSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingMask(character)))
                             {
                                 resetPriority = true;
@@ -299,7 +297,7 @@ namespace Barotrauma
                 }
                 foreach (Character enemy in Character.CharacterList)
                 {
-                    if (!HumanAIController.IsActive(enemy) || HumanAIController.IsFriendly(enemy) || enemy.IsArrested) { continue; }
+                    if (!HumanAIController.IsActive(enemy) || HumanAIController.IsFriendly(enemy) || enemy.IsHandcuffed) { continue; }
                     if (HumanAIController.VisibleHulls.Contains(enemy.CurrentHull))
                     {
                         Vector2 dir = character.Position - enemy.Position;

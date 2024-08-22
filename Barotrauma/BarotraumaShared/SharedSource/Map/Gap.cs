@@ -756,11 +756,12 @@ namespace Barotrauma
             hull2.Oxygen -= deltaOxygen;
         }
 
-        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
+        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist, bool allowRoomToRoom = false)
         {
             foreach (Gap gap in gaps)
             {
-                if (gap.Open == 0.0f || gap.IsRoomToRoom) { continue; }
+                if (gap.Open == 0.0f) { continue; }
+                if (gap.IsRoomToRoom && !allowRoomToRoom) { continue; }
 
                 if (gap.ConnectedWall != null)
                 {

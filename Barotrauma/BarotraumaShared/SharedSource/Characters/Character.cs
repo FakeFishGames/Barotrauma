@@ -1,17 +1,17 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
-using Barotrauma.IO;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Items.Components;
-using FarseerPhysics.Dynamics;
-using Barotrauma.Extensions;
-using System.Collections.Immutable;
-using Barotrauma.Abilities;
-using System.Diagnostics;
 #if SERVER
 using System.Text;
 #endif
@@ -350,6 +350,15 @@ namespace Barotrauma
         public bool IsFriendlyNPCTurnedHostile => originalTeamID == CharacterTeamType.FriendlyNPC && teamID == CharacterTeamType.Team2;
 
         public bool IsInstigator => CombatAction is { IsInstigator: true };
+        
+        /// <summary>
+        /// Do the outpost security officers treat the character as a criminal?
+        /// Triggers when the character has either committed a major crime or resisted being arrested (or fled).
+        /// Only affects the reactions of friendly NPCs in the outposts.
+        /// The NPCs still don't react immediately to "criminals", but take this into account when the character next time does something wrong.
+        /// The consequences are that the guards will not hold fire and will not give more warnings before attacking.
+        /// </summary>
+        public bool IsCriminal;
         
         /// <summary>
         /// Set true only, if the character is turned hostile from an escort mission (See <see cref="EscortMission"/>).
@@ -795,15 +804,27 @@ namespace Barotrauma
         }
 
         private float obstructVisionAmount;
+        public float ObstructVisionAmount
+        {
+            get { return obstructVisionAmount; }
+            set
+            {
+                obstructVisionAmount = MathHelper.Clamp(value, 0.0f, 1.0f);
+            }
+        }
+
+        /// <summary>
+        /// Provided for backwards compatibility: use <see cref="ObstructVisionAmount"/> instead.
+        /// </summary>
         public bool ObstructVision
         {
             get
             {
-                return obstructVisionAmount > 0.5f;
+                return obstructVisionAmount > 0.01f;
             }
             set
             {
-                obstructVisionAmount = value ? 1.0f : 0.0f;
+                obstructVisionAmount = value ? 0.5f : 0.0f;
             }
         }
 
@@ -857,7 +878,7 @@ namespace Barotrauma
             get { return CharacterHealth.IsUnconscious; }
         }
 
-        public bool IsArrested
+        public bool IsHandcuffed
         {
             get { return IsHuman && HasEquippedItem(Tags.HandLockerItem); }
         }
@@ -953,6 +974,18 @@ namespace Barotrauma
                 speechImpedimentSet = true;
                 speechImpediment = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
+        }
+
+        private float textChatVolume;
+
+        /// <summary>
+        /// How "loud" the player is when they use text chat.
+        /// When the user speaks in text chat this gets set to 1 and then slowly decreases back to 0 over 5 seconds.
+        /// </summary>
+        public float TextChatVolume
+        {
+            get => textChatVolume;
+            set => textChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
         }
 
         public float PressureTimer
@@ -1105,37 +1138,8 @@ namespace Barotrauma
                 return !Removed;
             }
         }
-
-        private bool canBeDragged = true;
-        public bool CanBeDragged
-        {
-            get
-            {
-                if (!canBeDragged) { return false; }
-                if (Removed || !AnimController.Draggable) { return false; }
-                return IsKnockedDown || LockHands || IsPet || CanInventoryBeAccessed;
-            }
-            set { canBeDragged = value; }
-        }
-
-        //can other characters access the inventory of this character
-        private bool canInventoryBeAccessed = true;
-        public bool CanInventoryBeAccessed
-        {
-            get
-            {
-                if (!canInventoryBeAccessed || Removed || Inventory == null) { return false; }
-                if (!Inventory.AccessibleWhenAlive)
-                {
-                    return IsDead;
-                }
-                else
-                {
-                    return IsKnockedDown || LockHands || IsBot && IsOnPlayerTeam;
-                }
-            }
-            set { canInventoryBeAccessed = value; }
-        }
+        
+        public bool IsDraggable => !Removed || AnimController.Draggable;
 
         public bool CanAim
         {
@@ -1322,6 +1326,10 @@ namespace Barotrauma
             : base(null, id)
         {
             wallet = new Wallet(Option<Character>.Some(this));
+            if (GameMain.GameSession?.Campaign?.Bank is { } bank)
+            {
+                wallet.SetRewardDistribution(bank.RewardDistribution);
+            }
 
             this.Seed = seed;
             this.Prefab = prefab;
@@ -1357,6 +1365,8 @@ namespace Barotrauma
             if (Info != null)
             {
                 teamID = Info.TeamID;
+                //no longer a new hire after spawning (only displayed as a new hire at the end of the outpost round, when the character hasn't spawned yet)
+                Info.IsNewHire = false;
             }
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
@@ -1873,7 +1883,7 @@ namespace Barotrauma
 
         public bool CanRunWhileDragging()
         {
-            if (selectedCharacter == null || !selectedCharacter.CanBeDragged) { return true; }
+            if (selectedCharacter is not { IsDraggable: true }) { return true; }
             //if the dragged character is conscious, don't allow running (the dragged character won't keep up, and the dragging gets interrupted)
             if (!selectedCharacter.IsIncapacitated && selectedCharacter.Stun <= 0.0f) { return false; }
             return HasAbilityFlag(AbilityFlags.MoveNormallyWhileDragging);
@@ -2574,18 +2584,15 @@ namespace Barotrauma
             return null;
         }
 
-        public bool CanAccessInventory(Inventory inventory)
+        public bool CanAccessInventory(Inventory inventory, CharacterInventory.AccessLevel accessLevel = CharacterInventory.AccessLevel.Limited)
         {
             if (!CanInteract || inventory.Locked) { return false; }
-
-            //the inventory belongs to some other character
-            if (inventory.Owner is Character character && inventory.Owner != this)
+            
+            if (inventory.Owner is Character inventoryOwner)
             {
-                var owner = character;
-                //can only be accessed if the character is incapacitated and has been selected
-                return SelectedCharacter == owner && owner.CanInventoryBeAccessed;
+                return inventoryOwner.IsInventoryAccessibleTo(this, accessLevel) && (inventoryOwner == this || CanInteractWith(inventoryOwner));
             }
-
+            
             if (inventory.Owner is Item item)
             {
                 if (!CanInteractWith(item)) 
@@ -2606,7 +2613,47 @@ namespace Barotrauma
             }
             return true;
         }
-
+        
+        public bool CanBeHealedBy(Character character, bool checkFriendlyTeam = true) => 
+            !character.IsClimbing && !DisableHealthWindow && 
+            UseHealthWindow && character.CanInteract && 
+            (!checkFriendlyTeam || IsFriendly(character) || CanBeDraggedBy(character)) && 
+            character.CanInteractWith(this, 160f, false);
+        
+        public bool CanBeDraggedBy(Character character)
+        {
+            if (!IsDraggable) { return false; }
+            return IsKnockedDown || LockHands || IsPet || (IsBot && character.TeamID == TeamID);
+        }
+        
+        /// <summary>
+        /// Is the inventory accessible to the character? Doesn't check if the character can actually interact with it (distance checks etc).
+        /// </summary>
+        public bool IsInventoryAccessibleTo(Character character, CharacterInventory.AccessLevel accessLevel = CharacterInventory.AccessLevel.Limited)
+        {
+            if (Removed || Inventory == null) { return false; }
+            if (!Inventory.AccessibleWhenAlive && !IsDead)
+            {
+                if (character == this)
+                {
+                    return Inventory.AccessibleByOwner;
+                }
+                return false;
+            }
+            if (character == this) { return true; }
+            if (IsKnockedDown || LockHands) { return true; }
+            return accessLevel switch
+            {
+                CharacterInventory.AccessLevel.Restricted => false,
+                CharacterInventory.AccessLevel.Limited => (IsBot && IsOnSameTeam()) || IsFriendlyPet(),
+                CharacterInventory.AccessLevel.Allowed => IsOnSameTeam() || IsFriendlyPet(),
+                _ => throw new NotImplementedException()
+            };
+            
+            bool IsOnSameTeam() => character.TeamID == teamID;
+            bool IsFriendlyPet() => IsPet && character.IsFriendly(this);
+        }
+        
         private Stopwatch sw;
         private Stopwatch StopWatch => sw ??= new Stopwatch();
         private float _selectedItemPriority;
@@ -2694,7 +2741,7 @@ namespace Barotrauma
         public bool CanInteractWith(Character c, float maxDist = 200.0f, bool checkVisibility = true, bool skipDistanceCheck = false)
         {
             if (c == this || Removed || !c.Enabled || !c.CanBeSelected || c.InvisibleTimer > 0.0f) { return false; }
-            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged && (c.onCustomInteract == null || !c.AllowCustomInteract)) { return false; }
+            if (!c.CharacterHealth.UseHealthWindow && !c.IsDraggable && (c.onCustomInteract == null || !c.AllowCustomInteract)) { return false; }
 
             if (!skipDistanceCheck)
             {
@@ -2718,7 +2765,7 @@ namespace Barotrauma
         {
             distanceToItem = -1.0f;
 
-            bool hidden = item.HiddenInGame;
+            bool hidden = item.IsHidden;
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen) { hidden = false; }
 #endif
@@ -2827,23 +2874,7 @@ namespace Barotrauma
             }
             if (distanceToItem > interactDistance && item.InteractDistance > 0.0f) { return false; }
 
-            Vector2 itemPosition = item.SimPosition;
-            if (Submarine == null && item.Submarine != null)
-            {
-                //character is outside, item inside
-                itemPosition += item.Submarine.SimPosition;
-            }
-            else if (Submarine != null && item.Submarine == null)
-            {
-                //character is inside, item outside
-                itemPosition -= Submarine.SimPosition;
-            }
-            else if (Submarine != item.Submarine)
-            {
-                //character and the item are inside different subs
-                itemPosition += item.Submarine.SimPosition;
-                itemPosition -= Submarine.SimPosition;
-            }
+            Vector2 itemPosition = GetPosition(Submarine, item, item.SimPosition);
 
             if (SelectedSecondaryItem != null && !item.IsSecondaryItem)
             {
@@ -2864,21 +2895,79 @@ namespace Barotrauma
             if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.SubEditorScreen && !insideTrigger)
             {
                 var body = Submarine.CheckVisibility(SimPosition, itemPosition, ignoreLevel: true);
-                if (body != null)
+                bool itemCenterVisible = CheckBody(body, item);
+
+                if (!itemCenterVisible && item.Prefab.RequireCursorInsideTrigger)
                 {
-                    var otherItem = body.UserData as Item ?? (body.UserData as ItemComponent)?.Item;
-                    if (otherItem != item && 
-                        (body.UserData as ItemComponent)?.Item != item && 
-                        /*allow interacting through open doors (e.g. duct blocks' colliders stay active despite being open)*/
-                        otherItem?.GetComponent<Door>() is not { IsOpen: true } && 
-                        Submarine.LastPickedFixture?.UserData as Item != item) 
-                    { 
-                        return false; 
+                    foreach (Rectangle trigger in item.Prefab.Triggers)
+                    {
+                        Rectangle transformTrigger = item.TransformTrigger(trigger, world: false);
+                        
+                        RectangleF simRect = new RectangleF(
+                            x: ConvertUnits.ToSimUnits(transformTrigger.X),
+                            y: ConvertUnits.ToSimUnits(transformTrigger.Y - transformTrigger.Height),
+                            width: ConvertUnits.ToSimUnits(transformTrigger.Width),
+                            height: ConvertUnits.ToSimUnits(transformTrigger.Height));
+
+                        simRect.Location = GetPosition(Submarine, item, simRect.Location);
+                        
+                        Vector2 closest = ToolBox.GetClosestPointOnRectangle(simRect, SimPosition);
+                        var triggerBody = Submarine.CheckVisibility(SimPosition, closest, ignoreLevel: true);
+
+                        if (CheckBody(triggerBody, item)) { return true; }
                     }
                 }
+                else
+                {
+                    return itemCenterVisible;
+                }
+
             }
 
             return true;
+
+            static bool CheckBody(Body body, Item item)
+            {
+                if (body is null) { return true; }
+                var otherItem = body.UserData as Item ?? (body.UserData as ItemComponent)?.Item;
+                if (otherItem != item && 
+                    (body.UserData as ItemComponent)?.Item != item && 
+                    /*allow interacting through open doors (e.g. duct blocks' colliders stay active despite being open)*/
+                    otherItem?.GetComponent<Door>() is not { IsOpen: true } && 
+                    Submarine.LastPickedFixture?.UserData as Item != item) 
+                { 
+                    return false; 
+                }
+
+                return true;
+            }
+
+            static Vector2 GetPosition(Submarine submarine, Item item, Vector2 simPosition)
+            {
+                Vector2 position = simPosition;
+
+                Vector2 itemSubPos = item.Submarine?.SimPosition ?? Vector2.Zero;
+                Vector2 subPos = submarine?.SimPosition ?? Vector2.Zero;
+
+                if (submarine == null && item.Submarine != null)
+                {
+                    //character is outside, item inside
+                    position += itemSubPos;
+                }
+                else if (submarine != null && item.Submarine == null)
+                {
+                    //character is inside, item outside
+                    position -= subPos;
+                }
+                else if (submarine != item.Submarine && submarine != null)
+                {
+                    //character and the item are inside different subs
+                    position += itemSubPos;
+                    position -= subPos;
+                }
+
+                return position;
+            }
         }
 
         /// <summary>
@@ -3051,15 +3140,15 @@ namespace Barotrauma
             {
                 DeselectCharacter();
             }
-            else if (FocusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged && (CanInteract || FocusedCharacter.IsDead && CanEat))
+            else if (FocusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDraggedBy(this) && (CanInteract || FocusedCharacter.IsDead && CanEat))
             {
                 SelectCharacter(FocusedCharacter);
             }
-            else if (FocusedCharacter != null && !FocusedCharacter.IsIncapacitated && IsKeyHit(InputType.Use) && FocusedCharacter.IsPet && CanInteract)
+            else if (FocusedCharacter is { IsIncapacitated: false } && IsKeyHit(InputType.Use) && FocusedCharacter.IsPet && CanInteract)
             {
                 (FocusedCharacter.AIController as EnemyAIController).PetBehavior.Play(this);
             }
-            else if (FocusedCharacter != null && IsKeyHit(InputType.Health) && FocusedCharacter.CharacterHealth.UseHealthWindow && CanInteract && CanInteractWith(FocusedCharacter, 160f, false))
+            else if (FocusedCharacter != null && IsKeyHit(InputType.Health) && FocusedCharacter.CanBeHealedBy(this))
             {
                 if (FocusedCharacter == SelectedCharacter)
                 {
@@ -3071,12 +3160,14 @@ namespace Barotrauma
                     }
 #endif
                 }
-                else if (!IsClimbing)
+                else
                 {
+                    SelectCharacter(FocusedCharacter);
 #if CLIENT
                     if (Controlled == this)
                     {
                         HealingCooldown.PutOnCooldown();
+                        CharacterHealth.OpenHealthWindow = FocusedCharacter.CharacterHealth;
                     }
 #elif SERVER
                     if (GameMain.Server?.ConnectedClients is { } clients)
@@ -3088,13 +3179,6 @@ namespace Barotrauma
                             HealingCooldown.SetCooldown(c);
                             break;
                         }
-                    }
-#endif
-                    SelectCharacter(FocusedCharacter);
-#if CLIENT
-                    if (Controlled == this)
-                    {
-                        CharacterHealth.OpenHealthWindow = FocusedCharacter.CharacterHealth;
                     }
 #endif
                 }
@@ -3231,6 +3315,11 @@ namespace Barotrauma
         public virtual void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime, cam);
+
+            if (TextChatVolume > 0)
+            {
+                TextChatVolume -= 0.2f * deltaTime;
+            }
 
             if (InvisibleTimer > 0.0f)
             {
@@ -3461,16 +3550,33 @@ namespace Barotrauma
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 
-            if (SelectedItem != null && !CanInteractWith(SelectedItem))
+            if (MustDeselect(SelectedItem))
             {
                 SelectedItem = null;
             }
-            if (SelectedSecondaryItem != null && !CanInteractWith(SelectedSecondaryItem))
+            if (MustDeselect(SelectedSecondaryItem))
             {
                 ReleaseSecondaryItem();
             }
 
             if (!IsDead) { LockHands = false; }
+
+            bool MustDeselect(Item item)
+            {
+                if (item == null) { return false; }
+                if (!CanInteractWith(item)) { return true; }
+                bool hasSelectableComponent = false;
+                foreach (var component in item.Components)
+                {
+                    //the "selectability" of an item can change e.g. if the player unequips another item that's required to access it
+                    if (component.CanBeSelected && component.HasRequiredItems(this, addMessage: false))
+                    {
+                        hasSelectableComponent = true;
+                        break;
+                    }
+                }
+                return !hasSelectableComponent;
+            }
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
@@ -3786,6 +3892,9 @@ namespace Barotrauma
 
         private void UpdateSoundRange(float deltaTime)
         {
+            const float textChatVolumeMultiplier = 0.5f;
+            const float voiceChatVolumeMultiplier = 1.5f;
+
             if (aiTarget == null) { return; }
             if (IsDead)
             {
@@ -3795,8 +3904,37 @@ namespace Barotrauma
             {
                 float massFactor = (float)Math.Sqrt(Mass / 10);
                 float targetRange = Math.Min(massFactor * AnimController.Collider.LinearVelocity.Length() * 2 * Noise, maxAIRange);
+                float speechImpedimentMultiplier = 1.0f - SpeechImpediment / 100.0f;
+                if (TextChatVolume > 0)
+                {
+                    targetRange = Math.Max(targetRange, TextChatVolume * textChatVolumeMultiplier * ChatMessage.SpeakRange * speechImpedimentMultiplier);
+                }
+                
+                if (IsPlayer)
+                {
+                    float voipAmplitude = 0.0f;
+#if SERVER
+                    foreach (var c in GameMain.Server.ConnectedClients)
+                    {
+                        if (c.Character != this) { continue; }
+                        voipAmplitude = c.VoipServerDecoder.Amplitude;
+                        break;
+                    }
+#elif CLIENT && DEBUG
+                    if (Controlled == this && GameMain.Client != null)
+                    {
+                        voipAmplitude = GameMain.Client.DebugServerVoipAmplitude;
+                    }
+#endif
+                    targetRange = Math.Max(targetRange, voipAmplitude * voiceChatVolumeMultiplier * ChatMessage.SpeakRange * speechImpedimentMultiplier);
+                }
+                
                 targetRange *= 1.0f + GetStatValue(StatTypes.SoundRangeMultiplier);
+                targetRange = Math.Min(targetRange, maxAIRange);
+                
                 float newRange = MathHelper.SmoothStep(aiTarget.SoundRange, targetRange, deltaTime * aiTargetChangeSpeed);
+
+                newRange *= 1.0f + GetStatValue(StatTypes.SoundRangeMultiplier);
                 if (!float.IsNaN(newRange))
                 {
                     aiTarget.SoundRange = newRange;
@@ -4693,7 +4831,29 @@ namespace Barotrauma
             }
 #endif
 
-            isDead = true;
+            AnimController.Frozen = false;
+
+            Character killer = causeOfDeathAffliction?.Source;
+            if (IsBot)
+            {
+                foreach (var item in Inventory.AllItems)
+                {
+                    if (item.Equipper is { IsPlayer: true } &&
+                        item.GetComponents<ItemContainer>().Any(ic => ic.BlameEquipperForDeath()))
+                    {
+                        killer = item.Equipper;
+                        if (AIController is HumanAIController humanAi)
+                        {
+                            humanAi.OnAttacked(killer, new AttackResult(damage: MaxVitality));
+                        }
+                        break;
+                    }
+                }
+            }
+
+            CauseOfDeath = new CauseOfDeath(
+                causeOfDeath, causeOfDeathAffliction?.Prefab,
+                killer, LastDamageSource);
 
             // Save these resistances in the CharacterInfo object so that if they
             // are needed for respawning, they will be available (because there
@@ -4704,13 +4864,28 @@ namespace Barotrauma
                 info.LastResistanceMultiplierSkillLossRespawn = GetAbilityResistance(Tags.SkillLossRespawnResistance);
             }
 
+            //it's important that we set isDead before executing the status effects,
+            //otherwise a statuseffect might kill the character "again" and trigger a loop that crashes the game
+            isDead = true;
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
-            AnimController.Frozen = false;
+#if CLIENT
+            // Keep permadeath status in sync (to show it correctly in the UI, the server takes care of the actual logic)
+            // NOTE: The opposite is done in Revive
+            if (GameMain.NetworkMember is { ServerSettings.RespawnMode: RespawnMode.Permadeath } &&
+                GameMain.Client.Character == this &&
+                GameMain.Client.CharacterInfo is CharacterInfo characterInfo)
+            {
+                characterInfo.PermanentlyDead = true;
+            }
+#endif
 
-            CauseOfDeath = new CauseOfDeath(
-                causeOfDeath, causeOfDeathAffliction?.Prefab,
-                causeOfDeathAffliction?.Source, LastDamageSource);
+#if SERVER
+            if (Info is not null)
+            {
+                Info.LastRewardDistribution = Option.Some(Wallet.RewardDistribution);
+            }
+#endif
 
             if (GameAnalyticsManager.SendUserStatistics && Prefab?.ContentPackage == ContentPackageManager.VanillaCorePackage)
             {
@@ -4823,6 +4998,15 @@ namespace Barotrauma
             if (info != null)
             {
                 info.CauseOfDeath = null;
+                
+                // Keep permadeath status in sync (to show it correctly in the UI, the server takes care of the actual logic)
+                // NOTE: The opposite is done in Kill
+                // FYI: In case you're wondering, it's alright to revive a "permanently" dead character here, because if
+                //      this gets called, the character wasn't actually dead anyway (eg. returning to lobby without saving)
+                if (GameMain.NetworkMember is { ServerSettings.RespawnMode: RespawnMode.Permadeath })
+                {
+                    info.PermanentlyDead = false;
+                }
             }
 
             foreach (LimbJoint joint in AnimController.LimbJoints)
@@ -5450,7 +5634,14 @@ namespace Barotrauma
             {
                 statValue += wearableValue;
             }
-
+            foreach (var heldItem in HeldItems)
+            {
+                if (heldItem.GetComponent<Holdable>() is Holdable holdable  &&
+                    holdable.HoldableStatValues.TryGetValue(statType, out float holdableValue))
+                {
+                    statValue += holdableValue;
+                }
+            }
             return statValue;
         }
 

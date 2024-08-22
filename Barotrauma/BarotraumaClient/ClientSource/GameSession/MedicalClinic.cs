@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -81,6 +81,22 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            processAfflictionChangesTimer -= deltaTime;
+            if (processAfflictionChangesTimer <= 0.0f)
+            {
+                foreach (var character in charactersWithAfflictionChanges)
+                {
+                    if (GameMain.NetworkMember is null)
+                    {
+                        ImmutableArray<NetAffliction> afflictions = GetAllAfflictions(character.CharacterHealth);
+                        ui?.UpdateAfflictions(new NetCrewMember(character.Info, afflictions));
+                    }
+                    ui?.UpdateCrewPanel();
+                }
+                charactersWithAfflictionChanges.Clear();
+                processAfflictionChangesTimer = ProcessAfflictionChangesInterval;
+            }
+
             DateTimeOffset now = DateTimeOffset.Now;
             UpdateQueue(afflictionRequests, now, onTimeout: static callback => { callback(new AfflictionRequest(RequestResult.Timeout, ImmutableArray<NetAffliction>.Empty)); });
             UpdateQueue(pendingHealRequests, now, onTimeout: static callback => { callback(new PendingRequest(RequestResult.Timeout, NetCollection<NetCrewMember>.Empty)); });

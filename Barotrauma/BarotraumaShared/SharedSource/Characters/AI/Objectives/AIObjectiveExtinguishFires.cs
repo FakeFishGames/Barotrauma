@@ -10,13 +10,13 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "extinguish fires".ToIdentifier();
         public override bool ForceRun => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowInAnySub => true;
 
         public AIObjectiveExtinguishFires(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
-        protected override bool Filter(Hull hull) => IsValidTarget(hull, character);
+        protected override bool IsValidTarget(Hull hull) => IsValidTarget(hull, character);
 
-        protected override float TargetEvaluation() => 
+        protected override float GetTargetPriority() => 
             // If any target is visible -> 100 priority
             Targets.Any(t => t == character.CurrentHull || HumanAIController.VisibleHulls.Contains(t)) ? 100 : 
             // Else based on the fire severity

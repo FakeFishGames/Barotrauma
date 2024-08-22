@@ -107,6 +107,11 @@ namespace Barotrauma
         public readonly LevelData.LevelType LevelType;
 
         /// <summary>
+        /// If set, this layer must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredLayer;
+
+        /// <summary>
         /// If set, the event set can only be chosen in locations of this type.
         /// </summary>
         public readonly ImmutableArray<Identifier> LocationTypeIdentifiers;
@@ -368,7 +373,7 @@ namespace Barotrauma
             ChooseRandom = element.GetAttributeBool("chooserandom", false);
             eventCount = element.GetAttributeInt("eventcount", 1);
             SubSetCount = element.GetAttributeInt("setcount", 1);
-            Exhaustible = element.GetAttributeBool("exhaustible", false);
+            Exhaustible = element.GetAttributeBool("exhaustible", parentSet?.Exhaustible ?? false);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
@@ -385,6 +390,8 @@ namespace Barotrauma
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat(nameof(ResetTime), parentSet?.ResetTime ?? 0);
             CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), parentSet?.CampaignTutorialOnly ?? false);
+
+            RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
 
             ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
             ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);

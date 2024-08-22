@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 
@@ -108,9 +108,14 @@ namespace Barotrauma
             return new JoinLString(separator, subStrs);
         }
 
-        public LocalizedString Fallback(LocalizedString fallback)
+        /// <summary>
+        /// Use this text instead if the original text cannot be found.
+        /// </summary>
+        /// <param name="fallback">The text to use as a fallback</param>
+        /// <param name="useDefaultLanguageIfFound">Should the default language (English) text be used instead of this fallback if there is a text available in the default language?</param>
+        public LocalizedString Fallback(LocalizedString fallback, bool useDefaultLanguageIfFound = true)
         {
-            return new FallbackLString(this, fallback);
+            return new FallbackLString(this, fallback, useDefaultLanguageIfFound);
         }
 
         public IReadOnlyList<LocalizedString> Split(params char[] separators)

@@ -21,6 +21,8 @@ namespace Barotrauma
         private const float MaxSpeedOnStairs = 1.7f;
         private const float SteepSlopePushMagnitude = MaxSpeedOnStairs;
 
+        public const float BreakFromGrabDistance = 1.4f;
+
         public override RagdollParams RagdollParams
         {
             get { return HumanRagdollParams; }
@@ -309,7 +311,10 @@ namespace Barotrauma
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
                     //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
                     //(except when dragging, then we need the pull joints)
-                    if (!character.CanBeDragged || character.SelectedBy == null) { ResetPullJoints(); }
+                    if (!Draggable || character.SelectedBy == null)
+                    {
+                        ResetPullJoints();
+                    }
                 }
                 return;
             }
@@ -1836,7 +1841,7 @@ namespace Barotrauma
 
                 float dist = ConvertUnits.ToSimUnits(Vector2.Distance(target.WorldPosition, WorldPosition));
                 //let the target break free if it's moving away and gets far enough
-                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && dist > 1.4f && target.AllowInput &&
+                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && dist > BreakFromGrabDistance && target.AllowInput &&
                     Vector2.Dot(target.WorldPosition - WorldPosition, target.AnimController.TargetMovement) > 0)
                 {
                     character.DeselectCharacter();

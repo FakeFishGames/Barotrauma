@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -134,6 +134,10 @@ namespace Barotrauma
             else
             {
                 text = TextManager.Get(Text).Fallback(Text);
+                if (text.Value.IsNullOrEmpty())
+                {
+                    text = text.Fallback(Text);
+                }
             }
             return ParentEvent.ReplaceVariablesInEventText(text);
         }

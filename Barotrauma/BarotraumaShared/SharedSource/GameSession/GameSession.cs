@@ -231,6 +231,12 @@ namespace Barotrauma
                 {
                     campaign.Bank.Deduct(selectedSub.Price);
                     campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, 0);
+#if SERVER
+                    if (GameMain.Server?.ServerSettings?.NewCampaignDefaultSalary is { } salary)
+                    {
+                        campaign.Bank.SetRewardDistribution((int)Math.Round(salary, digits: 0));
+                    }
+#endif
                 }
                 return campaign;
             }
@@ -567,6 +573,12 @@ namespace Barotrauma
                 {
                     GameAnalyticsManager.AddDesignEvent(eventId + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none") + "Discovered:Playtime", campaignMode.TotalPlayTime);
                     GameAnalyticsManager.AddDesignEvent(eventId + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none") + "Discovered:PassedLevels", campaignMode.TotalPassedLevels);
+                }
+                if (GameMain.NetworkMember?.ServerSettings is { } serverSettings)
+                {
+                    GameAnalyticsManager.AddDesignEvent("ServerSettings:RespawnMode:" + serverSettings.RespawnMode);
+                    GameAnalyticsManager.AddDesignEvent("ServerSettings:IronmanMode:" + serverSettings.IronmanMode);
+                    GameAnalyticsManager.AddDesignEvent("ServerSettings:AllowBotTakeoverOnPermadeath:" + serverSettings.AllowBotTakeoverOnPermadeath);
                 }
             }
 
@@ -960,6 +972,8 @@ namespace Barotrauma
                 {
                     ToggleTabMenu();
                 }
+                DeathPrompt?.Close();
+                DeathPrompt.CloseBotPanel();
 
                 GUI.PreventPauseMenuToggle = true;
 

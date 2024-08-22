@@ -382,7 +382,10 @@ namespace Barotrauma
                 if (!HasBody && !ShowStructures) { return; }
                 if (HasBody && !ShowWalls) { return; }
             }
-            else if (HiddenInGame) { return; }
+            else if (IsHidden) 
+            {
+                return; 
+            }
 
             Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted ? GUIStyle.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
 

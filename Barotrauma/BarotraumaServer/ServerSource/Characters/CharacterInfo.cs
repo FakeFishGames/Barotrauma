@@ -56,6 +56,7 @@ namespace Barotrauma
             msg.WriteUInt16(ID);
             msg.WriteString(Name);
             msg.WriteString(OriginalName);
+            msg.WriteBoolean(RenamingEnabled);
             msg.WriteByte((byte)Head.Preset.TagSet.Count);
             foreach (Identifier tag in Head.Preset.TagSet)
             {
@@ -96,6 +97,7 @@ namespace Barotrauma
 
             msg.WriteInt32(ExperiencePoints);
             msg.WriteRangedInteger(AdditionalTalentPoints, 0, MaxAdditionalTalentPoints);
+            msg.WriteBoolean(PermanentlyDead);
         }
     }
 }

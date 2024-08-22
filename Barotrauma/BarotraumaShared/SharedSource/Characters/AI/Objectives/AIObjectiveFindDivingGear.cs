@@ -11,8 +11,8 @@ namespace Barotrauma
         public override string DebugTag => $"{Identifier} ({gearTag})";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-        public override bool AbandonWhenCannotCompleteSubjectives => false;
-        public override bool AllowWhileHandcuffed => false;
+        public override bool AbandonWhenCannotCompleteSubObjectives => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         private readonly Identifier gearTag;
 

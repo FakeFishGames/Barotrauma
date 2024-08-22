@@ -66,6 +66,8 @@ namespace Barotrauma
         public Vector2 ShakePosition { get; private set; }
         private float shakeTimer;
 
+        public float MovementLockTimer;
+
         private float globalZoomScale = 1.0f;
 
         //used to smooth out the movement when in freecam
@@ -257,13 +259,15 @@ namespace Barotrauma
 
             float moveSpeed = 20.0f / zoom;
 
+            MovementLockTimer -= deltaTime;
+
             Vector2 moveCam = Vector2.Zero;
             if (TargetPos == Vector2.Zero)
             {
                 Vector2 moveInput = Vector2.Zero;
                 if (allowMove && !Freeze)
                 {
-                    if (GUI.KeyboardDispatcher.Subscriber == null && allowInput)
+                    if (GUI.KeyboardDispatcher.Subscriber == null && allowInput && MovementLockTimer <= 0.0f)
                     {
                         if (PlayerInput.KeyDown(Keys.LeftShift)) { moveSpeed *= 2.0f; }
                         if (PlayerInput.KeyDown(Keys.LeftControl)) { moveSpeed *= 0.5f; }

@@ -16,23 +16,23 @@ namespace Barotrauma
 
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
 
         private readonly CombatMode initialMode;
 
         private float checkWeaponsTimer;
-        private const float checkWeaponsInterval = 1;
+        private const float CheckWeaponsInterval = 1;
         private float ignoreWeaponTimer;
-        private const float ignoredWeaponsClearTime = 10;
+        private const float IgnoredWeaponsClearTime = 10;
 
-        private const float goodWeaponPriority = 30;
-
-        private const float arrestHoldFireTime = 8;
+        private const float GoodWeaponPriority = 30;
+        
         private float holdFireTimer;
         private bool hasAimed;
         private bool isLethalWeapon;
-        private bool AllowCoolDown => !IsOffensiveOrArrest || Mode != initialMode || character.TeamID == Enemy.TeamID;
+        private bool AllowCoolDown => allowCooldown || !IsOffensiveOrArrest || Mode != initialMode || character.TeamID == Enemy.TeamID;
+        private bool allowCooldown;
 
         public Character Enemy { get; private set; }
         public bool HoldPosition { get; set; }
@@ -45,7 +45,6 @@ namespace Barotrauma
             {
                 _weapon = value;
                 _weaponComponent = null;
-                hasAimed = false;
             }
         }
         private ItemComponent _weaponComponent;
@@ -58,8 +57,8 @@ namespace Barotrauma
             }
         }
 
-        public override bool ConcurrentObjectives => true;
-        public override bool AbandonWhenCannotCompleteSubjectives => false;
+        protected override bool ConcurrentObjectives => true;
+        public override bool AbandonWhenCannotCompleteSubObjectives => false;
 
         private readonly AIObjectiveFindSafety findSafety;
         private readonly HashSet<ItemComponent> weapons = new HashSet<ItemComponent>();
@@ -72,6 +71,9 @@ namespace Barotrauma
 
         private Hull retreatTarget;
         private float coolDownTimer;
+        private float pathBackTimer;
+        private const float DefaultCoolDown = 10.0f;
+        private const float PathBackCheckTime = 1.0f;
         private IEnumerable<Body> myBodies;
         private float aimTimer;
         private float reloadTimer;
@@ -79,17 +81,25 @@ namespace Barotrauma
 
         private bool canSeeTarget;
         private float visibilityCheckTimer;
-        private const float visibilityCheckInterval = 0.2f;
+        private const float VisibilityCheckInterval = 0.2f;
 
         private float sqrDistance;
-        private const float maxDistance = 2000;
-        private const float distanceCheckInterval = 0.2f;
+        private const float MaxDistance = 2000;
+        private const float DistanceCheckInterval = 0.2f;
         private float distanceTimer;
         
-        private const float closeDistanceThreshold = 300;
-        private const float floorHeightApproximate = 100;
+        private const float CloseDistanceThreshold = 300;
+        private const float FloorHeightApproximate = 100;
 
         public bool AllowHoldFire;
+        public bool SpeakWarnings;
+        private bool firstWarningTriggered;
+        private bool lastWarningTriggered;
+        
+        public float ArrestHoldFireTime { get; init; } = 10;
+        
+        private const float ArrestTargetDistance = 100;
+        private bool arrestingRegistered;
 
         /// <summary>
         /// Don't start using a weapon if this condition is true
@@ -123,7 +133,7 @@ namespace Barotrauma
         public CombatMode Mode { get; private set; }
 
         private bool IsOffensiveOrArrest => initialMode is CombatMode.Offensive or CombatMode.Arrest;
-        private bool TargetEliminated => IsEnemyDisabled || Enemy.IsUnconscious && Enemy.Params.Health.ConstantHealthRegeneration <= 0.0f || Enemy.IsArrested && !character.IsInstigator;
+        private bool TargetEliminated => IsEnemyDisabled || (Enemy.IsUnconscious && Enemy.Params.Health.ConstantHealthRegeneration <= 0.0f) || (!character.IsInstigator && Enemy.IsHandcuffed && Enemy.IsKnockedDown);
         private bool IsEnemyDisabled => Enemy == null || Enemy.Removed || Enemy.IsDead;
 
         private float AimSpeed => HumanAIController.AimSpeed;
@@ -141,7 +151,7 @@ namespace Barotrauma
             if (character.CurrentHull != null && Enemy.CurrentHull != null && character.CurrentHull != Enemy.CurrentHull)
             {
                 // Inside, not in the same hull with the enemy
-                if (Math.Abs(toEnemy.Y) > floorHeightApproximate)
+                if (Math.Abs(toEnemy.Y) > FloorHeightApproximate)
                 {
                     // Different floor
                     return false;
@@ -156,7 +166,7 @@ namespace Barotrauma
             return Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition) < margin * margin;
         }
 
-        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1, float coolDown = 10.0f) 
+        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1, float coolDown = DefaultCoolDown) 
             : base(character, objectiveManager, priorityModifier)
         {
             if (mode == CombatMode.None)
@@ -187,48 +197,31 @@ namespace Barotrauma
 
         protected override float GetPriority()
         {
-            if (Enemy == null || Enemy.Removed)
-            {
-                Priority = 0;
-                Abandon = true;
-                return Priority;
-            }
-            if (character.TeamID == CharacterTeamType.FriendlyNPC)
-            {
-                if (Enemy.Submarine == null || (Enemy.Submarine.TeamID != character.TeamID && Enemy.Submarine != character.Submarine))
-                {
-                    Priority = 0;
-                    Abandon = true;
-                    return Priority;
-                }
-            }
             if (TargetEliminated)
             {
                 Priority = 0;
+                return Priority;
             }
-            else
+            // 91-100
+            const float minPriority = AIObjectiveManager.EmergencyObjectivePriority + 1;
+            const float maxPriority = AIObjectiveManager.MaxObjectivePriority;
+            const float priorityScale = maxPriority - minPriority;
+            float xDist = Math.Abs(character.WorldPosition.X - Enemy.WorldPosition.X);
+            float yDist = Math.Abs(character.WorldPosition.Y - Enemy.WorldPosition.Y);
+            if (HumanAIController.VisibleHulls.Contains(Enemy.CurrentHull))
             {
-                // 91-100
-                const float minPriority = AIObjectiveManager.EmergencyObjectivePriority + 1;
-                const float maxPriority = AIObjectiveManager.MaxObjectivePriority;
-                const float priorityScale = maxPriority - minPriority;
-                float xDist = Math.Abs(character.WorldPosition.X - Enemy.WorldPosition.X);
-                float yDist = Math.Abs(character.WorldPosition.Y - Enemy.WorldPosition.Y);
-                if (HumanAIController.VisibleHulls.Contains(Enemy.CurrentHull))
+                xDist /= 2;
+                yDist /= 2;
+            }
+            float distanceFactor = MathUtils.InverseLerp(3000, 0, xDist + yDist * 5);
+            float devotion = CumulatedDevotion / 100;
+            float additionalPriority = MathHelper.Lerp(0, priorityScale, Math.Clamp(devotion + distanceFactor, 0, 1));
+            Priority = Math.Min((minPriority + additionalPriority) * PriorityModifier, maxPriority);
+            if (Priority > 0)
+            {
+                if (EnemyAIController.IsLatchedToSomeoneElse(Enemy, character))
                 {
-                    xDist /= 2;
-                    yDist /= 2;
-                }
-                float distanceFactor = MathUtils.InverseLerp(3000, 0, xDist + yDist * 5);
-                float devotion = CumulatedDevotion / 100;
-                float additionalPriority = MathHelper.Lerp(0, priorityScale, Math.Clamp(devotion + distanceFactor, 0, 1));
-                Priority = Math.Min((minPriority + additionalPriority) * PriorityModifier, maxPriority);
-                if (Priority > 0)
-                {
-                    if (EnemyAIController.IsLatchedToSomeoneElse(Enemy, character))
-                    {
-                        Priority = 0;
-                    }
+                    Priority = 0;
                 }
             }
             return Priority;
@@ -246,7 +239,7 @@ namespace Barotrauma
             if (ignoreWeaponTimer < 0)
             {
                 ignoredWeapons.Clear();
-                ignoreWeaponTimer = ignoredWeaponsClearTime;
+                ignoreWeaponTimer = IgnoredWeaponsClearTime;
             }
             bool isFightingIntruders = objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             if (findSafety != null && isFightingIntruders)
@@ -258,7 +251,7 @@ namespace Barotrauma
                 distanceTimer -= deltaTime;
                 if (distanceTimer < 0)
                 {
-                    distanceTimer = distanceCheckInterval;
+                    distanceTimer = DistanceCheckInterval;
                     sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
                 }
             }
@@ -266,16 +259,62 @@ namespace Barotrauma
 
         protected override bool CheckObjectiveSpecific()
         {
-            if (character.Submarine is not { TeamID: CharacterTeamType.FriendlyNPC })
+            if (character.Submarine is { TeamID: CharacterTeamType.FriendlyNPC } && character.Submarine == Enemy.Submarine)
             {
-                // Can't lose the target in friendly outposts.
-                if (sqrDistance > maxDistance * maxDistance)
+                // Target still in the outpost
+                if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsSecurity)
                 {
-                    // The target escaped from us.
-                    return true;
+                    // Outpost guards shouldn't lose the target in friendly outposts,
+                    // However, if we are not a guard, let's ensure that we allow the cooldown.
+                    allowCooldown = true;
                 }
             }
-            return IsEnemyDisabled || (AllowCoolDown && coolDownTimer <= 0);
+            else
+            {
+                if ((Enemy.Submarine == null && character.Submarine != null) || sqrDistance > MaxDistance * MaxDistance)
+                {
+                    // The target escaped from us.
+                    Abandon = true;
+                    if (character.TeamID == CharacterTeamType.FriendlyNPC && IsOffensiveOrArrest)
+                    {
+                        Enemy.IsCriminal = true;
+                    }
+                    return false;
+                }
+                if (Enemy.Submarine != null && character.Submarine != null && character.TeamID == CharacterTeamType.FriendlyNPC)
+                {
+                    if (Enemy.Submarine.TeamID != character.TeamID)
+                    {
+                        allowCooldown = true;
+                        // Target not in the outpost anymore.
+                        if (character.CanSeeTarget(Enemy))
+                        {
+                            allowCooldown = false;
+                            coolDownTimer = DefaultCoolDown;
+                        }
+                        else if (pathBackTimer <= 0)
+                        {
+                            // Check once per sec during the cooldown whether we can find a path back to the docking port
+                            pathBackTimer = PathBackCheckTime;
+                            foreach ((Submarine sub, DockingPort dockingPort) in character.Submarine.ConnectedDockingPorts)
+                            {
+                                if (sub.TeamID != character.TeamID) { continue; }
+                                var path = PathSteering.PathFinder.FindPath(character.SimPosition, character.GetRelativeSimPosition(dockingPort.Item), character.Submarine, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                                if (path.Unreachable)
+                                {
+                                    allowCooldown = false;
+                                    coolDownTimer = DefaultCoolDown;
+                                }
+                            }
+                        }
+                        if (IsOffensiveOrArrest)
+                        {
+                            Enemy.IsCriminal = true;
+                        }
+                    }
+                }
+            }
+            return TargetEliminated || (AllowCoolDown && coolDownTimer <= 0);
         }
 
         protected override void Act(float deltaTime)
@@ -288,6 +327,10 @@ namespace Barotrauma
             if (AllowCoolDown)
             {
                 coolDownTimer -= deltaTime;
+                if (pathBackTimer > 0)
+                {
+                    pathBackTimer -= deltaTime;
+                }
             }
             if (seekAmmunitionObjective == null && seekWeaponObjective == null)
             {
@@ -302,27 +345,6 @@ namespace Barotrauma
                 else if (seekAmmunitionObjective == null && seekWeaponObjective == null)
                 {
                     Move(deltaTime);
-                }
-                switch (Mode)
-                {
-                    case CombatMode.Offensive:
-                        if (TargetEliminated && objectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>())
-                        {
-                            character.Speak(TextManager.Get("DialogTargetDown").Value, null, 3.0f, "targetdown".ToIdentifier(), 30.0f);
-                        }
-                        break;
-                    case CombatMode.Arrest:
-                        if (HumanAIController.HasItem(Enemy, Tags.HandLockerItem, out _, requireEquipped: true))
-                        {
-                            IsCompleted = true;
-                        }
-                        else if (Enemy.IsKnockedDown && 
-                            !objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>() && 
-                            !HumanAIController.HasItem(character, Tags.HandLockerItem, out _, requireEquipped: false))
-                        {
-                            IsCompleted = true;
-                        }
-                        break;
                 }
             }
         }
@@ -389,7 +411,7 @@ namespace Barotrauma
                                             && !character.IsInstigator); // Instigators (= aggressive NPCs spawned with events) shouldn't seek new weapons, because we don't want them to grab e.g. an smg, if they spawn with a wrench or something.
             if (checkWeaponsTimer < 0)
             {
-                checkWeaponsTimer = checkWeaponsInterval;
+                checkWeaponsTimer = CheckWeaponsInterval;
                 // First go through all weapons and try to reload without seeking ammunition
                 HashSet<ItemComponent> allWeapons = FindWeaponsFromInventory();
                 while (allWeapons.Any())
@@ -412,7 +434,7 @@ namespace Barotrauma
                         // All good, the weapon is loaded
                         break;
                     }
-                    bool seekAmmo = isAllowedToSeekWeapons && seekAmmunitionObjective == null && !IsEnemyClose(closeDistanceThreshold);
+                    bool seekAmmo = isAllowedToSeekWeapons && seekAmmunitionObjective == null && !IsEnemyClose(CloseDistanceThreshold);
                     if (Reload(seekAmmo: seekAmmo))
                     {
                         // All good, we can use the weapon.
@@ -458,7 +480,7 @@ namespace Barotrauma
                         Mode = CombatMode.Retreat;
                     }
                 }
-                else if (seekAmmunitionObjective == null && (WeaponComponent == null || (WeaponComponent.CombatPriority < goodWeaponPriority && !IsEnemyClose(closeDistanceThreshold))))
+                else if (seekAmmunitionObjective == null && (WeaponComponent == null || (WeaponComponent.CombatPriority < GoodWeaponPriority && !IsEnemyClose(CloseDistanceThreshold))))
                 {
                     // No weapon or only a poor weapon equipped -> try to find better.
                     RemoveSubObjective(ref retreatObjective);
@@ -485,7 +507,7 @@ namespace Barotrauma
                                 if (range is > 0 and < float.PositiveInfinity)
                                 {
                                     // Y distance is irrelevant when we are on the same floor. If we are on a different floor, let's double it.
-                                    float yDiff = Math.Abs(toItem.Y) > floorHeightApproximate ? toItem.Y * 2 : 0;
+                                    float yDiff = Math.Abs(toItem.Y) > FloorHeightApproximate ? toItem.Y * 2 : 0;
                                     Vector2 adjustedDiff = new Vector2(toItem.X, yDiff);
                                     if (adjustedDiff.LengthSquared() > MathUtils.Pow2(range))
                                     {
@@ -501,7 +523,7 @@ namespace Barotrauma
                                 }
                                 if (i.CurrentHull != null && !HumanAIController.VisibleHulls.Contains(i.CurrentHull))
                                 {
-                                    if (Math.Abs(toItem.Y) > floorHeightApproximate && Math.Abs(toEnemy.Y) > floorHeightApproximate)
+                                    if (Math.Abs(toItem.Y) > FloorHeightApproximate && Math.Abs(toEnemy.Y) > FloorHeightApproximate)
                                     {
                                         if (Math.Sign(toItem.Y) == Math.Sign(toEnemy.Y))
                                         {
@@ -522,7 +544,7 @@ namespace Barotrauma
                                 SpeakNoWeapons();
                                 Mode = CombatMode.Retreat;
                             }
-                            else if (!objectiveManager.HasActiveObjective<AIObjectiveFightIntruders>())
+                            else if (!objectiveManager.HasObjectiveOrOrder<AIObjectiveFightIntruders>())
                             {
                                 // Poor weapon equipped
                                 Mode = CombatMode.Defensive;
@@ -642,7 +664,7 @@ namespace Barotrauma
                     priority /= 2;
                 }
             }
-            else if (Enemy.IsKnockedDown)
+            else if (Enemy.IsKnockedDown && Mode != CombatMode.Arrest)
             {
                 // Enemy is stunned, reduce the priority of stunner weapons.
                 Attack attack = GetAttackDefinition(weapon);
@@ -775,7 +797,7 @@ namespace Barotrauma
             float bestPriority = 0;
             float lethalDmg = -1;
             bool prioritizeMelee = IsEnemyClose(50) || EnemyAIController.IsLatchedTo(Enemy, character);
-            bool isCloseToEnemy = prioritizeMelee || IsEnemyClose(closeDistanceThreshold);
+            bool isCloseToEnemy = prioritizeMelee || IsEnemyClose(CloseDistanceThreshold);
             foreach (var weapon in weaponList)
             {
                 float priority = GetWeaponPriority(weapon, prioritizeMelee, canSeekAmmo: !isCloseToEnemy, out lethalDmg);
@@ -801,9 +823,28 @@ namespace Barotrauma
                     }
                     isLethalWeapon = lethalDmg > 1;
                 }
-                if (AllowHoldFire && !hasAimed && holdFireTimer <= 0)
+                if (AllowHoldFire)
                 {
-                    holdFireTimer = arrestHoldFireTime * Rand.Range(0.75f, 1.25f);
+                    if (!hasAimed && holdFireTimer <= 0)
+                    {
+                        holdFireTimer = ArrestHoldFireTime * Rand.Range(0.9f, 1.1f);
+                    }
+                    else
+                    {
+                        if (SpeakWarnings)
+                        {
+                            if (!lastWarningTriggered && holdFireTimer < ArrestHoldFireTime * 0.3f)
+                            {
+                                FriendlyGuardSpeak("dialogarrest.lastwarning".ToIdentifier(), delay: 0, minDurationBetweenSimilar: 0f);
+                                lastWarningTriggered = true;
+                            }
+                            else if (!firstWarningTriggered && holdFireTimer < ArrestHoldFireTime * 0.8f)
+                            {
+                                FriendlyGuardSpeak("dialogarrest.firstwarning".ToIdentifier(), delay: 0, minDurationBetweenSimilar: 0f);
+                                firstWarningTriggered = true;
+                            }
+                        }   
+                    }
                 }
             }
             return weaponComponent.Item;
@@ -909,9 +950,10 @@ namespace Barotrauma
 
         private void Retreat(float deltaTime)
         {
-            if (!Enemy.IsHuman)
+            if (!Enemy.IsHuman && !character.IsInFriendlySub)
             {
-                SpeakRetreating();
+                // Only relevant when we are retreating from monsters and are not inside a friendly sub.
+                PlayerCrewSpeak("dialogcombatretreating".ToIdentifier(), delay: Rand.Range(0f, 1f), minDurationBetweenSimilar: 20);
             }
             RemoveFollowTarget();
             RemoveSubObjective(ref seekAmmunitionObjective);
@@ -931,7 +973,7 @@ namespace Barotrauma
             {
                 RemoveSubObjective(ref retreatObjective);
             }
-            if (character.Submarine == null && sqrDistance < MathUtils.Pow2(maxDistance))
+            if (character.Submarine == null && sqrDistance < MathUtils.Pow2(MaxDistance))
             {
                 // Swim away
                 SteeringManager.Reset();
@@ -1017,6 +1059,16 @@ namespace Barotrauma
                 }
                 return;
             }
+            if (character.TeamID == CharacterTeamType.FriendlyNPC && character.Submarine != null && character.Submarine.TeamID != character.TeamID)
+            {
+                // An outpost guard following the target (possibly a player) to another sub -> don't go further, unless can see the enemy.
+                if (!character.IsClimbing && !character.CanSeeTarget(Enemy))
+                {
+                    SteeringManager.Reset();
+                    RemoveFollowTarget();
+                    return;
+                }
+            }
             if (followTargetObjective != null && followTargetObjective.Target != Enemy)
             {
                 RemoveFollowTarget();
@@ -1045,32 +1097,27 @@ namespace Barotrauma
                     }
                 });
             if (followTargetObjective == null) { return; }
-            if (Mode == CombatMode.Arrest && Enemy.IsKnockedDown)
+            if (Mode == CombatMode.Arrest && Enemy.IsKnockedDown && !arrestingRegistered)
             {
-                if (HumanAIController.HasItem(character, Tags.HandLockerItem, out _))
+                bool hasHandCuffs = HumanAIController.HasItem(character, Tags.HandLockerItem, out _);
+                if (!hasHandCuffs && character.TeamID == CharacterTeamType.FriendlyNPC)
                 {
-                    if (!arrestingRegistered)
+                    // Spawn handcuffs
+                    ItemPrefab prefab = ItemPrefab.Find(null, "handcuffs".ToIdentifier());
+                    if (prefab != null)
                     {
-                        arrestingRegistered = true;
-                        followTargetObjective.Completed += OnArrestTargetReached;
-                        followTargetObjective.CloseEnough = 100;
-                    }
-                }
-                else
-                {
-                    if (character.TeamID == CharacterTeamType.FriendlyNPC)
-                    {
-                        ItemPrefab prefab = ItemPrefab.Find(null, "handcuffs".ToIdentifier());
-                        if (prefab != null)
+                        Entity.Spawner.AddItemToSpawnQueue(prefab, character.Inventory, onSpawned: i =>
                         {
-                            Entity.Spawner.AddItemToSpawnQueue(prefab, character.Inventory, onSpawned: (Item i) => i.SpawnedInCurrentOutpost = true);
-                        }
+                            i.SpawnedInCurrentOutpost = true;
+                            i.AllowStealing = false;
+                        });
                     }
-                    RemoveFollowTarget();
-                    SteeringManager.Reset();
                 }
+                arrestingRegistered = true;
+                followTargetObjective.Completed += OnArrestTargetReached;
+                followTargetObjective.CloseEnough = ArrestTargetDistance;
             }
-            if (!arrestingRegistered && followTargetObjective != null)
+            if (!arrestingRegistered)
             {
                 followTargetObjective.CloseEnough =
                     WeaponComponent switch
@@ -1082,8 +1129,6 @@ namespace Barotrauma
                     };
             }
         }
-
-        private bool arrestingRegistered;
 
         private void RemoveFollowTarget()
         {
@@ -1110,9 +1155,9 @@ namespace Barotrauma
                 // Confiscate stolen goods and all weapons
                 foreach (var item in Enemy.Inventory.AllItemsMod)
                 {
-                    if (character.TeamID == CharacterTeamType.FriendlyNPC && item.StolenDuringRound ||
-                        item.HasTag(Tags.Weapon) || item.HasTag(Tags.Poison) ||
-                        GetWeaponComponent(item) is { CombatPriority: > 0 })
+                    // Ignore handcuffs already on the target.
+                    if (item.HasTag(Tags.HandLockerItem) && Enemy.HasEquippedItem(item)) { continue; }
+                    if (item.Illegitimate || item.HasTag(Tags.Weapon) || item.HasTag(Tags.Poison) || GetWeaponComponent(item) is { CombatPriority: > 0 })
                     {
                         item.Drop(character);
                         character.Inventory.TryPutItem(item, character, CharacterInventory.AnySlot);
@@ -1255,7 +1300,7 @@ namespace Barotrauma
             if (visibilityCheckTimer <= 0.0f)
             {
                 canSeeTarget = character.CanSeeTarget(Enemy);
-                visibilityCheckTimer = visibilityCheckInterval;
+                visibilityCheckTimer = VisibilityCheckInterval;
             }
             if (!canSeeTarget)
             {
@@ -1267,7 +1312,7 @@ namespace Barotrauma
                 character.SetInput(InputType.Aim, hit: false, held: true);
             }
             hasAimed = true;
-            if (holdFireTimer > 0)
+            if (AllowHoldFire && holdFireTimer > 0)
             {
                 holdFireTimer -= deltaTime;
                 return;
@@ -1280,7 +1325,7 @@ namespace Barotrauma
             if (reloadTimer > 0) { return; }
             if (holdFireCondition != null && holdFireCondition()) { return; }
             sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
-            distanceTimer = distanceCheckInterval;
+            distanceTimer = DistanceCheckInterval;
             if (WeaponComponent is MeleeWeapon meleeWeapon)
             {
                 bool closeEnough = true;
@@ -1354,8 +1399,8 @@ namespace Barotrauma
 
         private void UseWeapon(float deltaTime)
         {
-            // Never allow to attack characters with deadly weapons while trying to arrest.
-            if (Mode == CombatMode.Arrest && isLethalWeapon) { return; }
+            // Never allow friendly crew (bots) to attack with deadly weapons.
+            if (Mode == CombatMode.Arrest && isLethalWeapon && character.IsOnPlayerTeam && Enemy.IsOnPlayerTeam) { return; }
             character.SetInput(InputType.Shoot, hit: false, held: true);
             Weapon.Use(deltaTime, user: character);
             SetReloadTime(WeaponComponent);
@@ -1408,6 +1453,36 @@ namespace Barotrauma
         protected override void OnCompleted()
         {
             base.OnCompleted();
+            if (Enemy != null)
+            {
+                switch (Mode)
+                {
+                    case CombatMode.Offensive when Enemy.IsUnconscious && objectiveManager.HasObjectiveOrOrder<AIObjectiveFightIntruders>():
+                        character.Speak(TextManager.Get("DialogTargetDown").Value, null, 3.0f, "targetdown".ToIdentifier(), 30.0f);
+                        break;
+                    case CombatMode.Arrest when IsCompleted:
+                        if (!HumanAIController.IsTrueForAnyBotInTheCrew(bot => 
+                                (bot != HumanAIController && bot.ObjectiveManager.CurrentObjective is AIObjectiveCombat { Mode: CombatMode.Arrest } combatObj && combatObj.Enemy == Enemy) || 
+                                bot.ObjectiveManager.CurrentObjective is AIObjectiveGoTo { SourceObjective: AIObjectiveCombat combatObjective } && combatObjective.Enemy == Enemy))
+                        {
+                            // Go to the target and confiscate any stolen items, unless someone is already on it.
+                            // Added on the root level, because the lifetime of the new objective exceeds the lifetime of this objective.
+                            RemoveFollowTarget();
+                            var approachArrestTarget = new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: false, getDivingGearIfNeeded: false, closeEnough: ArrestTargetDistance)
+                            {
+                                UsePathingOutside = false,
+                                IgnoreIfTargetDead = true,
+                                TargetName = Enemy.DisplayName,
+                                AlwaysUseEuclideanDistance = false,
+                                SpeakIfFails = false,
+                                SourceObjective = this
+                            };
+                            approachArrestTarget.Completed += OnArrestTargetReached;
+                            objectiveManager.AddObjective(approachArrestTarget);
+                        }
+                        break;
+                }   
+            }
             if (ShouldUnequipWeapon)
             {
                 Unequip();
@@ -1424,11 +1499,23 @@ namespace Barotrauma
             }
             SteeringManager?.Reset();
         }
-
+        
+        public override void OnDeselected()
+        {
+            base.OnDeselected();
+            if (character.TeamID == CharacterTeamType.FriendlyNPC && IsOffensiveOrArrest && (!AllowHoldFire || (hasAimed && holdFireTimer <= 0)))
+            {
+                // Remember that the target resisted or acted offensively (we've aimed or tried to arrest/attack)
+                Enemy.IsCriminal = true;
+            }
+        }
+        
         public override void Reset()
         {
             base.Reset();
             hasAimed = false;
+            holdFireTimer = 0;
+            pathBackTimer = 0;
             isLethalWeapon = false;
             canSeeTarget = false;
             seekWeaponObjective = null;
@@ -1436,20 +1523,43 @@ namespace Barotrauma
             retreatObjective = null;
             followTargetObjective = null;
             retreatTarget = null;
+            firstWarningTriggered = false;
+            lastWarningTriggered = false;
         }
 
-        private void SpeakNoWeapons() => Speak("dialogcombatnoweapons".ToIdentifier(), delay: 0, minDuration: 30);
-        private void SpeakRetreating() => Speak("dialogcombatretreating".ToIdentifier(), delay: Rand.Range(0f, 1f), minDuration: 20);
-
-        private void Speak(Identifier textIdentifier, float delay, float minDuration)
+        /// <summary>
+        /// Speak that we don't have weapons. But only outside of friendly subs (not that relevant there, reduces spam).
+        /// </summary>
+        private void SpeakNoWeapons()
         {
-            if (character.IsOnPlayerTeam && !character.IsInFriendlySub)
+            if (!character.IsInFriendlySub)
             {
-                LocalizedString msg = TextManager.Get(textIdentifier);
-                if (!msg.IsNullOrEmpty())
-                {
-                    character.Speak(msg.Value, identifier: textIdentifier, delay: delay, minDurationBetweenSimilar: minDuration);
-                }
+                PlayerCrewSpeak("dialogcombatnoweapons".ToIdentifier(), delay: 0, minDurationBetweenSimilar: 30);
+            }
+        }
+        
+        private void PlayerCrewSpeak(Identifier textIdentifier, float delay, float minDurationBetweenSimilar)
+        {
+            if (character.IsOnPlayerTeam)
+            {
+                Speak(textIdentifier, delay, minDurationBetweenSimilar);
+            }
+        }
+        
+        private void FriendlyGuardSpeak(Identifier textIdentifier, float delay, float minDurationBetweenSimilar)
+        {
+            if (character.TeamID == CharacterTeamType.FriendlyNPC && character.IsSecurity)
+            {
+                Speak(textIdentifier, delay, minDurationBetweenSimilar);
+            }
+        }
+        
+        private void Speak(Identifier textIdentifier, float delay, float minDurationBetweenSimilar)
+        {
+            LocalizedString msg = TextManager.Get(textIdentifier);
+            if (!msg.IsNullOrEmpty())
+            {
+                character.Speak(msg.Value, identifier: textIdentifier, delay: delay, minDurationBetweenSimilar: minDurationBetweenSimilar);
             }
         }
 

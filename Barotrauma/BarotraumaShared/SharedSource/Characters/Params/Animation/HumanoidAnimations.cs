@@ -69,20 +69,12 @@ namespace Barotrauma
 
     abstract class HumanSwimParams : SwimParams, IHumanAnimation
     {
+        [Header("Legs")]
         [Serialize(0.5f, IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
         public float LegMoveAmount { get; set; }
 
         [Serialize(5.0f, IsPropertySaveable.Yes), Editable]
         public float LegCycleLength { get; set; }
-
-        [Serialize("0.5, 0.1", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
-        public Vector2 HandMoveAmount { get; set; }
-
-        [Serialize(5.0f, IsPropertySaveable.Yes), Editable]
-        public float HandCycleSpeed { get; set; }
-
-        [Serialize("0.0, 0.0", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
-        public Vector2 HandMoveOffset { get; set; }
 
         /// <summary>
         /// In degrees.
@@ -96,7 +88,18 @@ namespace Barotrauma
                 FootAngleInRadians = MathHelper.ToRadians(value);
             }
         }
+
         public float FootAngleInRadians { get; private set; }
+
+        [Header("Arms")]
+        [Serialize("0.5, 0.1", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
+        public Vector2 HandMoveAmount { get; set; }
+
+        [Serialize(5.0f, IsPropertySaveable.Yes), Editable]
+        public float HandCycleSpeed { get; set; }
+
+        [Serialize("0.0, 0.0", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
+        public Vector2 HandMoveOffset { get; set; }
 
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the arms."), Editable(MinValueFloat = 0, MaxValueFloat = 20, DecimalCount = 2)]
         public float ArmMoveStrength { get; set; }
@@ -104,12 +107,14 @@ namespace Barotrauma
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
 
+        [Header("Other")]
         [Serialize(true, IsPropertySaveable.Yes, description: "Is the head angle fixed or does the angle follow the mouse position?"), Editable]
         public bool FixedHeadAngle { get; set; }
     }
 
     abstract class HumanGroundedParams : GroundedMovementParams, IHumanAnimation
     {
+        [Header("Standing")]
         [Serialize(0.3f, IsPropertySaveable.Yes, description: "How much force is used to force the character upright."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float GetUpForce { get; set; }
 
@@ -119,6 +124,7 @@ namespace Barotrauma
         [Serialize(0.25f, IsPropertySaveable.Yes, description: "How much the character's torso leans forwards when moving."), Editable(DecimalCount = 2)]
         public float TorsoLeanAmount { get; set; }
 
+        [Header("Legs")]
         [Serialize(15.0f, IsPropertySaveable.Yes, description: "How much force is used to move the feet to the correct position."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float FootMoveStrength { get; set; }
 
@@ -152,6 +158,7 @@ namespace Barotrauma
         [Serialize(10.0f, IsPropertySaveable.Yes, description: "How much torque is used to bend the characters legs when taking a step."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float LegBendTorque { get; set; }
 
+        [Header("Arms")]
         [Serialize("0.4, 0.15", IsPropertySaveable.Yes, description: "How much the hands move along each axis."), Editable(DecimalCount = 2)]
         public Vector2 HandMoveAmount { get; set; }
 
@@ -167,6 +174,7 @@ namespace Barotrauma
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
 
+        [Header("Other")]
         [Serialize(true, IsPropertySaveable.Yes, description: "Is the head angle fixed or does the angle follow the mouse position?"), Editable]
         public bool FixedHeadAngle { get; set; }
     }

@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace Barotrauma;
 
@@ -63,6 +63,7 @@ public static class Tags
     public static readonly Identifier Crate = "crate".ToIdentifier();
     public static readonly Identifier DontSellItems = "dontsellitems".ToIdentifier();
     public static readonly Identifier CargoContainer = "cargocontainer".ToIdentifier();
+    public static readonly Identifier DisallowCargo = "disallowcargo".ToIdentifier();
 
     public static readonly Identifier CargoMissionItem = "cargomission".ToIdentifier();
 
@@ -100,6 +101,8 @@ public static class Tags
     public static readonly Identifier NonTraitorPlayer = "nontraitorplayer".ToIdentifier();
     public static readonly Identifier TraitorMissionItem = "traitormissionitem".ToIdentifier();
     public static readonly Identifier TraitorGuidelinesForSecurity = "traitorguidelinesforsecurity".ToIdentifier();
+
+    public static readonly Identifier ProvocativeToHumanAI = "provocativetohumanai".ToIdentifier();
 
     /// <summary>
     /// Container where the initial gear (diving suit, oxygen tank, etc) of respawning players is placed

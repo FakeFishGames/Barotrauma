@@ -6,9 +6,9 @@ namespace Barotrauma
     class AIObjectiveDeconstructItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "deconstruct item".ToIdentifier();
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
-        public override bool AllowInFriendlySubs => true;
+        protected override bool AllowInFriendlySubs => true;
 
         public readonly Item Item;
 

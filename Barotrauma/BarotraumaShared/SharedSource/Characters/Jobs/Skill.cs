@@ -10,15 +10,26 @@ namespace Barotrauma
 
         private float level;
 
+        /// <summary>
+        /// The highest skill level during the round (before any death penalties were applied)
+        /// </summary>
+        public float HighestLevelDuringRound { get; private set; }
+
         public float Level
         {
             get { return level; }
-            set { level = value; }
+            set 
+            {
+                HighestLevelDuringRound = MathHelper.Max(value, HighestLevelDuringRound);
+                level = value; 
+            }
         }
+
+        public LocalizedString DisplayName { get; private set; }
 
         public void IncreaseSkill(float value, bool increasePastMax)
         {
-            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumSkillWithTalents : MaximumSkill);
+            Level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumSkillWithTalents : MaximumSkill);
         }
 
         private readonly Identifier iconJobId;
@@ -32,16 +43,18 @@ namespace Barotrauma
         public Skill(SkillPrefab prefab, Rand.RandSync randSync)
         {
             Identifier = prefab.Identifier;
-            level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, randSync);
+            Level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, randSync);
             iconJobId = GetIconJobId();
             PriceMultiplier = prefab.PriceMultiplier;
+            DisplayName = TextManager.Get("SkillName." + Identifier);
         }
 
         public Skill(Identifier identifier, float level)
         {
             Identifier = identifier;
-            this.level = level;
+            Level = level;
             iconJobId = GetIconJobId();
+            DisplayName = TextManager.Get("SkillName." + Identifier);
         }
 
         private Identifier GetIconJobId()

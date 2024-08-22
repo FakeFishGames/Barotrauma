@@ -23,9 +23,9 @@ namespace Barotrauma
         Pirate = 0x200,
         GoTo = 0x400,
         ScanAlienRuins = 0x800,
-        ClearAlienRuins = 0x1000,
+        EliminateTargets = 0x1000,
         End = 0x2000,
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | ClearAlienRuins | End
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | EliminateTargets | End
     }
 
     partial class MissionPrefab : PrefabWithUintIdentifier
@@ -45,7 +45,7 @@ namespace Barotrauma
             { MissionType.Pirate, typeof(PirateMission) },
             { MissionType.GoTo, typeof(GoToMission) },
             { MissionType.ScanAlienRuins, typeof(ScanMission) },
-            { MissionType.ClearAlienRuins, typeof(AlienRuinMission) },
+            { MissionType.EliminateTargets, typeof(EliminateTargetsMission) },
             { MissionType.End, typeof(EndMission) }
         };
         public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
@@ -122,7 +122,7 @@ namespace Barotrauma
 
         public readonly bool AllowOtherMissionsInLevel;
 
-        public readonly bool RequireWreck, RequireRuin;
+        public readonly bool RequireWreck, RequireRuin, RequireThalamusWreck;
 
         /// <summary>
         /// If enabled, locations this mission takes place in cannot change their type
@@ -216,6 +216,10 @@ namespace Barotrauma
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
             RequireWreck = element.GetAttributeBool("requirewreck", false);
             RequireRuin = element.GetAttributeBool("requireruin", false);
+            RequireThalamusWreck = element.GetAttributeBool("requirethalamuswreck", false);
+
+            if (RequireThalamusWreck) { RequireWreck = true; }
+
             BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
             RequiredLocationFaction = element.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
             Commonness  = element.GetAttributeInt("commonness", 1);
@@ -360,11 +364,16 @@ namespace Barotrauma
 
             Identifier missionTypeName = element.GetAttributeIdentifier("type", Identifier.Empty);
             //backwards compatibility
-            if (missionTypeName == "outpostdestroy" || missionTypeName == "outpostrescue") 
-            {
-                missionTypeName = "AbandonedOutpost".ToIdentifier();
-            }
 
+            if (missionTypeName == "outpostdestroy" || missionTypeName == "outpostrescue")
+            {
+                missionTypeName = nameof(MissionType.AbandonedOutpost).ToIdentifier();
+            }
+            else if (missionTypeName == "clearalienruins")
+            {
+                missionTypeName = nameof(MissionType.EliminateTargets).ToIdentifier();
+            }
+            
             if (!Enum.TryParse(missionTypeName.Value, true, out Type))
             {
                 DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
@@ -434,19 +443,13 @@ namespace Barotrauma
                 }
             }
 
-            if (Type == MissionType.Beacon)
-            {
-                var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
-                if (connection?.LevelData == null || !connection.LevelData.HasBeaconStation || connection.LevelData.IsBeaconActive) { return false; }
-            }
-            else if (Type == MissionType.ScanAlienRuins || Type == MissionType.ClearAlienRuins)
-            {
-                var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
-                if (connection?.LevelData == null || connection.LevelData.GenerationParams.GetMaxRuinCount() < 1) { return false; }
-            }
-
             return false;
         }
+        
+        /// <summary>
+        /// Inclusive (matching the min an max values is accepted).
+        /// </summary>
+        public bool IsAllowedDifficulty(float difficulty) => difficulty >= MinLevelDifficulty && difficulty <= MaxLevelDifficulty;
 
         public Mission Instantiate(Location[] locations, Submarine sub)
         {

@@ -1,10 +1,12 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -41,6 +43,9 @@ namespace Barotrauma.Items.Components
         private bool attachable, attached, attachedByDefault;
         private Voronoi2.VoronoiCell attachTargetCell;
         private PhysicsBody body;
+
+        public readonly ImmutableDictionary<StatTypes, float> HoldableStatValues;
+
         public PhysicsBody Pusher
         {
             get;
@@ -287,6 +292,22 @@ namespace Barotrauma.Items.Components
                 }
             }
             characterUsable = element.GetAttributeBool("characterusable", true);
+
+            Dictionary<StatTypes, float> statValues = new Dictionary<StatTypes, float>();
+            foreach (var subElement in element.GetChildElements("statvalue"))
+            {
+                StatTypes statType = CharacterAbilityGroup.ParseStatType(subElement.GetAttributeString("stattype", ""), Name);
+                float statValue = subElement.GetAttributeFloat("value", 0f);
+                if (statValues.ContainsKey(statType))
+                {
+                    statValues[statType] += statValue;
+                }
+                else
+                {
+                    statValues.TryAdd(statType, statValue);
+                }                
+            }
+            HoldableStatValues = statValues.ToImmutableDictionary();
         }
 
         private bool OnPusherCollision(Fixture sender, Fixture other, Contact contact)
@@ -304,9 +325,9 @@ namespace Barotrauma.Items.Components
         }
 
         private bool loadedFromInstance;
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
 
             loadedFromInstance = true;
 

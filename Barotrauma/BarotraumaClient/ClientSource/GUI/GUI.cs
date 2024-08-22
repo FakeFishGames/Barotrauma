@@ -717,9 +717,9 @@ namespace Barotrauma
         private static readonly Queue<GUIComponent> removals = new Queue<GUIComponent>();
         private static readonly Queue<GUIComponent> additions = new Queue<GUIComponent>();
         // A helpers list for all elements that have a draw order less than 0.
-        private static readonly List<GUIComponent> first = new List<GUIComponent>();
+        private static readonly List<GUIComponent> firstAdditions = new List<GUIComponent>();
         // A helper list for all elements that have a draw order greater than 0.
-        private static readonly List<GUIComponent> last = new List<GUIComponent>();
+        private static readonly List<GUIComponent> lastAdditions = new List<GUIComponent>();
 
         /// <summary>
         /// Adds the component on the addition queue.
@@ -737,11 +737,11 @@ namespace Barotrauma
                 if (!component.Visible) { return; }
                 if (component.UpdateOrder < 0)
                 {
-                    first.Add(component);
+                    firstAdditions.Add(component);
                 }
                 else if (component.UpdateOrder > 0)
                 {
-                    last.Add(component);
+                    lastAdditions.Add(component);
                 }
                 else
                 {
@@ -800,9 +800,9 @@ namespace Barotrauma
                         RemoveFromUpdateList(component);
                     }
                 }
-                ProcessHelperList(first);
+                ProcessHelperList(firstAdditions);
                 ProcessAdditions();
-                ProcessHelperList(last);
+                ProcessHelperList(lastAdditions);
                 ProcessRemovals();
             }
         }
@@ -897,7 +897,7 @@ namespace Barotrauma
 
         public static IEnumerable<GUIComponent> GetAdditions()
         {
-            return additions;
+            return additions.Union(firstAdditions).Union(lastAdditions);
         }
         #endregion
 
@@ -2169,6 +2169,28 @@ namespace Barotrauma
                 numberInput.DecimalsToDisplay = decimalsToDisplay;
             }
             return frame;
+        }
+
+        public static GUITextBox CreateTextBoxWithPlaceholder(RectTransform rectT, string text, LocalizedString placeholder)
+        {
+            var holder = new GUIFrame(rectT, style: null);
+            var textBox = new GUITextBox(new RectTransform(Vector2.One, holder.RectTransform, Anchor.CenterLeft), text, createClearButton: false);
+            var placeholderElement = new GUITextBlock(new RectTransform(Vector2.One, holder.RectTransform, Anchor.CenterLeft),
+                textColor: Color.DarkGray * 0.6f,
+                text: placeholder,
+                textAlignment: Alignment.CenterLeft)
+            {
+                CanBeFocused = false
+            };
+
+            new GUICustomComponent(new RectTransform(Vector2.Zero, holder.RectTransform),
+                onUpdate: delegate { placeholderElement.RectTransform.NonScaledSize = textBox.Frame.RectTransform.NonScaledSize; });
+
+            textBox.OnSelected += delegate { placeholderElement.Visible = false; };
+            textBox.OnDeselected += delegate { placeholderElement.Visible = textBox.Text.IsNullOrWhiteSpace(); };
+
+            placeholderElement.Visible = string.IsNullOrWhiteSpace(text);
+            return textBox;
         }
 
         public static void NotifyPrompt(LocalizedString header, LocalizedString body)

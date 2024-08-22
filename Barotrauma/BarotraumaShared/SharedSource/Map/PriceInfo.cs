@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -8,9 +9,15 @@ namespace Barotrauma
     {
         public int Price { get; }
         public bool CanBeBought { get; }
-        //minimum number of items available at a given store
+
+        /// <summary>
+        /// Minimum number of items available at a given store
+        /// </summary>
         public int MinAvailableAmount { get; }
-        //maximum number of items available at a given store
+
+        /// <summary>
+        /// Maximum number of items available at a given store. Defaults to 20% more than the minimum amount.
+        /// </summary>
         public int MaxAvailableAmount { get; }
         /// <summary>
         /// Can the item be a Daily Special or a Requested Good
@@ -30,9 +37,14 @@ namespace Barotrauma
         public bool RequiresUnlock { get; }
 
         /// <summary>
-        /// Used when both <see cref="MinAvailableAmount"/> and <see cref="MaxAvailableAmount"/> are set to 0.
+        /// Used when neither <see cref="MinAvailableAmount"/> or <see cref="MaxAvailableAmount"/> are defined.
         /// </summary>
-        public const int DefaultAmount = 5;
+        private const int DefaultAmount = 5;
+
+        /// <summary>
+        /// How much more the maximum stock is relative to the minimum stock if not defined. Stores will gradually stock up towards the maximum.
+        /// </summary>
+        private const float DefaultMaxAvailabilityRelativeToMin = 1.2f;
 
         private readonly Dictionary<Identifier, float> minReputation = new Dictionary<Identifier, float>();
 
@@ -52,12 +64,11 @@ namespace Barotrauma
             MinLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
             BuyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
             CanBeBought = true;
-            int minAmount = GetMinAmount(element);
-            MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
-            int maxAmount = GetMaxAmount(element);
-            maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
-            MaxAvailableAmount = Math.Max(maxAmount, MinAvailableAmount);
+            MinAvailableAmount = Math.Min(GetMinAmount(element, defaultValue: DefaultAmount), CargoManager.MaxQuantity);
+            MaxAvailableAmount = MathHelper.Clamp(GetMaxAmount(element, defaultValue: (int)(MinAvailableAmount * DefaultMaxAvailabilityRelativeToMin)), MinAvailableAmount, CargoManager.MaxQuantity);
             RequiresUnlock = element.GetAttributeBool("requiresunlock", false);
+
+            System.Diagnostics.Debug.Assert(MaxAvailableAmount >= MinAvailableAmount);
         }
 
         public PriceInfo(int price, bool canBeBought,
@@ -67,14 +78,15 @@ namespace Barotrauma
             Price = price;
             CanBeBought = canBeBought;
             MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
+            MaxAvailableAmount = Math.Max(Math.Min(maxAmount, CargoManager.MaxQuantity), minAmount);
             BuyingPriceMultiplier = buyingPriceMultiplier;
-            maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
-            MaxAvailableAmount = Math.Max(maxAmount, minAmount);
             MinLevelDifficulty = minLevelDifficulty;
             CanBeSpecial = canBeSpecial;
             DisplayNonEmpty = displayNonEmpty;
             StoreIdentifier = new Identifier(storeIdentifier);
             RequiresUnlock = requiresUnlock;
+
+            System.Diagnostics.Debug.Assert(MaxAvailableAmount >= MinAvailableAmount);
         }
 
         private void LoadReputationRestrictions(XElement priceInfoElement)
@@ -95,8 +107,8 @@ namespace Barotrauma
             var priceInfos = new List<PriceInfo>();
             defaultPrice = null;
             int basePrice = element.GetAttributeInt("baseprice", 0);
-            int minAmount = GetMinAmount(element);
-            int maxAmount = GetMaxAmount(element);
+            int minAmount = GetMinAmount(element, defaultValue: DefaultAmount);
+            int maxAmount = GetMaxAmount(element, defaultValue: (int)(DefaultAmount * DefaultMaxAvailabilityRelativeToMin));
             int minLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
             bool canBeSpecial = element.GetAttributeBool("canbespecial", true);
             float buyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
@@ -143,11 +155,11 @@ namespace Barotrauma
             return priceInfos;
         }
 
-        private static int GetMinAmount(XElement element, int defaultValue = 0) => element != null ?
+        private static int GetMinAmount(XElement element, int defaultValue) => element != null ?
             element.GetAttributeInt("minamount", element.GetAttributeInt("minavailable", defaultValue)) :
             defaultValue;
 
-        private static int GetMaxAmount(XElement element, int defaultValue = 0) => element != null ?
+        private static int GetMaxAmount(XElement element, int defaultValue) => element != null ?
             element.GetAttributeInt("maxamount", element.GetAttributeInt("maxavailable", defaultValue)) :
             defaultValue;
     }

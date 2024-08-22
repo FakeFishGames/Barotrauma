@@ -388,6 +388,7 @@ namespace Barotrauma
                 character.TeleportTo(ConvertUnits.ToDisplayUnits(forceColliderSimPosition.Value));
             }
 
+            // TODO: Shouldn't multiply by LimbScale here, because it's already applied in attachLimb.Scale!
             Vector2 transformedLocalAttachPos = localAttachPos * attachLimb.Scale * attachLimb.Params.Ragdoll.LimbScale;
             if (jointDir < 0.0f)
             {

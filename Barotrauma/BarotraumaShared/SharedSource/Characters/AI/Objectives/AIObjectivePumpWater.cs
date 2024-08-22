@@ -12,7 +12,7 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "pump water".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         private List<Pump> pumpList;
 
@@ -25,7 +25,7 @@ namespace Barotrauma
             base.FindTargets();
         }
 
-        protected override bool Filter(Pump pump)
+        protected override bool IsValidTarget(Pump pump)
         {
             if (pump?.Item == null || pump.Item.Removed) { return false; }
             if (pump.Item.IgnoreByAI(character)) { return false; }
@@ -62,7 +62,7 @@ namespace Barotrauma
             return pumpList;
         }
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 0; }
             if (Option == "stoppumping")
@@ -90,7 +90,6 @@ namespace Barotrauma
         protected override AIObjective ObjectiveConstructor(Pump pump)
             => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false)
             {
-                IsLoop = false,
                 completionCondition = () => IsReady(pump)
             };
 

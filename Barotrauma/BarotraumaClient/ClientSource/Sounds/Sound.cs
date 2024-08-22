@@ -137,20 +137,8 @@ namespace Barotrauma.Sounds
         {
             for (int i = 0; i < length; i++)
             {
-                outBuffer[i] = FloatToShort(inBuffer[i]);
+                outBuffer[i] = ToolBox.FloatToShortAudioSample(inBuffer[i]);
             }
-        }
-
-        static protected short FloatToShort(float fVal)
-        {
-            int temp = (int)(32767 * fVal);
-            if (temp > short.MaxValue) temp = short.MaxValue;
-            else if (temp < short.MinValue) temp = short.MinValue;
-            return (short)temp;
-        }
-        static protected float ShortToFloat(short shortVal)
-        {
-            return shortVal / 32767f;
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

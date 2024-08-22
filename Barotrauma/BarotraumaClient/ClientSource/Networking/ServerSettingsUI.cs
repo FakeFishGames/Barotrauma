@@ -468,11 +468,28 @@ namespace Barotrauma.Networking
             };
             AssignGUIComponent(nameof(SaveServerLogs), saveLogsBox);
 
+            LocalizedString newCampaignDefaultSalaryLabel = TextManager.Get("ServerSettingsNewCampaignDefaultSalary");
+            NetLobbyScreen.CreateLabeledSlider(listBox.Content, headerTag: "ServerSettingsNewCampaignDefaultSalary", valueLabelTag: "ServerSettingsKickVotesRequired", tooltipTag: "ServerSettingsNewCampaignDefaultSalaryToolTip", 
+                out var defaultSalarySlider, out var defaultSalarySliderLabel);
+            defaultSalarySlider.Range = new Vector2(0, 100);
+            defaultSalarySlider.StepValue = 1;
+            defaultSalarySlider.OnMoved = (scrollBar, _) =>
+            {
+                if (scrollBar.UserData is not GUITextBlock text) { return false; }
+                text.Text = TextManager.AddPunctuation(
+                    ':',
+                    newCampaignDefaultSalaryLabel,
+                    TextManager.GetWithVariable("percentageformat", "[value]", ((int)Math.Round(scrollBar.BarScrollValue, digits: 0)).ToString()));
+                return true;
+            };
+            AssignGUIComponent(nameof(NewCampaignDefaultSalary), defaultSalarySlider);
+            defaultSalarySlider.OnMoved(defaultSalarySlider, defaultSalarySlider.BarScroll);
+
             //--------------------------------------------------------------------------------
             //                              game settings 
             //--------------------------------------------------------------------------------
 
-            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform), isHorizontal: true)
+            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform), isHorizontal: true, childAnchor: Anchor.BottomLeft)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -683,7 +700,7 @@ namespace Barotrauma.Networking
             //                              antigriefing
             //--------------------------------------------------------------------------------
 
-            var tickBoxContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), listBox.Content.RectTransform))
+            var tickBoxContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.268f), listBox.Content.RectTransform))
             {
                 AutoHideScrollBar = true,
                 UseGridLayout = true
@@ -693,6 +710,10 @@ namespace Barotrauma.Networking
             var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowFriendlyFire"));
             AssignGUIComponent(nameof(AllowFriendlyFire), allowFriendlyFire);
+            
+            var allowDragAndDropGive = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
+                TextManager.Get("ServerSettingsAllowDragAndDropGive"));
+            AssignGUIComponent(nameof(AllowDragAndDropGive), allowDragAndDropGive);
 
             var killableNPCs = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsKillableNPCs"));

@@ -459,6 +459,7 @@ namespace Barotrauma
                     Client owner = controlEventData.Owner;
                     msg.WriteBoolean(owner == c && owner.Character == this);
                     msg.WriteByte(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.SessionId : (byte)0);
+                    msg.WriteBoolean(info is { RenamingEnabled: true });
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);

@@ -71,9 +71,9 @@ namespace Barotrauma
 
         private Vector2 position;
 
-        public List<CircuitBoxConnection> ExternallyConnectedFrom = new();
+        public readonly List<CircuitBoxConnection> ExternallyConnectedFrom = new();
 
-        public static float Size = CircuitBoxSizes.ConnectorSize;
+        public static readonly float Size = CircuitBoxSizes.ConnectorSize;
 
         public Vector2 Position
         {

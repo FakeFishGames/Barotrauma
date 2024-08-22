@@ -107,6 +107,11 @@ namespace Barotrauma
         {
             if (spawnPending)
             {
+                if (itemPrefab == null)
+                {
+                    isFinished = true;
+                    return;
+                }
                 SpawnItem();
                 spawnPending = false;
             }

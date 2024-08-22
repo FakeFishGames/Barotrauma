@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -35,6 +35,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Does the item need to be equipped for the check to succeed?")]
         public bool RequireEquipped { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Does the item need to be worn for the check to succeed?")]
+        public bool RequireWorn { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes, description: "If enabled, the doesn't need to be directly inside the container/character we're checking, but can be nested inside multiple containers (e.g. in a toolbelt in a character's inventory).")]
         public bool Recursive { get; set; }
@@ -255,6 +258,19 @@ namespace Barotrauma
             {
                 if (character == null) { return false; }
                 return character.HasEquippedItem(item);
+            }
+            if (RequireWorn)
+            {
+                if (character == null) { return false; }
+                foreach (var wearable in item.GetComponents<Wearable>())
+                {
+                    foreach (var allowedSlot in wearable.AllowedSlots)
+                    {
+                        if (allowedSlot == InvSlotType.Any) { continue; }
+                        if (character.HasEquippedItem(item, allowedSlot)) { return true; }
+                    }
+                }
+                return false;
             }
             return true;
         }

@@ -13,9 +13,9 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "get item".ToIdentifier();
 
-        public override bool AbandonWhenCannotCompleteSubjectives => false;
+        public override bool AbandonWhenCannotCompleteSubObjectives => false;
         public override bool AllowMultipleInstances => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public HashSet<Item> ignoredItems = new HashSet<Item>();
 
@@ -444,7 +444,7 @@ namespace Barotrauma
                 }
                 if (!AllowStealing && character.IsOnPlayerTeam)
                 {
-                    if (item.SpawnedInCurrentOutpost && !item.AllowStealing) { continue; }   
+                    if (item.Illegitimate) { continue; }
                 }
                 if (!CheckItem(item)) { continue; }
                 if (item.Container != null)

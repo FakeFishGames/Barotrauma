@@ -188,18 +188,7 @@ namespace Barotrauma
 
             public static PurchasedItem CreateInitialStockItem(ItemPrefab itemPrefab, PriceInfo priceInfo)
             {
-                int quantity = PriceInfo.DefaultAmount;
-                if (priceInfo.MaxAvailableAmount > 0)
-                {
-                    quantity =
-                    priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount ?
-                    Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1) :
-                        priceInfo.MaxAvailableAmount;
-                }
-                else if (priceInfo.MinAvailableAmount > 0)
-                {
-                    quantity = priceInfo.MinAvailableAmount;
-                }
+                int quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
                 return new PurchasedItem(itemPrefab, quantity, buyer: null);
             }
 
@@ -256,7 +245,7 @@ namespace Barotrauma
                     if (stockItem.ItemPrefab.GetPriceInfo(this) is PriceInfo priceInfo)
                     {
                         if (!priceInfo.CanBeSpecial) { continue; }
-                        var baseQuantity = priceInfo.MinAvailableAmount > 0 ? priceInfo.MinAvailableAmount : PriceInfo.DefaultAmount;
+                        var baseQuantity = priceInfo.MinAvailableAmount;
                         weight += (float)(stockItem.Quantity - baseQuantity) / baseQuantity;
                         if (weight < 0.0f) { continue; }
                     }
@@ -906,8 +895,8 @@ namespace Barotrauma
                     }
                     MissionPrefab missionPrefab = 
                         random != null ? 
-                        ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, random) :
-                        ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, Rand.RandSync.Unsynced);
+                        ToolBox.SelectWeightedRandom(suitableMissions, m => m.Commonness, random) :
+                        ToolBox.SelectWeightedRandom(suitableMissions, m => m.Commonness, Rand.RandSync.Unsynced);
 
                     var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
                     //don't allow duplicate missions in the same connection
@@ -1139,6 +1128,12 @@ namespace Barotrauma
                 HireManager.GenerateCharacters(location: this, amount: HireManager.MaxAvailableCharacters);
             }
             return HireManager.AvailableCharacters;
+        }
+
+        public void ForceHireableCharacters(IEnumerable<CharacterInfo> hireableCharacters)
+        {
+            HireManager ??= new HireManager();
+            HireManager.AvailableCharacters = hireableCharacters.ToList();
         }
 
         private void CreateRandomName(LocationType type, Random rand, IEnumerable<Location> existingLocations)
@@ -1402,12 +1397,12 @@ namespace Barotrauma
                             existingStock.Quantity =
                                 Math.Min(
                                     existingStock.Quantity + 1, 
-                                    priceInfo.MaxAvailableAmount > 0 ? priceInfo.MaxAvailableAmount : CargoManager.MaxQuantity);
+                                    priceInfo.MaxAvailableAmount);
                         }
                     }
                     else if (existingStock != null)
                     {
-                        stockToRemove.Add(existingStock);                        
+                        stockToRemove.Add(existingStock);
                     }
                 }
 

@@ -184,6 +184,20 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Is some condition met (e.g. entity null, indetectable, outside level) that prevents anyone from detecting the target?
+        /// </summary>
+        public bool ShouldBeIgnored()
+        {
+            if (InDetectable) { return true; }
+            if (Entity == null) { return true; }
+            if (Level.Loaded != null && WorldPosition.Y > Level.Loaded.Size.Y)
+            {
+                return true;
+            }
+            return false;
+        }
+
         public AITarget(Entity e, XElement element) : this(e)
         {
             SightRange = element.GetAttributeFloat("sightrange", 0.0f);

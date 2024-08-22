@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Xml.Linq;
 using Voronoi2;
 
 namespace Barotrauma
@@ -430,6 +431,11 @@ namespace Barotrauma
         {
             get { return ForcedDifficulty ?? LevelData.Difficulty; }
         }
+        
+        /// <summary>
+        /// Inclusive (matching the min an max values is accepted).
+        /// </summary>
+        public bool IsAllowedDifficulty(float minDifficulty, float maxDifficulty) => LevelData.IsAllowedDifficulty(minDifficulty, maxDifficulty);
 
         public LevelData.LevelType Type
         {
@@ -3718,7 +3724,7 @@ namespace Barotrauma
             return MathUtils.LineSegmentToPointDistanceSquared(endPosition, endExitPosition, position) < minDist * minDist;
         }
 
-        private Submarine SpawnSubOnPath(string subName, ContentFile contentFile, SubmarineType type)
+        private Submarine SpawnSubOnPath(string subName, ContentFile contentFile, SubmarineType type, bool forceThalamus = false)
         {
             var tempSW = new Stopwatch();
             
@@ -3801,7 +3807,7 @@ namespace Barotrauma
                         }
                     }
                     // Only spawn thalamus when the wreck has some thalamus items defined.
-                    if (Rand.Value(Rand.RandSync.ServerAndClient) <= Loaded.GenerationParams.ThalamusProbability && sub.GetItems(false).Any(i => i.Prefab.HasSubCategory("thalamus")))
+                    if ((forceThalamus || Rand.Value(Rand.RandSync.ServerAndClient) <= Loaded.GenerationParams.ThalamusProbability) && sub.GetItems(false).Any(i => i.Prefab.HasSubCategory("thalamus")))
                     {
                         if (!sub.CreateWreckAI())
                         {
@@ -4039,56 +4045,93 @@ namespace Barotrauma
         private readonly Dictionary<Submarine, List<Vector2>> wreckPositions = new Dictionary<Submarine, List<Vector2>>();
         private readonly Dictionary<Submarine, List<Rectangle>> blockedRects = new Dictionary<Submarine, List<Rectangle>>();
 
+        private readonly record struct PlaceableWreck(WreckFile WreckFile, WreckInfo WreckInfo)
+        {
+            public static Option<PlaceableWreck> TryCreate(WreckFile wreckFile)
+            {
+                var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(i => i.FilePath == wreckFile.Path.Value);
+                if (matchingSub?.WreckInfo is null)
+                {
+                    DebugConsole.ThrowError($"No matching submarine info found for the wreck file {wreckFile.Path.Value}");
+                    return Option.None;
+                }
+
+                return Option.Some(new PlaceableWreck(wreckFile, matchingSub.WreckInfo));
+            }
+        }
+
         private void CreateWrecks()
         {
             var totalSW = new Stopwatch();
             totalSW.Start();
 
-            var wreckFiles = ContentPackageManager.EnabledPackages.All
+            var placeableWrecks = ContentPackageManager.EnabledPackages.All
                 .SelectMany(p => p.GetFiles<WreckFile>())
-                .OrderBy(f => f.UintIdentifier).ToList();
+                .OrderBy(f => f.UintIdentifier)
+                .Select(PlaceableWreck.TryCreate)
+                .Where(w => w.IsSome())
+                .Select(o => o.TryUnwrap(out var w) ? w : throw new InvalidOperationException())
+                .ToList();
 
-            for (int i = wreckFiles.Count - 1; i >= 0; i--)
+            for (int i = placeableWrecks.Count - 1; i >= 0; i--)
             {
-                var wreckFile = wreckFiles[i];
-                var wreckInfos = SubmarineInfo.SavedSubmarines.Where(i => i.IsWreck);
-                var matchingInfo = wreckInfos.SingleOrDefault(info => info.FilePath == wreckFile.Path.Value);
-                Debug.Assert(matchingInfo != null);
-                if (matchingInfo?.WreckInfo is WreckInfo wreckInfo)
+                var wreckInfo = placeableWrecks[i].WreckInfo;
+                if (!IsAllowedDifficulty(wreckInfo.MinLevelDifficulty, wreckInfo.MaxLevelDifficulty))
                 {
-                    if (Difficulty < wreckInfo.MinLevelDifficulty || Difficulty > wreckInfo.MaxLevelDifficulty)
-                    {
-                        wreckFiles.RemoveAt(i);
-                    }
+                    placeableWrecks.RemoveAt(i);
                 }
             }
-            if (wreckFiles.None())
+            if (placeableWrecks.None())
             {
                 DebugConsole.ThrowError($"No wreck files found for the level difficulty {LevelData.Difficulty}!");
                 Wrecks = new List<Submarine>();
                 return;
             }
-            wreckFiles.Shuffle(Rand.RandSync.ServerAndClient);
+            placeableWrecks.Shuffle(Rand.RandSync.ServerAndClient);
 
-            int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, wreckFiles.Count);
-            int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, wreckFiles.Count);
+            int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, placeableWrecks.Count);
+            int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, placeableWrecks.Count);
             int wreckCount = Rand.Range(minWreckCount, maxWreckCount + 1, Rand.RandSync.ServerAndClient);
+            bool requireThalamus = false;
 
             if (GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireWreck) ?? false)
             {
                 wreckCount = Math.Max(wreckCount, 1);
             }
+            
+            if (GameMain.GameSession?.GameMode?.Missions.Any(static m => m.Prefab.RequireThalamusWreck) ?? false)
+            {
+                requireThalamus = true;
+            }
 
             if (LevelData.ForceWreck != null)
             {
                 //force the desired wreck to be chosen first
-                var matchingFile =  wreckFiles.FirstOrDefault(w => w.Path == LevelData.ForceWreck.FilePath);
-                if (matchingFile != null)
+                var matchingFile =  placeableWrecks.FirstOrDefault(w => w.WreckFile.Path == LevelData.ForceWreck.FilePath);
+                if (matchingFile.WreckFile != null)
                 {
-                    wreckFiles.Remove(matchingFile);
-                    wreckFiles.Insert(0, matchingFile);
+                    placeableWrecks.Remove(matchingFile);
+                    placeableWrecks.Insert(0, matchingFile);
                 }
                 wreckCount = Math.Max(wreckCount, 1);
+            }
+
+            if (requireThalamus)
+            {
+                var thalamusWrecks = placeableWrecks
+                    .Where(static w => w.WreckInfo.WreckContainsThalamus == WreckInfo.HasThalamus.Yes)
+                    .ToList();
+
+                if (thalamusWrecks.Any())
+                {
+                    thalamusWrecks.Shuffle(Rand.RandSync.ServerAndClient);
+
+                    foreach (var wreck in thalamusWrecks)
+                    {
+                        placeableWrecks.Remove(wreck);
+                        placeableWrecks.Insert(0, wreck);
+                    }
+                }
             }
 
             Wrecks = new List<Submarine>(wreckCount);
@@ -4097,14 +4140,19 @@ namespace Barotrauma
                 //how many times we'll try placing another sub before giving up
                 const int MaxSubsToTry = 2;
                 int attempts = 0;
-                while (wreckFiles.Any() && attempts < MaxSubsToTry)
+                while (placeableWrecks.Any() && attempts < MaxSubsToTry)
                 {
-                    ContentFile contentFile = wreckFiles.First();
-                    wreckFiles.RemoveAt(0);
-                    if (contentFile == null) { continue; }
-                    string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path.Value);
-                    if (SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck) != null)
+                    var placeableWreck = placeableWrecks.First();
+                    var wreckFile = placeableWreck.WreckFile;
+                    placeableWrecks.RemoveAt(0);
+                    if (wreckFile == null) { continue; }
+                    string wreckName = System.IO.Path.GetFileNameWithoutExtension(wreckFile.Path.Value);
+                    if (SpawnSubOnPath(wreckName, wreckFile, SubmarineType.Wreck, forceThalamus: requireThalamus) is { } wreck)
                     {
+                        if (wreck.WreckAI is not null)
+                        {
+                            requireThalamus = false;
+                        }
                         //placed successfully
                         break;
                     }
@@ -4223,7 +4271,7 @@ namespace Barotrauma
                         {
                             foreach (MapEntity entityToHide in MapEntity.MapEntityList.Where(me => me.Submarine == outpost && (me.Prefab?.HasSubCategory(categoryToHide) ?? false)))
                             {
-                                entityToHide.HiddenInGame = true;
+                                entityToHide.IsLayerHidden = true;
                             }                                
                         }
                     }
@@ -4489,72 +4537,97 @@ namespace Barotrauma
             else if (GameMain.NetworkMember is not { IsClient: true })
             {
                 bool allowDisconnectedWires = true;
+                bool allowDamagedDevices = true;
                 bool allowDamagedWalls = true;
                 if (BeaconStation?.Info?.BeaconStationInfo is BeaconStationInfo info)
                 {
                     allowDisconnectedWires = info.AllowDisconnectedWires;
                     allowDamagedWalls = info.AllowDamagedWalls;
+                    allowDamagedDevices = info.AllowDamagedDevices;
                 }
 
                 //remove wires
-                float removeWireMinDifficulty = 20.0f;
-                float removeWireProbability = MathUtils.InverseLerp(removeWireMinDifficulty, 100.0f, LevelData.Difficulty) * 0.5f;
-                if (removeWireProbability > 0.0f && allowDisconnectedWires)
+                float disconnectWireMinDifficulty = 20.0f;
+                float disconnectWireProbability = MathUtils.InverseLerp(disconnectWireMinDifficulty, 100.0f, LevelData.Difficulty) * 0.5f;
+                if (disconnectWireProbability > 0.0f && allowDisconnectedWires)
                 {
-                    foreach (Item item in beaconItems.Where(it => it.GetComponent<Wire>() != null).ToList())
-                    {
-                        if (item.NonInteractable || item.InvulnerableToDamage) { continue; }
-                        Wire wire = item.GetComponent<Wire>();
-                        if (wire.Locked) { continue; }
-                        if (wire.Connections[0] != null && (wire.Connections[0].Item.NonInteractable || wire.Connections[0].Item.GetComponent<ConnectionPanel>().Locked))
-                        {
-                            continue;
-                        }
-                        if (wire.Connections[1] != null && (wire.Connections[1].Item.NonInteractable || wire.Connections[1].Item.GetComponent<ConnectionPanel>().Locked))
-                        {
-                            continue;
-                        }
-                        if (Rand.Range(0f, 1.0f, Rand.RandSync.Unsynced) < removeWireProbability)
-                        {
-                            foreach (Connection connection in wire.Connections)
-                            {
-                                if (connection != null)
-                                {
-                                    connection.ConnectionPanel.DisconnectedWires.Add(wire);
-                                    wire.RemoveConnection(connection.Item);
-#if SERVER
-                                    connection.ConnectionPanel.Item.CreateServerEvent(connection.ConnectionPanel);
-                                    wire.CreateNetworkEvent();
-#endif
-                                }
-                            }
-                        }
-                    }
+                    DisconnectBeaconStationWires(disconnectWireProbability);
                 }
 
+                if (allowDamagedDevices)
+                {
+                    DamageBeaconStationDevices(breakDeviceProbability: 0.5f);
+                }
                 if (allowDamagedWalls)
                 {
-                    //break powered items
-                    foreach (Item item in beaconItems.Where(it => it.Components.Any(c => c is Powered) && it.Components.Any(c => c is Repairable)))
+                    DamageBeaconStationWalls(damageWallProbability: 0.25f);
+                }
+            }
+            SetLinkedSubCrushDepth(BeaconStation);
+        }
+
+        public void DisconnectBeaconStationWires(float disconnectWireProbability)
+        {
+            if (disconnectWireProbability <= 0.0f) { return; }
+            List<Item> beaconItems = Item.ItemList.FindAll(it => it.Submarine == BeaconStation);
+            foreach (Item item in beaconItems.Where(it => it.GetComponent<Wire>() != null).ToList())
+            {
+                if (item.NonInteractable || item.InvulnerableToDamage) { continue; }
+                Wire wire = item.GetComponent<Wire>();
+                if (wire.Locked) { continue; }
+                if (wire.Connections[0] != null && (wire.Connections[0].Item.NonInteractable || wire.Connections[0].Item.GetComponent<ConnectionPanel>().Locked))
+                {
+                    continue;
+                }
+                if (wire.Connections[1] != null && (wire.Connections[1].Item.NonInteractable || wire.Connections[1].Item.GetComponent<ConnectionPanel>().Locked))
+                {
+                    continue;
+                }
+                if (Rand.Range(0f, 1.0f, Rand.RandSync.Unsynced) < disconnectWireProbability)
+                {
+                    foreach (Connection connection in wire.Connections)
                     {
-                        if (item.NonInteractable || item.InvulnerableToDamage) { continue; }
-                        if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.5f)
+                        if (connection != null)
                         {
-                            item.Condition *= Rand.Range(0.6f, 0.8f, Rand.RandSync.Unsynced);
-                        }
-                    }
-                    //poke holes in the walls
-                    foreach (Structure structure in Structure.WallList.Where(s => s.Submarine == BeaconStation))
-                    {
-                        if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.25f)
-                        {
-                            int sectionIndex = Rand.Range(0, structure.SectionCount - 1, Rand.RandSync.Unsynced);
-                            structure.AddDamage(sectionIndex, Rand.Range(structure.MaxHealth * 0.2f, structure.MaxHealth, Rand.RandSync.Unsynced));
+                            connection.ConnectionPanel.DisconnectedWires.Add(wire);
+                            wire.RemoveConnection(connection.Item);
+#if SERVER
+                            connection.ConnectionPanel.Item.CreateServerEvent(connection.ConnectionPanel);
+                            wire.CreateNetworkEvent();
+#endif
                         }
                     }
                 }
             }
-            SetLinkedSubCrushDepth(BeaconStation);
+        }
+
+        public void DamageBeaconStationDevices(float breakDeviceProbability)
+        {
+            if (breakDeviceProbability <= 0.0f) { return; }
+            //break powered items
+            List<Item> beaconItems = Item.ItemList.FindAll(it => it.Submarine == BeaconStation);
+            foreach (Item item in beaconItems.Where(it => it.Components.Any(c => c is Powered) && it.Components.Any(c => c is Repairable)))
+            {
+                if (item.NonInteractable || item.InvulnerableToDamage) { continue; }
+                if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < breakDeviceProbability)
+                {
+                    item.Condition *= Rand.Range(0.6f, 0.8f, Rand.RandSync.Unsynced);
+                }
+            }
+        }
+
+        public void DamageBeaconStationWalls(float damageWallProbability)
+        {
+            if (damageWallProbability <= 0.0f) { return; }
+            //poke holes in the walls
+            foreach (Structure structure in Structure.WallList.Where(s => s.Submarine == BeaconStation))
+            {
+                if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < damageWallProbability)
+                {
+                    int sectionIndex = Rand.Range(0, structure.SectionCount - 1, Rand.RandSync.Unsynced);
+                    structure.AddDamage(sectionIndex, Rand.Range(structure.MaxHealth * 0.2f, structure.MaxHealth, Rand.RandSync.Unsynced));
+                }
+            }
         }
 
         public bool CheckBeaconActive()

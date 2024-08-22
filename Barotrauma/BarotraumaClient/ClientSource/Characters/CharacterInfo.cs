@@ -141,7 +141,7 @@ namespace Barotrauma
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), skill.DisplayName, textColor: textColor, font: font) { Padding = Vector4.Zero };
 
                     float modifiedSkillLevel = skill.Level;
                     if (Character != null)
@@ -525,6 +525,7 @@ namespace Barotrauma
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
             string originalName = inc.ReadString();
+            bool renamingEnabled = inc.ReadBoolean();
             int tagCount = inc.ReadByte();
             HashSet<Identifier> tagSet = new HashSet<Identifier>();
             for (int i = 0; i < tagCount; i++)
@@ -538,7 +539,8 @@ namespace Barotrauma
             Color skinColor = inc.ReadColorR8G8B8();
             Color hairColor = inc.ReadColorR8G8B8();
             Color facialHairColor = inc.ReadColorR8G8B8();
-            
+
+
             Identifier npcId = inc.ReadIdentifier();
 
             Identifier factionId = inc.ReadIdentifier();
@@ -571,7 +573,8 @@ namespace Barotrauma
             CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, variant, npcIdentifier: npcId)
             {
                 ID = infoID,
-                MinReputationToHire = (factionId, minReputationToHire)
+                MinReputationToHire = (factionId, minReputationToHire),
+                RenamingEnabled = renamingEnabled
             };
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;
@@ -582,6 +585,7 @@ namespace Barotrauma
 
             ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
+            ch.PermanentlyDead = inc.ReadBoolean();
             return ch;
         }
 

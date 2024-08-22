@@ -71,7 +71,7 @@ namespace Barotrauma
                 currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                 editorContainer.ClearChildren();
                 SortLevelObjectsList(currentLevelData);
-                new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, false, true, elementHeight: 20);
+                new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, inGame: false, showName: true, elementHeight: 20, titleFont: GUIStyle.LargeFont);
                 return true;
             };
 
@@ -996,7 +996,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item == null || item.HiddenInGame) { continue; }
+                    if (item == null || item.IsHidden) { continue; }
                     foreach (var light in item.GetComponents<Items.Components.LightComponent>())
                     {
                         light.Update((float)deltaTime, Cam);

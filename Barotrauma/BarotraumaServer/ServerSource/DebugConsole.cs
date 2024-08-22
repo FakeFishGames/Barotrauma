@@ -963,7 +963,7 @@ namespace Barotrauma
                 }
                 client.Muted = true;
                 GameMain.Server.SendDirectChatMessage(TextManager.Get("MutedByServer").Value, client, ChatMessageType.MessageBox);
-            },
+            },  
             () =>
             {
                 if (GameMain.Server == null) return null;
@@ -1599,6 +1599,19 @@ namespace Barotrauma
                     NewMessage("Disabled RequireClientNameMatch");
                 }
             }));
+
+            AssignOnExecute("debugvoip", _ =>
+            {
+                VoipServerDecoder.DebugVoip = !VoipServerDecoder.DebugVoip;
+                NewMessage("Debugging voice chat is now " + (VoipServerDecoder.DebugVoip ? "enabled" : "disabled"), Color.White);
+            });
+
+            AssignOnClientRequestExecute("debugvoip", (client, _, _) =>
+            {
+                VoipServerDecoder.DebugVoip = !VoipServerDecoder.DebugVoip;
+                NewMessage("Debugging voice chat is now " + (VoipServerDecoder.DebugVoip ? "enabled" : "disabled") + " by " + client.Name, Color.White);
+                GameMain.Server.SendConsoleMessage("Debugging voice chat is now " + (VoipServerDecoder.DebugVoip ? "enabled" : "disabled"), client);
+            });
 #endif
 
             AssignOnClientRequestExecute(
@@ -1761,11 +1774,7 @@ namespace Barotrauma
                 "teleportcharacter|teleport",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    Character tpCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
-                    if (tpCharacter != null)
-                    {
-                        tpCharacter.TeleportTo(cursorWorldPos);
-                    }
+                    TeleportCharacter(cursorWorldPos, client.Character, args);
                 }
             );
 
@@ -1922,6 +1931,17 @@ namespace Barotrauma
                         foreach (Client c in GameMain.Server.ConnectedClients)
                         {
                             if (c.Character != revivedCharacter) { continue; }
+                            
+                            // If killed in ironman mode, the character has been wiped from the save mid-round, so its
+                            // original data needs to be restored to the save file (without making a backup of the dead character)
+                            if (GameMain.Server.ServerSettings.IronmanMode && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+                            {
+                                if (mpCampaign.RestoreSingleCharacterFromBackup(c) is CharacterCampaignData characterToRestore)
+                                {
+                                    characterToRestore.CharacterInfo.PermanentlyDead = false;
+                                    mpCampaign.SaveSingleCharacter(characterToRestore, skipBackup: true);
+                                }
+                            }
 
                             //clients stop controlling the character when it dies, force control back
                             GameMain.Server.SetClientCharacter(c, revivedCharacter);
@@ -2545,6 +2565,91 @@ namespace Barotrauma
                 }
             );
 
+            commands.Add(new Command("setsalary", "setsalary [0-100] [character/default]: Sets the salary of a certain character or the default salary to a percentage.", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    NewMessage($"Missing arguments. Expected at least 2 but got {args.Length} (amount, character)", Color.Red);
+                    return;
+                }
+
+                if (GameMain.GameSession?.Campaign is not MultiPlayerCampaign mpCampaign)
+                {
+                    NewMessage("No campaign active.", Color.Red);
+                    return;
+                }
+
+                if (!int.TryParse(args[0], out int amount))
+                {
+                    NewMessage($"{args[0]} is not a valid amount.", Color.Red);
+                    return;
+                }
+
+                if (args[1].Equals("default", StringComparison.OrdinalIgnoreCase))
+                {
+                    mpCampaign.Bank.SetRewardDistribution(amount);
+                    NewMessage($"Set the default salary to {amount}%", Color.White);
+                    return;
+                }
+
+                Character character = FindMatchingCharacter(args.Skip(1).ToArray());
+                if (character is null)
+                {
+                    NewMessage($"Character not found \"{args[1]}\".", Color.Red);
+                    return;
+                }
+
+                character.Wallet.SetRewardDistribution(amount);
+                NewMessage($"Set {character.Name}'s salary to {amount}%", Color.White);
+            }));
+            
+            AssignOnClientRequestExecute(
+                "setsalary",
+                (senderClient, cursorWorldPos, args) =>
+                {
+                    if (args.Length < 2)
+                    {
+                        GameMain.Server.SendConsoleMessage($"Missing arguments. Expected at least 2 but got {args.Length} (amount, character)", senderClient, Color.Red);
+                        return;
+                    }
+
+                    if (!CampaignMode.AllowedToManageWallets(senderClient))
+                    {
+                        GameMain.Server.SendConsoleMessage("You are not allowed to manage wallets.", senderClient, Color.Red);
+                        return;
+                    }
+                    
+                    if (GameMain.GameSession?.Campaign is not MultiPlayerCampaign mpCampaign)
+                    {
+                        GameMain.Server.SendConsoleMessage("No campaign active.", senderClient, Color.Red);
+                        return;
+                    }
+
+                    if (!int.TryParse(args[0], out int amount))
+                    {
+                        GameMain.Server.SendConsoleMessage($"{args[0]} is not a valid amount.", senderClient, Color.Red);
+                        return;
+                    }
+
+                    if (args[1].Equals("default", StringComparison.OrdinalIgnoreCase))
+                    {
+                        mpCampaign.Bank.SetRewardDistribution(amount);
+                        GameMain.Server.SendConsoleMessage($"Set the default salary to {amount}%", senderClient);
+                        return;
+                    }
+
+                    Character character = FindMatchingCharacter(args.Skip(1).ToArray());
+                    if (character is null)
+                    {
+                        GameMain.Server.SendConsoleMessage($"Character not found \"{args[1]}\".", senderClient, Color.Red);
+                        return;
+                    }
+
+                    character.Wallet.SetRewardDistribution(amount);
+                    GameMain.Server.SendConsoleMessage($"Set {character.Name}'s salary to {amount}%.", senderClient);
+                }
+            );
+
             commands.Add(new Command("readycheck", "Commence a ready check.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.GameScreen && GameMain.NetworkMember != null)
@@ -2607,7 +2712,7 @@ namespace Barotrauma
             }));
 #endif
         }
-
+        
         public static void ServerRead(IReadMessage inc, Client sender)
         {
             string consoleCommand = inc.ReadString();

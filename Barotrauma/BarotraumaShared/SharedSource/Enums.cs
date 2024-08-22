@@ -254,6 +254,11 @@ namespace Barotrauma
         SwimmingSpeed,
 
         /// <summary>
+        /// Increases the character's speed by a percentage when using an item that propels the character forwards (such as a diving scooter).
+        /// </summary>
+        PropulsionSpeed,
+
+        /// <summary>
         /// Decreases how long it takes for buffs applied to the character decay over time by a percentage.
         /// Buffs are afflictions that have isBuff set to true.
         /// </summary>

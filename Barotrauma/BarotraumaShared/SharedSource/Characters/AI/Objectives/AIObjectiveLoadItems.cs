@@ -50,7 +50,7 @@ namespace Barotrauma
             TargetCondition = option == "turretammo" ? ItemCondition.Empty : ItemCondition.Full;
         }
 
-        protected override bool Filter(Item target)
+        protected override bool IsValidTarget(Item target)
         {
             //don't pass TargetContainerTags to the method (no need to filter by tags anymore, it's already done when populating TargetContainers)
             if (!IsValidTarget(target, character, null, TargetCondition)) { return false; }
@@ -104,7 +104,7 @@ namespace Barotrauma
         protected override void OnObjectiveCompleted(AIObjective objective, Item target)
             => HumanAIController.RemoveTargets<AIObjectiveLoadItems, Item>(character, target);
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 0; }
             if (objectiveManager.IsOrder(this))

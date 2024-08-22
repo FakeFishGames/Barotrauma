@@ -394,7 +394,7 @@ namespace Barotrauma
                 objects = objects.OrderBy(p => (p as PrefabWithUintIdentifier)?.UintIdentifier ?? 0);
             }
             List<T> objectList = objects.ToList();
-            List<float> weights = objectList.Select(o => weightMethod(o)).ToList();
+            List<float> weights = objectList.Select(weightMethod).ToList();
             return SelectWeightedRandom(objectList, weights, random);
         }
 
@@ -774,6 +774,32 @@ namespace Barotrauma
             return self.Equals(other);
         }
 
+        /// <summary>
+        /// Converts a 16-bit audio sample to float value between -1 and 1.
+        /// </summary>
+        public static float ShortAudioSampleToFloat(short value)
+        {
+            return value / 32767f;
+        }
+
+        /// <summary>
+        /// Converts a float value between -1 and 1 to a 16-bit audio sample.
+        /// </summary>
+        public static short FloatToShortAudioSample(float value)
+        {
+            int temp = (int)(32767 * value);
+            if (temp > short.MaxValue)
+            {
+                temp = short.MaxValue;
+            }
+            else if (temp < short.MinValue)
+            {
+                temp = short.MinValue;
+            }
+            return (short)temp;
+        }
+
+        /// <summary
         public static SquareLine GetSquareLineBetweenPoints(Vector2 start, Vector2 end, float knobLength = 24f)
         {
             Vector2[] points = new Vector2[6];
@@ -810,6 +836,40 @@ namespace Barotrauma
                 : SquareLine.LineType.FourPointForwardsLine;
 
             return new SquareLine(points, type);
+        }
+
+        /// <summary>
+        /// Returns closest point on a rectangle to a given point.
+        /// If the point is inside the rectangle, the point itself is returned.
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static Vector2 GetClosestPointOnRectangle(RectangleF rect, Vector2 point)
+        {
+            Vector2 closest = new Vector2(
+                MathHelper.Clamp(point.X, rect.Left, rect.Right),
+                MathHelper.Clamp(point.Y, rect.Top, rect.Bottom));
+
+            if (point.X < rect.Left)
+            {
+                closest.X = rect.Left;
+            }
+            else if (point.X > rect.Right)
+            {
+                closest.X = rect.Right;
+            }
+
+            if (point.Y < rect.Top)
+            {
+                closest.Y = rect.Top;
+            }
+            else if (point.Y > rect.Bottom)
+            {
+                closest.Y = rect.Bottom;
+            }
+
+            return closest;
         }
     }
 }
