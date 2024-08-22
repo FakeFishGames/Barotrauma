@@ -333,7 +333,7 @@ namespace Barotrauma.Items.Components
             if (character == null || character.Removed) return false;
             if (ReloadTimer > 0) return false;
 
-            if (!forceFireOnReload)
+            if (BurstMode != BurstType.Forced || burstPos <= 0)
             {
                 tryingToCharge = true;
                 if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) return false;
