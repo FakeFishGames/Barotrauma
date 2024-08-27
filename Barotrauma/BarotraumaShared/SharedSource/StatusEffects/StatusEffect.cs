@@ -616,6 +616,9 @@ namespace Barotrauma
 
         private readonly List<ItemSpawnInfo> spawnItems;
 
+        private readonly String forceSayIdentifier = null;
+        private readonly bool forceSayInRadio;
+
         /// <summary>
         /// If enabled, one of the items this effect is configured to spawn is selected randomly, as opposed to spawning all of them.
         /// </summary>
@@ -1133,6 +1136,10 @@ namespace Barotrauma
                         animationsToTrigger ??= new List<AnimLoadInfo>();
                         animationsToTrigger.Add(new AnimLoadInfo(animType, file, priority, expectedSpeciesNames.ToImmutableArray()));
                         
+                        break;
+                    case "forcesay":
+                        forceSayIdentifier = subElement.GetAttributeString("message", null);
+                        forceSayInRadio = subElement.GetAttributeBool("sayinradio", false);
                         break;
                 }
             }
@@ -1886,6 +1893,52 @@ namespace Barotrauma
                 }
                 
                 TryTriggerAnimation(target, entity);
+
+                if (forceSayIdentifier != null) 
+                {
+                    Character targetCharacter = null;
+                    if (target is Character character)
+                    {
+                        targetCharacter = character;
+                    }
+                    string messagetosay = null;
+
+                    messagetosay = TextManager.Get(forceSayIdentifier).Value;
+
+                    if (messagetosay != null && targetCharacter != null && targetCharacter.SpeechImpediment < 100.0f && !targetCharacter.IsDead)
+                    {
+#if SERVER
+                        if (GameMain.Server != null)
+                        {
+                            ChatMessageType messagetype = ChatMessageType.Default;
+                            if (ChatMessage.CanUseRadio(targetCharacter, out WifiComponent radio) && forceSayInRadio) { messagetype = ChatMessageType.Radio; }
+                            GameMain.Server.SendChatMessage(messagetosay, messagetype, null, targetCharacter);
+                        }
+#endif
+#if CLIENT
+                        if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
+                        {
+                            bool canUseRadio = ChatMessage.CanUseRadio(targetCharacter, out WifiComponent radio);
+                            ChatMessageType messagetype = ChatMessageType.Default;
+                            if (canUseRadio && forceSayInRadio)
+                            {
+                                messagetype = ChatMessageType.Radio;
+                            }
+                            string modifiedMessage = ChatMessage.ApplyDistanceEffect(messagetosay, messagetype, targetCharacter, Character.Controlled);
+                            if (!string.IsNullOrEmpty(modifiedMessage))
+                            {
+                                GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(targetCharacter.DisplayName, modifiedMessage, messagetype, targetCharacter);
+                            }
+                            if (canUseRadio && forceSayInRadio)
+                            {
+                                Signal s = new Signal(modifiedMessage, sender: targetCharacter, source: radio.Item);
+                                radio.TransmitSignal(s, sentFromChat: true);
+                            }
+                            targetCharacter.ShowSpeechBubble(ChatMessage.MessageColor[(int)messagetype], messagetosay);
+                        }
+#endif
+                    }
+                }
 
                 if (isNotClient)
                 {
