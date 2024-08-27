@@ -112,7 +112,7 @@ namespace Barotrauma
         /// </summary>
         OnSuccess = 22,
         /// <summary>
-        /// Executes when an item is placed inside a container. Only valid in Abilities, the target can be either a character or an item depending on the type of Ability.
+        /// Executes when an Ability (an effect from a talent) triggers the status effect. Only valid in Abilities, the target can be either a character or an item depending on the type of Ability.
         /// </summary>
         OnAbility = 23,
         /// <summary>
