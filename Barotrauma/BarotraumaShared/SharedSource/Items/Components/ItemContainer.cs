@@ -421,12 +421,11 @@ namespace Barotrauma.Items.Components
                         relatedItem ??= containableItem;
                         foreach (StatusEffect effect in containableItem.StatusEffects)
                         {
-                            activeContainedItems.Add(new ActiveContainedItem(
-                                containedItem, 
-                                effect, 
-                                containableItem.ExcludeBroken, 
-                                containableItem.ExcludeFullCondition,
-                                containableItem.BlameEquipperForDeath));
+                            ActiveContainedItem activeContainedItem = new(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition, containableItem.BlameEquipperForDeath);
+                            activeContainedItems.Add(activeContainedItem);
+
+                            if (!TryProcessActiveContainedItem(activeContainedItem)) continue;
+                            activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, 1, item, targets);
                         }
                     }
                 }
@@ -492,6 +491,12 @@ namespace Barotrauma.Items.Components
 
         public void OnItemRemoved(Item containedItem)
         {
+            foreach (ActiveContainedItem activeContainedItem in activeContainedItems)
+            {
+                if (activeContainedItem.Item != containedItem || !TryProcessActiveContainedItem(activeContainedItem)) continue;
+                activeContainedItem.StatusEffect.Apply(ActionType.OnRemoved, 1, item, targets);
+            }
+
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
             containedItems.RemoveAll(i => i.Item == containedItem);
             item.SetContainedItemPositions();
@@ -657,37 +662,46 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            foreach (var activeContainedItem in activeContainedItems)
+            foreach (ActiveContainedItem activeContainedItem in activeContainedItems)
             {
-                Item contained = activeContainedItem.Item;
+                if (!TryProcessActiveContainedItem(activeContainedItem)) continue;
 
-                if (activeContainedItem.ExcludeBroken && contained.Condition <= 0.0f) { continue; }
-                if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) { continue; }
                 StatusEffect effect = activeContainedItem.StatusEffect;
-
-                targets.Clear();
-                bool wearing = item.GetComponent<Wearable>() is Wearable { IsActive: true };
-                if (effect.HasTargetType(StatusEffect.TargetType.This))
-                {
-                    targets.AddRange(item.AllPropertyObjects);
-                }
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
-                {
-                    targets.AddRange(contained.AllPropertyObjects);
-                }
-                if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
-                {
-                    targets.Add(character);
-                }
-                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
-                {
-                    effect.AddNearbyTargets(item.WorldPosition, targets);
-                }
                 effect.Apply(ActionType.OnActive, deltaTime, item, targets);
                 effect.Apply(ActionType.OnContaining, deltaTime, item, targets);
-                if (wearing) { effect.Apply(ActionType.OnWearing, deltaTime, item, targets); }
+                if (item.GetComponent<Wearable>() is Wearable { IsActive: true })
+                {
+                    effect.Apply(ActionType.OnWearing, deltaTime, item, targets);
+                }
             }
+        }
+
+        private bool TryProcessActiveContainedItem(ActiveContainedItem activeContainedItem)
+        {
+            Item contained = activeContainedItem.Item;
+
+            if (activeContainedItem.ExcludeBroken && contained.Condition <= 0) return false;
+            if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) return false;
+            StatusEffect effect = activeContainedItem.StatusEffect;
+
+            targets.Clear();
+            if (effect.HasTargetType(StatusEffect.TargetType.This))
+            {
+                targets.AddRange(item.AllPropertyObjects);
+            }
+            if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+            {
+                targets.AddRange(contained.AllPropertyObjects);
+            }
+            if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
+            {
+                targets.Add(character);
+            }
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) || effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+            {
+                effect.AddNearbyTargets(item.WorldPosition, targets);
+            }
+            return true;
         }
 
         /// <summary>
