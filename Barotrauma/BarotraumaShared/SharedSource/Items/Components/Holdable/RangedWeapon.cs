@@ -184,7 +184,8 @@ namespace Barotrauma.Items.Components
         private bool tryingToCharge;
 
         private Character prevUser;
-        private int burstPos;
+        private int burstIndex;
+        private bool ShouldForceFire => BurstMode == BurstType.Forced && burstIndex > 0;
 
         public RangedWeapon(Item item, ContentXElement element)
             : base(item, element)
@@ -228,11 +229,11 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                if (BurstMode == BurstType.Forced && burstPos > 0)
+                if (ShouldForceFire)
                 {
                     if (!HasRequiredContainedItems(prevUser, false))
                     {
-                        burstPos = 0;
+                        burstIndex = 0;
                     }
                     else if (Use(deltaTime, prevUser))
                     {
@@ -330,14 +331,14 @@ namespace Barotrauma.Items.Components
         private readonly List<Body> ignoredBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character.Removed) return false;
-            if (ReloadTimer > 0) return false;
+            if (character == null || character.Removed) { return false; }
+            if (ReloadTimer > 0) { return false; }
 
-            if (BurstMode != BurstType.Forced || burstPos <= 0)
+            if (!ShouldForceFire)
             {
                 tryingToCharge = true;
-                if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) return false;
-                if (currentChargeTime < MaxChargeTime) return false;
+                if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) { return false; }
+                if (currentChargeTime < MaxChargeTime) { return false; }
             }
 
             IsActive = true;
@@ -416,10 +417,10 @@ namespace Barotrauma.Items.Components
 
             if (BurstMode != BurstType.None)
             {
-                burstPos++;
-                if (burstPos >= BurstCount)
+                burstIndex++;
+                if (burstIndex >= BurstCount)
                 {
-                    burstPos = 0;
+                    burstIndex = 0;
                     SetReloadTimer(character, BurstReload, BurstReloadNoSkill);
                 }
             }
