@@ -424,8 +424,8 @@ namespace Barotrauma.Items.Components
                             ActiveContainedItem activeContainedItem = new(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition, containableItem.BlameEquipperForDeath);
                             activeContainedItems.Add(activeContainedItem);
 
-                            if (!TryProcessActiveContainedItem(activeContainedItem)) continue;
-                            activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, 1, item, targets);
+                            if (!CheckActiveContainedItemAndSetTargets(activeContainedItem)) { continue; }
+                            activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, deltaTime: 1, item, targets);
                         }
                     }
                 }
@@ -493,8 +493,8 @@ namespace Barotrauma.Items.Components
         {
             foreach (ActiveContainedItem activeContainedItem in activeContainedItems)
             {
-                if (activeContainedItem.Item != containedItem || !TryProcessActiveContainedItem(activeContainedItem)) continue;
-                activeContainedItem.StatusEffect.Apply(ActionType.OnRemoved, 1, item, targets);
+                if (activeContainedItem.Item != containedItem || !CheckActiveContainedItemAndSetTargets(activeContainedItem)) { continue; }
+                activeContainedItem.StatusEffect.Apply(ActionType.OnRemoved, deltaTime: 1, item, targets);
             }
 
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
@@ -664,7 +664,7 @@ namespace Barotrauma.Items.Components
 
             foreach (ActiveContainedItem activeContainedItem in activeContainedItems)
             {
-                if (!TryProcessActiveContainedItem(activeContainedItem)) continue;
+                if (!CheckActiveContainedItemAndSetTargets(activeContainedItem)) continue;
 
                 StatusEffect effect = activeContainedItem.StatusEffect;
                 effect.Apply(ActionType.OnActive, deltaTime, item, targets);
@@ -676,12 +676,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool TryProcessActiveContainedItem(ActiveContainedItem activeContainedItem)
+        /// <summary>
+        /// Return true and set targets if the item's effect should apply, otherwise return false.
+        /// </summary>
+        private bool CheckActiveContainedItemAndSetTargets(ActiveContainedItem activeContainedItem)
         {
             Item contained = activeContainedItem.Item;
-
-            if (activeContainedItem.ExcludeBroken && contained.Condition <= 0) return false;
-            if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) return false;
+            if (activeContainedItem.ExcludeBroken && contained.Condition <= 0) { return false; }
+            if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) { return false; }
             StatusEffect effect = activeContainedItem.StatusEffect;
 
             targets.Clear();
