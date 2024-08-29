@@ -435,6 +435,18 @@ namespace Barotrauma
             set => Params.CanSpeak = value;
         }
 
+        public bool CanSeeSubmarineIcon
+        {
+            get => Params.CanSeeSubmarineIcon;
+            set => Params.CanSeeSubmarineIcon = value;
+        }
+
+        public bool HasNightVision
+        {
+            get => Params.HasNightVision;
+            set => Params.HasNightVision = value;
+        }
+
         public bool NeedsAir
         {
             get => Params.NeedsAir;
