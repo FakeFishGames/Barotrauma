@@ -616,7 +616,14 @@ namespace Barotrauma
 
         private readonly List<ItemSpawnInfo> spawnItems;
 
+
+        /// <summary>
+        /// If set, the character targeted by this effect will send the corresponding localized text that has the specified identifier in the chat.
+        /// </summary>
         private readonly String forceSayIdentifier = null;
+        /// <summary>
+        /// If set to true, the character targeted by this effect's "forcesay" command will send their message in the radio. 
+        /// </summary>
         private readonly bool forceSayInRadio;
 
         /// <summary>
@@ -1896,46 +1903,28 @@ namespace Barotrauma
 
                 if (forceSayIdentifier != null) 
                 {
-                    Character targetCharacter = null;
-                    if (target is Character character)
-                    {
-                        targetCharacter = character;
-                    }
-                    string messagetosay = null;
+                    Character targetCharacter = target as Character;
+                    string messageToSay = null;
 
-                    messagetosay = TextManager.Get(forceSayIdentifier).Value;
+                    messageToSay = TextManager.Get(forceSayIdentifier).Value;
 
-                    if (messagetosay != null && targetCharacter != null && targetCharacter.SpeechImpediment < 100.0f && !targetCharacter.IsDead)
+                    if (messageToSay != null && targetCharacter != null && targetCharacter.SpeechImpediment < 100.0f && !targetCharacter.IsDead)
                     {
+                        ChatMessageType messagetype = ChatMessageType.Default;
+                        bool canUseRadio = ChatMessage.CanUseRadio(targetCharacter, out WifiComponent radio);
+                        if (canUseRadio && forceSayInRadio)
+                        {
+                            messagetype = ChatMessageType.Radio;
+                        }
 #if SERVER
                         if (GameMain.Server != null)
                         {
-                            ChatMessageType messagetype = ChatMessageType.Default;
-                            if (ChatMessage.CanUseRadio(targetCharacter, out WifiComponent radio) && forceSayInRadio) { messagetype = ChatMessageType.Radio; }
-                            GameMain.Server.SendChatMessage(messagetosay, messagetype, null, targetCharacter);
+                            GameMain.Server.SendChatMessage(messageToSay, messagetype, null, targetCharacter);
                         }
 #endif
 #if CLIENT
-                        if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
-                        {
-                            bool canUseRadio = ChatMessage.CanUseRadio(targetCharacter, out WifiComponent radio);
-                            ChatMessageType messagetype = ChatMessageType.Default;
-                            if (canUseRadio && forceSayInRadio)
-                            {
-                                messagetype = ChatMessageType.Radio;
-                            }
-                            string modifiedMessage = ChatMessage.ApplyDistanceEffect(messagetosay, messagetype, targetCharacter, Character.Controlled);
-                            if (!string.IsNullOrEmpty(modifiedMessage))
-                            {
-                                GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(targetCharacter.DisplayName, modifiedMessage, messagetype, targetCharacter);
-                            }
-                            if (canUseRadio && forceSayInRadio)
-                            {
-                                Signal s = new Signal(modifiedMessage, sender: targetCharacter, source: radio.Item);
-                                radio.TransmitSignal(s, sentFromChat: true);
-                            }
-                            targetCharacter.ShowSpeechBubble(ChatMessage.MessageColor[(int)messagetype], messagetosay);
-                        }
+                        AIChatMessage message = new AIChatMessage(messageToSay, messagetype);
+                        targetCharacter.SendSinglePlayerMessage(message, canUseRadio, radio);
 #endif
                     }
                 }

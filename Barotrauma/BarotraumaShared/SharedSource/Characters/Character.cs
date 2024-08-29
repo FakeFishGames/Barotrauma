@@ -4175,6 +4175,26 @@ namespace Barotrauma
             aiChatMessageQueue.Add(new AIChatMessage(message, messageType, identifier, delay));
         }
 
+#if CLIENT
+        public void SendSinglePlayerMessage(AIChatMessage message, bool canUseRadio, WifiComponent radio)
+        {
+            if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
+            {
+                string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
+                if (!string.IsNullOrEmpty(modifiedMessage))
+                {
+                    GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
+                }
+                if (canUseRadio)
+                {
+                    Signal s = new Signal(modifiedMessage, sender: this, source: radio.Item);
+                    radio.TransmitSignal(s, sentFromChat: true);
+                }
+            }
+            ShowSpeechBubble(ChatMessage.MessageColor[(int)message.MessageType.Value], message.Message);
+        }
+#endif
+
         private void UpdateAIChatMessages(float deltaTime)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
@@ -4191,28 +4211,13 @@ namespace Barotrauma
                     message.MessageType = canUseRadio ? ChatMessageType.Radio : ChatMessageType.Default;
                 }
 #if CLIENT
-                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
-                {
-                    string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
-                    if (!string.IsNullOrEmpty(modifiedMessage))
-                    {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
-                    }
-                    if (canUseRadio)
-                    {
-                        Signal s = new Signal(modifiedMessage, sender: this, source: radio.Item);
-                        radio.TransmitSignal(s, sentFromChat: true);
-                    }
-                }
+                SendSinglePlayerMessage(message, canUseRadio, radio);
 #endif
 #if SERVER
                 if (GameMain.Server != null && message.MessageType != ChatMessageType.Order)
                 {
                     GameMain.Server.SendChatMessage(message.Message, message.MessageType.Value, null, this);
                 }
-#endif
-#if CLIENT
-                ShowSpeechBubble(ChatMessage.MessageColor[(int)message.MessageType.Value], message.Message);
 #endif
                 sentMessages.Add(message);
             }
