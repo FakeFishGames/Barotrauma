@@ -589,11 +589,10 @@ namespace Barotrauma
             return ch;
         }
 
-        public void CreateIcon(RectTransform rectT)
+        public GUICustomComponent CreateIcon(RectTransform rectT)
         {
             LoadHeadAttachments();
-            new GUICustomComponent(rectT,
-                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
+            return new GUICustomComponent(rectT, onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
         }
 
         public class AppearanceCustomizationMenu : IDisposable
