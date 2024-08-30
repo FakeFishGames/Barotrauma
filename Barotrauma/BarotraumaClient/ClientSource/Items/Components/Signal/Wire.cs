@@ -686,7 +686,7 @@ namespace Barotrauma.Items.Components
         {
             if (GUI.MouseOn == null)
             {
-                Vector2 mousePos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                Vector2 mousePos = Screen.Selected?.Cam?.ScreenToWorld(PlayerInput.MousePosition) ?? Vector2.Zero;
                 if (item.Submarine != null) { mousePos -= (item.Submarine.Position + item.Submarine.HiddenSubPosition); }
 
                 if (GetClosestNodeIndex(mousePos, 10, out _) > -1) { return true; }
