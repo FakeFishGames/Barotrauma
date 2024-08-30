@@ -59,8 +59,16 @@ namespace Barotrauma
                     new LocalizedString[] { TextManager.Get("Yes").ToString(), TextManager.Get("No").ToString() });
                 warningBox.Buttons[0].OnClicked = (_, __) =>
                 {
-                    ZipFile.ExtractToDirectory(customFilesZip, AppDomain.CurrentDomain.BaseDirectory, true);
                     warningBox.Close();
+                    try
+                    {
+                        ZipFile.ExtractToDirectory(customFilesZip, AppDomain.CurrentDomain.BaseDirectory, true);
+                    }
+                    catch (Exception e) 
+                    {
+                        DebugConsole.ThrowError($"An error occured while trying to install files: {e.Message}\n{e.StackTrace}");
+                        return false;
+                    }
 
                     var restartBox = new GUIMessageBox(TextManager.Get("restartrequiredlabel"), TextManager.Get("restartrequiredgeneric"));
                     restartBox.Buttons[0].OnClicked += (btn, userdata) =>
