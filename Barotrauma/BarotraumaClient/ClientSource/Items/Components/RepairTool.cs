@@ -76,19 +76,22 @@ namespace Barotrauma.Items.Components
 
         partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex)
         {
-            Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
-            if (targetStructure.Submarine != null)
+            if (!targetStructure.Indestructible && targetStructure.Submarine is not { GodMode: true })
             {
-                progressBarPos += targetStructure.Submarine.DrawPosition;
+                Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
+                if (targetStructure.Submarine != null)
+                {
+                    progressBarPos += targetStructure.Submarine.DrawPosition;
+                }
+
+                var progressBar = user.UpdateHUDProgressBar(
+                    targetStructure.ID * 1000 + sectionIndex, //unique "identifier" for each wall section
+                    progressBarPos,
+                    MathUtils.InverseLerp(targetStructure.Prefab.MinHealth, targetStructure.Health, targetStructure.Health - targetStructure.SectionDamage(sectionIndex)),
+                    GUIStyle.Red, GUIStyle.Green);
+
+                if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
             }
-
-            var progressBar = user.UpdateHUDProgressBar(
-                targetStructure.ID * 1000 + sectionIndex, //unique "identifier" for each wall section
-                progressBarPos,
-                MathUtils.InverseLerp(targetStructure.Prefab.MinHealth, targetStructure.Health, targetStructure.Health - targetStructure.SectionDamage(sectionIndex)),
-                GUIStyle.Red, GUIStyle.Green);
-
-            if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
             if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition;
@@ -112,7 +115,7 @@ namespace Barotrauma.Items.Components
 
         partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, bool showProgressBar)
         {
-            if (showProgressBar)
+            if (!targetItem.Indestructible && !targetItem.InvulnerableToDamage && showProgressBar)
             {
                 float progressBarState = targetItem.ConditionPercentage / 100.0f;
                 if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState) || prevProgressBarTarget != targetItem)
