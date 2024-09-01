@@ -131,7 +131,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null) { GameMain.GameSession.Draw(spriteBatch); }
 
-            if (Character.Controlled == null && !GUI.DisableHUD)
+            if ((Character.Controlled == null || Character.Controlled.CanSeeSubmarineIcon) && !GUI.DisableHUD)
             {
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
@@ -143,7 +143,7 @@ namespace Barotrauma
                     Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
                     GUI.DrawIndicator(
                         spriteBatch, position, cam, 
-                        Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
+                        (Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height) * 0.6f), 
                         GUIStyle.SubmarineLocationIcon.Value.Sprite, indicatorColor); 
                 }
             }
