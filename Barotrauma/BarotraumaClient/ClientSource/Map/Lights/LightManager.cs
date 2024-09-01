@@ -531,14 +531,14 @@ namespace Barotrauma.Lights
                 //ambient light decreases the brightness of the halo (no need for a bright halo if the ambient light is bright enough)
                 float ambientBrightness = (AmbientLight.R + AmbientLight.B + AmbientLight.G) / 255.0f / 3.0f;
                 Color haloColor = Color.White.Multiply(0.3f - ambientBrightness);
-                if (character.HasNightVision)
+                if (character.HasNightVision && character == Character.Controlled)
                 {
-                    haloColor.A = +100;
+                    haloColor.A = 180;
                 }
                 if (haloColor.A > 0)
                 {
                     float scale = 512.0f / LightSource.LightTexture.Width;
-                    if (character.HasNightVision)
+                    if (character.HasNightVision && character == Character.Controlled)
                     {
                         scale = 5120.0f;
                     }
