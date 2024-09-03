@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,7 +13,7 @@ namespace Barotrauma
     {
         private GUIListBox subList;
 
-        protected GUILayoutGroup subPreviewContainer;
+        private GUILayoutGroup subPreviewContainer;
 
         public CharacterInfo.AppearanceCustomizationMenu[] CharacterMenus { get; private set; }
 
@@ -23,19 +22,14 @@ namespace Barotrauma
 
         private readonly Dictionary<GUIButton, GUIComponent> variantButtons = new Dictionary<GUIButton, GUIComponent>();
 
-        public SinglePlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer)
-            : base(newGameContainer, loadGameContainer)
-        {
-            CreateNewGameMenu();
-        }
+        public SinglePlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer) : base(newGameContainer, loadGameContainer) => CreateNewGameMenu();
 
         private int currentPage = 0;
         private GUIListBox pageContainer;
 
         public void Update()
         {
-            float targetScroll =
-                (float)currentPage / ((float)pageContainer.Content.CountChildren - 1);
+            float targetScroll = (float)currentPage / (float)(pageContainer.Content.CountChildren - 1);
 
             pageContainer.BarScroll = MathHelper.Lerp(pageContainer.BarScroll, targetScroll, 0.2f);
             if (MathUtils.NearlyEqual(pageContainer.BarScroll, targetScroll, 0.001f))
@@ -63,85 +57,6 @@ namespace Barotrauma
                 }
 
                 static bool ButtonHovered(GUIButton button) => button.State is GUIComponent.ComponentState.Pressed or GUIComponent.ComponentState.Hover or GUIComponent.ComponentState.HoverSelected;
-            }
-        }
-
-        private static GUIComponent CreateJobVariantTooltip(JobVariant jobVariant, GUIComponent parent, Point size)
-        {
-            GUIFrame jobVariantTooltip = new GUIFrame(new RectTransform(size, GUI.Canvas), "GUIToolTip")
-            {
-                UserData = parent
-            };
-            GUILayoutGroup content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), jobVariantTooltip.RectTransform, Anchor.Center))
-            {
-                Stretch = true
-            };
-
-            new GUITextBlock(new RectTransform(Vector2.UnitX, content.RectTransform) { IsFixedSize = true }, TextManager.GetWithVariable("startingequipmentname", "[number]", (jobVariant.Variant + 1).ToString()), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
-
-            IEnumerable<Identifier> itemIdentifiers = jobVariant.Prefab.PreviewItems[jobVariant.Variant].Where(it => it.ShowPreview).Select(it => it.ItemIdentifier).Distinct();
-
-            int itemsPerRow = 5;
-            int rows = (int)Math.Max(Math.Ceiling(itemIdentifiers.Count() / (float)itemsPerRow), 1);
-
-            new GUICustomComponent(new RectTransform(new Vector2(1f, 0.4f * rows), content.RectTransform, Anchor.BottomCenter), onDraw: (sb, component) => DrawJobVariantItems(sb, component, jobVariant, itemsPerRow));
-
-            jobVariantTooltip.RectTransform.MinSize = new Point(0, content.RectTransform.Children.Sum(c => c.Rect.Height + content.AbsoluteSpacing));
-
-            return jobVariantTooltip;
-        }
-
-        private static void DrawJobVariantItems(SpriteBatch spriteBatch, GUICustomComponent component, JobVariant jobPrefab, int itemsPerRow)
-        {
-            IEnumerable<Identifier> itemIdentifiers = jobPrefab.Prefab.PreviewItems[jobPrefab.Variant].Where(it => it.ShowPreview).Select(it => it.ItemIdentifier).Distinct();
-
-            Point slotSize = new Point(component.Rect.Height);
-            int spacing = (int)(5 * GUI.Scale);
-            int slotCount = itemIdentifiers.Count();
-            int slotCountPerRow = Math.Min(slotCount, itemsPerRow);
-            int rows = (int)Math.Max(Math.Ceiling(itemIdentifiers.Count() / (float)itemsPerRow), 1);
-
-            float totalWidth = slotSize.X * slotCountPerRow + spacing * (slotCountPerRow - 1);
-            float totalHeight = slotSize.Y * rows + spacing * (rows - 1);
-            if (totalWidth > component.Rect.Width)
-            {
-                slotSize = new Point(Math.Min((int)Math.Floor((slotSize.X - spacing) * (component.Rect.Width / totalWidth)), (int)Math.Floor((slotSize.Y - spacing) * (component.Rect.Height / totalHeight))));
-            }
-            int i = 0;
-            Rectangle tooltipRect = Rectangle.Empty;
-            LocalizedString tooltip = null;
-            foreach (Identifier itemIdentifier in itemIdentifiers)
-            {
-                if (MapEntityPrefab.FindByIdentifier(itemIdentifier) is not ItemPrefab itemPrefab) { continue; }
-
-                int row = (int)Math.Floor(i / (float)slotCountPerRow);
-                int slotsPerThisRow = Math.Min((slotCount - row * slotCountPerRow), slotCountPerRow);
-                Vector2 slotPos = new Vector2(component.Rect.Center.X + (slotSize.X + spacing) * (i % slotCountPerRow - slotsPerThisRow * 0.5f), component.Rect.Bottom - (rows * (slotSize.Y + spacing)) + (slotSize.Y + spacing) * row);
-
-                Rectangle slotRect = new Rectangle(slotPos.ToPoint(), slotSize);
-                Inventory.SlotSpriteSmall.Draw(spriteBatch, slotPos, scale: slotSize.X / (float)Inventory.SlotSpriteSmall.SourceRect.Width, color: slotRect.Contains(PlayerInput.MousePosition) ? Color.White : Color.White * 0.6f);
-
-                Sprite icon = itemPrefab.InventoryIcon ?? itemPrefab.Sprite;
-                float iconScale = Math.Min(Math.Min(slotSize.X / icon.size.X, slotSize.Y / icon.size.Y), 2f) * 0.9f;
-                icon.Draw(spriteBatch, slotPos + slotSize.ToVector2() * 0.5f, scale: iconScale);
-
-                int count = jobPrefab.Prefab.PreviewItems[jobPrefab.Variant].Count(it => it.ShowPreview && it.ItemIdentifier == itemIdentifier);
-                if (count > 1)
-                {
-                    string itemCountText = "x" + count;
-                    GUIStyle.Font.DrawString(spriteBatch, itemCountText, slotPos + slotSize.ToVector2() - GUIStyle.Font.MeasureString(itemCountText) - Vector2.UnitX * 5, Color.White);
-                }
-
-                if (slotRect.Contains(PlayerInput.MousePosition))
-                {
-                    tooltipRect = slotRect;
-                    tooltip = itemPrefab.Name + '\n' + itemPrefab.Description;
-                }
-                i++;
-            }
-            if (!tooltip.IsNullOrEmpty())
-            {
-                GUIComponent.DrawToolTip(spriteBatch, tooltip, tooltipRect);
             }
         }
 
@@ -428,39 +343,35 @@ namespace Barotrauma
                     return false;
                 };
 
-                GUIFrame previewContainer = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), subLayout.RectTransform) { IsFixedSize = true }, null)
+                GUIFrame previewContainer = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), subLayout.RectTransform) { IsFixedSize = true }, "GUIFrameListBox");
+                GUIFrame previewContent = new GUIFrame(new RectTransform(previewContainer.Rect.Size - new Point(10, 5), previewContainer.RectTransform, Anchor.BottomCenter), null);
+
+                characterInfo.CreateIcon(new RectTransform(new Vector2(1f, 0.9f), previewContent.RectTransform, Anchor.Center));
+
+                GUITextBlock jobText = new GUITextBlock(new RectTransform(Vector2.UnitX, previewContent.RectTransform), job.Name, job.UIColor)
                 {
-                    CanBeFocused = false
+                    Padding = new Vector4(5f, 5f, 0f, 0f)
                 };
 
-                GUIComponent headPreview = characterInfo.CreateIcon(new RectTransform(Vector2.One, previewContainer.RectTransform));
-                headPreview.CanBeFocused = false;
-
-                GUITextBlock jobText = new GUITextBlock(new RectTransform(new Point(previewContainer.Rect.Width, (int)(24 * GUI.Scale)), previewContainer.RectTransform), job.Name, job.UIColor);
-
-                GUILayoutGroup variantGroup = new GUILayoutGroup(new RectTransform(new Point(previewContainer.Rect.Width, (int)(32 * GUI.Scale)), previewContainer.RectTransform, Anchor.BottomLeft), true)
+                GUILayoutGroup variantGroup = new GUILayoutGroup(new RectTransform(new Point(previewContent.Rect.Width, (int)(32 * GUI.Scale)), previewContent.RectTransform, Anchor.BottomLeft), true)
                 {
-                    Stretch = true,
                     AbsoluteSpacing = (int)(4 * GUI.Scale)
                 };
                 List<GUIButton> buttons = new List<GUIButton>();
                 for (int variant = 0; variant < job.Variants; variant++)
                 {
-                    GUIButton button = new GUIButton(new RectTransform(Vector2.One, variantGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), (variant + 1).ToString(), style: "JobVariantButton")
+                    JobVariant jobVariant = new JobVariant(job, variant);
+
+                    GUIButton button = jobVariant.CreateButton(variantGroup, characterInfo.Job.Variant == variant, (btn, data) =>
                     {
-                        Selected = characterInfo.Job.Variant == variant,
-                        OnClicked = (btn, data) =>
-                        {
-                            buttons.ForEach(button => button.Selected = false);
-                            btn.Selected = true;
-                            characterInfo.Job.Variant = (data as JobVariant).Variant;
-                            return true;
-                        },
-                        UserData = new JobVariant(job, variant)
-                    };
+                        buttons.ForEach(button => button.Selected = false);
+                        btn.Selected = true;
+                        characterInfo.Job.Variant = (data as JobVariant).Variant;
+                        return true;
+                    });
 
                     buttons.Add(button);
-                    variantButtons.Add(button, CreateJobVariantTooltip(button.UserData as JobVariant, subLayout, previewContainer.Rect.Size + new Point(0, jobText.Rect.Height - variantGroup.Rect.Height)));
+                    variantButtons.Add(button, jobVariant.CreateTooltip(subLayout, previewContent.Rect.Size + new Point(0, jobText.Rect.Height - variantGroup.Rect.Height), data: subLayout));
                 }
 
                 GUIFrame customizationFrame = new GUIFrame(new RectTransform(Vector2.One, subLayout.RectTransform), style: null);
@@ -483,7 +394,7 @@ namespace Barotrauma
                     }
                 };
 
-                GUIButton randomizeButton = new GUIButton(new RectTransform(new Point((int)(32 * GUI.Scale)), previewContainer.RectTransform, Anchor.BottomRight), style: "RandomizeButton")
+                GUIButton randomizeButton = new GUIButton(new RectTransform(new Point((int)(32 * GUI.Scale)), previewContent.RectTransform, Anchor.BottomRight) { AbsoluteOffset = new Point(0, (int)(5 * GUI.Scale)) }, style: "RandomizeButton")
                 {
                     OnClicked = CharacterMenus[i].RandomizeButton.OnClicked
                 };
