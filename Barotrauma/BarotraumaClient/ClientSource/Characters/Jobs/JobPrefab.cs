@@ -1,8 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Linq;
 using System;
-using System.Xml.Linq;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -127,6 +128,103 @@ namespace Barotrauma
             }
 
             return outfitPreviews;
+        }
+    }
+
+    internal partial class JobVariant
+    {
+        private const int ItemsPerRow = 5;
+
+        private IEnumerable<JobPrefab.PreviewItem> PreviewItems => Prefab.PreviewItems[Variant].Where(it => it.ShowPreview);
+        private IEnumerable<Identifier> PreviewItemIdentifiers => PreviewItems.Select(it => it.ItemIdentifier).Distinct();
+
+        public GUIButton CreateButton(GUILayoutGroup parent, bool selected, GUIButton.OnClickedHandler onClicked)
+        {
+            GUIButton button = new GUIButton(new RectTransform(Vector2.One, parent.RectTransform, scaleBasis: ScaleBasis.BothHeight), (Variant + 1).ToString(), style: "JobVariantButton")
+            {
+                Selected = selected,
+                OnClicked = onClicked,
+                UserData = this
+            };
+
+            return button;
+        }
+
+        public GUIFrame CreateTooltip(GUIComponent parent, Point size, Point? position = null, Pivot? pivot = null, object data = null)
+        {
+            GUIFrame jobVariantTooltip = new GUIFrame(new RectTransform(size, GUI.Canvas, pivot: pivot), "GUIToolTip")
+            {
+                UserData = data
+            };
+
+            jobVariantTooltip.RectTransform.AbsoluteOffset = position.TryGetValue(out Point pos) ? pos : parent.Rect.Location;
+
+            GUILayoutGroup content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), jobVariantTooltip.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            new GUITextBlock(new RectTransform(Vector2.UnitX, content.RectTransform) { IsFixedSize = true }, TextManager.GetWithVariable("startingequipmentname", "[number]", (Variant + 1).ToString()), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+
+            int rows = (int)Math.Max(Math.Ceiling(PreviewItemIdentifiers.Count() / (float)ItemsPerRow), 1);
+
+            new GUICustomComponent(new RectTransform(new Vector2(1f, 0.4f * rows), content.RectTransform, Anchor.BottomCenter), onDraw: DrawPreviewItems);
+
+            jobVariantTooltip.RectTransform.MinSize = new Point(0, content.RectTransform.Children.Sum(c => c.Rect.Height + content.AbsoluteSpacing));
+
+            return jobVariantTooltip;
+        }
+
+        private void DrawPreviewItems(SpriteBatch spriteBatch, GUIComponent parent)
+        {
+            Point slotSize = new Point(parent.Rect.Height);
+            int spacing = (int)(5 * GUI.Scale);
+            int slotCount = PreviewItemIdentifiers.Count();
+            int slotCountPerRow = Math.Min(slotCount, ItemsPerRow);
+            int rows = (int)Math.Max(Math.Ceiling(PreviewItemIdentifiers.Count() / (float)ItemsPerRow), 1);
+
+            float totalWidth = slotSize.X * slotCountPerRow + spacing * (slotCountPerRow - 1);
+            float totalHeight = slotSize.Y * rows + spacing * (rows - 1);
+            if (totalWidth > parent.Rect.Width)
+            {
+                slotSize = new Point(Math.Min((int)Math.Floor((slotSize.X - spacing) * (parent.Rect.Width / totalWidth)), (int)Math.Floor((slotSize.Y - spacing) * (parent.Rect.Height / totalHeight))));
+            }
+            int i = 0;
+            Rectangle tooltipRect = Rectangle.Empty;
+            LocalizedString tooltip = null;
+            foreach (Identifier itemIdentifier in PreviewItemIdentifiers)
+            {
+                if (MapEntityPrefab.FindByIdentifier(itemIdentifier) is not ItemPrefab itemPrefab) { continue; }
+
+                int row = (int)Math.Floor(i / (float)slotCountPerRow);
+                int slotsPerThisRow = Math.Min((slotCount - row * slotCountPerRow), slotCountPerRow);
+                Vector2 slotPos = new Vector2(parent.Rect.Center.X + (slotSize.X + spacing) * (i % slotCountPerRow - slotsPerThisRow * 0.5f), parent.Rect.Bottom - (rows * (slotSize.Y + spacing)) + (slotSize.Y + spacing) * row);
+
+                Rectangle slotRect = new Rectangle(slotPos.ToPoint(), slotSize);
+                Inventory.SlotSpriteSmall.Draw(spriteBatch, slotPos, scale: slotSize.X / (float)Inventory.SlotSpriteSmall.SourceRect.Width, color: slotRect.Contains(PlayerInput.MousePosition) ? Color.White : Color.White * 0.6f);
+
+                Sprite icon = itemPrefab.InventoryIcon ?? itemPrefab.Sprite;
+                float iconScale = Math.Min(Math.Min(slotSize.X / icon.size.X, slotSize.Y / icon.size.Y), 2f) * 0.9f;
+                icon.Draw(spriteBatch, slotPos + slotSize.ToVector2() * 0.5f, scale: iconScale);
+
+                int count = PreviewItems.Count(it => it.ItemIdentifier == itemIdentifier);
+                if (count > 1)
+                {
+                    string itemCountText = "x" + count;
+                    GUIStyle.Font.DrawString(spriteBatch, itemCountText, slotPos + slotSize.ToVector2() - GUIStyle.Font.MeasureString(itemCountText) - Vector2.UnitX * 5, Color.White);
+                }
+
+                if (slotRect.Contains(PlayerInput.MousePosition))
+                {
+                    tooltipRect = slotRect;
+                    tooltip = itemPrefab.Name + '\n' + itemPrefab.Description;
+                }
+                i++;
+            }
+            if (!tooltip.IsNullOrEmpty())
+            {
+                GUIComponent.DrawToolTip(spriteBatch, tooltip, tooltipRect);
+            }
         }
     }
 }
