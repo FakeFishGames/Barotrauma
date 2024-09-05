@@ -621,7 +621,7 @@
         <reduceaffliction identifier="infection" strength="0.02" />
         <reduceaffliction identifier="bloodloss" strength="0.05" />
         <reduceaffliction identifier="bleeding" strength="0.05" />
-        <reduceaffliction identifier="nausea" strength="0.08" />
+        <reduceaffliction identifier="nausea" strength="1" />
         <reduceaffliction identifier="opiatewithdrawal" strength="0.06" />
         <reduceaffliction identifier="opiateaddiction" strength="0.06" />
         <reduceaffliction identifier="drunk" strength="0.08" />
@@ -655,7 +655,7 @@
         <reduceaffliction identifier="infection" strength="0.02" />
         <reduceaffliction identifier="bloodloss" strength="0.05" />
         <reduceaffliction identifier="bleeding" strength="0.05" />
-        <reduceaffliction identifier="nausea" strength="0.08" />
+        <reduceaffliction identifier="nausea" strength="1" />
         <reduceaffliction identifier="opiatewithdrawal" strength="0.06" />
         <reduceaffliction identifier="opiateaddiction" strength="0.06" />
         <reduceaffliction identifier="drunk" strength="0.08" />
@@ -688,7 +688,7 @@
         <reduceaffliction identifier="infection" strength="0.025" />
         <reduceaffliction identifier="bloodloss" strength="0.075" />
         <reduceaffliction identifier="bleeding" strength="0.075" />
-        <reduceaffliction identifier="nausea" strength="0.1" />
+        <reduceaffliction identifier="nausea" strength="1" />
         <reduceaffliction identifier="opiatewithdrawal" strength="0.08" />
         <reduceaffliction identifier="opiateaddiction" strength="0.08" />
         <reduceaffliction identifier="drunk" strength="0.1" />
@@ -720,7 +720,7 @@
         <reduceaffliction identifier="infection" strength="0.02" />
         <reduceaffliction identifier="bloodloss" strength="0.05" />
         <reduceaffliction identifier="bleeding" strength="0.05" />
-        <reduceaffliction identifier="nausea" strength="0.08" />
+        <reduceaffliction identifier="nausea" strength="1" />
         <reduceaffliction identifier="opiatewithdrawal" strength="0.06" />
         <reduceaffliction identifier="opiateaddiction" strength="0.06" />
         <reduceaffliction identifier="drunk" strength="0.08" />
