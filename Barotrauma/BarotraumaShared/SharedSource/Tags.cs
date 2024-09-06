@@ -48,6 +48,7 @@ public static class Tags
     public static readonly Identifier IdCardTag = "identitycard".ToIdentifier();
     public static readonly Identifier WireItem = "wire".ToIdentifier();
     public static readonly Identifier ChairItem = "chair".ToIdentifier();
+    public static readonly Identifier BedItem = "bed".ToIdentifier();
     public static readonly Identifier ArtifactHolder = "artifactholder".ToIdentifier();
     public static readonly Identifier Thalamus = "thalamus".ToIdentifier();
 
