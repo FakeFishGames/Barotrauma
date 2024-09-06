@@ -65,7 +65,7 @@ namespace Barotrauma
             { 
                 return Objectives.ContainsKey(target) && AIObjectiveCleanupItems.IsItemInsideValidSubmarine(target, character); 
             }
-            if (target.CurrentHull.FireSources.Count > 0) { return false; }
+            if (target.CurrentHull != null && target.CurrentHull.FireSources.Count > 0) { return false; }
 
             foreach (Character c in Character.CharacterList)
             {
