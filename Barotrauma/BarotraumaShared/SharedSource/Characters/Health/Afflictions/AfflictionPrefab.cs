@@ -606,6 +606,7 @@ namespace Barotrauma
         public static readonly Identifier BurnType = "burn".ToIdentifier();
         public static readonly Identifier BleedingType = "bleeding".ToIdentifier();
         public static readonly Identifier ParalysisType = "paralysis".ToIdentifier();
+        public static readonly Identifier ConvulseType = "convulse".ToIdentifier();
         public static readonly Identifier PoisonType = "poison".ToIdentifier();
         public static readonly Identifier StunType = "stun".ToIdentifier();
         public static readonly Identifier EMPType = "emp".ToIdentifier();

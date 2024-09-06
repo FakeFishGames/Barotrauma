@@ -1012,6 +1012,18 @@ namespace Barotrauma
                 {
                     IsParalyzed = true;
                 }
+
+                if (affliction.Strength > 0.0f && affliction.Strength >= affliction.Prefab.ActivationThreshold &&
+                    affliction.Prefab.AfflictionType == AfflictionPrefab.ConvulseType)
+                {
+                    foreach (Limb limb in Character.AnimController.Limbs)
+                    {
+                        if (limb.IsSevered) { continue; }
+                        if (limb.Hidden) { continue; }
+                        float force = Rand.Value() * 0.5f * limb.Mass * Math.Max(0.8f, ((affliction.Strength / affliction.Prefab.MaxStrength) * 2f));
+                        limb.body.ApplyLinearImpulse(Rand.Vector(force), maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.4f);
+                    }
+                }
             }
 #if CLIENT
             if (IsUnconscious)
