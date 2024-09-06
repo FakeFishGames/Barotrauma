@@ -26,8 +26,6 @@ namespace Barotrauma
         private static BackgroundMusic previousDefaultMusic;
 
         private static float updateMusicTimer;
-        private static bool increaseUpdateMusicTimer;
-
         //ambience
         private static Sound waterAmbienceIn => SoundPrefab.WaterAmbienceIn.ActivePrefab.Sound;
         private static Sound waterAmbienceOut => SoundPrefab.WaterAmbienceOut.ActivePrefab.Sound;
@@ -558,7 +556,6 @@ namespace Barotrauma
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
-                increaseUpdateMusicTimer = false;
                 //find appropriate music for the current situation
                 Identifier currentMusicType = GetCurrentMusicType();
                 float currentIntensity = GameMain.GameSession?.EventManager != null ?
@@ -657,19 +654,6 @@ namespace Barotrauma
 
                 foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
                 {
-                    //if the current maintrack is meant to mute all intensity music, loop through all the intensity channels and set them to null, then continue
-                    if ((targetMusic[mainTrackIndex] != null) && (targetMusic[mainTrackIndex].MuteIntensityMusic))
-                    {
-                        for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
-                        {
-                            if (targetMusic[i] != null)
-                            {
-                                targetMusic[i] = null;
-                                break;
-                            }
-                        }
-                        continue;
-                    }
                     //already playing, do nothing
                     if (targetMusic.Any(m => m != null && m == intensityMusic)) { continue; }
 
@@ -685,9 +669,9 @@ namespace Barotrauma
 
                 LogCurrentMusic();
                 updateMusicTimer = UpdateMusicInterval;
-                if (increaseUpdateMusicTimer)
+                if (mainTrack != null)
                 {
-                    updateMusicTimer += (targetMusic[mainTrackIndex].MinimumRequiredTimeToPlay);
+                    updateMusicTimer += mainTrack.MinimumRequiredTimeToPlay;
                 }
             }
 
@@ -878,7 +862,7 @@ namespace Barotrauma
                 if (!enemyAI.AttackHumans && !enemyAI.AttackRooms) { continue; }
 
                 bool specificMonsterMusicAvailable =
-                    musicClips.Any(m => IsSuitableMusicClip(m, character.MusicType.ToIdentifier(), intensity));
+                    musicClips.Any(m => IsSuitableMusicClip(m, character.MusicType, intensity));
 
                 if (specificMonsterMusicAvailable)
                 {
@@ -903,8 +887,7 @@ namespace Barotrauma
             {
                 Character chosencharacter = MonsterMusicCharacters.GetRandomByWeight(c => c.MusicWeight, Rand.RandSync.Unsynced);
                 // Allow the music to play for some time instead of constantly changing if multiple monsters with similiar music weight and different music types are present.
-                increaseUpdateMusicTimer = true;
-                return chosencharacter.MusicType.ToIdentifier();
+                return chosencharacter.MusicType;
             }
 
             if (targetSubmarine != null && targetSubmarine.AtDamageDepth)

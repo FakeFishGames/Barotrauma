@@ -243,7 +243,6 @@ namespace Barotrauma
 
         public readonly bool StartFromRandomTime;
         public readonly bool ContinueFromPreviousTime;
-        public readonly bool MuteIntensityMusic;
         public readonly float MinimumRequiredTimeToPlay;
         public int PreviousTime;
 
@@ -260,8 +259,7 @@ namespace Barotrauma
             Volume = element.GetAttributeFloat(nameof(Volume), 1.0f);
             StartFromRandomTime = element.GetAttributeBool(nameof(StartFromRandomTime), false);
             ContinueFromPreviousTime = element.GetAttributeBool(nameof(ContinueFromPreviousTime), false);
-            MuteIntensityMusic = element.GetAttributeBool("muteintensitymusic", false);
-            MinimumRequiredTimeToPlay = element.GetAttributeFloat("minimumrequiredtimetoplay", 30.0f);
+            MinimumRequiredTimeToPlay = element.GetAttributeFloat("minimumrequiredtimetoplay", 0.0f);
         }
     }
 
