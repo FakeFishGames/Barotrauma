@@ -26,6 +26,7 @@ namespace Barotrauma
         private static BackgroundMusic previousDefaultMusic;
 
         private static float updateMusicTimer;
+
         //ambience
         private static Sound waterAmbienceIn => SoundPrefab.WaterAmbienceIn.ActivePrefab.Sound;
         private static Sound waterAmbienceOut => SoundPrefab.WaterAmbienceOut.ActivePrefab.Sound;
@@ -886,7 +887,6 @@ namespace Barotrauma
             if (MonsterMusicCharacters.Any())
             {
                 Character chosencharacter = MonsterMusicCharacters.GetRandomByWeight(c => c.MusicWeight, Rand.RandSync.Unsynced);
-                // Allow the music to play for some time instead of constantly changing if multiple monsters with similiar music weight and different music types are present.
                 return chosencharacter.MusicType;
             }
 
