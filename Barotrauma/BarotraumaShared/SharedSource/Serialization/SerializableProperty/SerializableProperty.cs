@@ -303,10 +303,46 @@ namespace Barotrauma
                             case "identifierarray":
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray((string)value));
                                 return true;
+                            case "int" or "float":
+                                PropertyInfo.SetValue(parentObject, ParseNumericalOperators((string)value));
+                                return true;
                             default:
                                 DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
                                 DebugConsole.ThrowError($"(Cannot convert a string to a {PropertyType})");
                                 return false;
+                        }
+
+                        float ParseNumericalOperators(string value)
+                        {
+                            float newVal = (float)PropertyInfo.GetValue(parentObject);
+                            if (value.Length > 1 && float.TryParse(value[1..], out float rhs))
+                            {
+                                switch (value[0])
+                                {
+                                    case '=':
+                                        newVal = rhs;
+                                        break;
+                                    case '+':
+                                        newVal += rhs;
+                                        break;
+                                    case '-':
+                                        newVal -= rhs;
+                                        break;
+                                    case '*' or 'x':
+                                        newVal *= rhs;
+                                        break;
+                                    case '/' or '\\':
+                                        newVal /= rhs;
+                                        break;
+                                    case '^':
+                                        newVal = MathF.Pow(newVal, rhs);
+                                        break;
+                                    case '%':
+                                        newVal %= rhs;
+                                        break;
+                                }
+                            }
+                            return newVal;
                         }
                     }
                     else if (PropertyType != value.GetType())
