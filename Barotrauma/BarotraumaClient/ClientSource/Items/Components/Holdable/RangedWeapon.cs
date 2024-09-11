@@ -1,4 +1,5 @@
-﻿using Barotrauma.Particles;
+﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
 using Barotrauma.Sounds;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -9,7 +10,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class RangedWeapon : ItemComponent
+    partial class RangedWeapon : ItemComponent, IServerSerializable
     {
         protected Sprite crosshairSprite, crosshairPointerSprite;
 
@@ -20,7 +21,7 @@ namespace Barotrauma.Items.Components
         private RoundSound chargeSound;
 
         private SoundChannel chargeSoundChannel;
-        
+
         [Serialize(defaultValue: "0.5, 1.5", IsPropertySaveable.No, description: "Pitch slides from X to Y over the charge time")]
         public Vector2 ChargeSoundWindupPitchSlide
         {
@@ -28,7 +29,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 _chargeSoundWindupPitchSlide = new Vector2(
-                        Math.Max(value.X, SoundChannel.MinFrequencyMultiplier), 
+                        Math.Max(value.X, SoundChannel.MinFrequencyMultiplier),
                         Math.Min(value.Y, SoundChannel.MaxFrequencyMultiplier));
             }
         }
@@ -179,7 +180,7 @@ namespace Barotrauma.Items.Components
 
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;
-            
+
             if (GUI.HideCursor && !character.AnimController.IsHoldingToRope)
             {
                 if (crossHairPosDirtyTimer <= 0.0f)
@@ -202,7 +203,7 @@ namespace Barotrauma.Items.Components
         {
             Vector2 particlePos = item.WorldPosition + ConvertUnits.ToDisplayUnits(TransformedBarrelPos);
             float rotation = item.body.Rotation;
-			if (item.body.Dir < 0.0f) { rotation += MathHelper.Pi; }
+            if (item.body.Dir < 0.0f) { rotation += MathHelper.Pi; }
             foreach (ParticleEmitter emitter in particleEmitters)
             {
                 emitter.Emit(1.0f, particlePos, hullGuess: item.CurrentHull, angle: rotation, particleRotation: -rotation);
@@ -216,6 +217,11 @@ namespace Barotrauma.Items.Components
             crosshairSprite = null;
             crosshairPointerSprite?.Remove();
             crosshairSprite = null;
+        }
+
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
+        {
+            burstIndex = msg.ReadInt32();
         }
     }
 }

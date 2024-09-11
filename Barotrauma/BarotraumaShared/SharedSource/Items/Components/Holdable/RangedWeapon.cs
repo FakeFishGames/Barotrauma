@@ -16,15 +16,19 @@ namespace Barotrauma.Items.Components
             /// <summary>
             /// The weapon will not perform a burst.
             /// </summary>
-            None = 0,
+            None,
             /// <summary>
-            /// The burst count will not reset when the trigger is released.
+            /// The burst index will reset when the trigger is released.
             /// </summary>
-            Save = 1,
+            Reset,
+            /// <summary>
+            /// The burst index will not reset when the trigger is released.
+            /// </summary>
+            Save,
             /// <summary>
             /// The burst will continue even if the trigger is released.
             /// </summary>
-            Forced = 2
+            Forced
         }
 
         private float reload;
@@ -229,6 +233,10 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
+                if (BurstMode == BurstType.Reset && !prevUser.HeldItems.Contains(Item) || !prevUser.IsKeyDown(InputType.Aim))
+                {
+                    burstIndex = 0;
+                }
                 if (ShouldForceFire)
                 {
                     if (!HasRequiredContainedItems(prevUser, false))
