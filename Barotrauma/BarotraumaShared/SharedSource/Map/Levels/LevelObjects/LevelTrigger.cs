@@ -662,16 +662,9 @@ namespace Barotrauma
                 if (triggerer is Character character)
                 {
                     effect.Apply(effect.type, deltaTime, triggerer, character, position);
-                    if (effect.HasTargetType(StatusEffect.TargetType.Contained) && character.Inventory != null)
+                    if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                     {
-                        foreach (Item item in character.Inventory.AllItemsMod)
-                        {
-                            if (item.ContainedItems == null) { continue; }
-                            foreach (Item containedItem in item.ContainedItems)
-                            {
-                                effect.Apply(effect.type, deltaTime, triggerer, containedItem.AllPropertyObjects, position);
-                            }
-                        }
+                        effect.Apply(effect.type, deltaTime, triggerer, effect.GetContainedItems(character).SelectMany(item => item.AllPropertyObjects).ToList(), position);
                     }
                 }
                 else if (triggerer is Item item)
@@ -682,7 +675,7 @@ namespace Barotrauma
                 {
                     effect.Apply(effect.type, deltaTime, sub, Array.Empty<ISerializableEntity>(), position);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) || effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                 {
                     targets.Clear();
                     effect.AddNearbyTargets(worldPosition, targets);

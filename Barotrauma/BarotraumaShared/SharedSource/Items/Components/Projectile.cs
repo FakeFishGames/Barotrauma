@@ -1111,8 +1111,7 @@ namespace Barotrauma.Items.Components
                                 {
                                     effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb);
                                 }
-                                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                                if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                                 {
                                     targets.Clear();
                                     effect.AddNearbyTargets(targetLimb.WorldPosition, targets);

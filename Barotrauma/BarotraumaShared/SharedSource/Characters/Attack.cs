@@ -569,8 +569,7 @@ namespace Barotrauma
                 }
                 if (target is Entity targetEntity)
                 {
-                    if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                        effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                    if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                     {
                         targets.Clear();
                         effect.AddNearbyTargets(worldPosition, targets);
@@ -592,7 +591,7 @@ namespace Barotrauma
                 if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     targets.Clear();
-                    targets.AddRange(attacker.Inventory.AllItems);
+                    targets.AddRange(effect.GetContainedItems(attacker));
                     if (additionalEffectType != ActionType.OnEating)
                     {
                         effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
@@ -668,8 +667,7 @@ namespace Barotrauma
                     effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                 {
                     targets.Clear();
                     effect.AddNearbyTargets(worldPosition, targets);                
@@ -679,7 +677,7 @@ namespace Barotrauma
                 if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     targets.Clear();
-                    targets.AddRange(attacker.Inventory.AllItems);
+                    targets.AddRange(effect.GetContainedItems(attacker));
                     effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, attacker, targets);
                 }

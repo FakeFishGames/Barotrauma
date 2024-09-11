@@ -487,8 +487,7 @@ namespace Barotrauma
             {
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targets: characterHealth.Character.AnimController.Limbs);
             }
-            if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+            if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
             {
                 targets.Clear();
                 statusEffect.AddNearbyTargets(characterHealth.Character.WorldPosition, targets);

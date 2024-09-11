@@ -1979,18 +1979,11 @@ namespace Barotrauma
 
             if (effect.HasTargetType(StatusEffect.TargetType.Contained))
             {
-                foreach (Item containedItem in ContainedItems)
+                foreach (Item containedItem in effect.GetContainedItems(this))
                 {
-                    if (effect.TargetIdentifiers != null &&
-                        !effect.TargetIdentifiers.Contains(((MapEntity)containedItem).Prefab.Identifier) &&
-                        !effect.TargetIdentifiers.Any(id => containedItem.HasTag(id)))
+                    if (effect.TargetIdentifiers != null && !effect.TargetIdentifiers.Contains(containedItem.Prefab.Identifier) && !effect.TargetIdentifiers.Any(containedItem.HasTag))
                     {
                         continue;
-                    }
-
-                    if (effect.TargetSlot > -1)
-                    {
-                        if (!OwnInventory.GetItemsAt(effect.TargetSlot).Contains(containedItem)) { continue; }
                     }
 
                     hasTargets = true;
@@ -1998,7 +1991,7 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
             {
                 effect.AddNearbyTargets(WorldPosition, targets);
                 if (targets.Count > 0)
@@ -2058,8 +2051,11 @@ namespace Barotrauma
                 targets.Add(limb);
             }
 
-            if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) { targets.AddRange(Container.AllPropertyObjects); }
-            
+            if (effect.HasTargetType(StatusEffect.TargetType.Parent))
+            {
+                targets.AddRange(effect.GetParentItems(this).SelectMany(item => item.AllPropertyObjects));
+            }
+
             effect.Apply(type, deltaTime, this, targets, worldPosition);            
         }
 

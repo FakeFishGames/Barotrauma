@@ -172,12 +172,22 @@ namespace Barotrauma.Extensions
         // source: https://stackoverflow.com/questions/19237868/get-all-children-to-one-list-recursive-c-sharp
         public static IEnumerable<T> SelectManyRecursive<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> selector)
         {
-            var result = source.SelectMany(selector);
-            if (!result.Any())
+            IEnumerable<T> result = source.SelectMany(selector);
+            return result.Any() ? result.Concat(result.SelectManyRecursive(selector)) : result;
+        }
+
+        public static IEnumerable<T> SelectManyRecursive<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> selector, int maxDepth, int minDepth = 1)
+        {
+            minDepth = Math.Max(minDepth, 1);
+            maxDepth = Math.Max(maxDepth, minDepth);
+
+            return RecursiveSearch(source, selector, minDepth, maxDepth, 1);
+
+            static IEnumerable<T> RecursiveSearch(IEnumerable<T> source, Func<T, IEnumerable<T>> selector, int minDepth, int maxDepth, int depth)
             {
-                return result;
+                IEnumerable<T> result = source.SelectMany(selector);
+                return result.Any() && depth <= maxDepth ? depth < minDepth ? RecursiveSearch(result, selector, minDepth, maxDepth, depth + 1) : result.Concat(RecursiveSearch(result, selector, minDepth, maxDepth, depth + 1)) : result;
             }
-            return result.Concat(result.SelectManyRecursive(selector));
         }
 
         public static void AddIfNotNull<T>(this IList<T> source, T value)

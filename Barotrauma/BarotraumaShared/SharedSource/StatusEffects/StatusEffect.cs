@@ -122,7 +122,11 @@ namespace Barotrauma
             /// <summary>
             /// Last limb of the character the effect is being used on.
             /// </summary>
-            LastLimb = 1024
+            LastLimb = 1024,
+            /// <summary>
+            /// Same as NearbyCharacters and NearbyItems.
+            /// </summary>
+            NearbyEntities = NearbyCharacters | NearbyItems
         }
 
         /// <summary>
@@ -531,6 +535,15 @@ namespace Barotrauma
         /// </summary>
         public int TargetSlot = -1;
 
+        /// <summary>
+        /// Whether to search recursively when finding parent/child items.
+        /// </summary>
+        private readonly bool RecursiveSearch;
+        /// <summary>
+        /// Controls the depth at which the recursive search will take place. Requires <see cref="RecursiveSearch"/>.
+        /// </summary>
+        private readonly int MinSearchDepth, MaxSearchDepth;
+
         private readonly List<RelatedItem> requiredItems;
 
         public readonly ImmutableArray<(Identifier propertyName, object value)> PropertyEffects;
@@ -807,6 +820,9 @@ namespace Barotrauma
 
             TargetItemComponent = element.GetAttributeString("targetitemcomponent", string.Empty);
             TargetSlot = element.GetAttributeInt("targetslot", -1);
+            RecursiveSearch = element.GetAttributeBool("recursive", element.GetAttributeBool("recursivesearch", false));
+            MinSearchDepth = element.GetAttributeInt("minsearchdepth", 1);
+            MaxSearchDepth = element.GetAttributeInt("maxsearchdepth", int.MaxValue);
 
             Range = element.GetAttributeFloat("range", 0.0f);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
@@ -880,6 +896,8 @@ namespace Barotrauma
                     case "targetlimb":
                     case "delay":
                     case "interval":
+                    case "recursivesearch":
+                    case "recursive":
                         //aliases for fields we're already reading above, and which shouldn't be interpreted as values we're trying to set
                         break;
                     case "allowedafflictions":
@@ -903,7 +921,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"Error in StatusEffect ({parentDebugName}): sounds should be defined as child elements of the StatusEffect, not as attributes.", contentPackage: element.ContentPackage);
                         break;
                     case "range":
-                        if (!HasTargetType(TargetType.NearbyCharacters) && !HasTargetType(TargetType.NearbyItems))
+                        if (!HasTargetType(TargetType.NearbyEntities))
                         {
                             propertyAttributes.Add(attribute);
                         }
@@ -1265,6 +1283,40 @@ namespace Barotrauma
                 }
                 return false;
             }
+        }
+
+        public List<Item> GetContainedItems(Character character) => (TargetSlot > -1 ? character.Inventory.GetItemsAt(TargetSlot) : character.Inventory.AllItems).SelectMany(item => GetContainedItems(item, true)).ToList();
+
+        public List<Item> GetContainedItems(Item item, bool isChild = false)
+        {
+            List<Item> targets = new List<Item>();
+            IEnumerable<Item> children = isChild ? new List<Item> { item } : (TargetSlot > -1 ? item.OwnInventory.GetItemsAt(TargetSlot) : item.ContainedItems);
+
+            if (HasTargetType(TargetType.Contained))
+            {
+                targets.AddRange(children);
+                if (RecursiveSearch)
+                {
+                    targets.AddRange(children.SelectManyRecursive(item => item.ContainedItems, MinSearchDepth, MaxSearchDepth));
+                }
+            }
+            return targets;
+        }
+
+        public List<Item> GetParentItems(Item item)
+        {
+            List<Item> targets = new List<Item>();
+            Item parent = item.Container;
+
+            if (HasTargetType(TargetType.Parent) && parent != null)
+            {
+                targets.Add(parent);
+                if (RecursiveSearch)
+                {
+                    targets.AddRange(parent.SelectManyRecursive(item => item.Container, MaxSearchDepth, MinSearchDepth));
+                }
+            }
+            return targets;
         }
 
         public bool HasRequiredConditions(IReadOnlyList<ISerializableEntity> targets)

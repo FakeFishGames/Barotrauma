@@ -1279,8 +1279,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                    statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                 {
                     targets.Clear();
                     statusEffect.AddNearbyTargets(WorldPosition, targets);
