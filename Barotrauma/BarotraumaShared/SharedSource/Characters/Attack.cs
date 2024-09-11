@@ -588,7 +588,7 @@ namespace Barotrauma
                         effect.Apply(additionalEffectType, deltaTime, targetEntity, targetEntity as ISerializableEntity, worldPosition);
                     }
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     targets.Clear();
                     targets.AddRange(effect.GetContainedItems(attacker));
@@ -674,7 +674,7 @@ namespace Barotrauma
                     effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     targets.Clear();
                     targets.AddRange(effect.GetContainedItems(attacker));

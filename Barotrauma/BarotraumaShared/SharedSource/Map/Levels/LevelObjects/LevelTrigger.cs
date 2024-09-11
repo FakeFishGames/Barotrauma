@@ -662,7 +662,7 @@ namespace Barotrauma
                 if (triggerer is Character character)
                 {
                     effect.Apply(effect.type, deltaTime, triggerer, character, position);
-                    if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
+                    if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                     {
                         effect.Apply(effect.type, deltaTime, triggerer, effect.GetContainedItems(character).SelectMany(item => item.AllPropertyObjects).ToList(), position);
                     }

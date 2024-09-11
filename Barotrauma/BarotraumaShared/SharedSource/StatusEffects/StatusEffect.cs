@@ -124,29 +124,9 @@ namespace Barotrauma
             /// </summary>
             LastLimb = 1024,
             /// <summary>
-            /// The container of the container the item is inside (if any).
-            /// </summary>
-            GrandParent = 2048,
-            /// <summary>
-            /// The item(s) contained in the inventories of the item(s) contained in the inventory of the entity the StatusEffect is defined in.
-            /// </summary>
-            GrandChildren = 4096,
-            /// <summary>
             /// Same as NearbyCharacters and NearbyItems.
             /// </summary>
-            NearbyEntities = NearbyCharacters | NearbyItems,
-            /// <summary>
-            /// Same as Parent with RecursiveSearch.
-            /// </summary>
-            Parents = Parent | GrandParent,
-            /// <summary>
-            /// Same as Contained with RecursiveSearch.
-            /// </summary>
-            Descendants = Contained | GrandChildren,
-            /// <summary>
-            /// Same as This, Parents, and Descendants.
-            /// </summary>
-            Heirarchy = This | Parents | Descendants
+            NearbyEntities = NearbyCharacters | NearbyItems
         }
 
         /// <summary>
@@ -871,10 +851,6 @@ namespace Barotrauma
                 else
                 {
                     targetTypes |= targetType;
-                    if (targetType is TargetType.Parents or TargetType.Descendants or TargetType.Heirarchy)
-                    {
-                        RecursiveSearch = true;
-                    }
                 }
             }
             if (targetTypes == 0)
@@ -1318,25 +1294,13 @@ namespace Barotrauma
 
             if (HasTargetType(TargetType.Contained))
             {
-                if (ProcessChildren()) { return targets; }
-            }
-            if (HasTargetType(TargetType.GrandChildren))
-            {
-                children = children.SelectMany(item => item.ContainedItems);
-                if (ProcessChildren()) { return targets; }
-            }
-            return targets;
-
-            bool ProcessChildren()
-            {
                 targets.AddRange(children);
                 if (RecursiveSearch)
                 {
                     targets.AddRange(children.SelectManyRecursive(item => item.ContainedItems, MinSearchDepth, MaxSearchDepth));
-                    return true;
                 }
-                return false;
             }
+            return targets;
         }
 
         public List<Item> GetParentItems(Item item)
@@ -1346,25 +1310,13 @@ namespace Barotrauma
 
             if (HasTargetType(TargetType.Parent) && parent != null)
             {
-                if (ProcessParent()) { return targets; }
-            }
-            if (HasTargetType(TargetType.GrandParent) && parent?.Container != null)
-            {
-                parent = parent.Container;
-                if (ProcessParent()) { return targets; }
-            }
-            return targets;
-
-            bool ProcessParent()
-            {
                 targets.Add(parent);
                 if (RecursiveSearch)
                 {
                     targets.AddRange(parent.SelectManyRecursive(item => item.Container, MaxSearchDepth, MinSearchDepth));
-                    return true;
                 }
-                return false;
             }
+            return targets;
         }
 
         public bool HasRequiredConditions(IReadOnlyList<ISerializableEntity> targets)

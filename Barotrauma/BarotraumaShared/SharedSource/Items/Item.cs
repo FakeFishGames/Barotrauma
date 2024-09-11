@@ -1977,7 +1977,7 @@ namespace Barotrauma
 
             targets.Clear();
 
-            if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
+            if (effect.HasTargetType(StatusEffect.TargetType.Contained))
             {
                 foreach (Item containedItem in effect.GetContainedItems(this))
                 {
@@ -2051,7 +2051,7 @@ namespace Barotrauma
                 targets.Add(limb);
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.Parents))
+            if (effect.HasTargetType(StatusEffect.TargetType.Parent))
             {
                 targets.AddRange(effect.GetParentItems(this).SelectMany(item => item.AllPropertyObjects));
             }

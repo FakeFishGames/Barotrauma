@@ -671,7 +671,7 @@ namespace Barotrauma.Items.Components
                 {
                     targets.AddRange(item.AllPropertyObjects);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     targets.AddRange(effect.GetContainedItems(contained, true).SelectMany(item => item.AllPropertyObjects));
                 }
