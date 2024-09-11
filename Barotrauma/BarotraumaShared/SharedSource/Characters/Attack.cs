@@ -569,8 +569,7 @@ namespace Barotrauma
                 }
                 if (target is Entity targetEntity)
                 {
-                    if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                        effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                    if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                     {
                         targets.Clear();
                         effect.AddNearbyTargets(worldPosition, targets);
@@ -589,10 +588,10 @@ namespace Barotrauma
                         effect.Apply(additionalEffectType, deltaTime, targetEntity, targetEntity as ISerializableEntity, worldPosition);
                     }
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
                 {
                     targets.Clear();
-                    targets.AddRange(attacker.Inventory.AllItems);
+                    targets.AddRange(effect.GetContainedItems(attacker));
                     if (additionalEffectType != ActionType.OnEating)
                     {
                         effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
@@ -668,18 +667,17 @@ namespace Barotrauma
                     effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                 {
                     targets.Clear();
                     effect.AddNearbyTargets(worldPosition, targets);                
                     effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
                 {
                     targets.Clear();
-                    targets.AddRange(attacker.Inventory.AllItems);
+                    targets.AddRange(effect.GetContainedItems(attacker));
                     effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, attacker, targets);
                 }

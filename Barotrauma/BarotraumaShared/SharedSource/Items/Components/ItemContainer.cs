@@ -671,16 +671,15 @@ namespace Barotrauma.Items.Components
                 {
                     targets.AddRange(item.AllPropertyObjects);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                if (effect.HasTargetType(StatusEffect.TargetType.Descendants))
                 {
-                    targets.AddRange(contained.AllPropertyObjects);
+                    targets.AddRange(effect.GetContainedItems(contained, true).SelectMany(item => item.AllPropertyObjects));
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
                 {
                     targets.Add(character);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                if (effect.HasTargetType(StatusEffect.TargetType.NearbyEntities))
                 {
                     effect.AddNearbyTargets(item.WorldPosition, targets);
                 }

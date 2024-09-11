@@ -122,7 +122,31 @@ namespace Barotrauma
             /// <summary>
             /// Last limb of the character the effect is being used on.
             /// </summary>
-            LastLimb = 1024
+            LastLimb = 1024,
+            /// <summary>
+            /// The container of the container the item is inside (if any).
+            /// </summary>
+            GrandParent = 2048,
+            /// <summary>
+            /// The item(s) contained in the inventories of the item(s) contained in the inventory of the entity the StatusEffect is defined in.
+            /// </summary>
+            GrandChildren = 4096,
+            /// <summary>
+            /// Same as NearbyCharacters and NearbyItems.
+            /// </summary>
+            NearbyEntities = NearbyCharacters | NearbyItems,
+            /// <summary>
+            /// Same as Parent with RecursiveSearch.
+            /// </summary>
+            Parents = Parent | GrandParent,
+            /// <summary>
+            /// Same as Contained with RecursiveSearch.
+            /// </summary>
+            Descendants = Contained | GrandChildren,
+            /// <summary>
+            /// Same as This, Parents, and Descendants.
+            /// </summary>
+            Heirarchy = This | Parents | Descendants
         }
 
         /// <summary>
@@ -531,6 +555,15 @@ namespace Barotrauma
         /// </summary>
         public int TargetSlot = -1;
 
+        /// <summary>
+        /// Whether to search recursively when finding parent/child items.
+        /// </summary>
+        private readonly bool RecursiveSearch;
+        /// <summary>
+        /// Controls the depth at which the recursive search will take place. Requires <see cref="RecursiveSearch"/>.
+        /// </summary>
+        private readonly int MinSearchDepth, MaxSearchDepth;
+
         private readonly List<RelatedItem> requiredItems;
 
         public readonly ImmutableArray<(Identifier propertyName, object value)> PropertyEffects;
@@ -807,6 +840,9 @@ namespace Barotrauma
 
             TargetItemComponent = element.GetAttributeString("targetitemcomponent", string.Empty);
             TargetSlot = element.GetAttributeInt("targetslot", -1);
+            RecursiveSearch = element.GetAttributeBool("recursive", element.GetAttributeBool("recursivesearch", false));
+            MinSearchDepth = element.GetAttributeInt("minsearchdepth", 1);
+            MaxSearchDepth = element.GetAttributeInt("maxsearchdepth", int.MaxValue);
 
             Range = element.GetAttributeFloat("range", 0.0f);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
@@ -835,6 +871,10 @@ namespace Barotrauma
                 else
                 {
                     targetTypes |= targetType;
+                    if (targetType is TargetType.Parents or TargetType.Descendants or TargetType.Heirarchy)
+                    {
+                        RecursiveSearch = true;
+                    }
                 }
             }
             if (targetTypes == 0)
@@ -880,6 +920,8 @@ namespace Barotrauma
                     case "targetlimb":
                     case "delay":
                     case "interval":
+                    case "recursivesearch":
+                    case "recursive":
                         //aliases for fields we're already reading above, and which shouldn't be interpreted as values we're trying to set
                         break;
                     case "allowedafflictions":
@@ -903,7 +945,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"Error in StatusEffect ({parentDebugName}): sounds should be defined as child elements of the StatusEffect, not as attributes.", contentPackage: element.ContentPackage);
                         break;
                     case "range":
-                        if (!HasTargetType(TargetType.NearbyCharacters) && !HasTargetType(TargetType.NearbyItems))
+                        if (!HasTargetType(TargetType.NearbyEntities))
                         {
                             propertyAttributes.Add(attribute);
                         }
@@ -1261,6 +1303,64 @@ namespace Barotrauma
                 if (yDiff > Range) { return false; }
                 if (xDiff * xDiff + yDiff * yDiff < Range * Range)
                 {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public List<Item> GetContainedItems(Character character) => (TargetSlot > -1 ? character.Inventory.GetItemsAt(TargetSlot) : character.Inventory.AllItems).SelectMany(item => GetContainedItems(item, true)).ToList();
+
+        public List<Item> GetContainedItems(Item item, bool isChild = false)
+        {
+            List<Item> targets = new List<Item>();
+            IEnumerable<Item> children = isChild ? new List<Item> { item } : (TargetSlot > -1 ? item.OwnInventory.GetItemsAt(TargetSlot) : item.ContainedItems);
+
+            if (HasTargetType(TargetType.Contained))
+            {
+                if (ProcessChildren()) { return targets; }
+            }
+            if (HasTargetType(TargetType.GrandChildren))
+            {
+                children = children.SelectMany(item => item.ContainedItems);
+                if (ProcessChildren()) { return targets; }
+            }
+            return targets;
+
+            bool ProcessChildren()
+            {
+                targets.AddRange(children);
+                if (RecursiveSearch)
+                {
+                    targets.AddRange(children.SelectManyRecursive(item => item.ContainedItems, MinSearchDepth, MaxSearchDepth));
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public List<Item> GetParentItems(Item item)
+        {
+            List<Item> targets = new List<Item>();
+            Item parent = item.Container;
+
+            if (HasTargetType(TargetType.Parent) && parent != null)
+            {
+                if (ProcessParent()) { return targets; }
+            }
+            if (HasTargetType(TargetType.GrandParent) && parent?.Container != null)
+            {
+                parent = parent.Container;
+                if (ProcessParent()) { return targets; }
+            }
+            return targets;
+
+            bool ProcessParent()
+            {
+                targets.Add(parent);
+                if (RecursiveSearch)
+                {
+                    targets.AddRange(parent.SelectManyRecursive(item => item.Container, MaxSearchDepth, MinSearchDepth));
                     return true;
                 }
                 return false;
