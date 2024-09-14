@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            burstIndex = msg.ReadInt32();
+            BurstIndex = msg.ReadInt32();
         }
     }
 }

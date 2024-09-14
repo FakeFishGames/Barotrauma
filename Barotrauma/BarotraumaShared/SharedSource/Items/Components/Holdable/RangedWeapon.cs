@@ -188,8 +188,21 @@ namespace Barotrauma.Items.Components
         private bool tryingToCharge;
 
         private Character prevUser;
+
         private int burstIndex;
-        private bool ShouldForceFire => BurstMode == BurstType.Forced && burstIndex > 0;
+        private int BurstIndex
+        {
+            get => burstIndex;
+            set
+            {
+                burstIndex = value;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
+        }
+
+        private bool ShouldForceFire => BurstMode == BurstType.Forced && BurstIndex > 0;
 
         public RangedWeapon(Item item, ContentXElement element)
             : base(item, element)
@@ -233,15 +246,15 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                if (BurstMode == BurstType.Reset && !prevUser.HeldItems.Contains(Item) || !prevUser.IsKeyDown(InputType.Aim))
+                if (BurstMode == BurstType.Reset && (prevUser == null || !prevUser.HeldItems.Contains(Item) || !prevUser.IsKeyDown(InputType.Aim)))
                 {
-                    burstIndex = 0;
+                    BurstIndex = 0;
                 }
                 if (ShouldForceFire)
                 {
                     if (!HasRequiredContainedItems(prevUser, false))
                     {
-                        burstIndex = 0;
+                        BurstIndex = 0;
                     }
                     else if (Use(deltaTime, prevUser))
                     {
@@ -425,10 +438,10 @@ namespace Barotrauma.Items.Components
 
             if (BurstMode != BurstType.None)
             {
-                burstIndex++;
-                if (burstIndex >= BurstCount)
+                BurstIndex++;
+                if (BurstIndex >= BurstCount)
                 {
-                    burstIndex = 0;
+                    BurstIndex = 0;
                     SetReloadTimer(character, BurstReload, BurstReloadNoSkill);
                 }
             }
