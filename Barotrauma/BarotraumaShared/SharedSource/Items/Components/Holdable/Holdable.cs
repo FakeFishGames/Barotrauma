@@ -968,12 +968,12 @@ namespace Barotrauma.Items.Components
                 float noisePos = (float)Timing.TotalTimeUnpaused * SwingSpeed * deltaTime;
                 if (swingAmount != Vector2.Zero)
                 {
-                    swingPos.X = MathHelper.Lerp(-swingAmount.X, swingAmount.X, PerlinNoise.GetPerlin(noisePos, noisePos));
-                    swingPos.Y = MathHelper.Lerp(-swingAmount.Y, swingAmount.Y, PerlinNoise.GetPerlin(noisePos - 0.5f, noisePos - 0.5f));
+                    swingPos.X = MathHelper.Lerp(-swingAmount.X, swingAmount.X, PerlinNoise.GetPerlin(noisePos));
+                    swingPos.Y = MathHelper.Lerp(-swingAmount.Y, swingAmount.Y, PerlinNoise.GetPerlin(noisePos - 0.5f));
                 }
                 if (swingRotation != 0f)
                 {
-                    swingAngle = MathHelper.Lerp(-swingRotation, swingRotation, PerlinNoise.GetPerlin(noisePos, noisePos));
+                    swingAngle = MathHelper.Lerp(-swingRotation, swingRotation, PerlinNoise.GetPerlin(noisePos));
                 }
             }
         }
