@@ -72,18 +72,10 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize("None", IsPropertySaveable.No, description: "The type of burst the weapon performs.")]
-        public BurstType BurstMode
-        {
-            get;
-            set;
-        }
+        public BurstType BurstMode { get; set; }
 
         [Serialize(0, IsPropertySaveable.No, description: "The amount of shots fired in a single burst.")]
-        public int BurstCount
-        {
-            get;
-            set;
-        }
+        public int BurstCount { get; set; }
 
         private float burstReload;
         [Serialize(1f, IsPropertySaveable.No, description: "How long the user has to wait before they can fire the weapon again after a burst (in seconds).")]
@@ -94,11 +86,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize(1f, IsPropertySaveable.No, description: "Burst reload time at 0 skill level. Reload time scales with skill level up to the Weapons skill requirement.")]
-        public float BurstReloadNoSkill
-        {
-            get;
-            set;
-        }
+        public float BurstReloadNoSkill { get; set; }
 
         [Serialize(1, IsPropertySaveable.No, description: "How many projectiles the weapon launches when fired once.")]
         public int ProjectileCount
@@ -159,8 +147,11 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        private readonly IReadOnlySet<Identifier> suitableProjectiles;
+        private bool waitingForTriggerRelease;
+        [Serialize(false, IsPropertySaveable.No, "Does the user have to release the shoot key in order to fire again?")]
+        public bool RequireTriggerRelease { get; set; }
 
+        private readonly IReadOnlySet<Identifier> suitableProjectiles;
 
         private enum ChargingState
         {
@@ -180,7 +171,6 @@ namespace Barotrauma.Items.Components
                 return Vector2.Transform(flippedPos, bodyTransform) * item.Scale;
             }
         }
-
 
         public Projectile LastProjectile { get; private set; }
 
@@ -243,11 +233,19 @@ namespace Barotrauma.Items.Components
         {
             ReloadTimer -= deltaTime;
 
-            if (BurstMode == BurstType.Reset && (prevUser == null || !prevUser.HeldItems.Contains(Item) || !prevUser.IsKeyDown(InputType.Shoot)))
+            if ((BurstMode == BurstType.Reset || RequireTriggerRelease) && (prevUser == null || !prevUser.HeldItems.Contains(Item) || !prevUser.IsKeyDown(InputType.Shoot)))
             {
-                BurstIndex = 0;
-                ReloadTimer = MathF.Min(ReloadTimer, prevUser == null ? Reload : GetReloadTimer(prevUser, Reload, ReloadNoSkill));
+                if (BurstMode == BurstType.Reset)
+                {
+                    BurstIndex = 0;
+                    ReloadTimer = MathF.Min(ReloadTimer, prevUser == null ? Reload : GetReloadTimer(prevUser, Reload, ReloadNoSkill));
+                }
+                if (RequireTriggerRelease && BurstIndex == 0)
+                {
+                    waitingForTriggerRelease = false;
+                }
             }
+
             if (ReloadTimer <= 0f)
             {
                 ReloadTimer = 0f;
@@ -355,7 +353,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) { return false; }
-            if (ReloadTimer > 0) { return false; }
+            if (ReloadTimer > 0f || waitingForTriggerRelease) { return false; }
 
             if (!ShouldForceFire)
             {
@@ -445,8 +443,10 @@ namespace Barotrauma.Items.Components
                 {
                     BurstIndex = 0;
                     ReloadTimer = GetReloadTimer(character, BurstReload, BurstReloadNoSkill);
+                    if (RequireTriggerRelease) { waitingForTriggerRelease = true; }
                 }
             }
+            else if (RequireTriggerRelease) { waitingForTriggerRelease = true; }
 
             return true;
         }
