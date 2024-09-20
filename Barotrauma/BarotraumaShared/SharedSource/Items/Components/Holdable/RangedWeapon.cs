@@ -243,13 +243,14 @@ namespace Barotrauma.Items.Components
         {
             ReloadTimer -= deltaTime;
 
-            if (ReloadTimer < 0.0f)
+            if (BurstMode == BurstType.Reset && (prevUser == null || !prevUser.HeldItems.Contains(Item) || !prevUser.IsKeyDown(InputType.Shoot)))
             {
-                ReloadTimer = 0.0f;
-                if (BurstMode == BurstType.Reset && (prevUser == null || !prevUser.HeldItems.Contains(Item) || !prevUser.IsKeyDown(InputType.Aim)))
-                {
-                    BurstIndex = 0;
-                }
+                BurstIndex = 0;
+                ReloadTimer = MathF.Min(ReloadTimer, prevUser == null ? Reload : GetReloadTimer(prevUser, Reload, ReloadNoSkill));
+            }
+            if (ReloadTimer <= 0f)
+            {
+                ReloadTimer = 0f;
                 if (ShouldForceFire)
                 {
                     if (!HasRequiredContainedItems(prevUser, false))
@@ -327,7 +328,7 @@ namespace Barotrauma.Items.Components
             return reducedPenaltyMultiplier;
         }
 
-        private void SetReloadTimer(Character character, float skilledReload, float unskilledReload)
+        private float GetReloadTimer(Character character, float skilledReload, float unskilledReload)
         {
             float newReload = skilledReload;
             float weaponSkill = character.GetSkillLevel("weapons");
@@ -345,8 +346,9 @@ namespace Barotrauma.Items.Components
                 newReload *= Math.Max(1f, ApplyDualWieldPenaltyReduction(character, DualWieldReloadTimePenaltyMultiplier, 1f));
             }
 
-            ReloadTimer = newReload / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
-            ReloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.FiringRateMultiplier);
+            newReload /= 1f + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f;
+            newReload /= 1f + item.GetQualityModifier(Quality.StatType.FiringRateMultiplier);
+            return newReload;
         }
 
         private readonly List<Body> ignoredBodies = new List<Body>();
@@ -364,7 +366,7 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
-            SetReloadTimer(character, Reload, ReloadNoSkill);
+            ReloadTimer = GetReloadTimer(character, Reload, ReloadNoSkill);
             currentChargeTime = 0f;
 
             var abilityRangedWeapon = new AbilityRangedWeapon(item);
@@ -442,7 +444,7 @@ namespace Barotrauma.Items.Components
                 if (BurstIndex >= BurstCount)
                 {
                     BurstIndex = 0;
-                    SetReloadTimer(character, BurstReload, BurstReloadNoSkill);
+                    ReloadTimer = GetReloadTimer(character, BurstReload, BurstReloadNoSkill);
                 }
             }
 
