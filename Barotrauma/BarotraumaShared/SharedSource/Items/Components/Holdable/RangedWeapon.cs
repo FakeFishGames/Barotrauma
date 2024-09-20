@@ -71,8 +71,17 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private BurstType burstMode;
         [Serialize("None", IsPropertySaveable.No, description: "The type of burst the weapon performs.")]
-        public BurstType BurstMode { get; set; }
+        public BurstType BurstMode
+        {
+            get => burstMode;
+            set
+            {
+                burstMode = value;
+                BurstIndex = 0;
+            }
+        }
 
         [Serialize(0, IsPropertySaveable.No, description: "The amount of shots fired in a single burst.")]
         public int BurstCount { get; set; }
@@ -266,7 +275,7 @@ namespace Barotrauma.Items.Components
                         return;
                     }
                 }
-                if (MaxChargeTime <= 0f)
+                if (MaxChargeTime <= 0f && !waitingForTriggerRelease)
                 {
                     IsActive = false;
                     return;
