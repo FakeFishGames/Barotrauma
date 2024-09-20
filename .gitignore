@@ -55,5 +55,9 @@ Barotrauma/BarotraumaShared/Content/*
 Barotrauma/**/GameAnalyticsKeys.cs
 .github/ISSUE_TEMPLATE/release-checklist.md
 
+# Local mods
+Barotrauma/BarotraumaShared/LocalMods/*
+!Barotrauma/BarotraumaShared/LocalMods/info.txt
+
 #Rider
 *.DotSettings.user
