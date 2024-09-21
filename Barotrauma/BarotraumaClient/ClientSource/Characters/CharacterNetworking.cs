@@ -220,7 +220,16 @@ namespace Barotrauma
                 keys[(int)InputType.Ragdoll].Held = ragdollInput;
                 keys[(int)InputType.Ragdoll].SetState(false, ragdollInput);
 
-                facingRight = msg.ReadBoolean();
+            }
+
+            facingRight = msg.ReadBoolean();
+
+            if (AnimController.IsFlipped == facingRight)
+            {
+                if((AnimController is HumanoidAnimController && !CanMove) || AnimController is FishAnimController)
+                {
+                    TryFlipCharacter();
+                }
             }
 
             bool entitySelected = msg.ReadBoolean();
