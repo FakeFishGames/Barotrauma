@@ -2111,11 +2111,7 @@ namespace Barotrauma
                 ((!IsClimbing && AnimController.OnGround) || (IsClimbing && IsKeyDown(InputType.Aim))) && 
                 !AnimController.InWater)
             {
-                if (dontFollowCursor)
-                {
-                    AnimController.TargetDir = Direction.Right;
-                }
-                else
+                if (AnimController is not FishAnimController)
                 {
                     if (CursorPosition.X < AnimController.Collider.Position.X - cursorFollowMargin)
                     {
@@ -2125,6 +2121,10 @@ namespace Barotrauma
                     {
                         AnimController.TargetDir = Direction.Right;
                     }
+                }
+                if (AnimController is HumanoidAnimController && dontFollowCursor) // For character editor
+                {
+                    AnimController.TargetDir = Direction.Right;
                 }
             }
 
@@ -5807,6 +5807,25 @@ namespace Barotrauma
         {
             AnimController.StopClimbing();
             ReleaseSecondaryItem();
+        }
+
+        public void TryFlipCharacter()
+        {
+            if (AnimController is FishAnimController fishAnimController)
+            {
+                if (fishAnimController.CurrentFishAnimation.Flip)
+                {
+                    fishAnimController.Flip();
+                }
+            }
+            else
+            {
+                AnimController.TargetDir = (AnimController.TargetDir == Direction.Left) ? Direction.Right : Direction.Left;
+                if (!CanMove)
+                {
+                    AnimController.Flip();
+                }
+            }
         }
     }
 
