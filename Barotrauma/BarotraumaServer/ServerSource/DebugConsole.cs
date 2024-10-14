@@ -1609,6 +1609,7 @@ namespace Barotrauma
 #endif
 
             AssignOnClientRequestExecute("spawn|spawncharacter", (Client client, Vector2 cursorPos, string[] args) => SpawnCharacter(args, cursorPos));
+            AssignOnClientRequestExecute("spawnnpc", (Client client, Vector2 cursorPos, string[] args) => SpawnCharacter(args, cursorPos, true));
 
             AssignOnClientRequestExecute(
                 "banaddress|banip",
