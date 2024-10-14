@@ -498,14 +498,8 @@ namespace Barotrauma
                 NewMessage(GameMain.Server.ServerSettings.StartWhenClientsReady ? "Enabled starting the round automatically when clients are ready." : "Disabled starting the round automatically when clients are ready.", Color.White);
             });
 
-            AssignOnExecute("spawn|spawncharacter", (string[] args) =>
-            {
-                SpawnCharacter(args, Vector2.Zero, out string errorMsg);
-                if (!string.IsNullOrWhiteSpace(errorMsg))
-                {
-                    ThrowError(errorMsg);
-                }
-            });
+            AssignOnExecute("spawn|spawncharacter", args => SpawnCharacter(args, Vector2.Zero));
+            AssignOnExecute("spawnnpc", args => SpawnCharacter(args, Vector2.Zero, true));
 
             AssignOnExecute("giveperm", (string[] args) =>
             {
@@ -1614,17 +1608,7 @@ namespace Barotrauma
             });
 #endif
 
-            AssignOnClientRequestExecute(
-                "spawn|spawncharacter",
-                (Client client, Vector2 cursorPos, string[] args) =>
-                {
-                    SpawnCharacter(args, cursorPos, out string errorMsg);
-                    if (!string.IsNullOrWhiteSpace(errorMsg))
-                    {
-                        ThrowError(errorMsg);
-                    }
-                }
-            );
+            AssignOnClientRequestExecute("spawn|spawncharacter", (Client client, Vector2 cursorPos, string[] args) => SpawnCharacter(args, cursorPos));
 
             AssignOnClientRequestExecute(
                 "banaddress|banip",
