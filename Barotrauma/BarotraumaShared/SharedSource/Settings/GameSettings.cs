@@ -195,8 +195,7 @@ namespace Barotrauma
                         Specularity = true,
                         ChromaticAberration = true,
                         ParticleLimit = 1500,
-                        LosMode = LosMode.Transparent,
-                        ScreenShake = 1.0f
+                        LosMode = LosMode.Transparent
                     };
                     gfxSettings.RadialDistortion = true;
                     gfxSettings.CompressTextures = true;
@@ -233,7 +232,6 @@ namespace Barotrauma
                 public int VisibleLightLimit;
                 public float TextScale;
                 public bool RadialDistortion;
-                public float ScreenShake;
             }
 
             [StructSerialization.Skip]
