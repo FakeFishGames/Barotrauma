@@ -268,6 +268,15 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
+            commands.Add(new Command("spawnnpc", "spawnnpc [npcsetidentifier] [npcidentifier] [near/inside/outside/cursor] [team (0-3)] [add to crew (true/false)]: Spawns an NPC at a random spawnpoint. (Use the third parameter to select a specific set of spawnpoints.)", null, () => new string[][]
+            {
+                NPCSet.Sets.Select(p => p.Identifier.Value).OrderBy(s => s).ToArray(), // NPC Sets
+                NPCSet.Sets.SelectMany(set => set.Humans).Select(p => p.Identifier.Value).OrderBy(s => s).ToArray(), // NPCs
+                new string[] { "near", "inside", "outside", "cursor" },
+                new string[] { "0", "1", "2", "3" },
+                new string[] { "true", "false" }
+            }, isCheat: true));
+
             commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
@@ -1629,6 +1638,14 @@ namespace Barotrauma
                 }
             }, null, isCheat: true));
 
+            commands.Add(new Command("killall", "killall: Immediately kills all characters in the level.", args =>
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    c.Kill(CauseOfDeathType.Unknown, null);
+                }
+            }, null, isCheat: true));
+
             commands.Add(new Command("despawnnow", "despawnnow [character]: Immediately despawns the specified dead character. If the character argument is omitted, all dead characters are despawned.", (string[] args) =>
             {
                 if (args.Length == 0)
@@ -2464,119 +2481,137 @@ namespace Barotrauma
             }
         }
 
-        private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg)
+        private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, bool npc = false)
         {
-            errorMsg = "";
-            if (args.Length == 0) { return; }
+            if (args.Length < (npc ? 2 : 1) || string.IsNullOrWhiteSpace(args[0]) || npc && string.IsNullOrWhiteSpace(args[1])) { return; }
 
-            Character spawnedCharacter = null;
-
-            Vector2 spawnPosition = Vector2.Zero;
-            WayPoint spawnPoint = null;
-
-            string characterLowerCase = args[0].ToLowerInvariant();
             JobPrefab job = null;
-            if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
+            bool isHuman = true;
+            if (!npc)
             {
-                job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(characterLowerCase, StringComparison.OrdinalIgnoreCase));
+                string characterLowerCase = args[0].ToLowerInvariant();
+                job = JobPrefab.Prefabs.ContainsKey(characterLowerCase) ? JobPrefab.Prefabs[characterLowerCase] : JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(characterLowerCase, StringComparison.OrdinalIgnoreCase));
+                isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             }
-            else
+
+            ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType teamType, out bool addToCrew);
+
+            if (npc)
             {
-                job = JobPrefab.Prefabs[characterLowerCase];
-            }
-            bool isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
-            bool addToCrew = false;
-            if (args.Length > 1)
-            {
-                switch (args[1].ToLowerInvariant())
+                if (NPCSet.Get(args[0].ToIdentifier(), args[1].ToIdentifier()) is { } humanPrefab)
                 {
-                    case "inside":
-                        spawnPoint = WayPoint.GetRandom(SpawnType.Human, job, Submarine.MainSub);
-                        break;
-                    case "outside":
-                        spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
-                        break;
-                    case "near":
-                    case "close":
-                        float closestDist = -1.0f;
-                        foreach (WayPoint wp in WayPoint.WayPointList)
-                        {
-                            if (wp.Submarine != null) continue;
-
-                            //don't spawn inside hulls
-                            if (Hull.FindHull(wp.WorldPosition, null) != null) continue;
-
-                            float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
-
-                            if (closestDist < 0.0f || dist < closestDist)
-                            {
-                                spawnPoint = wp;
-                                closestDist = dist;
-                            }
-                        }
-                        break;
-                    case "cursor":
-                        spawnPosition = cursorWorldPos;
-                        break;
-                    default:
-                        spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
-                        break;
-                }
-                addToCrew = 
-                    args.Length > 3 ?
-                    args[3].Equals("true", StringComparison.OrdinalIgnoreCase) :
-                    isHuman;
-            }
-            else
-            {
-                spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
-            }
-
-            if (string.IsNullOrWhiteSpace(args[0])) { return; }
-            CharacterTeamType teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
-            if (args.Length > 2)
-            {
-                try
-                {
-                    teamType = (CharacterTeamType)int.Parse(args[2]);
-                }
-                catch
-                {
-                    ThrowError($"\"{args[2]}\" is not a valid team id.");
-                }
-            }
-
-            if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
-
-            if (isHuman)
-            {
-                var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
-                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
-                spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
-
-                spawnedCharacter.GiveJobItems(spawnPoint);
-                spawnedCharacter.GiveIdCardTags(spawnPoint);
-                spawnedCharacter.Info.StartItemsGiven = true;
-            }
-            else
-            {
-                CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier());
-                if (prefab != null)
-                {
-                    CharacterInfo characterInfo = null;
-                    if (prefab.HasCharacterInfo)
+                    Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
                     {
-                        characterInfo = new CharacterInfo(prefab.Identifier);
-                    }
-                    spawnedCharacter = Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8), characterInfo);
+                        newCharacter.HumanPrefab = humanPrefab;
+                        humanPrefab.GiveItems(newCharacter, newCharacter.Submarine, spawnPoint);
+                        humanPrefab.InitializeCharacter(newCharacter);
+#if SERVER
+                        newCharacter.LoadTalents();
+                        GameMain.NetworkMember.CreateEntityEvent(newCharacter, new Character.UpdateTalentsEventData());
+#endif
+                        PostSpawnHuman(newCharacter);
+                    });
                 }
             }
-            if (addToCrew && GameMain.GameSession != null)
+            else if (isHuman)
             {
-                spawnedCharacter.TeamID = teamType;
-#if CLIENT
-                GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
-#endif
+                int variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
+                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
+                Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, characterInfo, onSpawn: newCharacter =>
+                {
+                    newCharacter.GiveJobItems(spawnPoint);
+                    newCharacter.GiveIdCardTags(spawnPoint);
+                    newCharacter.Info.StartItemsGiven = true;
+                    PostSpawnHuman(newCharacter);
+                });
+            }
+            else if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) is { } prefab)
+            {
+                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(prefab.Identifier) : null);
+            }
+
+            void PostSpawnHuman(Character newCharacter)
+            {
+                newCharacter.TeamID = teamType;
+                if (addToCrew)
+                {
+                    GameMain.GameSession?.CrewManager.AddCharacter(newCharacter);
+                }
+            }
+
+            void ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType teamType, out bool addToCrew)
+            {
+                spawnPosition = Vector2.Zero;
+                spawnPoint = null;
+
+                int argIndex = npc ? 2 : 1;
+                if (args.Length > argIndex)
+                {
+                    switch (args[argIndex].ToLowerInvariant())
+                    {
+                        case "inside":
+                            spawnPoint = WayPoint.GetRandom(SpawnType.Human, job, Submarine.MainSub);
+                            break;
+                        case "outside":
+                            spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
+                            break;
+                        case "near":
+                        case "close":
+                            float closestDist = -1f;
+                            foreach (WayPoint wp in WayPoint.WayPointList)
+                            {
+                                if (wp.Submarine != null) { continue; }
+
+                                // Don't spawn inside hulls
+                                if (Hull.FindHull(wp.WorldPosition, null) != null) { continue; }
+
+                                float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
+
+                                if (closestDist < 0f || dist < closestDist)
+                                {
+                                    spawnPoint = wp;
+                                    closestDist = dist;
+                                }
+                            }
+                            break;
+                        case "cursor":
+                            spawnPosition = cursorWorldPos;
+                            break;
+                        default:
+                            spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
+                            break;
+                    }
+                }
+                else
+                {
+                    spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
+                }
+
+                argIndex++;
+                if (args.Length > argIndex)
+                {
+                    if (int.TryParse(args[argIndex], out int teamID) && teamID is >= 0 and <= 3)
+                    {
+                        teamType = (CharacterTeamType)teamID;
+                    }
+                    else
+                    {
+                        ThrowError($"\"{args[argIndex]}\" is not a valid team id.");
+                        teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+                    }
+                }
+                else
+                {
+                    teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+                }
+
+                argIndex++;
+                addToCrew = args.Length > argIndex && bool.TryParse(args[argIndex], out bool result) ? result : isHuman;
+
+                if (spawnPoint != null)
+                {
+                    spawnPosition = spawnPoint.WorldPosition;
+                }
             }
         }
 
