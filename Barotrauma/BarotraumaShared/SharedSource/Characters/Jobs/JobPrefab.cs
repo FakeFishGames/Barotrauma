@@ -59,10 +59,11 @@ namespace Barotrauma
         public override void Dispose() { }
     }
 
-    internal class JobVariant
+    internal partial class JobVariant
     {
         public JobPrefab Prefab;
         public int Variant;
+
         public JobVariant(JobPrefab prefab, int variant)
         {
             Prefab = prefab;
