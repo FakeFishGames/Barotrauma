@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
 
         private Vector4 padding;
 
-        [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
+        [Editable(DecimalCount = 0, VectorComponentLabels = new string[] { "inputtype.left", "inputtype.up", "inputtype.right", "inputtype.down" }), Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels.")]
         public Vector4 Padding
         {
             get { return padding; }
@@ -38,6 +38,14 @@ namespace Barotrauma.Items.Components
                 padding = value;
                 TextBlock.Padding = value * item.Scale; 
             }
+        }
+
+        private Alignment alignment;
+        [Editable, Serialize(Alignment.Center, IsPropertySaveable.Yes, description: "The alignment of the label's text.")]
+        public Alignment TextAlignment
+        {
+            get => alignment;
+            set => alignment = textBlock.TextAlignment = value;
         }
 
         private string text;
@@ -59,6 +67,16 @@ namespace Barotrauma.Items.Components
                 UpdateScrollingText();
             }
         }
+
+        /*
+        private GUIFont font;
+        [Editable, Serialize("UnscaledSmallFont", IsPropertySaveable.Yes, description: "The label's font.")]
+        public GUIFont Font
+        {
+            get => font;
+            set => font = textBlock.Font = value;
+        }
+        */
 
         private bool ignoreLocalization;
 
@@ -118,7 +136,6 @@ namespace Barotrauma.Items.Components
                 scrollable = value;
                 IsActive = value || parseSpecialTextTagOnStart;
                 TextBlock.Wrap = !scrollable;
-                TextBlock.TextAlignment = scrollable ? Alignment.CenterLeft : Alignment.Center;
             }
         }
 
@@ -164,12 +181,14 @@ namespace Barotrauma.Items.Components
                 needsScrolling = true;
                 float spaceWidth = textBlock.Font.MeasureChar(' ').X * TextBlock.TextScale;
                 scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText.Value;
+                TextBlock.TextAlignment = Alignment.CenterLeft;
             }
             else
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
                 TextBlock.Text = scrollingText = DisplayText.Value;
+                TextBlock.TextAlignment = alignment;
                 scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
@@ -215,7 +234,7 @@ namespace Barotrauma.Items.Components
         private void RecreateTextBlock()
         {
             textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
-                textColor: textColor, font: GUIStyle.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: !scrollable, style: null)
+                textColor: textColor, font: /*font*/ GUIStyle.UnscaledSmallFont, textAlignment: needsScrolling ? Alignment.CenterLeft : alignment, wrap: !scrollable, style: null)
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,
