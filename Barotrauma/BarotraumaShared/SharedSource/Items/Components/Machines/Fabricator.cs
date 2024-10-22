@@ -319,7 +319,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                hasPower = Voltage >= MinVoltage;
+                hasPower = HasPower;
 
                 if (!hasPower)
                 {

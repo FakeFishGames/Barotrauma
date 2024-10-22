@@ -19,7 +19,8 @@ namespace Barotrauma.Networking
         Order = 8,
         ServerLog = 9,
         ServerMessageBox = 10,
-        ServerMessageBoxInGame = 11
+        ServerMessageBoxInGame = 11,
+        Team = 12,
     }
 
     public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
@@ -50,7 +51,12 @@ namespace Barotrauma.Networking
             new Color(64, 240, 89),     //private
             new Color(255, 255, 255),   //console
             new Color(255, 255, 255),   //messagebox
-            new Color(255, 128, 0)      //order
+            new Color(255, 128, 0),      //order
+            new Color(),                    // ServerLog
+            new Color(),                    // ServerMessageBox
+            new Color(),                    // ServerMessageBoxInGame
+            //new Color(128, 0, 255),     // team
+            new Color(86, 91, 205), // team
         };
 
         public readonly string Text;

@@ -1,4 +1,4 @@
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     /// <summary>
     /// Makes the event jump to a <see cref="Label"/> somewhere else in the event.
@@ -10,6 +10,9 @@ namespace Barotrauma
 
         [Serialize(-1, IsPropertySaveable.Yes, description: "How many times can this GoTo action be repeated? Can be used to make some parts of an event repeat a limited number of times. If negative or zero, there's no limit.")]
         public int MaxTimes { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "By default, jumping to another part in the event closes the active conversation prompt. Use this if if you want to keep it open instead.")]
+        public bool EndConversation { get; set; }
 
         private int counter;
 

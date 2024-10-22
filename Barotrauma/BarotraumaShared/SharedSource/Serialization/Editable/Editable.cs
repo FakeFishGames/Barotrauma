@@ -1,11 +1,14 @@
-using System;
+﻿using System;
 
 namespace Barotrauma;
 
 [AttributeUsage(AttributeTargets.Property)]
 class Editable : Attribute
 {
-    public int MaxLength;
+    /// <summary>
+    /// Maximum length of the value if the value is a string. Only has an effect is larger than 0.
+    /// </summary>
+    public int MaxLength = -1;
     public int DecimalCount = 1;
 
     public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
@@ -34,9 +37,8 @@ class Editable : Attribute
     /// </summary>
     public bool ReadOnly;
 
-    public Editable(int maxLength = 20)
+    public Editable()
     {
-        MaxLength = maxLength;
     }
 
     public Editable(int minValue, int maxValue)

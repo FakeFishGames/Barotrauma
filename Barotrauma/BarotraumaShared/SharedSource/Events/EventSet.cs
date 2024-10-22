@@ -73,7 +73,7 @@ namespace Barotrauma
 
         public static void AddSetEventPrefabsToList(List<EventPrefab> list, EventSet set)
         {
-            list.AddRange(set.EventPrefabs.SelectMany(ep => ep.EventPrefabs));
+            list.AddRange(set.EventPrefabs.SelectMany(ep => ep.EventPrefabs).Where(ep => !list.Contains(ep)));
             foreach (var childSet in set.ChildSets) { AddSetEventPrefabsToList(list, childSet); }
         }
 
@@ -110,6 +110,11 @@ namespace Barotrauma
         /// If set, this layer must be present somewhere in the level.
         /// </summary>
         public readonly Identifier RequiredLayer;
+
+        /// <summary>
+        /// If set, this spawn point tag must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredSpawnPointTag;
 
         /// <summary>
         /// If set, the event set can only be chosen in locations of this type.
@@ -207,7 +212,14 @@ namespace Barotrauma
         /// monsters in addition to the vanilla monsters spawned by vanilla sets, without you having to add your custom monsters to every single vanilla set.
         /// </summary>
         public readonly bool Additive;
-            
+
+        /// <summary>
+        /// This will force the game to always choose this event set if it's suitable for the current level. 
+        /// If the set is additive, it is guaranteed to get chosen regardless of what other sets get selected.
+        /// If the set is NOT additive, the game will choose the first available non-additive set that is configured to be always selected.
+        /// </summary>
+        public readonly bool SelectAlways;
+
         /// <summary>
         /// The commonness of the event set (i.e. how likely it is for this specific set to be chosen).
         /// </summary>
@@ -349,7 +361,8 @@ namespace Barotrauma
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
 
-            Additive = element.GetAttributeBool("additive", false);
+            Additive = element.GetAttributeBool(nameof(Additive), false);
+            SelectAlways = element.GetAttributeBool(nameof(SelectAlways), false);
 
             string levelTypeStr = element.GetAttributeString("leveltype", parentSet?.LevelType.ToString() ?? "LocationConnection");
             if (!Enum.TryParse(levelTypeStr, true, out LevelType))
@@ -392,6 +405,7 @@ namespace Barotrauma
             CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), parentSet?.CampaignTutorialOnly ?? false);
 
             RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
+            RequiredSpawnPointTag = element.GetAttributeIdentifier(nameof(RequiredSpawnPointTag), Identifier.Empty);
 
             ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
             ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);

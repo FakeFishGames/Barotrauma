@@ -20,7 +20,8 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
-            return Screen.Selected == GameMain.SubEditorScreen || GameMain.DebugDraw;
+            if (Screen.Selected != GameMain.SubEditorScreen && !GameMain.DebugDraw) { return false; }
+            return base.IsVisible(worldView);
         }
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)

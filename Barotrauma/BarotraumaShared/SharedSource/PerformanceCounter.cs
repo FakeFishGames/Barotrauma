@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -10,10 +11,18 @@ namespace Barotrauma
 
         public double AverageFramesPerSecond { get; private set; }
         public double CurrentFramesPerSecond { get; private set; }
-        
+
+        public double AverageFramesPerSecondInPastMinute { get; private set; }
+
         public const int MaximumSamples = 10;
 
         private readonly Queue<double> sampleBuffer = new Queue<double>();
+
+        private readonly Queue<double> averageFramesPerSecondBuffer = new Queue<double>();
+
+        private readonly Stopwatch timer = new Stopwatch();
+        private long lastSecondMark = 0;
+        private long lastMinuteMark = 0;
 
         public class TickInfo
         {
@@ -29,6 +38,7 @@ namespace Barotrauma
 #endif
 
         private readonly List<string> tempSavedIdentifiers = new List<string>();
+
         public IReadOnlyList<string> GetSavedIdentifiers
         {
             get 
@@ -40,6 +50,11 @@ namespace Barotrauma
                 }
                 return tempSavedIdentifiers;
             }
+        }
+
+        public PerformanceCounter()
+        {
+            timer.Start();
         }
 
         public void AddElapsedTicks(string identifier, long ticks)
@@ -74,15 +89,35 @@ namespace Barotrauma
             CurrentFramesPerSecond = 1.0 / deltaTime;
 
             sampleBuffer.Enqueue(CurrentFramesPerSecond);
-
             if (sampleBuffer.Count > MaximumSamples)
             {
                 sampleBuffer.Dequeue();
-                AverageFramesPerSecond = sampleBuffer.Average(i => i);
+                AverageFramesPerSecond = sampleBuffer.Average();
             }
             else
             {
                 AverageFramesPerSecond = CurrentFramesPerSecond;
+            }
+
+            long currentTime = timer.ElapsedMilliseconds;
+            long currentSecond = currentTime / 1000;
+
+
+            if (currentSecond > lastSecondMark)
+            {
+                averageFramesPerSecondBuffer.Enqueue(AverageFramesPerSecond);
+                lastSecondMark = currentSecond;
+            }
+
+            if (currentTime - lastMinuteMark >= 60 * 1000)
+            {
+                //the FPS could be even higher than this on a high-end monitor, but let's restrict it to 144 to reduce the number of distinct event IDs
+                const int MaxFPS = 144;
+                AverageFramesPerSecondInPastMinute = averageFramesPerSecondBuffer.Average();
+                GameAnalyticsManager.AddDesignEvent($"FPS:{MathHelper.Clamp((int)AverageFramesPerSecondInPastMinute, 0, MaxFPS)}");
+                GameAnalyticsManager.AddDesignEvent($"FPSLowest:{MathHelper.Clamp((int)averageFramesPerSecondBuffer.Min(), 0, MaxFPS)}");
+                averageFramesPerSecondBuffer.Clear();
+                lastMinuteMark = currentTime;
             }
 
             return true;

@@ -71,7 +71,7 @@ namespace Barotrauma
             this.targetContainer = targetContainer;
         }
 
-        protected override bool CheckObjectiveSpecific() => IsCompleted;
+        protected override bool CheckObjectiveState() => IsCompleted;
 
         protected override void Act(float deltaTime)
         {

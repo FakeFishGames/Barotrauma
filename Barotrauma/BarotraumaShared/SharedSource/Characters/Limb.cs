@@ -258,10 +258,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!mouthPos.HasValue)
-                {
-                    mouthPos = Params.MouthPos;
-                }
+                mouthPos ??= Params.MouthPos;
                 return mouthPos.Value;
             }
             set
@@ -366,7 +363,7 @@ namespace Barotrauma
                 if (isSevered)
                 {
                     ragdoll.SubtractMass(this);
-                    if (type == LimbType.Head)
+                    if (type == LimbType.Head && character.Params.Health.DieFromBeheading)
                     {
                         character.Kill(CauseOfDeathType.Unknown, null);
                     }
@@ -386,10 +383,18 @@ namespace Barotrauma
 
         public Submarine Submarine => character?.Submarine;
 
+        private bool _hidden;
         public bool Hidden
         {
-            get => Params.Hide;
-            set => Params.Hide = value;
+            get => _hidden || Params.Hide;
+            set => _hidden = value;
+        }
+        
+        // Just a wrapper for Hidden, but both can be used via status effects, so it's not safe to remove it.
+        public bool Hide
+        {
+            get => Hidden;
+            set => Hidden = value;
         }
 
         public Vector2 WorldPosition
@@ -636,7 +641,7 @@ namespace Barotrauma
                 //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
                 bool canBeSevered = Params.CanBeSeveredAlive;
-                if (character.AnimController.CanWalk)
+                if (character.AnimController.CanWalk && !character.Params.Health.AllowSeveringLegs)
                 {
                     switch (type)
                     {
@@ -671,7 +676,7 @@ namespace Barotrauma
             this.character = character;
             this.Params = limbParams;
             dir = Direction.Right;
-            body = new PhysicsBody(limbParams);
+            body = new PhysicsBody(limbParams, findNewContacts: false);
             type = limbParams.Type;
             IgnoreCollisions = limbParams.IgnoreCollisions;
             body.UserData = this;
@@ -937,7 +942,7 @@ namespace Barotrauma
                     severedFadeOutTimer = SeveredFadeOutTime;
                 }
             }
-            else if (!IsDead)
+            else if (!IsDead && (character.IsPlayer || character.AIState is not AIState.PlayDead))
             {
                 if (Params.BlinkFrequency > 0)
                 {
@@ -989,6 +994,7 @@ namespace Barotrauma
         public void ReEnable()
         {
             if (!temporarilyDisabled) { return; }
+            temporarilyDisabled = false;
             Hidden = false;
             Disabled = false;
             IgnoreCollisions = originalIgnoreCollisions;
@@ -1008,6 +1014,8 @@ namespace Barotrauma
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
             attack.UpdateAttackTimer(deltaTime, character);
+            attack.DamageMultiplier = 1.0f + character.GetStatValue(attack.Ranged ? StatTypes.NaturalRangedAttackMultiplier : StatTypes.NaturalMeleeAttackMultiplier);
+            
             if (attack.Blink)
             {
                 if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Any())
@@ -1434,6 +1442,7 @@ namespace Barotrauma
 
         public void Remove()
         {
+            ragdoll.SubtractMass(this);
             body?.Remove();
             body = null;
             if (pullJoint != null)

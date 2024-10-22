@@ -214,10 +214,10 @@ namespace Barotrauma
                         PropertyInfo.SetValue(parentObject, new RawLString(value));
                         break;
                     case "stringarray":
-                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
+                        PropertyInfo.SetValue(parentObject, ParseStringArray(value));
                         break;
                     case "identifierarray":
-                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray(value));
+                        PropertyInfo.SetValue(parentObject, ParseIdentifierArray(value));
                         break;
                 }
             }
@@ -227,6 +227,17 @@ namespace Barotrauma
                 return false;
             }
             return true;
+        }
+
+
+        private static string[] ParseStringArray(string stringArrayValues)
+        {
+            return string.IsNullOrEmpty(stringArrayValues) ? Array.Empty<string>() : stringArrayValues.Split(';');
+        }
+
+        private static Identifier[] ParseIdentifierArray(string stringArrayValues)
+        {
+            return ParseStringArray(stringArrayValues).ToIdentifiers();
         }
 
         public bool TrySetValue(object parentObject, object value)
@@ -298,10 +309,10 @@ namespace Barotrauma
                                 PropertyInfo.SetValue(parentObject, new RawLString((string)value));
                                 return true;
                             case "stringarray":
-                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
+                                PropertyInfo.SetValue(parentObject, ParseStringArray((string)value));
                                 return true;
                             case "identifierarray":
-                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray((string)value));
+                                PropertyInfo.SetValue(parentObject, ParseIdentifierArray((string)value));
                                 return true;
                             default:
                                 DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
@@ -1082,7 +1093,7 @@ namespace Barotrauma
                 {
                     var componentElement = subElement.FirstElement();
                     if (componentElement == null) { continue; }
-                    ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
+                    ItemComponent itemComponent = item2.Components.FirstOrDefault(c => c.Name == componentElement.Name.ToString());
                     if (itemComponent == null) { continue; }
                     foreach (XAttribute attribute in componentElement.Attributes())
                     {

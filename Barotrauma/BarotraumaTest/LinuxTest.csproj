@@ -25,7 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BarotraumaClient\LinuxClient.csproj" />
+      <ProjectReference Include="..\BarotraumaClient\LinuxClient.csproj" Aliases="Client" />
+      <ProjectReference Include="..\BarotraumaServer\LinuxServer.csproj" Aliases="Server"/>
   </ItemGroup>
 
   <ItemGroup>

@@ -28,7 +28,7 @@ namespace Barotrauma
         public GUIComponent ReportButtonFrame { get; set; }
 
         private GUIFrame guiFrame;
-        private GUIFrame crewArea;
+        private GUILayoutGroup crewArea;
         private GUIListBox crewList;
         private float crewListOpenState;
         private bool _isCrewMenuOpen = true;
@@ -93,11 +93,29 @@ namespace Barotrauma
 
             #region Crew Area
 
-            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), style: null, color: Color.Transparent)
+            crewArea = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), childAnchor: Anchor.TopCenter)
             {
-                CanBeFocused = false
+                Stretch = true
             };
             crewArea.RectTransform.NonScaledSize = HUDLayoutSettings.CrewArea.Size;
+
+            for (int i = 0; i < 2; i++)
+            {
+                CharacterTeamType teamId = i == 0 ? CharacterTeamType.Team1 : CharacterTeamType.Team2;
+                var nameText = new GUITextBlock(new RectTransform(new Point(crewArea.Rect.Width - GUI.IntScale(10), GUI.IntScale(30)), crewArea.RectTransform), CombatMission.GetTeamName(teamId), textColor: CombatMission.GetTeamColor(teamId))
+                {
+                    ForceUpperCase = ForceUpperCase.Yes,
+                    TextGetter = () => CombatMission.GetTeamName(teamId),
+                    Visible = false,
+                    IgnoreLayoutGroups = true,
+                    UserData = teamId
+                };
+                var teamIcon = new GUIImage(new RectTransform(Vector2.One, nameText.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight), style: i == 0 ? "CoalitionIcon" : "SeparatistIcon")
+                {
+                    Color = nameText.TextColor
+                };
+                nameText.Padding = new Vector4(teamIcon.Rect.Width + nameText.Padding.X, nameText.Padding.Y, nameText.Padding.Z, nameText.Padding.W);
+            }
 
             // AbsoluteOffset is set in UpdateProjectSpecific based on crewListOpenState
             crewList = new GUIListBox(new RectTransform(Vector2.One, crewArea.RectTransform), style: null, isScrollBarOnDefaultSide: false)
@@ -562,8 +580,18 @@ namespace Barotrauma
         public bool CharacterClicked(GUIComponent component, object selection)
         {
             if (!AllowCharacterSwitch) { return false; }
-            if (!(selection is Character character) || character.IsDead || character.IsUnconscious) { return false; }
+            if (selection is not Character character || character.IsDead || character.IsUnconscious) { return false; }
             if (!character.IsOnPlayerTeam) { return false; }
+
+            if (GameMain.IsMultiplayer)
+            {
+                if (Character.Controlled == null)
+                {
+                    Camera cam = Screen.Selected.Cam;
+                    cam.Position = character.DrawPosition;
+                }
+                return true;
+            }
 
             SelectCharacter(character);
             if (GUI.KeyboardDispatcher.Subscriber == crewList) { GUI.KeyboardDispatcher.Subscriber = null; }
@@ -631,10 +659,9 @@ namespace Barotrauma
         {
             if (crewList != this.crewList) { return; }
             if (draggedElementData is not Character) { return; }
-            if (!IsSinglePlayer) { return; }
             if (crewList.HasDraggedElementIndexChanged)
             {
-                UpdateCrewListIndices();
+                if (IsSinglePlayer) { UpdateCrewListIndices(); }
             }
             else
             {
@@ -645,10 +672,13 @@ namespace Barotrauma
         private void ResetCrewListIndex(Character c)
         {
             if (c?.Info == null) { return; }
-            c.Info.CrewListIndex = -1;
-            UpdateCrewListIndices();
+            //default to the bottom of the list
+            c.Info.CrewListIndex = int.MaxValue;
         }
 
+        /// <summary>
+        /// Refresh the <see cref="CharacterInfo.CrewListIndex"/> of the characters based on their order in the crew list
+        /// </summary>
         private void UpdateCrewListIndices()
         {
             if (crewList == null) { return; }
@@ -661,20 +691,23 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Order the crew list according to the characters' <see cref="CharacterInfo.CrewListIndex"/>
+        /// </summary>
         private void SortCrewList()
         {
             if (crewList == null) { return; }
             crewList.Content.RectTransform.SortChildren((x, y) =>
             {
-                var infoX = (x.GUIComponent.UserData as Character)?.Info?.CrewListIndex;
-                var infoY = (y.GUIComponent.UserData as Character)?.Info?.CrewListIndex;
-                if (infoX.HasValue)
+                int? index1 = (x.GUIComponent.UserData as Character)?.Info?.CrewListIndex;
+                int? index2 = (y.GUIComponent.UserData as Character)?.Info?.CrewListIndex;
+                if (index1.HasValue)
                 {
-                    return infoY.HasValue ? infoX.Value.CompareTo(infoY.Value) : -1;
+                    return index2.HasValue ? index1.Value.CompareTo(index2.Value) : -1;
                 }
                 else
                 {
-                    return infoY.HasValue ? 1 : 0;
+                    return index2.HasValue ? 1 : 0;
                 }
             });
             UpdateCrewListIndices();
@@ -1635,6 +1668,18 @@ namespace Barotrauma
             {
                 crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
 
+                var myTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID;
+                if (GameMain.GameSession?.GameMode is PvPMode)
+                {
+                    var team1Text = crewArea.GetChildByUserData(CharacterTeamType.Team1);
+                    team1Text.Visible = myTeam == CharacterTeamType.Team1;
+                    team1Text.IgnoreLayoutGroups = !team1Text.Visible;
+
+                    var team2Text = crewArea.GetChildByUserData(CharacterTeamType.Team2);
+                    team2Text.Visible = myTeam == CharacterTeamType.Team2;
+                    team2Text.IgnoreLayoutGroups = !team2Text.Visible;
+                }
+
                 foreach (GUIComponent characterComponent in crewList.Content.Children)
                 {
                     if (characterComponent.UserData is Character character)
@@ -1645,7 +1690,7 @@ namespace Barotrauma
                             continue;
                         }
 
-                        characterComponent.Visible = Character.Controlled == null || Character.Controlled.TeamID == character.TeamID;
+                        characterComponent.Visible = Character.Controlled == null || myTeam == character.TeamID;
                         if (character.TeamID == CharacterTeamType.FriendlyNPC && Character.Controlled != null && 
                             (character.CurrentHull == Character.Controlled.CurrentHull || Vector2.DistanceSquared(Character.Controlled.WorldPosition, character.WorldPosition) < 500.0f * 500.0f))
                         {
@@ -2098,7 +2143,7 @@ namespace Barotrauma
             CreateNodeConnectors();
             if (Character.Controlled != null)
             {
-                Character.Controlled.dontFollowCursor = true;
+                Character.Controlled.FollowCursor = false;
             }
 
             HintManager.OnShowCommandInterface();
@@ -2242,7 +2287,7 @@ namespace Barotrauma
             returnNodeHotkey = expandNodeHotkey = Keys.None;
             if (Character.Controlled != null)
             {
-                Character.Controlled.dontFollowCursor = false;
+                Character.Controlled.FollowCursor = true;
             }
         }
 
@@ -2511,7 +2556,7 @@ namespace Barotrauma
             // --> Create shortcut node for Steer order
             if (CanFitMoreNodes() && ShouldDelegateOrder("steer") && IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["steer"]) &&
                 subItems.Find(i => i.HasTag(Tags.NavTerminal) && i.IsPlayerTeamInteractable) is Item nav && characters.None(c => c.SelectedItem == nav) &&
-                nav.GetComponent<Steering>() is Steering steering && steering.Voltage > steering.MinVoltage)
+                nav.GetComponent<Steering>() is Steering { HasPower: true } steering)
             {
                 var order = new Order(OrderPrefab.Prefabs["steer"], steering.Item, steering);
                 AddOrderNode(order);

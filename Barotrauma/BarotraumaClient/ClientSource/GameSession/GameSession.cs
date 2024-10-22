@@ -282,10 +282,10 @@ namespace Barotrauma
         public void SetRespawnInfo(string text, Color textColor, bool waitForNextRoundRespawn, bool hideButtons = false)
         {
             if (topLeftButtonGroup == null) { return; }
-            
+
             bool permadeathMode = GameMain.NetworkMember?.ServerSettings is { RespawnMode: RespawnMode.Permadeath };
-            bool ironmanMode = GameMain.NetworkMember is { ServerSettings: { RespawnMode: RespawnMode.Permadeath, IronmanMode: true } };
-            
+            bool ironmanMode = GameMain.NetworkMember?.ServerSettings is { IronmanModeActive: true };
+
             bool hasRespawnOptions;
             if (permadeathMode)
             {

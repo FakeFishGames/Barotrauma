@@ -572,8 +572,9 @@ namespace Barotrauma
                             Vector2 offset = decorativeSprite.GetOffset(ref offsetState, Vector2.Zero) * scale;
                             if (flippedX) { offset.X = -offset.X; }
                             if (flippedY) { offset.Y = -offset.Y; }
-                            decorativeSprite.Sprite.Draw(spriteRecorder, new Vector2(spritePos.X + offset.X, -(spritePos.Y + offset.Y)), color,
-                                rotationRad + rot, decorativeSprite.GetScale(0f) * scale, prefab.Sprite.effects,
+                            float throwAway = 0.0f;
+                            decorativeSprite.Sprite.Draw(spriteRecorder, new Vector2(spritePos.X + offset.X, -(spritePos.Y + offset.Y)), color, decorativeSprite.Sprite.Origin,
+                                rotationRad + rot, decorativeSprite.GetScale(ref throwAway, 0f) * scale, prefab.Sprite.effects,
                                 depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.Sprite.Depth), 0.999f));
                         }
                     }

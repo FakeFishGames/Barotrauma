@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -62,6 +63,8 @@ namespace Barotrauma
         private int nameFormatIndex;
         private Identifier nameIdentifier;
 
+        public int NameFormatIndex => nameFormatIndex;
+
         /// <summary>
         /// For backwards compatibility: a non-localizable name from the old text files.
         /// </summary>
@@ -80,7 +83,7 @@ namespace Barotrauma
         /// <summary>
         /// Is some mission blocking this location from changing its type, or have location type changes been forcibly disabled on the location?
         /// </summary>
-        public bool LocationTypeChangesBlocked => DisallowLocationTypeChanges || availableMissions.Any(m => m.Prefab.BlockLocationTypeChanges);
+        public bool LocationTypeChangesBlocked => DisallowLocationTypeChanges || availableMissions.Any(m => !m.Completed && m.Prefab.BlockLocationTypeChanges);
 
         public bool DisallowLocationTypeChanges;
 
@@ -1177,9 +1180,22 @@ namespace Barotrauma
             }
         }
 
-        private static LocalizedString GetName(LocationType type, int nameFormatIndex, Identifier nameId)
+        public static LocalizedString GetName(Identifier locationTypeIdentifier, int nameFormatIndex, Identifier nameId)
         {
-            if (type?.NameFormats == null || !type.NameFormats.Any())
+            if (LocationType.Prefabs.TryGet(locationTypeIdentifier, out LocationType locationType))
+            {
+                return GetName(locationType, nameFormatIndex, nameId);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Could not find the location type {locationTypeIdentifier}.\n" + Environment.StackTrace.CleanUpPath());
+                return new RawLString(nameId.Value);
+            }
+        }
+
+        public static LocalizedString GetName(LocationType type, int nameFormatIndex, Identifier nameId)
+        {
+            if (type?.NameFormats == null || !type.NameFormats.Any() || nameFormatIndex < 0)
             {
                 return TextManager.Get(nameId);
             }

@@ -29,11 +29,13 @@ namespace Barotrauma
             UpdatePermanentStats = 14,
             RemoveFromCrew = 15,
             LatchOntoTarget = 16,
-            
+            UpdateTalentRefundPoints = 17,
+            ConfirmTalentRefund = 18,
+
             MinValue = 0,
-            MaxValue = 16
+            MaxValue = 18
         }
-        
+
         private interface IEventData : NetEntityEvent.IData
         {
             public EventType EventType { get; }
@@ -230,9 +232,18 @@ namespace Barotrauma
 
         public struct UpdateSkillsEventData : IEventData
         {
-            public EventType EventType => EventType.UpdateSkills;
+            public readonly EventType EventType => EventType.UpdateSkills;
+
+            public readonly bool ForceNotification;
+            public readonly Identifier SkillIdentifier;
+
+            public UpdateSkillsEventData(Identifier skillIdentifier, bool forceNotification)
+            {
+                SkillIdentifier = skillIdentifier;
+                ForceNotification = forceNotification;
+            }
         }
-        
+
         private struct UpdateMoneyEventData : IEventData
         {
             public EventType EventType => EventType.UpdateMoney;
@@ -242,11 +253,21 @@ namespace Barotrauma
         {
             public EventType EventType => EventType.UpdatePermanentStats;
             public readonly StatTypes StatType;
-            
+
             public UpdatePermanentStatsEventData(StatTypes statType)
             {
                 StatType = statType;
             }
+        }
+
+        public struct UpdateRefundPointsEventData : IEventData
+        {
+            public EventType EventType => EventType.UpdateTalentRefundPoints;
+        }
+
+        public struct ConfirmRefundEventData : IEventData
+        {
+            public EventType EventType => EventType.ConfirmTalentRefund;
         }
     }
 }

@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -140,7 +141,25 @@ namespace Barotrauma
         }
 
         public static Identifier[] ToIdentifiers(this string[] strings)
-            => ((IEnumerable<string>)strings).ToIdentifiers().ToArray();
+            => strings.AsEnumerable().ToIdentifiers().ToArray();
+        
+        /// <summary>
+        /// Parses identifiers from a comma separated string.
+        /// </summary>
+        public static IEnumerable<Identifier> ToIdentifiers(this string tagsString, string separator = ",")
+        {
+            if (string.IsNullOrWhiteSpace(tagsString))
+            {
+                return Enumerable.Empty<Identifier>();
+            }
+            return tagsString.Split(separator, StringSplitOptions.TrimEntries).AsEnumerable().ToIdentifiers();
+        }
+    
+        /// <summary>
+        /// Parses a comma separated string from a collection of identifier.
+        /// </summary>
+        public static string ConvertToString(this IEnumerable<Identifier> tags, string separator = ",") 
+            => string.Join(separator, tags);
 
         public static Identifier ToIdentifier(this string? s)
         {

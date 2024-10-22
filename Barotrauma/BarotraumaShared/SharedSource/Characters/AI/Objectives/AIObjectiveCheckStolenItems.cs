@@ -45,7 +45,7 @@ namespace Barotrauma
             InitTimers();
         }
         
-        protected override bool CheckObjectiveSpecific() => false;
+        protected override bool CheckObjectiveState() => false;
 
         protected override float GetPriority()
         {

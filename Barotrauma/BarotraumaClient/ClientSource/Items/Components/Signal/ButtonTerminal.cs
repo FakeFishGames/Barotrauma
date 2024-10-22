@@ -3,7 +3,6 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -16,7 +15,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(ContentXElement element)
         {
-            terminalButtonStyles = new string[RequiredSignalCount];
+            terminalButtonStyles = new string[requiredSignalCount];
             int i = 0;
             foreach (var childElement in element.GetChildElements("TerminalButton"))
             {
@@ -38,11 +37,11 @@ namespace Barotrauma.Items.Components
             };
             paddedFrame.OnAddedToGUIUpdateList += (component) =>
             {
-                bool buttonsEnabled = AllowUsingButtons;
-                foreach (var child in component.Children)
+                bool buttonsEnabled = IsActivated;
+                foreach (GUIComponent child in component.Children)
                 {
-                    if (!(child is GUIButton)) { continue; }
-                    if (!(child.UserData is int)) { continue; }
+                    if (child is not GUIButton) { continue; }
+                    if (child.UserData is not int) { continue; }
                     child.Enabled = buttonsEnabled;
                     child.Children.ForEach(c => c.Enabled = buttonsEnabled);
                 }
@@ -59,7 +58,7 @@ namespace Barotrauma.Items.Components
                 containerIndicator.OverrideState = itemsContained ? GUIComponent.ComponentState.Selected : GUIComponent.ComponentState.None;
             };
 
-            float x = 1.0f / (1 + RequiredSignalCount);
+            float x = 1.0f / (1 + requiredSignalCount);
             float y = Math.Min((x * paddedFrame.Rect.Width) / paddedFrame.Rect.Height, 0.5f);
             Vector2 relativeSize = new Vector2(x, y);
 
@@ -69,7 +68,7 @@ namespace Barotrauma.Items.Components
             containerIndicator = new GUIImage(new RectTransform(new Vector2(0.5f, 0.5f * (1.0f - y)), containerSection.RectTransform, anchor: Anchor.BottomCenter),
                 style: "IndicatorLightRed", scaleToFit: true);
 
-            for (int i = 0; i < RequiredSignalCount; i++)
+            for (int i = 0; i < requiredSignalCount; i++)
             {
                 var button = new GUIButton(new RectTransform(relativeSize, paddedFrame.RectTransform), style: null)
                 {
@@ -111,7 +110,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            SendSignal(msg.ReadRangedInteger(0, Signals.Length - 1), sender: null, isServerMessage: true);
+            SendSignal(msg.ReadRangedInteger(0, Signals.Length - 1), sender: null, ignoreState: true);
         }
     }
 }

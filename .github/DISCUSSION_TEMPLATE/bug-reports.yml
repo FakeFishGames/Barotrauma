@@ -73,8 +73,7 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:
-        - v1.5.9.2 (Summer Update Hotfix 2)
-        - v1.6.4.0 (unstable)
+        - v1.6.17.0 (Unto the Breach Update)
         - Other
     validations:
       required: true

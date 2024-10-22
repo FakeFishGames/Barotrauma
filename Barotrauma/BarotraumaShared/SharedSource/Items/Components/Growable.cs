@@ -556,7 +556,7 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct || spawnSeed)
             {
-                VineTile vine = Vines.GetRandomUnsynced();
+                VineTile vine = Vines.GetRandomUnsynced()!;
                 spawnPos = vine.GetWorldPosition(planter, slot.Offset);
             }
             else

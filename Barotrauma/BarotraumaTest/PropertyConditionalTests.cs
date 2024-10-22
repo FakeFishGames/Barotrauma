@@ -1,10 +1,12 @@
-﻿using Barotrauma;
+﻿extern alias Client;
+using Client::Barotrauma;
 using FluentAssertions;
 using FsCheck;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Xunit;
+
 namespace TestProject;
 
 public sealed class PropertyConditionalTests

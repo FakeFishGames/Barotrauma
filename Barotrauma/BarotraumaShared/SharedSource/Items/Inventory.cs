@@ -327,7 +327,7 @@ namespace Barotrauma
 #endif
         }
 
-        protected IEnumerable<Item> GetAllItems(bool checkForDuplicates)
+        public IEnumerable<Item> GetAllItems(bool checkForDuplicates)
         {
             for (int i = 0; i < capacity; i++)
             {
@@ -796,14 +796,15 @@ namespace Barotrauma
             {
                 for (int j = 0; j < otherInventory.capacity; j++)
                 {
-                    if (otherInventory.slots[j].Contains(item)) 
+                    // in case the item is in multiple slots like OuterClothes | InnerClothes, prevent it from being added twice to the list
+                    if (otherInventory.slots[j].Contains(item) && !stackedItems.Contains(item)) 
                     {
                         stackedItems.AddRange(otherInventory.slots[j].Items);
                         otherInventory.slots[j].RemoveAllItems(); 
                     }
                 }
             }
-            else
+            else if (!stackedItems.Contains(item))
             {
                 stackedItems.Add(item);
                 otherInventory.slots[otherIndex].RemoveItem(item);

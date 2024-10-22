@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -310,7 +310,13 @@ namespace Barotrauma.Items.Components
                 return wire.BackingWire.TryUnwrap(out var backingWire) ? backingWire.Name : "a wire";
             }
 
-            bool CanAccessAndUnlocked(Client client) => item.CanClientAccess(client) && !Locked;
+            bool CanAccessAndUnlocked(Client client) =>
+                !IsLocked() &&
+                item.CanClientAccess(client) &&
+                ClientHasRequiredItems(client);
+
+            bool ClientHasRequiredItems(Client client) =>
+                client.Character is { } chara && HasRequiredItems(chara, addMessage: false);
         }
 
         /// <summary>

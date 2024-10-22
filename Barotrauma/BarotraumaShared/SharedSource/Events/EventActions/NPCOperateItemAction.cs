@@ -86,7 +86,7 @@ namespace Barotrauma
                 {
                     foreach (var objective in humanAiController.ObjectiveManager.Objectives)
                     {
-                        if (objective is AIObjectiveOperateItem operateItemObjective && operateItemObjective.OperateTarget == target)
+                        if (objective is AIObjectiveOperateItem operateItemObjective && operateItemObjective.Component.Item == target)
                         {
                             objective.Abandon = true;
                         }
@@ -115,7 +115,7 @@ namespace Barotrauma
                     if (npc.Removed || npc.AIController is not HumanAIController humanAiController) { continue; }
                     foreach (var operateItemObjective in humanAiController.ObjectiveManager.GetActiveObjectives<AIObjectiveOperateItem>())
                     {
-                        if (operateItemObjective.OperateTarget == target)
+                        if (operateItemObjective.Component.Item == target)
                         {
                             operateItemObjective.Abandon = true;
                         }

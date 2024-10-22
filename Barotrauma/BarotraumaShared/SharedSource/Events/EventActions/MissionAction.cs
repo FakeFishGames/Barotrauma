@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -213,7 +213,7 @@ namespace Barotrauma
                     return false;
                 }
             }
-            if (!locationTypes.Contains(location.Type.Identifier) && !(location.HasOutpost() && locationTypes.Contains("AnyOutpost".ToIdentifier())))
+            if (!locationTypes.Contains(location.Type.Identifier) && !(location.HasOutpost() && locationTypes.Contains(Tags.AnyOutpost)))
             {
                 return false;
             }

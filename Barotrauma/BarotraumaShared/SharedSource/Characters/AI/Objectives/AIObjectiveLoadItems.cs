@@ -71,7 +71,7 @@ namespace Barotrauma
             if (item.IsClaimedByBallastFlora) { return false; }
             if (!item.HasAccess(character)) { return false; }
             // Ignore items that require power but don't have it
-            if (item.GetComponent<Powered>() is Powered powered && powered.PowerConsumption > 0 && powered.Voltage < powered.MinVoltage) { return false; }
+            if (item.GetComponent<Powered>() is { PowerConsumption: > 0, HasPower: false }) { return false; }
             return true;
         }
 

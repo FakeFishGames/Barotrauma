@@ -31,7 +31,12 @@ namespace Barotrauma
     {
         public static readonly List<DelayedListElement> DelayList = new List<DelayedListElement>();
 
-        private enum DelayTypes { Timer = 0, ReachCursor = 1 }
+        private enum DelayTypes 
+        { 
+            Timer = 0,
+            [Obsolete("The delay type is unsupported.")]
+            ReachCursor = 1 
+        }
 
         private readonly DelayTypes delayType;
         private readonly float delay;
@@ -39,8 +44,12 @@ namespace Barotrauma
         public DelayedEffect(ContentXElement element, string parentDebugName)
             : base(element, parentDebugName)
         {
-            DelayTypes delayTypeAttr = element.GetAttributeEnum("delaytype", DelayTypes.Timer);
-            if (delayTypeAttr is DelayTypes.Timer)
+            delayType = element.GetAttributeEnum("delaytype", DelayTypes.Timer);
+            if (delayType == DelayTypes.ReachCursor)
+            {
+                DebugConsole.AddWarning($"Potential error in {parentDebugName}: the delay type {DelayTypes.ReachCursor} is not supported.", contentPackage: element.ContentPackage);
+            }
+            if (delayType is DelayTypes.Timer)
             {
                 delay = element.GetAttributeFloat("delay", 1.0f);
             }
@@ -75,9 +84,15 @@ namespace Barotrauma
                         return;
                     }
 
-                    if (projectile.User == null)
+                    var user =
+                        projectile.User ??
+                        projectile.Attacker ??
+                        projectile.Launcher?.GetRootInventoryOwner() as Character;
+                    if (user == null)
                     {
-                        DebugConsole.LogError("Projectile: '" + projectile.Name + "' missing user to determine distance");
+#if DEBUG
+                        DebugConsole.LogError($"Projectile \"{projectile.Item.Prefab.Identifier}\" missing user");
+#endif
                         return;
                     }
 
@@ -112,7 +127,7 @@ namespace Barotrauma
             switch (delayType)
             {
                 case DelayTypes.Timer:
-                    DelayList.Add(new DelayedListElement(this, entity, targets, delay, worldPosition, null));
+                    DelayList.Add(new DelayedListElement(this, entity, currentTargets, delay, worldPosition, null));
                     break;
                 case DelayTypes.ReachCursor:
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();
@@ -124,15 +139,19 @@ namespace Barotrauma
                         return;
                     }
 
-                    if (projectile.User == null)
+                    var user =
+                        projectile.User ??
+                        projectile.Attacker ??
+                        projectile.Launcher?.GetRootInventoryOwner() as Character;
+                    if (user == null)
                     {
 #if DEBUG
-                        DebugConsole.LogError("Projectile " + projectile.Name + "missing user");
+                        DebugConsole.LogError($"Projectile \"{projectile.Item.Prefab.Identifier}\" missing user");
 #endif
                         return;
                     }
 
-                    DelayList.Add(new DelayedListElement(this, entity, targets, Vector2.Distance(entity.WorldPosition, projectile.User.CursorWorldPosition), worldPosition, entity.WorldPosition));
+                    DelayList.Add(new DelayedListElement(this, entity, currentTargets, Vector2.Distance(entity.WorldPosition, user.CursorWorldPosition), worldPosition, entity.WorldPosition));
                     break;
             }
         }

@@ -28,8 +28,6 @@ namespace Barotrauma
 
         private bool stun = false;
 
-        private readonly List<Affliction> huskInfection = new List<Affliction>();
-
         [Serialize(0f, IsPropertySaveable.Yes), Editable]
         public override float Strength
         {
@@ -62,7 +60,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly AfflictionPrefabHusk HuskPrefab;
+        public readonly AfflictionPrefabHusk HuskPrefab;
 
         private float DormantThreshold => HuskPrefab.DormantThreshold;
         private float ActiveThreshold => HuskPrefab.ActiveThreshold;
@@ -129,7 +127,7 @@ namespace Barotrauma
             {
                 State = InfectionState.Final;
                 ActivateHusk();
-                ApplyDamage(deltaTime, applyForce: true);
+                ApplyDamage(deltaTime);
                 character.SetStun(5);
             }
         }
@@ -192,27 +190,41 @@ namespace Barotrauma
             prevDisplayedMessage = State;
         }
 
-        private void ApplyDamage(float deltaTime, bool applyForce)
+        private const float DamageCooldown = 0.1f;
+        private float damageCooldownTimer;
+        private void ApplyDamage(float deltaTime)
         {
-            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered && !l.Hidden);
+            if (damageCooldownTimer > 0)
+            {
+                damageCooldownTimer -= deltaTime;
+                return;
+            }
+            damageCooldownTimer = DamageCooldown;
+            int limbCount = character.AnimController.Limbs.Count(IsValidLimb);
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                if (limb.IsSevered) { continue; }
-                if (limb.Hidden) { continue; }
+                if (!IsValidLimb(limb)) { continue; }
                 float random = Rand.Value();
-                huskInfection.Clear();
-                huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * 10 * deltaTime / limbCount));
+                if (random == 0) { continue; }
+                const float damageRate = 2;
+                float dmg = random / limbCount * damageRate;
                 character.LastDamageSource = null;
-                float force = applyForce ? random * 0.5f * limb.Mass : 0;
-                character.DamageLimb(limb.WorldPosition, limb, huskInfection, 0, false, Rand.Vector(force));
+                var afflictions = AfflictionPrefab.InternalDamage.Instantiate(dmg).ToEnumerable();
+                const float forceMultiplier = 5;
+                float force = dmg * limb.Mass * forceMultiplier;
+                character.DamageLimb(limb.WorldPosition, limb, afflictions, stun: 0, playSound: false, Rand.Vector(force), ignoreDamageOverlay: true, recalculateVitality: false);
             }
+            character.CharacterHealth.RecalculateVitality();
+
+            static bool IsValidLimb(Limb limb) => !limb.IgnoreCollisions && !limb.IsSevered && !limb.Hidden;
         }
 
         public void ActivateHusk()
         {
             if (huskAppendage == null && character.Params.UseHuskAppendage)
             {
-                huskAppendage = AttachHuskAppendage(character, Prefab as AfflictionPrefabHusk);
+                var huskAffliction = Prefab as AfflictionPrefabHusk;
+                huskAppendage = AttachHuskAppendage(character, huskAffliction, GetHuskedSpeciesName(character.Params, huskAffliction));
             }
 
             if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
@@ -287,7 +299,7 @@ namespace Barotrauma
             Entity.Spawner.AddEntityToRemoveQueue(character);
             UnsubscribeFromDeathEvent();
 
-            Identifier huskedSpeciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
+            Identifier huskedSpeciesName = GetHuskedSpeciesName(character.Params, Prefab as AfflictionPrefabHusk);
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
 
             if (prefab == null)
@@ -314,6 +326,7 @@ namespace Barotrauma
                 husk.Info.Character = husk;
                 husk.Info.TeamID = CharacterTeamType.None;
             }
+            husk.AllowPlayDead = character.AllowPlayDead;
 
             if (Prefab is AfflictionPrefabHusk huskPrefab)
             {
@@ -383,11 +396,9 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public static List<Limb> AttachHuskAppendage(Character character, AfflictionPrefabHusk matchingAffliction, ContentXElement appendageDefinition = null, Ragdoll ragdoll = null)
+        public static List<Limb> AttachHuskAppendage(Character character, AfflictionPrefabHusk matchingAffliction, Identifier huskedSpeciesName, ContentXElement appendageDefinition = null, Ragdoll ragdoll = null)
         {
             var appendage = new List<Limb>();
-            Identifier nonhuskedSpeciesName = GetNonHuskedSpeciesName(character.SpeciesName, matchingAffliction);
-            Identifier huskedSpeciesName = GetHuskedSpeciesName(nonhuskedSpeciesName, matchingAffliction);
             CharacterPrefab huskPrefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
             if (huskPrefab?.ConfigElement == null)
             {
@@ -410,10 +421,7 @@ namespace Barotrauma
             ContentPath pathToAppendage = element.GetAttributeContentPath("path") ?? ContentPath.Empty;
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
             if (doc == null) { return appendage; }
-            if (ragdoll == null)
-            {
-                ragdoll = character.AnimController;
-            }
+            ragdoll ??= character.AnimController;
             if (ragdoll.Dir < 1.0f)
             {
                 ragdoll.Flip();
@@ -467,19 +475,31 @@ namespace Barotrauma
                     ragdoll.AddLimb(huskAppendage);
                     ragdoll.AddJoint(jointParams);
                     appendage.Add(huskAppendage);
-                }                
+                }
             }
             return appendage;
         }
 
-        public static Identifier GetHuskedSpeciesName(Identifier speciesName, AfflictionPrefabHusk prefab)
+        public static Identifier GetHuskedSpeciesName(CharacterParams character, AfflictionPrefabHusk prefab)
         {
-            return new Identifier(speciesName.Value + prefab.HuskedSpeciesName.Value);
+            Identifier huskedSpecies = character.HuskedSpecies;
+            if (huskedSpecies.IsEmpty)
+            {
+                // Default pattern: Crawler -> Crawlerhusk, Human -> Humanhusk
+                return new Identifier(character.SpeciesName.Value + prefab.HuskedSpeciesName.Value);
+            }
+            return huskedSpecies;
         }
 
-        public static Identifier GetNonHuskedSpeciesName(Identifier huskedSpeciesName, AfflictionPrefabHusk prefab)
+        public static Identifier GetNonHuskedSpeciesName(CharacterParams character, AfflictionPrefabHusk prefab)
         {
-            return huskedSpeciesName.Remove(prefab.HuskedSpeciesName);
+            Identifier nonHuskedSpecies = character.NonHuskedSpecies;
+            if (nonHuskedSpecies.IsEmpty)
+            {
+                // Default pattern: Crawlerhusk -> Crawler, Humanhusk -> Human
+                return character.SpeciesName.Remove(prefab.HuskedSpeciesName);
+            }
+            return nonHuskedSpecies;
         }
     }
 }

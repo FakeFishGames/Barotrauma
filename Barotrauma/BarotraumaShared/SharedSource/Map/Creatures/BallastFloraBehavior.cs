@@ -623,7 +623,8 @@ namespace Barotrauma.MapCreatures.Behavior
                         List<BallastFloraBranch> list = branches[hull];
                         if (!list.Any(HasAcidEmitter))
                         {
-                            BallastFloraBranch randomBranch = branches[hull].GetRandomUnsynced();
+                            BallastFloraBranch? randomBranch = branches[hull].GetRandomUnsynced();
+                            if (randomBranch == null) { continue; }
                             randomBranch.SpawningItem = true;
                     
                             ItemPrefab prefab = ItemPrefab.Find(null, AttackItemPrefab);

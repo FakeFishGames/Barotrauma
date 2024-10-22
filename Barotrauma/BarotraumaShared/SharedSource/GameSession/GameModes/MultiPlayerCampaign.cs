@@ -116,7 +116,6 @@ namespace Barotrauma
             //only the server generates the map, the clients load it from a save file
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                campaign.Settings = settings;
                 campaign.map = new Map(campaign, mapSeed);
             }
             campaign.InitProjSpecific();
@@ -133,16 +132,24 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific();
-                
-        public static string GetCharacterDataSavePath(string savePath)
+
+        public static string GetCharacterDataSavePath(string loadPath)
         {
-            return Path.Combine(Path.GetDirectoryName(savePath), Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+            string directory = Path.GetDirectoryName(loadPath);
+            string fileName = Path.GetFileNameWithoutExtension(loadPath);
+
+            if (CampaignDataPath.IsBackupPath(loadPath, out uint backupIndex))
+            {
+                string trimmedFileName = Path.GetFileNameWithoutExtension(fileName);
+                return Path.Combine(directory, $"{trimmedFileName}_CharacterData{SaveUtil.BackupCharacterDataExtensionStart}{backupIndex}");
+            }
+            return Path.Combine(directory, $"{fileName}_CharacterData.xml");
         }
 
-        public static string GetCharacterDataSavePath()
-        {
-            return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
-        }
+        public static string GetCharacterDataPathForLoading()
+            => GetCharacterDataSavePath(GameMain.GameSession.DataPath.LoadPath);
+        public static string GetCharacterDataPathForSaving()
+            => GetCharacterDataSavePath(GameMain.GameSession.DataPath.SavePath);
 
         /// <summary>
         /// Loads the campaign from an XML element. Creates the map if it hasn't been created yet, otherwise updates the state of the map.
@@ -254,7 +261,7 @@ namespace Barotrauma
 
 #if SERVER
             characterData.Clear();
-            string characterDataPath = GetCharacterDataSavePath();
+            string characterDataPath = GetCharacterDataPathForLoading();
             if (!File.Exists(characterDataPath))
             {
                 DebugConsole.ThrowError($"Failed to load the character data for the campaign. Could not find the file \"{characterDataPath}\".");

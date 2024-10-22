@@ -1,6 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using Barotrauma;
+﻿extern alias Client;
+using System;
+using Client::Barotrauma;
 using FluentAssertions;
 using FsCheck;
 using Xunit;

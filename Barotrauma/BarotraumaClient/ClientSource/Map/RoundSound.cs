@@ -73,9 +73,16 @@ namespace Barotrauma
             }
 
             Sound? existingSound = null;
-            if (roundSoundByPath.TryGetValue(filename.FullPath, out RoundSound? rs) && rs.Sound is { Disposed: false })
+            if (roundSoundByPath.TryGetValue(filename.FullPath, out RoundSound? rs))
             {
-                existingSound = rs.Sound;
+                if (rs.Sound is { Disposed: false })
+                {
+                    existingSound = rs.Sound;
+                }
+                else
+                {
+                    roundSoundByPath.Remove(filename.FullPath);
+                }
             }
 
             if (existingSound is null)

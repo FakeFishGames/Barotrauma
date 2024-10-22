@@ -24,7 +24,11 @@ namespace Barotrauma.Abilities
             foreach (Character enemyCharacter in enemyCharacters)
             {
                 if (!enemyCharacter.IsHuman) { continue; }
-                if (enemyCharacter.Submarine == null || enemyCharacter.Submarine != Submarine.MainSub) { continue; }
+                if (enemyCharacter.Submarine == null || 
+                    (Submarine.MainSub != null && enemyCharacter.Submarine != Submarine.MainSub)) 
+                {
+                    continue;
+                }
                 if (enemyCharacter.IsDead) { continue; }
                 if (!enemyCharacter.LockHands) { continue; }
                 Character.GiveMoney(moneyAmount);

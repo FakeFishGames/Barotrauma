@@ -748,7 +748,7 @@ namespace Barotrauma
                 }
             }
             enumDropDown.MustSelectAtLeastOne = !hasNoneOption;
-            enumDropDown.OnSelected += (selected, val) =>
+            enumDropDown.AfterSelected += (selected, val) =>
             {
                 if (SetPropertyValue(property, entity, string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
                 {
@@ -788,8 +788,12 @@ namespace Barotrauma
                 ToolTip = toolTip,
                 Font = GUIStyle.SmallFont,
                 Text = StripPrefabTags(value),
-                OverflowClip = true
+                OverflowClip = true,
             };
+            if (editableAttribute != null && editableAttribute.MaxLength > 0)
+            {
+                propertyBox.MaxTextLength = editableAttribute.MaxLength;
+            }
 
             HashSet<MapEntity> editedEntities = new HashSet<MapEntity>();
             propertyBox.OnTextChanged += (textBox, text) =>
@@ -805,8 +809,7 @@ namespace Barotrauma
             refresh += () =>
             {
                 if (propertyBox.Selected) { return; }
-
-                propertyBox.Text = StripPrefabTags(property.GetValue(entity).ToString());
+                propertyBox.Text = StripPrefabTags(property.GetValue(entity)?.ToString());
             };
 
             bool OnApply(GUITextBox textBox)

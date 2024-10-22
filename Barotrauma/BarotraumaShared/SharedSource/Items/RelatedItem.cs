@@ -148,13 +148,8 @@ namespace Barotrauma
 
         public string JoinedIdentifiers
         {
-            get { return string.Join(",", Identifiers); }
-            set
-            {
-                if (value == null) return;
-
-                Identifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
-            }
+            get => Identifiers.ConvertToString();
+            set => Identifiers = value.ToIdentifiers().ToImmutableHashSet();
         }
 
         /// <summary>
@@ -164,13 +159,8 @@ namespace Barotrauma
 
         public string JoinedExcludedIdentifiers
         {
-            get { return string.Join(",", ExcludedIdentifiers); }
-            set
-            {
-                if (value == null) return;
-
-                ExcludedIdentifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
-            }
+            get => ExcludedIdentifiers.ConvertToString();
+            set => ExcludedIdentifiers = value.ToIdentifiers().ToImmutableHashSet();
         }
 
         public bool MatchesItem(Item item)
@@ -321,7 +311,9 @@ namespace Barotrauma
 #if CLIENT
                 foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
                 {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType));
+                    string inputTag = $"[{inputType.ToString().ToLowerInvariant()}]";
+                    if (!msg.Contains(inputTag)) { continue; }
+                    msg = msg.Replace(inputTag, GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType));
                 }
                 Msg = msg;
 #endif

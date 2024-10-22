@@ -513,18 +513,19 @@ namespace Barotrauma
         /// </summary>
         private bool Check()
         {
+            if (isCompleted) { return true; }
             if (AbortCondition != null && AbortCondition(this))
             {
                 Abandon = true;
                 return false;
             }
-            return CheckObjectiveSpecific();
+            return CheckObjectiveState();
         }
 
         /// <summary>
         /// Should return whether the objective is completed or not.
         /// </summary>
-        protected abstract bool CheckObjectiveSpecific();
+        protected abstract bool CheckObjectiveState();
 
         private bool CheckState()
         {
@@ -573,8 +574,6 @@ namespace Barotrauma
                 }
             }
         }
-
-        public virtual void SpeakAfterOrderReceived() { }
 
         protected static bool CanPutInInventory(Character character, Item item, bool allowWearing)
         {

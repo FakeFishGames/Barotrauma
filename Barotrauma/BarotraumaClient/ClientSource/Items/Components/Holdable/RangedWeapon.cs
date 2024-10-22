@@ -177,6 +177,8 @@ namespace Barotrauma.Items.Components
             //don't draw the crosshair if the item is in some other type of equip slot than hands (e.g. assault rifle in the bag slot)
             if (!character.HeldItems.Contains(item)) { return; }
 
+            base.DrawHUD(spriteBatch, character);
+
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;
             

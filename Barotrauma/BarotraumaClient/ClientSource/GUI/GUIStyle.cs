@@ -51,6 +51,16 @@ namespace Barotrauma
         public readonly static GUISprite InteractionLabelBackground = new GUISprite("InteractionLabelBackground");
         public readonly static GUISprite BrokenIcon = new GUISprite("BrokenIcon");
         public readonly static GUISprite YouAreHereCircle = new GUISprite("YouAreHereCircle");
+        
+        public readonly static GUISprite SubLocationIcon = new GUISprite("SubLocationIcon");
+        public readonly static GUISprite ShuttleIcon = new GUISprite("ShuttleIcon");
+        public readonly static GUISprite WreckIcon = new GUISprite("WreckIcon");
+        public readonly static GUISprite CaveIcon = new GUISprite("CaveIcon");
+        public readonly static GUISprite OutpostIcon = new GUISprite("OutpostIcon");
+        public readonly static GUISprite RuinIcon = new GUISprite("RuinIcon");
+        public readonly static GUISprite EnemyIcon = new GUISprite("EnemyIcon");
+        public readonly static GUISprite CorpseIcon = new GUISprite("CorpseIcon");
+        public readonly static GUISprite BeaconIcon = new GUISprite("BeaconIcon");
 
         public readonly static GUISprite Radiation = new GUISprite("Radiation");
         public readonly static GUISpriteSheet RadiationAnimSpriteSheet = new GUISpriteSheet("RadiationAnimSpriteSheet");
@@ -71,7 +81,7 @@ namespace Barotrauma
         public readonly static GUISprite EndRoundButtonPulse = new GUISprite("EndRoundButtonPulse");
 
         public readonly static GUISpriteSheet FocusIndicator = new GUISpriteSheet("FocusIndicator");
-        
+
         public readonly static GUISprite IconOverflowIndicator = new GUISprite("IconOverflowIndicator");
 
         /// <summary>

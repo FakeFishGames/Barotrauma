@@ -1,9 +1,10 @@
-﻿using Barotrauma.Utils;
-using FluentAssertions;
+﻿extern alias Client;
 using FsCheck;
 using Microsoft.Xna.Framework;
 using System;
 using Xunit;
+
+using CoordinateSpace2D = Client::Barotrauma.Utils.CoordinateSpace2D;
 namespace TestProject;
 
 public class CoordinateSpace2DTests

@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            hasPower = Voltage > MinVoltage;
+            hasPower = HasPower;
             if (hasPower)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime);
