@@ -1754,12 +1754,12 @@ namespace Barotrauma
                     if (targetCharacter != null) { RemoveCharacter(targetCharacter); }
                 }
             }
-            if (flipCharacter)
+            if (flipCharacter && isNotClient)
             {
                 for (int i = 0; i < targets.Count; i++)
                 {
                     var target = GetCharacterFromTarget(targets[i]);
-                    if (target != null && isNotClient)
+                    if (target != null)
                     {
                         target.TryFlipCharacter();
                     }
