@@ -1758,7 +1758,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    var target = CharacterFromTarget(targets[i]);
+                    var target = GetCharacterFromTarget(targets[i]);
                     if (target != null && isNotClient)
                     {
                         target.TryFlipCharacter();

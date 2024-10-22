@@ -288,7 +288,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!IsStuck && CurrentFishAnimation.Flip && character.AIController is not { CanFlip: false } && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient))
+            if (!IsStuck && CurrentFishAnimation.Flip && character.AIController is not { CanFlip: false })
             {
                 flipCooldown -= deltaTime;
                 if (TargetDir != Direction.None && TargetDir != dir)
@@ -303,9 +303,14 @@ namespace Barotrauma
                     }
                     bool isMovingFastEnough = Math.Abs(MainLimb.LinearVelocity.X) > requiredSpeed;
                     bool isTryingToMoveHorizontally = Math.Abs(TargetMovement.X) > Math.Abs(TargetMovement.Y);
-                    if ((flipTimer > CurrentFishAnimation.FlipDelay && flipCooldown <= 0.0f) && ((isMovingFastEnough && isTryingToMoveHorizontally) || IsMovingBackwards))
+                    if ((flipTimer > CurrentFishAnimation.FlipDelay && flipCooldown <= 0.0f && ((isMovingFastEnough && isTryingToMoveHorizontally) || IsMovingBackwards))
+                        || character.IsRemotePlayer)
                     {
                         Flip();
+                        if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
+                        {
+                            Mirror(CurrentSwimParams != null ? CurrentSwimParams.MirrorLerp : true);
+                        }
                         flipTimer = 0.0f;
                         flipCooldown = CurrentFishAnimation.FlipCooldown;
                     }
@@ -994,10 +999,6 @@ namespace Barotrauma
 				}
                 //no need to do anything when flipping vertically oriented limbs
                 //the sprite gets flipped horizontally, which does the job
-            }
-            if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
-            {
-                Mirror(CurrentSwimParams != null ? CurrentSwimParams.MirrorLerp : true);
             }
         }
 

@@ -404,9 +404,8 @@ namespace Barotrauma
 
                 tempBuffer.WriteBoolean(IsRagdolled || Stun > 0.0f || IsDead || IsIncapacitated);
 
+                tempBuffer.WriteBoolean(AnimController.Dir > 0.0f);
             }
-
-            tempBuffer.WriteBoolean(AnimController.Dir > 0.0f);
 
             if (SelectedCharacter != null || HasSelectedAnyItem)
             {
