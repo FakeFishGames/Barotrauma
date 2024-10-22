@@ -81,6 +81,8 @@ namespace Barotrauma
 
         public static bool IsItemInsideValidSubmarine(Item item, Character character)
         {
+            if (item == null || item.Removed) { return false; }
+            if (character == null || character.Removed) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }

@@ -1,16 +1,24 @@
 #nullable enable
 
+extern alias Client;
 using System;
 using System.Collections.Immutable;
 using Barotrauma;
-using Barotrauma.Networking;
 using FluentAssertions;
 using FsCheck;
 using Microsoft.Xna.Framework;
 using Xunit;
 
+using NetworkSerialize = Client::Barotrauma.NetworkSerialize;
+using INetSerializableStruct = Client::Barotrauma.INetSerializableStruct;
+using ReadWriteMessage = Client::Barotrauma.Networking.ReadWriteMessage;
+using ReadOnlyBitField = Client::Barotrauma.ReadOnlyBitField;
+using WriteOnlyBitField = Client::Barotrauma.WriteOnlyBitField;
+
 namespace TestProject
 {
+    extern alias Server;
+    
     // ReSharper disable UnusedMember.Local NotAccessedField.Local UnusedMember.Global
     public sealed class INetSerializableStructTests
     {
@@ -199,7 +207,7 @@ namespace TestProject
 
         private struct TestRangedStruct : INetSerializableStruct
         {
-            [NetworkSerialize(MinValueInt = -100, MaxValueInt = 100)]
+            [Client::Barotrauma.NetworkSerialize(MinValueInt = -100, MaxValueInt = 100)]
             public int IntValue;
 
             [NetworkSerialize(MinValueFloat = -100, MaxValueFloat = 100, NumberOfBits = 16)]
@@ -236,13 +244,13 @@ namespace TestProject
         private static void SerializeDeserializeRanged(int intValue, float floatValue)
         {
             ReadWriteMessage msg = new ReadWriteMessage();
-            TestRangedStruct writeStruct = new TestRangedStruct
+            INetSerializableStruct writeStruct = new TestRangedStruct
             {
                 IntValue = intValue,
                 FloatValue = floatValue
             };
 
-            msg.WriteNetSerializableStruct(writeStruct);
+            writeStruct.Write(msg);
             msg.BitPosition = 0;
 
             TestRangedStruct readStruct = INetSerializableStruct.Read<TestRangedStruct>(msg);
@@ -255,7 +263,7 @@ namespace TestProject
         {
             ReadWriteMessage msg = new ReadWriteMessage();
 
-            msg.WriteNetSerializableStruct(toWrite);
+            toWrite.Write(msg);
             msg.BitPosition = 0;
 
             T read = INetSerializableStruct.Read<T>(msg);
@@ -283,19 +291,21 @@ namespace TestProject
         private static void SerializeDeserializeNullableTuple<T, U>(T arg1, U arg2)
         {
             ReadWriteMessage msg = new ReadWriteMessage();
-            TupleNullableStruct<T, U> writeStruct = new TupleNullableStruct<T, U>
+            INetSerializableStruct writeStruct = new TupleNullableStruct<T, U>
             {
                 One = arg1,
                 Two = arg2
             };
 
-            msg.WriteNetSerializableStruct(writeStruct);
+            writeStruct.Write(msg);
             msg.BitPosition = 0;
 
             TupleNullableStruct<T, U> readStruct = INetSerializableStruct.Read<TupleNullableStruct<T, U>>(msg);
 
             readStruct.Should().BeEquivalentTo(writeStruct, options => options
                 .ComparingByMembers<TupleNullableStruct<T, U>>()
+                .RespectingRuntimeTypes()
+                .ComparingByMembers<string>()
                 .ComparingByMembers(typeof(Option<>)));
         }
 

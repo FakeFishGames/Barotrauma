@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null) { return; }
             
-            if (Voltage < MinVoltage && PowerConsumption > 0)
+            if (!HasPower && PowerConsumption > 0)
             {
                 return;
             }

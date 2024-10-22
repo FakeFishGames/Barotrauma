@@ -385,17 +385,20 @@ namespace Barotrauma.Items.Components
 
             if (item.Condition > 0.0f || !HideBarrelWhenBroken)
             {
-                railSprite?.Draw(spriteBatch,
+                var currentRailSprite = item.Condition <= 0.0f && railSpriteBroken != null ? railSpriteBroken : railSprite;
+                var currentBarrelSprite = item.Condition <= 0.0f && barrelSpriteBroken != null ? barrelSpriteBroken : barrelSprite;
+
+                currentRailSprite?.Draw(spriteBatch,
                     drawPos,
                     overrideColor ?? item.SpriteColor,
                     Rotation + MathHelper.PiOver2, item.Scale,
-                    SpriteEffects.None, item.SpriteDepth + (railSprite.Depth - item.Sprite.Depth));
+                    SpriteEffects.None, item.SpriteDepth + (currentRailSprite.Depth - item.Sprite.Depth));
 
-                barrelSprite?.Draw(spriteBatch,
+                currentBarrelSprite?.Draw(spriteBatch,
                     drawPos - GetRecoilOffset() * item.Scale,
                     overrideColor ?? item.SpriteColor,
                     Rotation + MathHelper.PiOver2, item.Scale,
-                    SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
+                    SpriteEffects.None, item.SpriteDepth + (currentBarrelSprite.Depth - item.Sprite.Depth));
 
                 float chargeRatio = currentChargeTime / MaxChargeTime;
 
@@ -702,12 +705,14 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
+
             if (HudTint.A > 0)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                     new Color(HudTint.R, HudTint.G, HudTint.B) * (HudTint.A / 255.0f), true);
             }
-            
+
             GetAvailablePower(out float batteryCharge, out float batteryCapacity);
 
             List<Item> availableAmmo = new List<Item>();

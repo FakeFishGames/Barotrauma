@@ -59,10 +59,13 @@ namespace Barotrauma
                 if (character.Submarine != null && character.AIController is EnemyAIController enemyAi)
                 {
                     enemyAi.UnattackableSubmarines.Add(character.Submarine);
-                    enemyAi.UnattackableSubmarines.Add(Submarine.MainSub);
-                    foreach (Submarine sub in Submarine.MainSub.DockedTo)
+                    if (Submarine.MainSub != null)
                     {
-                        enemyAi.UnattackableSubmarines.Add(sub);
+                        enemyAi.UnattackableSubmarines.Add(Submarine.MainSub);
+                        foreach (Submarine sub in Submarine.MainSub.DockedTo)
+                        {
+                            enemyAi.UnattackableSubmarines.Add(sub);
+                        }
                     }
                 }
             }

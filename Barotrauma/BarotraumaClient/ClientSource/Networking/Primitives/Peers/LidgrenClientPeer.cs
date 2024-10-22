@@ -224,10 +224,13 @@ namespace Barotrauma.Networking
             ToolBox.ThrowIfNull(netPeerConfiguration);
 
 #if DEBUG
-            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
-            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Client.SimulatedMinimumLatency;
-            netPeerConfiguration.SimulatedRandomLatency = GameMain.Client.SimulatedRandomLatency;
-            netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
+            if (GameMain.Client != null)
+            {
+                netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
+                netPeerConfiguration.SimulatedMinimumLatency = GameMain.Client.SimulatedMinimumLatency;
+                netPeerConfiguration.SimulatedRandomLatency = GameMain.Client.SimulatedRandomLatency;
+                netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
+            }
 #endif
 
             byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);

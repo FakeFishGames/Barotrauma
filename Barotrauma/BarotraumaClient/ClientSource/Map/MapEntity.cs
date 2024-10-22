@@ -81,6 +81,16 @@ namespace Barotrauma
 
         public virtual bool IsVisible(Rectangle worldView)
         {
+            Rectangle worldRect = WorldRect;
+            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) { return false; }
+            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) { return false; }
+            //zoomed extremely far out -> no need to render
+            if (Screen.Selected.Cam.Zoom < 0.05f) { return false; }
+            if (worldRect.Width * Screen.Selected.Cam.Zoom < 1.0f ||
+                worldRect.Height * Screen.Selected.Cam.Zoom < 1.0f)
+            {
+                return false;
+            }
             return true;
         }
 
@@ -90,6 +100,8 @@ namespace Barotrauma
         public MapEntity ReplacedBy;
 
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back = true) { }
+
+        public virtual float GetDrawDepth() { return 0.0f; }
 
         /// <summary>
         /// A method that modifies the draw depth to prevent z-fighting between entities with the same sprite depth
@@ -305,6 +317,15 @@ namespace Barotrauma
                         if (PlayerInput.IsCtrlDown())
                         {
                             HashSet<MapEntity> clones = Clone(SelectedList.ToList()).Where(c => c != null).ToHashSet();
+                            
+                            if (clones.Count == 1)
+                            {
+                                if (clones.First() is WayPoint wayPoint && SelectedList.First() is WayPoint originalWaypoint && originalWaypoint.SpawnType == SpawnType.Path)
+                                {
+                                    originalWaypoint.ConnectTo(wayPoint);
+                                }
+                            }
+                            
                             SelectedList = clones;
                             SelectedList.ForEach(c => c.Move(moveAmount));
                             SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(clones), false));
@@ -1068,6 +1089,7 @@ namespace Barotrauma
             }
 
             SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false, handleInventoryBehavior: false));
+            if (Screen.Selected is SubEditorScreen subEditor) { subEditor.ReconstructLayers(); }
         }
 
         /// <summary>

@@ -17,7 +17,8 @@ namespace Barotrauma
         private static Sprite infoAreaPortraitBG;
 
         public bool LastControlled;
-        public int CrewListIndex { get; set; } = -1;
+               
+        public int CrewListIndex { get; set; } = int.MaxValue; //default to the bottom of the list
 
         private Sprite disguisedPortrait;
         private List<WearableSprite> disguisedAttachmentSprites;
@@ -31,6 +32,8 @@ namespace Barotrauma
         private Sprite tintMask;
         private float tintHighlightThreshold;
         private float tintHighlightMultiplier;
+
+        public bool ShowTalentResetPopupOnOpen = true;
 
         public static void Init()
         {
@@ -208,7 +211,7 @@ namespace Barotrauma
             return frame;
         }
 
-        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel)
+        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel, bool forceNotification)
         {
             if (TeamID == CharacterTeamType.FriendlyNPC) { return; }
             if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
@@ -225,6 +228,18 @@ namespace Barotrauma
                     "+[value] "+ TextManager.Get("SkillName." + skillIdentifier).Value, 
                     specialIncrease ? GUIStyle.Orange : GUIStyle.Green, 
                     playSound: Character == Character.Controlled, skillIdentifier, increase);
+            }
+            else if (forceNotification)
+            {
+                float change = newLevel - prevLevel;
+                if (Math.Abs(change) > 0.01f)
+                {
+                    string sign = change > 0 ? "+" : "-";
+                    Character?.AddMessage(
+                        $"{sign}{Math.Round(change, 2)} {TextManager.Get("SkillName." + skillIdentifier).Value}",
+                        specialIncrease ? GUIStyle.Orange : GUIStyle.Green,
+                        playSound: Character == Character.Controlled);
+                }
             }
         }
 
@@ -586,6 +601,8 @@ namespace Barotrauma
             ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
             ch.PermanentlyDead = inc.ReadBoolean();
+            ch.TalentRefundPoints = inc.ReadInt32();
+            ch.TalentResetCount = inc.ReadInt32();
             return ch;
         }
 

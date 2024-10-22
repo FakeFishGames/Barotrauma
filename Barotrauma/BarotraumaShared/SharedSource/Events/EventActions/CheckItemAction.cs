@@ -66,13 +66,12 @@ namespace Barotrauma
 
         public CheckItemAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
-            itemIdentifierSplit = ItemIdentifiers.Split(',').ToIdentifiers();
-            itemTags = ItemTags.Split(",").ToIdentifiers();
+            itemIdentifierSplit = ItemIdentifiers.ToIdentifiers().ToArray();
+            itemTags = ItemTags.ToIdentifiers().ToArray();
             var conditionalList = new List<PropertyConditional>();
             foreach (ContentXElement subElement in element.GetChildElements("conditional"))
             {
                 conditionalList.AddRange(PropertyConditional.FromXElement(subElement));
-                break;
             }
             conditionals = conditionalList;
 

@@ -11,6 +11,13 @@ namespace Barotrauma.Particles
         AlphaBlend, Additive//, Distortion
     }
 
+    enum ParticleDrawOrder
+    {
+        Default,
+        Foreground,
+        Background
+    }
+
     class ParticleManager
     {
         private const int MaxOutOfViewDist = 500;
@@ -91,7 +98,7 @@ namespace Barotrauma.Particles
             return CreateParticle(prefab, position, velocity, rotation, hullGuess, collisionIgnoreTimer: collisionIgnoreTimer, tracerPoints:tracerPoints);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, ParticleDrawOrder drawOrder = ParticleDrawOrder.Default, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             if (prefab == null || prefab.Sprites.Count == 0) { return null; }
             if (particleCount >= MaxParticles)
@@ -134,7 +141,7 @@ namespace Barotrauma.Particles
             if (particles[particleCount] == null) { particles[particleCount] = new Particle(); }
             Particle particle = particles[particleCount];
 
-            particle.Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
+            particle.Init(prefab, position, velocity, rotation, hullGuess, drawOrder, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
             particleCount++;
             particlesInCreationOrder.AddFirst(particle);
 
@@ -213,7 +220,7 @@ namespace Barotrauma.Particles
             return activeParticles;
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool inWater, bool? inSub, ParticleBlendState blendState)
+        public void Draw(SpriteBatch spriteBatch, bool inWater, bool? inSub, ParticleBlendState blendState, bool? background = false)
         {
             ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;
 
@@ -225,12 +232,16 @@ namespace Barotrauma.Particles
                 if (inSub.HasValue)
                 {
                     bool isOutside = particle.CurrentHull == null;
-                    if (!particle.DrawOnTop && isOutside == inSub.Value)
+                    if (particle.DrawOrder != ParticleDrawOrder.Foreground && isOutside == inSub.Value)
                     {
                         continue;
                     }
                 }
-
+                if (background.HasValue)
+                {
+                    bool isBackgroundParticle = particle.DrawOrder == ParticleDrawOrder.Background;
+                    if (background.Value != isBackgroundParticle) { continue; }
+                }
                 particle.Draw(spriteBatch);
             }
         }

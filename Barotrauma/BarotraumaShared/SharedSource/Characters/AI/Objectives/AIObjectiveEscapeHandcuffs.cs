@@ -28,7 +28,7 @@ namespace Barotrauma
         }
 
         public override bool CanBeCompleted => true;
-        protected override bool CheckObjectiveSpecific() => false;
+        protected override bool CheckObjectiveState() => false;
 
         // escape timer is set to 60 by default to allow players to locate prisoners in time
         private float escapeTimer = 60f;

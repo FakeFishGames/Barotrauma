@@ -359,5 +359,18 @@ namespace Barotrauma.Networking
         }
         protected static void LogMalformedMessage()
             => DebugConsole.ThrowError("Received malformed message from remote peer.");
+
+        protected bool ShouldAskForPassword(ServerSettings serverSettings, NetworkConnection connection)
+        {
+            if (!serverSettings.HasPassword) { return false; }
+
+            if (GameMain.Server is { } server && server.FindAndRemoveRecentlyDisconnectedConnection(connection))
+            {
+                // do not ask passwords from clients that have recently disconnected
+                return false;
+            }
+
+            return true;
+        }
     }
 }

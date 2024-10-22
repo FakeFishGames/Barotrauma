@@ -37,8 +37,10 @@ namespace Barotrauma
 
         public readonly OnRoundEndAction OnRoundEndAction;
 
-        private readonly string[] requiredDestinationTypes;
+        private readonly Identifier[] requiredDestinationTypes;
         public readonly bool RequireBeaconStation;
+
+        public readonly Identifier RequiredDestinationFaction;
 
         public int CurrentActionIndex { get; private set; }
         public List<EventAction> Actions { get; } = new List<EventAction>();
@@ -78,15 +80,82 @@ namespace Barotrauma
                     contentPackage: prefab.ContentPackage);
             }
 
-            requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
+            requiredDestinationTypes = prefab.ConfigElement.GetAttributeIdentifierArray("requireddestinationtypes", Array.Empty<Identifier>());
             RequireBeaconStation = prefab.ConfigElement.GetAttributeBool("requirebeaconstation", false);
+            RequiredDestinationFaction = prefab.ConfigElement.GetAttributeIdentifier(nameof(RequiredDestinationFaction), Identifier.Empty);
 
-            var allActions = GetAllActions().Select(a => a.action);
+            var allActionsWithIndent = GetAllActions();
+            var allActions = allActionsWithIndent.Select(a => a.action);
+
+            //attempt to check if the event has ConversationActions with options that don't close the prompt and don't lead to any follow-up conversation
+            foreach (var action in allActions)
+            {
+                if (action is ConversationAction conversationAction && conversationAction.Options.Any())
+                {
+                    int thisActionIndex = allActionsWithIndent.FindIndex(a => a.action == action);
+                    int thisIndentationLevel = allActionsWithIndent[thisActionIndex].indent;
+                    bool isLast = true;
+
+                    //go through all the actions after this one
+                    foreach (var actionWithIndent in allActionsWithIndent.Skip(thisActionIndex + 1))
+                    {
+                        //if it's an action with the same indentation level, it means it's a ConversationAction coming after this one
+                        if (actionWithIndent.action is ConversationAction && actionWithIndent.indent == thisIndentationLevel)
+                        {
+                            isLast = false;
+                            break;
+                        }
+                        //if the indentation level went back down, we've already searched everything inside this ConversationAction
+                        if (actionWithIndent.indent < thisIndentationLevel) { break; }
+                    }
+                    if (isLast)
+                    {
+                        foreach (var option in conversationAction.Options)
+                        {
+                            if (!conversationAction.GetEndingOptions().Contains(conversationAction.Options.IndexOf(option)) &&
+                                option.Actions.None(a => 
+                                    a is ConversationAction || HasConversationSubAction(a) ||
+                                    /* if there's a goto action explicitly set to end the conversation, assume it's intentional*/
+                                    a is GoTo { EndConversation: false }))
+                            {
+                                DebugConsole.AddWarning($"Potential error in event \"{prefab.Identifier}\": {nameof(ConversationAction)} ({conversationAction.Text}) has an option ({option.Text}) that doesn't end the conversation, but could not find any follow-ups to the conversation.");
+                            }
+                        }
+                    }
+                }
+
+                static bool HasConversationSubAction(EventAction action)
+                {
+                    foreach (var subAction in action.GetSubActions())
+                    {
+                        if (subAction is ConversationAction) { return true; }
+                        if (HasConversationSubAction(subAction)) { return true; }
+                    }
+                    return false;
+                }
+            }
+
+            foreach (var label in allActions.OfType<Label>())
+            {
+                if (allActions.None(a => a is GoTo gotoAction && label.Name == gotoAction.Name))
+                {
+                    //this can be safe, because a label with no gotos leading to it does nothing (but it's still a sign that something's misconfigured)
+                    DebugConsole.AddWarning($"Error in event \"{prefab.Identifier}\". Could not find a GoTo matching the Label \"{label.Name}\".",
+                        contentPackage: prefab.ContentPackage);
+                }
+            }
+
             foreach (var gotoAction in allActions.OfType<GoTo>())
             {
-                if (allActions.None(a => a is Label label && label.Name == gotoAction.Name))
+                int labelCount = allActions.Count(a => a is Label label && label.Name == gotoAction.Name);
+                if (labelCount == 0)
                 {                    
                     DebugConsole.ThrowError($"Error in event \"{prefab.Identifier}\". Could not find a label matching the GoTo \"{gotoAction.Name}\".", 
+                        contentPackage: prefab.ContentPackage);
+                }
+                else if (labelCount > 1)
+                {
+                    DebugConsole.ThrowError($"Error in event \"{prefab.Identifier}\". Multiple labels with the name \"{gotoAction.Name}\".",
                         contentPackage: prefab.ContentPackage);
                 }
             }
@@ -143,7 +212,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Finds all actions in the ScriptedEvent (recursively going through the subactions as well). 
+        /// Finds all actions in the ScriptedEvent using a depth-first search (recursively going through the subactions as well). 
         /// Returns a list of tuples where the first value is the indentation level (or "how deep in the hierarchy") the action is.
         /// </summary>
         public List<(int indent, EventAction action)> GetAllActions()
@@ -433,19 +502,24 @@ namespace Barotrauma
 
         public override bool LevelMeetsRequirements()
         {
-            if (requiredDestinationTypes == null) { return true; }
             var currLocation = GameMain.GameSession?.Campaign?.Map.CurrentLocation;
             if (currLocation?.Connections == null) { return true; }
             foreach (LocationConnection c in currLocation.Connections)
             {
                 if (RequireBeaconStation && !c.LevelData.HasBeaconStation) { continue; }
-                if (requiredDestinationTypes.Any(t => c.OtherLocation(currLocation).Type.Identifier == t))
+
+                var otherLocation = c.OtherLocation(currLocation);
+                if (!RequiredDestinationFaction.IsEmpty && otherLocation.Faction?.Prefab.Identifier != RequiredDestinationFaction) { continue; }
+
+                if (requiredDestinationTypes.Contains(Tags.AnyOutpost) && otherLocation.HasOutpost() && otherLocation.Type.IsAnyOutpost) { return true; }
+                if (requiredDestinationTypes.Any(t => otherLocation.Type.Identifier == t))
                 {
                     return true;
                 }
             }
-            return false;
+            return RequiredDestinationFaction.IsEmpty && requiredDestinationTypes.None();
         }
+
 
         public override void Finish()
         {

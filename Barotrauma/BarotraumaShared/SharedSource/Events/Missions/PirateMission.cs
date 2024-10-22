@@ -25,6 +25,8 @@ namespace Barotrauma
         private readonly List<Character> characters = new List<Character>();
         private readonly Dictionary<Character, List<Item>> characterItems = new Dictionary<Character, List<Item>>();
 
+        private readonly Dictionary<HumanPrefab, List<StatusEffect>> characterStatusEffects = new Dictionary<HumanPrefab, List<StatusEffect>>();
+
         // Update the last sighting periodically so that the players can find the pirate sub even if they have lost the track of it.
         private readonly float pirateSightingUpdateFrequency = 30;
         private float pirateSightingUpdateTimer;
@@ -96,14 +98,26 @@ namespace Barotrauma
             characterTypeConfig = prefab.ConfigElement.GetChildElement("CharacterTypes");
             addedMissionDifficultyPerPlayer = prefab.ConfigElement.GetAttributeFloat("addedmissiondifficultyperplayer", 0);
 
+            factionIdentifier = prefab.ConfigElement.GetAttributeIdentifier("faction", Identifier.Empty);
+
             //make sure all referenced character types are defined
             foreach (XElement characterElement in characterConfig.Elements())
             {
-                var characterId = characterElement.GetAttributeString("typeidentifier", string.Empty);
-                var characterTypeElement = characterTypeConfig.Elements().FirstOrDefault(e => e.GetAttributeString("typeidentifier", string.Empty) == characterId);
+                Identifier typeId = characterElement.GetAttributeIdentifier("typeidentifier", Identifier.Empty);
+                if (typeId.IsEmpty)
+                {
+                    if (characterElement.GetAttributeIdentifier("identifier", Identifier.Empty).IsEmpty)
+                    {
+                        DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Character element with neither a typeidentifier or identifier ({characterElement.ToString()}).",
+                            contentPackage: Prefab.ContentPackage);
+                    }
+                    continue;
+                }
+                var characterTypeElement = characterTypeConfig.Elements().FirstOrDefault(e =>
+                    e.GetAttributeIdentifier("typeidentifier", Identifier.Empty) == typeId);
                 if (characterTypeElement == null)
                 {
-                    DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Could not find a character type element for the character \"{characterId}\".",
+                    DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Could not find a character type element for the character \"{typeId}\".",
                         contentPackage: Prefab.ContentPackage);
                 }
             }
@@ -143,37 +157,47 @@ namespace Barotrauma
             levelData = level;
             missionDifficulty = level?.Difficulty ?? 0;
 
-            XElement submarineConfig = GetRandomDifficultyModifiedElement(submarineTypeConfig, missionDifficulty, ShipRandomnessModifier);
-            alternateReward = submarineConfig.GetAttributeInt("alternatereward", Reward);
-            factionIdentifier = submarineConfig.GetAttributeIdentifier("faction", Identifier.Empty);
+            //no specific sub configured, choose a random one
+            if (submarineTypeConfig == null)
+            {
+                submarineInfo = GetRandomDifficultyModifiedSubmarine(missionDifficulty, ShipRandomnessModifier);
+                alternateReward = (int)submarineInfo.EnemySubmarineInfo.Reward;
+            }
+            else
+            {
+                XElement submarineConfig = GetRandomDifficultyModifiedElement(submarineTypeConfig, missionDifficulty, ShipRandomnessModifier);
+                alternateReward = submarineConfig.GetAttributeInt("alternatereward", Reward);
+                factionIdentifier = submarineConfig.GetAttributeIdentifier("faction", factionIdentifier);
+
+                ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.ContentPackage);
+                if (submarinePath.IsNullOrEmpty())
+                {
+                    DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!",
+                        contentPackage: Prefab.ContentPackage);
+                    return;
+                }
+
+                BaseSubFile contentFile = 
+                    GetSubFile<EnemySubmarineFile>(submarinePath) ?? 
+                    GetSubFile<SubmarineFile>(submarinePath);
+                BaseSubFile GetSubFile<T>(ContentPath path) where T : BaseSubFile
+                {
+                    return ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<T>()).FirstOrDefault(f => f.Path == submarinePath);
+                }
+
+                if (contentFile == null)
+                {
+                    DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!",
+                        contentPackage: Prefab.ContentPackage);
+                    return;
+                }
+
+                submarineInfo = new SubmarineInfo(contentFile.Path.Value);
+            }
 
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", alternateReward)}‖end‖";
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
 
-            ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.ContentPackage);
-            if (submarinePath.IsNullOrEmpty())
-            {
-                DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!", 
-                    contentPackage: Prefab.ContentPackage);
-                return;
-            }
-
-            BaseSubFile contentFile = 
-                GetSubFile<EnemySubmarineFile>(submarinePath) ?? 
-                GetSubFile<SubmarineFile>(submarinePath);
-            BaseSubFile GetSubFile<T>(ContentPath path) where T : BaseSubFile
-            {
-                return ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<T>()).FirstOrDefault(f => f.Path == submarinePath);
-            }
-
-            if (contentFile == null)
-            {
-                DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!", 
-                    contentPackage: Prefab.ContentPackage);
-                return;
-            }
-
-            submarineInfo = new SubmarineInfo(contentFile.Path.Value);
         }
 
         private static float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier, Random rand)
@@ -183,6 +207,33 @@ namespace Barotrauma
         private static int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty, Random rand)
         {
             return Math.Max((int)Math.Round(minAmount + (maxAmount - minAmount) * (levelDifficulty + MathHelper.Lerp(-RandomnessModifier, RandomnessModifier, (float)rand.NextDouble())) / MaxDifficulty), minAmount);
+        }
+
+        private SubmarineInfo GetRandomDifficultyModifiedSubmarine(float levelDifficulty, float randomnessModifier)
+        {
+            Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
+            // look for the saved submarine that is closest to our difficulty, with some randomness
+            SubmarineInfo bestSubmarine = null;
+            float bestValue = float.MaxValue;
+            var submarineInfos = SubmarineInfo.SavedSubmarines.Where(i => i.IsEnemySubmarine);
+            foreach (SubmarineInfo submarineInfo in submarineInfos)
+            {
+                if (!Prefab.Tags.Any(t => submarineInfo.EnemySubmarineInfo.MissionTags.Contains(t))) { continue; }
+                float applicabilityValue = GetDifficultyModifiedValue(submarineInfo.EnemySubmarineInfo.PreferredDifficulty, levelDifficulty, randomnessModifier, rand);
+                if (applicabilityValue < bestValue)
+                {
+                    bestSubmarine = submarineInfo;
+                    bestValue = applicabilityValue;
+                }
+            }
+
+            if (bestSubmarine == null)
+            {
+                DebugConsole.ThrowError("No EnemySubmarine found that matches the mission's tags!");
+                return SubmarineInfo.SavedSubmarines.First(i => i.IsEnemySubmarine);
+            }
+
+            return bestSubmarine;
         }
 
         private XElement GetRandomDifficultyModifiedElement(XElement parentElement, float levelDifficulty, float randomnessModifier)
@@ -300,30 +351,54 @@ namespace Barotrauma
             bool commanderAssigned = false;
             foreach (ContentXElement element in characterConfig.Elements())
             {
+                //there's two ways to define the characters in pirate missions
+                //1. "the normal way", referring to a human prefab
+                Identifier humanPrefabId = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+                //2. the strange way it was initially implemented and the way the vanilla missions work: using a reference to a "character type" in the mission, which refers to a human prefab
+                Identifier characterTypeId = element.GetAttributeIdentifier("typeidentifier", Identifier.Empty);
+
+                int minAmount = element.GetAttributeInt("minamount", 0);
+                int maxAmount = element.GetAttributeInt("maxamount", 0);
                 // it is possible to get more than the "max" amount of characters if the modified difficulty is high enough; this is intentional
                 // if necessary, another "hard max" value could be used to clamp the value for performance/gameplay concerns
-                int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty, rand);
-                var characterId = element.GetAttributeString("typeidentifier", string.Empty);
+                int amountCreated = minAmount == 0 && maxAmount == 0 ? 
+                    //default to 1 character if amount is not defined
+                    1 :
+                    //otherwise choose a value between min and max based on difficulty
+                    GetDifficultyModifiedAmount(minAmount, maxAmount, enemyCreationDifficulty, rand);
+                
                 for (int i = 0; i < amountCreated; i++)
                 {
-                    XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeString("typeidentifier", string.Empty) == characterId).FirstOrDefault();
-
-                    if (characterType == null)
+                    HumanPrefab humanPrefab = null;
+                    bool isCommander = false;
+                    if (!characterTypeId.IsEmpty)
                     {
-                        DebugConsole.ThrowError($"No character types defined in CharacterTypes for a declared type identifier in mission \"{Prefab.Identifier}\".",
-                            contentPackage: element.ContentPackage);
-                        return;
+                        XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeIdentifier("typeidentifier", Identifier.Empty) == characterTypeId).FirstOrDefault();
+                        if (characterType == null)
+                        {
+                            DebugConsole.ThrowError($"No character types defined in CharacterTypes for a declared type identifier in mission \"{Prefab.Identifier}\".",
+                                contentPackage: element.ContentPackage);
+                            return;
+                        }
+                        XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, RandomnessModifier);
+                        humanPrefab = GetHumanPrefabFromElement(variantElement);
+                        isCommander = variantElement.GetAttributeBool("iscommander", false);
+                    }
+                    else if (!humanPrefabId.IsEmpty)
+                    {
+                        humanPrefab = GetHumanPrefabFromElement(element);
+                        isCommander = element.GetAttributeBool("iscommander", false);
                     }
 
-                    XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, RandomnessModifier);
-
-                    var humanPrefab = GetHumanPrefabFromElement(variantElement);
                     if (humanPrefab == null) { continue; }
 
                     Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, enemySub, CharacterTeamType.None, null);
+                    if (element.GetAttribute("color") != null)
+                    {
+                        spawnedCharacter.UniqueNameColor = element.GetAttributeColor("color", Color.Red);
+                    }
                     if (!commanderAssigned)
                     {
-                        bool isCommander = variantElement.GetAttributeBool("iscommander", false);
                         if (isCommander && spawnedCharacter.AIController is HumanAIController humanAIController)
                         {
                             humanAIController.InitShipCommandManager();
@@ -332,6 +407,15 @@ namespace Barotrauma
                                 humanAIController.ShipCommandManager.patrolPositions.Add(patrolPos);
                             }
                             commanderAssigned = true;
+                        }
+                    }
+
+                    foreach (var subElement in element.Elements())
+                    {
+                        if (subElement.NameAsIdentifier() == "statuseffect")
+                        {
+                            var newEffect = StatusEffect.Load(subElement, parentDebugName: Prefab.Name.Value);
+                            newEffect?.Apply(newEffect.type, 1.0f, spawnedCharacter, spawnedCharacter);                            
                         }
                     }
 

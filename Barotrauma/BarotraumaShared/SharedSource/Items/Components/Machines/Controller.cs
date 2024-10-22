@@ -183,11 +183,25 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Does the Controller require power to function (= to send signals and move the camera focus to a connected item)?")]
+        public bool RequirePower
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, IsPropertySaveable.No, description: "If true, other items can be used simultaneously.")]
         public bool IsSecondaryItem
         {
             get;
             private set;
+        }
+
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the user sticks to the position of this item even if the item moves.")]
+        public bool ForceUserToStayAttached
+        {
+            get;
+            set;
         }
 
         public Controller(Item item, ContentXElement element)
@@ -199,22 +213,35 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
+        /// <summary>
+        /// Hack for allowing characters to interact with a loader to get inside a boarding pod. 
+        /// Doing that simply by autointeracting with the contained pod is difficult, because interacting with the loader selects it 
+        /// _after_ the Select method of the pod is called by the autointeract logic, and the character only goes inside the pod if it's the selected item.
+        /// </summary>
+        private bool forceSelectNextFrame;
+
         public override void Update(float deltaTime, Camera cam) 
         {
             this.cam = cam;
-            UserInCorrectPosition = false;
+            if (!ForceUserToStayAttached) { UserInCorrectPosition = false; }
 
             string signal = IsToggle && State ? output : falseOutput;
-            if (item.Connections != null && IsToggle && !string.IsNullOrEmpty(signal))
+            if (item.Connections != null && IsToggle && !string.IsNullOrEmpty(signal) && !IsOutOfPower())
             {
                 item.SendSignal(signal, "signal_out");
                 item.SendSignal(signal, "trigger_out");
             }
 
+            if (forceSelectNextFrame && user != null)
+            {
+                user.SelectedItem = item;
+            }
+            forceSelectNextFrame = false;
+
             if (user == null 
                 || user.Removed
                 || !user.IsAnySelectedItem(item)
-                || item.ParentInventory != null
+                || (item.ParentInventory != null && !IsAttachedUser(user))
                 || !user.CanInteractWith(item) 
                 || (UsableIn == UseEnvironment.Water && !user.AnimController.InWater)
                 || (UsableIn == UseEnvironment.Air && user.AnimController.InWater))
@@ -226,6 +253,17 @@ namespace Barotrauma.Items.Components
                 }
                 if (item.Connections == null || !IsToggle || string.IsNullOrEmpty(signal)) { IsActive = false; }
                 return;
+            }
+
+            if (ForceUserToStayAttached && Vector2.DistanceSquared(item.WorldPosition, user.WorldPosition) > 0.1f)
+            {
+                user.TeleportTo(item.WorldPosition);
+                user.AnimController.Collider.ResetDynamics();
+                foreach (var limb in user.AnimController.Limbs)
+                {
+                    if (limb.Removed || limb.IsSevered) { continue; }
+                    limb.body?.ResetDynamics();
+                }
             }
 
             user.AnimController.StartUsingItem();
@@ -344,6 +382,8 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
+            if (IsOutOfPower()) { return false; }
+
             if (IsToggle && (activator == null || lastUsed < Timing.TotalTime - 0.1))
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -379,6 +419,8 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
+
+            if (IsOutOfPower()) { return false; }
 
             focusTarget = GetFocusTarget();
 
@@ -417,10 +459,19 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public bool IsOutOfPower()
+        {
+            if (!RequirePower) { return false; }
+            var powered = item.GetComponent<Powered>();
+            return powered == null || powered.Voltage < powered.MinVoltage;
+        }
+
         public Item GetFocusTarget()
         {
             var positionOut = item.Connections?.Find(c => c.Name == "position_out");
             if (positionOut == null) { return null; }
+
+            if (IsOutOfPower()) { return null; }
 
             item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: user), positionOut);
 
@@ -447,6 +498,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
+            if (IsOutOfPower()) { return false; }
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen) { return false; }
 #endif
@@ -539,7 +591,16 @@ namespace Barotrauma.Items.Components
             {
                 user = activator;
                 IsActive = true;
+                if (ForceUserToStayAttached && item.Container != null)
+                {
+                    forceSelectNextFrame = true;
+                    return false;
+                }
             }
+
+            //allow the selection logic above to run when out of power, but allow sending signals
+            if (IsOutOfPower()) { return false; }
+
 #if SERVER
             item.CreateServerEvent(this);
 #endif            
@@ -548,6 +609,14 @@ namespace Barotrauma.Items.Components
                 item.SendSignal(new Signal(output, sender: user), "signal_out");
             }
             return true;
+        }
+
+        /// <summary>
+        /// "Attached user" sticks to this item. Can be used for things such as clown crates and boarding pods.
+        /// </summary>
+        public bool IsAttachedUser(Character character)
+        {
+            return character != null && character == user && ForceUserToStayAttached;
         }
 
         public override void FlipX(bool relativeToSub)

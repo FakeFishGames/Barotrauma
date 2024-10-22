@@ -91,7 +91,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
             IsCompleted = Item.IsFullCondition;
             if (character.IsOnPlayerTeam && IsCompleted && IsRepairing())

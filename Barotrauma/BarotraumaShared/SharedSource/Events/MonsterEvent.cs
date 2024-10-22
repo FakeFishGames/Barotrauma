@@ -72,7 +72,9 @@ namespace Barotrauma
         /// Maximum number of the specific type of monster in the entire level. Can be used to prevent the event from spawning more monsters if there's
         /// already enough of that type of monster, e.g. spawned by another event or by a mission.
         /// </summary>
-        public readonly int MaxAmountPerLevel = int.MaxValue;
+        public readonly int MaxAmountPerLevel;
+        
+        private readonly float? overridePlayDeadProbability;
 
         public IReadOnlyList<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
@@ -137,6 +139,11 @@ namespace Barotrauma
             scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
             delayBetweenSpawns = prefab.ConfigElement.GetAttributeFloat("delaybetweenspawns", 0.1f);
             resetTime = prefab.ConfigElement.GetAttributeFloat("resettime", 0);
+            float playDeadProbability = prefab.ConfigElement.GetAttributeFloat("playdeadprobability", -1f);
+            if (playDeadProbability >= 0)
+            {
+                overridePlayDeadProbability = playDeadProbability;
+            }
 
             if (GameMain.NetworkMember != null)
             {
@@ -175,6 +182,18 @@ namespace Barotrauma
 
         protected override void InitEventSpecific(EventSet parentSet)
         {
+            // apply pvp stun resistance (reduce stun amount via resist multiplier)
+            if (GameMain.NetworkMember is { } networkMember && GameMain.GameSession?.GameMode is PvPMode && !networkMember.ServerSettings.PvPSpawnMonsters)
+            {
+                if (GameSettings.CurrentConfig.VerboseLogging)
+                {
+                    DebugConsole.NewMessage($"PvP setting: disabling monster event ({SpeciesName})", Color.Yellow);
+                }
+                
+                disallowed = true;
+                return;
+            }
+            
             if (parentSet != null && resetTime == 0)
             {
                 // Use the parent reset time only if there's no reset time defined for the event.
@@ -199,6 +218,10 @@ namespace Barotrauma
                         Prefab.ContentPackage);
                     disallowed = true;
                     continue;
+                }
+                if (overridePlayDeadProbability.HasValue)
+                {
+                    createdCharacter.EvaluatePlayDeadProbability(overridePlayDeadProbability);
                 }
                 if (GameMain.GameSession.IsCurrentLocationRadiated())
                 {
@@ -299,7 +322,7 @@ namespace Barotrauma
                     {
                         if (sub.Info.Type != SubmarineType.Player &&
                             sub.Info.Type != SubmarineType.EnemySubmarine &&
-                            sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) 
+                            !sub.IsRespawnShuttle) 
                         { 
                             continue; 
                         }
@@ -606,7 +629,7 @@ namespace Barotrauma
                     bool anyInAbyss = false;
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
-                        if (submarine.Info.Type != SubmarineType.Player || submarine == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
+                        if (submarine.Info.Type != SubmarineType.Player || submarine.IsRespawnShuttle) { continue; }
                         if (submarine.WorldPosition.Y < 0)
                         {
                             anyInAbyss = true;

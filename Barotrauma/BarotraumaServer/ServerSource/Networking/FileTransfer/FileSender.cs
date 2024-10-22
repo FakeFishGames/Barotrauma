@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
                 {
                     try
                     {
-                        Data = File.ReadAllBytes(filePath);
+                        Data = File.ReadAllBytes(filePath, catchUnauthorizedAccessExceptions: false);
                     }
                     catch (System.IO.IOException e)
                     {
@@ -400,7 +400,7 @@ namespace Barotrauma.Networking
                     if (GameMain.GameSession != null &&
                         !ActiveTransfers.Any(t => t.Connection == inc.Sender && t.FileType == FileTransferType.CampaignSave))
                     {
-                        StartTransfer(inc.Sender, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
+                        StartTransfer(inc.Sender, FileTransferType.CampaignSave, GameMain.GameSession.DataPath.LoadPath);
                         if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                         {
                             client.LastCampaignSaveSendTime = (campaign.LastSaveID, (float)Lidgren.Network.NetTime.Now);

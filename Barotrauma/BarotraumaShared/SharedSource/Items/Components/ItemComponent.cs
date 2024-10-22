@@ -661,6 +661,10 @@ namespace Barotrauma.Items.Components
 
         protected virtual void RemoveComponentSpecific()
         {
+#if CLIENT
+            HUDOverlay?.Remove(); 
+            HUDOverlay = null;
+#endif
         }
         
         protected string GetTextureDirectory(ContentXElement subElement)
@@ -794,12 +798,25 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private bool CheckIdCardAccess(RelatedItem relatedItem, IdCard idCard)
         {
-            if (item.Submarine != null && item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle)
+            if (item.Submarine is { IsRespawnShuttle: false })
             {
                 //id cards don't work in enemy subs (except on items that only require the default "idcard" tag)
                 if (idCard.TeamID != CharacterTeamType.None && idCard.TeamID != item.Submarine.TeamID && relatedItem.Identifiers.Any(id => id != "idcard"))
                 {
-                    return false;
+                    if (GameMain.GameSession?.GameMode is PvPMode)
+                    {
+                        if (item.Submarine.TeamID != CharacterTeamType.FriendlyNPC && item.Submarine.TeamID != CharacterTeamType.None)
+                        {
+                            // In PvP, always allow access also to FriendlyNPC and None -> restrict access only to the enemy sub.
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 else if (idCard.SubmarineSpecificID != 0 && item.Submarine.SubmarineSpecificIDTag != idCard.SubmarineSpecificID)
                 {

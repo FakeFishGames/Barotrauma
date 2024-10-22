@@ -257,7 +257,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
             if (character.Submarine is { TeamID: CharacterTeamType.FriendlyNPC } && character.Submarine == Enemy.Submarine)
             {
@@ -898,23 +898,13 @@ namespace Barotrauma
                 }
             }
         }
-
-        private void Unequip()
+        
+        private void UnequipWeapon()
         {
-            if (!character.LockHands && character.HeldItems.Contains(Weapon))
-            {
-                if (!Weapon.AllowedSlots.Contains(InvSlotType.Any) || !character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Any }))
-                {
-                    if (Weapon.AllowedSlots.Contains(InvSlotType.Bag))
-                    {
-                        if (character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Bag }))
-                        {
-                            return;
-                        }
-                    }
-                    Weapon.Drop(character);
-                }
-            }
+            if (Weapon == null) { return; }
+            if (character.LockHands) { return; }
+            if (character.HeldItems.Contains(Weapon)) { return; }
+            character.Unequip(Weapon);
         }
 
         private bool Equip()
@@ -929,7 +919,15 @@ namespace Barotrauma
                 ClearInputs();
                 Weapon.TryInteract(character, forceSelectKey: true);
                 var slots = Weapon.AllowedSlots.Where(CharacterInventory.IsHandSlotType);
-                if (character.Inventory.TryPutItem(Weapon, character, slots))
+                bool successfullyEquipped = character.TryPutItem(Weapon, slots);
+                if (!successfullyEquipped && character.HasHandsFull(out (Item leftHandItem, Item rightHandItem) items))
+                {
+                    // Unequip and try again.
+                    character.Unequip(items.leftHandItem);
+                    character.Unequip(items.rightHandItem);
+                    successfullyEquipped = character.TryPutItem(Weapon, slots);
+                }
+                if (successfullyEquipped)
                 {
                     SetAimTimer(Rand.Range(0.2f, 0.4f) / AimSpeed);
                     SetReloadTime(WeaponComponent);
@@ -1322,8 +1320,6 @@ namespace Barotrauma
                 aimTimer -= deltaTime;
                 return;
             }
-            if (reloadTimer > 0) { return; }
-            if (holdFireCondition != null && holdFireCondition()) { return; }
             sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
             distanceTimer = DistanceCheckInterval;
             if (WeaponComponent is MeleeWeapon meleeWeapon)
@@ -1353,9 +1349,11 @@ namespace Barotrauma
                     if (closeEnough && Enemy.WorldPosition.Y < character.WorldPosition.Y && yDiff > 25)
                     {
                         // The target is probably knocked down? -> try to reach it by crouching.
-                        HumanAIController.AnimController.Crouching = true;
+                        HumanAIController.AnimController.Crouch();
                     }
                 }
+                if (reloadTimer > 0) { return; }
+                if (holdFireCondition != null && holdFireCondition()) { return; }
                 if (closeEnough)
                 {
                     UseWeapon(deltaTime);
@@ -1371,7 +1369,8 @@ namespace Barotrauma
             {
                 if (WeaponComponent is RepairTool repairTool)
                 {
-                    if (sqrDistance > repairTool.Range * repairTool.Range) { return; }
+                    float reach = AIObjectiveFixLeak.CalculateReach(repairTool, character);
+                    if (sqrDistance > reach * reach) { return; }
                 }
                 float aimFactor = MathHelper.PiOver2 * (1 - AimAccuracy);
                 if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.WorldPosition - Weapon.WorldPosition) < MathHelper.PiOver4 + aimFactor)
@@ -1420,11 +1419,8 @@ namespace Barotrauma
                     break;
                 }
                 case MeleeWeapon mw:
-                {
-                    if (character.AnimController is HumanoidAnimController { Crouching: false })
-                    {
-                        reloadTime = mw.Reload;
-                    }
+                { 
+                    reloadTime = mw.Reload;
                     break;
                 }
             }
@@ -1485,7 +1481,7 @@ namespace Barotrauma
             }
             if (ShouldUnequipWeapon)
             {
-                Unequip();
+                UnequipWeapon();
             }
             SteeringManager?.Reset();
         }
@@ -1495,7 +1491,7 @@ namespace Barotrauma
             base.OnAbandon();
             if (ShouldUnequipWeapon)
             {
-                Unequip();
+                UnequipWeapon();
             }
             SteeringManager?.Reset();
         }

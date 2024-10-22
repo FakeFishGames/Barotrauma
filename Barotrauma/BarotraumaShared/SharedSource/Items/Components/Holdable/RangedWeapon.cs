@@ -243,7 +243,7 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
             float baseReloadTime = reload;
-            float weaponSkill = character.GetSkillLevel("weapons");
+            float weaponSkill = character.GetSkillLevel(Tags.WeaponsSkill);
             
             bool applyReloadFailure = ReloadSkillRequirement > 0 && ReloadNoSkill > reload && weaponSkill < ReloadSkillRequirement;
             if (applyReloadFailure)
@@ -291,6 +291,9 @@ namespace Barotrauma.Items.Components
                     var lastProjectile = LastProjectile;
                     if (lastProjectile != projectile)
                     {
+                        //Note that we always snap the rope here, unlike when firing a rope from a turret.
+                        //That's because handheld RangedWeapons have some special logic for handling the rope,
+                        //which doesn't support multiple attached ropes (see Holdable.GetRope and the references to it)
                         lastProjectile?.Item.GetComponent<Rope>()?.Snap();
                     }
                     float damageMultiplier = (1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier)) * WeaponDamageModifier;

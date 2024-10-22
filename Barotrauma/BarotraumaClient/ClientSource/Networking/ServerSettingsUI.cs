@@ -418,8 +418,44 @@ namespace Barotrauma.Networking
             var randomizeLevelBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform), TextManager.Get("ServerSettingsRandomizeSeed"));
             AssignGUIComponent(nameof(RandomizeSeed), randomizeLevelBox);
 
-            //***********************************************
-
+            // *******  PVP  ********************************
+            NetLobbyScreen.CreateSubHeader("gamemode.pvp", listBox.Content);
+            
+            var teamSelectModeLabel = new GUITextBlock(
+                new RectTransform(new Vector2(1.0f, 0.05f),
+                    listBox.Content.RectTransform),
+                TextManager.Get("TeamSelectionMode"));
+            teamSelectModeLabel.ToolTip = TextManager.Get("TeamSelectionMode.tooltip");
+            var teamSelectionMode = new GUISelectionCarousel<PvpTeamSelectionMode>(
+                new RectTransform(new Vector2(0.5f, 0.6f),
+                    teamSelectModeLabel.RectTransform,
+                    Anchor.CenterRight));
+            foreach (PvpTeamSelectionMode teamSelectionModeOption in Enum.GetValues(typeof(PvpTeamSelectionMode)))
+            {
+                var optionName = teamSelectionModeOption.ToString();
+                teamSelectionMode.AddElement(teamSelectionModeOption,
+                    TextManager.Get($"TeamSelectionMode.{optionName}"),
+                    TextManager.Get($"TeamSelectionMode.{optionName}.tooltip"));
+            }
+            AssignGUIComponent(nameof(PvpTeamSelectionMode), teamSelectionMode);
+            
+            var autoBalanceThresholdLabel = new GUITextBlock(
+                new RectTransform(new Vector2(1.0f, 0.05f),
+                    listBox.Content.RectTransform),
+                TextManager.Get("AutoBalanceThreshold"));
+            var autoBalanceThresholdTooltip = TextManager.Get("AutoBalanceThreshold.tooltip");
+            autoBalanceThresholdLabel.ToolTip = autoBalanceThresholdTooltip;
+            var autoBalanceThreshold = new GUISelectionCarousel<int>(
+                new RectTransform(new Vector2(0.5f, 0.6f),
+                    autoBalanceThresholdLabel.RectTransform,
+                    Anchor.CenterRight));
+            autoBalanceThreshold.AddElement(0, TextManager.Get($"AutoBalanceThreshold.Off"), autoBalanceThresholdTooltip);
+            autoBalanceThreshold.AddElement(1, "1", autoBalanceThresholdTooltip);
+            autoBalanceThreshold.AddElement(2, "2", autoBalanceThresholdTooltip);
+            autoBalanceThreshold.AddElement(3, "3", autoBalanceThresholdTooltip);
+            AssignGUIComponent(nameof(PvpAutoBalanceThreshold), autoBalanceThreshold);
+            
+            // *******  GAMEPLAY  ***************************
             NetLobbyScreen.CreateSubHeader("serversettingsroundstab", listBox.Content);
 
             var voiceChatEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform),
@@ -484,6 +520,9 @@ namespace Barotrauma.Networking
             };
             AssignGUIComponent(nameof(NewCampaignDefaultSalary), defaultSalarySlider);
             defaultSalarySlider.OnMoved(defaultSalarySlider, defaultSalarySlider.BarScroll);
+
+            var pvpDisembarkPoints = NetLobbyScreen.CreateLabeledNumberInput(listBox.Content, "serversettingsdisembarkpoints", 0, 100, "serversettingsdisembarkpointstooltip");
+            AssignGUIComponent(nameof(DisembarkPointAllowance), pvpDisembarkPoints);
 
             //--------------------------------------------------------------------------------
             //                              game settings 

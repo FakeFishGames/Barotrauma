@@ -344,7 +344,9 @@ namespace Barotrauma.Networking
         {
             // Do nothing with the auth ticket because that should be handled by the owner peer,
             // just assume that authentication succeeded
-            pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
+            pendingClient.InitializationStep = ShouldAskForPassword(serverSettings, pendingClient.Connection)
+                ? ConnectionInitialization.Password
+                : ConnectionInitialization.ContentPackageOrder;
             pendingClient.Name = packet.Name;
             pendingClient.AuthSessionStarted = true;
         }

@@ -11,13 +11,17 @@ namespace Barotrauma.Items.Components
             string[] elementValues = new string[customInterfaceElementList.Count];
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (customInterfaceElementList[i].HasPropertyName)
+                var element = customInterfaceElementList[i];
+                switch (element.InputType)
                 {
-                    elementValues[i] = msg.ReadString();
-                }
-                else
-                {
-                    elementStates[i] = msg.ReadBoolean();
+                    case CustomInterfaceElement.InputTypeOption.Number:
+                    case CustomInterfaceElement.InputTypeOption.Text:
+                        elementValues[i] = msg.ReadString();
+                        break;
+                    case CustomInterfaceElement.InputTypeOption.Button:
+                    case CustomInterfaceElement.InputTypeOption.TickBox:
+                        elementStates[i] = msg.ReadBoolean();
+                        break;
                 }
             }
 
@@ -26,15 +30,10 @@ namespace Barotrauma.Items.Components
             {
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
-                    var element = customInterfaceElementList[i];
-                    if (element.HasPropertyName)
+                    var element = customInterfaceElementList[i]; 
+                    switch (element.InputType)
                     {
-                        if (!element.IsNumberInput)
-                        {
-                            TextChanged(element, elementValues[i]);
-                        }
-                        else
-                        {
+                        case CustomInterfaceElement.InputTypeOption.Number:
                             switch (element.NumberType)
                             {
                                 case NumberType.Int when int.TryParse(elementValues[i], out int value):
@@ -44,16 +43,20 @@ namespace Barotrauma.Items.Components
                                     ValueChanged(element, value);
                                     break;
                             }
-                        }
-                    }
-                    else if (element.ContinuousSignal)
-                    {
-                        TickBoxToggled(element, elementStates[i]);
-                    }
-                    else if (elementStates[i])
-                    {
-                        clickedButton = element;
-                        ButtonClicked(element);
+                            break;
+                        case CustomInterfaceElement.InputTypeOption.Text:
+                            TextChanged(element, elementValues[i]);
+                            break;
+                        case CustomInterfaceElement.InputTypeOption.TickBox:
+                            TickBoxToggled(element, elementStates[i]);
+                            break;
+                        case CustomInterfaceElement.InputTypeOption.Button:
+                            if (elementStates[i])
+                            {
+                                clickedButton = element;
+                                ButtonClicked(element);
+                            }
+                            break;
                     }
                 }
             }
@@ -70,17 +73,19 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
                 var element = customInterfaceElementList[i];
-                if (element.HasPropertyName)
+
+                switch (element.InputType)
                 {
-                    msg.WriteString(element.Signal);
-                }
-                else if(element.ContinuousSignal)
-                {
-                    msg.WriteBoolean(element.State);
-                }
-                else
-                {
-                    msg.WriteBoolean(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
+                    case CustomInterfaceElement.InputTypeOption.Number:
+                    case CustomInterfaceElement.InputTypeOption.Text:
+                        msg.WriteString(element.Signal);                
+                        break;
+                    case CustomInterfaceElement.InputTypeOption.TickBox:
+                        msg.WriteBoolean(element.State);
+                        break;
+                    case CustomInterfaceElement.InputTypeOption.Button:
+                        msg.WriteBoolean(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
+                        break;
                 }
             }
         }

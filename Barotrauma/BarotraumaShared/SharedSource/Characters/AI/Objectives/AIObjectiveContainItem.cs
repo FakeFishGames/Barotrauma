@@ -77,9 +77,8 @@ namespace Barotrauma
             this.container = container;
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
-            if (IsCompleted) { return true; }
             if (container?.Item == null || !container.Item.HasAccess(character))
             {
                 Abandon = true;

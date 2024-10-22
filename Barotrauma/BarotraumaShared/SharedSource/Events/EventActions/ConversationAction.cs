@@ -113,13 +113,15 @@ namespace Barotrauma
                     Text = elem.GetAttributeString("tag", string.Empty);
                     textElement = elem;
                 }
-            }
-            if (element.GetChildElement("Replace") != null)
-            {
-                DebugConsole.ThrowError(
-                    $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\"" +
-                    $" - unrecognized child element \"Replace\".",
-                    contentPackage: element.ContentPackage);
+                else
+                {
+                    string thisName = nameof(ConversationAction);
+                    DebugConsole.ThrowError(
+                        $"Error in {thisName} in the event \"{parentEvent.Prefab.Identifier}\"" +
+                        $" - unrecognized child element \"{elem.Name}\". If it's an action intended to execute after the {thisName}, " +
+                        $"it should be after the {thisName}, not inside it.",
+                        contentPackage: element.ContentPackage);
+                }
             }
         }
 
@@ -245,7 +247,17 @@ namespace Barotrauma
 
         public int[] GetEndingOptions()
         {
-            List<int> endings = Options.Where(group => !group.Actions.Any() || group.EndConversation).Select(group => Options.IndexOf(group)).ToList();
+            List<int> endings = Options
+                .Where(group =>  
+                    group.EndConversation || 
+                    //no actions = safe to assume this must end the conversation
+                    !group.Actions.Any() ||
+                    //no follow-up conversation and a goto makes the event jump somewhere else
+                    //we cannot easily determine whether that goto will lead to a follow-up conversation,
+                    //so it's safest to close this conversation to prevent it from getting stuck (the potential follow-up will open a new one)
+                    (group.Actions.None(a => a is ConversationAction) && group.Actions.Any(a => a is GoTo { EndConversation: true })))
+                .Select(group => Options.IndexOf(group))
+                .ToList();
             if (!ContinueConversation) { endings.Add(-1); }
             return endings.ToArray();
         }

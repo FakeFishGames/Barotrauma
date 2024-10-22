@@ -216,6 +216,7 @@ namespace Barotrauma.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
+            base.DrawHUD(spriteBatch, character);
             GUI.HideCursor = targetSections.Count > 0;
         }
 

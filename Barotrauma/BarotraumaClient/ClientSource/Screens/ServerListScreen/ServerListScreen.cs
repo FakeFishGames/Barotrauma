@@ -448,7 +448,7 @@ namespace Barotrauma
                     .ToArray();
 
                 bool inSelectedCall = false;
-                languageDropdown.OnSelected = (_, userData) =>
+                languageDropdown.AfterSelected = (_, userData) =>
                 {
                     if (inSelectedCall) { return true; }
                     try

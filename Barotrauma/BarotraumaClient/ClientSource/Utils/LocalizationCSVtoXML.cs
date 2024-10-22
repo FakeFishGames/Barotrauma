@@ -45,7 +45,7 @@ namespace Barotrauma
                 Dictionary<string, List<string>> xmlContent;
                 try
                 {
-                    xmlContent = ConvertInfoTextToXML(File.ReadAllLines(textFilePath, Encoding.UTF8));
+                    xmlContent = ConvertInfoTextToXML(File.ReadAllLines(textFilePath, Encoding.UTF8, catchUnauthorizedAccessExceptions: false));
                 }
                 catch (Exception e)
                 {
@@ -156,7 +156,7 @@ namespace Barotrauma
                     List<string> xmlContent;
                     try
                     {
-                        xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8), language);
+                        xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8, catchUnauthorizedAccessExceptions: false), language);
                     }
                     catch (Exception e)
                     {

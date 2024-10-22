@@ -503,8 +503,18 @@ namespace Barotrauma
             {
                 if (PlayerInput.ScrollWheelSpeed != 0)
                 {
-                    zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, MinZoom, MaxZoom);
+                    float newZoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, MinZoom, MaxZoom);
+                    float zoomDeltaPrc = ((newZoom - zoom) / zoom);
+                    zoom = newZoom;
                     zoomBar.BarScroll = GetBarScrollValue();
+                    
+                    // modify view area offset as well when zooming, to zoom into mouse cursor position
+                    Point mouseToViewAreaScreenCenterDelta = (GetViewArea.Center - viewAreaOffset) - PlayerInput.MousePosition.ToPoint();
+                    Vector2 mouseDelta = mouseToViewAreaScreenCenterDelta.ToVector2();
+
+                    Vector2 newViewAreaOffset = viewAreaOffset.ToVector2();
+                    newViewAreaOffset += (mouseDelta + newViewAreaOffset) * zoomDeltaPrc;
+                    viewAreaOffset = newViewAreaOffset.ToPoint();
                 }
                 widgets.Values.ForEach(w => w.Update((float)deltaTime));
                 if (PlayerInput.MidButtonHeld())
@@ -516,6 +526,36 @@ namespace Barotrauma
             }
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
+                if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.C))
+                {
+                    string text = "";
+                    if (selectedSprites.Count == 1)
+                    {
+                        var selectedSprite = selectedSprites.First();
+                        if (selectedSprite.SourceElement != null)
+                        {
+                            string sourceRectText = $"sourcerect=\"{XMLExtensions.RectToString(selectedSprite.SourceRect)}\"";
+                            text += $"{sourceRectText}";
+                        }
+                    }
+                    else
+                    {
+                        foreach (var selectedSprite in selectedSprites)
+                        {
+                            if (selectedSprite.SourceElement == null) { continue; }
+                            XElement xElement = new XElement(selectedSprite.SourceElement.Element);
+                            xElement.SetAttributeValue("sourcerect", XMLExtensions.RectToString(selectedSprite.SourceRect));
+                            xElement.SetAttributeValue("origin", XMLExtensions.Vector2ToString(selectedSprite.RelativeOrigin));
+                            text += $"{xElement}";
+                            if (selectedSprites.Last() != selectedSprite)
+                            {
+                                text += Environment.NewLine;
+                            }
+                        }
+                    }
+                    
+                    Clipboard.SetText(text);
+                }
                 if (PlayerInput.KeyHit(Keys.Left))
                 {
                     Nudge(Keys.Left);
@@ -568,6 +608,28 @@ namespace Barotrauma
                 {
                     holdTimer = 0;
                 }
+                
+                float moveSpeed = 600f * zoom;
+                float moveSpeedDeltaTime = (float)(moveSpeed * deltaTime);
+                Vector2 viewOffsetMove = Vector2.Zero;
+                if (PlayerInput.KeyDown(Keys.W))
+                {
+                    viewOffsetMove.Y += moveSpeedDeltaTime;
+                }
+                if (PlayerInput.KeyDown(Keys.S))
+                {
+                    viewOffsetMove.Y -= moveSpeedDeltaTime;
+                }
+                if (PlayerInput.KeyDown(Keys.A))
+                {
+                    viewOffsetMove.X += moveSpeedDeltaTime;
+                }
+                if (PlayerInput.KeyDown(Keys.D))
+                {
+                    viewOffsetMove.X -= moveSpeedDeltaTime;
+                }
+                
+                viewAreaOffset += viewOffsetMove.ToPoint();
             }            
         }
 
@@ -963,8 +1025,14 @@ namespace Barotrauma
             //foreach (Sprite sprite in loadedSprites.OrderBy(s => GetSpriteName(s)))
             foreach (Sprite sprite in loadedSprites.OrderBy(s => s.SourceElement.GetAttributeContentPath("texture")?.Value ?? string.Empty))
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    GetSpriteName(sprite) + " (" + sprite.SourceRect.X + ", " + sprite.SourceRect.Y + ", " + sprite.SourceRect.Width + ", " + sprite.SourceRect.Height + ")")
+                string elementLocalName = sprite.SourceElement.Element.Name.LocalName;
+                string text = $"{GetSpriteName(sprite)} ({sprite.SourceRect.X}, {sprite.SourceRect.Y}, {sprite.SourceRect.Width}, {sprite.SourceRect.Height}) [{elementLocalName}]";
+                if (string.Equals(elementLocalName, "sprite", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    text = $"{GetSpriteName(sprite)} ({sprite.SourceRect.X}, {sprite.SourceRect.Y}, {sprite.SourceRect.Width}, {sprite.SourceRect.Height})";
+                }
+                
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, text: text)
                 {
                     UserData = sprite
                 };
@@ -1005,11 +1073,11 @@ namespace Barotrauma
             string name = sprite.Name;
             if (string.IsNullOrWhiteSpace(name))
             {
-                name = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
+                name = sourceElement.Parent?.GetAttributeString("identifier", string.Empty);
             }
             if (string.IsNullOrEmpty(name))
             {
-                name = sourceElement.Parent.GetAttributeString("name", string.Empty);
+                name = sourceElement.Parent?.GetAttributeString("name", string.Empty);
             }
             return string.IsNullOrEmpty(name) ? Path.GetFileNameWithoutExtension(sprite.FilePath.Value) : name;
         }

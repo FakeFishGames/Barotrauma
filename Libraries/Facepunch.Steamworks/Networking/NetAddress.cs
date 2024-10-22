@@ -60,18 +60,33 @@ namespace Steamworks.Data
 		/// Specific IP, specific port
 		/// </summary>
 		public static NetAddress From( IPAddress address, ushort port )
-		{
-			var addr = address.GetAddressBytes();
+        {
+            var local = Cleared;
+            switch (address.AddressFamily)
+            {
+                case System.Net.Sockets.AddressFamily.InterNetwork:
+                    InternalSetIPv4(ref local, address.IpToInt32(), port);
+                    return local;
+                case System.Net.Sockets.AddressFamily.InterNetworkV6:
+                    var ptr = GetIpv6AddressBytesPtr(address);
+                    InternalSetIPv6(ref local, ptr, port);
+                    FreeMemory(ptr);
+                    return local;
+                default:
+                    throw new System.NotImplementedException( $"Oops - no {address.AddressFamily} support yet?" );
+            }
 
-			if ( address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork )
-			{
-				var local = Cleared;
-				InternalSetIPv4( ref local, Utility.IpToInt32( address ), port );
-				return local;
-			}
+            static System.IntPtr GetIpv6AddressBytesPtr(IPAddress address)
+            {
+                byte[] bytes = address.GetAddressBytes();
+                var unmanagedPointer = Marshal.AllocHGlobal(bytes.Length);
+                Marshal.Copy(bytes, 0, unmanagedPointer, bytes.Length);
+                return unmanagedPointer;
+            }
 
-			throw new System.NotImplementedException( "Oops - no IPV6 support yet?" );
-		}
+            void FreeMemory(System.IntPtr unmanagedMemory)
+                => Marshal.FreeHGlobal(unmanagedMemory);
+        }
 
 		/// <summary>
 		/// Set everything to zero

@@ -228,11 +228,7 @@ namespace Barotrauma
             coroutine = CoroutineManager.Invoke(() =>
             {
                 //round ended before the coroutine finished
-#if CLIENT
-                if (GameMain.GameSession == null || Level.Loaded == null && !(GameMain.GameSession.GameMode is TestGameMode)) { return; }
-#else
-                if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-#endif
+                if (GameMain.GameSession == null || Level.Loaded == null && GameMain.GameSession.GameMode is not TestGameMode) { return; }
                 DelayedObjectives.Remove(objective);
                 AddObjective(objective);
                 callback?.Invoke();

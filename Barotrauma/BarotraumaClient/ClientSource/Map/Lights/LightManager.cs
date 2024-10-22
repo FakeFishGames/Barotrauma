@@ -174,7 +174,7 @@ namespace Barotrauma.Lights
         }
 
         private readonly List<LightSource> activeLights = new List<LightSource>(capacity: 100);
-        private readonly List<LightSource> activeLightsWithLightVolume = new List<LightSource>(capacity: 100);
+        private readonly List<LightSource> activeShadowCastingLights = new List<LightSource>(capacity: 100);
 
         public static int ActiveLightCount { get; private set; }
 
@@ -279,7 +279,7 @@ namespace Barotrauma.Lights
                 }
 
                 //above the top boundary of the level (in an inactive respawn shuttle?)
-                if (Level.Loaded != null && light.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                if (Level.IsPositionAboveLevel(light.WorldPosition)) { continue; }
 
                 float range = light.LightSourceParams.TextureRange;
                 if (light.LightSprite != null)
@@ -315,19 +315,20 @@ namespace Barotrauma.Lights
             }
 
             //find the lights with an active light volume
-            activeLightsWithLightVolume.Clear();
+            activeShadowCastingLights.Clear();
             foreach (var activeLight in activeLights)
             {
+                if (!activeLight.CastShadows) { continue; }
                 if (activeLight.Range < 1.0f || activeLight.Color.A < 1 || activeLight.CurrentBrightness <= 0.0f) { continue; }
-                activeLightsWithLightVolume.Add(activeLight);
+                activeShadowCastingLights.Add(activeLight);
             }
 
             //remove some lights with a light volume if there's too many of them
-            if (activeLightsWithLightVolume.Count > GameSettings.CurrentConfig.Graphics.VisibleLightLimit && Screen.Selected is { IsEditor: false })
+            if (activeShadowCastingLights.Count > GameSettings.CurrentConfig.Graphics.VisibleLightLimit && Screen.Selected is { IsEditor: false })
             {
-                for (int i = GameSettings.CurrentConfig.Graphics.VisibleLightLimit; i < activeLightsWithLightVolume.Count; i++)
+                for (int i = GameSettings.CurrentConfig.Graphics.VisibleLightLimit; i < activeShadowCastingLights.Count; i++)
                 {
-                    activeLights.Remove(activeLightsWithLightVolume[i]);
+                    activeLights.Remove(activeShadowCastingLights[i]);
                 }
             }
             activeLights.Sort((l1, l2) => l1.LastRecalculationTime.CompareTo(l2.LastRecalculationTime));
@@ -827,7 +828,7 @@ namespace Barotrauma.Lights
         public void ClearLights()
         {
             activeLights.Clear();
-            activeLightsWithLightVolume.Clear();
+            activeShadowCastingLights.Clear();
             lights.Clear();
         }
     }

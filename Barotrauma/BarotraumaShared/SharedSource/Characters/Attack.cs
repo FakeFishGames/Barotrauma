@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -24,11 +25,22 @@ namespace Barotrauma
         NotDefined
     }
 
+    [Flags]
     public enum AttackTarget
     {
-        Any,
-        Character,
-        Structure   // Including hulls etc. Evaluated as anything but a character.
+        Any = 0,
+        /// <summary>
+        /// Characters only
+        /// </summary>
+        Character = 1,
+        /// <summary>
+        /// Structures and hulls, but also items (for backwards support)!
+        /// </summary>
+        Structure = 2,
+        /// <summary>
+        /// Items only
+        /// </summary>
+        Item = 4
     }
 
     public enum AIBehaviorAfterAttack
@@ -816,15 +828,28 @@ namespace Barotrauma
             return true;
         }
 
-        public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType == targetType;
+        public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType.HasAnyFlag(targetType);
 
         public bool IsValidTarget(Entity target)
         {
             return TargetType switch
             {
                 AttackTarget.Character => target is Character,
-                AttackTarget.Structure => !(target is Character),
-                _ => true,
+                AttackTarget.Structure => target is Structure or Hull or Item, // Items are intentionally included for backwards-support.
+                AttackTarget.Item => target is Item,
+                _ => IsValidTarget(GetAttackTargetTypeFromEntity(target))
+            };
+        }
+        
+        private static AttackTarget GetAttackTargetTypeFromEntity(Entity entity)
+        {
+            return entity switch
+            {
+                Character => AttackTarget.Character,
+                Item => AttackTarget.Item,
+                Structure => AttackTarget.Structure,
+                Hull => AttackTarget.Structure,
+                _ => AttackTarget.Any
             };
         }
 

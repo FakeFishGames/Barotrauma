@@ -588,7 +588,7 @@ namespace Barotrauma
             return itemContainer;
         }
 
-        public static void DeliverItemsToSub(IEnumerable<PurchasedItem> itemsToSpawn, Submarine sub, CargoManager cargoManager)
+        public static void DeliverItemsToSub(IEnumerable<PurchasedItem> itemsToSpawn, Submarine sub, CargoManager cargoManager, bool showNotification = true)
         {
             if (!itemsToSpawn.Any()) { return; }
 
@@ -606,7 +606,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (sub == Submarine.MainSub && itemsToSpawn.Any(it => !it.Delivered && it.Quantity > 0))
+            if (sub == Submarine.MainSub && itemsToSpawn.Any(it => !it.Delivered && it.Quantity > 0) && showNotification)
             {
 #if CLIENT
                 new GUIMessageBox("",
@@ -620,11 +620,14 @@ namespace Barotrauma
 #else
                 foreach (Client client in GameMain.Server.ConnectedClients)
                 {
-                    ChatMessage msg = ChatMessage.Create("",
-                       TextManager.ContainsTag(cargoRoom.RoomName) ? $"CargoSpawnNotification~[roomname]=§{cargoRoom.RoomName}" : $"CargoSpawnNotification~[roomname]={cargoRoom.RoomName}", 
-                       ChatMessageType.ServerMessageBoxInGame, null);
-                    msg.IconStyle = "StoreShoppingCrateIcon";
-                    GameMain.Server.SendDirectChatMessage(msg, client);
+                    if (client.TeamID == CharacterTeamType.None || client.TeamID == sub.TeamID)
+                    {
+                        ChatMessage msg = ChatMessage.Create("",
+                           TextManager.ContainsTag(cargoRoom.RoomName) ? $"CargoSpawnNotification~[roomname]=§{cargoRoom.RoomName}" : $"CargoSpawnNotification~[roomname]={cargoRoom.RoomName}", 
+                           ChatMessageType.ServerMessageBoxInGame, null);
+                        msg.IconStyle = "StoreShoppingCrateIcon";
+                        GameMain.Server.SendDirectChatMessage(msg, client);
+                    }
                 }
 #endif
             }
@@ -638,7 +641,7 @@ namespace Barotrauma
                 {
                     var item = new Item(pi.ItemPrefab, position, wp.Submarine);
                     var itemContainer = GetOrCreateCargoContainerFor(pi.ItemPrefab, cargoRoom, ref availableContainers);
-                    itemContainer?.Inventory.TryPutItem(item, null);
+                    itemContainer?.Inventory.TryPutItem(item, user: null);
                     ItemSpawned(pi, item, cargoManager);
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
@@ -695,6 +698,11 @@ namespace Barotrauma
                 }
             }
 
+            ItemSpawned(item);
+        }
+
+        public static void ItemSpawned(Item item)
+        {
             Submarine sub = item.Submarine ?? item.RootContainer?.Submarine;
             if (sub != null)
             {

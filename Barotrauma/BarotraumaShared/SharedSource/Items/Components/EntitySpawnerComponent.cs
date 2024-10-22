@@ -300,7 +300,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (!string.IsNullOrWhiteSpace(ItemIdentifier))
                 {
-                    Identifier[] allItems = ItemIdentifier.Split(',').Select(s => s.Trim()).ToIdentifiers().ToArray();
+                    Identifier[] allItems = ItemIdentifier.ToIdentifiers().ToArray();
                     Identifier itemIdentifier = allItems.GetRandomUnsynced();
                     ItemPrefab? prefab = ItemPrefab.Find(null, itemIdentifier);
                     if (prefab is null) { return; }
@@ -320,7 +320,7 @@ namespace Barotrauma.Items.Components
         {
             if (!string.IsNullOrWhiteSpace(SpeciesName))
             {
-                Identifier[] allSpecies = SpeciesName.Split(',').Select(s => s.Trim()).ToIdentifiers().ToArray();
+                Identifier[] allSpecies = SpeciesName.ToIdentifiers().ToArray();
                 Identifier species = allSpecies.GetRandomUnsynced();
                 Entity.Spawner?.AddCharacterToSpawnQueue(species, pos, onSpawn);
             }

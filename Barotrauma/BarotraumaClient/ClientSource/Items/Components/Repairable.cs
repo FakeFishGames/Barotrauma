@@ -299,6 +299,8 @@ namespace Barotrauma.Items.Components
         
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
+
             IsActive = true;
             
             float defaultMaxCondition = (item.MaxCondition / item.MaxRepairConditionMultiplier);

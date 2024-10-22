@@ -1,4 +1,274 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.6.17.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed water currents stopping subs entirely (regardless of the size of the sub or the current).
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.6.16.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+PvP and combat:
+- Added outpost deathmatch mission type. Teams spawn at different sides of a colony, and need to get x kills to win (configured using a slider in the server lobby). There are periodic weapon/ammo drops around the outpost. The ammo drops spawn more destructive weapons and ammo as the round progresses.
+- Added "king of the hull" mission type. The teams must stay in control of a beacon station for x seconds to win (configured using a slider in the server lobby).
+- Separatists spawn with different gear in the PvP mode to make it easier to differentiate between the teams.
+- New settings for the PvP mode: multiplier for stuns, option to disable monster and wreck spawns.
+- Added a perk system that can be used to purchase perks such as extra gear, turrets, submarine upgrades and talents for PvP and mission rounds.
+- Added "boarding pod", an item you can go inside and launch through a depth charge tube. The pod penetrates through submarine walls, allowing rapid boarding of enemy subs.
+- Added railgun and coilgun harpoons. Can be used to reel enemy subs and other large targets closer to your sub.
+- More options for controlling the team assignment logic in the PvP mode:
+	- Split team choice logic into two modes: Player Preference (the old behavior) and the new Player Choice mode (players are free to choose their team).
+	- Added a server setting for auto-balance threshold (how big of a difference there can be in team sizes before the server forces them to be rebalanced).
+- Option to send chat messages only to your team in the server lobby. Only works when Player Choice mode is enabled (because in the Player Preference mode the teams aren't known in the lobby yet).
+- Three new background music tracks for the outpost deathmatch mode.
+- Option to select the outpost in the outpost deathmatch mission type (or any modded mission type that supports selecting the outpost).
+- Show the opposing team's names as red, even when spectating (previously separatists were always red when you're not controlling a character).
+- Name tags are more visible in PvP (they're no longer hidden when the character is in a different room, nor faded out when the cursor is not near the character).
+- The team you're on is shown above the crew list.
+- Option to choose different submarines for both teams.
+- Sonars display the approximate position of the enemy submarine in sub vs sub PvP missions. Can be disabled from the server lobby.
+- PvP mode levels are much smaller, making submarine vs submarine matches faster.
+- Stun weapons reworked and now cause movement spasms before stunning.
+- Flamers can set characters on fire.
+- Grenades can be "cooked" (pulling the pin to trigger a timed explosion) by pressing E while holding one.
+- Stun grenades blind and deafen the target for a while.
+- Incendium grenades no longer set the whole room on fire; instead, they start a more localized fire that can also set characters on fire.
+- Acid grenades now spread gas around a bit more.
+- Detonators now get damaged by explosions and always have a 0.2 second delay before triggering and made them craftable
+- Added a timed detonator variant that can be set to explode with a 0-60 countdown, which doesn’t require wiring to use.
+
+Alien ruins:
+- New modules: shrine, research facility, current generator room and workshop.
+- Updated all alien ruin modules: new puzzles and traps, improvements to old puzzles, visual improvements.
+- New lore-heavy three-part event chain that takes place in research outposts, and progresses when ruin missions are completed.
+- Made walls and doors much harder to destroy to encourage getting past the puzzles and obstacles in other ways.
+- Added a weaker version of the ruin walls, to be used in specific spots in the ruins.
+- Alien power cells can be charged in alien generators.
+- Most alien devices are now destructible.
+- Alien terminals have been reworked to send out a signal when there's a trinket inside: can be used for creating puzzles that require keeping the trinket in the terminal, meaning you can't just reuse the same trinket for every terminal but need to think about where to place it at any given time.
+- Improvements to alien device sprites.
+- New alien containers/storages: alien assembly device, alien storage vat and alien sample display.
+- New alien devices: alien current generator and alien toxins generator.
+- New decorative alien structures.
+- Additional loot spawning to chests and other containers, making exploring ruins more worthwhile and especially expands the ability to pick up (unidentified) genes along the way.
+- Fractal guardians were given additional guardian-only pathways and doorways in ruins, so they can navigate through the modules more effortlessly.
+- Alien turrets deal significantly more damage.
+- Alien generators indicate more clearly when they're enabled or disabled (adjusted the lights).
+- Alien current generators show more clearly (with bubbles) that they're enabled, pushing the player back.
+- New alien module: workshop. Introduces repair pods where guardians can hide in.
+
+Husks:
+- Three new husk variants: Prowler, Exosuit and Chimera.
+- Improved the appendages (ovipositors) coming from the husks’ mouths.
+- There's a chance that corpses in wrecks are husks.
+- Husks can play dead.
+- The amount of husk infection resistance given by e.g. antibiotics stays constant over the duration of the meds. Makes the effects of the meds a lot more intuitive / predictable.
+- Significantly buffed calyxanide damage on husks.
+- Fixed failed calyxanide injections not doing anything (happens occasionally when the medical skill is low enough). Now applies halved duration instead, like on other poisons/meds.
+- Added minor burn reduction on all husks allowing them to (slowly) recover from burn wounds.
+- Cultist robes require less reputation to buy, Zealot robes require more.
+- Zealot robes no longer block transformation. Full husk transformation immunity was too powerful, which made husk genes and husk symbiosis much less valuable.
+
+Gene splicing:
+- Various changes to gene splicing to make it easier to refine genes, swap between different types of genes at will, and make tainted genes more useful (rather than something that's essentially "permanently ruined"): 
+    - Removing genetic materials from a splicer doesn't destroy the material.
+    - Combining genes can remove taints if one gene is 100% pure.
+    - Dying with genetic materials equipped taints the material.
+    - When refining genes, the lower quality gene's quality now affects how much it will improve the quality of the higher quality gene - meaning that using higher-quality genes for refining is more effective than low-quality genes.
+- Changed the husk immunity genes to instead slow down the infection at lower quality to make higher quality husk genes actually worth getting.
+- Mudraptor gene quality affects the damage and damage protection of the beak.
+- Spineling gene quality affects the damage done by spineling spikes.
+- Effects from gene splicing aren't shown on health scanners (which made it difficult to see the relevant afflictions when treating someone).
+
+Optimizations:
+- Optimizations to character creation. Reduces the lag spikes when players respawn.
+- Optimized the way afflictions apply overlays to limbs (had an unnecessarily large performance impact when there were lots of characters with a large number of afflictions).
+- Minor optimization to the way items in a characters' inventory stick to the position of the character.
+- Minor UI optimizations.
+- Improved performance when debugdraw is enabled.
+- Minor optimizations to level wall rendering.
+
+Talent changes and fixes:
+- Reworked Europabrew to be more of a double-edged sword: it's a cheap cure for any poison, but it also increases ALL types of damage taken (works on monsters too!), not just acid damage.
+- Fixed "Extra Powder" talent not affecting depth charges.
+- Fixed weapons skill gain and medical skill gain from certain talents working the wrong way around.
+- Sulphuric Acid Syringe recipe changed and renamed to Crimson Acid. Now causes a very significant slow and much more damage over a longer duration. 
+- "Macrodosing" talent had acid burn damage boost removed, but increased the amount of poison applied, making it much easier to poison big enemies. 
+- "What A Stench" talent had acid burn damage bonuses reduced, to allow acid burn weapons to be stronger even for those without these specific talents.
+- Buffed "Modular Repairs" talent: repair pack is now a "multitool", essentially a combination of a screwdriver and wrench which repairs slightly faster, and is no longer consumed when used. The talent also gives one free "Modular Repairs" submarine upgrade.
+- Differentiated the "Art of Submarine Warfare" book given by talents from the one you can purchase from outposts (different names and sprites). Previously these looked identical, and it seemed like a bug when they didn't stack and gave a different amount of skill.
+- Fixed "War Stories" book seemingly giving no skill increase sometimes. The amount of skill the book gives is proportional to the number of kills the "author" of the book got, and diminishes the higher the reader's skill is. That meant the book sometimes increased the skill by less than 1 (only making it progress toward the next level), which didn't cause a skill increase notification to pop up.
+- Fixed "Bounty Hunter" and "Logistics Expert" not showing the additional reward in UI in multiplayer.
+- Fixed "Tasty Target" still making characters super loud (and visible on the sonar).
+- Fixed "Lightning Wizard" talent description not mentioning it only affects melee attacks.
+- Fixed reputation gain bonus from the "Protect and Serve" talent being multiplicative, meaning you could get ridiculous amounts of rep if you have multiple security officers with the talent.
+- Fixed "Mule" talent not working with physicorium bars.
+
+Miscellaneous changes and additions:
+- 2 new research modules. 
+- 3 new medical modules.
+- 2 new security modules.
+- 6 new admin modules.
+- 4 new crew modules.
+- 4 new docking modules.
+- 4 new engineering modules.
+- 4 new clown modules.
+- 2 new Church of Husk modules.
+- New bath house and nightclub modules.
+- 3 new storage modules, with 4 new events (providing extra loot and some potential challenges).
+- Added module ‘probability’, meaning some optional modules (such as storage modules) do not always spawn.
+- New "gravity shell" ammo types for railgun and flak cannon. Fabricated from dementonite.
+- New "mindsense" item that temporarily gives you the ability to sense living characters through walls. Fabricated from dementonite.
+- Clown crates can be carried with a character inside.
+- Jukeboxes play music, the track can be changed by interacting with the jukebox. Also added new "speaker" items that work the same as jukeboxes.
+- 7 new achievements: 
+	- Get Out Alive: get through the entirety of the Cold Caverns without losing your character in permadeath mode.
+	- The Abyss Beckons: lose a character in the permadeath mode.
+	- King of the Hull: win a PvP King of the Hull mission.
+	- Hide And Seek: kill a Cave Mantis.
+	- Ancient Novelty: destroy an alien terminal using alien curio.
+	- What Smirks Below: kill a psychoclown on a beacon station.
+	- Europa's Finest: complete a campaign in ironman mode in multiplayer!
+- Added the ability to load saves from back-up save slots, rather than just one save slot per campaign (allows going back further into the past, to avoid getting stuck).
+- Disabled portable item finders working outside of the player subs. The intention is that they can't be used as a map of unknown places. Can be adjusted in xml for modding.
+- Some new stair variants.
+- Made the water ambience sounds inside the sub a little more quiet.
+- Adjusted the low pass filter that muffles audio that's coming from far away or from behind obstacles: the sounds are now muffled more heavily.
+- Made the ping estimations in the server list more accurate. They are still not perfect, because due to the way SteamP2P works (with the connection potentially getting relayed through Valve's intermediary servers), it can be hard to determine the ping in advance without actually connecting to the server.
+- Adjusted railgun shells and depth charges to show the 'explosives' icon. Other items can still be placed into them, but most don't actually do anything. This should help players to understand it's mainly intended for explosives.
+- Adjusted the names and descriptions of turret ammunition, to be more clear (and more easily searchable) on what turret they're used with.
+- Circuit boxes can be set to require a specific ID card tag to access.
+- The docking circuit boxes in vanilla subs require a captain's ID card to access.
+- One-handed riot shields (to make them actually useful!).
+- Added "surveillance center" item which can be connected to multiple cameras, which can be toggled through with buttons on the UI. There's an example item assembly showing how to connect the center to multiple cameras using the new output selector components.
+- Output selector component (the technical term is "demultiplexer"). A component that has one input connection, and multiple output connections, and allows you to choose which of the output to send the input signal to.
+- Input selector component (the technical term is "multiplexer"). A component that has multiple input connections, and one output connection, and allows you to choose which of the input signals should be forwarded to the output.
+- Made the sound effects and camera shake a lot more noticeable when approaching crush depth.
+- Option to make circuit boxes require a specific ID card to access.
+- Removed the restriction of 2 security officers and 2 medics per crew in multiplayer.
+- Spectators can focus the camera on a character by clicking on one on the crew list.
+- Easier testing of outpost modules in the sub editor: when launching the test mode with an outpost module that's suitable for some outpost, the editor generates the whole outpost as opposed to just the single module.
+- Higher-res collider indicators (visible in the character editor and when debugdraw is on).
+- Adjusting the audio level sliders changes the volume immediately (as opposed to when you click "apply") to make the volume easier to preview.
+- Added options for renaming and deleting local mods.
+- Added an option to copy a workshop mod to a local mod.
+- Fixed the context menu's "unsubscribe" button not working.
+- Copying a waypoint while holding Ctrl automatically links it to the original waypoint in the sub editor.
+- Option to choose the level difficulty in the level editor.
+- Crush depths for different levels of hull upgrades are visualized in the level editor.
+- Fixed BrokenSprites not showing up in the sprite editor.
+- Ctrl+C copies the sourcerect of the selected sprite or sprites in the sprite editor.
+- The total mass of the character is shown in the character editor. Note that the masses don't correspond to any "real units", but they may be of use if you e.g. want to make some status effects affect large monsters.
+
+AI:
+- Fixed an issue in the medic AI that made them often use suboptimal medicine when there were better options available. The issue happened when the medic didn't have the meds readily available: when they started searching for the sub for suitable meds, they would accept any of the 4 most suitable ones even if there were more suitable options available.
+- Medic bots no longer use saline to treat infections. Saline has such a minor effect on infections that the bots could end up wasting huge amounts of it.
+- Bots are now able to change the fuel rods on exosuits.
+- Fixed bots being too eager to use welding tools and plasma cutters as weapons.
+- Defense bots are now much better at navigating inside the sub, and they can open doors and use ladders.
+- Fixed defense bots always being friendly to all humans, regardless of the team.
+- Defense bots can now be told to unfollow by interacting with "E" (play). You can also tell someone else's defense bot to follow you.
+- Defense bots show a green light when they are following a target.
+- Monsters can now see and target searchlights.
+- Fixed escorted NPCs getting turned hostile by the negative side-effects of medicine way too easily.
+- Fixed security officers starting to consider everyone in the outpost as "belonging to another crew" after they've been alerted in a jailbreak mission, causing them to do constant security inspections on each other.
+- Fixed low amounts of poisoning making bots say the target is mildly injured and doesn't need treatment.
+- Fixed bots being unable to heal husk infections.
+- Fixed bots recharging fulgurium batteries as soon as they're below 100% condition.
+- Fixed bots being unable to defend themselves if they are holding an item that cannot be placed in the inventory, such as a cargo scooter or a box. Now they can put the item on their back or drop it when necessary.
+- Fixed bots trying to store items like HMG in cabinets instead of putting it on their back when they don't need it.
+- Fixed bots wearing both diving mask and diving suit when the suit has no oxygen left and when a mask would suffice.
+- Fixed bots using repair tools in combat from an incorrect distance.
+- Fixed bots sometimes getting stuck in a flooding room. Happened in situations where the centers of the nearby safe hulls were far away from the current room, e.g. if the rooms were very large.
+- Fixed bots refusing to fix small leaks when there are no diving masks available but there are diving suits that they could use.
+
+Fixes:
+- Fixed "mission equality check failed" error when you join an ongoing campaign in which the players have selected missions in an outpost, but not departed yet.
+- Fixed "lock default wiring" server setting locking components in all circuit boxes (even ones placed mid-round).
+- Fixed headsets not working on characters spawned via console command. 
+- Fixed iron man mode staying "partially on" when the checkbox is left ticked, and a respawn mode other than permadeath is enabled, causing e.g. character loss to not get reverted when restarting the round.
+- Fixed escort and cargo missions still sometimes leading to locations with no outpost. Now these missions should not be offered if there's no adjacent outposts.
+- Fixed the sonar marker sometimes disappearing in one of the levels at the end of the campaign if the player stays too long in the level.
+- Fixed dropping a melee weapon mid-swing leaving its hit detection active, causing characters to take damage if they touch it afterwards.
+- Fixed monsters being unable to walk/swim backwards in multiplayer, causing the animations to look off in the case of e.g. monsters that back off after attacking.
+- Fixed mineral scanners working without power.
+- Fixed some faction events getting stuck when you choose the "ignore" option in the dialog.
+- Fixed wrecked coilgun loader still using the old sprite (that doesn't look like the normal loader).
+- Fixed lower docking port not being connected to the power grid in Camel, Orca 2, R-29 and Remora.
+- Fixed chitin being damageable.
+- Fixed beacon stations being often positioned in a different spot in mirrored levels (e.g. it might be near the outpost at the end of the level, but if you entered that outpost and returned to the level, it might’ve been near the other end of the level).
+- Handheld item finders no longer work in ruins, wrecks and outposts (makes it too easy to locate loot - they were originally intended just for finding items on your own sub).
+- Fixed "access denied" console errors when you attempt to open a restricted folder in the file selection dialog (e.g. when selecting a preview image in the sub editor). Now folders you don't have access to open a hidden from the menu.
+- Fixed lights sometimes going through doors.
+- Fixed dropped items sometimes seemingly disappearing client-side in multiplayer (most often, cargo scooters around ruins).
+- Fixed inability to select containers that make you automatically pick up the item inside (e.g. weapon holders and fire extinguisher brackets) in the sub editor.
+- Fixed occasional "invalid wallet" errors when finishing the campaign with talents that give extra money at the end of the round.
+- Fixed rescuing Jacov Subra still not changing the abandoned outpost back to normal.
+- Fixed characters losing skills and items if they die due to a disconnection, and then despawn before the end of the round.
+- Fixed loading an autosave in the submarine editor not refreshing the list of layers in the sub.
+- Disabled drop item hotkey in editors. It seems this is frequently bound to keys that are used in editors too, leading to e.g. people dropping screwdrivers around the sub when they're trying to toggle the entity list.
+- Fixed outdated skill requirements in some weapon tooltips (Autoshotgun, HMG and Machine Pistol).
+- Fixed crew list order shuffling around whenever characters are added or removed in MP.
+- Fixed smoke from volcanoes and lava vents rendering in front of level walls.
+- Fixed "man and his raptor" mission completing even if the mudraptor dies.
+- Fixed crashing when trying to join a dedicated server via an IPv6 address.
+- Fixed logbooks sometimes spawning in locked cabinets in wreck missions, which may make the mission impossible to complete if there's no corpse with an appropriate ID card in the wreck.
+- Fixed deleting a wire with a label behind it from a circuit box also deleting the label.
+- Fixed incorrect opium skill requirement tooltip.
+- Fixed pulse laser loader's light flashing when it's rewired.
+- Fixed certain affliction-specific animations, like the "drunken run" animation increasing movement speed when wearing a diving suit.
+- Fixed psychosis artifacts sometimes causing excessive amounts of psychosis when the number of characters inside their area of effect changed.
+- Fixed bots being able to start deconstructors from a distance if the item they're trying to deconstruct is already inside the deconstructor.
+- Fixed a very rare issue that sometimes caused there to be now path between biomes on certain campaign map seeds.
+- Fixed missions never triggering in levels that don't lead to an outpost if there's any paths to outposts available.
+- Fixed outpost NPCs being unable to sit in cafeteria chairs (literally unplayable).
+
+Modding:
+- More modder-friendly event set handling. Previously it was very difficult to ensure custom events always trigger without overriding all of the vanilla event sets. We had support for "additive sets", which can trigger in addition to the normal event sets, but no way to guarantee one triggers. Now an attribute called "SelectAlways" can be added to an event set to ensure the game always selects the set when it's suitable for the current level. If the set is additive, it is guaranteed to get chosen regardless of what other sets get selected. If the set is NOT additive, the game will choose the first available non-additive set that is configured to be always selected.
+- Made beacon events more modding-friendly: previously which beacon events were allowed to trigger was based on which layers are present in the beacons, but this was not a good idea because it breaks the events in all existing beacon mods (which for the most part don't use layers). Now trigger based on what kind of spawnpoints there are available in the beacon station.
+- Added OnInserted and OnRemoved action types, which can be used in Containable definitions to trigger a status effect when something is placed into or removed from a container.
+- Option to allow severing monsters' heads without killing them.
+- Add an option to trigger motion sensors by species name or group.
+- Monster AI: Added support for multiple targeting tags per target (e.g. an item having two different tags that a monster can target with different targeting params: the guardians now use this when targeting traps: they can either hide in them or flee to them for the repairs).
+- Monster AI: Added support for multiple targeting params with the same tag. Currently not used in the vanilla game.
+- Add support for targeting only items and for specifying multiple target types in the attack definitions. Or in other words, a monster attack can be configured to work against both characters and items.
+- Fixed property conditionals targeting item components always requiring a match for all of the components of the same type, instead of any of them. Can be adjusted in the xml.
+- Fixed NPCChangeTeamAction crashing the game if the target doesn't have a character info (= it's a monster or a pet).
+- Increased the shadow casting light limit to 100 in the sub editor (can still be bypassed by enabling the "debugdraw" command).
+- Made hostile abandoned outpost NPCs able to react offensively to the player even if the mission takes places in a friendly outpost (i.e. assassination/rescue missions can take place elsewhere than abandoned outposts without the hostile NPCs fleeing from the players).
+- Made it possible for a CustomInterface to periodically refresh the UI to match the properties of the item (e.g. if there's some timer field, to get the value of the timer from the item).Configured with the attribute "GetValueInterval". Previously it was only possible to make the UI control the values of the properties or send signals, but not the other way around.
+- Support for defining characters "the normal way" (using human prefabs, as opposed to the "character types") in pirate missions.
+- Support for applying status effects on the pirates in pirate missions.
+- Fixed toggling layers not working in outpost modules.
+- Fixed contained items not getting hidden when the layer the parent item is in gets hidden.
+- Fixed Sprite elements in wearables being case-sensitive.
+- Fixed SpawnAction sometimes choosing spawnpoints in the abyss, ruins or caves when set to spawn at the MainPath.
+- Fixed items not being positioned/rotated correctly when contained inside a "grandparent container" (item inside a container inside a container).
+- Added "researchmaterial" tag to items containable in a research station. Doesn't affect any vanilla content, but allows modders to make research stations usable for things other than genetic materials. Also allow putting medium and small items into the output slots.
+- Option to make TriggerComponents trigger based on a species name, species group or a conditional.
+- "HUDOverlay" element which can be used to show a full-screen overlay on any arbitrary item the view is focused on. Used on cameras. 
+- Fixed there being no guarantee that there's a suitable start outpost in the first biome, especially when using mods that add a lot of new location types.
+- Fixed removing an item with multiple inventories using status effects only removing the items inside its first inventory.
+- Fixed MissionStateAction always incrementing the state by 1 when set to "Add", disregarding the value set in XML. 
+- Fixed delayed effects not filtering the targets properly (ignoring e.g. TargetIdentifiers and TargetItemComponent).
+- Fixed character variants overriding the targeting parameters of the parent character incorrectly.
+- Mission types are no longer hard-coded.The name of the XML element determines the actual mission class used by the game, but the mission type can be any arbitrary string. Can be used if you for example want to add special types of salvage missions, and categorize them separately in the menus.
+- Fixed NPCs losing the reference to the HumanPrefab if they're hired in the crew and a new round has started. Didn't cause any issues in the vanilla game, but made it impossible to refer to the NPC using the human prefab id in events.
+- Non-humanoids can now use ladders, if they have both "CanInteract" and "CanClimb" enabled in the character params.
+- Fixed making an NPC stop operating an item with NPCOperateItemAction not working.
+- Fixed StatusEffectAction not working client-side when it's executed immediately at the start of the round before clients have loaded in.
+- Fixed "sprite not found" console errors when the game tries to preload a modded creature with damaged sprites.
+- Fixed MeleeWeapon StatusEffects not being synced correctly (the effect didn't specify the MeleeWeapon component as the target client-side). Doesn't seem to have affected any vanilla content.
+- Fixed conditional sprites in limbs completely ignoring the texture path defined in the xml and always using the default path.
+- Fixed inability to make structure prefabs indestructible (the setting only applied to individual wall instances placed in the sub editor).
+- Instead of having to define the pirate sub files in the mission, you can also just leave it out and let the mission choose a random enemy sub. The reward, preferred difficulty, and tags that restrict which mission a sub can be used in, can be configured in the sub editor.
+- Fixed specific kinds of item variants causing "sprite not found" errors. Specifically, when a variant in Mod A inherited an item from Mod B, and that item had sprite paths configured using %ModDir%, the game would attempt to find the sprite from Mod A even though it should be looking for it from Mod B.
+- Fixed items that take up both the OuterClothes and InnerClothes slots being possible to put in just either of them by swapping them with other items in a specific way.
+- Made "RemoveIfLinkedOutpostDoorInUse" affect ladders too (making it possible to remove unused ladders from outpost modules by linking them to doors).
+- Fixed inability to set an item's condition or quality using OnSpawn status effects.
+- Fixed PowerTransfer.CanTransfer not working.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.5.9.2
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -148,7 +418,6 @@ Modding:
 - Added a new attribute "ShouldBeOpen" to doors. Can be used by status effects to tell the door to open/close.
 - The game now prefers English texts when a localized text isn't found. This means that if your mod is only translated to English, e.g. mission and item names use the English text if someone is playing the game in another language, as opposed to displaying the text configured in the xml directly (e.g. missionname.mycustommission).
 - Fixed "TransferAfflictions" setting of StatusEffect (which can be used to transfer afflictions from the character executing the effect to a new one spawned by the effect) not working correctly if the characters have a different amount of vitality.
-- Instead of having to define the pirate sub files in the mission, you can also just leave it out and let the mission choose a random enemy sub. The reward, preferred difficulty, and tags that restrict which mission a sub can be used in, can be configured in the sub editor.
 - Changed how outpost modules are configured for abandoned outposts: Special outpost module types are now used: "AbandonedAirlock", "AbandonedAdminModule", etc. Previously these special modules used the same module types as normal outposts, but were restricted to only spawn in outposts of the appropriate type. That meant a mod could not add a new module that's used in all types of “normal” outposts by setting the location type to "Any", because it would also be used in abandoned outposts.
 - Made vision obstruction effect adjustable: instead of being just on/off, there's a ObstructVisionAmount value that can be set to a value between 0 and 1. A value of 0.5 roughly corresponds to the old obstruction effect, and setting the obstruction using the old ObstructVision boolean sets it to that value. 
 - Better support for including non-human characters in the crew: CharacterInfo (which defines a characters job, skills and such, and is required for characters in the crew) can be enabled on any type of character by adding HasCharacterInfo="true" to the character config.

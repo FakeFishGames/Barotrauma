@@ -4,14 +4,14 @@
     {
         private readonly Identifier afflictionId;
         private readonly float strength;
-        private readonly string multiplyStrengthBySkill;
+        private readonly Identifier multiplyStrengthBySkill;
         private readonly bool setValue;
 
         public CharacterAbilityGiveAffliction(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             afflictionId = abilityElement.GetAttributeIdentifier("afflictionid", abilityElement.GetAttributeIdentifier("affliction", Identifier.Empty));
             strength = abilityElement.GetAttributeFloat("strength", 0f);
-            multiplyStrengthBySkill = abilityElement.GetAttributeString("multiplystrengthbyskill", string.Empty);
+            multiplyStrengthBySkill = abilityElement.GetAttributeIdentifier("multiplystrengthbyskill", Identifier.Empty);
             setValue = abilityElement.GetAttributeBool("setvalue", false);
 
             if (afflictionId.IsEmpty)
@@ -52,7 +52,7 @@
                 return;
             }
             float strength = this.strength;
-            if (!string.IsNullOrEmpty(multiplyStrengthBySkill))
+            if (!multiplyStrengthBySkill.IsEmpty)
             {
                 strength *= Character.GetSkillLevel(multiplyStrengthBySkill);
             }

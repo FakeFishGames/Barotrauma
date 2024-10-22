@@ -12,6 +12,7 @@ namespace Barotrauma
         {
             public float RotationState;
             public float OffsetState;
+            public float ScaleState;
             public Vector2 RandomOffsetMultiplier = new Vector2(Rand.Range(-1.0f, 1.0f), Rand.Range(-1.0f, 1.0f));
             public float RandomRotationFactor = Rand.Range(0.0f, 1.0f);
             public float RandomScaleFactor = Rand.Range(0.0f, 1.0f);
@@ -27,7 +28,8 @@ namespace Barotrauma
         {
             None,
             Sine,
-            Noise
+            Noise,
+            Circle
         }
 
         [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
@@ -46,6 +48,15 @@ namespace Barotrauma
 
         [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
         public float OffsetAnimSpeed { get; private set; }
+
+        [Serialize(AnimationType.None, IsPropertySaveable.No), Editable]
+        public AnimationType ScaleAnim { get; private set; }
+
+        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
+        public Vector2 ScaleAnimAmount { get; private set; }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
+        public float ScaleAnimSpeed { get; private set; }
 
         private float rotationSpeedRadians;
         private float absRotationSpeedRadians;
@@ -136,7 +147,7 @@ namespace Barotrauma
             foreach (var subElement in element.Elements())
             {
                 //choose which list the new conditional should be placed to
-                List<PropertyConditional> conditionalList = null;
+                List<PropertyConditional> conditionalList;
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "conditional":
@@ -162,15 +173,14 @@ namespace Barotrauma
                 {
                     case AnimationType.Sine:
                         offsetState %= (MathHelper.TwoPi / OffsetAnimSpeed);
-                        offset *= (float)Math.Sin(offsetState * OffsetAnimSpeed);
+                        offset *= MathF.Sin(offsetState * OffsetAnimSpeed);
+                        break;
+                    case AnimationType.Circle:
+                        offsetState %= (MathHelper.TwoPi / OffsetAnimSpeed);
+                        offset *= new Vector2(MathF.Cos(offsetState * OffsetAnimSpeed), MathF.Sin(offsetState * OffsetAnimSpeed));
                         break;
                     case AnimationType.Noise:
-                        offsetState %= 1.0f / (OffsetAnimSpeed * 0.1f);
-
-                        float t = offsetState * 0.1f * OffsetAnimSpeed;
-                        offset = new Vector2(
-                            offset.X * (PerlinNoise.GetPerlin(t, t) - 0.5f),
-                            offset.Y * (PerlinNoise.GetPerlin(t + 0.5f, t + 0.5f) - 0.5f));
+                        offset *= GetNoiseVector(ref offsetState, OffsetAnimSpeed);
                         break;
                 }
             }
@@ -192,7 +202,7 @@ namespace Barotrauma
                 case AnimationType.Sine:
                     rotationState %= MathHelper.TwoPi / absRotationSpeedRadians;
                     return 
-                        rotationRadians * (float)Math.Sin(rotationState * rotationSpeedRadians)
+                        rotationRadians * MathF.Sin(rotationState * rotationSpeedRadians)
                         + MathHelper.Lerp(randomRotationRadians.X, randomRotationRadians.Y, randomRotationFactor);
                 case AnimationType.Noise:
                     rotationState %= 1.0f / absRotationSpeedRadians;
@@ -207,13 +217,40 @@ namespace Barotrauma
             }
         }
 
-        public float GetScale(float randomScaleModifier)
+        public Vector2 GetScale(ref float scaleState, float randomScaleModifier)
         {
-            if (RandomScale == Vector2.Zero)
-            { 
-                return scale;
-            }
-            return MathHelper.Lerp(RandomScale.X, RandomScale.Y, randomScaleModifier);
+            Vector2 currentScale = Vector2.One *
+                (RandomScale == Vector2.Zero ? scale : MathHelper.Lerp(RandomScale.X, RandomScale.Y, randomScaleModifier));
+            if (ScaleAnimSpeed > 0.0f)
+            {
+                switch (ScaleAnim)
+                {
+                    case AnimationType.Sine:
+                        scaleState %= (MathHelper.TwoPi / ScaleAnimSpeed);
+                        currentScale *= Vector2.One + ScaleAnimAmount * MathF.Sin(scaleState * ScaleAnimSpeed);
+                        break;
+                    case AnimationType.Noise:
+                        currentScale *= Vector2.One + ScaleAnimAmount * GetNoiseVector(ref scaleState, ScaleAnimSpeed);
+                        break;
+                }
+            }            
+            return currentScale;            
+        }
+
+        private static Vector2 GetNoiseVector(ref float state, float speed)
+        {
+            //multiply speed by a magic constant, because otherwise a speed of 1 would already be very fast (looping through the noise texture once per second)
+            //just makes the values more intuitive / closer to what constitutes as "fast" on the other types of animations
+            float modifiedSpeed = speed * 0.1f;
+            // wrap around the edge of the noise (t == 1)
+            state %= 1.0f / modifiedSpeed;
+            float t = state * modifiedSpeed;
+            Vector2 noiseValue = new Vector2(
+                PerlinNoise.GetPerlin(t, t),
+                //sample the y coordinate from a different position in the noise texture
+                PerlinNoise.GetPerlin(t + 0.5f, t + 0.5f));
+            //move the value so it's in the range of -0.5 and 0.5, as opposed to 0-1.
+            return noiseValue - new Vector2(0.5f, 0.5f);
         }
 
         public static void UpdateSpriteStates(ImmutableDictionary<int, ImmutableArray<DecorativeSprite>> spriteGroups, Dictionary<DecorativeSprite, State> animStates,
@@ -264,6 +301,7 @@ namespace Barotrauma
                         if (!checkConditional(conditional)) { animate = false; break; }
                     }
                     if (!animate) { continue; }
+                    spriteState.ScaleState += deltaTime;
                     spriteState.OffsetState += deltaTime;
                     spriteState.RotationState += deltaTime;
                 }

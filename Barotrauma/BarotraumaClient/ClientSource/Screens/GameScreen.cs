@@ -133,19 +133,7 @@ namespace Barotrauma
 
             if (Character.Controlled == null && !GUI.DisableHUD)
             {
-                for (int i = 0; i < Submarine.MainSubs.Length; i++)
-                {
-                    if (Submarine.MainSubs[i] == null) continue;
-                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
-
-                    Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
-
-                    Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
-                    GUI.DrawIndicator(
-                        spriteBatch, position, cam, 
-                        Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
-                        GUIStyle.SubmarineLocationIcon.Value.Sprite, indicatorColor); 
-                }
+                DrawPositionIndicators(spriteBatch);
             }
 
             if (!GUI.DisableHUD)
@@ -164,7 +152,118 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:HUD", sw.ElapsedTicks);
             sw.Restart();
         }
+        
+        private void DrawPositionIndicators(SpriteBatch spriteBatch)
+        {
+            Sprite subLocationSprite = GUIStyle.SubLocationIcon.Value?.Sprite;
+            Sprite shuttleSprite = GUIStyle.ShuttleIcon.Value?.Sprite;
+            Sprite wreckSprite = GUIStyle.WreckIcon.Value?.Sprite;
+            Sprite caveSprite = GUIStyle.CaveIcon.Value?.Sprite;
+            Sprite outpostSprite = GUIStyle.OutpostIcon.Value?.Sprite;
+            Sprite ruinSprite = GUIStyle.RuinIcon.Value?.Sprite;
+            Sprite enemySprite = GUIStyle.EnemyIcon.Value?.Sprite;
+            Sprite corpseSprite = GUIStyle.CorpseIcon.Value?.Sprite;
+            Sprite beaconSprite = GUIStyle.BeaconIcon.Value?.Sprite;
+            
+            for (int i = 0; i < Submarine.MainSubs.Length; i++)
+            {
+                if (Submarine.MainSubs[i] == null) { continue; }
+                if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
+                
+                Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
+                
+                Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
+                Sprite displaySprite = Submarine.MainSubs[i].Info.HasTag(SubmarineTag.Shuttle) ? shuttleSprite : subLocationSprite;
+                if (displaySprite != null)
+                {
+                    GUI.DrawIndicator(
+                        spriteBatch, position, cam,
+                        Math.Max(Submarine.MainSubs[i].Borders.Width, Submarine.MainSubs[i].Borders.Height),
+                        displaySprite, indicatorColor);
+                }
+            }
+            
+            if (!GameMain.DevMode) { return;}
+            
+            if (Level.Loaded != null)
+            {
+                foreach (Level.Cave cave in Level.Loaded.Caves)
+                {
+                    Vector2 position = cave.StartPos.ToVector2();
+                    
+                    Color indicatorColor = Color.Yellow * 0.5f;
+                    if (caveSprite != null)
+                    {
+                        GUI.DrawIndicator(
+                            spriteBatch, position, cam, hideDist: 3000f,
+                            caveSprite, indicatorColor);
+                    }
+                }
+            }
+            
+            foreach (Submarine submarine in Submarine.Loaded)
+            {
+                if (Submarine.MainSubs.Contains(submarine)) { continue; }
+                
+                Vector2 position = submarine.WorldPosition;
 
+                Color teamColorIndicator = submarine.TeamID switch
+                {
+                    CharacterTeamType.Team1 => Color.LightBlue * 0.5f,
+                    CharacterTeamType.Team2 => GUIStyle.Red * 0.5f,
+                    CharacterTeamType.FriendlyNPC => GUIStyle.Yellow * 0.5f,
+                    _ => Color.Green * 0.5f
+                };
+                
+                Color indicatorColor = submarine.Info.Type switch
+                {
+                    SubmarineType.Outpost => Color.LightGreen,
+                    SubmarineType.Wreck => Color.SaddleBrown,
+                    SubmarineType.BeaconStation => Color.Azure,
+                    SubmarineType.Ruin => Color.Purple,
+                    _ => teamColorIndicator
+                };
+                
+                Sprite displaySprite = submarine.Info.Type switch
+                {
+                    SubmarineType.Outpost => outpostSprite,
+                    SubmarineType.Wreck => wreckSprite,
+                    SubmarineType.BeaconStation => beaconSprite,
+                    SubmarineType.Ruin => ruinSprite,
+                    _ => subLocationSprite
+                };
+                
+                // use a little dimmer color for transports
+                if (submarine.Info.SubmarineClass == SubmarineClass.Transport) { indicatorColor *= 0.75f; }
+                
+                if (displaySprite != null)
+                {
+                    GUI.DrawIndicator(
+                        spriteBatch, position, cam, hideDist: Math.Max(submarine.Borders.Width, submarine.Borders.Height),
+                        displaySprite, indicatorColor);
+                }
+            }
+            
+            // markers for all enemies and corpses
+            foreach (Character character in Character.CharacterList)
+            {
+                Vector2 position = character.WorldPosition;
+                Color indicatorColor = Color.DarkRed * 0.5f;
+                if (character.IsDead) { indicatorColor = Color.DarkGray * 0.5f; }
+                
+                if (character.TeamID != CharacterTeamType.None) { continue;}
+                
+                Sprite displaySprite = character.IsDead ? corpseSprite : enemySprite;
+                
+                if (displaySprite != null)
+                {
+                    GUI.DrawIndicator(
+                        spriteBatch, position, cam, hideDist: 3000f,
+                        displaySprite, indicatorColor);
+                }
+            }
+        }
+        
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch, double deltaTime)
         {
             foreach (Submarine sub in Submarine.Loaded)

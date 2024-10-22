@@ -150,12 +150,30 @@ namespace Barotrauma.Items.Components
 
         public GUIFrame GuiFrame { get; set; }
 
+        /// <summary>
+        /// Overlay (just a non-interactable sprite) drawn when the item is selected, equipped or focused to via Controllers (e.g. when operating a turret via a periscope or a camera via a monitor).
+        /// </summary>
+        public Sprite HUDOverlay { get; set; }
+
+        public float HUDOverlayAnimSpeed
+        {
+            get;
+            set;
+        }
+
         private GUIDragHandle guiFrameDragHandle;
 
         private bool guiFrameUpdatePending;
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool AllowUIOverlap
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool CloseByClickingOutsideGUIFrame
         {
             get;
             set;
@@ -261,7 +279,7 @@ namespace Barotrauma.Items.Components
             if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
 
             //above the top boundary of the level (in an inactive respawn shuttle?)
-            if (item.Submarine != null && Level.Loaded != null && item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) 
+            if (item.Submarine != null && item.Submarine.IsAboveLevel) 
             {
                 return; 
             }
@@ -340,7 +358,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (soundSelectionMode == SoundSelectionMode.Manual)
                 {
-                    index = Math.Clamp(ManuallySelectedSound, 0, matchingSounds.Count);
+                    index = Math.Clamp(ManuallySelectedSound, 0, matchingSounds.Count - 1);
                 }
                 else
                 {
@@ -416,12 +434,23 @@ namespace Barotrauma.Items.Components
             if (sound == null) { return 0.0f; }
             if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }
 
-            if (SerializableProperties.TryGetValue(sound.VolumeProperty, out SerializableProperty property))
+            SerializableProperty property = null;
+            ISerializableEntity targetEntity = null;
+            if (SerializableProperties.TryGetValue(sound.VolumeProperty, out property))
+            {
+                targetEntity = this;
+            }
+            else if (Item.SerializableProperties.TryGetValue(sound.VolumeProperty, out property))
+            {
+                targetEntity = Item;
+            }
+
+            if (property != null)
             {
                 float newVolume;
                 try
                 {
-                    newVolume = property.GetFloatValue(this);
+                    newVolume = property.GetFloatValue(targetEntity);
                 }
                 catch
                 {
@@ -470,7 +499,24 @@ namespace Barotrauma.Items.Components
             return linkToUIComponent;
         }
 
-        public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
+        public virtual void DrawHUD(SpriteBatch spriteBatch, Character character)
+        {
+            if (HUDOverlay != null)
+            {
+                Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                if (HUDOverlay is SpriteSheet spriteSheet)
+                {
+                    spriteSheet.Draw(spriteBatch,
+                        spriteIndex: (int)(Math.Floor(Timing.TotalTimeUnpaused * HUDOverlayAnimSpeed) % spriteSheet.FrameCount),
+                        pos: screenSize / 2, color: Color.White, origin: HUDOverlay.Origin, rotate: 0, scale: screenSize / spriteSheet.FrameSize.ToVector2());
+                }
+                else
+                {
+                    HUDOverlay.Draw(spriteBatch,
+                        pos: screenSize / 2, color: Color.White, origin: HUDOverlay.Origin, rotate: 0, scale: screenSize / HUDOverlay.size);
+                }
+            }
+        }
 
         public virtual void AddToGUIUpdateList(int order = 0)
         {
@@ -512,6 +558,13 @@ namespace Barotrauma.Items.Components
                     }
                     GuiFrameSource = subElement;
                     ReloadGuiFrame();
+                    break;
+                case "hudoverlayanimated":
+                    HUDOverlay = new SpriteSheet(subElement);
+                    HUDOverlayAnimSpeed = subElement.GetAttributeFloat("animspeed", 1.0f);
+                    break;
+                case "hudoverlay":
+                    HUDOverlay = new Sprite(subElement);
                     break;
                 case "alternativelayout":
                     AlternativeLayout = GUILayoutSettings.Load(subElement);

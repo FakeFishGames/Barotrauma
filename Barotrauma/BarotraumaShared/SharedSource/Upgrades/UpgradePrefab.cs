@@ -399,7 +399,49 @@ namespace Barotrauma
         private Dictionary<string, string[]> targetProperties { get; }
         private readonly ImmutableArray<UpgradeMaxLevelMod> MaxLevelsMods;
         public readonly ImmutableHashSet<UpgradeResourceCost> ResourceCosts;
-
+        
+        public const int CrushDepthDefaultUpgradePrc = 15;
+        private static int? crushDepthUpgradePrc;
+        
+        public static int CrushDepthUpgradePrc
+        {
+            get
+            {
+                if (crushDepthUpgradePrc == null)
+                {
+                    if (Find("increasewallhealth".ToIdentifier()) is UpgradePrefab hullUpgradePrefab)
+                    {
+                        string updateValueStr = hullUpgradePrefab.SourceElement?.GetChildElement("Structure")?.GetAttributeString("crushdepth", null) ?? string.Empty;
+                        if (!string.IsNullOrEmpty(updateValueStr))
+                        {
+                            crushDepthUpgradePrc = ParsePercentage(updateValueStr, Identifier.Empty, suppressWarnings: true);
+                        }
+                    }
+                }
+                
+                return crushDepthUpgradePrc ?? CrushDepthDefaultUpgradePrc;
+            }
+        }
+        
+        public const int IncreaseWallHealthDefaultMaxLevel = 6;
+        private static int? increaseWallHealthMaxLevel;
+        
+        public static int IncreaseWallHealthMaxLevel
+        {
+            get
+            {
+                if (increaseWallHealthMaxLevel == null)
+                {
+                    if (Find("increasewallhealth".ToIdentifier()) is UpgradePrefab hullUpgradePrefab)
+                    {
+                        increaseWallHealthMaxLevel = hullUpgradePrefab.MaxLevel;
+                    }
+                }
+                
+                return increaseWallHealthMaxLevel ?? IncreaseWallHealthDefaultMaxLevel;
+            }
+        }
+        
         public UpgradePrefab(ContentXElement element, UpgradeModulesFile file) : base(element, file)
         {
             Name = element.GetAttributeString(nameof(Name), string.Empty)!;

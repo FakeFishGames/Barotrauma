@@ -11,6 +11,7 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
             if (focusTarget != null && character.ViewTarget == focusTarget)
             {
                 foreach (ItemComponent ic in focusTarget.Components)
@@ -20,6 +21,15 @@ namespace Barotrauma.Items.Components
                         ic.DrawHUD(spriteBatch, character);
                     }
                 }
+            }
+        }
+
+        public override void AddToGUIUpdateList(int order = 0)
+        {
+            base.AddToGUIUpdateList(order);
+            if (focusTarget != null && Character.Controlled.ViewTarget == focusTarget)
+            {
+                focusTarget.AddToGUIUpdateList(order);
             }
         }
 

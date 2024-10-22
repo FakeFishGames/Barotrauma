@@ -111,7 +111,7 @@ namespace Barotrauma
             get { return failed; }
         }
 
-        public virtual bool AllowRespawn
+        public virtual bool AllowRespawning
         {
             get { return true; }
         }
@@ -211,21 +211,21 @@ namespace Barotrauma
 
         public virtual void SetLevel(LevelData level) { }
 
-        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false, float? difficultyLevel = null)
+        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
-            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer, difficultyLevel);
+            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionTypes, isSinglePlayer, difficultyLevel);
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false, float? difficultyLevel = null)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
-            if (missionType == MissionType.None)
+            if (missionTypes.None())
             {
                 return null;
             }
             else
             {
-                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => m.Type.HasAnyFlag(missionType)));
+                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => missionTypes.Contains(m.Type)));
             }
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);
             if (requireCorrectLocationType)
@@ -350,11 +350,12 @@ namespace Barotrauma
         private void TriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
             if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
-            var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier == trigger.EventIdentifier);
+            //clients are not allowed to trigger events, they're handled by the server
+            if (GameMain.NetworkMember is { IsClient: true }) { return; }
+            EventPrefab eventPrefab = EventPrefab.FindEventPrefab(trigger.EventIdentifier, trigger.EventTag, Prefab.ContentPackage);
             if (eventPrefab == null)
             {
-                DebugConsole.ThrowError($"Mission \"{Name}\" failed to trigger an event (couldn't find an event with the identifier \"{trigger.EventIdentifier}\").",
-                    contentPackage: Prefab.ContentPackage);
+                DebugConsole.ThrowError($"Mission {Prefab.Identifier} failed to trigger an event (identifier: {trigger.EventIdentifier}, tag: {trigger.EventTag}).", contentPackage: Prefab.ContentPackage);
                 return;
             }
             if (GameMain.GameSession?.EventManager != null)
