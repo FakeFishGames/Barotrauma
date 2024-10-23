@@ -1380,6 +1380,58 @@ namespace Barotrauma
                 msgBox.Buttons[0].OnClicked = msgBox.Close;
             }));
 
+            AssignOnExecute("debugmenu", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    switch (args[0])
+                    {
+                        case "close" or "closeall":
+                            DebugMenus.CloseAll();
+                            break;
+                        case "entities" or "entityexplorer":
+                            DebugMenus.CreateEntityExplorer();
+                            break;
+                        case "gui" or "guiexplorer" or "guiheirarchy":
+                            DebugMenus.TryCreateGUIExplorer(Screen.Selected.Frame);
+                            break;
+                        case "inspect":
+                            if (args.Length > 1)
+                            {
+                                switch (args[1])
+                                {
+                                    case "entities":
+                                        DebugMenus.inspectorMode = InspectorMode.Entities;
+                                        break;
+                                    case "gui":
+                                        DebugMenus.inspectorMode = InspectorMode.GUI;
+                                        break;
+                                    default:
+                                        NewMessage($"'{args[1]}' is not a valid inspector mode", Color.Yellow);
+                                        DebugMenus.inspectorMode = InspectorMode.Disabled;
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                DebugMenus.inspectorMode = InspectorMode.Entities;
+                            }
+                            break;
+                        case "spawnitems" or "spawnitem" or "itemspawner":
+                            DebugMenus.itemSpawnerWindow.Visible = true;
+                            break;
+                        default:
+                            NewMessage($"'{args[0]}' is not a valid window", Color.Yellow);
+                            break;
+                    }
+                }
+                else
+                {
+                    DebugMenus.CreateEntityExplorer();
+                }
+            });
+            AssignRelayToServer("debugmenu", false);
+
             AssignOnExecute("debugdraw", (string[] args) =>
             {
                 if (args.None() || !bool.TryParse(args[0], out bool state))
