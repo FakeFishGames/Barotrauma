@@ -8,7 +8,7 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            foreach (Character c in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            foreach (Character c in Character.GetFriendlyCrew(character))
             {
                 if (!c.IsDead && c.IsUnconscious)
                 {

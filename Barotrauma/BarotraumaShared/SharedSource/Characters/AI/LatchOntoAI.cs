@@ -308,7 +308,7 @@ namespace Barotrauma
                     if (enemyAI.AttackLimb == null) { break; }
                     if (targetBody == null) { break; }
                     if (IsAttached && AttachJoints[0].BodyB == targetBody) { break; }
-                    Vector2 referencePos = TargetCharacter != null ? TargetCharacter.WorldPosition : ConvertUnits.ToDisplayUnits(transformedAttachPos);
+                    Vector2 referencePos = TargetCharacter?.WorldPosition ?? ConvertUnits.ToDisplayUnits(transformedAttachPos);
                     if (Vector2.DistanceSquared(referencePos, enemyAI.AttackLimb.WorldPosition) < enemyAI.AttackLimb.attack.DamageRange * enemyAI.AttackLimb.attack.DamageRange)
                     {
                         AttachToBody(transformedAttachPos);

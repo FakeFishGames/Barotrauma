@@ -102,13 +102,19 @@ namespace Barotrauma.Networking
         {
             get
             {
-                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return 100.0f; }
+                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled || GameMain.GameSession?.GameMode is PvPMode) 
+                { 
+                    return 100.0f; 
+                }
                 if (HasPermission(ClientPermissions.KarmaImmunity)) { return 100.0f; }
                 return karma;
             }
             set
             {
-                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return; }
+                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled || GameMain.GameSession?.GameMode is PvPMode) 
+                { 
+                    return;
+                }
                 karma = Math.Min(Math.Max(value, 0.0f), 100.0f);
                 if (!MathUtils.NearlyEqual(karma, syncedKarma, 10.0f))
                 {

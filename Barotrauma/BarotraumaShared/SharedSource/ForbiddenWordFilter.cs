@@ -14,7 +14,7 @@ namespace Barotrauma
         {
             try
             {
-                forbiddenWords = File.ReadAllLines(fileListPath).Select(s => s.ToLowerInvariant()).ToHashSet();
+                forbiddenWords = File.ReadAllLines(fileListPath, catchUnauthorizedAccessExceptions: false).Select(s => s.ToLowerInvariant()).ToHashSet();
             }
             catch (System.IO.IOException e)
             {

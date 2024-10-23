@@ -328,11 +328,11 @@ namespace Barotrauma
             Vector2 max = new Vector2(worldRect.Right, worldRect.Y + worldRect.Height);
             foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
             {
-                float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
-                min.X = Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale, min.X);
-                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale, max.X);
-                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
-                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
+                Vector2 scale = decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                min.X = Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale.X, min.X);
+                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale.X, max.X);
+                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale.Y, min.Y);
+                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale.Y, max.Y);
             }
             Vector2 offset = GetCollapseEffectOffset();
             min += offset;
@@ -341,6 +341,9 @@ namespace Barotrauma
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
             if (min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }
 
+            Vector2 extents = max - min;
+            if (extents.X * Screen.Selected.Cam.Zoom < 1.0f) { return false; }
+            if (extents.Y * Screen.Selected.Cam.Zoom < 1.0f) { return false; }
             return true;
         }
 
@@ -368,7 +371,7 @@ namespace Barotrauma
             return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : Prefab.Sprite.Depth;
         }
 
-        public float GetDrawDepth()
+        public override float GetDrawDepth()
         {
             return GetDrawDepth(GetRealDepth(), Prefab.Sprite);
         }
@@ -560,7 +563,8 @@ namespace Barotrauma
                         pos: drawPos.FlipY(),
                         color: color,
                         rotate: rotation,
-                        scale: decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale,
+                        origin: decorativeSprite.Sprite.Origin,
+                        scale: decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale,
                         spriteEffect: Prefab.Sprite.effects ^ SpriteEffects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - Prefab.Sprite.Depth), 0.999f));
                 }

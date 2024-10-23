@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -95,6 +96,9 @@ namespace Barotrauma
         protected override bool AllowInAnySub => true;
 
         public Identifier DialogueIdentifier { get; set; } = "dialogcannotreachtarget".ToIdentifier();
+        private readonly Identifier ExoSuitRefuel = "dialog.exosuit.refuel".ToIdentifier();
+        private readonly Identifier ExoSuitOutOfFuel = "dialog.exosuit.outoffuel".ToIdentifier();
+            
         public LocalizedString TargetName { get; set; }
 
         public ISpatialEntity Target { get; private set; }
@@ -193,6 +197,43 @@ namespace Barotrauma
             {
                 Abandon = true;
                 return;
+            }
+            if (checkExoSuitTimer <= 0)
+            {
+                checkExoSuitTimer = CheckExoSuitTime * Rand.Range(0.9f, 1.1f);
+                if (character.GetEquippedItem(Tags.PoweredDivingSuit, InvSlotType.OuterClothes) is { OwnInventory: Inventory exoSuitInventory } exoSuit &&
+                    exoSuit.GetComponent<Powered>() is not { HasPower: true })
+                {
+                    if (HumanAIController.HasItem(character, Tags.DivingSuitFuel, out IEnumerable<Item> fuelRods, conditionPercentage: 1, recursive: true))
+                    {
+                        // Try to switch the fuel sources
+                        if (character.IsOnPlayerTeam)
+                        {
+                            character.Speak(TextManager.Get(ExoSuitRefuel).Value, minDurationBetweenSimilar: 10f, identifier: ExoSuitRefuel);
+                        }
+                        // Have to copy the list, because it's modified when we unequip the item.
+                        foreach (Item containedItem in exoSuit.ContainedItems.ToList())
+                        {
+                            if (containedItem.HasTag(Tags.DivingSuitFuel) && containedItem.Condition <= 0)
+                            {
+                                character.Unequip(containedItem);
+                            }
+                        }
+                        // Refuel
+                        // The information about the target slot is defined in a status effect. We could parse it, but let's keep it simple and just presume that the target slot is the second slot, as it the case with the vanilla exosuits.
+                        const int targetSlot = 1;
+                        Item fuelRod = fuelRods.MaxBy(b => b.Condition);
+                        exoSuitInventory.TryPutItem(fuelRod, targetSlot, allowSwapping: true, allowCombine: true, user: character);
+                    }
+                    else if (character.IsOnPlayerTeam)
+                    {
+                        character.Speak(TextManager.Get(ExoSuitOutOfFuel).Value, minDurationBetweenSimilar: 30.0f, identifier: ExoSuitOutOfFuel);
+                    }
+                }
+            }
+            else
+            {
+                checkExoSuitTimer -= deltaTime;
             }
             if (Target == character || character.SelectedBy != null && HumanAIController.IsFriendly(character.SelectedBy))
             {
@@ -353,9 +394,9 @@ namespace Barotrauma
                             }
                             else
                             {
-                                // Try again without requiring the diving suit
+                                // Try again without requiring the diving suit (or mask)
                                 RemoveSubObjective(ref findDivingGear);
-                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
+                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: !tryToGetDivingSuit, objectiveManager),
                                     onAbandon: () =>
                                     {
                                         Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
@@ -442,7 +483,7 @@ namespace Barotrauma
                 if (checkScooterTimer <= 0)
                 {
                     useScooter = false;
-                    checkScooterTimer = checkScooterTime * Rand.Range(0.75f, 1.25f);
+                    checkScooterTimer = CheckScooterTime * Rand.Range(0.9f, 1.1f);
                     Item scooter = null;
                     bool shouldUseScooter = Mimic && targetCharacter != null && targetCharacter.HasEquippedItem(Tags.Scooter, allowBroken: false);
                     if (!shouldUseScooter)
@@ -465,24 +506,25 @@ namespace Barotrauma
                     }
                     else if (shouldUseScooter)
                     {
-                        var leftHandItem = character.GetEquippedItem(slotType: InvSlotType.LeftHand);
-                        var rightHandItem = character.GetEquippedItem(slotType: InvSlotType.RightHand);
-                        bool handsFull = 
-                            (leftHandItem != null && !character.Inventory.IsAnySlotAvailable(leftHandItem) && !character.Inventory.TryPutItem(leftHandItem, character, InvSlotType.Bag.ToEnumerable())) ||
-                            (rightHandItem != null && !character.Inventory.IsAnySlotAvailable(rightHandItem) && !character.Inventory.TryPutItem(rightHandItem, character, InvSlotType.Bag.ToEnumerable()));
-                        if (!handsFull)
+                        bool hasHandsFull = character.HasHandsFull(out (Item leftHandItem, Item rightHandItem) items);
+                        if (hasHandsFull)
+                        {
+                            hasHandsFull = !character.TryPutItemInAnySlot(items.leftHandItem) && 
+                                           !character.TryPutItemInAnySlot(items.rightHandItem) &&
+                                           !character.TryPutItemInBag(items.leftHandItem) && 
+                                           !character.TryPutItemInBag(items.rightHandItem);
+                        }
+                        if (!hasHandsFull)
                         {
                             bool hasBattery = false;
-                            if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> nonEquippedScooters, containedTag: Tags.MobileBattery, conditionPercentage: 1, requireEquipped: false))
+                            if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> nonEquippedScootersWithBattery, containedTag: Tags.MobileBattery, conditionPercentage: 1, requireEquipped: false))
                             {
-                                // Non-equipped scooter with a battery
-                                scooter = nonEquippedScooters.FirstOrDefault();
+                                scooter = nonEquippedScootersWithBattery.FirstOrDefault();
                                 hasBattery = true;
                             }
-                            else if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> _nonEquippedScooters, requireEquipped: false))
+                            else if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> nonEquippedScootersWithoutBattery, requireEquipped: false))
                             {
-                                // Non-equipped scooter without a battery
-                                scooter = _nonEquippedScooters.FirstOrDefault();
+                                scooter = nonEquippedScootersWithoutBattery.FirstOrDefault();
                                 // Non-recursive so that the bots won't take batteries from other items. Also means that they can't find batteries inside containers. Not sure how to solve this.
                                 hasBattery = HumanAIController.HasItem(character, Tags.MobileBattery, out _, requireEquipped: false, conditionPercentage: 1, recursive: false);
                             }
@@ -518,8 +560,7 @@ namespace Barotrauma
                         }
                         if (!useScooter)
                         {
-                            // Unequip
-                            character.Inventory.TryPutItem(scooter, character, CharacterInventory.AnySlot);
+                            character.TryPutItemInAnySlot(scooter);
                         }
                     }
                 }
@@ -663,7 +704,10 @@ namespace Barotrauma
 
         private bool useScooter;
         private float checkScooterTimer;
-        private readonly float checkScooterTime = 0.5f;
+        private const float CheckScooterTime = 0.5f;
+        
+        private float checkExoSuitTimer;
+        private const float CheckExoSuitTime = 2.0f;
 
         public Hull GetTargetHull() => GetTargetHull(Target);
 
@@ -764,9 +808,8 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
-            if (IsCompleted) { return true; }
             // First check the distance and then if can interact (heaviest)
             if (Target == null)
             {

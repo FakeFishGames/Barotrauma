@@ -2,8 +2,8 @@
 
 http://www.barotraumagame.com
 
-© 2018-2022 FakeFish Ltd. All rights reserved.
-© 2019-2022 Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved.
+© 2017-2024 FakeFish Ltd. All rights reserved.
+© 2019-2024 Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved.
 Privacy policy: http://privacypolicy.daedalic.com
 
 See the wiki for more detailed info and instructions:

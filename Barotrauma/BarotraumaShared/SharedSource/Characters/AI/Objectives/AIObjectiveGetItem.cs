@@ -658,9 +658,8 @@ namespace Barotrauma
             return bestItem;
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
-            if (IsCompleted) { return true; }
             if (targetItem == null)
             {
                 // Not yet ready

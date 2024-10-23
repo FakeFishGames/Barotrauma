@@ -14,7 +14,16 @@ namespace Barotrauma
         protected List<GUIComponent> selected;
 
         public delegate bool OnSelectedHandler(GUIComponent component, object obj);
+        /// <summary>
+        /// Triggers when some element is clicked on the listbox. 
+        /// Note that <see cref="SelectedData"/> is not set yet when this callback triggers, and returning false from the callback disallows selecting it.
+        /// </summary>
         public OnSelectedHandler OnSelected;
+
+        /// <summary>
+        /// Triggers after some element has been selected from the listbox.
+        /// </summary>
+        public OnSelectedHandler AfterSelected;
 
         public delegate object CheckSelectedHandler();
         public CheckSelectedHandler CheckSelected;
@@ -1151,6 +1160,8 @@ namespace Barotrauma
             {
                 SoundPlayer.PlayUISound(GUISoundType.Select);
             }
+
+            AfterSelected?.Invoke(child, SelectedData);
         }
 
         public void Select(IEnumerable<GUIComponent> children)
@@ -1160,8 +1171,9 @@ namespace Barotrauma
             selected.Clear();
             selected.AddRange(children.Where(c => Content.Children.Contains(c)));
             foreach (var child in selected) { OnSelected?.Invoke(child, child.UserData); }
+            AfterSelected?.Invoke(children.FirstOrDefault(), SelectedData);
         }
-        
+
         public void Deselect()
         {
             Selected = false;
@@ -1170,6 +1182,15 @@ namespace Barotrauma
                 GUI.KeyboardDispatcher.Subscriber = null;
             }
             selected.Clear();
+        }
+
+        public void DeselectElement(GUIComponent child)
+        {
+            if (child == null) { return; }
+            if (selected.Contains(child))
+            {
+                selected.Remove(child);
+            }
         }
 
         public void UpdateScrollBarSize()
@@ -1268,7 +1289,7 @@ namespace Barotrauma
             ContentBackground.DrawManually(spriteBatch, alsoChildren: false);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            if (HideChildrenOutsideFrame)
+            if (HideChildrenOutsideFrame && Content.CountChildren > 0)
             {                    
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Content.Rect);
@@ -1306,7 +1327,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, drawRect, Color.White * 0.5f, thickness: 2f);
             }
             
-            if (HideChildrenOutsideFrame)
+            if (HideChildrenOutsideFrame && Content.CountChildren > 0)
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;

@@ -14,7 +14,8 @@
             float waterVolume = 0.0f, totalVolume = 0.0f;
             foreach (Hull hull in Hull.HullList)
             {
-                if (hull.Submarine != character.Submarine) { continue; }
+                if (hull.Submarine is not { } hullSubmarine) { continue; }
+                if (hullSubmarine != character.Submarine || hullSubmarine.TeamID != character.TeamID) { continue; }
                 waterVolume += hull.WaterVolume;
                 totalVolume += hull.Volume;
             }

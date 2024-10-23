@@ -5,6 +5,8 @@
         private readonly float addedValue;
         private readonly float multiplyValue;
 
+        public override bool AllowClientSimulation => true;
+
         public CharacterAbilityModifyValue(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             addedValue = abilityElement.GetAttributeFloat("addedvalue", 0f);

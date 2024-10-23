@@ -311,7 +311,11 @@ namespace Barotrauma
                 targets.Add(target);
                 foreach (ContentXElement subElement in chosenElement.Elements())
                 {
-                    LoadTarget(subElement, parentTarget: target);                    
+                    if (subElement.NameAsIdentifier() == "target" ||
+                        subElement.NameAsIdentifier() == "chooserandom")
+                    {
+                        LoadTarget(subElement, parentTarget: target);
+                    }                  
                 }           
             } 
         }

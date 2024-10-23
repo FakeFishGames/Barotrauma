@@ -120,7 +120,6 @@ namespace Barotrauma
         {
         }
 
-        protected override bool CheckObjectiveSpecific() => false;
-
+        protected override bool CheckObjectiveState() => false;
     }
 }

@@ -11,7 +11,7 @@ namespace Barotrauma
         public override void CalculateImportanceSpecific()
         {
             if (shipCommandManager.NavigationState == ShipCommandManager.NavigationStates.Inactive) { return; }
-            if (TargetItemComponent is Powered powered && powered.Voltage <= powered.MinVoltage) { return; }
+            if (TargetItemComponent is Powered { HasPower: false }) { return; }
             if (TargetItem.Condition <= 0f) { return; }
 
             Importance = 70f;

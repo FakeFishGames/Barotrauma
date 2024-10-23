@@ -10,19 +10,17 @@ namespace Barotrauma
     class MapGenerationParams : Prefab, ISerializableEntity
     {
         public static readonly PrefabSelector<MapGenerationParams> Params = new PrefabSelector<MapGenerationParams>();
+
         public static MapGenerationParams Instance
         {
-            get
-            {
-                return Params.ActivePrefab;
-            }
+            get { return Params.ActivePrefab; }
         }
 
 #if DEBUG
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool ShowLocations { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool ShowLevelTypeNames { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes), Editable]
@@ -49,8 +47,8 @@ namespace Barotrauma
         public float LargeLevelConnectionLength { get; set; }
 
         [Serialize("20,20", IsPropertySaveable.Yes, description: "How far from each other voronoi sites are placed. " +
-            "Sites determine shape of the voronoi graph. Locations are placed at the vertices of the voronoi cells. " +
-            "(Decreasing this value causes the number of sites, and the complexity of the map, to increase exponentially - be careful when adjusting)"), Editable]
+                                                                 "Sites determine shape of the voronoi graph. Locations are placed at the vertices of the voronoi cells. " +
+                                                                 "(Decreasing this value causes the number of sites, and the complexity of the map, to increase exponentially - be careful when adjusting)"), Editable]
         public Point VoronoiSiteInterval { get; set; }
 
         [Serialize("5,5", IsPropertySaveable.Yes), Editable]

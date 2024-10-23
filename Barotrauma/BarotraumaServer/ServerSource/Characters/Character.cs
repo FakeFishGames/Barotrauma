@@ -40,7 +40,7 @@ namespace Barotrauma
                     {
                         matchingData.ApplyPermadeath();
                         
-                        if (GameMain.Server is { ServerSettings.IronmanMode: true })
+                        if (GameMain.Server?.ServerSettings is { IronmanModeActive: true })
                         {
                             mpCampaign.SaveSingleCharacter(matchingData);
                         }

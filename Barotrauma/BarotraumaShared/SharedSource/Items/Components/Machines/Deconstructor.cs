@@ -14,8 +14,6 @@ namespace Barotrauma.Items.Components
         private float progressTimer;
         private float progressState;
 
-        private bool hasPower;
-
         private Character user;
 
         private float userDeconstructorSpeedMultiplier = 1.0f;
@@ -88,9 +86,8 @@ namespace Barotrauma.Items.Components
                 SetActive(false);
                 return;
             }
-
-            hasPower = Voltage >= MinVoltage;
-            if (!hasPower) { return; }
+            
+            if (!HasPower) { return; }
 
             var repairable = item.GetComponent<Repairable>();
             if (repairable != null)
@@ -243,16 +240,16 @@ namespace Barotrauma.Items.Components
                         if (targetItem == otherItem) { continue; }
                         if (deconstructProduct.RequiredOtherItem.Any(r => otherItem.HasTag(r) || r == otherItem.Prefab.Identifier))
                         {
-                            var geneticMaterial1 = targetItem.GetComponent<GeneticMaterial>();
-                            var geneticMaterial2 = otherItem.GetComponent<GeneticMaterial>();
-                            if (geneticMaterial1 != null && geneticMaterial2 != null)
+                            var targetGeneticMaterial = targetItem.GetComponent<GeneticMaterial>();
+                            var otherGeneticMaterial = otherItem.GetComponent<GeneticMaterial>();
+                            if (targetGeneticMaterial != null && otherGeneticMaterial != null)
                             {
-                                var result = geneticMaterial1.Combine(geneticMaterial2, user);
+                                var result = targetGeneticMaterial.Combine(otherGeneticMaterial, user, out Item itemToDestroy);
                                 if (result == GeneticMaterial.CombineResult.Refined)
                                 {
                                     inputContainer.Inventory.RemoveItem(otherItem);
                                     OutputContainer.Inventory.RemoveItem(otherItem);
-                                    Entity.Spawner.AddItemToRemoveQueue(otherItem);
+                                    Entity.Spawner.AddItemToRemoveQueue(itemToDestroy);
                                 }
                                 if (result != GeneticMaterial.CombineResult.None)
                                 {
@@ -425,31 +422,39 @@ namespace Barotrauma.Items.Components
             foreach (Item inputItem in items)
             {
                 if (!inputItem.AllowDeconstruct) { continue; }
+                
                 foreach (var deconstructItem in inputItem.Prefab.DeconstructItems)
                 {
+                    // check for deconstructor compatibility (for example, 'geneticresearchstation' tag)
                     if (deconstructItem.RequiredDeconstructor.Length > 0)
                     {
-                        if (!deconstructItem.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)) { continue; }
+                        if (deconstructItem.RequiredDeconstructor.None(requiredId => item.HasTag(requiredId) || item.Prefab.Identifier == requiredId)) { continue; }
                     }
+                    
+                    // check for other required items in the same deconstructor (for example, 'geneticmaterial')
                     if (deconstructItem.RequiredOtherItem.Length > 0 && checkRequiredOtherItems)
                     {
-                        if (!deconstructItem.RequiredOtherItem.Any(r => items.Any(it => it.HasTag(r) || it.Prefab.Identifier == r))) { continue; }
+                        // no matching item with the required id, skip
+                        if (deconstructItem.RequiredOtherItem.None(requiredId => items.Any(it => it.HasTag(requiredId) || it.Prefab.Identifier == requiredId))) { continue; }
+                        
                         bool validOtherItemFound = false;
                         foreach (Item otherInputItem in items)
                         {
                             if (otherInputItem == inputItem) { continue; }
-                            if (!deconstructItem.RequiredOtherItem.Any(r => otherInputItem.HasTag(r) || otherInputItem.Prefab.Identifier == r)) { continue; }
+                            if (deconstructItem.RequiredOtherItem.None(requiredId => otherInputItem.HasTag(requiredId) || otherInputItem.Prefab.Identifier == requiredId)) { continue; }
 
-                            var geneticMaterial1 = inputItem.GetComponent<GeneticMaterial>();
-                            var geneticMaterial2 = otherInputItem.GetComponent<GeneticMaterial>();
-                            if (geneticMaterial1 != null && geneticMaterial2 != null)
+                            // skip if genetic materials cannot be combined (or refined)
+                            var geneticMaterial = inputItem.GetComponent<GeneticMaterial>();
+                            var otherGeneticMaterial = otherInputItem.GetComponent<GeneticMaterial>();
+                            if (geneticMaterial != null && otherGeneticMaterial != null)
                             {
-                                if (!geneticMaterial1.CanBeCombinedWith(geneticMaterial2)) { continue; }
+                                if (!geneticMaterial.CanBeCombinedWith(otherGeneticMaterial)) { continue; }
                             }
                             validOtherItemFound = true;
                         }
                         if (!validOtherItemFound) { continue; }
                     }
+                    
                     yield return (inputItem, deconstructItem);
                 }
             }

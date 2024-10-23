@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System.Linq;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
@@ -49,7 +49,7 @@ namespace Barotrauma
             }
 
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
-            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.FirstOrDefault(static jp => jp.Identifier == "captain"));
+            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.FirstOrDefault(static jp => jp.Identifier == "captain"), isPvP: false);
             dummyCharacter.Info.Name = "Galldren";
             dummyCharacter.Inventory.CreateSlots();
             dummyCharacter.Info.GiveExperience(999999);
@@ -59,6 +59,9 @@ namespace Barotrauma
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
+
+            dummyCharacter.Info.TalentRefundPoints = 2;
+            TabMenu = new TabMenu();
         }
 
         public override void AddToGUIUpdateList()

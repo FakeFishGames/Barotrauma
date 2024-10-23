@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -8,7 +7,7 @@ namespace Barotrauma.Items.Components
         const float FireCheckInterval = 1.0f;
         private float fireCheckTimer;
 
-        private bool fireInRange;
+        public bool FireInRange { get; private set; }
 
         private int maxOutputLength;
         [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
@@ -80,10 +79,10 @@ namespace Barotrauma.Items.Components
             fireCheckTimer -= deltaTime;
             if (fireCheckTimer <= 0.0f)
             {
-                fireInRange = IsFireInRange();
+                FireInRange = IsFireInRange();
                 fireCheckTimer = FireCheckInterval;
             }
-            string signalOut = fireInRange ? Output : FalseOutput;
+            string signalOut = FireInRange ? Output : FalseOutput;
             if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }           
         }
     }

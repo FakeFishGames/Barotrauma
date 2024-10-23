@@ -12,14 +12,20 @@
 internal class CharacterAbilityWarStories : CharacterAbility
 {
     private readonly Identifier targetStat;
-    private readonly float minCondition;
+    private readonly float normalQualityThreshold;
+    private readonly float goodQualityThreshold;
+    private readonly float excellentQualityThreshold;
+    private readonly float masterworkQualityThreshold;
 
     private readonly ItemPrefab prefab;
 
     public CharacterAbilityWarStories(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
     {
         targetStat = abilityElement.GetAttributeIdentifier("target", Identifier.Empty);
-        minCondition = abilityElement.GetAttributeFloat("mincondition", 1);
+        normalQualityThreshold = abilityElement.GetAttributeFloat("normalqualitythreshold", 4);
+        goodQualityThreshold = abilityElement.GetAttributeFloat("goodqualitythreshold", 10);
+        excellentQualityThreshold = abilityElement.GetAttributeFloat("excellentqualitythreshold", 20);
+        masterworkQualityThreshold = abilityElement.GetAttributeFloat("masterworkqualitythreshold", 30);
 
         if (targetStat.IsEmpty)
         {
@@ -37,23 +43,28 @@ internal class CharacterAbilityWarStories : CharacterAbility
     {
         if (prefab is null || Character is null) { return; }
         
-        float condition = Character.Info?.GetSavedStatValue(StatTypes.None, targetStat) ?? 0;
-        if (condition < minCondition) { return; }
+        float statValue = Character.Info?.GetSavedStatValue(StatTypes.None, targetStat) ?? 0;
+
+        if (statValue < normalQualityThreshold) { return; }
+
+        int quality = 0;
+        if (statValue >= masterworkQualityThreshold) { quality = 3; }
+        else if (statValue >= excellentQualityThreshold) { quality = 2; }
+        else if (statValue >= goodQualityThreshold) { quality = 1; }
 
         if (GameMain.GameSession?.RoundEnding ?? true)
         {
             Item item = new(prefab, Character.WorldPosition, Character.Submarine)
             {
-                Condition = condition,
-                HealthMultiplier = condition
+                Quality = quality,
             };
             Character.Inventory.TryPutItem(item, Character, item.AllowedSlots);
         }
         else
         {
-            Entity.Spawner?.AddItemToSpawnQueue(prefab, Character.Inventory, condition: condition, onSpawned: item =>
+            Entity.Spawner?.AddItemToSpawnQueue(prefab, Character.Inventory, quality: quality, onSpawned: item =>
             {
-                item.HealthMultiplier = condition;
+                item.Quality = quality;
             });
         }
     }

@@ -176,6 +176,8 @@ namespace Barotrauma
             //only player's crew can steal, ignore other teams
             if (!target.IsOnPlayerTeam) { return false; }
             if (target.IsHandcuffed) { return false; }
+            //ignore thieves in the same team
+            if (character.OriginalTeamID == target.TeamID || character.TeamID == target.TeamID) { return false; }
             // Ignore targets that are climbing, because might need to use ladders to get to them.
             if (target.IsClimbing) { return false; }
             if (HumanAIController.IsTrueForAnyBotInTheCrew(bot => 

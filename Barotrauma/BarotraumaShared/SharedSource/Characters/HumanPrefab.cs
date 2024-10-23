@@ -94,6 +94,9 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the NPC will not spawn if the specified spawn point tags can't be found.")]
+        public bool RequireSpawnPointTag { get; protected set; }
+
         [Serialize(CampaignMode.InteractionType.None, IsPropertySaveable.No)]
         public CampaignMode.InteractionType CampaignInteractionType { get; protected set; }
 

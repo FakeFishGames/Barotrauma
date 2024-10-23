@@ -320,7 +320,7 @@ namespace Barotrauma.Networking
 
         private Sound overrideSound;
         private int overridePos;
-        private short[] overrideBuf = new short[VoipConfig.BUFFER_SIZE];
+        private readonly short[] overrideBuf = new short[VoipConfig.BUFFER_SIZE];
 
         private void FillBuffer()
         {
@@ -331,13 +331,13 @@ namespace Barotrauma.Networking
                 {
                     int sampleCount = overrideSound.FillStreamBuffer(overridePos, overrideBuf);
                     overridePos += sampleCount * 2;
-                    Array.Copy(overrideBuf, 0, uncompressedBuffer, totalSampleCount, sampleCount);
+                    Array.Copy(overrideBuf, 0, uncompressedBuffer, totalSampleCount, Math.Min(sampleCount, uncompressedBuffer.Length - totalSampleCount));
                     totalSampleCount += sampleCount;
 
                     if (sampleCount == 0)
                     {
                         overridePos = 0;
-                    }
+                    }                    
                 }
                 int sleepMs = VoipConfig.BUFFER_SIZE * 800 / VoipConfig.FREQUENCY;
                 Thread.Sleep(sleepMs - 1);
@@ -382,7 +382,14 @@ namespace Barotrauma.Networking
             }
             else
             {
-                overrideSound = GameMain.SoundManager.LoadSound(fileName, true);
+                try
+                {
+                    overrideSound = GameMain.SoundManager.LoadSound(fileName, true);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to load the sound {fileName}.", e);
+                }
             }
         }
 

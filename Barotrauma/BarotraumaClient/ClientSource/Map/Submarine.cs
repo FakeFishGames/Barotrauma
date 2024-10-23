@@ -656,6 +656,7 @@ namespace Barotrauma
                             errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning",
                                 ("[doorcount]", doorLinks.ToString()),
                                 ("[freeconnectioncount]", (item.Connections[i].MaxWires - wireCount).ToString())).Value);
+                            warnings.Add(SubEditorScreen.WarningType.InsufficientFreeConnectionsWarning);
                             break;
                         }
                     }
@@ -836,7 +837,7 @@ namespace Barotrauma
                 subBody.PositionBuffer.Insert(index, posInfo);
             }
         }
-        
+
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Identifier layerIdentifier = msg.ReadIdentifier();

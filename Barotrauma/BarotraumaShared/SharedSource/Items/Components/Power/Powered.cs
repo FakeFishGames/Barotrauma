@@ -170,6 +170,8 @@ namespace Barotrauma.Items.Components
         /// Can be used by status effects or sounds to check if the item has enough power to run
         /// </summary>
         public float RelativeVoltage => minVoltage <= 0.0f ? 1.0f : MathHelper.Clamp(Voltage / minVoltage, 0.0f, 1.0f);
+        
+        public virtual bool HasPower => Voltage >= MinVoltage;
 
         public bool PoweredByTinkering { get; set; }
 
@@ -668,6 +670,8 @@ namespace Barotrauma.Items.Components
             return 
                 conn1.IsPower && conn2.IsPower && 
                 conn1.Item.Condition > 0.0f && conn2.Item.Condition > 0.0f &&
+                conn1.Item.GetComponent<PowerTransfer>() is not { CanTransfer: false } &&
+                conn2.Item.GetComponent<PowerTransfer>() is not { CanTransfer: false } &&
                 (conn1.Item.HasTag(Tags.JunctionBox) || conn2.Item.HasTag(Tags.JunctionBox) || conn1.Item.HasTag(Tags.DockingPort) || conn2.Item.HasTag(Tags.DockingPort) || conn1.IsOutput != conn2.IsOutput);
         }
 

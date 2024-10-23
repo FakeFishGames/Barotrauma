@@ -1359,7 +1359,7 @@ namespace Barotrauma
                         if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container &&
                             container.Inventory.CanBePut(item))
                         {
-                            if (!container.AllowDragAndDrop || !container.AllowAccess)
+                            if (!container.AllowDragAndDrop || !container.IsAccessible())
                             {
                                 allowCombine = false;
                             }

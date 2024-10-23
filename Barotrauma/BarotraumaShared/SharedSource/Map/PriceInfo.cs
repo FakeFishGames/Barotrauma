@@ -46,6 +46,11 @@ namespace Barotrauma
         /// </summary>
         private const float DefaultMaxAvailabilityRelativeToMin = 1.2f;
 
+        /// <summary>
+        /// If set, the item is only available in outposts with this faction.
+        /// </summary>
+        public Identifier RequiredFaction { get; private set; }
+
         private readonly Dictionary<Identifier, float> minReputation = new Dictionary<Identifier, float>();
 
         /// <summary>
@@ -67,7 +72,7 @@ namespace Barotrauma
             MinAvailableAmount = Math.Min(GetMinAmount(element, defaultValue: DefaultAmount), CargoManager.MaxQuantity);
             MaxAvailableAmount = MathHelper.Clamp(GetMaxAmount(element, defaultValue: (int)(MinAvailableAmount * DefaultMaxAvailabilityRelativeToMin)), MinAvailableAmount, CargoManager.MaxQuantity);
             RequiresUnlock = element.GetAttributeBool("requiresunlock", false);
-
+            RequiredFaction = element.GetAttributeIdentifier(nameof(RequiredFaction), Identifier.Empty);
             System.Diagnostics.Debug.Assert(MaxAvailableAmount >= MinAvailableAmount);
         }
 
@@ -115,6 +120,7 @@ namespace Barotrauma
             bool displayNonEmpty = element.GetAttributeBool("displaynonempty", false);
             bool soldByDefault = element.GetAttributeBool("sold", element.GetAttributeBool("soldbydefault", true));
             bool requiresUnlock = element.GetAttributeBool("requiresunlock", false);
+            Identifier requiredFactionByDefault = element.GetAttributeIdentifier(nameof(RequiredFaction), Identifier.Empty);
             foreach (XElement childElement in element.GetChildElements("price"))
             {
                 float priceMultiplier = childElement.GetAttributeFloat("multiplier", 1.0f);
@@ -137,7 +143,10 @@ namespace Barotrauma
                     buyingPriceMultiplier: storeBuyingMultiplier,
                     displayNonEmpty: displayNonEmpty,
                     requiresUnlock: requiresUnlock,
-                    storeIdentifier: storeIdentifier);
+                    storeIdentifier: storeIdentifier)
+                {
+                    RequiredFaction = childElement.GetAttributeIdentifier(nameof(RequiredFaction), requiredFactionByDefault)
+                };
                 priceInfo.LoadReputationRestrictions(childElement);
                 priceInfos.Add(priceInfo);
             }
@@ -150,7 +159,10 @@ namespace Barotrauma
                 minLevelDifficulty: minLevelDifficulty,
                 buyingPriceMultiplier: buyingPriceMultiplier,
                 displayNonEmpty: displayNonEmpty,
-                requiresUnlock: requiresUnlock);
+                requiresUnlock: requiresUnlock)
+            {
+                RequiredFaction = requiredFactionByDefault
+            };
             defaultPrice.LoadReputationRestrictions(element);
             return priceInfos;
         }

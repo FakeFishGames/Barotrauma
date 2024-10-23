@@ -300,7 +300,7 @@ namespace Barotrauma.CharacterEditor
                                                 string destinationDir = Path.GetDirectoryName(destinationPath);
                                                 if (!Directory.Exists(destinationDir))
                                                 {
-                                                    Directory.CreateDirectory(destinationDir);
+                                                    Directory.CreateDirectory(destinationDir, catchUnauthorizedAccessExceptions: true);
                                                 }
 
                                                 if (!File.Exists(destinationPath))

@@ -9,8 +9,21 @@ namespace Barotrauma
 {
     public class GUIDropDown : GUIComponent, IKeyboardSubscriber
     {
+        /// <param name="selected">The component that was selected from the dropdown.</param>
+        /// <param name="obj"><see cref="GUIComponent.UserData"/> of the component selected from the dropdown.</param>
         public delegate bool OnSelectedHandler(GUIComponent selected, object obj = null);
+        /// <summary>
+        /// Triggers when some item is cliecked from the dropdown.
+        /// Note that <see cref="SelectedData"/> is not set yet when this callback triggers, and returning false from the callback disallows selecting it.
+        /// If you want to access the new value, use the obj argument.
+        /// </summary>
         public OnSelectedHandler OnSelected;
+
+        /// <summary>
+        /// Triggers after an item has been selected from the dropdown, all validation has been done and the new value has been set.
+        /// </summary>
+        public OnSelectedHandler AfterSelected;
+
         public OnSelectedHandler OnDropped;
 
         private readonly GUIButton button;
@@ -166,7 +179,7 @@ namespace Barotrauma
 
         public Vector4 Padding => button.TextBlock.Padding;
                 
-        public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false, Alignment textAlignment = Alignment.CenterLeft) : base(style, rectT)
+        public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false, Alignment textAlignment = Alignment.CenterLeft, float listBoxScale = 1) : base(style, rectT)
         {
             text ??= LocalizedString.EmptyString;
 
@@ -185,13 +198,21 @@ namespace Barotrauma
 
             Anchor listAnchor = dropAbove ? Anchor.TopCenter : Anchor.BottomCenter;
             Pivot listPivot = dropAbove ? Pivot.BottomCenter : Pivot.TopCenter;
-            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, listAnchor, listPivot)
+            listBox = new GUIListBox(new RectTransform(new Point((int)(Rect.Width * listBoxScale), Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, listAnchor, listPivot)
             { IsFixedSize = false }, style: null)
             {
                 Enabled = !selectMultiple,
                 PlaySoundOnSelect = true,
             };
-            if (!selectMultiple) { listBox.OnSelected = SelectItem; }           
+            if (!selectMultiple)
+            {
+                listBox.AfterSelected = (component, obj) =>
+                {
+                    SelectItem(component, obj);
+                    AfterSelected?.Invoke(component, obj);
+                    return true;
+                };
+            }
             GUIStyle.Apply(listBox, "GUIListBox", this);
             GUIStyle.Apply(listBox.ContentBackground, "GUIListBox", this);
 
@@ -199,6 +220,8 @@ namespace Barotrauma
             {
                 icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), button.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5, 0) }, null, scaleToFit: true);
                 icon.ApplyStyle(button.Style.ChildStyles["dropdownicon".ToIdentifier()]);
+                //move the text away from the icon
+                button.TextBlock.Padding += new Vector4(0, 0, icon.Rect.Width, 0);
             }
 
             currentHighestParent = FindHighestParent();
@@ -249,12 +272,12 @@ namespace Barotrauma
             toolTip ??= "";
             if (selectMultiple)
             {
-                var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, style: "ListBoxElement", color: color)
+                var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, style: "ListBoxElement", color: color)
                 {
                     UserData = userData,
                     ToolTip = toolTip
                 };
-                new GUITickBox(new RectTransform(new Vector2(1.0f, 0.8f), frame.RectTransform, anchor: Anchor.CenterLeft) { MaxSize = new Point(int.MaxValue, (int)(button.Rect.Height * 0.8f)) }, text)
+                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.8f), frame.RectTransform, anchor: Anchor.CenterLeft) { MaxSize = new Point(int.MaxValue, (int)(button.Rect.Height * 0.8f)) }, text)
                 {
                     UserData = userData,
                     ToolTip = toolTip,
@@ -263,6 +286,11 @@ namespace Barotrauma
                         if (MustSelectAtLeastOne && selectedIndexMultiple.Count <= 1 && !tb.Selected)
                         {
                             tb.Selected = true;
+                            return false;
+                        }
+
+                        if (OnSelected != null && !OnSelected.Invoke(tb.Parent, tb.Parent.UserData))
+                        {
                             return false;
                         }
 
@@ -282,8 +310,7 @@ namespace Barotrauma
                             i++;
                         }
                         button.Text = LocalizedString.Join(", ", texts);
-                        // TODO: The callback is called at least twice, remove this?
-                        OnSelected?.Invoke(tb.Parent, tb.Parent.UserData);
+                        AfterSelected?.Invoke(tb.Parent, SelectedData);
                         return true;
                     }
                 };
@@ -291,7 +318,7 @@ namespace Barotrauma
             }
             else
             {
-                return new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, text, style: "ListBoxElement", color: color, textColor: textColor)
+                return new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, text, style: "ListBoxElement", color: color, textColor: textColor)
                 {
                     UserData = userData,
                     ToolTip = toolTip
@@ -328,9 +355,8 @@ namespace Barotrauma
                 }
                 button.Text = textBlock?.Text ?? "";
             }
+            OnSelected?.Invoke(component, obj);
             Dropped = false;
-            // TODO: OnSelected can be called multiple times and when it shouldn't be called -> turn into an event so that nobody else can call it.
-            OnSelected?.Invoke(component, component.UserData);
             return true;
         }
 
@@ -344,6 +370,7 @@ namespace Barotrauma
             {
                 listBox.Select(userData);
             }
+            AfterSelected?.Invoke(SelectedComponent, SelectedData);
         }
 
         public void Select(int index)
@@ -360,6 +387,7 @@ namespace Barotrauma
             {
                 listBox.Select(index);
             }
+            AfterSelected?.Invoke(this, SelectedData);
         }
 
         private bool wasOpened;

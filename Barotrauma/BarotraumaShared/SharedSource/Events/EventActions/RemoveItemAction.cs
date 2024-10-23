@@ -25,7 +25,7 @@ namespace Barotrauma
             {
                 ItemIdentifiers = element.GetAttributeString("itemidentifier", element.GetAttributeString("identifier", string.Empty));
             }
-            itemIdentifierSplit = ItemIdentifiers.Split(',').ToIdentifiers().ToImmutableHashSet();
+            itemIdentifierSplit = ItemIdentifiers.ToIdentifiers().ToImmutableHashSet();
         }
 
         private bool isFinished = false;

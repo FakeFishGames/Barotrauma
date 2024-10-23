@@ -191,7 +191,7 @@ namespace Barotrauma
         {
             if (InDetectable) { return true; }
             if (Entity == null) { return true; }
-            if (Level.Loaded != null && WorldPosition.Y > Level.Loaded.Size.Y)
+            if (Level.IsPositionAboveLevel(WorldPosition))
             {
                 return true;
             }

@@ -6,6 +6,7 @@ internal class CharacterAbilityUpgradeSubmarine : CharacterAbility
     private readonly UpgradePrefab? upgradePrefab;
     private readonly UpgradeCategory? upgradeCategory;
     public readonly int level;
+    private readonly bool giveOnAddingFirstTime;
 
     public override bool AllowClientSimulation => true;
 
@@ -13,7 +14,8 @@ internal class CharacterAbilityUpgradeSubmarine : CharacterAbility
     {
         var prefabIdentifier = abilityElement.GetAttributeIdentifier(nameof(upgradePrefab), Identifier.Empty);
         var categoryIdentifier = abilityElement.GetAttributeIdentifier(nameof(upgradeCategory), Identifier.Empty);
-        
+        giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", characterAbilityGroup.AbilityEffectType == AbilityEffectType.None);
+
         if (UpgradePrefab.Find(prefabIdentifier) is not { } foundUpgradePrefab)
         {
             DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilityUpgradeSubmarine)} - {nameof(upgradePrefab)} not found.",
@@ -45,6 +47,14 @@ internal class CharacterAbilityUpgradeSubmarine : CharacterAbility
     protected override void ApplyEffect()
     {
         ApplyEffectSpecific();
+    }
+
+    public override void InitializeAbility(bool addingFirstTime)
+    {
+        if (addingFirstTime && giveOnAddingFirstTime)
+        {
+            ApplyEffectSpecific();
+        }
     }
 
     private void ApplyEffectSpecific()

@@ -103,6 +103,9 @@ namespace Barotrauma
             get { return map; }
         }
 
+        /// <summary>
+        /// Which missions have been selected for the current round?
+        /// </summary>
         public override IEnumerable<Mission> Missions
         {
             get
@@ -112,10 +115,13 @@ namespace Barotrauma
                 {
                     if (Map.CurrentLocation != null)
                     {
+                        var currentLevelData = Level.Loaded?.LevelData ?? GameMain.GameSession?.LevelData;
                         foreach (Mission mission in map.CurrentLocation.SelectedMissions)
                         {
-                            if (mission.Locations[0] == mission.Locations[1] ||
-                                mission.Locations.Contains(Map.SelectedLocation))
+                            if (//mission takes place in current location
+                                mission.Locations[0] == mission.Locations[1] ||
+                                //mission takes place between two locations, and we're in the level between those locations
+                                mission.Locations.Contains(Map.SelectedLocation) && currentLevelData is { Type: LevelData.LevelType.LocationConnection })
                             {
                                 yield return mission;
                             }
@@ -170,6 +176,7 @@ namespace Barotrauma
         protected CampaignMode(GameModePreset preset, CampaignSettings settings)
             : base(preset)
         {
+            Settings = settings;
             Bank = new Wallet(Option<Character>.None())
             {
                 Balance = settings.InitialMoney
@@ -246,7 +253,7 @@ namespace Barotrauma
                 sub != leavingSub &&
                 !leavingSub.DockedTo.Contains(sub) &&
                 sub.Info.Type == SubmarineType.Player && sub.TeamID == CharacterTeamType.Team1 && // pirate subs are currently tagged as player subs as well
-                sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                !sub.IsRespawnShuttle &&
                 (sub.AtEndExit != leavingSub.AtEndExit || sub.AtStartExit != leavingSub.AtStartExit));
         }
 
@@ -401,9 +408,9 @@ namespace Barotrauma
                         currentLocation.DeselectMission(mission);
                     }
                 }
-                if (levelData.HasBeaconStation && !levelData.IsBeaconActive && Missions.None(m => m.Prefab.Type == MissionType.Beacon))
+                if (levelData.HasBeaconStation && !levelData.IsBeaconActive && Missions.None(m => m.Prefab.Type == Tags.MissionTypeBeacon))
                 {
-                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.IsSideObjective && m.Type == MissionType.Beacon);
+                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.IsSideObjective && m.Type == Tags.MissionTypeBeacon);
                     if (beaconMissionPrefabs.Any())
                     {
                         var filteredMissions = beaconMissionPrefabs.Where(m => levelData.Difficulty >= m.MinLevelDifficulty && levelData.Difficulty <= m.MaxLevelDifficulty);
@@ -490,7 +497,7 @@ namespace Barotrauma
                             if (missionPrefabs.Any())
                             {
                                 var missionPrefab = ToolBox.SelectWeightedRandom(missionPrefabs, p => p.Commonness, rand);
-                                if (missionPrefab.Type == MissionType.Pirate && Missions.Any(m => m.Prefab.Type == MissionType.Pirate))
+                                if (missionPrefab.Type == Tags.MissionTypePirate && Missions.Any(m => m.Prefab.Type == Tags.MissionTypePirate))
                                 {
                                     continue;                                    
                                 }
@@ -769,7 +776,7 @@ namespace Barotrauma
                     {
                         foreach (var dockedSub in Level.Loaded.StartOutpost.DockedTo)
                         {
-                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            if (dockedSub.IsRespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
                             return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                         }
                     }
@@ -809,7 +816,7 @@ namespace Barotrauma
                     {
                         foreach (var dockedSub in Level.Loaded.EndOutpost.DockedTo)
                         {
-                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            if (dockedSub.IsRespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
                             return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                         }
                     }
@@ -1287,7 +1294,7 @@ namespace Barotrauma
             return Faction.GetPlayerAffiliationStatus(faction);
         }
 
-        public abstract void Save(XElement element);
+        public abstract void Save(XElement element, bool isSavingOnLoading);
 
         protected void LoadStats(XElement element)
         {

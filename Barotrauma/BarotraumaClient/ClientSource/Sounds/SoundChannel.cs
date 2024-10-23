@@ -13,7 +13,7 @@ namespace Barotrauma.Sounds
             private set;
         }
 
-        public SoundSourcePool(int sourceCount = SoundManager.SOURCE_COUNT)
+        public SoundSourcePool(int sourceCount = SoundManager.SourceCount)
         {
             int alError;
 

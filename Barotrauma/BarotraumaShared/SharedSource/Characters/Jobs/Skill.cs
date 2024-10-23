@@ -40,10 +40,12 @@ namespace Barotrauma
 
         public readonly float PriceMultiplier = 1.0f;
 
-        public Skill(SkillPrefab prefab, Rand.RandSync randSync)
+        public Skill(SkillPrefab prefab, bool isPvP, Rand.RandSync randSync)
         {
             Identifier = prefab.Identifier;
-            Level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, randSync);
+
+            var levelRange = prefab.GetLevelRange(isPvP);
+            Level = Rand.Range(levelRange.Start, levelRange.End, randSync);
             iconJobId = GetIconJobId();
             PriceMultiplier = prefab.PriceMultiplier;
             DisplayName = TextManager.Get("SkillName." + Identifier);

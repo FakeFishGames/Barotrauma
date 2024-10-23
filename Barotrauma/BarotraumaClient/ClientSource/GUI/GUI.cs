@@ -469,7 +469,7 @@ namespace Barotrauma
                             "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                         soundTextY += yStep;
 
-                        for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
+                        for (int i = 0; i < SoundManager.SourceCount; i++)
                         {
                             Color clr = Color.White;
                             string soundStr = i + ": ";
@@ -1546,7 +1546,7 @@ namespace Barotrauma
         private static readonly VertexPositionColorTexture[] donutVerts = new VertexPositionColorTexture[DonutSegments * 4];
 
         public static void DrawDonutSection(
-            SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float depth = 0.0f)
+            SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float depth = 0.0f, float rotationRad = 0.0f)
         {
             float getRadius(int vertexIndex)
                 => (vertexIndex % 4) switch
@@ -1589,7 +1589,7 @@ namespace Barotrauma
             for (int vertexIndex = 0; vertexIndex < maxDirectionIndex * 4; vertexIndex++)
             {
                 donutVerts[vertexIndex].Color = clr;
-                donutVerts[vertexIndex].Position = new Vector3(center + getDirection(vertexIndex) * getRadius(vertexIndex), 0.0f);
+                donutVerts[vertexIndex].Position = new Vector3(center + Vector2.Transform(getDirection(vertexIndex) * getRadius(vertexIndex), Matrix.CreateRotationZ(rotationRad)), 0.0f);
             }
             sb.Draw(solidWhiteTexture, donutVerts, depth, count: maxDirectionIndex);
         }
@@ -1856,9 +1856,16 @@ namespace Barotrauma
             Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
             sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
-#endregion
 
-#region Element creation
+        public static void DrawCapsule(SpriteBatch sb, Vector2 origin, float length, float radius, float rotation, Color clr, float depth = 0, float thickness = 1)
+        {
+            DrawDonutSection(sb, origin + Vector2.Transform(-new Vector2(length / 2, 0), Matrix.CreateRotationZ(rotation)), new Range<float>(radius - thickness / 2, radius + thickness / 2), MathHelper.Pi, clr, depth, rotation - MathHelper.Pi);
+            DrawRectangle(sb, origin, new Vector2(length, radius * 2), new Vector2(length / 2, radius), rotation, clr, depth, thickness);
+            DrawDonutSection(sb, origin + Vector2.Transform(new Vector2(length / 2, 0), Matrix.CreateRotationZ(rotation)), new Range<float>(radius - thickness / 2, radius + thickness / 2), MathHelper.Pi, clr, depth, rotation);
+        }
+        #endregion
+
+        #region Element creation
 
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {

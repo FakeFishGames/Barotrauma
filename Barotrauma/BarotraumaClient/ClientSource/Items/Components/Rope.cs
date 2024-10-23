@@ -52,9 +52,11 @@ namespace Barotrauma.Items.Components
 
                 Vector2 sourcePos = GetSourcePos();
 
+                //need to double the size because this is essentially just the radius, we need the diameter
+                // + some extra margin to be on the safe side
                 return new Vector2(
                     Math.Abs(target.DrawPosition.X - sourcePos.X),
-                    Math.Abs(target.DrawPosition.Y - sourcePos.Y)) * 1.5f;
+                    Math.Abs(target.DrawPosition.Y - sourcePos.Y)) * 2.2f;
             }
         }
         
@@ -122,7 +124,7 @@ namespace Barotrauma.Items.Components
             {
                 if (turret.BarrelSprite != null)
                 {
-                    startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
+                    startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * turret.Item.Scale * BarrelLengthMultiplier;
                 }
                 startPos -= turret.GetRecoilOffset();
             }

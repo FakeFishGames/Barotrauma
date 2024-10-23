@@ -541,7 +541,7 @@ namespace Barotrauma
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty, mapSeed);
+                GameMain.GameSession = new GameSession(null, Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty, mapSeed);
                 campaign = (MultiPlayerCampaign)GameMain.GameSession.GameMode;
                 campaign.CampaignID = campaignID;
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
@@ -1044,7 +1044,7 @@ namespace Barotrauma
             return false;
         }
 
-        public override void Save(XElement element)
+        public override void Save(XElement element, bool isSavingOnLoading)
         {
             //do nothing, the clients get the save files from the server
         }
