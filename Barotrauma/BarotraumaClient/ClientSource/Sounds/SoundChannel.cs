@@ -434,6 +434,8 @@ namespace Barotrauma.Sounds
         private readonly uint[] unqueuedBuffers;
         private readonly float[] streamBufferAmplitudes;
 
+        public bool MuteBackgroundMusic;
+
         public int StreamSeekPos
         {
             get { return streamSeekPos; }

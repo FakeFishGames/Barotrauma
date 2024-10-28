@@ -141,7 +141,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (chargeSound != null)
                         {
-                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling, freqMult: chargeSound.GetRandomFrequencyMultiplier());
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound, item.WorldPosition, hullGuess: item.CurrentHull);
                             if (chargeSoundChannel != null) { chargeSoundChannel.Looping = true; }
                         }
                     }

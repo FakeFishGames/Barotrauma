@@ -22,7 +22,6 @@ namespace Barotrauma.Abilities
 
             foreach (Character character in Character.GetFriendlyCrew(Character))
             {
-                if (character.Info is null) { return; }
                 character.Info.AdditionalTalentPoints += amount;
             }
         }

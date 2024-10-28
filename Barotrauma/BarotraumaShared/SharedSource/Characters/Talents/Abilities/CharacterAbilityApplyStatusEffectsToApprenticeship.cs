@@ -28,7 +28,7 @@ namespace Barotrauma.Abilities
 
             foreach (Character character in Character.GetFriendlyCrew(Character))
             {
-                JobPrefab? characterJob = character.Info?.Job?.Prefab;
+                JobPrefab? characterJob = character.Info.Job?.Prefab;
                 if (characterJob is null) { continue; }
 
                 switch (characterJob.Identifier == apprenticeJob.Identifier)

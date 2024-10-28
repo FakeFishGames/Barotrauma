@@ -64,6 +64,9 @@ namespace Barotrauma
             }
         }
 
+        private readonly List<Body> limbBodies = new List<Body>();
+        public IEnumerable<Body> LimbBodies => limbBodies;
+
         public bool HasMultipleLimbsOfSameType => limbs != null && limbs.Length > limbDictionary.Count;
 
         private bool frozen;
@@ -524,6 +527,7 @@ namespace Barotrauma
 
         protected void CreateLimbs()
         {
+            limbBodies.Clear();
             limbs?.ForEach(l => l.Remove());
             Mass = 0;
             DebugConsole.Log($"Creating limbs from {RagdollParams.Name}.");
@@ -618,6 +622,7 @@ namespace Barotrauma
             {
                 throw new Exception($"Failed to add a limb to the character \"{Character?.ConfigPath ?? "null"}\" (limb index {ID} out of bounds). The ragdoll file may be configured incorrectly.");
             }
+            limbBodies.Add(limb.body.FarseerBody);
             Limbs[ID] = limb;
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) { limbDictionary.Add(limb.type, limb); }
@@ -629,6 +634,7 @@ namespace Barotrauma
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
             Array.Resize(ref limbs, Limbs.Length + 1);
             Limbs[Limbs.Length - 1] = limb;
+            limbBodies.Add(limb.body.FarseerBody);
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) { limbDictionary.Add(limb.type, limb); }
             SetupDrawOrder();
@@ -636,14 +642,14 @@ namespace Barotrauma
 
         public void RemoveLimb(Limb limb)
         {
-            if (!Limbs.Contains(limb)) return;
+            if (!Limbs.Contains(limb)) { return; }
 
             Limb[] newLimbs = new Limb[Limbs.Length - 1];
 
             int i = 0;
             foreach (Limb existingLimb in Limbs)
             {
-                if (existingLimb == limb) continue;
+                if (existingLimb == limb) { continue; }
                 newLimbs[i] = existingLimb;
                 i++;
             }
@@ -680,8 +686,11 @@ namespace Barotrauma
                 }
                 LimbJoints = newJoints;
             }
-            
+
+            limbBodies.Remove(limb.body.FarseerBody);
             limb.Remove();
+            System.Diagnostics.Debug.Assert(!limbs.Contains(limb));
+            System.Diagnostics.Debug.Assert(limbs.None(l => l.Removed));
             foreach (LimbJoint limbJoint in attachedJoints)
             {
                 GameMain.World.Remove(limbJoint.Joint);
@@ -2243,6 +2252,7 @@ namespace Barotrauma
                 }
                 limbs = null;
             }
+            limbBodies.Clear();
 
             if (collider != null)
             {

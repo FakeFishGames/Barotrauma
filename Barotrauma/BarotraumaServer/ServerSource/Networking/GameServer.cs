@@ -615,7 +615,7 @@ namespace Barotrauma.Networking
                         readyToStartAutomatically = true;
                     }
                 }
-                if (readyToStartAutomatically)
+                if (readyToStartAutomatically && !isRoundStartWarningActive)
                 {
                     if (!wasReadyToStartAutomatically) { GameMain.NetLobbyScreen.LastUpdateID++; }
                     TryStartGame();
@@ -840,9 +840,8 @@ namespace Barotrauma.Networking
                             IWriteMessage msg = new WriteOnlyMessage().WithHeader(ServerPacketHeader.CANCEL_STARTGAME);
                             serverPeer.Send(msg, c.Connection, DeliveryMethod.Reliable);
                         }
+                        AbortStartGameIfWarningActive();
                     }
-
-                    AbortStartGameIfWarningActive();
                     break;
                 case ClientPacketHeader.REQUEST_STARTGAMEFINALIZE:
                     if (connectedClient == null)
@@ -2547,6 +2546,21 @@ namespace Barotrauma.Networking
         private void AbortStartGameIfWarningActive()
         {
             isRoundStartWarningActive = false;
+            //reset autorestart countdown to give the clients time to reselect perks
+            if (ServerSettings.AutoRestart) 
+            { 
+                ServerSettings.AutoRestartTimer = Math.Max(ServerSettings.AutoRestartInterval, 5.0f); 
+            }
+            //reset start round votes so we don't immediately attempt to restart
+            foreach (var client in connectedClients)
+            {
+                client.SetVote(VoteType.StartRound, false);
+            }
+
+            int clientsReady = connectedClients.Count(c => c.GetVote<bool>(VoteType.StartRound));
+
+            GameMain.NetLobbyScreen.LastUpdateID++;
+
             CoroutineManager.StopCoroutines(nameof(WarnAndDelayStartGame));
         }
 
@@ -3312,6 +3326,24 @@ namespace Barotrauma.Networking
 
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameId)) { return false; }
 
+            if (!newJob.IsEmpty)
+            {
+                if (!JobPrefab.Prefabs.TryGet(newJob, out JobPrefab newJobPrefab) || newJobPrefab.HiddenJob)
+                {
+                    newJob = Identifier.Empty;
+                }
+            }
+
+            if (newName == c.Name && newJob == c.PreferredJob && newTeam == c.PreferredTeam) { return false; }
+
+            c.NameId = nameId;
+            c.PreferredJob = newJob;
+            if (newTeam != c.PreferredTeam)
+            {
+                c.PreferredTeam = newTeam;
+                RefreshPvpTeamAssignments();
+            }
+
             var timeSinceNameChange = DateTime.Now - c.LastNameChangeTime;
             if (timeSinceNameChange < Client.NameChangeCoolDown && newName != c.Name)
             {
@@ -3321,27 +3353,12 @@ namespace Barotrauma.Networking
                     var coolDownRemaining = Client.NameChangeCoolDown - timeSinceNameChange;
                     SendDirectChatMessage($"ServerMessage.NameChangeFailedCooldownActive~[seconds]={(int)coolDownRemaining.TotalSeconds}", c);
                     LastClientListUpdateID++;
+                    //increment the ID to make sure the current server-side name is treated as the "latest",
+                    //and the client correctly reverts back to the old name
+                    c.NameId++;
                 }
-                c.NameId = nameId;
                 c.RejectedName = newName;
                 return false;
-            }
-
-            if (!newJob.IsEmpty)
-            {
-                if (!JobPrefab.Prefabs.TryGet(newJob, out JobPrefab newJobPrefab) || newJobPrefab.HiddenJob)
-                {
-                    newJob = Identifier.Empty;
-                }
-            }
-            c.NameId = nameId;
-            if (newName == c.Name && newJob == c.PreferredJob && newTeam == c.PreferredTeam) { return false; }
-            c.PreferredJob = newJob;
-
-            if (newTeam != c.PreferredTeam)
-            {
-                c.PreferredTeam = newTeam;
-                RefreshPvpTeamAssignments();
             }
 
             return TryChangeClientName(c, newName);

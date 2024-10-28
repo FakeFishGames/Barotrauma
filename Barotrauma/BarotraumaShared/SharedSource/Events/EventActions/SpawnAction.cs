@@ -168,7 +168,7 @@ namespace Barotrauma
                         logError: false);
                 }
 
-                humanPrefab ??= NPCSet.Get(NPCSetIdentifier, NPCIdentifier, logError: true);
+                humanPrefab ??= NPCSet.Get(NPCSetIdentifier, NPCIdentifier, logError: true, contentPackageToLogInError: ParentEvent.Prefab.ContentPackage);
 
                 if (humanPrefab != null)
                 {

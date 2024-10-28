@@ -291,7 +291,7 @@ namespace Barotrauma
                     if (characterInfos.Count >= 3) { break; }
                 }
             }
-            characterInfos.Sort((a, b) => Math.Sign(b.Job.MinKarma - a.Job.MinKarma));
+            characterInfos.Sort((a, b) => Math.Sign(a.Job.CampaignSetupUIOrder - b.Job.CampaignSetupUIOrder));
 
             characterInfoColumns.ClearChildren();
             CharacterMenus?.ForEach(m => m.Dispose());

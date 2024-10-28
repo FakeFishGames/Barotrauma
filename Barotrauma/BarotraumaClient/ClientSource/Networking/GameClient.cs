@@ -763,6 +763,11 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.CANCEL_STARTGAME:
                     DebugConsole.Log("Received CANCEL_STARTGAME packet.");
                     GameMain.NetLobbyScreen?.CloseStartRoundWarning();
+                    if (GameMain.NetLobbyScreen?.ReadyToStartBox is { } readyToStartBox)
+                    {
+                        readyToStartBox.Selected = false;
+                        SetReadyToStart(readyToStartBox);
+                    }
                     break;
                 case ServerPacketHeader.STARTGAME:
                     DebugConsole.Log("Received STARTGAME packet.");

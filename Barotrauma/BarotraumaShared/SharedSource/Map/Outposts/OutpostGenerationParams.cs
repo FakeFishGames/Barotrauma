@@ -196,36 +196,40 @@ namespace Barotrauma
             private class Entry
             {
                 private readonly HumanPrefab humanPrefab = null;
-                private readonly Identifier setIdentifier = Identifier.Empty;
-                private readonly Identifier npcIdentifier = Identifier.Empty;
+                public readonly Identifier SetIdentifier = Identifier.Empty;
+                public readonly Identifier NpcIdentifier = Identifier.Empty;
 
                 public readonly Identifier FactionIdentifier = Identifier.Empty;
+
+                public readonly ContentPackage ContentPackage;
                 
-                public Entry(HumanPrefab humanPrefab, Identifier factionIdentifier)
+                public Entry(HumanPrefab humanPrefab, Identifier factionIdentifier, ContentPackage contentPackage)
                 {
                     this.humanPrefab = humanPrefab;
-                    this.FactionIdentifier = factionIdentifier;
+                    FactionIdentifier = factionIdentifier;
+                    ContentPackage = contentPackage;
                 }
 
-                public Entry(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier)
+                public Entry(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, ContentPackage contentPackage)
                 {
-                    this.setIdentifier = setIdentifier;
-                    this.npcIdentifier = npcIdentifier;
-                    this.FactionIdentifier = factionIdentifier;
+                    SetIdentifier = setIdentifier;
+                    NpcIdentifier = npcIdentifier;
+                    FactionIdentifier = factionIdentifier;
+                    ContentPackage = contentPackage;
                 }
                 
                 public HumanPrefab HumanPrefab
-                    => humanPrefab ?? NPCSet.Get(setIdentifier, npcIdentifier);
+                    => humanPrefab ?? NPCSet.Get(SetIdentifier, NpcIdentifier, contentPackageToLogInError: ContentPackage);
             }
 
             private readonly List<Entry> entries = new List<Entry>();
 
-            public void Add(HumanPrefab humanPrefab, Identifier factionIdentifier)
-                => entries.Add(new Entry(humanPrefab, factionIdentifier));
+            public void Add(HumanPrefab humanPrefab, Identifier factionIdentifier, ContentPackage contentPackage)
+                => entries.Add(new Entry(humanPrefab, factionIdentifier, contentPackage));
             
             
-            public void Add(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier)
-                => entries.Add(new Entry(setIdentifier, npcIdentifier, factionIdentifier));
+            public void Add(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, ContentPackage contentPackage)
+                => entries.Add(new Entry(setIdentifier, npcIdentifier, factionIdentifier, contentPackage));
 
             public IEnumerator<HumanPrefab> GetEnumerator()
             {
@@ -244,7 +248,10 @@ namespace Barotrauma
                 {
                     if (entry.FactionIdentifier == Identifier.Empty || factions.Any(f => f.Identifier == entry.FactionIdentifier))
                     {
-                        yield return entry.HumanPrefab;
+                        if (entry.HumanPrefab != null)
+                        {
+                            yield return entry.HumanPrefab;
+                        }
                     }
                 }
             }
@@ -315,11 +322,11 @@ namespace Barotrauma
                             Identifier faction = npcElement.GetAttributeIdentifier("faction", Identifier.Empty);
                             if (from != Identifier.Empty)
                             {
-                                newCollection.Add(from, npcElement.GetAttributeIdentifier("identifier", Identifier.Empty), faction);
+                                newCollection.Add(from, npcElement.GetAttributeIdentifier("identifier", Identifier.Empty), faction, npcElement.ContentPackage);
                             }
                             else
                             {
-                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from), faction);
+                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from), faction, npcElement.ContentPackage);
                             }
                         }
                         humanPrefabCollections.Add(newCollection);

@@ -2708,13 +2708,18 @@ namespace Barotrauma
                     
                     if (newTeamPreference == CharacterTeamType.None
                         && GameMain.Client?.ServerSettings?.PvpTeamSelectionMode == PvpTeamSelectionMode.PlayerChoice) { return false; } // Already handled by delegate above 
-                    
+
+                    var oldPreference = MultiplayerPreferences.Instance.TeamPreference;
+
                     MultiplayerPreferences.Instance.TeamPreference = newTeamPreference;
                     
                     UpdateSelectedSub(newTeamPreference);
-                    GameMain.Client?.ForceNameJobTeamUpdate();
+                    if (newTeamPreference != oldPreference)
+                    {
+                        GameMain.Client?.ForceNameJobTeamUpdate();
+                        GameSettings.SaveCurrentConfig();
+                    }
                     RefreshPvpTeamSelectionButtons();
-                    GameSettings.SaveCurrentConfig();
                     UpdateDisembarkPointListFromServerSettings();
                     //need to update job preferences and close the selection frame
                     //because the team selection might affect the uniform sprite and the loadouts
@@ -4015,7 +4020,9 @@ namespace Barotrauma
                 JobSelectionFrame.Visible = false;
             }
 
-            if (GUI.MouseOn?.UserData is JobVariant jobPrefab && GUI.MouseOn.Style?.Name == "JobVariantButton")
+            if (GUI.MouseOn?.UserData is JobVariant jobPrefab && 
+                GUI.MouseOn.Style?.Name == "JobVariantButton" &&
+                GUI.MouseOn.Parent != null)
             {
                 if (jobVariantTooltip?.UserData is not JobVariant prevVisibleVariant || 
                     prevVisibleVariant.Prefab != jobPrefab.Prefab || 

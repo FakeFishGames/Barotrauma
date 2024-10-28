@@ -74,7 +74,6 @@ namespace Barotrauma
         private float pathBackTimer;
         private const float DefaultCoolDown = 10.0f;
         private const float PathBackCheckTime = 1.0f;
-        private IEnumerable<Body> myBodies;
         private float aimTimer;
         private float reloadTimer;
         private float spreadTimer;
@@ -1375,9 +1374,10 @@ namespace Barotrauma
                 float aimFactor = MathHelper.PiOver2 * (1 - AimAccuracy);
                 if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.WorldPosition - Weapon.WorldPosition) < MathHelper.PiOver4 + aimFactor)
                 {
-                    myBodies ??= character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     // Check that we don't hit friendlies. No need to check the walls, because there's a separate check for that at 1096 (which intentionally has a small delay)
-                    var pickedBodies = Submarine.PickBodies(Weapon.SimPosition, Submarine.GetRelativeSimPosition(from: Weapon, to: Enemy), myBodies, Physics.CollisionCharacter);
+                    var pickedBodies = Submarine.PickBodies(Weapon.SimPosition, Submarine.GetRelativeSimPosition(from: Weapon, to: Enemy), 
+                        ignoredBodies: character.AnimController.LimbBodies, 
+                        Physics.CollisionCharacter);
                     foreach (var body in pickedBodies)
                     {
                         Character target = body.UserData switch

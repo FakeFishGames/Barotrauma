@@ -437,7 +437,7 @@ namespace Barotrauma
                 jobDropDown.AddItem(TextManager.Get("Any"), null);
                 foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
                 {
-                    if (jobPrefab.HiddenJob) { continue; }
+                    if (jobPrefab.Name.IsNullOrWhiteSpace()) { continue; }
                     jobDropDown.AddItem(jobPrefab.Name, jobPrefab);
                 }
                 jobDropDown.SelectItem(AssignedJob);

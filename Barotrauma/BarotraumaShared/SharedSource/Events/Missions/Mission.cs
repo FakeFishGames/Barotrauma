@@ -568,7 +568,7 @@ namespace Barotrauma
 
             Identifier characterIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
             Identifier characterFrom = element.GetAttributeIdentifier("from", Identifier.Empty);
-            HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
+            HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier, contentPackageToLogInError: Prefab.ContentPackage);
             if (humanPrefab == null)
             {
                 DebugConsole.ThrowError($"Couldn't spawn character for mission: character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".",

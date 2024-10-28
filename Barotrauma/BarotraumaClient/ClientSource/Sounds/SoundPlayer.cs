@@ -484,8 +484,20 @@ namespace Barotrauma
             if (sound == null) { return null; }
             return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, 1.0f, hullGuess);
         }
+        public static SoundChannel PlaySound(RoundSound sound, Vector2 position, float? volume = null, Hull hullGuess = null)
+        {
+           return PlaySound(
+               sound.Sound,
+               position, 
+               volume ?? sound.Volume, 
+               sound.Range, 
+               ignoreMuffling: sound.IgnoreMuffling, 
+               hullGuess: hullGuess, 
+               freqMult: sound.GetRandomFrequencyMultiplier(),
+               muteBackgroundMusic: sound.MuteBackgroundMusic);
+        }
 
-        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, float? freqMult = null, Hull hullGuess = null, bool ignoreMuffling = false)
+        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, float? freqMult = null, Hull hullGuess = null, bool ignoreMuffling = false, bool muteBackgroundMusic = false)
         {
             if (sound == null)
             {
@@ -501,7 +513,12 @@ namespace Barotrauma
                 return null;
             }
             bool muffle = !ignoreMuffling && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
-            return sound.Play(volume ?? sound.BaseGain, far, freqMult ?? 1.0f, position, muffle: muffle);            
+            var channel = sound.Play(volume ?? sound.BaseGain, far, freqMult ?? 1.0f, position, muffle: muffle);
+            if (channel != null)
+            {
+                channel.MuteBackgroundMusic = muteBackgroundMusic;
+            }
+            return channel;
         }
 
         public static void DisposeDisabledMusic()
@@ -673,6 +690,17 @@ namespace Barotrauma
                 updateMusicTimer = UpdateMusicInterval;
             }
 
+            bool muteBackgroundMusic = false;
+            for (int i = 0; i < SoundManager.SourceCount; i++)
+            {
+                SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(SoundManager.SourcePoolIndex.Default, i);
+                if (playingSoundChannel is { MuteBackgroundMusic: true, IsPlaying: true })
+                {
+                    muteBackgroundMusic = true;
+                    break;
+                }
+            }
+
             int activeTrackCount = targetMusic.Count(m => m != null);
             for (int i = 0; i < MaxMusicChannels; i++)
             {
@@ -729,6 +757,10 @@ namespace Barotrauma
                         musicChannel[i].Looping = true;
                     }
                     float targetGain = targetMusic[i].Volume;
+                    if (muteBackgroundMusic)
+                    {
+                        targetGain = 0.0f;
+                    }
                     if (targetMusic[i].DuckVolume)
                     {
                         targetGain *= (float)Math.Sqrt(1.0f / activeTrackCount);

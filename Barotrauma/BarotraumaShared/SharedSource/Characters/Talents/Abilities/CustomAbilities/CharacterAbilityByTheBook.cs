@@ -35,7 +35,7 @@ namespace Barotrauma.Abilities
                 GameAnalyticsManager.AddMoneyGainedEvent(moneyAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
-                    character.Info?.GiveExperience(experienceAmount);
+                    character.Info.GiveExperience(experienceAmount);
                 }
                 timesGiven++;
                 if (max > 0 && timesGiven >= max) { break; }

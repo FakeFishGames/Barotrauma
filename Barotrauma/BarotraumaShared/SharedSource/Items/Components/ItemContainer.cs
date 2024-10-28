@@ -850,7 +850,8 @@ namespace Barotrauma.Items.Components
 
         private bool CanAutoInteractWithContained(Item containedItem)
         {
-            return AutoInteractWithContained && autoInteractWithContainedTags.Any(t => containedItem.HasTag(t));
+            return AutoInteractWithContained && 
+                (autoInteractWithContainedTags.None() || autoInteractWithContainedTags.Any(t => containedItem.HasTag(t)));
         }
 
         private void SetContainedActive(bool active)

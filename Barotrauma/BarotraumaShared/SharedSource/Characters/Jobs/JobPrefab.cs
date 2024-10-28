@@ -184,6 +184,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(10, IsPropertySaveable.No, description: "Determines the order of the characters in the campaign setup ui.")]
+        public int CampaignSetupUIOrder
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, IsPropertySaveable.No, description: "If set to true, a client that has chosen this as their preferred job will get it regardless of the maximum number or the amount of spawnpoints in the sub.")]
         public bool AllowAlways
         {

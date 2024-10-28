@@ -210,7 +210,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull, ignoreMuffling: powerOnSound.IgnoreMuffling, freqMult: powerOnSound.GetRandomFrequencyMultiplier());                    
+                    SoundPlayer.PlaySound(powerOnSound, item.WorldPosition, hullGuess: item.CurrentHull);                    
                     powerOnSoundPlayed = true;
                 }
             }

@@ -5709,13 +5709,17 @@ namespace Barotrauma
             return sameRoomHulls.Contains(character.CurrentHull);
         }
 
+        /// <summary>
+        /// Returns all friendly crew members that are alive.
+        /// Filters out pets and characters that don't have <see cref="CharacterInfo"/>.
+        /// </summary>
         public static IEnumerable<Character> GetFriendlyCrew(Character character)
         {
             if (character is null)
             {
                 return Enumerable.Empty<Character>();
             }
-            return CharacterList.Where(c => HumanAIController.IsFriendly(character, c, onlySameTeam: true) && !c.IsDead);
+            return CharacterList.Where(c => c.Info != null && !c.IsDead && !c.IsPet && HumanAIController.IsFriendly(character, c, onlySameTeam: true));
         }
 
         public bool HasRecipeForItem(Identifier recipeIdentifier)

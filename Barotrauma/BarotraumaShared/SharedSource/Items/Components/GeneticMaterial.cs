@@ -234,7 +234,8 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
             if (targetCharacter != null)
             {
-                if (SetTaintedOnDeath && targetCharacter.IsDead && !tainted)
+                if (SetTaintedOnDeath && !tainted && 
+                    targetCharacter.IsDead && targetCharacter.CauseOfDeath is not { Type: CauseOfDeathType.Disconnected })
                 {
                     SetTainted(true);
                 }

@@ -40,8 +40,6 @@ namespace Barotrauma
         /// </summary>
         private readonly List<KillCount> kills = new List<KillCount>();
 
-        private bool initialized = false;
-
         private float roundEndTimer;
 
         private float timeInTargetSubmarineTimer;
@@ -92,12 +90,6 @@ namespace Barotrauma
 
         private void CheckTeamCharacters()
         {
-            if (!allowRespawning && initialized)
-            {
-                //if no respawns are allowed, we only need to check the characters once
-                return;
-            }
-
             for (int i = 0; i < crews.Length; i++)
             {
                 foreach (var character in crews[i])
@@ -133,8 +125,6 @@ namespace Barotrauma
                     }
                 }
             }
-
-            initialized = true;
         }
 
         private void CheckWinCondition(float deltaTime)

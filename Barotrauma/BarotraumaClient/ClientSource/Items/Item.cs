@@ -408,7 +408,7 @@ namespace Barotrauma
                     fadeInBrokenSprite.Sprite.effects ^= SpriteEffects;
                 }
 
-                if (body == null)
+                if (body == null || body.BodyType == BodyType.Static)
                 {
                     if (Prefab.ResizeHorizontal || Prefab.ResizeVertical)
                     {

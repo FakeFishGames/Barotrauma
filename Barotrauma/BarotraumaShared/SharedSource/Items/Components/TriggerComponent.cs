@@ -243,7 +243,16 @@ namespace Barotrauma.Items.Components
         public void SetPhysicsBodyPosition(bool ignoreContacts = true)
         {
             if (PhysicsBody == null) { return; }
+
             Vector2 offset = ConvertUnits.ToSimUnits(BodyOffset * item.Scale);
+            if (item.FlippedX)
+            {
+                offset.X = -offset.X;
+            }
+            if (item.FlippedY)
+            {
+                offset.Y = -offset.Y;
+            }
             if (!MathUtils.NearlyEqual(item.RotationRad, 0))
             {
                 Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
@@ -258,6 +267,15 @@ namespace Barotrauma.Items.Components
                 PhysicsBody.SetTransform(item.SimPosition + offset, -item.RotationRad);
             }
             PhysicsBody.UpdateDrawPosition();
+        }
+
+        public override void FlipX(bool relativeToSub)
+        {
+            SetPhysicsBodyPosition();
+        }
+        public override void FlipY(bool relativeToSub)
+        {
+            SetPhysicsBodyPosition();
         }
 
         public override void OnMapLoaded()

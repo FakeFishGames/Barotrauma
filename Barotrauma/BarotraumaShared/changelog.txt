@@ -1,4 +1,26 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.6.18.1
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed several issues when the server rejects a name change due to a client trying to change their name too often: the server would start spamming the "can't change name" message, team and job preference selection would stop working too, and the game would crash when attempting to open the job preferences.
+- Fixed equipped genes becoming tainted if you die due to disconnection.
+- Fixed kill/death counters not working in the Sub vs. Sub PvP missions.
+- Fixed gravity spheres not rotating in the sub editor.
+- Fixed current generators not getting properly mirrored in ruins in mirrored levels.
+- Fixed spawnpoints for escorted characters and prisoners not working.
+- Fixed crashing if an AI character's husk infection is removed when they're using a ranged weapon.
+- Fixed psychosis effect persisting if you leave the outpost midway through the "minds unraveled" event.
+- Fixed night club merchants spawning in outposts without a night club.
+- Fixed night club merchants not selling beer or rum (literally unplayable).
+- Fixed bots cleaning up live grenades.
+- Fixed server getting stuck in an infinite "restart loop" if autorestart or starting when everyone is ready is enabled and the selected perks are not suitable for the selected sub. The server would just attempt an immediate restart if the players wanted to cancel and reselect the perks.
+- Fixed "All" option not working in the server browser's language filter dropdown.
+- Fixed Raate Colony pvp map missing hulls near upper turrets.
+
+Modding:
+- Fixed outpost generation parameters that reference non-existent NPC prefabs causing a crash during outpost generation.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.6.17.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

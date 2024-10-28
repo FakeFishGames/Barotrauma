@@ -229,7 +229,7 @@ namespace Barotrauma.Items.Components
             {
                 if (reelSoundChannel is not { IsPlaying: true })
                 {
-                    reelSoundChannel = SoundPlayer.PlaySound(sound.Sound, position, sound.Volume, sound.Range, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
+                    reelSoundChannel = SoundPlayer.PlaySound(sound, position);
                     if (reelSoundChannel != null)
                     {
                         reelSoundChannel.Looping = true;
@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
             }
             else
             { 
-                SoundPlayer.PlaySound(sound.Sound, position, sound.Volume, sound.Range, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
+                SoundPlayer.PlaySound(sound, position);
             }
         }
 

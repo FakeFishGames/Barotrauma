@@ -93,6 +93,7 @@ namespace Barotrauma
                         else
                         {
                             angle = -item.RotationRad;
+                            if (item.FlippedX) { angle += MathHelper.Pi; }
                             particleRotation = item.RotationRad;
                         }
                         entityAngleAssigned = true;

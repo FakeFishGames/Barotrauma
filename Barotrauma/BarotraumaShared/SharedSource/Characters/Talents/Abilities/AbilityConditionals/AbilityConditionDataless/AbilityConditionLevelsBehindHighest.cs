@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
+﻿using System.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -14,7 +12,7 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            return Character.GetFriendlyCrew(character).Where(c => c.Info != null && (c.Info.GetCurrentLevel() - character.Info.GetCurrentLevel() >= levelsBehind)).Any();
+            return Character.GetFriendlyCrew(character).Any(c => c.Info.GetCurrentLevel() - character.Info.GetCurrentLevel() >= levelsBehind);
         }
     }
 }
