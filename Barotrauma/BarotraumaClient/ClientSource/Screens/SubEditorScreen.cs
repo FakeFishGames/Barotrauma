@@ -5937,7 +5937,7 @@ namespace Barotrauma
                                             newItem.Remove();
                                         }
                                     }
-                                    else if (itemContainer != null && itemContainer.Inventory.CanBePut(itemPrefab))
+                                    else if (itemContainer != null && itemContainer.Inventory.CanProbablyBePut(itemPrefab))
                                     {
                                         bool placedItem = itemContainer.Inventory.TryPutItem(newItem, dummyCharacter);
                                         spawnedItem |= placedItem;

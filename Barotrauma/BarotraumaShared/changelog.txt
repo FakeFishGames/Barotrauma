@@ -1,4 +1,23 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.6.19.1
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed chat input box getting cleared whenever someone changes their team, or when the game mode or team selection mode changes.
+- Fixed stun resistance PvP setting doing nothing.
+- Made Crimson Acid less powerful against large monsters.
+- Fixed everyone's name tags being shown in red until you spawn when you join a campaign mid-round.
+- Fixed stackable items with a non-default quality (e.g. grenades) failing to stack in the fabricator's output slot, instead just falling to the floor. 
+- Fixed very large PvP outposts often clipping into the level walls.
+- Fixed decorative structures such as background walls not showing up on hostile (non-player) subs in multiplayer. 
+- Fixed "giveitem" command crashing the game when used with no arguments.
+- Fixed Gravity Flak Shell's "gravity pull effect" being affected by gravity.
+- Fixed Fulgurium Batteries sometimes spawning automatically in tools at the start of a campaign.
+- Changed cargo scooter recipe to be more consistent with the normal scooter recipe (Underwater Scooter + x2 Ti-Al Alloy).
+
+Modding:
+- Fixed freezes / lag spikes in multiplayer when a scripted event uses StatusEffectAction when there's lots of mods with custom events enabled.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.6.18.1
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

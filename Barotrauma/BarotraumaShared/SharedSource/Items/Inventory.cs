@@ -58,7 +58,12 @@ namespace Barotrauma
                 return true;
             }
 
-            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
+            /// <summary>
+            /// Can an instance of the item prefab be put into the slot? 
+            /// Note that if the condition and quality aren't given, they are ignored, and the method can return true even if the item can't go in the slot
+            /// due to it being occupied by another item with a different condition or quality (which disallows stacking).
+            /// </summary>
+            public bool CanProbablyBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
             {
                 if (itemPrefab == null) { return false; }
                 if (items.Count > 0)
@@ -518,7 +523,12 @@ namespace Barotrauma
             return slots[i].CanBePut(item, ignoreCondition);
         }
 
-        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
+        /// <summary>
+        /// Can an instance of the item prefab be put into the inventory? 
+        /// Note that if the condition and quality aren't given, they are ignored, and the method can return true even if the item can't go in the inventory
+        /// due to the slots being occupied by another item with a different condition or quality (which disallows stacking).
+        /// </summary>
+        public bool CanProbablyBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
         {
             for (int i = 0; i < capacity; i++)
             {
@@ -530,7 +540,7 @@ namespace Barotrauma
         public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null, int? quality = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
-            return slots[i].CanBePut(itemPrefab, condition);
+            return slots[i].CanProbablyBePut(itemPrefab, condition, quality);
         }
 
         public int HowManyCanBePut(ItemPrefab itemPrefab, float? condition = null)

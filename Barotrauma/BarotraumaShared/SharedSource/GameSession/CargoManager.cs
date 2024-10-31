@@ -546,7 +546,7 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(item.CargoContainerIdentifier))
             {
                 itemContainer = availableContainers.Find(ac =>
-                    ac.Inventory.CanBePut(item) &&
+                    ac.Inventory.CanProbablyBePut(item) &&
                     (ac.Item.Prefab.Identifier == item.CargoContainerIdentifier ||
                     ac.Item.Prefab.Tags.Contains(item.CargoContainerIdentifier)));
 

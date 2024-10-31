@@ -61,25 +61,46 @@ namespace Barotrauma
         }
 #endif
 
-        public static List<EventPrefab> GetAllEventPrefabs()
+        private static readonly Dictionary<Identifier, EventPrefab> AllEventPrefabs = new Dictionary<Identifier, EventPrefab>();
+
+        public static IEnumerable<EventPrefab> GetAllEventPrefabs()
         {
-            List<EventPrefab> eventPrefabs = EventPrefab.Prefabs.ToList();
-            foreach (var eventSet in Prefabs)
-            {
-                AddSetEventPrefabsToList(eventPrefabs, eventSet);
-            }
-            return eventPrefabs;
+            return AllEventPrefabs.Values;
         }
 
-        public static void AddSetEventPrefabsToList(List<EventPrefab> list, EventSet set)
+        /// <summary>
+        /// Finds all the event prefabs (both "normal prefabs" that exists by themselves, present in <see cref="EventPrefab.Prefabs"/>, and the ones that exists only inside child event sets),
+        /// and adds them to <see cref="AllEventPrefabs"/>.
+        /// </summary>
+        public static void RefreshAllEventPrefabs()
         {
-            list.AddRange(set.EventPrefabs.SelectMany(ep => ep.EventPrefabs).Where(ep => !list.Contains(ep)));
-            foreach (var childSet in set.ChildSets) { AddSetEventPrefabsToList(list, childSet); }
+            AllEventPrefabs.Clear();
+            foreach (var eventPrefab in EventPrefab.Prefabs)
+            {
+                AllEventPrefabs.TryAdd(eventPrefab.Identifier, eventPrefab);
+            }
+            foreach (var eventSet in Prefabs)
+            {
+                AddChildEventPrefabs(eventSet);
+            }
+        }
+
+        private static void AddChildEventPrefabs(EventSet set)
+        {
+            foreach (var subEventPrefabs in set.EventPrefabs)
+            {
+                foreach (var eventPrefab in subEventPrefabs.EventPrefabs)
+                {
+                    AllEventPrefabs.TryAdd(eventPrefab.Identifier, eventPrefab);
+                }
+            }
+
+            foreach (var childSet in set.ChildSets) { AddChildEventPrefabs(childSet); }
         }
 
         public static EventPrefab GetEventPrefab(Identifier identifier)
         {
-            return GetAllEventPrefabs().Find(prefab => prefab.Identifier == identifier);
+            return AllEventPrefabs.GetValueOrDefault(identifier);
         }
 
         /// <summary>

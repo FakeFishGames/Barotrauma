@@ -2726,7 +2726,7 @@ namespace Barotrauma
                     UpdateJobPreferences(GameMain.Client?.CharacterInfo ?? Character.Controlled?.Info);
                     JobSelectionFrame = null;
                     RefreshChatrow(); // to enable/disable team chat according to current selection
-                    
+
                     return true;
                 };
 
@@ -4772,19 +4772,29 @@ namespace Barotrauma
             {
                 TeamChatSelected = false;
             }
-            
-            chatInput = new GUITextBox(new RectTransform(new Vector2(0.75f, 1.0f), chatRow.RectTransform, Anchor.CenterRight))
-            {
-                MaxTextLength = ChatMessage.MaxLength,
-                Font = GUIStyle.SmallFont,
-                DeselectAfterMessage = false
-            };
 
-            micIcon = new GUIImage(new RectTransform(new Vector2(0.05f, 1.0f), chatRow.RectTransform), style: "GUIMicrophoneUnavailable");
-            
-            chatInput.Select();
+            if (chatInput != null)
+            {
+                chatInput.RectTransform.Parent = chatRow.RectTransform;
+            }
+            else
+            {
+                chatInput = new GUITextBox(new RectTransform(new Vector2(0.75f, 1.0f), chatRow.RectTransform, Anchor.CenterRight))
+                {
+                    MaxTextLength = ChatMessage.MaxLength,
+                    Font = GUIStyle.SmallFont,
+                    DeselectAfterMessage = false
+                };
+
+                micIcon = new GUIImage(new RectTransform(new Vector2(0.05f, 1.0f), chatRow.RectTransform), style: "GUIMicrophoneUnavailable");
+                chatInput.Select();
+            }
+
+            //this needs to be done even if we're using the existing chatinput instance instead of creating a new one,
+            //because the client might not have existed when the input box was first created
             if (GameMain.Client != null)
             {
+                chatInput.ResetDelegates();
                 chatInput.OnEnterPressed = GameMain.Client.EnterChatMessage;
                 chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
                 chatInput.OnDeselected += (sender, key) =>

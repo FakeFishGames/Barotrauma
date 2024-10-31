@@ -273,12 +273,18 @@ namespace Barotrauma
             {
                 if (Character.Controlled == null)
                 {
-                    NewMessage("No character is selected!", Color.Red);
+                    ThrowError("No character is selected!");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the name or identifier of the item to spawn.");
+                    return;
                 }
                 
                 var modifiedArgs = new List<string>(args);
                 modifiedArgs.Insert(1, "inventory");
-        
                 TrySpawnItem(modifiedArgs.ToArray());
             },
             getValidArgs: () =>

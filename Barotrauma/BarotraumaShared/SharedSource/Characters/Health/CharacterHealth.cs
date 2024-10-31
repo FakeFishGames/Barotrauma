@@ -818,8 +818,9 @@ namespace Barotrauma
                     newStrength += existingAffliction.Strength;
                 }
                 newStrength = Math.Min(existingAffliction.Prefab.MaxStrength, newStrength);
-                if (existingAffliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                 existingAffliction.Strength = newStrength;
+                //set stun after setting the strength, because stun multipliers might want to set the strength to something else
+                if (existingAffliction == stunAffliction) { Character.SetStun(newStrength, allowStunDecrease: true, isNetworkMessage: true); }
                 existingAffliction.Duration = existingAffliction.Prefab.Duration;
                 if (newAffliction.Source != null) { existingAffliction.Source = newAffliction.Source; }
                 if (recalculateVitality)

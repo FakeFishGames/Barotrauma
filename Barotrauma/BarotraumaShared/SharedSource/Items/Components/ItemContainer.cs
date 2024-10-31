@@ -1160,7 +1160,7 @@ namespace Barotrauma.Items.Components
                 foreach (string id in splitIds)
                 {
                     ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == id);
-                    if (prefab != null && Inventory != null && Inventory.CanBePut(prefab))
+                    if (prefab != null && Inventory != null && Inventory.CanProbablyBePut(prefab))
                     {
                         bool isEditor = false;
 #if CLIENT

@@ -70,11 +70,14 @@ namespace Barotrauma
                 Item spawnedItem;
                 if (Inventory?.Owner != null)
                 {
-                    if (!SpawnIfInventoryFull && !Inventory.CanBePut(Prefab))
+                    if (!SpawnIfInventoryFull && !Inventory.CanProbablyBePut(Prefab))
                     {
                         return null;
                     }
                     spawnedItem = new Item(Prefab, Vector2.Zero, null);
+                    //this needs to be done before attempting to put the item in the inventory,
+                    //because the quality and condition may affect whether it can go in the inventory (into an existing stack)
+                    SetItemProperties(spawnedItem);
 
                     var slot = Slot != InvSlotType.None ? Slot.ToEnumerable() : spawnedItem.AllowedSlots;
                     if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, slot))
@@ -96,16 +99,21 @@ namespace Barotrauma
                 else
                 {
                     spawnedItem = new Item(Prefab, Position, Submarine);
-                }
-                if (Condition.TryUnwrap(out float condition))
-                {
-                    spawnedItem.Condition = condition;
-                }
-                if (Quality.TryUnwrap(out int quality))
-                {
-                    spawnedItem.Quality = quality;
+                    SetItemProperties(spawnedItem);
                 }
                 return spawnedItem;
+
+                void SetItemProperties(Item spawnedItem)
+                {
+                    if (Condition.TryUnwrap(out float condition))
+                    {
+                        spawnedItem.Condition = condition;
+                    }
+                    if (Quality.TryUnwrap(out int quality))
+                    {
+                        spawnedItem.Quality = quality;
+                    }
+                }
             }
 
             public void OnSpawned(Entity spawnedItem)

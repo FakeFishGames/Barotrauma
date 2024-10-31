@@ -1290,9 +1290,17 @@ namespace Barotrauma.Networking
                     {
                         mpCampaign.SendCrewState();
                     }
-                    else if (GameMain.GameSession.GameMode is PvPMode && c.TeamID == CharacterTeamType.None)
+                    else if (GameMain.GameSession.GameMode is PvPMode)
                     {
-                        AssignClientToPvpTeamMidgame(c);
+                        if (c.TeamID == CharacterTeamType.None)
+                        {
+                            AssignClientToPvpTeamMidgame(c);
+                        }
+                    }
+                    else
+                    {
+                        //everyone's in team 1 in non-pvp game modes
+                        c.TeamID = CharacterTeamType.Team1;
                     }
                     c.InGame = true;
                 }

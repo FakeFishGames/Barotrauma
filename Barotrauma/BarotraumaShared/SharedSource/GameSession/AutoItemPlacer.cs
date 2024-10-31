@@ -333,7 +333,7 @@ namespace Barotrauma
                 }
                 var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.Prefab == itemPrefab);
                 int quality = existingItem?.Quality ?? Quality.GetSpawnedItemQuality(validContainer.Key.Item.Submarine, Level.Loaded, Rand.RandSync.ServerAndClient);
-                if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
+                if (!validContainer.Key.Inventory.CanProbablyBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine, callOnItemLoaded: false)
                 {
                     SpawnedInCurrentOutpost = validContainer.Key.Item.SpawnedInCurrentOutpost,

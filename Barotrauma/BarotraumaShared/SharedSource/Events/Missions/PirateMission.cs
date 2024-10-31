@@ -479,10 +479,7 @@ namespace Barotrauma
             }
 #endif
             enemySub.SetPosition(spawnPos);
-            if (!IsClient)
-            {
-                InitPirateShip();
-            }
+            InitPirateShip();            
 
             // flipping the sub on the frame it is moved into place must be done after it's been moved, or it breaks item connections in the submarine
             // creating the pirates has to be done after the sub has been flipped, or it seems to break the AI pathing
