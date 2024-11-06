@@ -299,7 +299,7 @@ namespace Barotrauma
             }
 
             ImmutableHashSet<TalentPrefab?> talentsOutsideTree = info.GetUnlockedTalentsOutsideTree().Select(static e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e)).ToImmutableHashSet();
-            if (talentsOutsideTree.Any())
+            if (talentsOutsideTree.Any(t => t != null && !t.IsHiddenExtraTalent))
             {
                 //spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), nameLayout.RectTransform), style: null);
@@ -324,6 +324,7 @@ namespace Barotrauma
                 foreach (var extraTalent in talentsOutsideTree)
                 {
                     if (extraTalent is null) { continue; }
+                    if (extraTalent.IsHiddenExtraTalent) { continue; }
                     GUIImage talentImg = new GUIImage(new RectTransform(Vector2.One, extraTalentList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), sprite: extraTalent.Icon, scaleToFit: true)
                     {
                         ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{extraTalent.DisplayName}‖color:end‖" + "\n\n" + ToolBox.ExtendColorToPercentageSigns(extraTalent.Description.Value)),
