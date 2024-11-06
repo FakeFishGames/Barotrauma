@@ -23,7 +23,7 @@ namespace Barotrauma
         public readonly Sprite Icon;
 
         /// <summary>
-        /// When set to true, this talent will not be visible in the "Extra Talents" panel if it is not part of the character's job skill tree.
+        /// When set to true, this talent will not be visible in the "Extra Talents" panel if it is not part of the character's job talent tree.
         /// </summary>
         public readonly bool IsHiddenExtraTalent;
 

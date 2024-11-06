@@ -1435,7 +1435,10 @@ namespace Barotrauma
 
         partial void OnTalentGiven(TalentPrefab talentPrefab)
         {
-            AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier).Value, GUIStyle.Yellow, playSound: this == Controlled);
+            if (!talentPrefab.IsHiddenExtraTalent)
+            {
+                AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier).Value, GUIStyle.Yellow, playSound: this == Controlled);
+            }
         }
     }
 }
