@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
         private RoundSound chargeSound;
 
         private SoundChannel chargeSoundChannel;
-        
+
         [Serialize(defaultValue: "0.5, 1.5", IsPropertySaveable.No, description: "Pitch slides from X to Y over the charge time")]
         public Vector2 ChargeSoundWindupPitchSlide
         {
@@ -30,9 +30,11 @@ namespace Barotrauma.Items.Components
                 _chargeSoundWindupPitchSlide = new Vector2(
                         Math.Max(value.X, SoundChannel.MinFrequencyMultiplier), 
                         Math.Min(value.Y, SoundChannel.MaxFrequencyMultiplier));
-            }
+        }
         }
         private Vector2 _chargeSoundWindupPitchSlide;
+
+        public Vector2 BarrelScreenPos => Screen.Selected.Cam.WorldToScreen(item.DrawPosition + ConvertUnits.ToDisplayUnits(TransformedBarrelPos));
 
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
@@ -59,12 +61,12 @@ namespace Barotrauma.Items.Components
                 {
                     case "crosshair":
                         {
-                            crosshairSprite = new Sprite(subElement, path: textureDir);
+                        crosshairSprite = new Sprite(subElement, path: textureDir);
                         }
                         break;
                     case "crosshairpointer":
                         {
-                            crosshairPointerSprite = new Sprite(subElement, path: textureDir);
+                        crosshairPointerSprite = new Sprite(subElement, path: textureDir);
                         }
                         break;
                     case "particleemitter":
@@ -86,28 +88,16 @@ namespace Barotrauma.Items.Components
             currentCrossHairScale = currentCrossHairPointerScale = cam == null ? 1.0f : cam.Zoom;
             if (crosshairSprite != null)
             {
-                Vector2 aimRefWorldPos = character.AimRefPosition;
-                if (character.Submarine != null) { aimRefWorldPos += character.Submarine.Position; }
-                Vector2 itemPos = cam.WorldToScreen(aimRefWorldPos);
-                float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
-                Vector2 barrelDir = new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
+                // Set position based on in-world aim
+                Vector2 barrelDir = ((float)Math.Cos(item.body.TransformedRotation), -(float)Math.Sin(item.body.TransformedRotation));
+                float mouseDist = Vector2.Distance(BarrelScreenPos, PlayerInput.MousePosition);
+                crosshairPos = Vector2.Clamp(BarrelScreenPos + barrelDir * mouseDist, Vector2.Zero, (GameMain.GraphicsWidth, GameMain.GraphicsHeight));
 
-                Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
-                crosshairPos = new Vector2(
-                    MathHelper.Clamp(itemPos.X + barrelDir.X * mouseDiff.Length(), 0, GameMain.GraphicsWidth),
-                    MathHelper.Clamp(itemPos.Y + barrelDir.Y * mouseDiff.Length(), 0, GameMain.GraphicsHeight));
-
+                // Resize pointer based on current spread
                 float spread = GetSpread(character);
-                Projectile projectile = FindProjectile();
-                if (projectile != null)
-                {
-                    spread += MathHelper.ToRadians(projectile.Spread);
-                }
-
-                float crossHairDist = Vector2.Distance(item.WorldPosition, cam.ScreenToWorld(crosshairPos));
-                float spreadDist = (float)Math.Sin(spread) * crossHairDist;
-
-                currentCrossHairPointerScale = MathHelper.Clamp(spreadDist / Math.Min(crosshairSprite.size.X, crosshairSprite.size.Y), 0.1f, 10.0f);
+                if (FindProjectile() is Projectile projectile) { spread += MathHelper.ToRadians(projectile.Spread); }
+                float spreadAtRange = (float)Math.Sin(spread) * Vector2.Distance(BarrelScreenPos, crosshairPos);
+                currentCrossHairPointerScale = MathHelper.Clamp(spreadAtRange / Math.Min(crosshairSprite.size.X, crosshairSprite.size.Y), 0.1f, 10f);
             }
             currentCrossHairScale *= CrossHairScale;
             crosshairPointerPos = PlayerInput.MousePosition;
@@ -181,7 +171,7 @@ namespace Barotrauma.Items.Components
 
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;
-            
+
             if (GUI.HideCursor && !character.AnimController.IsHoldingToRope)
             {
                 if (crossHairPosDirtyTimer <= 0.0f)
