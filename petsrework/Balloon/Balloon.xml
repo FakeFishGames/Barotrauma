@@ -1,4 +1,5 @@
-<Character SpeciesName="Balloon" SpeciesTranslationOverride="Cthulhu" humanoid="False" blooddecal="blood" group="human" husk="False" needsair="False" canspeak="True" caninteract="True" noise="100" visiblity="100" eatingspeed="5" displayname="" visibility="100" pathfinderpriority="1" hasinfo="False" usehuskappendage="False" speciestranslationoverride="" needswater="False" bleedparticleair="blooddrop" bleedparticlewater="waterblood" hideinsonar="False" sonardisruption="0" soundinterval="30">
+﻿<override>
+<Character SpeciesName="Balloon" SpeciesTranslationOverride="Cthulhu" humanoid="False" canclimb="True" blooddecal="blood" group="human" husk="False" needsair="False" canspeak="True" caninteract="True" noise="100" visiblity="100" eatingspeed="5" displayname="" visibility="100" pathfinderpriority="1" hasinfo="False" usehuskappendage="False" speciestranslationoverride="" needswater="False" bleedparticleair="blooddrop" bleedparticlewater="waterblood" hideinsonar="False" sonardisruption="0" soundinterval="30">
   <ragdolls folder="default" />
   <animations folder="default" />
   <damageemitter drawontop="True" Particle="gib" AngleMin="0" AngleMax="360" ScaleMin="0.25" ScaleMax="0.5" VelocityMin="50" VelocityMax="300" EmitInterval="0" ParticlesPerSecond="0" ParticleAmount="10" HighQualityCollisionDetection="False" CopyEntityAngle="False" />
@@ -8,7 +9,7 @@
   <health Vitality="30" DoesBleed="True" CrushDepth="Infinity" UseHealthWindow="False" BleedingReduction="0.2" BurnReduction="0" ConstantHealthRegeneration="0" HealthRegenerationWhenEating="10" StunImmunity="False" PoisonImmunity="False" PoisonVulnerability="1" EmpVulnerability="0" ApplyAfflictionColors="False">
     <Limb name="Torso" />
   </health>
-  <Inventory Slots="Any, Any" AccessibleWhenAlive="True" Commonness="1" />
+  <Inventory Slots="Any, Any, Any" AccessibleWhenAlive="True" Commonness="1" />
   <ai CombatStrength="10" Sight="1" Hearing="1" AggressionHurt="200" AggressionGreed="10" FleeHealthThreshold="0" AttackWhenProvoked="False" AvoidGunfire="True" DamageThreshold="0" AvoidTime="3" MinFleeTime="20" AvoidAbyss="True" StayInAbyss="False" PatrolFlooded="False" PatrolDry="False" StartAggression="0" MaxAggression="100" AggressionCumulation="0" >
     <target Tag="owner" State="Protect" Priority="100" ReactDistance="200" AttackDistance="0" Timer="0"  Threshold="3" />
     <target Tag="stronger" State="Avoid" Priority="50" ReactDistance="1000" AttackDistance="0" Timer="0"  Threshold="0" />
@@ -30,3 +31,4 @@
     </petbehavior>
   </ai>
 </Character>
+</override>
