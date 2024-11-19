@@ -967,7 +967,7 @@ namespace Barotrauma
                         new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                         colorWithoutTint * damageOverlayStrength, activeSprite.Origin,
                         -body.DrawRotation,
-                        Scale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
+                        Scale * TextureScale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
                 }
             }
 
