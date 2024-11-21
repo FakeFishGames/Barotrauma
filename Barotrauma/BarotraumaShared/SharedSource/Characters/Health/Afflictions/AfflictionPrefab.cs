@@ -359,6 +359,10 @@ namespace Barotrauma
                 description: "Color to tint the affected character's entire body with at this effect's highest strength. The alpha channel is used to determine how much to tint the character.")]
             public Color MaxBodyTint { get; private set; }
 
+            [Serialize(0f, IsPropertySaveable.No, 
+                description: "Multiplier for the convulsion/seizure effect on the character's ragdoll when this effect is active.")]
+            public float ConvulseAmount { get; private set; }
+
             /// <summary>
             /// StatType that will be applied to the affected character when the effect is active that is proportional to the effect's strength.
             /// </summary>
@@ -606,7 +610,6 @@ namespace Barotrauma
         public static readonly Identifier BurnType = "burn".ToIdentifier();
         public static readonly Identifier BleedingType = "bleeding".ToIdentifier();
         public static readonly Identifier ParalysisType = "paralysis".ToIdentifier();
-        public static readonly Identifier ConvulseType = "convulse".ToIdentifier();
         public static readonly Identifier PoisonType = "poison".ToIdentifier();
         public static readonly Identifier StunType = "stun".ToIdentifier();
         public static readonly Identifier EMPType = "emp".ToIdentifier();
