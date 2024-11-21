@@ -372,6 +372,10 @@ namespace Barotrauma
                 description: $"Color of the \"thermal goggles overlay\" enabled by the affliction. Only has an effect if {nameof(ThermalOverlayRange)} is larger than 0.")]
             public Color ThermalOverlayColor { get; private set; }
 
+            [Serialize(0f, IsPropertySaveable.No,
+                description: "Multiplier for the convulsion/seizure effect on the character's ragdoll when this effect is active.")]
+            public float ConvulseAmount { get; private set; }
+
             /// <summary>
             /// StatType that will be applied to the affected character when the effect is active that is proportional to the effect's strength.
             /// </summary>
