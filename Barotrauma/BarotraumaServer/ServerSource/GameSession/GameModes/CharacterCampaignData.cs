@@ -143,6 +143,7 @@ namespace Barotrauma
         {
             Reset();
             CharacterInfo.PermanentlyDead = true;
+            GameMain.GameSession?.IncrementPermadeath(AccountId);    
             DebugConsole.NewMessage($"Permadeath applied on {Name}'s CharacterCampaignData.CharacterInfo.");
         }
 

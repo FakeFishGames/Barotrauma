@@ -140,24 +140,44 @@ namespace Barotrauma
 
         public ContentPath OutpostFilePath { get; set; }
 
-        public class ModuleCount
+        [Serialize("", IsPropertySaveable.Yes, description: "If set, a fully pre-built outpost with this tag will be used instead of generating the outpost."), Editable]
+        public Identifier OutpostTag { get; set; }
+
+        public class ModuleCount : ISerializableEntity
         {
             public Identifier Identifier;
-            public int Count;
-            public int Order;
 
-            public Identifier RequiredFaction;
+            [Serialize(0, IsPropertySaveable.Yes), Editable]
+            public int Count { get; set; }
+
+            [Serialize(0, IsPropertySaveable.Yes, description: "Can be used to enforce the modules to be placed in a specific order, starting from the docking module (0 = first, 1 = second, etc)."), Editable]
+            public int Order { get; set; }
+
+            [Serialize(0.0f, IsPropertySaveable.Yes, description: "Minimum difficulty of the current level for the module to appear in the outpost."), Editable]
+            public float MinDifficulty { get; set; }
+            
+            [Serialize(100.0f, IsPropertySaveable.Yes, description: "Maximum difficulty of the current level for the module to appear in the outpost."), Editable]
+            public float MaxDifficulty { get; set; }
+
+            [Serialize(1.0f, IsPropertySaveable.Yes, description: "Probability for this type of module to be included in the outpost."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+            public float Probability { get; set; }
+
+            [Serialize("", IsPropertySaveable.Yes), Editable]
+            public Identifier RequiredFaction { get; set; }
+
+            public string Name => Identifier.Value;
+
+            public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; set; }
 
             public ModuleCount(ContentXElement element)
             {
                 Identifier = element.GetAttributeIdentifier("flag", element.GetAttributeIdentifier("moduletype", ""));
-                Count = element.GetAttributeInt("count", 0);
-                Order = element.GetAttributeInt("order", 0);
-                RequiredFaction = element.GetAttributeIdentifier("requiredfaction", Identifier.Empty);
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             }
 
             public ModuleCount(Identifier id, int count)
             {
+                SerializableProperties = SerializableProperty.DeserializeProperties(this, element: null);
                 Identifier = id;
                 Count = count;
                 RequiredFaction = Identifier.Empty;
@@ -176,36 +196,40 @@ namespace Barotrauma
             private class Entry
             {
                 private readonly HumanPrefab humanPrefab = null;
-                private readonly Identifier setIdentifier = Identifier.Empty;
-                private readonly Identifier npcIdentifier = Identifier.Empty;
+                public readonly Identifier SetIdentifier = Identifier.Empty;
+                public readonly Identifier NpcIdentifier = Identifier.Empty;
 
                 public readonly Identifier FactionIdentifier = Identifier.Empty;
+
+                public readonly ContentPackage ContentPackage;
                 
-                public Entry(HumanPrefab humanPrefab, Identifier factionIdentifier)
+                public Entry(HumanPrefab humanPrefab, Identifier factionIdentifier, ContentPackage contentPackage)
                 {
                     this.humanPrefab = humanPrefab;
-                    this.FactionIdentifier = factionIdentifier;
+                    FactionIdentifier = factionIdentifier;
+                    ContentPackage = contentPackage;
                 }
 
-                public Entry(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier)
+                public Entry(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, ContentPackage contentPackage)
                 {
-                    this.setIdentifier = setIdentifier;
-                    this.npcIdentifier = npcIdentifier;
-                    this.FactionIdentifier = factionIdentifier;
+                    SetIdentifier = setIdentifier;
+                    NpcIdentifier = npcIdentifier;
+                    FactionIdentifier = factionIdentifier;
+                    ContentPackage = contentPackage;
                 }
                 
                 public HumanPrefab HumanPrefab
-                    => humanPrefab ?? NPCSet.Get(setIdentifier, npcIdentifier);
+                    => humanPrefab ?? NPCSet.Get(SetIdentifier, NpcIdentifier, contentPackageToLogInError: ContentPackage);
             }
 
             private readonly List<Entry> entries = new List<Entry>();
 
-            public void Add(HumanPrefab humanPrefab, Identifier factionIdentifier)
-                => entries.Add(new Entry(humanPrefab, factionIdentifier));
+            public void Add(HumanPrefab humanPrefab, Identifier factionIdentifier, ContentPackage contentPackage)
+                => entries.Add(new Entry(humanPrefab, factionIdentifier, contentPackage));
             
             
-            public void Add(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier)
-                => entries.Add(new Entry(setIdentifier, npcIdentifier, factionIdentifier));
+            public void Add(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, ContentPackage contentPackage)
+                => entries.Add(new Entry(setIdentifier, npcIdentifier, factionIdentifier, contentPackage));
 
             public IEnumerator<HumanPrefab> GetEnumerator()
             {
@@ -224,7 +248,10 @@ namespace Barotrauma
                 {
                     if (entry.FactionIdentifier == Identifier.Empty || factions.Any(f => f.Identifier == entry.FactionIdentifier))
                     {
-                        yield return entry.HumanPrefab;
+                        if (entry.HumanPrefab != null)
+                        {
+                            yield return entry.HumanPrefab;
+                        }
                     }
                 }
             }
@@ -261,6 +288,7 @@ namespace Barotrauma
             }
 
             OutpostFilePath = element.GetAttributeContentPath(nameof(OutpostFilePath));
+            OutpostTag = element.GetAttributeIdentifier(nameof(OutpostTag), Identifier.Empty);
             
             var humanPrefabCollections = new List<NpcCollection>();
             foreach (var subElement in element.Elements())
@@ -268,7 +296,23 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "modulecount":
-                        moduleCounts.Add(new ModuleCount(subElement));
+                        var newModuleCount = new ModuleCount(subElement);
+                        if (moduleCounts.None() && newModuleCount.Probability < 1.0f)
+                        {
+                            DebugConsole.AddWarning(
+                                $"Potential error in outpost generation parameters \"{Identifier}\"." +
+                                $" The first module is set to spawn with a probability of {newModuleCount.Probability}%. The first module must always spawn, so the probability will be ignored.",
+                                contentPackage: ContentPackage);
+                            newModuleCount.Probability = 1.0f;
+                        }
+                        else if (newModuleCount.Probability <= 0.0f)
+                        {
+                            DebugConsole.AddWarning(
+                                $"Potential error in outpost generation parameters \"{Identifier}\"." +
+                                $" Probability of the module {newModuleCount.Identifier} is 0% (the module should never spawn, so there's no reason to include it in the generation parameters.",
+                                contentPackage: ContentPackage);
+                        }
+                        moduleCounts.Add(newModuleCount);
                         break;
                     case "npcs":
                         var newCollection = new NpcCollection();
@@ -278,11 +322,11 @@ namespace Barotrauma
                             Identifier faction = npcElement.GetAttributeIdentifier("faction", Identifier.Empty);
                             if (from != Identifier.Empty)
                             {
-                                newCollection.Add(from, npcElement.GetAttributeIdentifier("identifier", Identifier.Empty), faction);
+                                newCollection.Add(from, npcElement.GetAttributeIdentifier("identifier", Identifier.Empty), faction, npcElement.ContentPackage);
                             }
                             else
                             {
-                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from), faction);
+                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from), faction, npcElement.ContentPackage);
                             }
                         }
                         humanPrefabCollections.Add(newCollection);
@@ -299,7 +343,7 @@ namespace Barotrauma
             return moduleCounts.FirstOrDefault(m => m.Identifier == moduleFlag)?.Count ?? 0;
         }
 
-        public void SetModuleCount(Identifier moduleFlag, int count)
+        public void SetModuleCount(Identifier moduleFlag, int count, float? probability = null, float? minDifficulty = null, float? maxDifficulty = null)
         {
             if (moduleFlag == Identifier.Empty || moduleFlag == "none") { return; }
             if (count <= 0)
@@ -311,12 +355,20 @@ namespace Barotrauma
                 var moduleCount = moduleCounts.FirstOrDefault(m => m.Identifier == moduleFlag);
                 if (moduleCount == null)
                 {
-                    moduleCounts.Add(new ModuleCount(moduleFlag, count));
+                    moduleCount = new ModuleCount(moduleFlag, count);
+                    if (moduleCount.Probability <= 0.0f)
+                    {
+                        DebugConsole.AddWarning(
+                            $"Potential error in outpost generation parameters \"{Identifier}\"."+
+                            $" Probability of the module {moduleCount.Identifier} is 0 (the module should never spawn, so there's no reason to include it in the generation parameters.",
+                            contentPackage: ContentPackage);
+                    }
+                    moduleCounts.Add(moduleCount);
                 }
-                else
-                {
-                    moduleCount.Count = count;
-                }
+                moduleCount.Count = count;
+                if (probability.HasValue) { moduleCount.Probability = probability.Value; }
+                if (minDifficulty.HasValue) { moduleCount.MinDifficulty = minDifficulty.Value; }
+                if (maxDifficulty.HasValue) { moduleCount.MaxDifficulty = maxDifficulty.Value; }
             }
         }
 
@@ -330,12 +382,15 @@ namespace Barotrauma
             }
         }
 
-        public IReadOnlyList<HumanPrefab> GetHumanPrefabs(IEnumerable<FactionPrefab> factions, Rand.RandSync randSync)
+        public IReadOnlyList<HumanPrefab> GetHumanPrefabs(IEnumerable<FactionPrefab> factions, Submarine sub, Rand.RandSync randSync)
         {
             if (!humanPrefabCollections.Any()) { return Array.Empty<HumanPrefab>(); }
 
             var collection = humanPrefabCollections.GetRandom(randSync);
-            return collection.GetByFaction(factions).ToImmutableList();
+            return collection
+                .GetByFaction(factions)
+                .Where(humanPrefab => !humanPrefab.RequireSpawnPointTag || WayPoint.WayPointList.Any(wp => wp.Submarine == sub && humanPrefab.GetSpawnPointTags().Any(tag => wp.Tags.Contains(tag))))
+                .ToImmutableList();
         }
 
         public bool CanHaveCampaignInteraction(CampaignMode.InteractionType interactionType)

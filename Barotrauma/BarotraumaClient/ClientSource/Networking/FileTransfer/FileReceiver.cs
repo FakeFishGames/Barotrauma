@@ -260,7 +260,7 @@ namespace Barotrauma.Networking
                         {
                             try
                             {
-                                Directory.CreateDirectory(downloadFolder);
+                                Directory.CreateDirectory(downloadFolder, catchUnauthorizedAccessExceptions: false);
                             }
                             catch (Exception e)
                             {
@@ -572,7 +572,7 @@ namespace Barotrauma.Networking
             {
                 try
                 {
-                    File.Delete(transfer.FilePath);
+                    File.Delete(transfer.FilePath, catchUnauthorizedAccessExceptions: false);
                 }
                 catch (Exception e)
                 {

@@ -259,7 +259,7 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(AllowedUpgrades)) { return Enumerable.Empty<Identifier>(); }
             if (allowedUpgradeSet is null || cachedAllowedUpgrades != AllowedUpgrades)
             {
-                allowedUpgradeSet = AllowedUpgrades.Split(",").ToIdentifiers().ToImmutableHashSet();
+                allowedUpgradeSet = AllowedUpgrades.ToIdentifiers().ToImmutableHashSet();
                 cachedAllowedUpgrades = AllowedUpgrades;
             }
 

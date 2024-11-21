@@ -21,9 +21,9 @@ namespace Barotrauma
 
         public Skill PrimarySkill { get; private set; }
 
-        public Job(JobPrefab jobPrefab) : this(jobPrefab, randSync: Rand.RandSync.Unsynced, variant: 0) { }
+        public Job(JobPrefab jobPrefab, bool isPvP) : this(jobPrefab, isPvP, randSync: Rand.RandSync.Unsynced, variant: 0) { }
 
-        public Job(JobPrefab jobPrefab, Rand.RandSync randSync, int variant, params Skill[] s)
+        public Job(JobPrefab jobPrefab, bool isPvP, Rand.RandSync randSync, int variant, params Skill[] s)
         {
             prefab = jobPrefab;
             Variant = variant;
@@ -40,7 +40,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    skill = new Skill(skillPrefab, randSync);
+                    skill = new Skill(skillPrefab, isPvP, randSync);
                     skills.Add(skillPrefab.Identifier, skill);
                 }
                 if (skillPrefab.IsPrimarySkill) { PrimarySkill = skill; }
@@ -74,11 +74,11 @@ namespace Barotrauma
             }
         }
 
-        public static Job Random(Rand.RandSync randSync)
+        public static Job Random(bool isPvP, Rand.RandSync randSync)
         {
             var prefab = JobPrefab.Random(randSync);
-            var variant = Rand.Range(0, prefab.Variants, randSync);
-            return new Job(prefab, randSync, variant);
+            int variant = Rand.Range(0, prefab.Variants, randSync);
+            return new Job(prefab, isPvP, randSync, variant);
         }
 
         public IEnumerable<Skill> GetSkills()
@@ -128,13 +128,18 @@ namespace Barotrauma
             }
         }
 
-        public void GiveJobItems(Character character, WayPoint spawnPoint = null)
+        public void GiveJobItems(Character character, bool isPvPMode, WayPoint spawnPoint = null)
         {
-            if (!prefab.ItemSets.TryGetValue(Variant, out var spawnItems)) { return; }
+            if (!prefab.JobItems.TryGetValue(Variant, out var spawnItems)) { return; }
 
-            foreach (XElement itemElement in spawnItems.GetChildElements("Item"))
+            foreach (JobPrefab.JobItem jobItem in spawnItems)
             {
-                InitializeJobItem(character, itemElement, spawnPoint);
+                //spawn the "root items" here, InitializeJobItem goes through the children recursively
+                if (jobItem.ParentItem != null) { continue; }
+                for (int i = 0; i < jobItem.Amount; i++)
+                {
+                    InitializeJobItem(character, isPvPMode, jobItem, spawnItems, spawnPoint);
+                }
             }
 
             if (GameMain.GameSession is { TraitorsEnabled: true } && character.IsSecurity)
@@ -144,29 +149,14 @@ namespace Barotrauma
             }
         }
 
-        private void InitializeJobItem(Character character, XElement itemElement, WayPoint spawnPoint = null, Item parentItem = null)
+        private void InitializeJobItem(Character character, bool isPvPMode, JobPrefab.JobItem jobItem, IEnumerable<JobPrefab.JobItem> allJobItems, WayPoint spawnPoint = null, Item parentItem = null)
         {
-            ItemPrefab itemPrefab;
-            if (itemElement.Attribute("name") != null)
+            Identifier itemIdentifier = jobItem.GetItemIdentifier(character.TeamID, isPvPMode);
+            if (itemIdentifier.IsEmpty) { return; }
+            if ((MapEntityPrefab.FindByIdentifier(itemIdentifier) ?? MapEntityPrefab.FindByName(itemIdentifier.Value)) is not ItemPrefab itemPrefab)
             {
-                string itemName = itemElement.Attribute("name").Value;
-                DebugConsole.ThrowErrorLocalized("Error in Job config (" + Name + ") - use item identifiers instead of names to configure the items.");
-                itemPrefab = MapEntityPrefab.FindByName(itemName) as ItemPrefab;
-                if (itemPrefab == null)
-                {
-                    DebugConsole.ThrowErrorLocalized("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
-                    return;
-                }
-            }
-            else
-            {
-                string itemIdentifier = itemElement.GetAttributeString("identifier", "");
-                itemPrefab = MapEntityPrefab.FindByIdentifier(itemIdentifier.ToIdentifier()) as ItemPrefab;
-                if (itemPrefab == null)
-                {
-                    DebugConsole.ThrowErrorLocalized("Tried to spawn \"" + Name + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
-                    return;
-                }
+                DebugConsole.ThrowErrorLocalized($"Tried to spawn \"{Name}\" with the item \"{itemIdentifier}\". Matching item prefab not found.");
+                return;
             }
 
             Item item = new Item(itemPrefab, character.Position, null);
@@ -187,7 +177,7 @@ namespace Barotrauma
             }
 #endif
 
-            if (itemElement.GetAttributeBool("equip", false))
+            if (jobItem.Equip)
             {
                 //if the item is both pickable and wearable, try to wear it instead of picking it up
                 List<InvSlotType> allowedSlots =
@@ -229,12 +219,18 @@ namespace Barotrauma
                 wifiComponent.TeamID = character.TeamID;
             }
 
-            if (parentItem != null) { parentItem.Combine(item, user: null); }
+            parentItem?.Combine(item, user: null);
 
-            foreach (XElement childItemElement in itemElement.Elements())
+            foreach (JobPrefab.JobItem childItem in allJobItems)
             {
-                InitializeJobItem(character, childItemElement, spawnPoint, item);
-            } 
+                if (childItem.ParentItem == jobItem)
+                {
+                    for (int i = 0; i < childItem.Amount; i++)
+                    {
+                        InitializeJobItem(character, isPvPMode, childItem, allJobItems, spawnPoint, parentItem: item);
+                    }
+                }
+            }
         }
 
         public XElement Save(XElement parentElement)

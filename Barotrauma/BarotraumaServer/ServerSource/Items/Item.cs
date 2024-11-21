@@ -175,6 +175,10 @@ namespace Barotrauma
                         }
                     }
                     break;
+                case SwapItemEventData swapItemEventData:
+                    msg.WriteUInt16(swapItemEventData.NewId);
+                    msg.WriteUInt32(swapItemEventData.NewItem.UintIdentifier);
+                    break;
                 default:
                     throw error($"Unsupported event type {itemEventData.GetType().Name}");
             }
@@ -317,7 +321,7 @@ namespace Barotrauma
             msg.WriteBoolean(tagsChanged);
             if (tagsChanged)
             {
-                IEnumerable<Identifier> splitTags = Tags.Split(',').ToIdentifiers();
+                IEnumerable<Identifier> splitTags = Tags.ToIdentifiers();
                 msg.WriteString(string.Join(',', splitTags.Where(t => !base.Prefab.Tags.Contains(t))));
                 msg.WriteString(string.Join(',', base.Prefab.Tags.Where(t => !splitTags.Contains(t))));
             }

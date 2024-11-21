@@ -16,6 +16,8 @@ namespace Barotrauma
         public readonly bool Stream;
         public readonly bool IgnoreMuffling;
 
+        public readonly bool MuteBackgroundMusic;
+
         public readonly string? Filename;
 
         private RoundSound(ContentXElement element, Sound sound)
@@ -26,6 +28,7 @@ namespace Barotrauma
             Range = element.GetAttributeFloat("range", 1000.0f);
             Volume = element.GetAttributeFloat("volume", 1.0f);
             IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
+            MuteBackgroundMusic = element.GetAttributeBool("MuteBackgroundMusic", false);
             
             FrequencyMultiplierRange = new Vector2(1.0f);
             string freqMultAttr = element.GetAttributeString("frequencymultiplier", element.GetAttributeString("frequency", "1.0"));
@@ -73,9 +76,16 @@ namespace Barotrauma
             }
 
             Sound? existingSound = null;
-            if (roundSoundByPath.TryGetValue(filename.FullPath, out RoundSound? rs) && rs.Sound is { Disposed: false })
+            if (roundSoundByPath.TryGetValue(filename.FullPath, out RoundSound? rs))
             {
-                existingSound = rs.Sound;
+                if (rs.Sound is { Disposed: false })
+                {
+                    existingSound = rs.Sound;
+                }
+                else
+                {
+                    roundSoundByPath.Remove(filename.FullPath);
+                }
             }
 
             if (existingSound is null)

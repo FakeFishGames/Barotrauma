@@ -13,7 +13,7 @@ namespace Barotrauma.Sounds
             private set;
         }
 
-        public SoundSourcePool(int sourceCount = SoundManager.SOURCE_COUNT)
+        public SoundSourcePool(int sourceCount = SoundManager.SourceCount)
         {
             int alError;
 
@@ -433,6 +433,8 @@ namespace Barotrauma.Sounds
         private readonly uint[] streamBuffers;
         private readonly uint[] unqueuedBuffers;
         private readonly float[] streamBufferAmplitudes;
+
+        public bool MuteBackgroundMusic;
 
         public int StreamSeekPos
         {

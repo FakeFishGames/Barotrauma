@@ -180,11 +180,40 @@ namespace Barotrauma
             random = new MTRandom(RandomSeed);
 
             bool playingCampaign = GameMain.GameSession?.GameMode is CampaignMode;
-            EventSet initialEventSet = SelectRandomEvents(
-                EventSet.Prefabs.ToList(),
-                requireCampaignSet: playingCampaign,
-                random: random);
+
+            //ensure that the sets that have been configured to be always selected get selected if there's any available
+            EventSet initialEventSet = null;
             EventSet additiveSet = null;
+            var selectAlwaysEventSets = GetAllowedEventSets(EventSet.Prefabs.ToList(), requireCampaignSet: playingCampaign).Where(s => s.SelectAlways);
+            foreach (var eventSet in selectAlwaysEventSets)
+            {
+                if (eventSet.Additive)
+                {
+                    additiveSet = eventSet;
+                }
+                else
+                { 
+                    if (initialEventSet == null)
+                    {
+                        initialEventSet = eventSet;
+                    }
+                    else //initial set already chosen, ignore this one
+                    {
+                        continue;
+                    }
+                }
+                AddSet(eventSet);
+            }
+
+            if (initialEventSet == null)
+            {
+                initialEventSet = SelectRandomEvents(
+                    EventSet.Prefabs.ToList(),
+                    requireCampaignSet: playingCampaign,
+                    random: random);
+            }
+
+            //we happened to choose an additive set as the initial one, choose an additive one too
             if (initialEventSet != null && initialEventSet.Additive)
             {
                 additiveSet = initialEventSet;
@@ -193,15 +222,15 @@ namespace Barotrauma
                     requireCampaignSet: playingCampaign,
                     random: random);
             }
-            if (initialEventSet != null)
+
+            if (initialEventSet != null) { AddSet(initialEventSet); }
+            if (additiveSet != null) { AddSet(additiveSet); }
+
+            void AddSet(EventSet eventSet)
             {
-                pendingEventSets.Add(initialEventSet);
-                CreateEvents(initialEventSet);
-            }
-            if (additiveSet != null)
-            {
-                pendingEventSets.Add(additiveSet);
-                CreateEvents(additiveSet);
+                if (pendingEventSets.Contains(eventSet)) { return; }
+                pendingEventSets.Add(eventSet);
+                CreateEvents(eventSet);
             }
 
             if (level?.LevelData != null)
@@ -244,7 +273,7 @@ namespace Barotrauma
 
             while (QueuedEventsForNextRound.TryDequeue(out var id))
             {
-                var eventPrefab = EventSet.GetEventPrefab(id);
+                var eventPrefab = EventSet.GetEventPrefab(id) ?? EventSet.GetAllEventPrefabs().Where(e => e.Tags.Contains(id)).GetRandomUnsynced();
                 if (eventPrefab == null)
                 {
                     DebugConsole.ThrowError($"Error in EventManager.StartRound - could not find an event with the identifier {id}.");
@@ -609,12 +638,11 @@ namespace Barotrauma
             }
         }
 
-        private EventSet SelectRandomEvents(IReadOnlyList<EventSet> eventSets, bool? requireCampaignSet = null, Random random = null)
+        private IEnumerable<EventSet> GetAllowedEventSets(IReadOnlyList<EventSet> eventSets, bool? requireCampaignSet = null)
         {
-            if (level == null) { return null; }
-            Random rand = random ?? new MTRandom(ToolBox.StringToInt(level.Seed));
+            if (level == null) { return Enumerable.Empty<EventSet>(); }
 
-            var allowedEventSets = 
+            var allowedEventSets =
                 eventSets.Where(set => IsValidForLevel(set, level));
 
             if (requireCampaignSet.HasValue)
@@ -659,6 +687,12 @@ namespace Barotrauma
                 // When there are no forced sets, only allow sets that aren't forced at any specific location
                 allowedEventSets = allowedEventSets.Where(set => set.ForceAtDiscoveredNr < 0 && set.ForceAtVisitedNr < 0);
             }
+            return allowedEventSets;
+        }
+
+        private EventSet SelectRandomEvents(IReadOnlyList<EventSet> eventSets, bool? requireCampaignSet = null, Random random = null)
+        {
+            var allowedEventSets = GetAllowedEventSets(eventSets, requireCampaignSet);
 
             if (allowedEventSets.Count() == 1)
             {
@@ -666,6 +700,7 @@ namespace Barotrauma
                 return allowedEventSets.First();
             }
 
+            Random rand = random ?? new MTRandom(ToolBox.StringToInt(level.Seed));
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
             float randomNumber = (float)rand.NextDouble();
             randomNumber *= totalCommonness;
@@ -692,6 +727,7 @@ namespace Barotrauma
             return
                 (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
                 (e.RequiredLayer.IsEmpty || Submarine.LayerExistsInAnySub(e.RequiredLayer)) &&
+                (e.RequiredSpawnPointTag.IsEmpty || WayPoint.WayPointList.Any(wp => wp.Tags.Contains(e.RequiredSpawnPointTag))) &&
                 !level.LevelData.NonRepeatableEvents.Contains(e.Identifier);
         }
 
@@ -706,6 +742,7 @@ namespace Barotrauma
                 level.IsAllowedDifficulty(eventSet.MinLevelDifficulty, eventSet.MaxLevelDifficulty) &&
                 level.LevelData.Type == eventSet.LevelType &&
                 (eventSet.RequiredLayer.IsEmpty || Submarine.LayerExistsInAnySub(eventSet.RequiredLayer)) &&
+                (eventSet.RequiredSpawnPointTag.IsEmpty || WayPoint.WayPointList.Any(wp => wp.Tags.Contains(eventSet.RequiredSpawnPointTag))) &&
                 (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier);
         }
 
@@ -965,9 +1002,9 @@ namespace Barotrauma
                         monsterStrength += enemyAI.CombatStrength;
                     }
 
-                    if (character.CurrentHull?.Submarine?.Info != null &&
-                        (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)) &&
-                        character.CurrentHull.Submarine.Info.Type == SubmarineType.Player)
+                    if (Submarine.MainSub != null &&
+                        character.CurrentHull?.Submarine.Info is { Type: SubmarineType.Player } &&
+                        (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
                     {
                         // Enemy onboard -> Crawler inside the sub adds 0.2 to enemy danger, Mudraptor 0.42
                         enemyDanger += enemyAI.CombatStrength / 500.0f;
@@ -1128,6 +1165,8 @@ namespace Barotrauma
                 }
             }
 #else
+            if (refEntity == null) { return null; }
+
             foreach (Barotrauma.Networking.Client client in GameMain.Server.ConnectedClients)
             {
                 if (client.Character == null) { continue; }

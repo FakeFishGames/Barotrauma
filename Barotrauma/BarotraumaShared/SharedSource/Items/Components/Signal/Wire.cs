@@ -66,6 +66,7 @@ namespace Barotrauma.Items.Components
         private float editNodeDelay;
 
         private bool locked;
+
         public bool Locked
         {
             get

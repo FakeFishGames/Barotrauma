@@ -20,6 +20,8 @@ namespace Barotrauma.Networking
 
         public bool AllowModDownloads { get; private set; } = true;
 
+        public string AutomaticallyAttemptedPassword = string.Empty;
+
         public readonly record struct Callbacks(
             Callbacks.MessageCallback OnMessageReceived,
             Callbacks.DisconnectCallback OnDisconnect,
@@ -102,8 +104,9 @@ namespace Barotrauma.Networking
 
                     TaskPool.Add($"{GetType().Name}.{nameof(GetAccountId)}", GetAccountId(), t =>
                     {
-                        if (GameMain.Client?.ClientPeer is null) { return; }
-                        
+                        // FIXME what to do with this?
+                        //if (GameMain.Client?.ClientPeer is null) { return; }
+
                         if (!t.TryGetResult(out Option<AccountId> accountId))
                         {
                             Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
@@ -118,7 +121,7 @@ namespace Barotrauma.Networking
 
                         var body = new ClientAuthTicketAndVersionPacket
                         {
-                            Name = GameMain.Client.Name,
+                            Name = GameMain.Client?.Name ?? "Unknown",
                             OwnerKey = ownerKey,
                             AccountId = accountId,
                             AuthTicket = authTicket,
@@ -177,9 +180,15 @@ namespace Barotrauma.Networking
                     var passwordPacket = INetSerializableStruct.Read<ServerPeerPasswordPacket>(inc.Message);
 
                     if (WaitingForPassword) { return; }
-                    
+
                     passwordPacket.Salt.TryUnwrap(out passwordSalt);
                     passwordPacket.RetriesLeft.TryUnwrap(out var retries);
+
+                    if (!string.IsNullOrWhiteSpace(AutomaticallyAttemptedPassword))
+                    {
+                        SendPassword(AutomaticallyAttemptedPassword);
+                        return;
+                    }
 
                     LocalizedString pwMsg = TextManager.Get("PasswordRequired");
 

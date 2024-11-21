@@ -318,7 +318,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected override bool CheckObjectiveSpecific() => IsCompleted;
+        protected override bool CheckObjectiveState() => IsCompleted;
 
         public override void Reset()
         {

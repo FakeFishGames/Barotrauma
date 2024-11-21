@@ -752,7 +752,7 @@ namespace Barotrauma
             }
             textPos.X += 10.0f * GUI.Scale;
 
-            if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet)
+            if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet && character.IsFriendly(character.FocusedCharacter))
             {
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText("PlayHint", InputType.Use),
                     GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);

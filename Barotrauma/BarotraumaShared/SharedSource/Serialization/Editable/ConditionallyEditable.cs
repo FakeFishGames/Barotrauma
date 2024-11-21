@@ -44,7 +44,7 @@ sealed class ConditionallyEditable : Editable
             ConditionType.IsSwappableItem
                 => entity is Item item && item.Prefab.SwappableItem != null,
             ConditionType.AllowRotating
-                => (entity is Item { body: null } item && item.Prefab.AllowRotatingInEditor)
+                => (entity is Item item && (item.body == null || item.body.BodyType == FarseerPhysics.BodyType.Static) && item.Prefab.AllowRotatingInEditor)
                    || (entity is Structure structure && structure.Prefab.AllowRotatingInEditor),
             ConditionType.Attachable
                 => GetComponent<Holdable>(entity) is Holdable { Attachable: true },

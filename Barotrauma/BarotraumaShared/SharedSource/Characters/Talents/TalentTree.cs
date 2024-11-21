@@ -131,7 +131,7 @@ namespace Barotrauma
             if (character.Info.GetTotalTalentPoints() - selectedTalents.Count <= 0) { return false; }
             if (!JobTalentTrees.TryGet(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return false; }
 
-            if (IsTalentLocked(talentIdentifier)) { return false; }
+            if (IsTalentLocked(talentIdentifier, Character.GetFriendlyCrew(character))) { return false; }
 
             if (character.Info.GetUnlockedTalentsInTree().Contains(talentIdentifier))
             {
@@ -163,10 +163,8 @@ namespace Barotrauma
             return false;
         }
 
-        public static bool IsTalentLocked(Identifier talentIdentifier, ImmutableHashSet<Character> characterList = null)
+        public static bool IsTalentLocked(Identifier talentIdentifier, IEnumerable<Character> characterList)
         {
-            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
-
             foreach (Character c in characterList)
             {
                 if (c.Info.GetSavedStatValue(StatTypes.LockedTalents, talentIdentifier) >= 1) { return true; }

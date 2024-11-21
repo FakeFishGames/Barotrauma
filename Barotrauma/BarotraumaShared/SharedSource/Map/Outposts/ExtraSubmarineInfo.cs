@@ -43,7 +43,7 @@ namespace Barotrauma
             }
         }
 
-        public void Save(XElement element)
+        public virtual void Save(XElement element)
         {
             SerializableProperty.SerializeProperties(this, element);
         }
@@ -124,6 +124,48 @@ namespace Barotrauma
             }
 
             WreckContainsThalamus = HasThalamus.No;
+        }
+    }
+
+    class EnemySubmarineInfo : ExtraSubmarineInfo
+    {
+        [Serialize(4000.0f, IsPropertySaveable.Yes), Editable]
+        public float Reward { get; set; }
+
+        [Serialize(50.0f, IsPropertySaveable.Yes), Editable]
+        public float PreferredDifficulty { get; set; }
+
+        private readonly HashSet<Identifier> missionTags = new HashSet<Identifier>();
+
+        public HashSet<Identifier> MissionTags => missionTags;
+
+        public EnemySubmarineInfo(SubmarineInfo submarineInfo, XElement element) : base(submarineInfo, element)
+        {
+            Name = $"{nameof(EnemySubmarineInfo)} ({submarineInfo.Name})";
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            foreach (var missionTag in element.GetAttributeIdentifierArray(nameof(MissionTags), Array.Empty<Identifier>()))
+            {
+                missionTags.Add(missionTag);
+            }
+        }
+
+        public EnemySubmarineInfo(SubmarineInfo submarineInfo) : base(submarineInfo)
+        {
+            Name = $"{nameof(EnemySubmarineInfo)} ({submarineInfo.Name})";
+        }
+
+        public EnemySubmarineInfo(EnemySubmarineInfo original) : base(original)
+        {
+            foreach (var missionTag in original.missionTags)
+            {
+                missionTags.Add(missionTag);
+            }
+        }
+
+        public override void Save(XElement element)
+        {
+            base.Save(element);
+            element.Add(new XAttribute(nameof(MissionTags), string.Join(',', missionTags)));
         }
     }
 }

@@ -44,7 +44,7 @@ namespace Barotrauma
             ignoredTags = AIObjectiveGetItem.ParseIgnoredTags(identifiersOrTags).ToImmutableHashSet();
         }
 
-        protected override bool CheckObjectiveSpecific() => subObjectivesCreated && subObjectives.None();
+        protected override bool CheckObjectiveState() => subObjectivesCreated && subObjectives.None();
 
         protected override void Act(float deltaTime)
         {
@@ -56,7 +56,7 @@ namespace Barotrauma
                 AIObjectiveGetItem? getItem = null;
                 TryAddSubObjective(ref getItem, () =>
                 {
-                   var getItem = new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
+                   getItem = new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
                     {
                         AllowVariants = AllowVariants,
                         Wear = Wear,

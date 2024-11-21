@@ -204,12 +204,8 @@ namespace Barotrauma
                 var allTargetItems = new List<Identifier>();
                 for (int i = 0; i < AllOptions.Length; i++)
                 {
-                    Identifier[] optionTargetItemsSplit = i < splitTargetItems.Length ? splitTargetItems[i].Split(',', '，').ToIdentifiers() : Array.Empty<Identifier>();
-                    for (int j = 0; j < optionTargetItemsSplit.Length; j++)
-                    {
-                        optionTargetItemsSplit[j] = optionTargetItemsSplit[j].Value.Trim().ToIdentifier();
-                        allTargetItems.Add(optionTargetItemsSplit[j]);
-                    }
+                    Identifier[] optionTargetItemsSplit = i < splitTargetItems.Length ? splitTargetItems[i].ToIdentifiers().ToArray() : Array.Empty<Identifier>();
+                    allTargetItems.AddRange(optionTargetItemsSplit);
                     optionTargetItems.Add(AllOptions[i], optionTargetItemsSplit.ToImmutableArray());
                 }
                 TargetItems = allTargetItems.ToImmutableArray();

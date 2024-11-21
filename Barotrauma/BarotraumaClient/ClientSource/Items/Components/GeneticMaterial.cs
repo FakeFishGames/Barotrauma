@@ -48,24 +48,45 @@ namespace Barotrauma.Items.Components
                     description += '\n' + containedDescription;
                 }
             }
+            
+            if (GameMain.DevMode && Tainted && selectedTaintedEffect != null)
+            {
+                description = $"{description}\n{selectedTaintedEffect.Name}: {selectedTaintedEffect.GetDescription(0f, AfflictionPrefab.Description.TargetType.OtherCharacter)}";
+            }
         }
 
         public void ModifyDeconstructInfo(Deconstructor deconstructor, ref LocalizedString buttonText, ref LocalizedString infoText)
         {
             if (deconstructor.InputContainer.Inventory.AllItems.Count() == 2)
             {
-                var otherGeneticMaterial =
-                    deconstructor.InputContainer.Inventory.AllItems.FirstOrDefault(it => it != item && it.Prefab == item.Prefab)?.GetComponent<GeneticMaterial>();
+                var otherItem = deconstructor.InputContainer.Inventory.AllItems.FirstOrDefault(it => it != item);
+                if (otherItem == null)
+                {
+                    return;
+                }
+
+                var otherGeneticMaterial = otherItem.GetComponent<GeneticMaterial>();
                 if (otherGeneticMaterial == null)
                 {
-                    buttonText = TextManager.Get("researchstation.combine");
-                    infoText = TextManager.Get("researchstation.combine.infotext");
+                    return;
                 }
-                else
+
+                var combineRefineResult = GetCombineRefineResult(otherGeneticMaterial);
+
+                if (combineRefineResult == CombineResult.None)
+                {
+                    infoText = TextManager.Get("researchstation.novalidcombination");
+                }
+                else if (combineRefineResult == CombineResult.Refined)
                 {
                     buttonText = TextManager.Get("researchstation.refine");
                     int taintedProbability = (int)(GetTaintedProbabilityOnRefine(otherGeneticMaterial, Character.Controlled) * 100);
                     infoText = TextManager.GetWithVariable("researchstation.refine.infotext", "[taintedprobability]", taintedProbability.ToString());
+                }
+                else
+                {
+                    buttonText = TextManager.Get("researchstation.combine");
+                    infoText = TextManager.Get("researchstation.combine.infotext");
                 }
             }
         }

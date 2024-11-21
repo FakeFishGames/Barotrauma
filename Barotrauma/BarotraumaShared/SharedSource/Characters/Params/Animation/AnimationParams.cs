@@ -44,9 +44,6 @@ namespace Barotrauma
         [Serialize(0f, IsPropertySaveable.Yes, description: "How much the body raises when taking a step."), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 0.1f)]
         public float StepLiftAmount { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
-        public bool MultiplyByDir { get; set; }
-
         [Serialize(0.5f, IsPropertySaveable.Yes, description: "When does the body raise when taking a step. The default (0.5) is in the middle of the step."), Editable(MinValueFloat = -1, MaxValueFloat = 1, DecimalCount = 2, ValueStep = 0.1f)]
         public float StepLiftOffset { get; set; }
 
@@ -56,6 +53,48 @@ namespace Barotrauma
         [Header("Movement")]
         [Serialize(0.75f, IsPropertySaveable.Yes, description: "The character's movement speed is multiplied with this value when moving backwards."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2)]
         public float BackwardsMovementMultiplier { get; set; }
+        
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "Adjusts the maximum speed while climbing. The actual speed is affected by the MovementSpeed."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10f, DecimalCount = 2)]
+        public float ClimbSpeed { get; set; }
+        
+        [Serialize(2.0f, IsPropertySaveable.Yes, description: "Used instead of ClimbSpeed when descending ladders while moving fast (running). Not used if lower than ClimbSpeed."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10f, DecimalCount = 2)]
+        public float SlideSpeed { get; set; }
+        
+        [Serialize(10.5f, IsPropertySaveable.Yes, description: "Force applied to the main collider, torso and head, when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbBodyMoveForce { get; set; }
+        
+        [Serialize(5.2f, IsPropertySaveable.Yes, description: "Force applied to the hands when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbHandMoveForce { get; set; }
+        
+        [Serialize(10.0f, IsPropertySaveable.Yes, description: "Force applied to the feet when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbFootMoveForce { get; set; }
+        
+        [Serialize(30.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbStepHeight { get; set; }
+        
+        protected override bool Deserialize(XElement element = null)
+        {
+            if (element.GetAttributeEnum(nameof(AnimationType), AnimationType.NotDefined) is AnimationType.Run)
+            {
+                // These values were previously hard-coded when running, so we need to set different default values for the run animations, when they are not defined.
+                const string climbSpeedName = nameof(ClimbSpeed);
+                if (element.GetAttribute(climbSpeedName) == null)
+                {
+                    element.SetAttribute(climbSpeedName, 2.0f);
+                }
+                const string climbStepName = nameof(ClimbStepHeight);
+                if (element.GetAttribute(climbStepName) == null)
+                {
+                    element.SetAttribute(climbStepName, 60.0f);
+                }
+                const string slideSpeedName = nameof(SlideSpeed);
+                if (element.GetAttribute(slideSpeedName) == null)
+                {
+                    element.SetAttribute(slideSpeedName, 4.0f);
+                }
+            }
+            return base.Deserialize(element);
+        }
     }
 
     abstract class SwimParams : AnimationParams
@@ -92,7 +131,7 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
-        [Header("Standing")]
+        [Header("Orientation")]
         [Serialize(float.NaN, IsPropertySaveable.Yes), Editable(-360f, 360f)]
         public float HeadAngle
         {

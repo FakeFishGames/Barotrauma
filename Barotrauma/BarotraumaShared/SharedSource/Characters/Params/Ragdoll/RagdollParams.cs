@@ -113,7 +113,7 @@ namespace Barotrauma
 
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool CanWalk { get; set; }
-
+        
         [Serialize(true, IsPropertySaveable.Yes, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
 
@@ -654,7 +654,7 @@ namespace Barotrauma
             [Serialize(0.25f, IsPropertySaveable.Yes), Editable]
             public float Stiffness { get; set; }
 
-            [Serialize(1f, IsPropertySaveable.Yes, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable]
+            [Serialize(1f, IsPropertySaveable.Yes, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable(DecimalCount = 2)]
             public float Scale { get; set; }
 
             [Serialize(false, IsPropertySaveable.No), Editable(ReadOnly = true)]
@@ -705,6 +705,9 @@ namespace Barotrauma
 
             [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
             public LimbType Type { get; set; }
+            
+            [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "Secondary limb type to be used for generic purposes. Currently only used in climbing animations."), Editable()]
+            public LimbType SecondaryType { get; set; }
 
             /// <summary>
             /// The orientation of the sprite as drawn on the sprite sheet (in radians).
@@ -775,6 +778,12 @@ namespace Barotrauma
 
             [Serialize("0, 0", IsPropertySaveable.Yes, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -10f, MaxValueFloat = 10f)]
             public Vector2 MouthPos { get; set; }
+            
+            [Serialize(50f, IsPropertySaveable.Yes, description: "How much torque is applied on the head while updating the eating animations?"), Editable]
+            public float EatTorque { get; set; }
+            
+            [Serialize(2f, IsPropertySaveable.Yes, description: "How strong a linear impulse is applied on the head while updating the eating animations?"), Editable]
+            public float EatImpulse { get; set; }
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float ConstantTorque { get; set; }
@@ -795,8 +804,11 @@ namespace Barotrauma
             [Serialize(10f, IsPropertySaveable.Yes, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
             public float SeveredFadeOutTime { get; set; } = 10.0f;
 
-            [Serialize(false, IsPropertySaveable.Yes, description: "Only applied when the limb is of type Tail. If none of the tails have been defined to use the angle and an angle is defined in the animation parameters, the first tail limb is used."), Editable]
+            [Serialize(false, IsPropertySaveable.Yes, description: "Should the tail angle be applied on this limb? If none of the limbs have been defined to use the angle and an angle is defined in the animation parameters, the first tail limb is used."), Editable]
             public bool ApplyTailAngle { get; set; }
+            
+            [Serialize(false, IsPropertySaveable.Yes, description: "Should this limb be moved like a tail when swimming? Always true for tail limbs. On tails, disable by setting SineFrequencyMultiplier to 0."), Editable]
+            public bool ApplySineMovement { get; set; }
 
             [Serialize(1f, IsPropertySaveable.Yes), Editable(ValueStep = 0.1f, DecimalCount = 2)]
             public float SineFrequencyMultiplier { get; set; }

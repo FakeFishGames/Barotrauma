@@ -62,6 +62,8 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
 
+        public bool MuteBackgroundMusic;
+
         public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, ContentXElement xElement = null, bool getFullPath = true)
         {
             Owner = owner;

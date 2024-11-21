@@ -76,7 +76,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        protected override bool CheckObjectiveSpecific() => targetHull.FireSources.None();
+        protected override bool CheckObjectiveState() => targetHull.FireSources.None();
 
         private float sinTime;
         protected override void Act(float deltaTime)

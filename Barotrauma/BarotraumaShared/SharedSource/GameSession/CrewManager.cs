@@ -182,7 +182,7 @@ namespace Barotrauma
             characterInfos.Remove(characterInfo);
         }
         
-        public void AddCharacter(Character character, bool sortCrewList = true)
+        public void AddCharacter(Character character)
         {
             if (character.Removed)
             {
@@ -216,10 +216,6 @@ namespace Barotrauma
             }
 #if CLIENT
             var characterComponent = AddCharacterToCrewList(character);
-            if (sortCrewList)
-            {
-                SortCrewList();
-            }
             if (character.CurrentOrders != null)
             {
                 foreach (var order in character.CurrentOrders)
@@ -324,7 +320,7 @@ namespace Barotrauma
                 Character character = Character.Create(info, spawnWaypoints[i].WorldPosition, info.Name);
                 InitializeCharacter(character, mainSubWaypoints[i], spawnWaypoints[i]);
 
-                AddCharacter(character, sortCrewList: false);
+                AddCharacter(character);
 #if CLIENT
                 if (IsSinglePlayer && (Character.Controlled == null || character.Info.LastControlled)) { Character.Controlled = character; }
 #endif
@@ -364,7 +360,7 @@ namespace Barotrauma
                 }
                 else if (!character.Info.StartItemsGiven)
                 {
-                    character.GiveJobItems(mainSubWaypoint);
+                    character.GiveJobItems(isPvPMode: GameMain.GameSession?.GameMode is PvPMode, mainSubWaypoint);
                     foreach (Item item in character.Inventory.AllItems)
                     {
                         //if the character is loaded from a human prefab with preconfigured items, its ID card gets assigned to the sub it spawns in

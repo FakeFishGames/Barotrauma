@@ -1,12 +1,11 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -15,6 +14,8 @@ namespace Barotrauma
         //music
         private const float MusicLerpSpeed = 1.0f;
         private const float UpdateMusicInterval = 5.0f;
+
+        public const float MuffleFilterFrequency = 600;
 
         const int MaxMusicChannels = 6;
 
@@ -28,9 +29,9 @@ namespace Barotrauma
         private static float updateMusicTimer;
 
         //ambience
-        private static Sound waterAmbienceIn => SoundPrefab.WaterAmbienceIn.ActivePrefab.Sound;
-        private static Sound waterAmbienceOut => SoundPrefab.WaterAmbienceOut.ActivePrefab.Sound;
-        private static Sound waterAmbienceMoving => SoundPrefab.WaterAmbienceMoving.ActivePrefab.Sound;
+        private static SoundPrefab waterAmbienceIn => SoundPrefab.WaterAmbienceIn.ActivePrefab;
+        private static SoundPrefab waterAmbienceOut => SoundPrefab.WaterAmbienceOut.ActivePrefab;
+        private static SoundPrefab waterAmbienceMoving => SoundPrefab.WaterAmbienceMoving.ActivePrefab;
         private static readonly HashSet<SoundChannel> waterAmbienceChannels = new HashSet<SoundChannel>();
 
         private static float ambientSoundTimer;
@@ -213,9 +214,9 @@ namespace Barotrauma
                 }
             }
 
-            updateWaterAmbience(waterAmbienceIn, ambienceVolume * (1.0f - movementSoundVolume) * insideSubFactor);
-            updateWaterAmbience(waterAmbienceMoving, ambienceVolume * movementSoundVolume * insideSubFactor);
-            updateWaterAmbience(waterAmbienceOut, 1.0f - insideSubFactor);
+            updateWaterAmbience(waterAmbienceIn.Sound, ambienceVolume * (1.0f - movementSoundVolume) * insideSubFactor * waterAmbienceIn.Volume);
+            updateWaterAmbience(waterAmbienceMoving.Sound, ambienceVolume * movementSoundVolume * insideSubFactor * waterAmbienceMoving.Volume);
+            updateWaterAmbience(waterAmbienceOut.Sound, (1.0f - insideSubFactor) * waterAmbienceOut.Volume);
         }
 
         private static void UpdateWaterFlowSounds(float deltaTime)
@@ -483,8 +484,20 @@ namespace Barotrauma
             if (sound == null) { return null; }
             return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, 1.0f, hullGuess);
         }
+        public static SoundChannel PlaySound(RoundSound sound, Vector2 position, float? volume = null, Hull hullGuess = null)
+        {
+           return PlaySound(
+               sound.Sound,
+               position, 
+               volume ?? sound.Volume, 
+               sound.Range, 
+               ignoreMuffling: sound.IgnoreMuffling, 
+               hullGuess: hullGuess, 
+               freqMult: sound.GetRandomFrequencyMultiplier(),
+               muteBackgroundMusic: sound.MuteBackgroundMusic);
+        }
 
-        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, float? freqMult = null, Hull hullGuess = null, bool ignoreMuffling = false)
+        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, float? freqMult = null, Hull hullGuess = null, bool ignoreMuffling = false, bool muteBackgroundMusic = false)
         {
             if (sound == null)
             {
@@ -500,7 +513,12 @@ namespace Barotrauma
                 return null;
             }
             bool muffle = !ignoreMuffling && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
-            return sound.Play(volume ?? sound.BaseGain, far, freqMult ?? 1.0f, position, muffle: muffle);            
+            var channel = sound.Play(volume ?? sound.BaseGain, far, freqMult ?? 1.0f, position, muffle: muffle);
+            if (channel != null)
+            {
+                channel.MuteBackgroundMusic = muteBackgroundMusic;
+            }
+            return channel;
         }
 
         public static void DisposeDisabledMusic()
@@ -672,6 +690,17 @@ namespace Barotrauma
                 updateMusicTimer = UpdateMusicInterval;
             }
 
+            bool muteBackgroundMusic = false;
+            for (int i = 0; i < SoundManager.SourceCount; i++)
+            {
+                SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(SoundManager.SourcePoolIndex.Default, i);
+                if (playingSoundChannel is { MuteBackgroundMusic: true, IsPlaying: true })
+                {
+                    muteBackgroundMusic = true;
+                    break;
+                }
+            }
+
             int activeTrackCount = targetMusic.Count(m => m != null);
             for (int i = 0; i < MaxMusicChannels; i++)
             {
@@ -728,6 +757,10 @@ namespace Barotrauma
                         musicChannel[i].Looping = true;
                     }
                     float targetGain = targetMusic[i].Volume;
+                    if (muteBackgroundMusic)
+                    {
+                        targetGain = 0.0f;
+                    }
                     if (targetMusic[i].DuckVolume)
                     {
                         targetGain *= (float)Math.Sqrt(1.0f / activeTrackCount);
@@ -956,7 +989,7 @@ namespace Barotrauma
             PlayDamageSound(damageType, damage, bodyPosition, 800.0f);
         }
 
-        public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, IEnumerable<Identifier> tags = null)
+        public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, IEnumerable<Identifier> tags = null, float gain = 1.0f)
         {
             var suitableSounds = damageSounds.Where(s =>
                 s.DamageType == damageType &&
@@ -972,7 +1005,7 @@ namespace Barotrauma
                 s.DamageRange == Vector2.Zero || (randomizedDamage >= s.DamageRange.X && randomizedDamage <= s.DamageRange.Y));
 
             var damageSound = suitableSounds.GetRandomUnsynced();
-            damageSound?.Sound?.Play(1.0f, range, position, muffle: !damageSound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, range, null));
+            damageSound?.Sound?.Play(gain, range, position, muffle: !damageSound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, range, null));
         }
 
         public static void PlayUISound(GUISoundType soundType)

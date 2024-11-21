@@ -312,7 +312,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific() => isDoneOperating && !Repeat;
+        protected override bool CheckObjectiveState() => isDoneOperating && !Repeat;
 
         public override void Reset()
         {

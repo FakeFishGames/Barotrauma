@@ -29,6 +29,9 @@ namespace Barotrauma.Networking
         {
             SetAccountInfo(new AccountInfo(accountId));
         }
+
+        public override bool AddressMatches(NetworkConnection other)
+            => other is PipeConnection;
     }
 }
 

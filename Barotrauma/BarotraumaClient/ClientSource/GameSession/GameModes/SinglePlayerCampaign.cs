@@ -240,7 +240,7 @@ namespace Barotrauma
             if (!savedOnStart)
             {
                 GUI.SetSavingIndicatorState(true);
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                SaveUtil.SaveGame(GameMain.GameSession.DataPath, isSavingOnLoading: true);
                 savedOnStart = true;
             }
 
@@ -448,7 +448,7 @@ namespace Barotrauma
                 if (success)
                 {
                     GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                    SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                    SaveUtil.SaveGame(GameMain.GameSession.DataPath);
                 }
                 else
                 {
@@ -479,7 +479,7 @@ namespace Barotrauma
         protected override void EndCampaignProjSpecific()
         {
             GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-            SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+            SaveUtil.SaveGame(GameMain.GameSession.DataPath);
             GameMain.CampaignEndScreen.Select();
             GUI.DisableHUD = false;
             GameMain.CampaignEndScreen.OnFinished = () =>
@@ -672,7 +672,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Save(XElement element)
+        public override void Save(XElement element, bool isSavingOnLoading)
         {
             XElement modeElement = new XElement("SinglePlayerCampaign",
                 new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),

@@ -25,4 +25,6 @@ namespace Barotrauma
                 Vector2.DistanceSquared(EndWorldPos, currentEndWorldPos) > minDistSquared;
         }
     }
+
+    public readonly record struct CachedLocation(Vector2 Location, double RecalculationTime);
 }

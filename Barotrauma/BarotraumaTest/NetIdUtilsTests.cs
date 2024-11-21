@@ -1,6 +1,6 @@
-﻿using System;
-using Barotrauma.Networking;
-using FluentAssertions;
+﻿extern alias Client;
+using System;
+using Client::Barotrauma.Networking;
 using FsCheck;
 using Xunit;
 

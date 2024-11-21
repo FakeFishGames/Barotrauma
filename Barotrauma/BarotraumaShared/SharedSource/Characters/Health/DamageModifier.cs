@@ -53,7 +53,7 @@ namespace Barotrauma
             private set
             {
                 rawAfflictionIdentifierString = value;
-                ParseAfflictionIdentifiers();
+                parsedAfflictionIdentifiers = rawAfflictionIdentifierString.ToIdentifiers().ToImmutableArray();
             }
         }
 
@@ -67,7 +67,7 @@ namespace Barotrauma
             private set
             {
                 rawAfflictionTypeString = value;
-                ParseAfflictionTypes();
+                parsedAfflictionTypes = rawAfflictionTypeString.ToIdentifiers().ToImmutableArray();
             }
         }
 
@@ -117,30 +117,6 @@ namespace Barotrauma
                 DebugConsole.AddWarning(msg, contentPackage: element.ContentPackage);
 #endif
             }
-        }
-
-        private void ParseAfflictionTypes()
-        {
-            if (string.IsNullOrWhiteSpace(rawAfflictionTypeString)) 
-            {
-                parsedAfflictionTypes = Enumerable.Empty<Identifier>().ToImmutableArray();
-                return;
-            }
-
-            parsedAfflictionTypes = rawAfflictionTypeString.Split(',', '，')
-                .Select(s => s.Trim()).ToIdentifiers().ToImmutableArray();
-        }
-
-        private void ParseAfflictionIdentifiers()
-        {
-            if (string.IsNullOrWhiteSpace(rawAfflictionIdentifierString))
-            {
-                parsedAfflictionIdentifiers = Enumerable.Empty<Identifier>().ToImmutableArray();
-                return;
-            }
-            
-            parsedAfflictionIdentifiers = rawAfflictionIdentifierString.Split(',', '，')
-                .Select(s => s.Trim()).ToIdentifiers().ToImmutableArray();
         }
 
         public bool MatchesAfflictionIdentifier(string identifier) =>

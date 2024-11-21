@@ -117,7 +117,7 @@ namespace Barotrauma
             objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
             if (item.IgnoreByAI(character) || Item.DeconstructItems.Contains(item))
             {

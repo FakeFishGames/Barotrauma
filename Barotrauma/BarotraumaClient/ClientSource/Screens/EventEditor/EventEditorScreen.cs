@@ -198,7 +198,7 @@ namespace Barotrauma
 
                         msgBox.Close();
                         string path = Path.Combine(exportPath, $"{nameInput.Text}.xml");
-                        File.WriteAllText(path, save.ToString());
+                        File.WriteAllText(path, save.ToString(), catchUnauthorizedAccessExceptions: false);
                         AskForConfirmation(TextManager.Get("EventEditor.OpenTextHeader"), TextManager.Get("EventEditor.OpenTextBody"), () =>
                         {
                             ToolBox.OpenFileWithShell(path);
@@ -942,7 +942,7 @@ namespace Barotrauma
                 return false;
             }
 
-            GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
+            GameSession gameSession = new GameSession(subInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
             TestGameMode gameMode = ((TestGameMode?)gameSession.GameMode) ?? throw new InvalidCastException();
 
             gameMode.SpawnOutpost = true;

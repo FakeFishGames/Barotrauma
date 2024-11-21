@@ -200,6 +200,10 @@ namespace Barotrauma
             {
                 condition = $"{value1.ColorizeObject()} {Operator.ColorizeObject()} {value2.ColorizeObject()}";
             }
+            else if (!Identifier.IsEmpty)
+            {
+                condition = $"{Identifier} {Condition}".ColorizeObject();
+            }
 
             return $"{ToolBox.GetDebugSymbol(succeeded.HasValue)} {nameof(CheckDataAction)} -> (Data: {Identifier.ColorizeObject()}, Success: {succeeded.ColorizeObject()}, Expression: {condition})";
         }

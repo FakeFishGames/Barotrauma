@@ -24,6 +24,9 @@ public sealed class EpicAccountId : AccountId
     public new static Option<EpicAccountId> Parse(string str)
     {
         if (str.IsNullOrWhiteSpace()) { return Option.None; }
+        //according to the documentation, this is the maximum length of the ID
+        const int MaxEpicAccountIDLength = 32 + 1;
+        if (str.Length > MaxEpicAccountIDLength + prefix.Length) { return Option.None; }
         if (str.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) { str = str[prefix.Length..]; }
         if (!str.IsHexString()) { return Option.None; }
 

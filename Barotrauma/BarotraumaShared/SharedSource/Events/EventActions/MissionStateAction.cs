@@ -1,4 +1,4 @@
-namespace Barotrauma
+﻿namespace Barotrauma
 {
 
     /// <summary>
@@ -31,6 +31,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": MissionIdentifier has not been configured.",
                     contentPackage: element.ContentPackage);
             }
+            if (Operation == OperationType.Add && State == 0)
+            {
+                DebugConsole.AddWarning($"Potential error in event \"{parentEvent.Prefab.Identifier}\": {nameof(MissionStateAction)} is set to add 0 to the mission state, which will do nothing.",
+                    contentPackage: element.ContentPackage);
+            }
         }
 
         public override bool IsFinished(ref string goTo)
@@ -55,7 +60,7 @@ namespace Barotrauma
                         mission.State = State;
                         break;
                     case OperationType.Add:
-                        mission.State += 1;
+                        mission.State += State;
                         break;
                 }
             }

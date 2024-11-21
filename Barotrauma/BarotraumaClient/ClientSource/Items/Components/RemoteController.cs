@@ -6,6 +6,7 @@ namespace Barotrauma.Items.Components
     {
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
             currentTarget?.DrawHUD(spriteBatch, Screen.Selected.Cam, character);
         }
 

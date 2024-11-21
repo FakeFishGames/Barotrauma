@@ -15,7 +15,7 @@ namespace Barotrauma
             Humans = element.Elements().Select(npcElement => new HumanPrefab(npcElement, file, Identifier)).ToImmutableArray();
         }
 
-        public static HumanPrefab? Get(Identifier setIdentifier, Identifier npcidentifier, bool logError = true)
+        public static HumanPrefab? Get(Identifier setIdentifier, Identifier npcidentifier, bool logError = true, ContentPackage? contentPackageToLogInError = null)
         {
             HumanPrefab? prefab = Sets.Where(set => set.Identifier == setIdentifier).SelectMany(npcSet => npcSet.Humans.Where(npcSetHuman => npcSetHuman.Identifier == npcidentifier)).FirstOrDefault();
 
@@ -23,7 +23,7 @@ namespace Barotrauma
             {
                 if (logError)
                 {
-                    DebugConsole.ThrowError($"Could not find human prefab \"{npcidentifier}\" from \"{setIdentifier}\".");
+                    DebugConsole.ThrowError($"Could not find human prefab \"{npcidentifier}\" from \"{setIdentifier}\".", contentPackage: contentPackageToLogInError);
                 }
                 return null;
             }

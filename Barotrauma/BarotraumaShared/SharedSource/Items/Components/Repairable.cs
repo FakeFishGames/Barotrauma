@@ -752,7 +752,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (ic is Powered powered && powered is not LightComponent)
                 {
-                    if (powered.Voltage >= powered.MinVoltage) { return true; }
+                    if (powered.HasPower) { return true; }
                 }
             }
 
