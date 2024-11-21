@@ -217,6 +217,7 @@ namespace Barotrauma
         public readonly float RequiredTime;
         public readonly int RequiredMoney;
         public readonly bool RequiresRecipe;
+        public readonly bool HideIfNoRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly ImmutableArray<Skill> RequiredSkills;
         public readonly uint RecipeHash;
@@ -250,6 +251,7 @@ namespace Barotrauma
             }
             var requiredItems = new List<RequiredItem>();
             RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
+            HideIfNoRecipe = element.GetAttributeBool("hideifnorecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
 
             int limitDefault = element.GetAttributeInt("fabricationlimit", -1);

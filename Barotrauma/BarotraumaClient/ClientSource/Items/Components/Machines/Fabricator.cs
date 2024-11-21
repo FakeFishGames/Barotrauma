@@ -771,6 +771,18 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                if (recipe.RequiresRecipe && recipe.HideIfNoRecipe)
+                {
+                    if (Character.Controlled != null)
+                    {
+                        if (!AnyOneHasRecipeForItem(Character.Controlled, recipe.TargetItem))
+                        {
+                            child.Visible = false;
+                            continue;
+                        }
+                    }
+                }
+
                 child.Visible =
                     (string.IsNullOrWhiteSpace(filter) || recipe.DisplayName.Contains(filter, StringComparison.OrdinalIgnoreCase)) &&
                     (!category.HasValue || recipe.TargetItem.Category.HasFlag(category.Value));
