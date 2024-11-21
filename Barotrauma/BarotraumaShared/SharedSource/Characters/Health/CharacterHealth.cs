@@ -1053,7 +1053,7 @@ namespace Barotrauma
                 }
 
                 AfflictionPrefab.Effect currentEffect = affliction.GetActiveEffect();
-                if (affliction.Strength > 0.0f && affliction.Strength >= affliction.Prefab.ActivationThreshold && currentEffect.ConvulseAmount > 0f)
+                if (affliction.Strength > 0.0f && affliction.Strength >= affliction.Prefab.ActivationThreshold && currentEffect != null && currentEffect.ConvulseAmount > 0f)
                 {
                     foreach (Limb limb in Character.AnimController.Limbs)
                     {
