@@ -1345,6 +1345,7 @@ namespace Barotrauma
         {
             if (ConversationAction.IsDialogOpen) { return; }
             if (!AllowCharacterSwitch) { return; }
+            if (character == null || character.Removed) { return; }
             //make the previously selected character wait in place for some time
             //(so they don't immediately start idling and walking away from their station)
             var aiController = Character.Controlled?.AIController;
@@ -1373,7 +1374,8 @@ namespace Barotrauma
                 if (index > lastIndex) { index = 0; }
                 if (index < 0) { index = lastIndex; }
 
-                if ((crewList.Content.GetChild(index)?.UserData as Character)?.IsOnPlayerTeam ?? false)
+                var candidateCharacter = crewList.Content.GetChild(index)?.UserData as Character;
+                if (candidateCharacter != null && !candidateCharacter.Removed && candidateCharacter.IsOnPlayerTeam)
                 {
                     return index;
                 }
