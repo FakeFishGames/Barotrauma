@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,11 @@ namespace Barotrauma
 
         public delegate void OnValueChangedHandler(GUISelectionCarousel<T> carousel);
         public OnValueChangedHandler? OnValueChanged;
+        
+        /// <summary>
+        /// Are there some conditions for selecting a particular element?
+        /// </summary>
+        public Func<T, bool>? ElementSelectionCondition { get; set; }
 
         public GUITextBlock TextBlock { get; private set; }
 
@@ -89,35 +95,9 @@ namespace Barotrauma
             GUIStyle.Apply(TextBlock, "TextBlock", this);
             RightButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), layoutGroup.RectTransform), style: "GUIButtonToggleRight");
             GUIStyle.Apply(RightButton, "RightButton", this);
-
-            RightButton.OnClicked += (btn, userData) =>
-            {
-                if (elements.Count < 2) { return false; }
-                if (SelectedElement == null)
-                {
-                    SelectElement(elements.First());
-                }
-                else
-                {
-                    int newIndex = (elements.IndexOf(SelectedElement) + 1) % elements.Count;
-                    SelectElement(elements[newIndex]);
-                }
-                return true;
-            };
-            LeftButton.OnClicked += (btn, userData) =>
-            {
-                if (elements.Count < 2) { return false; }
-                if (SelectedElement == null)
-                {
-                    SelectElement(elements.First());
-                }
-                else
-                {
-                    int newIndex = MathUtils.PositiveModulo((elements.IndexOf(SelectedElement) - 1), elements.Count);
-                    SelectElement(elements[newIndex]);
-                }
-                return true;
-            };
+            
+            RightButton.OnClicked += (_, _) => SelectNextValidElement();
+            LeftButton.OnClicked += (_, _) => SelectNextValidElement(directionLeft: true);
 
             if (newElements != null && newElements.Any()) 
             { 
@@ -140,9 +120,11 @@ namespace Barotrauma
                 SelectElement(null);
                 return;
             }
-            if (elements.FirstOrDefault(e => value.Equals(e.value)) is { } element)
+            var matchingElement = elements.Where(e => value.Equals(e.value)) // selection is in the set of possible values
+                .FirstOrDefault(e => ElementSelectionCondition == null || ElementSelectionCondition(e.value)); // selection matches extra conditions, if any
+            if (matchingElement != null)
             {
-                SelectElement(element);
+                SelectElement(matchingElement);
             }
         }
 
@@ -186,6 +168,43 @@ namespace Barotrauma
             {
                 SelectElement(newElement);
             }
+        }
+        /// <summary>
+        /// Refresh the current selection, for example if there are conditions for which elements are valid, and those might have changed
+        /// </summary>
+        public void Refresh()
+        {
+            if (SelectedElement != null)
+            {
+                if (ElementSelectionCondition == null || ElementSelectionCondition(SelectedElement.value))
+                {
+                    return;
+                }
+            }
+            
+            SelectElement(elements.FirstOrDefault(e => ElementSelectionCondition == null || ElementSelectionCondition(e.value)));
+        }
+
+        private bool SelectNextValidElement(bool directionLeft = false)
+        {
+            if (elements.Count < 2) { return false; }
+            
+            // Try to find a valid next/previous element
+            int currentIndex = SelectedElement == null ? -1 : elements.IndexOf(SelectedElement);
+            int newIndex = currentIndex;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                newIndex = directionLeft ? MathUtils.PositiveModulo((newIndex - 1), elements.Count) : (newIndex + 1) % elements.Count;
+                if (ElementSelectionCondition == null || ElementSelectionCondition(elements[newIndex].value))
+                {
+                    SelectElement(elements[newIndex]);
+                    return true;
+                }
+            }
+            
+            // No valid elements found
+            SelectElement(null);
+            return true;
         }
     }
 }

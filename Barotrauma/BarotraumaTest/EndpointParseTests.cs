@@ -1,9 +1,14 @@
 ﻿#nullable enable
+extern alias Client;
 using System.Net;
 using Barotrauma;
 using Xunit;
 using Barotrauma.Networking;
 using FluentAssertions;
+
+using Endpoint = Client::Barotrauma.Networking.Endpoint;
+using LidgrenEndpoint = Client::Barotrauma.Networking.LidgrenEndpoint;
+using SteamP2PEndpoint = Client::Barotrauma.Networking.SteamP2PEndpoint;
 
 namespace TestProject;
 
@@ -18,7 +23,7 @@ public class EndpointParseTests
                 Option<Endpoint>.Some(new LidgrenEndpoint(IPAddress.Loopback, 27015)),
                 options => options.RespectingRuntimeTypes());
     }
-    
+
     [Fact]
     public void TestLidgrenEndpointHostName()
     {
@@ -28,7 +33,7 @@ public class EndpointParseTests
                 Option<Endpoint>.Some(new LidgrenEndpoint(IPAddress.Loopback, 27015)),
                 options => options.RespectingRuntimeTypes());
     }
-    
+
     [Fact]
     public void TestLidgrenAddress()
     {
@@ -38,7 +43,7 @@ public class EndpointParseTests
                 Option<Address>.Some(new LidgrenAddress(IPAddress.Loopback)),
                 options => options.RespectingRuntimeTypes());
     }
-    
+
     [Fact]
     public void TestSteamP2PEndpoint()
     {
@@ -48,7 +53,7 @@ public class EndpointParseTests
                 Option<Endpoint>.Some(new SteamP2PEndpoint(new SteamId(76561198977850505))),
                 options => options.RespectingRuntimeTypes());
     }
-    
+
     [Fact]
     public void TestSteamP2PAddress()
     {

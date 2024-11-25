@@ -15,16 +15,33 @@ namespace Barotrauma
 
     partial class CharacterInventory : Inventory
     {
+        /// <summary>
+        /// How much access other characters have to the inventory?
+        /// <see cref="Restricted"/> = Only accessible when character is knocked down or handcuffed.
+        /// <see cref="Limited"/> = Can also access inventories of bots on the same team and friendly pets.
+        /// <see cref="Allowed"/> = Can also access other players in the same team (used for drag and drop give).
+        /// </summary>
+        public enum AccessLevel
+        {
+            Restricted,
+            Limited,
+            Allowed
+        }
+        
         private readonly Character character;
 
+        /// <summary>
+        /// Slot type for each inventory slot. Vanilla package has one type for each slot,
+        /// although it is technically possible to have multiple types for a single slot.
+        /// </summary>
         public InvSlotType[] SlotTypes
         {
             get;
             private set;
         }
-
-
-        public static readonly List<InvSlotType> AnySlot = new List<InvSlotType>() { InvSlotType.Any };
+        
+        public static readonly List<InvSlotType> AnySlot = new List<InvSlotType> { InvSlotType.Any };
+        public static readonly List<InvSlotType> BagSlot = new List<InvSlotType> { InvSlotType.Bag };
 
         public static bool IsHandSlotType(InvSlotType s) => s.HasFlag(InvSlotType.LeftHand) || s.HasFlag(InvSlotType.RightHand);
 
@@ -344,31 +361,40 @@ namespace Barotrauma
             }
 
             if (item.GetComponent<Pickable>() == null || item.AllowedSlots.None()) { return false; }
-
-            bool inSuitableSlot = false;
-            bool inWrongSlot = false;
+            
             int currentSlot = -1;
-            for (int i = 0; i < capacity; i++)
+            bool inWrongSlot = false;
+            bool inSuitableSlot = false;
+
+            // verify item's current placement
+            for (int slotIndex = 0; slotIndex < capacity; slotIndex++)
             {
-                if (slots[i].Contains(item))
+                if (!slots[slotIndex].Contains(item)) { continue; }
+                
+                // item is at least in this slot, can be in many
+                currentSlot = slotIndex;
+                
+                var firstMatchingSlotType = allowedSlots.FirstOrDefault(slot => slot.HasFlag(SlotTypes[slotIndex]));
+                
+                if (firstMatchingSlotType == default) // if (firstMatchingSlotType == InvSlotType.None)
                 {
-                    currentSlot = i;
-                    if (allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
+                    inWrongSlot = true;
+                    break;
+                }
+                
+                inSuitableSlot = true;
+                
+                // can have more than one flag, such as InvSlotType.InnerClothes | InvSlotType.OuterClothes
+                var individualFlags = EnumExtensions.GetIndividualFlags(firstMatchingSlotType);
+                
+                // if item is not in ALL required slot types
+                foreach (var flag in individualFlags)
+                {
+                    if (flag == InvSlotType.None) { continue; }
+                    if (!IsInLimbSlot(item, flag))
                     {
-                        if ((SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) && !allowedSlots.Contains(SlotTypes[i]))
-                        {
-                            //allowed slot = InvSlotType.RightHand | InvSlotType.LeftHand
-                            // -> make sure the item is in both hand slots
-                            inSuitableSlot = IsInLimbSlot(item, InvSlotType.RightHand) && IsInLimbSlot(item, InvSlotType.LeftHand);
-                        }
-                        else
-                        {
-                            inSuitableSlot = true;
-                        }
-                    }
-                    else if (!allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
-                    {
-                        inWrongSlot = true;
+                        inSuitableSlot = false;
+                        break;
                     }
                 }
             }
@@ -435,6 +461,8 @@ namespace Barotrauma
 
             return placedInSlot > -1;
         }
+        
+
 
         public bool IsAnySlotAvailable(Item item) => GetFreeAnySlot(item, inWrongSlot: false) > -1;
 
@@ -546,6 +574,7 @@ namespace Barotrauma
             {
                 item.AssignCampaignInteractionType(CampaignMode.InteractionType.None);
             }
+            item.Equipper = user;            
         }
 
         protected override void CreateNetworkEvent(Range slotRange)

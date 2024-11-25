@@ -19,7 +19,8 @@ namespace Barotrauma.Networking
         Order = 8,
         ServerLog = 9,
         ServerMessageBox = 10,
-        ServerMessageBoxInGame = 11
+        ServerMessageBoxInGame = 11,
+        Team = 12,
     }
 
     public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
@@ -50,7 +51,12 @@ namespace Barotrauma.Networking
             new Color(64, 240, 89),     //private
             new Color(255, 255, 255),   //console
             new Color(255, 255, 255),   //messagebox
-            new Color(255, 128, 0)      //order
+            new Color(255, 128, 0),      //order
+            new Color(),                    // ServerLog
+            new Color(),                    // ServerMessageBox
+            new Color(),                    // ServerMessageBoxInGame
+            //new Color(128, 0, 255),     // team
+            new Color(86, 91, 205), // team
         };
 
         public readonly string Text;
@@ -60,6 +66,15 @@ namespace Barotrauma.Networking
         {
             get
             {
+                if (Type == ChatMessageType.Radio && Sender is Item)
+                {
+                    if (translatedText.IsNullOrEmpty())
+                    {
+                        translatedText = TextManager.Get(Text).Fallback(Text).Value;
+                    }
+
+                    return translatedText;
+                }
                 if (Type.HasFlag(ChatMessageType.Server) || Type.HasFlag(ChatMessageType.Error) || Type.HasFlag(ChatMessageType.ServerLog))
                 {
                     if (translatedText.IsNullOrEmpty())
@@ -80,7 +95,8 @@ namespace Barotrauma.Networking
         public PlayerConnectionChangeType ChangeType;
         public string IconStyle;
 
-        public readonly Character Sender;
+        public Character SenderCharacter => Sender as Character;
+        public readonly Entity Sender;
         public readonly Client SenderClient;
 
         public readonly string SenderName;
@@ -125,7 +141,7 @@ namespace Barotrauma.Networking
 
         public ChatMode ChatMode { get; set; } = ChatMode.None; 
 
-        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
+        protected ChatMessage(string senderName, string text, ChatMessageType type, Entity sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             Text = text;
             Type = type;
@@ -139,7 +155,7 @@ namespace Barotrauma.Networking
             customTextColor = textColor;
         }
 
-        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
+        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Entity sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character != null && c.Character == sender), changeType, textColor);
         }

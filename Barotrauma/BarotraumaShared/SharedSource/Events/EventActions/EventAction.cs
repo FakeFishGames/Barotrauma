@@ -11,6 +11,10 @@ namespace Barotrauma
         {
             public string Text;
             public List<EventAction> Actions;
+            /// <summary>
+            /// Should this option end the conversation (closing the conversation prompt?). By default, options that don't have any actions inside them, or that only have a GoTo action, end the conversation.
+            /// But if there are other actions inside the option, the game assumes there may be some kind of a follow-up coming to the conversation, and by default leaves it open.
+            /// </summary>
             public bool EndConversation;
 
             private int currentSubAction = 0;
@@ -197,6 +201,12 @@ namespace Barotrauma
                 }
             }            
         }
+
+        protected string GetEventDebugName()
+        {
+            return ParentEvent?.Prefab?.Identifier is { IsEmpty: false } identifier ? $"the event \"{identifier}\"" : "an unknown event";
+        }
+
 
         /// <summary>
         /// Rich test to display in debugdraw

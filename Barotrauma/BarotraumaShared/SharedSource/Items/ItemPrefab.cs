@@ -340,8 +340,12 @@ namespace Barotrauma
                 }
             }
 
-            this.RequiredSkills = requiredSkills.ToImmutableArray();
-            this.RequiredItems = requiredItems.ToImmutableArray();
+            RequiredSkills = requiredSkills.ToImmutableArray();
+            RequiredItems = requiredItems
+                /*Put the items required by identifier first - since we must use specific items for those, we should check them before the ones that accept multiple items. 
+                 Otherwise we might end up choosing the "specific item" as the multi-option ingredient, and not have enough left for the "specific item" requirement */
+                .OrderBy(requiredItem => requiredItem is RequiredItemByIdentifier ? 0 : 1)
+                .ToImmutableArray();
 
             RecipeHash = GenerateHash();
         }
@@ -378,6 +382,7 @@ namespace Barotrauma
         public readonly int Amount;
         public readonly bool CampaignOnly;
         public readonly bool NotCampaign;
+        public readonly bool NotPvP;
         public readonly bool TransferOnlyOnePerContainer;
         public readonly bool AllowTransfersHere = true;
 
@@ -395,6 +400,7 @@ namespace Barotrauma
             MinCondition = element.GetAttributeFloat("mincondition", 0f);
             CampaignOnly = element.GetAttributeBool("campaignonly", CampaignOnly);
             NotCampaign = element.GetAttributeBool("notcampaign", NotCampaign);
+            NotPvP = element.GetAttributeBool("notpvp", NotPvP);
             TransferOnlyOnePerContainer = element.GetAttributeBool("TransferOnlyOnePerContainer", TransferOnlyOnePerContainer);
             AllowTransfersHere = element.GetAttributeBool("AllowTransfersHere", AllowTransfersHere);
 
@@ -438,8 +444,12 @@ namespace Barotrauma
 
         public int GetPrice(Location location = null)
         {
-            int price = BasePrice;
-            return location?.GetAdjustedMechanicalCost(price) ?? price;
+            int price = location?.GetAdjustedMechanicalCost(BasePrice) ?? BasePrice;
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                price = (int)(price * campaign.Settings.ShipyardPriceMultiplier);
+            }
+            return price;
         }
 
         public SwappableItem(ContentXElement element)
@@ -500,7 +510,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsOverride => Prefabs.IsOverride(this);
 
-        private readonly XElement originalElement;
+        private readonly ContentXElement originalElement;
         public ContentXElement ConfigElement { get; private set; }
 
         public ImmutableArray<DeconstructItem> DeconstructItems { get; private set; }
@@ -721,6 +731,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.No, description: "Should the character who's selected the item grab it (hold their hand on it, the same way as they do when repairing)? Defaults to true on items that have an ItemContainer component.")]
         public bool GrabWhenSelected { get; set; }
 
+        [Serialize(true, IsPropertySaveable.No, description: "Are AI characters allowed to deselect the item when they're idling (and wander off?).")]
+        public bool AllowDeselectWhenIdling { get; private set; }
+
         private float health;
 
         [Serialize(100.0f, IsPropertySaveable.No)]
@@ -746,6 +759,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool DamagedByExplosions { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool DamagedByContainedItemExplosions { get; private set; }
 
         [Serialize(1f, IsPropertySaveable.No)]
         public float ExplosionDamageMultiplier { get; private set; }
@@ -874,7 +890,8 @@ namespace Barotrauma
             int extraStackSize = inventory switch
             {
                 ItemInventory { Owner: Item it } i => (int)it.StatManager.GetAdjustedValueAdditive(ItemTalentStats.ExtraStackSize, i.ExtraStackSize),
-                CharacterInventory { Owner: Character { Info: { } info } } i => i.ExtraStackSize + (int)info.GetSavedStatValueWithAll(StatTypes.InventoryExtraStackSize, Category.ToIdentifier()),
+                CharacterInventory { Owner: Character { Info: { } info } } i => 
+                    i.ExtraStackSize + EnumExtensions.GetIndividualFlags(Category).Sum(c => (int)info.GetSavedStatValueWithAll(StatTypes.InventoryExtraStackSize, c.ToIdentifier())),
                 not null => inventory.ExtraStackSize,
                 null => 0
             };
@@ -1036,11 +1053,13 @@ namespace Barotrauma
                 AllowAsExtraCargo = ConfigElement.GetAttributeBool("allowasextracargo", false);
             }
 
-            this.tags = ConfigElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet();
-            if (!Tags.Any())
+            List<Identifier> tags = ConfigElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToList();
+            //this was previously handled in ItemComponent, moved here to make it part of the immutable tags of the item
+            if (ConfigElement.Descendants().Any(e => e.NameAsIdentifier() == "lightcomponent")) 
             {
-                this.tags = ConfigElement.GetAttributeIdentifierArray("Tags", Array.Empty<Identifier>()).ToImmutableHashSet();
+                tags.Add("light".ToIdentifier());
             }
+            this.tags = tags.ToImmutableHashSet();
 
             if (ConfigElement.GetAttribute("cargocontainername") != null)
             {
@@ -1382,10 +1401,14 @@ namespace Barotrauma
         public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
             priceInfo = GetPriceInfo(store);
+            Identifier? faction = store?.Location.Faction?.Prefab.Identifier;
+            Identifier? secondaryFaction = store?.Location.SecondaryFaction?.Prefab.Identifier;
+
             return
                 priceInfo is { CanBeBought: true } &&
                 (store?.Location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty &&
-                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => store?.Location.Faction?.Prefab.Identifier == p.Key || store?.Location.SecondaryFaction?.Prefab.Identifier == p.Key));
+                (priceInfo.RequiredFaction.IsEmpty || faction == priceInfo.RequiredFaction || secondaryFaction == priceInfo.RequiredFaction) &&
+                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => faction == p.Key || secondaryFaction == p.Key));
         }
 
         public bool CanBeBoughtFrom(Location location)
@@ -1566,7 +1589,7 @@ namespace Barotrauma
 
         public void InheritFrom(ItemPrefab parent)
         {
-            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement, CheckXML).FromPackage(ConfigElement.ContentPackage);
+            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement, CheckXML);
             ParseConfigElement(parent);
 
             void CheckXML(XElement originalElement, XElement variantElement, XElement result)

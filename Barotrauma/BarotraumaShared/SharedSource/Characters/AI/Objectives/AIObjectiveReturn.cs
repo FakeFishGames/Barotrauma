@@ -7,20 +7,23 @@ namespace Barotrauma
     class AIObjectiveReturn : AIObjective
     {
         public override Identifier Identifier { get; set; } = "return".ToIdentifier();
-        public Submarine ReturnTarget { get; }
+        public Submarine Target { get; }
 
         private AIObjectiveGoTo moveInsideObjective, moveOutsideObjective;
         private bool usingEscapeBehavior, isSteeringThroughGap;
 
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
 
         public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
         {
-            ReturnTarget = GetReturnTarget(Submarine.MainSubs) ?? GetReturnTarget(Submarine.Loaded);
-            if (ReturnTarget == null)
+            Target = GetReturnTarget(Submarine.MainSubs) ?? GetReturnTarget(Submarine.Loaded);
+            if (Target == null)
             {
-                DebugConsole.AddSafeError("Error with a Return objective: no suitable return target found");
+                if (GameMain.GameSession.GameMode is not TestGameMode)
+                {
+                    DebugConsole.AddWarning($"({character.DisplayName}) No suitable return target found. Cannot return back to the main sub.");   
+                }
                 Abandon = true;
             }
 
@@ -54,7 +57,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (ReturnTarget == null)
+            if (Target == null)
             {
                 Abandon = true;
                 return;
@@ -62,7 +65,7 @@ namespace Barotrauma
             bool shouldUseEscapeBehavior = false;
             if (character.CurrentHull != null || isSteeringThroughGap)
             {
-                if (character.Submarine == null || !character.Submarine.IsConnectedTo(ReturnTarget))
+                if (character.Submarine == null || !character.Submarine.IsConnectedTo(Target))
                 {
                     // Character is on another sub that is not connected to the target sub, use the escape behavior to get them out
                     shouldUseEscapeBehavior = true;
@@ -76,13 +79,13 @@ namespace Barotrauma
                         Abandon = true;
                     }
                 }
-                else if (character.Submarine != ReturnTarget)
+                else if (character.Submarine != Target)
                 {
                     // Character is on another sub that is connected to the target sub, create a Go To objective to reach the target sub
                     if (moveInsideObjective == null)
                     {
                         Hull targetHull = null;
-                        foreach (var d in ReturnTarget.ConnectedDockingPorts.Values)
+                        foreach (var d in Target.ConnectedDockingPorts.Values)
                         {
                             if (!d.Docked) { continue; }
                             if (d.DockingTarget == null) { continue; }
@@ -143,7 +146,7 @@ namespace Barotrauma
                 Hull targetHull = null;
                 float targetDistanceSquared = float.MaxValue;
                 bool targetIsAirlock = false;
-                foreach (var hull in ReturnTarget.GetHulls(false))
+                foreach (var hull in Target.GetHulls(false))
                 {
                     bool hullIsAirlock = hull.IsAirlock;
                     if(hullIsAirlock || (!targetIsAirlock && hull.LeadsOutside(character)))
@@ -178,18 +181,14 @@ namespace Barotrauma
             usingEscapeBehavior = shouldUseEscapeBehavior;
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
-            if (IsCompleted)
-            {
-                return true;
-            }
-            if (ReturnTarget == null)
+            if (Target == null)
             {
                 Abandon = true;
                 return false;
             }
-            if (character.Submarine == ReturnTarget)
+            if (character.Submarine == Target)
             {
                 IsCompleted = true;
             }

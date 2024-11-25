@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -125,7 +125,7 @@ namespace Barotrauma
 
             public NetCrewMember(CharacterInfo info)
             {
-                CharacterInfoID = info.GetIdentifierUsingOriginalName();
+                CharacterInfoID = info.ID;
                 Afflictions = ImmutableArray<NetAffliction>.Empty;
             }
 
@@ -138,7 +138,7 @@ namespace Barotrauma
             {
                 foreach (CharacterInfo info in crew)
                 {
-                    if (info.GetIdentifierUsingOriginalName() == CharacterInfoID)
+                    if (info.ID == CharacterInfoID)
                     {
                         return info;
                     }
@@ -158,6 +158,14 @@ namespace Barotrauma
         public Action? OnUpdate;
 
         private readonly CampaignMode? campaign;
+
+        /// <summary>
+        /// Characters whose afflictions have changed (processed periodically, refreshing the UI client-side, sending updates to clients server-side
+        /// </summary>
+        private readonly HashSet<Character> charactersWithAfflictionChanges = new HashSet<Character>();
+
+        private float processAfflictionChangesTimer;
+        private const float ProcessAfflictionChangesInterval = 1.0f;
 
         public MedicalClinic(CampaignMode campaign)
         {
@@ -305,35 +313,8 @@ namespace Barotrauma
 
         private void OnAfflictionCountChangedPrivate(Character character)
         {
-            if (character is not { CharacterHealth: { } health, Info: { } info }) { return; }
-
-            ImmutableArray<NetAffliction> afflictions = GetAllAfflictions(health);
-
-#if CLIENT
-            if (GameMain.NetworkMember is null)
-            {
-                ui?.UpdateAfflictions(new NetCrewMember(info, afflictions));
-            }
-
-            ui?.UpdateCrewPanel();
-#elif SERVER
-            foreach (AfflictionSubscriber sub in afflictionSubscribers.ToList())
-            {
-                if (sub.Expiry < DateTimeOffset.Now)
-                {
-                    afflictionSubscribers.Remove(sub);
-                    continue;
-                }
-
-                if (sub.Target == info)
-                {
-                    ServerSend(new NetCrewMember(info, afflictions),
-                        header: NetworkHeader.AFFLICTION_UPDATE,
-                        deliveryMethod: DeliveryMethod.Unreliable,
-                        targetClient: sub.Subscriber);
-                }
-            }
-#endif
+            if (character?.Info == null) { return; }
+            charactersWithAfflictionChanges.Add(character);
         }
 
         public int GetTotalCost() => PendingHeals.SelectMany(static h => h.Afflictions).Aggregate(0, static (current, affliction) => current + affliction.Price);

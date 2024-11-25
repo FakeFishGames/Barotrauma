@@ -127,7 +127,7 @@ namespace Barotrauma
             writePkgElem(CorePackage);
             RegularPackages.ForEach(writePkgElem);
 
-            if (!Directory.Exists(SavePath)) { Directory.CreateDirectory(SavePath); }
+            if (!Directory.Exists(SavePath)) { Directory.CreateDirectory(SavePath, catchUnauthorizedAccessExceptions: false); }
             newDoc.SaveSafe(Path.Combine(SavePath, ToolBox.RemoveInvalidFileNameChars($"{Name}.xml")));
         }
     }

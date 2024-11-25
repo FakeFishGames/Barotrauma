@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -129,7 +129,7 @@ namespace Barotrauma.Items.Components
 
         public void RemoveComponents(IReadOnlyCollection<CircuitBoxComponent> node)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             var ids = node.Select(static n => n.ID).ToImmutableArray();
 
             if (GameMain.NetworkMember is null)
@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
 
         public void AddWire(CircuitBoxConnection one, CircuitBoxConnection two)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             if (GameMain.NetworkMember is null)
             {
                 Connect(one, two, static delegate { }, CircuitBoxWire.SelectedWirePrefab);
@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
 
         public void RemoveWires(IReadOnlyCollection<CircuitBoxWire> wires)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             var ids = wires.Select(static w => w.ID).ToImmutableArray();
             if (GameMain.NetworkMember is null)
             {
@@ -230,7 +230,7 @@ namespace Barotrauma.Items.Components
 
         public void MoveComponent(Vector2 moveAmount, IReadOnlyCollection<CircuitBoxNode> moveables)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             var ids = ImmutableArray.CreateBuilder<ushort>();
             var ios = ImmutableArray.CreateBuilder<CircuitBoxInputOutputNode.Type>();
             var labelIds = ImmutableArray.CreateBuilder<ushort>();
@@ -265,7 +265,7 @@ namespace Barotrauma.Items.Components
 
         public void AddComponent(ItemPrefab prefab, Vector2 pos)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             if (GameMain.NetworkMember is null)
             {
                 ItemPrefab resource;
@@ -292,7 +292,7 @@ namespace Barotrauma.Items.Components
 
         public void RenameLabel(CircuitBoxLabelNode label, Color color, NetLimitedString header, NetLimitedString body)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             if (GameMain.NetworkMember is null)
             {
                 label.EditText(header, body);
@@ -303,9 +303,20 @@ namespace Barotrauma.Items.Components
             CreateClientEvent(new CircuitBoxRenameLabelEvent(label.ID, color, header, body));
         }
 
+        public void SetConnectionLabelOverrides(CircuitBoxInputOutputNode node, Dictionary<string, string> newOverrides)
+        {
+            if (GameMain.NetworkMember is null)
+            {
+                node.ReplaceAllConnectionLabelOverrides(newOverrides);
+                return;
+            }
+
+            CreateClientEvent(new CircuitBoxRenameConnectionLabelsEvent(node.NodeType, newOverrides.ToNetDictionary()));
+        }
+
         public void ResizeNode(CircuitBoxNode node, CircuitBoxResizeDirection dir, Vector2 amount)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             var resize = node.ResizeBy(dir, amount);
             if (GameMain.NetworkMember is null)
             {
@@ -330,7 +341,7 @@ namespace Barotrauma.Items.Components
 
         public void AddLabel(Vector2 pos)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             if (GameMain.NetworkMember is null)
             {
                 AddLabelInternal(ICircuitBoxIdentifiable.FindFreeID(Labels), GUIStyle.Blue, pos, CircuitBoxLabelNode.DefaultHeaderText, NetLimitedString.Empty);
@@ -342,7 +353,7 @@ namespace Barotrauma.Items.Components
 
         public void RemoveLabel(IReadOnlyCollection<CircuitBoxLabelNode> labels)
         {
-            if (Locked) { return; }
+            if (IsLocked()) { return; }
             if (!labels.Any()) { return; }
 
             var ids = labels.Select(static n => n.ID).ToImmutableArray();
@@ -528,6 +539,12 @@ namespace Barotrauma.Items.Components
                             _ => node.Position
                         };
                     }
+
+                    foreach (var labelOverride in data.LabelOverrides)
+                    {
+                        RenameConnectionLabelsInternal(labelOverride.Type, labelOverride.Override.ToDictionary());
+                    }
+
                     wasInitializedByServer = true;
                     break;
                 }
@@ -554,6 +571,12 @@ namespace Barotrauma.Items.Components
                 {
                     var data = INetSerializableStruct.Read<CircuitBoxResizeLabelEvent>(msg);
                     ResizeLabelInternal(data.ID, data.Position, data.Size);
+                    break;
+                }
+                case CircuitBoxOpcode.RenameConnections:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRenameConnectionLabelsEvent>(msg);
+                    RenameConnectionLabelsInternal(data.Type, data.Override.ToDictionary());
                     break;
                 }
                 default:

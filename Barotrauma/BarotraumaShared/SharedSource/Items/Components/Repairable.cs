@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Abilities;
-using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -9,6 +8,14 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    interface IDeteriorateUnderStress
+    {
+        public float CurrentStress { get; }
+    }
+
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
         private readonly LocalizedString header;
@@ -80,6 +87,34 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "How much faster the device can deteriorate when under stress (e.g. when operating at full speed/power)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float MaxStressDeteriorationMultiplier
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "At what speed/power must the device be operating at to be considered \"under stress\"."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float StressDeteriorationThreshold
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "How fast the deterioration speed increases when under stress."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float StressDeteriorationIncreaseSpeed
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "How fast the deterioration speed decreases when not under stress."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, DecimalCount = 2)]
+        public float StressDeteriorationDecreaseSpeed
+        {
+            get;
+            set;
+        }
+
         [Serialize(100.0f, IsPropertySaveable.Yes, description: "The amount of time it takes to fix the item with insufficient skill levels."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float FixDurationLowSkill
         {
@@ -139,6 +174,8 @@ namespace Barotrauma.Items.Components
         private float tinkeringDuration;
         private float tinkeringStrength;
 
+        public float StressDeteriorationMultiplier { get; private set; } = 1.0f;
+
         public float TinkeringStrength => tinkeringStrength;
 
         private bool tinkeringPowersDevices;
@@ -147,7 +184,6 @@ namespace Barotrauma.Items.Components
         public bool IsBelowRepairThreshold => item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold;
 
         public bool IsBelowRepairIconThreshold => item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold / 2;
-          
 
         public enum FixActions : int
         {
@@ -420,6 +456,21 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(conditionSignal, "condition_out");
 
+            foreach (var component in item.Components)
+            {
+                if (component is IDeteriorateUnderStress deteriorateUnderStress)
+                {
+                    if (deteriorateUnderStress.CurrentStress >= StressDeteriorationThreshold)
+                    {
+                        StressDeteriorationMultiplier = Math.Min(StressDeteriorationMultiplier + deltaTime * StressDeteriorationIncreaseSpeed, MaxStressDeteriorationMultiplier);
+                    }
+                    else
+                    {
+                        StressDeteriorationMultiplier = Math.Max(StressDeteriorationMultiplier - deltaTime * StressDeteriorationDecreaseSpeed, 1.0f);
+                    }
+                }
+            }
+
             if (ForceDeteriorationTimer > 0.0f)
             {
                 ForceDeteriorationTimer -= deltaTime;
@@ -599,7 +650,7 @@ namespace Barotrauma.Items.Components
             {
                 float deteriorationSpeed = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
                 if (ForceDeteriorationTimer > 0.0f) { deteriorationSpeed = Math.Max(deteriorationSpeed, 1.0f); }
-                item.Condition -= deteriorationSpeed * deltaTime;
+                item.Condition -= deteriorationSpeed * StressDeteriorationMultiplier * deltaTime;
             }            
         }
 
@@ -701,7 +752,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (ic is Powered powered && powered is not LightComponent)
                 {
-                    if (powered.Voltage >= powered.MinVoltage) { return true; }
+                    if (powered.HasPower) { return true; }
                 }
             }
 

@@ -37,6 +37,7 @@ namespace Barotrauma
         AddLabel,
         RemoveLabel,
         ResizeLabel,
+        RenameConnections,
         ServerInitialize
     }
 
@@ -157,6 +158,10 @@ namespace Barotrauma
     internal readonly record struct CircuitBoxRenameLabelEvent(ushort LabelId, Color Color, NetLimitedString NewHeader, NetLimitedString NewBody) : INetSerializableStruct;
 
     [NetworkSerialize]
+    internal readonly record struct CircuitBoxRenameConnectionLabelsEvent(CircuitBoxInputOutputNode.Type Type, NetDictionary<string, string> Override) : INetSerializableStruct;
+
+
+    [NetworkSerialize]
     internal readonly record struct CircuitBoxErrorEvent(string Message) : INetSerializableStruct;
 
     [NetworkSerialize]
@@ -164,6 +169,7 @@ namespace Barotrauma
         ImmutableArray<CircuitBoxServerCreateComponentEvent> Components,
         ImmutableArray<CircuitBoxServerCreateWireEvent> Wires,
         ImmutableArray<CircuitBoxServerAddLabelEvent> Labels,
+        ImmutableArray<CircuitBoxRenameConnectionLabelsEvent> LabelOverrides,
         Vector2 InputPos,
         Vector2 OutputPos) : INetSerializableStruct;
 
@@ -198,6 +204,8 @@ namespace Barotrauma
                     => CircuitBoxOpcode.RemoveLabel,
                 CircuitBoxResizeLabelEvent
                     => CircuitBoxOpcode.ResizeLabel,
+                CircuitBoxRenameConnectionLabelsEvent
+                    => CircuitBoxOpcode.RenameConnections,
                 _ => throw new ArgumentOutOfRangeException(nameof(Data))
             };
     }

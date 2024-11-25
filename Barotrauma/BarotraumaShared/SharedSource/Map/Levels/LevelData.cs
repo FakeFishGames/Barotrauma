@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.RuinGeneration;
 
 namespace Barotrauma
 {
@@ -46,6 +47,19 @@ namespace Barotrauma
         public SubmarineInfo ForceBeaconStation;
 
         public SubmarineInfo ForceWreck;
+
+        public RuinGenerationParams ForceRuinGenerationParams;
+
+        public enum ThalamusSpawn
+        {
+            Random,
+            Forced,
+            Disabled
+        }
+        
+        public static SubmarineInfo ConsoleForceWreck;
+        public static SubmarineInfo ConsoleForceBeaconStation;
+        public static ThalamusSpawn ForceThalamus = ThalamusSpawn.Random;
 
         public bool AllowInvalidOutpost;
 
@@ -99,6 +113,11 @@ namespace Barotrauma
                 return Math.Max(Size.Y * Physics.DisplayToRealWorldRatio, Level.DefaultRealWorldCrushDepth);
             }
         }
+        
+        /// <summary>
+        /// Inclusive (matching the min an max values is accepted).
+        /// </summary>
+        public bool IsAllowedDifficulty(float minDifficulty, float maxDifficulty) => Difficulty >= minDifficulty && Difficulty <= maxDifficulty;
 
         public LevelData(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome)
         {
@@ -211,10 +230,11 @@ namespace Barotrauma
         public LevelData(LocationConnection locationConnection)
         {
             Seed = locationConnection.Locations[0].LevelData.Seed + locationConnection.Locations[1].LevelData.Seed;
+            bool connectionIsBiomeTransition = locationConnection.Locations[0].Biome.Identifier != locationConnection.Locations[1].Biome.Identifier;
             Biome = locationConnection.Biome;
             Type = LevelType.LocationConnection;
             Difficulty = locationConnection.Difficulty;
-            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.LocationConnection, Difficulty, Biome.Identifier);
+            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.LocationConnection, Difficulty, Biome.Identifier, biomeTransition: connectionIsBiomeTransition);
 
             float sizeFactor = MathUtils.InverseLerp(
                 MapGenerationParams.Instance.SmallLevelConnectionLength,
@@ -259,7 +279,7 @@ namespace Barotrauma
                 (int)MathUtils.Round(GenerationParams.Height, Level.GridCellSize));
         }
 
-        public static LevelData CreateRandom(string seed = "", float? difficulty = null, LevelGenerationParams generationParams = null, bool requireOutpost = false)
+        public static LevelData CreateRandom(string seed = "", float? difficulty = null, LevelGenerationParams generationParams = null, Identifier biomeId = default, bool requireOutpost = false, bool pvpOnly = false)
         {
             if (string.IsNullOrEmpty(seed))
             {
@@ -268,14 +288,21 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            LevelType type = generationParams == null ?
-                (requireOutpost ? LevelType.Outpost : LevelType.LocationConnection) :
-                 generationParams.Type;
+            LevelType type = generationParams?.Type ??
+                             (requireOutpost
+                                      ? LevelType.Outpost
+                                      : LevelType.LocationConnection);
 
             float selectedDifficulty = difficulty ?? Rand.Range(30.0f, 80.0f, Rand.RandSync.ServerAndClient);
 
-            if (generationParams == null) { generationParams = LevelGenerationParams.GetRandom(seed, type, selectedDifficulty); }
-            var biome =
+            Biome biome = null;
+            if (!biomeId.IsEmpty && biomeId != "Random")
+            {
+                Biome.Prefabs.TryGet(biomeId, out biome);
+            }
+            generationParams ??= LevelGenerationParams.GetRandom(seed, type, selectedDifficulty, pvpOnly: pvpOnly, biomeId: biomeId);
+
+            biome ??=
                 Biome.Prefabs.FirstOrDefault(b => generationParams?.AllowedBiomeIdentifiers.Contains(b.Identifier) ?? false) ??
                 Biome.Prefabs.GetRandom(Rand.RandSync.ServerAndClient);
 

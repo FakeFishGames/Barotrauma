@@ -11,9 +11,10 @@ namespace Barotrauma
     /// </summary>
     class TagAction : EventAction
     {
-        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8 }
+        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8, Enemy = 16, Ruin = 32 }
+        public enum CharacterTeam {  Any = 0, None = 1, Team1 = 2, Team2 = 4, FriendlyNPC = 8 }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "What criteria to use to select the entities to target. Valid values are players, player, traitor, nontraitor, nontraitorplayer, bot, crew, humanprefabidentifier:[id], jobidentifier:[id], structureidentifier:[id], structurespecialtag:[tag], itemidentifier:[id], itemtag:[tag], hull, hullname:[name], submarine:[type], eventtag:[tag].")]
+        [Serialize("", IsPropertySaveable.Yes, description: "What criteria to use to select the entities to target. Valid values are players, player, traitor, nontraitor, nontraitorplayer, bot, crew, humanprefabidentifier:[id], jobidentifier:[id], structureidentifier:[id], structurespecialtag:[tag], itemidentifier:[id], itemtag:[tag], hull, hullname:[name], submarine:[type], eventtag:[tag], speciesname:[id].")]
         public string Criteria { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "The tag to apply to the target.")]
@@ -21,6 +22,9 @@ namespace Barotrauma
 
         [Serialize(SubType.Any, IsPropertySaveable.Yes, description: "The type of submarine the target needs to be in.")]
         public SubType SubmarineType { get; set; }
+
+        [Serialize(CharacterTeam.Any, IsPropertySaveable.Yes, description: "The team the target needs to be on.")]
+        public CharacterTeam Team { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, "If set, the target must be in an outpost module that has this tag.")]
         public Identifier RequiredModuleTag { get; set; }
@@ -33,6 +37,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.Yes, description: "If there are multiple matching targets, should all of them be tagged or one chosen randomly?")]
         public bool ChooseRandom { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes, description: "If choosing a random target, targets with this tag can optionally be excluded.")]
+        public Identifier ChooseRandomExcludingTag { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the event continue if the TagAction can't find any valid targets?")]
         public bool ContinueIfNoTargetsFound { get; set; }
@@ -68,6 +75,7 @@ namespace Barotrauma
                 ("bot", v => TagBots(playerCrewOnly: false)),
                 ("crew", v => TagCrew()),
                 ("humanprefabidentifier", TagHumansByIdentifier),
+                ("humanprefabtag", TagHumansByTag),
                 ("jobidentifier", TagHumansByJobIdentifier),
                 ("structureidentifier", TagStructuresByIdentifier),
                 ("structurespecialtag", TagStructuresBySpecialTag),
@@ -77,6 +85,7 @@ namespace Barotrauma
                 ("hullname", TagHullsByName),
                 ("submarine", TagSubmarinesByType),
                 ("eventtag", TagByEventTag),
+                ("speciesname", TagBySpeciesName)
             }.Select(t => (t.k.ToIdentifier(), t.v)).ToImmutableDictionary();
         }
 
@@ -86,7 +95,14 @@ namespace Barotrauma
         }
         public override void Reset()
         {
+            taggingDone = false;
+            cantFindTargets = false;
             isFinished = false;
+        }
+
+        private void TagBySpeciesName(Identifier speciesName)
+        {
+            AddTarget(Tag, Character.CharacterList.Where(c => c.SpeciesName == speciesName && CharacterTeamMatches(c)));
         }
 
         private void TagByEventTag(Identifier eventTag)
@@ -99,7 +115,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tag, 
                 ScriptedEvent.TargetPredicate.EntityType.Character, 
-                e => e is Character c && c.IsPlayer && (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters));
+                e => e is Character c && c.IsPlayer && (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters) && CharacterTeamMatches(c));
         }
 
         private void TagTraitors()
@@ -150,12 +166,17 @@ namespace Barotrauma
 
         private void TagHumansByIdentifier(Identifier identifier)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab?.Identifier == identifier));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab?.Identifier == identifier && CharacterTeamMatches(c)));
+        }
+
+        private void TagHumansByTag(Identifier tag)
+        {
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab != null && c.HumanPrefab.GetTags().Contains(tag)));
         }
 
         private void TagHumansByJobIdentifier(Identifier jobIdentifier)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HasJob(jobIdentifier)));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HasJob(jobIdentifier) && CharacterTeamMatches(c)));
         }
 
         private void TagStructuresByIdentifier(Identifier identifier)
@@ -217,6 +238,7 @@ namespace Barotrauma
         private bool IsValidItem(Item it)
         {
             return 
+                !it.IsLayerHidden && /*items in hidden layers are treated as if they didn't exist, regardless if hidden items should be allowed*/
                 (!it.HiddenInGame || AllowHiddenItems) && 
                 ModuleTagMatches(it) && 
                 //if the item has just spawned, it may be in a hull but not moved into the coordinate space of the hull yet
@@ -226,7 +248,7 @@ namespace Barotrauma
 
         private bool MatchesRequirements(Entity e)
         {
-            return ModuleTagMatches(e) && SubmarineTypeMatches(e.Submarine);
+            return ModuleTagMatches(e) && SubmarineTypeMatches(e as Submarine ?? e.Submarine);
         }
 
         private bool ModuleTagMatches(Entity e)
@@ -260,6 +282,23 @@ namespace Barotrauma
             return hull != null && hull.OutpostModuleTags.Contains(RequiredModuleTag);
         }
 
+        private bool CharacterTeamMatches(Character character)
+        {
+            if (Team == CharacterTeam.Any) { return true;  }
+            switch (Team)
+            {
+                case CharacterTeam.None:
+                    return character.TeamID == CharacterTeamType.None;
+                case CharacterTeam.Team1:
+                    return character.TeamID == CharacterTeamType.Team1;
+                case CharacterTeam.Team2:
+                    return character.TeamID == CharacterTeamType.Team2;
+                case CharacterTeam.FriendlyNPC:
+                    return character.TeamID == CharacterTeamType.FriendlyNPC;
+                default:
+                    return false;
+            }
+        } 
 
         private bool SubmarineTypeMatches(Submarine sub)
         {
@@ -273,7 +312,7 @@ namespace Barotrauma
             switch (sub.Info.Type)
             {
                 case Barotrauma.SubmarineType.Player:
-                    return submarineType.HasFlag(SubType.Player) && sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle;
+                    return submarineType.HasFlag(SubType.Player) && !sub.IsRespawnShuttle;
                 case Barotrauma.SubmarineType.Outpost:
                 case Barotrauma.SubmarineType.OutpostModule:
                     return submarineType.HasFlag(SubType.Outpost);
@@ -281,6 +320,10 @@ namespace Barotrauma
                     return submarineType.HasFlag(SubType.Wreck);
                 case Barotrauma.SubmarineType.BeaconStation:
                     return submarineType.HasFlag(SubType.BeaconStation);
+                case Barotrauma.SubmarineType.EnemySubmarine:
+                    return submarineType.HasFlag(SubType.Enemy);
+                case Barotrauma.SubmarineType.Ruin:
+                    return submarineType.HasFlag(SubType.Ruin);
                 default:
                     return false;
             }
@@ -350,6 +393,11 @@ namespace Barotrauma
 
         private void TagRandom(Identifier tag, IEnumerable<Entity> entities)
         {
+            if (!ChooseRandomExcludingTag.IsEmpty)
+            {
+                var excludedTargets = ParentEvent.GetTargets(ChooseRandomExcludingTag);
+                entities = entities.Except(excludedTargets);
+            }
             if (entities.None()) 
             {
                 cantFindTargets = true;
@@ -407,7 +455,7 @@ namespace Barotrauma
 
         public override string ToDebugString()
         {
-            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TagAction)} -> (Criteria: {Criteria.ColorizeObject()}, Tag: {Tag.ColorizeObject()}, Sub: {SubmarineType.ColorizeObject()})";
+            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TagAction)} -> (Criteria: {Criteria.ColorizeObject()}, Tag: {Tag.ColorizeObject()}, Sub: {SubmarineType.ColorizeObject()}, Team: {Team.ColorizeObject()})";
         }
     }
 }

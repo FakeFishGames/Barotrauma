@@ -122,7 +122,7 @@ namespace Barotrauma.Sounds
 
         static void MuffleBuffer(float[] buffer, int sampleRate)
         {
-            var filter = new LowpassFilter(sampleRate, 1600);
+            var filter = new LowpassFilter(sampleRate, SoundPlayer.MuffleFilterFrequency);
             filter.Process(buffer);
         }
 

@@ -265,7 +265,7 @@ namespace Barotrauma.Transition
                 subs = getFiles(oldSubsPath, "*.sub");
                 itemAssemblies = getFiles(oldItemAssembliesPath, "*.xml");
                 
-                string[] allOldMods = Directory.GetDirectories(oldModsPath, "*", System.IO.SearchOption.TopDirectoryOnly);
+                string[] allOldMods = Directory.GetDirectories(oldModsPath, "*");
 
                 var publishedItems = await SteamManager.Workshop.GetPublishedItems();
                 foreach (var modDir in allOldMods)

@@ -2108,13 +2108,13 @@ namespace Barotrauma
                 deliveryPrompt.Buttons[0].OnClicked = (btn, userdata) =>
                 {
                     ConfirmPurchase(deliverImmediately: true);
-                    deliveryPrompt.Close();
+                    deliveryPrompt?.Close();
                     return true;
                 };
                 deliveryPrompt.Buttons[1].OnClicked = (btn, userdata) =>
                 {
                     ConfirmPurchase(deliverImmediately: false);
-                    deliveryPrompt.Close();
+                    deliveryPrompt?.Close();
                     return true;
                 };
             }

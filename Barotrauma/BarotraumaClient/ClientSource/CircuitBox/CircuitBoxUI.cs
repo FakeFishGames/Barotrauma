@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public List<CircuitBoxWireRenderer> VirtualWires = new();
 
-        public bool Locked => CircuitBox.Locked;
+        public bool Locked => CircuitBox.IsLocked();
 
         public CircuitBoxUI(CircuitBox box)
         {
@@ -350,6 +350,10 @@ namespace Barotrauma
             {
                 component.Sprite.Draw(spriteBatch, PlayerInput.MousePosition);
             }
+            if (PlayerInput.PrimaryMouseButtonHeld() && MouseSnapshotHandler.LastConnectorUnderCursor.IsSome())
+            {
+                CircuitBoxWire.SelectedWirePrefab.Sprite.Draw(spriteBatch, PlayerInput.MousePosition, CircuitBoxWire.SelectedWirePrefab.SpriteColor, scale: camera.Zoom);
+            }
 
             foreach (var c in CircuitBox.Components)
             {
@@ -360,11 +364,11 @@ namespace Barotrauma
             {
                 n.DrawHUD(spriteBatch, camera);
             }
-            
+
             if (Locked)
             {
                 LocalizedString lockedText = TextManager.Get("CircuitBoxLocked")
-                    .Fallback(TextManager.Get("ConnectionLocked"));
+                    .Fallback(TextManager.Get("ConnectionLocked"), useDefaultLanguageIfFound: false);
 
                 Vector2 size = GUIStyle.LargeFont.MeasureString(lockedText);
                 Vector2 pos = new Vector2(screenRect.Center.X - size.X / 2, screenRect.Top + screenRect.Height * 0.05f);
@@ -579,9 +583,25 @@ namespace Barotrauma
 
             if (isMouseOn)
             {
-                if (CircuitBox.HeldComponent.IsNone() && PlayerInput.PrimaryMouseButtonDown())
+                if (PlayerInput.PrimaryMouseButtonDown())
                 {
-                    MouseSnapshotHandler.StartDragging();
+                    if (CircuitBox.HeldComponent.IsNone())
+                    {
+                        MouseSnapshotHandler.StartDragging();
+                    }
+                    else
+                    {
+                        MouseSnapshotHandler.ClearSnapshot();
+                    }
+                }
+
+                if (PlayerInput.DoubleClicked() && MouseSnapshotHandler.FindWireUnderCursor(cursorPos).IsNone())
+                {
+                    var topmostNode = GetTopmostNode(MouseSnapshotHandler.FindNodesUnderCursor(cursorPos));
+                    if (topmostNode is CircuitBoxLabelNode label && circuitComponent is not null)
+                    {
+                        label.PromptEditText(circuitComponent);
+                    }
                 }
 
                 if (PlayerInput.MidButtonHeld() || (PlayerInput.IsAltDown() && PlayerInput.PrimaryMouseButtonHeld()))
@@ -629,6 +649,7 @@ namespace Barotrauma
 
                 if (PlayerInput.PrimaryMouseButtonClicked())
                 {
+                    bool selectedNode = false;
                     if (MouseSnapshotHandler.IsResizing && MouseSnapshotHandler.LastResizeAffectedNode.TryUnwrap(out var r))
                     {
                         var (dir, node) = r;
@@ -647,7 +668,7 @@ namespace Barotrauma
                         }
                         else if (!MouseSnapshotHandler.IsWiring)
                         {
-                            TrySelectComponentsUnderCursor();
+                            selectedNode = TrySelectComponentsUnderCursor();
                         }
                     }
 
@@ -658,8 +679,15 @@ namespace Barotrauma
                             CircuitBox.AddWire(one, two);
                         }
                     }
-
-                    CircuitBox.SelectWires(MouseSnapshotHandler.LastWireUnderCursor.TryUnwrap(out var wire) ? ImmutableArray.Create(wire) : ImmutableArray<CircuitBoxWire>.Empty, !PlayerInput.IsShiftDown());
+                    
+                    if (MouseSnapshotHandler.LastWireUnderCursor.TryUnwrap(out var wire) && !MouseSnapshotHandler.IsDragging && !selectedNode)
+                    {
+                        CircuitBox.SelectWires(ImmutableArray.Create(wire), !PlayerInput.IsShiftDown());
+                    }
+                    else if (CircuitBox.Wires.Any(static wire => wire.IsSelectedByMe))
+                    {
+                        CircuitBox.SelectWires(ImmutableArray<CircuitBoxWire>.Empty, !PlayerInput.IsShiftDown());
+                    }
 
                     CircuitBox.HeldComponent = Option.None;
                     MouseSnapshotHandler.EndDragging();
@@ -732,11 +760,17 @@ namespace Barotrauma
             }
         }
 
-        private void TrySelectComponentsUnderCursor()
+        private bool TrySelectComponentsUnderCursor()
         {
             CircuitBoxNode? foundNode = GetTopmostNode(MouseSnapshotHandler.GetLastComponentsUnderCursor());
+            
+            if (foundNode is CircuitBoxLabelNode && MouseSnapshotHandler.LastWireUnderCursor.IsSome())
+            {
+                foundNode = null;
+            }
 
             CircuitBox.SelectComponents(foundNode is null ? ImmutableArray<CircuitBoxNode>.Empty : ImmutableArray.Create(foundNode), !PlayerInput.IsShiftDown());
+            return foundNode is not null;
         }
 
         private void OpenContextMenu()
@@ -752,6 +786,7 @@ namespace Barotrauma
                 if (wireOption.TryUnwrap(out var wire))
                 {
                     CircuitBox.RemoveWires(wire.IsSelected ? wireSelection : ImmutableArray.Create(wire));
+                    return;
                 }
 
                 switch (nodeOption)
@@ -767,9 +802,18 @@ namespace Barotrauma
 
             var editLabel = new ContextMenuOption(TextManager.Get("circuitboxeditlabel"), isEnabled: nodeOption is CircuitBoxLabelNode && !Locked, () =>
             {
-                if (nodeOption is not CircuitBoxLabelNode label || circuitComponent is null) { return; }
+                if (circuitComponent is null) { return; }
+                if (nodeOption is not CircuitBoxLabelNode label) { return; }
 
                 label.PromptEditText(circuitComponent);
+            });
+
+            var editConnections = new ContextMenuOption(TextManager.Get("circuitboxrenameconnections"), isEnabled: nodeOption is CircuitBoxInputOutputNode && !Locked, () =>
+            {
+                if (circuitComponent is null) { return; }
+                if (nodeOption is not CircuitBoxInputOutputNode io) { return; }
+
+                io.PromptEdit(circuitComponent);
             });
 
             var addLabelOption = new ContextMenuOption(TextManager.Get("circuitboxaddlabel"), isEnabled: !Locked, () =>
@@ -777,7 +821,7 @@ namespace Barotrauma
                 CircuitBox.AddLabel(cursorPos);
             });
 
-            ContextMenuOption[] allOptions = { addLabelOption, editLabel, option };
+            ContextMenuOption[] allOptions = { addLabelOption, editLabel, editConnections, option };
 
             // show component name in the header to better indicate what is about to be deleted
             if (nodeOption is CircuitBoxComponent comp)

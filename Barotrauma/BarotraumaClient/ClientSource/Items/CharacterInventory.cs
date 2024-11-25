@@ -785,7 +785,7 @@ namespace Barotrauma
                 {
                     if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory
                     {
-                        if (character.HeldItems.Any(i => i.OwnInventory != null && i.OwnInventory.CanBePut(item)))
+                        if (character.HeldItems.Any(i => i.OwnInventory != null && i.OwnInventory.CanBePut(item) && character.CanAccessInventory(i.OwnInventory)))
                         {
                             return QuickUseAction.PutToEquippedItem;
                         }
@@ -843,13 +843,14 @@ namespace Barotrauma
                 else if (character.HeldItems.FirstOrDefault(i =>
                     i.OwnInventory != null &&
                     i.OwnInventory.Container.DrawInventory &&
+                    character.CanAccessInventory(i.OwnInventory) &&
                     (i.OwnInventory.CanBePut(item) || ((i.OwnInventory.Capacity == 1 || i.OwnInventory.Container.HasSubContainers) && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))) is { } equippedContainer)
                 {
                     if (allowEquip)
                     {
                         if (!character.HasEquippedItem(item))
                         {
-                            if (equippedContainer.GetComponent<ItemContainer>() is { QuickUseMovesItemsInside: false})
+                            if (equippedContainer.GetComponent<ItemContainer>() is { QuickUseMovesItemsInside: false })
                             {
                                 //put the item in a hand slot if that hand is free
                                 if ((item.AllowedSlots.Contains(InvSlotType.RightHand) && character.Inventory.GetItemInLimbSlot(InvSlotType.RightHand) == null) ||

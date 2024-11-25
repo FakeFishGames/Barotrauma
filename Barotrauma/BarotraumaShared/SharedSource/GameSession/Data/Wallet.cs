@@ -53,7 +53,7 @@ namespace Barotrauma
     internal struct NetWalletSetSalaryUpdate : INetSerializableStruct
     {
         [NetworkSerialize]
-        public ushort Target;
+        public Option<ushort> Target;
 
         [NetworkSerialize(MinValueInt = 0, MaxValueInt = 100)]
         public int NewRewardDistribution;
@@ -117,13 +117,13 @@ namespace Barotrauma
         public override int Balance
         {
             get => 0;
-            set => new InvalidOperationException("Tried to set the balance on an invalid wallet");
+            set => throw new InvalidOperationException("Tried to set the balance on an invalid wallet");
         }
 
         public override int RewardDistribution
         {
             get => 0;
-            set => new InvalidOperationException("Tried to set the reward distribution on an invalid wallet");
+            set => throw new InvalidOperationException("Tried to set the reward distribution on an invalid wallet");
         }
     }
 
@@ -134,7 +134,7 @@ namespace Barotrauma
         public const string LowerCaseSaveElementName = "wallet";
 
         private const string AttributeNameBalance = "balance",
-                             AttrubuteNameRewardDistribution = "rewarddistribution",
+                             AttributeNameRewardDistribution = "rewarddistribution",
                              SaveElementName = "Wallet";
 
         public readonly Option<Character> Owner;
@@ -152,7 +152,15 @@ namespace Barotrauma
         public virtual int RewardDistribution
         {
             get => rewardDistribution;
-            set => rewardDistribution = ClampRewardDistribution(value);
+            set
+            {
+                rewardDistribution = ClampRewardDistribution(value); 
+
+                if (Owner.TryUnwrap(out var character) && character.Info is { } info)
+                {
+                    info.LastRewardDistribution = Option.Some(rewardDistribution);
+                }
+            }
         }
 
         public Wallet(Option<Character> owner)
@@ -163,12 +171,14 @@ namespace Barotrauma
         public Wallet(Option<Character> owner, XElement element): this(owner)
         {
             balance = ClampBalance(element.GetAttributeInt(AttributeNameBalance, 0));
-            rewardDistribution = ClampBalance(element.GetAttributeInt(AttrubuteNameRewardDistribution, 0));
+            rewardDistribution = ClampBalance(element.GetAttributeInt(AttributeNameRewardDistribution, 0));
         }
 
         public XElement Save()
         {
-            XElement element = new XElement(SaveElementName, new XAttribute(AttributeNameBalance, Balance), new XAttribute(AttrubuteNameRewardDistribution, RewardDistribution));
+            XElement element = new XElement(SaveElementName,
+                new XAttribute(AttributeNameBalance, Balance),
+                new XAttribute(AttributeNameRewardDistribution, RewardDistribution));
             return element;
         }
 
@@ -195,6 +205,11 @@ namespace Barotrauma
             SettingsChanged(balanceChanged: Option<int>.Some(-price), rewardChanged: Option<int>.None());
         }
 
+        /// <summary>
+        /// Sets how much salary the wallet owner should receive from mission rewards.
+        /// Bank's salary determines the default salary for new characters.
+        /// </summary>
+        /// <param name="value"></param>
         public void SetRewardDistribution(int value)
         {
             int oldValue = RewardDistribution;

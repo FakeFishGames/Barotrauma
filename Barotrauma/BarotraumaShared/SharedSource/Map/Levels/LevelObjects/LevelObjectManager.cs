@@ -103,7 +103,7 @@ namespace Barotrauma
 
             foreach (Structure structure in Structure.WallList)
             {
-                if (!structure.HasBody || structure.HiddenInGame) { continue; }
+                if (!structure.HasBody || structure.IsHidden) { continue; }
 
                 LevelObjectPrefab.SpawnPosType spawnPosType = LevelObjectPrefab.SpawnPosType.None;
                 if (level.Ruins.Any(r => r.Submarine == structure.Submarine))
@@ -178,12 +178,21 @@ namespace Barotrauma
                 {
                     float minDistance = level.Size.X * 0.2f;
 
+                    bool allowAtStart = prefab.AllowAtStart;
+                    bool allowAtEnd = prefab.AllowAtEnd;
+                    if (GameMain.GameSession?.GameMode is PvPMode)
+                    {
+                        //in PvP mode, the object must be allowed at both the start and end to be placed at either end
+                        //since the 2nd team starts at the end of the level, it'd be unfair to allow e.g. ballast flora to spawn at the end of the level but not the start
+                        allowAtEnd = allowAtStart = allowAtEnd && allowAtStart;
+                    }
+
                     suitableSpawnPositions.Add(prefab, 
                         availableSpawnPositions.Where(sp =>
                             sp.SpawnPosTypes.Any(type => prefab.SpawnPos.HasFlag(type)) && 
                             sp.Length >= prefab.MinSurfaceWidth &&
-                            (prefab.AllowAtStart || !level.IsCloseToStart(sp.GraphEdge.Center, minDistance)) &&
-                            (prefab.AllowAtEnd || !level.IsCloseToEnd(sp.GraphEdge.Center, minDistance)) &&
+                            (allowAtStart || !level.IsCloseToStart(sp.GraphEdge.Center, minDistance)) &&
+                            (allowAtEnd || !level.IsCloseToEnd(sp.GraphEdge.Center, minDistance)) &&
                             (sp.Alignment == Alignment.Any || prefab.Alignment.HasFlag(sp.Alignment))).ToList());
 
                     spawnPositionWeights.Add(prefab,

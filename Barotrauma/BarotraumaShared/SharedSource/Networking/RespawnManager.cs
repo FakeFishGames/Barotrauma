@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -23,6 +24,14 @@ namespace Barotrauma.Networking
         /// </summary>
         public static float SkillLossPercentageOnImmediateRespawn => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnImmediateRespawn ?? 10.0f;
 
+        public static bool UseDeathPrompt
+        {
+            get
+            {
+                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null;
+            }
+        }
+
         public enum State
         {
             Waiting,
@@ -31,122 +40,151 @@ namespace Barotrauma.Networking
         }
 
         private readonly NetworkMember networkMember;
-        private readonly Steering shuttleSteering;
-        private readonly List<Door> shuttleDoors;
-        private readonly ItemContainer respawnContainer;
+        private readonly Dictionary<CharacterTeamType, List<Steering>> shuttleSteering = new Dictionary<CharacterTeamType, List<Steering>>();
+        private readonly Dictionary<CharacterTeamType, List<Door>> shuttleDoors = new Dictionary<CharacterTeamType, List<Door>>();
+        private readonly Dictionary<CharacterTeamType, List<ItemContainer>> respawnContainers = new Dictionary<CharacterTeamType, List<ItemContainer>>();
 
-        //items created during respawn
-        //any respawn items left in the shuttle are removed when the shuttle despawns
-        private readonly List<Item> respawnItems = new List<Item>();
+        private class TeamSpecificState
+        {
+            public readonly CharacterTeamType TeamID;
 
-        //characters who spawned during the last respawn
-        private readonly List<Character> respawnedCharacters = new List<Character>();
+            public State State;
+            public readonly List<Character> RespawnedCharacters = new List<Character>();
+            /// <summary>
+            /// When will the shuttle be dispatched with respawned characters
+            /// </summary>
+            public DateTime RespawnTime;
+            /// <summary>
+            /// When will the sub start heading back out of the level
+            /// </summary>
+            public DateTime ReturnTime;
+            public DateTime DespawnTime;
+            public bool RespawnCountdownStarted;
+            public bool ReturnCountdownStarted;
+
+            public int PendingRespawnCount, RequiredRespawnCount;
+            public int PrevPendingRespawnCount, PrevRequiredRespawnCount;
+
+            public State CurrentState;
+
+            //items created during respawn
+            //any respawn items left in the shuttle are removed when the shuttle despawns
+            public readonly List<Item> RespawnItems = new List<Item>();
+
+            public TeamSpecificState(CharacterTeamType teamID)
+            {
+                TeamID = teamID;
+            }
+        }
+
+        private readonly Dictionary<CharacterTeamType, TeamSpecificState> teamSpecificStates = new Dictionary<CharacterTeamType, TeamSpecificState>();
 
         public bool UsingShuttle
         {
-            get { return RespawnShuttle != null; }
-        }
-
-        /// <summary>
-        /// When will the shuttle be dispatched with respawned characters
-        /// </summary>
-        public DateTime RespawnTime { get; private set; }
-
-        /// <summary>
-        /// When will the sub start heading back out of the level
-        /// </summary>
-        public DateTime ReturnTime { get; private set; }
-
-        public bool RespawnCountdownStarted
-        {
-            get;
-            private set;
-        }
-
-        public bool ReturnCountdownStarted
-        {
-            get;
-            private set;
-        }
-
-        public State CurrentState { get; private set; }
-
-        public static bool UseRespawnPrompt
-        {
-            get
-            {
-                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
-            }
+            get { return respawnShuttles.Any(); }
         }
 
         private float maxTransportTime;
 
         private float updateReturnTimer;
 
-        public bool CanRespawnAgain =>
-            /*can never respawn again if we're currently transporting and transport time is set to be infinite*/
-            !(CurrentState == State.Transporting && maxTransportTime <= 0.0f);
+        public bool CanRespawnAgain(CharacterTeamType team)
+        {
+            if (teamSpecificStates.TryGetValue(team, out var state))
+            {
+                return state.CurrentState == State.Transporting && maxTransportTime <= 0.0f;
+            }
+            return false;
+        }
 
-        public Submarine RespawnShuttle { get; private set; }
+        private Dictionary<CharacterTeamType, Submarine> respawnShuttles = new Dictionary<CharacterTeamType, Submarine>();
+
+        public IEnumerable<Submarine> RespawnShuttles => respawnShuttles.Values;
 
         public RespawnManager(NetworkMember networkMember, SubmarineInfo shuttleInfo)
             : base(null, Entity.RespawnManagerID)
         {
             this.networkMember = networkMember;
 
-            if (shuttleInfo != null)
+            teamSpecificStates = new Dictionary<CharacterTeamType, TeamSpecificState>();
+            int teamCount = GameMain.GameSession?.GameMode is PvPMode ? 2 : 1;
+
+            respawnShuttles.Clear();
+            List<WifiComponent> wifiComponents = new List<WifiComponent>();
+            for (int i = 0; i < teamCount; i++)
             {
-                RespawnShuttle = new Submarine(shuttleInfo, true);
-                RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
-                //set crush depth slightly deeper than the main sub's
-                RespawnShuttle.SetCrushDepth(Math.Max(RespawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f));
+                var teamId = i == 0 ? CharacterTeamType.Team1 : CharacterTeamType.Team2;
+                teamSpecificStates.Add(teamId, new TeamSpecificState(teamId));
 
-                //prevent wifi components from communicating between the respawn shuttle and other subs
-                List<WifiComponent> wifiComponents = new List<WifiComponent>();
-                foreach (Item item in Item.ItemList)
+                if (shuttleInfo != null && networkMember.ServerSettings is not { RespawnMode: RespawnMode.Permadeath })
                 {
-                    if (item.Submarine == RespawnShuttle) { wifiComponents.AddRange(item.GetComponents<WifiComponent>()); }                   
-                }
-                foreach (WifiComponent wifiComponent in wifiComponents)
-                {
-                    wifiComponent.TeamID = CharacterTeamType.FriendlyNPC;
-                }
+                    shuttleDoors.Add(teamId, new List<Door>());
+                    shuttleSteering.Add(teamId, new List<Steering>());
+                    respawnContainers.Add(teamId, new List<ItemContainer>());
 
-                ResetShuttle();
-                
-                shuttleDoors = new List<Door>();
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.Submarine != RespawnShuttle) { continue; }
-
-                    if (item.HasTag(Tags.RespawnContainer))
+                    var respawnShuttle = new Submarine(shuttleInfo, true);
+                    if (teamId == CharacterTeamType.Team2)
                     {
-                        respawnContainer = item.GetComponent<ItemContainer>();
+                        respawnShuttle.FlipX();
                     }
 
-                    var steering = item.GetComponent<Steering>();
-                    if (steering != null) { shuttleSteering = steering; }
-
-                    var door = item.GetComponent<Door>();
-                    if (door != null) { shuttleDoors.Add(door); }
-
-                    //lock all wires to prevent the players from messing up the electronics
-                    var connectionPanel = item.GetComponent<ConnectionPanel>();
-                    if (connectionPanel != null)
+                    respawnShuttles.Add(teamId, respawnShuttle);
+                    respawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
+                    //set crush depth slightly deeper than the main sub's
+                    if (Submarine.MainSub != null)
                     {
-                        foreach (Connection connection in connectionPanel.Connections)
+                        respawnShuttle.SetCrushDepth(Math.Max(respawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f));
+                    }
+
+                    //prevent wifi components from communicating between the respawn shuttle and other subs
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.Submarine == respawnShuttle) { wifiComponents.AddRange(item.GetComponents<WifiComponent>()); }
+                    }
+                    foreach (WifiComponent wifiComponent in wifiComponents)
+                    {
+                        wifiComponent.TeamID = CharacterTeamType.FriendlyNPC;
+                    }
+
+                    ResetShuttle(teamSpecificStates[teamId]);
+
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.Submarine != respawnShuttle) { continue; }
+
+                        if (item.HasTag(Tags.RespawnContainer))
                         {
-                            foreach (Wire wire in connection.Wires)
+                            if (GameMain.GameSession?.Missions != null)
                             {
-                                if (wire != null) wire.Locked = true;
+                                foreach (var mission in GameMain.GameSession.Missions)
+                                {
+                                    //append the mission type so respawn gear can be configured per mission type (e.g. respawncontainer_kingofthehull)
+                                    item.AddTag(Tags.RespawnContainer.AppendIfMissing("_" + mission.Prefab.Type));
+                                }
+                            }
+                            respawnContainers[teamId].Add(item.GetComponent<ItemContainer>());
+                        }
+
+                        var steering = item.GetComponent<Steering>();
+                        if (steering != null) { shuttleSteering[teamId].Add(steering); }
+
+                        var door = item.GetComponent<Door>();
+                        if (door != null) { shuttleDoors[teamId].Add(door); }
+
+                        //lock all wires to prevent the players from messing up the electronics
+                        var connectionPanel = item.GetComponent<ConnectionPanel>();
+                        if (connectionPanel != null)
+                        {
+                            foreach (Connection connection in connectionPanel.Connections)
+                            {
+                                foreach (Wire wire in connection.Wires)
+                                {
+                                    if (wire != null) wire.Locked = true;
+                                }
                             }
                         }
                     }
                 }
-            }
-            else
-            {
-                RespawnShuttle = null;
             }
 
 #if SERVER
@@ -159,105 +197,99 @@ namespace Barotrauma.Networking
 
         private bool OnShuttleCollision(Fixture sender, Fixture other, Contact contact)
         {
+            if (sender.Body.UserData is not Submarine sub || !teamSpecificStates.ContainsKey(sub.TeamID)) { return true; }
             //ignore collisions with the top barrier when returning
-            return CurrentState != State.Returning || other?.Body != Level.Loaded?.TopBarrier;
+            return teamSpecificStates[sub.TeamID].CurrentState != State.Returning || other?.Body != Level.Loaded?.TopBarrier;
         }
 
         public void Update(float deltaTime)
         {
-            if (RespawnShuttle == null)
+            foreach (var teamSpecificState in teamSpecificStates.Values)
             {
-                if (CurrentState != State.Waiting)
+                if (RespawnShuttles.None())
                 {
-                    CurrentState = State.Waiting;
+                    if (teamSpecificState.CurrentState != State.Waiting)
+                    {
+                        teamSpecificState.CurrentState = State.Waiting;
+                    }
                 }
-            }
-
-            switch (CurrentState)
-            {
-                case State.Waiting:
-                    UpdateWaiting(deltaTime);
-                    break;
-                case State.Transporting:
-                    UpdateTransporting(deltaTime);
-                    break;
-                case State.Returning:
-                    UpdateReturning(deltaTime);
-                    break;
+                switch (teamSpecificState.CurrentState)
+                {
+                    case State.Waiting:
+                        UpdateWaiting(teamSpecificState);
+                        break;
+                    case State.Transporting:
+                        UpdateTransporting(teamSpecificState, deltaTime);
+                        break;
+                    case State.Returning:
+                        UpdateReturning(teamSpecificState, deltaTime);
+                        break;
+                }
             }
         }
 
-        partial void UpdateWaiting(float deltaTime);
+        partial void UpdateWaiting(TeamSpecificState teamSpecificState);
         
-        private void UpdateTransporting(float deltaTime)
+        private void UpdateTransporting(TeamSpecificState teamSpecificState, float deltaTime)
         {
             //infinite transport time -> shuttle wont return
             if (maxTransportTime <= 0.0f) return;
-            UpdateTransportingProjSpecific(deltaTime);
+            UpdateTransportingProjSpecific(teamSpecificState, deltaTime);
         }
 
-        partial void UpdateTransportingProjSpecific(float deltaTime);
+        partial void UpdateTransportingProjSpecific(TeamSpecificState teamSpecificState, float deltaTime);
 
         public void ForceRespawn()
         {
-            ResetShuttle();
-            RespawnCountdownStarted = true;
-            RespawnTime = DateTime.Now;
-            CurrentState = State.Waiting;
+            foreach (var teamSpecificState in teamSpecificStates.Values)
+            {
+                if (teamSpecificState.CurrentState == State.Transporting) { continue; }
+                ResetShuttle(teamSpecificState);
+                teamSpecificState.RespawnCountdownStarted = true;
+                teamSpecificState.RespawnTime = DateTime.Now;
+                teamSpecificState.CurrentState = State.Waiting;
+            }
         }
 
-        private void UpdateReturning(float deltaTime)
+        private void UpdateReturning(TeamSpecificState teamSpecificState, float deltaTime)
         {
             updateReturnTimer += deltaTime;
             if (updateReturnTimer > 1.0f)
             {
                 updateReturnTimer = 0.0f;
-                shuttleSteering?.SetDestinationLevelStart();
-                UpdateReturningProjSpecific(deltaTime);
+                shuttleSteering[teamSpecificState.TeamID].ForEach(steering => steering.SetDestinationLevelStart());
+                UpdateReturningProjSpecific(teamSpecificState, deltaTime);
             }
         }
 
-        partial void UpdateReturningProjSpecific(float deltaTime);
-        
-        private IEnumerable<CoroutineStatus> ForceShuttleToPos(Vector2 position, float speed)
+        partial void UpdateReturningProjSpecific(TeamSpecificState teamSpecificState, float deltaTime);
+
+        private Submarine GetShuttle(CharacterTeamType team)
         {
-            if (RespawnShuttle == null)
+            if (respawnShuttles.TryGetValue(team, out Submarine sub))
             {
-                yield return CoroutineStatus.Success;
+                return sub;
             }
-
-            while (Math.Abs(position.Y - RespawnShuttle.WorldPosition.Y) > 100.0f)
-            {
-                Vector2 diff = position - RespawnShuttle.WorldPosition;
-                if (diff.LengthSquared() > 0.01f)
-                {
-                    Vector2 displayVel = Vector2.Normalize(diff) * speed;
-                    RespawnShuttle.SubBody.Body.LinearVelocity = ConvertUnits.ToSimUnits(displayVel);
-                }
-                yield return CoroutineStatus.Running;
-
-                if (RespawnShuttle.SubBody == null) yield return CoroutineStatus.Success;
-            }
-
-            yield return CoroutineStatus.Success;
+            return null;
         }
 
-        private void ResetShuttle()
+        private void ResetShuttle(TeamSpecificState teamSpecificState)
         {
-            ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
+            teamSpecificState.ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
 
 #if SERVER
-            despawnTime = ReturnTime + new TimeSpan(0, 0, seconds: 30);
+            teamSpecificState.DespawnTime = teamSpecificState.ReturnTime + new TimeSpan(0, 0, seconds: 30);
 #endif
-
-            if (RespawnShuttle == null) { return; }
+            var shuttle = GetShuttle(teamSpecificState.TeamID);
+            if (shuttle == null) { return; }
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != RespawnShuttle) { continue; }
+                if (item.Submarine != shuttle) { continue; }
                 
                 //remove respawn items that have been left in the shuttle
-                if (respawnItems.Contains(item) || respawnContainer?.Item != null && item.IsOwnedBy(respawnContainer.Item))
+                if (teamSpecificState.RespawnItems.Contains(item) ||
+                    respawnContainers[teamSpecificState.TeamID].Any(container => item.IsOwnedBy(container.Item)))
                 {
                     Spawner.AddItemToRemoveQueue(item);
                     continue;
@@ -292,11 +324,11 @@ namespace Barotrauma.Networking
 #endif
                 }
             }
-            respawnItems.Clear();
+            teamSpecificState.RespawnItems.Clear();
 
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != RespawnShuttle) { continue; }
+                if (wall.Submarine != shuttle) { continue; }
                 for (int i = 0; i < wall.SectionCount; i++)
                 {
                     wall.AddDamage(i, -100000.0f);
@@ -305,7 +337,7 @@ namespace Barotrauma.Networking
 
             foreach (Hull hull in Hull.HullList)
             {
-                if (hull.Submarine != RespawnShuttle) { continue; }
+                if (hull.Submarine != shuttle) { continue; }
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
                 hull.BallastFlora?.Remove();
@@ -314,8 +346,8 @@ namespace Barotrauma.Networking
             Dictionary<Character, Vector2> characterPositions = new Dictionary<Character, Vector2>();
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Submarine != RespawnShuttle) { continue; }
-                if (!respawnedCharacters.Contains(c)) 
+                if (c.Submarine != shuttle) { continue; }
+                if (!teamSpecificState.RespawnedCharacters.Contains(c)) 
                 {
                     characterPositions.Add(c, c.WorldPosition);
                     continue; 
@@ -336,13 +368,25 @@ namespace Barotrauma.Networking
                 }
             }
 
-            RespawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + RespawnShuttle.Borders.Height));
-            RespawnShuttle.Velocity = Vector2.Zero;
+            shuttle.SetPosition(new Vector2(
+                teamSpecificState.TeamID == CharacterTeamType.Team1 ? Level.Loaded.StartPosition.X : Level.Loaded.EndPosition.X, 
+                Level.Loaded.Size.Y + shuttle.Borders.Height));
+            shuttle.Velocity = Vector2.Zero;            
 
             foreach (var characterPosition in characterPositions)
             {
                 characterPosition.Key.TeleportTo(characterPosition.Value);
             }
+        }
+
+        public static float GetReducedSkill(CharacterInfo characterInfo, Skill skill, float skillLossPercentage, float? currentSkillLevel = null)
+        {
+            var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
+            float currentLevel = currentSkillLevel ?? skill.Level;
+            if (skillPrefab == null) { return currentLevel; }
+            var levelRange = skillPrefab.GetLevelRange(isPvP: GameMain.GameSession?.GameMode is PvPMode);
+            if (currentLevel < levelRange.End) { return currentLevel; }
+            return MathHelper.Lerp(currentLevel, levelRange.End, skillLossPercentage / 100.0f);
         }
 
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos);
@@ -351,18 +395,74 @@ namespace Barotrauma.Networking
             RespawnCharactersProjSpecific(shuttlePos);
         }
 
-        public Vector2 FindSpawnPos()
+        public static AfflictionPrefab GetRespawnPenaltyAfflictionPrefab()
+        {
+            return AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
+        }
+
+        public static Affliction GetRespawnPenaltyAffliction()
+        {
+            return GetRespawnPenaltyAfflictionPrefab()?.Instantiate(10.0f);
+        }
+
+        public static void GiveRespawnPenaltyAffliction(Character character)
+        {
+            var respawnPenaltyAffliction = GetRespawnPenaltyAffliction();
+            if (respawnPenaltyAffliction != null)
+            {
+                character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction);
+            }
+        }
+
+        public Vector2 FindSpawnPos(Submarine respawnShuttle, Submarine mainSub)
         {
             if (Level.Loaded == null || Submarine.MainSub == null) { return Vector2.Zero; }
 
-            Rectangle dockedBorders = RespawnShuttle.GetDockedBorders();
+            Rectangle dockedBorders = respawnShuttle.GetDockedBorders();
             Vector2 diffFromDockedBorders =
                 new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
-                - new Vector2(RespawnShuttle.Borders.Center.X, RespawnShuttle.Borders.Y - RespawnShuttle.Borders.Height / 2);
+                - new Vector2(respawnShuttle.Borders.Center.X, respawnShuttle.Borders.Y - respawnShuttle.Borders.Height / 2);
 
             int minWidth = Math.Max(dockedBorders.Width, 1000);
             int minHeight = Math.Max(dockedBorders.Height, 1000);
 
+            List<Level.InterestingPosition> potentialSpawnPositions = FindValidSpawnPoints(respawnShuttle, minWidth, minHeight, minDistFromSubs: 10000.0f, minDistFromCharacters: 5000.0f);
+            if (potentialSpawnPositions.None())
+            {
+                DebugConsole.NewMessage("Failed to find a shuttle spawn position far away from submarines and characters, attempting to find one closer to to subs and characters...");
+                potentialSpawnPositions = FindValidSpawnPoints(respawnShuttle, minWidth, minHeight, minDistFromSubs: 1000.0f, minDistFromCharacters: 500.0f);
+                if (potentialSpawnPositions.None())
+                {
+                    DebugConsole.NewMessage("Failed to find a shuttle spawn position, using the level's start position instead.");
+                    return Level.Loaded.StartPosition;
+                }
+            }
+
+            Vector2 bestSpawnPos = Level.Loaded.StartPosition;
+            float bestSpawnPosValue = 0.0f;
+            foreach (var potentialSpawnPos in potentialSpawnPositions)
+            {
+                //the closer the spawnpos is to the main sub, the better
+                float spawnPosValue = 100000.0f / Math.Max(Vector2.Distance(potentialSpawnPos.Position.ToVector2(), mainSub.WorldPosition), 1.0f);
+
+                //prefer spawnpoints that are at the left side of the sub (so the shuttle doesn't have to go backwards)
+                if (potentialSpawnPos.Position.X > mainSub.WorldPosition.X)
+                {
+                    spawnPosValue *= 0.1f;
+                }
+
+                if (spawnPosValue > bestSpawnPosValue)
+                {
+                    bestSpawnPos = potentialSpawnPos.Position.ToVector2();
+                    bestSpawnPosValue = spawnPosValue;
+                }
+            }
+
+            return bestSpawnPos;
+        }
+
+        private List<Level.InterestingPosition> FindValidSpawnPoints(Submarine respawnShuttle, float minWidth, float minHeight, float minDistFromSubs, float minDistFromCharacters)
+        {
             List<Level.InterestingPosition> potentialSpawnPositions = new List<Level.InterestingPosition>();
             foreach (Level.InterestingPosition potentialSpawnPos in Level.Loaded.PositionsOfInterest.Where(p => p.PositionType == Level.PositionType.MainPath))
             {
@@ -378,12 +478,12 @@ namespace Barotrauma.Networking
                 //make sure there aren't any walls too close
                 var tooCloseCells = Level.Loaded.GetTooCloseCells(potentialSpawnPos.Position.ToVector2(), Math.Max(minWidth, minHeight));
                 if (tooCloseCells.Any()) { continue; }
-                
+
                 //make sure the spawnpoint is far enough from other subs
                 foreach (Submarine sub in Submarine.Loaded)
                 {
-                    if (sub == RespawnShuttle || RespawnShuttle.DockedTo.Contains(sub)) { continue; }
-                    float minDist = Math.Max(Math.Max(minWidth, minHeight) + Math.Max(sub.Borders.Width, sub.Borders.Height), 10000.0f);
+                    if (sub == respawnShuttle || respawnShuttle.DockedTo.Contains(sub)) { continue; }
+                    float minDist = Math.Max(Math.Max(minWidth, minHeight) + Math.Max(sub.Borders.Width, sub.Borders.Height), minDistFromSubs);
                     if (Vector2.DistanceSquared(sub.WorldPosition, potentialSpawnPos.Position.ToVector2()) < minDist * minDist)
                     {
                         invalid = true;
@@ -404,7 +504,7 @@ namespace Barotrauma.Networking
                     {
                         //cannot spawn near alive characters (to prevent other players from seeing the shuttle 
                         //appear out of nowhere, or monsters from immediatelly wrecking the shuttle)
-                        if (Vector2.DistanceSquared(character.WorldPosition, potentialSpawnPos.Position.ToVector2()) < 5000.0f * 5000.0f)
+                        if (Vector2.DistanceSquared(character.WorldPosition, potentialSpawnPos.Position.ToVector2()) < minDistFromCharacters * minDistFromCharacters)
                         {
                             invalid = true;
                             break;
@@ -415,27 +515,7 @@ namespace Barotrauma.Networking
 
                 potentialSpawnPositions.Add(potentialSpawnPos);
             }
-            Vector2 bestSpawnPos = new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + RespawnShuttle.Borders.Height);
-            float bestSpawnPosValue = 0.0f;
-            foreach (var potentialSpawnPos in potentialSpawnPositions)
-            {
-                //the closer the spawnpos is to the main sub, the better
-                float spawnPosValue = 100000.0f / Math.Max(Vector2.Distance(potentialSpawnPos.Position.ToVector2(), Submarine.MainSub.WorldPosition), 1.0f);
-
-                //prefer spawnpoints that are at the left side of the sub (so the shuttle doesn't have to go backwards)
-                if (potentialSpawnPos.Position.X > Submarine.MainSub.WorldPosition.X)
-                {
-                    spawnPosValue *= 0.1f;
-                }
-
-                if (spawnPosValue > bestSpawnPosValue)
-                {
-                    bestSpawnPos = potentialSpawnPos.Position.ToVector2();
-                    bestSpawnPosValue = spawnPosValue;
-                }
-            }
-
-            return bestSpawnPos;
+            return potentialSpawnPositions;
         }
     }
 }

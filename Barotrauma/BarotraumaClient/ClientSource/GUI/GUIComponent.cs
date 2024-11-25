@@ -815,7 +815,8 @@ namespace Barotrauma
         protected virtual void SetAlpha(float a)
         {
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
-            hoverColor = new Color(hoverColor.R / 255.0f, hoverColor.G / 255.0f, hoverColor.B / 255.0f, a);;
+            hoverColor = new Color(hoverColor.R / 255.0f, hoverColor.G / 255.0f, hoverColor.B / 255.0f, a);
+            disabledColor = new Color(disabledColor.R / 255.0f, disabledColor.G / 255.0f, disabledColor.B / 255.0f, a);
         }
 
         public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectInflate = null)
@@ -835,15 +836,29 @@ namespace Barotrauma
             flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
-        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
+        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null, bool alsoChildren = false)
         {
             CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait, onRemove));
+            if (alsoChildren)
+            {
+                foreach (var child in Children)
+                {
+                    child.FadeOut(duration, removeAfter, wait, onRemove, alsoChildren);
+                }
+            }
         }
 
-        public void FadeIn(float wait, float duration)
+        public void FadeIn(float wait, float duration, bool alsoChildren = false)
         {
             SetAlpha(0.0f);
             CoroutineManager.StartCoroutine(LerpAlpha(1.0f, duration, false, wait));
+            if (alsoChildren)
+            {
+                foreach (var child in Children)
+                {
+                    child.FadeIn(wait, duration, alsoChildren);
+                }
+            }
         }
 
         public void SlideIn(float wait, float duration, int amount, SlideDirection direction)

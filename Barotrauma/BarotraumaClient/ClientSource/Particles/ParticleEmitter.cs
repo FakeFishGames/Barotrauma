@@ -8,6 +8,7 @@ namespace Barotrauma.Particles
 {
     class ParticleEmitterProperties : ISerializableEntity
     {
+
         private const float MinValue = int.MinValue,
                             MaxValue = int.MaxValue;
 
@@ -98,8 +99,8 @@ namespace Barotrauma.Particles
         [Editable, Serialize(1f, IsPropertySaveable.Yes)]
         public float LifeTimeMultiplier { get; set; }
 
-        [Editable, Serialize(false, IsPropertySaveable.Yes)]
-        public bool DrawOnTop { get; set; }
+        [Editable, Serialize(ParticleDrawOrder.Default, IsPropertySaveable.Yes)]
+        public ParticleDrawOrder DrawOrder { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes)]
         public float Angle
@@ -127,6 +128,12 @@ namespace Barotrauma.Particles
         public ParticleEmitterProperties(XElement element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            //backwards compatibility
+            if (element.GetAttributeBool("drawontop", false))
+            {
+                DrawOrder = ParticleDrawOrder.Foreground;
+            }
         }
     }
 
@@ -215,7 +222,9 @@ namespace Barotrauma.Particles
                 position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
             }
 
-            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, particlePrefab.DrawOnTop || Prefab.DrawOnTop, lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
+            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess,
+                particlePrefab.DrawOrder != ParticleDrawOrder.Default ? particlePrefab.DrawOrder : Prefab.DrawOrder,
+                lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
 
             if (particle != null)
             {
@@ -286,7 +295,9 @@ namespace Barotrauma.Particles
 
         public readonly ContentPackage? ContentPackage;
 
-        public bool DrawOnTop => Properties.DrawOnTop || ParticlePrefab is { DrawOnTop: true };
+        public ParticleDrawOrder DrawOrder => Properties.DrawOrder != ParticleDrawOrder.Default ? 
+            Properties.DrawOrder : 
+            (ParticlePrefab?.DrawOrder ?? ParticleDrawOrder.Default);
 
         public ParticleEmitterPrefab(ContentXElement element)
         {

@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +30,9 @@ namespace Barotrauma
 
         [Serialize(-1, IsPropertySaveable.Yes, description: "Maximum number of NPCs the action can target. For example, you could only make a specific number of security officers man a periscope.")]
         public int MaxTargets { get; set; }
+
+        [Serialize(100, IsPropertySaveable.Yes, description: "Priority of operating the item (0-100). Higher values will make the AI prefer operating the item over other orders (priority 60-70) or e.g. reacting to emergencies (priority 90).")]
+        public int Priority { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes, description: "The event actions reset when a GoTo action makes the event jump to a different point. Should the NPC stop operating the item when the event resets?")]
         public bool AbandonOnReset { get; set; }
@@ -72,7 +75,7 @@ namespace Barotrauma
                     {
                         var newObjective = new AIObjectiveOperateItem(itemComponent, npc, humanAiController.ObjectiveManager, OrderOption, RequireEquip)
                         {
-                            OverridePriority = 100.0f
+                            OverridePriority = Priority
                         };
                         humanAiController.ObjectiveManager.AddObjective(newObjective);
                         humanAiController.ObjectiveManager.WaitTimer = 0.0f;
@@ -83,7 +86,7 @@ namespace Barotrauma
                 {
                     foreach (var objective in humanAiController.ObjectiveManager.Objectives)
                     {
-                        if (objective is AIObjectiveOperateItem operateItemObjective && operateItemObjective.OperateTarget == target)
+                        if (objective is AIObjectiveOperateItem operateItemObjective && operateItemObjective.Component.Item == target)
                         {
                             objective.Abandon = true;
                         }
@@ -112,7 +115,7 @@ namespace Barotrauma
                     if (npc.Removed || npc.AIController is not HumanAIController humanAiController) { continue; }
                     foreach (var operateItemObjective in humanAiController.ObjectiveManager.GetActiveObjectives<AIObjectiveOperateItem>())
                     {
-                        if (operateItemObjective.OperateTarget == target)
+                        if (operateItemObjective.Component.Item == target)
                         {
                             operateItemObjective.Abandon = true;
                         }

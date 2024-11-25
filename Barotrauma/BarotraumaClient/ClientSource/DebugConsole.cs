@@ -114,7 +114,7 @@ namespace Barotrauma
             textBox.MaxTextLength = maxLength;
             textBox.OnKeyHit += (sender, key) =>
             {
-                if (key != Keys.Tab)
+                if (key != Keys.Tab && key != Keys.LeftShift)
                 {
                     ResetAutoComplete();
                 }
@@ -181,7 +181,8 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyHit(Keys.Tab) && !textBox.IsIMEActive)
                 {
-                    textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
+                    int increment = PlayerInput.KeyDown(Keys.LeftShift) ? -1 : 1;
+                    textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : increment );
                 }
 
                 if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
@@ -586,6 +587,39 @@ namespace Barotrauma
                 }
                 GameMain.CharacterEditorScreen.Select();
             }));
+            
+            commands.Add(new Command("settainted", "settainted [true/false]: Sets tainted effect on hovered genetic material.", 
+            onExecute: (string[] args) =>
+            {
+                
+                if (Character.Controlled == null)
+                {
+                    NewMessage("No controlled character!", Color.Red);
+                    return;
+                }
+
+                Item focusedItem = Character.Controlled?.FocusedItem ?? Inventory.SelectedSlot?.Item;
+            
+                if (focusedItem == null)
+                {
+                    NewMessage("No focused item, hover on something!", Color.Red);
+                    return;
+                }
+
+                var geneticMaterial = focusedItem.GetComponent<GeneticMaterial>();
+
+                if (geneticMaterial == null)
+                {
+                    NewMessage("Not hovering on a genetic material!", Color.Red);
+                    return;
+                }
+                else
+                {
+                    bool newValue = args.None(arg => string.Equals(arg, "false", StringComparison.InvariantCultureIgnoreCase));
+                    geneticMaterial.SetTainted(newValue);
+                    NewMessage($"Set tainted to {newValue} for {focusedItem.Name}", Color.Yellow);
+                }
+            }, isCheat: true));
 
             commands.Add(new Command("quickstart", "Starts a singleplayer sandbox", (string[] args) =>
             {
@@ -624,6 +658,113 @@ namespace Barotrauma
                 GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName, difficulty, levelGenerationParams);
 
             }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().OrderBy(s => s).ToArray() }));
+            
+            commands.Add(new Command("forcewreck", "forcewreck [wreckname] (optional, ThalamusSpawn)[Random/Forced/Disabled]: When generating levels, ensures a specific wreck is generated. Second optional parameter to control thalamus spawning.", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    var submarineFile = GetSubmarineFile<WreckFile>(args[0]);
+                    
+                    if (submarineFile != null)
+                    {
+                        var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(i => i.FilePath == submarineFile.Path.Value);
+                        if (matchingSub != null)
+                        {
+                            NewMessage($"Setting ForceWreck to: {matchingSub.Name}, {submarineFile.Path}", color: Color.Yellow);
+                            
+                            LevelData.ConsoleForceWreck = matchingSub;
+                        }
+                    }
+                    else
+                    {
+                        NewMessage($"Can't find: {args[0]}", color: Color.Red);
+                    }
+                }
+                
+                if (args.Length > 1)
+                {
+                    string forceThalamusArg = args[1];
+                    if (Enum.TryParse(forceThalamusArg, out LevelData.ThalamusSpawn result))
+                    {
+                        NewMessage($"Setting ThalamusSpawn to: {result}", color: Color.Yellow);
+                        LevelData.ForceThalamus = result;
+                    }
+                    else
+                    {
+                        NewMessage($"Can't parse argument: {forceThalamusArg}", color: Color.Red);
+                    }
+                }
+                else
+                {
+                    NewMessage($"Setting ThalamusSpawn to: {LevelData.ThalamusSpawn.Random}", color: Color.Yellow);
+                    LevelData.ForceThalamus = LevelData.ThalamusSpawn.Random;
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    ListSubmarineFileNames<WreckFile>(),
+                    new string[] { LevelData.ThalamusSpawn.Random.ToString(), LevelData.ThalamusSpawn.Forced.ToString(), LevelData.ThalamusSpawn.Disabled.ToString() }
+                };
+            }, isCheat: true));
+            
+            commands.Add(new Command("forcebeaconstation|forcebeacon", "forcebeaconstation [station name]: When generating levels, ensures a specific beacon station is generated.", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    var submarineFile = GetSubmarineFile<BeaconStationFile>(args[0]);
+                    
+                    if (submarineFile != null)
+                    {
+                        var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(i => i.FilePath == submarineFile.Path.Value);
+                        if (matchingSub != null)
+                        {
+                            NewMessage($"Setting ForceBeaconStation to: {matchingSub.Name}, {submarineFile.Path}", color: Color.Yellow);
+                            
+                            LevelData.ConsoleForceBeaconStation = matchingSub;
+                        }
+                    }
+                    else
+                    {
+                        NewMessage($"Can't find: {args[0]}", color: Color.Red);
+                    }
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    ListSubmarineFileNames<BeaconStationFile>()
+                };
+            }, isCheat: true));
+            
+            commands.Add(new Command("reloadcontentfile", "reloadcontentfile [filepath]: Reloads a specific content xml file during runtime.", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    string pathArgument = args[0];
+                    var contentFile = GetContentFile(pathArgument);
+                    
+                    if (contentFile != null)
+                    {
+                        NewMessage($"Reloading content file: {pathArgument}", Color.Yellow);
+                        contentFile.UnloadFile();
+                        contentFile.LoadFile();
+                    }
+                    else
+                    {
+                        NewMessage($"Can't find {args[0]} to reload", color:Color.Red);
+                    }
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    ListContentFilePaths()
+                };
+            }, isCheat: true));
 
             commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks networking debug logging.", (string[] args) =>
             {
@@ -633,6 +774,20 @@ namespace Barotrauma
             commands.Add(new Command("readycheck", "Commence a ready check in multiplayer.", (string[] args) =>
             {
                 NewMessage("Ready checks can only be commenced in multiplayer.", Color.Red);
+            }));
+
+            commands.Add(new Command("setsalary", "setsalary [0-100] [character/default]: Sets the salary of a certain character or the default salary to a percentage.", (string[] args) =>
+            {
+                ThrowError("This command can only be used in multiplayer campaign.");
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                    new[]{ "0", "100" },
+                    Enumerable.Union(
+                        new string[] { "default" },
+                        Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n)).ToArray(),
+                };
             }));
             
             commands.Add(new Command("bindkey", "bindkey [key] [command]: Binds a key to a command.", (string[] args) =>
@@ -768,6 +923,7 @@ namespace Barotrauma
             AssignRelayToServer("spreadsheetexport", false);
 #if DEBUG
             AssignRelayToServer("listspamfilters", false);
+            AssignRelayToServer("showitemxml", false);
             AssignRelayToServer("crash", false);
             AssignRelayToServer("showballastflorasprite", false);
             AssignRelayToServer("simulatedlatency", false);
@@ -793,6 +949,7 @@ namespace Barotrauma
             AssignRelayToServer("money", true);
             AssignRelayToServer("showmoney", true);
             AssignRelayToServer("setskill", true);
+            AssignRelayToServer("setsalary", true);
             AssignRelayToServer("readycheck", true);
             commands.Add(new Command("debugjobassignment", "", (string[] args) => { }));
             AssignRelayToServer("debugjobassignment", true);
@@ -838,11 +995,8 @@ namespace Barotrauma
 
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
             {
-                Character tpCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, false);
-                if (tpCharacter != null)
-                {
-                    tpCharacter.TeleportTo(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
-                }
+                Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                TeleportCharacter(cursorWorldPos, Character.Controlled, args);
             });
 
             AssignOnExecute("spawn|spawncharacter", (string[] args) =>
@@ -1425,6 +1579,9 @@ namespace Barotrauma
 
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
+#if DEBUG
+            AssignRelayToServer("debugvoip", true);
+#endif
 
             commands.Add(new Command("mute", "mute [name]: Prevent the client from speaking to anyone through the voice chat. Using this command requires a permission from the server host.",
             null,
@@ -1908,7 +2065,7 @@ namespace Barotrauma
                             addIfMissing($"missionname.{missionId}".ToIdentifier(), language);
                         }
 
-                        if (missionPrefab.Type == MissionType.Combat)
+                        if (missionPrefab.Type == Tags.MissionTypeCombat)
                         {
                             addIfMissing($"MissionDescriptionNeutral.{missionId}".ToIdentifier(), language);
                             addIfMissing($"MissionDescription1.{missionId}".ToIdentifier(), language);
@@ -2344,7 +2501,40 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.LoadSub(wreckedSubmarineInfo);
             }));
 
+            commands.Add(new Command("showitemxml", "showitemxml [item]: Shows the XML configuration of an item in the console and copies it to the clipboard. Useful for debugging variants that partially override the XML of the base item for example.", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    ThrowError("Please specify the name or identifier of the item.");
+                    return;
+                }
+
+                string itemNameOrId = args[0].ToLowerInvariant();
+                ItemPrefab itemPrefab =
+                    (MapEntityPrefab.FindByName(itemNameOrId) ??
+                    MapEntityPrefab.FindByIdentifier(itemNameOrId.ToIdentifier())) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    ThrowError("Item \"{itemNameOrId}\" not found!");
+                    return;
+                }
+                string xmlStr = itemPrefab.ConfigElement.Element.ToString();
+                NewMessage(xmlStr);
+                Clipboard.SetText(xmlStr);
+            }, getValidArgs: () =>
+            {
+                return new string[][]
+                {
+                    GetItemNameOrIdParams().ToArray()
+                };
+            }));
+
 #if DEBUG
+            commands.Add(new Command("deathprompt", "Shows the death prompt for testing purposes.", (string[] args) =>
+            {
+                DeathPrompt.Create(delay: 1.0f);
+            }));
+
             commands.Add(new Command("listspamfilters", "Lists filters that are in the global spam filter.", (string[] args) =>
             {
                 if (!SpamServerFilters.GlobalSpamFilter.TryUnwrap(out var filter))
@@ -2644,7 +2834,7 @@ namespace Barotrauma
                 string[] lines;
                 try
                 {
-                    lines = File.ReadAllLines(sourcePath);
+                    lines = File.ReadAllLines(sourcePath, catchUnauthorizedAccessExceptions: false);
                 }
                 catch (Exception e)
                 {
@@ -2736,7 +2926,6 @@ namespace Barotrauma
 
                 foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs())
                 {
-                    if (eventPrefab is not TraitorEventPrefab) { continue; }
                     if (eventPrefab.Identifier.IsEmpty) 
                     {
                         continue;
@@ -2791,7 +2980,7 @@ namespace Barotrauma
                     }
 
                     string textId = $"EventText.{parentName}";
-                    if (!string.IsNullOrEmpty(text) && !text.Contains("EventText.", StringComparison.OrdinalIgnoreCase)) 
+                    if (!string.IsNullOrEmpty(text) && !text.StartsWith("EventText.", StringComparison.OrdinalIgnoreCase) && !text.StartsWith("Tutorial.", StringComparison.OrdinalIgnoreCase)) 
                     {
                         if (existingTexts.TryGetValue(text, out string existingTextId))
                         {
@@ -2961,9 +3150,18 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("playovervc", "Plays a sound over voice chat.", (args) =>
+            {
+                VoipCapture.Instance?.SetOverrideSound(args.Length > 0 ? args[0] : null);
+            }));
+
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
-                if (args.Length != 1) { return; }
+                if (args.Length != 1) 
+                {
+                    ThrowError("Please specify a language to check.");
+                    return; 
+                }
                 TextManager.CheckForDuplicates(args[0].ToIdentifier().ToLanguageIdentifier());
             }));
 
@@ -3093,12 +3291,12 @@ namespace Barotrauma
                 {
                     if (Screen.Selected == GameMain.GameScreen)
                     {
-                        ThrowError("Reloading the package while in GameScreen may break things; to do it anyway, type 'reloadcorepackage [name] force'");
+                        ThrowError("Reloading the package while in GameScreen may break things; to do it anyway, type 'reloadpackage [name] force'");
                         return;
                     }
                     if (Screen.Selected == GameMain.SubEditorScreen)
                     {
-                        ThrowError("Reloading the core package while in sub editor may break thingg; to do it anyway, type 'reloadcorepackage [name] force'");
+                        ThrowError("Reloading the core package while in sub editor may break things; to do it anyway, type 'reloadpackage [name] force'");
                         return;
                     }
                 }
@@ -3422,9 +3620,7 @@ namespace Barotrauma
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
                 ragdollParams.LimbScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
-                var pos = character.WorldPosition;
-                character.AnimController.Recreate();
-                character.TeleportTo(pos);
+                character.AnimController.RecreateAndRespawn();
             }, isCheat: true));
 
             commands.Add(new Command("jointscale", "Define the jointscale for the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
@@ -3447,9 +3643,7 @@ namespace Barotrauma
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
                 ragdollParams.JointScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
-                var pos = character.WorldPosition;
-                character.AnimController.Recreate();
-                character.TeleportTo(pos);
+                character.AnimController.RecreateAndRespawn();
             }, isCheat: true));
 
             commands.Add(new Command("ragdollscale", "Rescale the ragdoll of the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
@@ -3473,9 +3667,7 @@ namespace Barotrauma
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
                 ragdollParams.LimbScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
                 ragdollParams.JointScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
-                var pos = character.WorldPosition;
-                character.AnimController.Recreate();
-                character.TeleportTo(pos);
+                character.AnimController.RecreateAndRespawn();
             }, isCheat: true));
 
             commands.Add(new Command("recreateragdoll", "Recreate the ragdoll of the controlled character. Provide id or name if you want to target another character.", (string[] args) =>
@@ -3486,21 +3678,43 @@ namespace Barotrauma
                     ThrowError("Not controlling any character!");
                     return;
                 }
-                var pos = character.WorldPosition;
-                character.AnimController.Recreate();
-                character.TeleportTo(pos);
-            }, isCheat: true));
+                character.AnimController.RecreateAndRespawn();
+            }, isCheat: true,
+                getValidArgs: () => new[] { GetSpawnedSpeciesNames() }));
 
-            commands.Add(new Command("resetragdoll", "Reset the ragdoll of the controlled character. Provide id or name if you want to target another character.", (string[] args) =>
+            commands.Add(new Command("resetragdoll", "Reset the ragdoll of the controlled character (and all of the same species). Provide species name if you want to target another character.", (string[] args) =>
             {
-                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
-                if (character == null)
+                IEnumerable<Character> characters;
+                if (args.Length == 0)
                 {
-                    ThrowError("Not controlling any character!");
+                    if (Character.Controlled == null)
+                    {
+                        ThrowError("Invalid species name! Press [TAB] to get valid options in this context.");
+                        return;
+                    }
+                    // Reset all characters of the same species, because the same params affect them too.
+                    characters = FindMatchingSpecies(Character.Controlled.SpeciesName.ToString());
+                }
+                else
+                {
+                    characters = FindMatchingSpecies(args);
+                }
+                if (characters.None())
+                {
+                    ThrowError("Invalid species name!");
                     return;
                 }
-                character.AnimController.ResetRagdoll(forceReload: true);
-            }, isCheat: true));
+                characters.ForEach(c => c.AnimController.ResetRagdoll());
+                foreach (Character character in characters)
+                {
+                    // Variant scale multiplier doesn't work without recreating the ragdoll.
+                    if (!character.VariantOf.IsEmpty)
+                    {
+                        character.AnimController.RecreateAndRespawn();
+                    }
+                }
+            }, isCheat: true, 
+                getValidArgs: () => new[] { GetSpawnedSpeciesNames() }));
             
             commands.Add(new Command("loadanimation", "Loads an animation variation by name for the controlled character. The animation file has to be in the correct animations folder. Note: the changes are not saved!", (string[] args) =>
             {
@@ -3613,7 +3827,7 @@ namespace Barotrauma
                     ThrowError("Cannot use the flipx command while playing online.");
                     return;
                 }
-                if (Submarine.MainSub.SubBody != null) { Submarine.MainSub?.FlipX(); }
+                if (Submarine.MainSub?.SubBody != null) { Submarine.MainSub.FlipX(); }
             }, isCheat: true));
 
             commands.Add(new Command("head", "Load the head sprite and the wearables (hair etc). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>

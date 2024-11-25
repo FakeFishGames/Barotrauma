@@ -1,9 +1,13 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
+    [NetworkSerialize]
+    public readonly record struct RoundStartWarningData(float RoundStartsAnywaysTimeInSeconds, string Team1Sub, ImmutableArray<uint> Team1IncompatiblePerks, string Team2Sub, ImmutableArray<uint> Team2IncompatiblePerks) : INetSerializableStruct;
+
     partial class NetLobbyScreen : Screen
     {
         private UInt16 lastUpdateID;

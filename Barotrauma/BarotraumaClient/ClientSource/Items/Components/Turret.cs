@@ -196,7 +196,7 @@ namespace Barotrauma.Items.Components
             Vector2 particlePos = GetRelativeFiringPosition();
             foreach (ParticleEmitter emitter in particleEmitters)
             {
-                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation);
+                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -Rotation, particleRotation: Rotation);
             }
         }
 
@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
             if (crosshairSprite != null)
             {
                 Vector2 itemPos = cam.WorldToScreen(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y));
-                Vector2 turretDir = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+                Vector2 turretDir = new Vector2((float)Math.Cos(Rotation), (float)Math.Sin(Rotation));
 
                 Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
                 crosshairPos = new Vector2(
@@ -227,14 +227,14 @@ namespace Barotrauma.Items.Components
             {
                 if (moveSoundChannel == null && startMoveSound != null)
                 {
-                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound.Sound, item.WorldPosition, startMoveSound.Volume, startMoveSound.Range, ignoreMuffling: startMoveSound.IgnoreMuffling, freqMult: startMoveSound.GetRandomFrequencyMultiplier());
+                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound, item.WorldPosition, hullGuess: item.CurrentHull);
                 }
                 else if (moveSoundChannel == null || !moveSoundChannel.IsPlaying)
                 {
                     if (moveSound != null)
                     {
                         moveSoundChannel?.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, item.WorldPosition, moveSound.Volume, moveSound.Range, ignoreMuffling: moveSound.IgnoreMuffling, freqMult: moveSound.GetRandomFrequencyMultiplier());
+                        moveSoundChannel = SoundPlayer.PlaySound(moveSound, item.WorldPosition, hullGuess: item.CurrentHull);
                         if (moveSoundChannel != null) { moveSoundChannel.Looping = true;}
                     }
                 }
@@ -246,7 +246,7 @@ namespace Barotrauma.Items.Components
                     if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound.Sound)
                     {
                         moveSoundChannel.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, item.WorldPosition, endMoveSound.Volume, endMoveSound.Range, ignoreMuffling: endMoveSound.IgnoreMuffling, freqMult: endMoveSound.GetRandomFrequencyMultiplier());
+                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound, item.WorldPosition, hullGuess: item.CurrentHull);
                         if (moveSoundChannel != null) { moveSoundChannel.Looping = false; }
                     }
                     else if (!moveSoundChannel.IsPlaying)
@@ -268,14 +268,14 @@ namespace Barotrauma.Items.Components
                     foreach (ParticleEmitter emitter in particleEmitterCharges)
                     {
                         // color is currently not connected to ammo type, should be updated when ammo is changed
-                        emitter.Emit(deltaTime, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
+                        emitter.Emit(deltaTime, particlePos, hullGuess: null, angle: -Rotation, particleRotation: Rotation, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
                     }
 
                     if (chargeSoundChannel == null || !chargeSoundChannel.IsPlaying)
                     {
                         if (chargeSound != null)
                         {
-                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling, freqMult: chargeSound.GetRandomFrequencyMultiplier());
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound, item.WorldPosition, hullGuess: item.CurrentHull);
                             if (chargeSoundChannel != null) { chargeSoundChannel.Looping = true; }
                         }
                     }
@@ -339,7 +339,7 @@ namespace Barotrauma.Items.Components
             if (crosshairSprite != null)
             {
                 Vector2 itemPos = cam.WorldToScreen(item.WorldPosition);
-                Vector2 turretDir = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+                Vector2 turretDir = new Vector2((float)Math.Cos(Rotation), (float)Math.Sin(Rotation));
 
                 Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
                 crosshairPos = new Vector2(
@@ -372,7 +372,7 @@ namespace Barotrauma.Items.Components
                     recoilOffset = RecoilDistance;
                 }
             }
-            return new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset;
+            return new Vector2((float)Math.Cos(Rotation), (float)Math.Sin(Rotation)) * recoilOffset;
         }
         
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
@@ -385,26 +385,29 @@ namespace Barotrauma.Items.Components
 
             if (item.Condition > 0.0f || !HideBarrelWhenBroken)
             {
-                railSprite?.Draw(spriteBatch,
+                var currentRailSprite = item.Condition <= 0.0f && railSpriteBroken != null ? railSpriteBroken : railSprite;
+                var currentBarrelSprite = item.Condition <= 0.0f && barrelSpriteBroken != null ? barrelSpriteBroken : barrelSprite;
+
+                currentRailSprite?.Draw(spriteBatch,
                     drawPos,
                     overrideColor ?? item.SpriteColor,
-                    rotation + MathHelper.PiOver2, item.Scale,
-                    SpriteEffects.None, item.SpriteDepth + (railSprite.Depth - item.Sprite.Depth));
+                    Rotation + MathHelper.PiOver2, item.Scale,
+                    SpriteEffects.None, item.SpriteDepth + (currentRailSprite.Depth - item.Sprite.Depth));
 
-                barrelSprite?.Draw(spriteBatch,
+                currentBarrelSprite?.Draw(spriteBatch,
                     drawPos - GetRecoilOffset() * item.Scale,
                     overrideColor ?? item.SpriteColor,
-                    rotation + MathHelper.PiOver2, item.Scale,
-                    SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
+                    Rotation + MathHelper.PiOver2, item.Scale,
+                    SpriteEffects.None, item.SpriteDepth + (currentBarrelSprite.Depth - item.Sprite.Depth));
 
                 float chargeRatio = currentChargeTime / MaxChargeTime;
 
                 foreach ((Sprite chargeSprite, Vector2 position) in chargeSprites)
                 {
                     chargeSprite?.Draw(spriteBatch,
-                        drawPos - MathUtils.RotatePoint(new Vector2(position.X * chargeRatio, position.Y * chargeRatio) * item.Scale, rotation + MathHelper.PiOver2),
+                        drawPos - MathUtils.RotatePoint(new Vector2(position.X * chargeRatio, position.Y * chargeRatio) * item.Scale, Rotation + MathHelper.PiOver2),
                         item.SpriteColor,
-                        rotation + MathHelper.PiOver2, item.Scale,
+                        Rotation + MathHelper.PiOver2, item.Scale,
                         SpriteEffects.None, item.SpriteDepth + (chargeSprite.Depth - item.Sprite.Depth));
                 }
 
@@ -427,9 +430,9 @@ namespace Barotrauma.Items.Components
                     float newPositionOffset = barrelPositionModifier * SpinningBarrelDistance;
 
                     spinningBarrel.Draw(spriteBatch,
-                        drawPos - MathUtils.RotatePoint(new Vector2(newPositionOffset, 0f) * item.Scale, rotation + MathHelper.PiOver2),
+                        drawPos - MathUtils.RotatePoint(new Vector2(newPositionOffset, 0f) * item.Scale, Rotation + MathHelper.PiOver2),
                         Color.Lerp(overrideColor ?? item.SpriteColor, newColorModifier, 0.8f),
-                        rotation + MathHelper.PiOver2, item.Scale,
+                        Rotation + MathHelper.PiOver2, item.Scale,
                         SpriteEffects.None, newDepth);
                 }
             }
@@ -475,9 +478,9 @@ namespace Barotrauma.Items.Components
             {
                 spriteBatch.DrawLine(drawPos, drawPos + center * circleRadius, GUIStyle.Green, thickness: lineThickness);
             }
-            else if (radians > Math.PI * 2)
+            else if (radians >= MathHelper.TwoPi)
             {
-                spriteBatch.DrawCircle(drawPos, circleRadius, 180, GUIStyle.Red, thickness: lineThickness);
+                spriteBatch.DrawCircle(drawPos, circleRadius, 180, GUIStyle.Green, thickness: lineThickness);
             }
             else
             {
@@ -510,7 +513,12 @@ namespace Barotrauma.Items.Components
                 };
                 widget.MouseHeld += (deltaTime) =>
                 {
-                    minRotation = GetRotationAngle(GetDrawPos());
+                    float newMinRotation = GetRotationAngle(GetDrawPos());
+                    AngleWrapAdjustment(minRotation, newMinRotation, ref maxRotation);
+                    
+                    // clamp value here to keep widget movement within max range
+                    minRotation = MathHelper.Clamp(newMinRotation, maxRotation - MathHelper.TwoPi, maxRotation);
+                    
                     UpdateBarrel();
                     MapEntity.DisableSelect = true;
                 };
@@ -554,7 +562,12 @@ namespace Barotrauma.Items.Components
                 };
                 widget.MouseHeld += (deltaTime) =>
                 {
-                    maxRotation = GetRotationAngle(GetDrawPos());
+                    float newMaxRotation = GetRotationAngle(GetDrawPos());
+                    AngleWrapAdjustment(maxRotation, newMaxRotation, ref minRotation);
+                    
+                    // clamp value here to keep widget movement within max range
+                    maxRotation = MathHelper.Clamp(newMaxRotation, minRotation, minRotation + MathHelper.TwoPi);
+                    
                     UpdateBarrel();
                     MapEntity.DisableSelect = true;
                 };
@@ -580,10 +593,44 @@ namespace Barotrauma.Items.Components
 
             void UpdateBarrel()
             {
-                rotation = (minRotation + maxRotation) / 2;
+                Rotation = (minRotation + maxRotation) / 2;
             }
         }
-
+        
+        private static void AngleWrapAdjustment(float currentRotation, float newRotation, ref float rangeLockedRotation)
+        {
+            if (DetectAngleWrapAround(currentRotation, newRotation))
+            {
+                // if there's a wrap-around, also wrap the other rotation limit to keep range
+                if (newRotation < currentRotation)
+                {
+                    rangeLockedRotation -= MathHelper.TwoPi;
+                }
+                else
+                {
+                    rangeLockedRotation += MathHelper.TwoPi;
+                }
+            }
+        }
+        
+        private static bool DetectAngleWrapAround(float rotation, float newRotation)
+        {
+            float deltaRotation = MathF.Abs(rotation - newRotation);
+            
+            // turret angle wraps around to 0 from -2Pi and 2Pi.
+            // Detect wrap-around when dragging the widgets, where usual rotation delta is small,
+            // so a large jump in rotation (here, an arbitrary big value in the range of 0 to 2Pi)
+            // is considered a wrap-around for this purpose.
+            // NOTE: this is not a reliable way to detect angle wrap-around in general, and is only intended for
+            // the angle widgets!
+            if (deltaRotation > MathHelper.TwoPi * 0.8f)
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        
         public Vector2 GetDrawPos()
         {
             Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
@@ -658,12 +705,14 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
+
             if (HudTint.A > 0)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                     new Color(HudTint.R, HudTint.G, HudTint.B) * (HudTint.A / 255.0f), true);
             }
-            
+
             GetAvailablePower(out float batteryCharge, out float batteryCapacity);
 
             List<Item> availableAmmo = new List<Item>();
@@ -764,7 +813,7 @@ namespace Barotrauma.Items.Components
             if (projectileID == 0) { return; }
 
             //ID ushort.MaxValue = launched without a projectile
-            if (projectileID == ushort.MaxValue)
+            if (projectileID == LaunchWithoutProjectileId)
             {
                 Launch(null, user);
             }

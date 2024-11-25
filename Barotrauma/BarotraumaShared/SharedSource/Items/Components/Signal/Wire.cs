@@ -66,6 +66,7 @@ namespace Barotrauma.Items.Components
         private float editNodeDelay;
 
         private bool locked;
+
         public bool Locked
         {
             get
@@ -268,8 +269,10 @@ namespace Barotrauma.Items.Components
                     CreateNetworkEvent();
                 }
 #endif
-                //the wire is active if only one end has been connected
-                IsActive = connections[0] == null ^ connections[1] == null;
+                //the wire is active if it's currently being wired to something (in character inventory and connected from one end)
+                IsActive = 
+                    item.ParentInventory is CharacterInventory &&
+                    connections[0] == null ^ connections[1] == null;
             }
 
             Drawable = IsActive || nodes.Any();
@@ -839,9 +842,9 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
 
             nodes.AddRange(ExtractNodes(componentElement));
 

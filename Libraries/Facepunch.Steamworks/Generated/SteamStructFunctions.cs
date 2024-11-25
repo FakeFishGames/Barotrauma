@@ -210,7 +210,7 @@ namespace Steamworks.Data
 		internal static extern bool InternalIsIPv6AllZeros( ref NetAddress self );
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIPAddr_SetIPv6", CallingConvention = Platform.CC)]
-		internal static extern void InternalSetIPv6( ref NetAddress self, ref byte ipv6, ushort nPort );
+		internal static extern void InternalSetIPv6( ref NetAddress self, IntPtr ipv6, ushort nPort );
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIPAddr_SetIPv4", CallingConvention = Platform.CC)]
 		internal static extern void InternalSetIPv4( ref NetAddress self, uint nIP, ushort nPort );

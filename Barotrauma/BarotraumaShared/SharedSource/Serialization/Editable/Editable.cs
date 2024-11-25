@@ -1,18 +1,26 @@
-using System;
-using Barotrauma.Items.Components;
+﻿using System;
 
 namespace Barotrauma;
 
 [AttributeUsage(AttributeTargets.Property)]
 class Editable : Attribute
 {
-    public int MaxLength;
+    /// <summary>
+    /// Maximum length of the value if the value is a string. Only has an effect is larger than 0.
+    /// </summary>
+    public int MaxLength = -1;
     public int DecimalCount = 1;
 
     public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
     public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
-    public bool ForceShowPlusMinusButtons = false;
+    public bool ForceShowPlusMinusButtons;
     public float ValueStep;
+    
+    /// <summary>
+    /// Should the value customized in the editor be applied to the new item swapped in place of this item.
+    /// Used e.g. for transferring the auto operate properties from one turret to another installed on place of it.
+    /// </summary>
+    public bool TransferToSwappedItem;
 
     /// <summary>
     /// Labels of the components of a vector property (defaults to x,y,z,w)
@@ -29,9 +37,8 @@ class Editable : Attribute
     /// </summary>
     public bool ReadOnly;
 
-    public Editable(int maxLength = 20)
+    public Editable()
     {
-        MaxLength = maxLength;
     }
 
     public Editable(int minValue, int maxValue)

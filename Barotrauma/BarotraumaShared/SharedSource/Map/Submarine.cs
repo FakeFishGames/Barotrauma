@@ -7,9 +7,11 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.PerkBehaviors;
 using Voronoi2;
 
 namespace Barotrauma
@@ -24,6 +26,21 @@ namespace Barotrauma
         public SubmarineInfo Info { get; private set; }
 
         public CharacterTeamType TeamID = CharacterTeamType.None;
+
+        public static ImmutableArray<SubItemSwapPerk> GetSubItemSwapPerksFromTeamPerks(ImmutableArray<DisembarkPerkPrefab> teamPerks)
+        {
+            var builder = ImmutableArray.CreateBuilder<SubItemSwapPerk>();
+            foreach (DisembarkPerkPrefab prefab in teamPerks)
+            {
+                foreach (var perk in prefab.PerkBehaviors)
+                {
+                    if (perk is not SubItemSwapPerk subSwapPerk) { continue; }
+                    builder.Add(subSwapPerk);
+                }
+            }
+
+            return builder.ToImmutable();
+        }
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
@@ -45,6 +62,10 @@ namespace Barotrauma
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
         public static readonly Submarine[] MainSubs = new Submarine[2];
+
+        /// <summary>
+        /// Note that this can be null in some situations, e.g. editors and missions that don't load a submarine.
+        /// </summary>
         public static Submarine MainSub
         {
             get { return MainSubs[0]; }
@@ -121,6 +142,8 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public List<WayPoint> ForcedOutpostModuleWayPoints = new List<WayPoint>();
 
         public static List<Submarine> Loaded
         {
@@ -204,6 +227,12 @@ namespace Barotrauma
                 return Level.Loaded.GetRealWorldDepth(WorldPosition.Y);
             }
         }
+
+        /// <summary>
+        /// Is the submarine above the upper boundary of the level ("outside bounds", where the submarine shouldn't be able to get to normally)?
+        /// E.g. respawn shuttles are moved above the level when they despawn.
+        /// </summary>
+        public bool IsAboveLevel => Level.IsPositionAboveLevel(WorldPosition);
 
         public bool AtEndExit
         {
@@ -322,6 +351,9 @@ namespace Barotrauma
                 return RealWorldDepth > Level.Loaded.RealWorldCrushDepth && RealWorldDepth > RealWorldCrushDepth;
             }
         }
+
+        public bool IsRespawnShuttle =>
+            GameMain.NetworkMember?.RespawnManager is { } respawnManager && respawnManager.RespawnShuttles.Contains(this);
 
         private readonly List<WayPoint> exitPoints = new List<WayPoint>();
         public IReadOnlyList<WayPoint> ExitPoints { get { return exitPoints; } }
@@ -675,7 +707,7 @@ namespace Barotrauma
                     if (item.GetComponent<Turret>() != null) { return false; }
                     if (item.body != null && !item.body.Enabled) { return true; }
                 }
-                if (e.HiddenInGame) { return true; }
+                if (e.IsHidden) { return true; }
                 return false;
             });
 
@@ -1101,6 +1133,11 @@ namespace Barotrauma
                         continue;
                     }
                     item.FlipX(true);
+
+                    if (!item.Prefab.CanFlipX && item.Prefab.AllowRotatingInEditor)
+                    {
+                        item.Rotation = -item.Rotation;
+                    }
                 }
             }
 
@@ -1119,6 +1156,15 @@ namespace Barotrauma
             }
         }
 
+        public static bool LayerExistsInAnySub(Identifier layer)
+        {
+            foreach (MapEntity me in MapEntity.MapEntityList)
+            {
+                if (me.Layer == layer) { return true; }
+            }
+            return false;
+        }
+
         public bool LayerExists(Identifier layer)
         {
             foreach (MapEntity me in MapEntity.MapEntityList)
@@ -1128,16 +1174,62 @@ namespace Barotrauma
             return false;
         }
 
+
         public void SetLayerEnabled(Identifier layer, bool enabled, bool sendNetworkEvent = false)
         {
-            foreach (MapEntity me in MapEntity.MapEntityList)
+            SetLayerEnabled(layer, enabled, MapEntity.MapEntityList.Where(m => m.Submarine == this));
+#if SERVER
+            if (sendNetworkEvent)
             {
-                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != this || me.Layer != layer) { continue; }
-                me.HiddenInGame = !enabled;
-#if CLIENT
-                //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
-                if (me.HiddenInGame && me is Item item)
+                GameMain.Server.CreateEntityEvent(this, new SetLayerEnabledEventData(layer, enabled));
+            }
+#endif
+        }
+
+        public static void SetLayerEnabled(Identifier layer, bool enabled, IEnumerable<MapEntity> entities)
+        {
+            foreach (MapEntity entity in MapEntity.MapEntityList)
+            {
+                if (string.IsNullOrEmpty(entity.Layer) || entity.Layer != layer) { continue; }
+                entity.IsLayerHidden = !enabled;
+
+                if (entity is WayPoint wp)
                 {
+                    if (enabled)
+                    {
+                        wp.SpawnType = wp.SpawnType.RemoveFlag(SpawnType.Disabled);
+                    }
+                    else
+                    {
+                        wp.SpawnType = wp.SpawnType.AddFlag(SpawnType.Disabled);
+                    }
+                }
+                else if (entity is Item item)
+                {
+                    SetItemHidden(item, entity.IsLayerHidden);
+                }
+            }
+
+            static void SetItemHidden(Item item, bool isHidden)
+            {
+                foreach (var containedItem in item.ContainedItems)
+                {
+                    SetItemHidden(containedItem, isHidden);
+                }
+                foreach (var connectionPanel in item.GetComponents<ConnectionPanel>())
+                {
+                    foreach (var connection in connectionPanel.Connections)
+                    {
+                        foreach (var wire in connection.Wires)
+                        {
+                            wire.Item.IsLayerHidden = isHidden;
+                        }
+                    }
+                }
+#if CLIENT
+                if (isHidden)
+                {
+                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
                     foreach (var lightComponent in item.GetComponents<LightComponent>())
                     {
                         lightComponent.Light.Enabled = false;
@@ -1145,12 +1237,6 @@ namespace Barotrauma
                 }
 #endif
             }
-#if SERVER
-            if (sendNetworkEvent)
-            {
-                GameMain.Server.CreateEntityEvent(this, new SetLayerEnabledEventData(layer, enabled));
-            }
-#endif
         }
 
         public void Update(float deltaTime)
@@ -1168,7 +1254,7 @@ namespace Barotrauma
             if (Level.Loaded != null &&
                 WorldPosition.Y < Level.MaxEntityDepth &&
                 subBody.Body.Enabled &&
-                (GameMain.NetworkMember?.RespawnManager == null || this != GameMain.NetworkMember.RespawnManager.RespawnShuttle))
+                !IsRespawnShuttle)
             {
                 subBody.Body.ResetDynamics();
                 subBody.Body.Enabled = false;
@@ -1372,11 +1458,8 @@ namespace Barotrauma
             foreach (Submarine sub in loaded)
             {
                 if (ignoreOutposts && sub.Info.IsOutpost) { continue; }
-                if (ignoreOutsideLevel && Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
-                if (ignoreRespawnShuttle)
-                {
-                    if (sub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
-                }
+                if (ignoreOutsideLevel && Level.Loaded != null && sub.IsAboveLevel) { continue; }
+                if (ignoreRespawnShuttle && sub.IsRespawnShuttle) { continue; }                
                 if (teamType.HasValue && sub.TeamID != teamType) { continue; }
                 float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
@@ -1413,7 +1496,8 @@ namespace Barotrauma
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
                 if (!item.HasTag(Tags.CargoContainer)) { continue; }
-                if (item.NonInteractable || item.HiddenInGame) { continue; }
+                if (item.HasTag(Tags.DisallowCargo)) { continue; }
+                if (item.NonInteractable || item.IsHidden) { continue; }
                 var itemContainer = item.GetComponent<ItemContainer>();
                 if (itemContainer == null) { continue; }
                 int emptySlots = 0;
@@ -1516,7 +1600,10 @@ namespace Barotrauma
             return new Rectangle((int)bounds.X, (int)bounds.Y, (int)(bounds.Z - bounds.X), (int)(bounds.Y - bounds.W));
         }
 
-        public Submarine(SubmarineInfo info, bool showErrorMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
+        public Submarine(SubmarineInfo info,
+                         bool showErrorMessages = true,
+                         Func<Submarine, List<MapEntity>> loadEntities = null,
+                         IdRemap linkedRemap = null) : base(null, NullEntityID)
         {
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -1610,6 +1697,10 @@ namespace Barotrauma
                     ShowSonarMarker = false;
                     PhysicsBody.FarseerBody.BodyType = BodyType.Static;
                     TeamID = CharacterTeamType.FriendlyNPC;
+                    foreach (var dockedSub in DockedTo)
+                    {
+                        dockedSub.TeamID = CharacterTeamType.FriendlyNPC;
+                    }
 
                     bool indestructible =
                         GameMain.NetworkMember != null &&
@@ -1703,9 +1794,12 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (Identifier layer in Info.LayersHiddenByDefault)
+                if (Screen.Selected is { IsEditor : false })
                 {
-                    SetLayerEnabled(layer, enabled: false);
+                    foreach (Identifier layer in Info.LayersHiddenByDefault)
+                    {
+                        SetLayerEnabled(layer, enabled: false);
+                    }
                 }
 
                 GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged.Register(upgradeEventIdentifier, _ => ResetCrushDepth());
@@ -1793,7 +1887,7 @@ namespace Barotrauma
 
         public bool CheckFuel()
         {
-            float fuel = GetItems(true).Where(i => i.HasTag(Tags.Fuel)).Sum(i => i.Condition);
+            float fuel = GetItems(true).Where(i => i.HasTag(Tags.ReactorFuel)).Sum(i => i.Condition);
             Info.LowFuel = fuel < 200;
             return !Info.LowFuel;
         }
@@ -1815,6 +1909,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("class", Info.SubmarineClass.ToString()));
             }
             element.Add(new XAttribute("tags", Info.Tags.ToString()));
+            element.Add(new XAttribute("outposttags", Info.OutpostTags.ConvertToString()));
             element.Add(new XAttribute("gameversion", GameMain.Version.ToString()));
 
             Rectangle dimensions = VisibleBorders;
@@ -1839,42 +1934,48 @@ namespace Barotrauma
                 element.Add(new XAttribute("layerhiddenbydefault", string.Join(", ", Info.LayersHiddenByDefault)));
             }
 
+            if (Info.WreckInfo != null)
+            {
+                bool hasThalamus = false;
+
+                var wreckAiEntities = WreckAIConfig.Prefabs.Select(p => p.Entity).ToImmutableHashSet();
+                var prefabsOnSub = GetItems(true).Select(i => i.Prefab).Distinct().ToImmutableHashSet();
+
+                foreach (ItemPrefab prefab in prefabsOnSub)
+                {
+                    foreach (Identifier entity in wreckAiEntities)
+                    {
+                        if (WreckAI.IsThalamus(prefab, entity))
+                        {
+                            hasThalamus = true;
+                            break;
+                        }
+                    }
+                    if (hasThalamus) { break; }
+                }
+
+                element.Add(new XAttribute(nameof(WreckInfo.WreckContainsThalamus), hasThalamus ? WreckInfo.HasThalamus.Yes : WreckInfo.HasThalamus.No));
+            }
+
             if (Info.Type == SubmarineType.OutpostModule)
             {
                 Info.OutpostModuleInfo?.Save(element);
             }
+            if (Info.GetExtraSubmarineInfo is { } extraSubInfo)
+            {
+                extraSubInfo.Save(element);
+            }
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.PendingItemSwap?.SwappableItem?.ConnectedItemsToSwap is not { } connectedItemsToSwap) { continue; }
-                foreach (var (requiredTag, swapTo) in connectedItemsToSwap)
+                if (item.PendingItemSwap?.SwappableItem == null) { continue; }
+                var connectedItemsToSwap = item.GetConnectedItemsToSwap(item.PendingItemSwap.SwappableItem);
+                foreach (var kvp in connectedItemsToSwap)
                 {
-                    List<Item> itemsToSwap = new List<Item>();
-                    itemsToSwap.AddRange(item.linkedTo.Where(lt => (lt as Item)?.HasTag(requiredTag) ?? false).Cast<Item>());
-                    if (item.GetComponent<ConnectionPanel>() is ConnectionPanel connectionPanel)
-                    {
-                        foreach (Connection c in connectionPanel.Connections)
-                        {
-                            foreach (var connectedComponent in item.GetConnectedComponentsRecursive<ItemComponent>(c))
-                            {
-                                if (!itemsToSwap.Contains(connectedComponent.Item) && connectedComponent.Item.HasTag(requiredTag))
-                                {
-                                    itemsToSwap.Add(connectedComponent.Item);
-                                }
-                            }
-                        }
-                    }
-                    ItemPrefab itemPrefab = ItemPrefab.Find("", swapTo);
-                    if (itemPrefab == null) 
-                    {
-                        DebugConsole.ThrowError($"Failed to swap an item connected to \"{item.Name}\" into \"{swapTo}\".");
-                        continue;
-                    }
-                    foreach (Item itemToSwap in itemsToSwap)
-                    {
-                        itemToSwap.PurchasedNewSwap = item.PurchasedNewSwap;
-                        if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }
-                    }
+                    Item itemToSwap = kvp.Key;
+                    ItemPrefab swapTo = kvp.Value;
+                    itemToSwap.PurchasedNewSwap = item.PurchasedNewSwap;
+                    if (itemToSwap.Prefab != swapTo) { itemToSwap.PendingItemSwap = swapTo; }                    
                 }
             }
 
@@ -1933,6 +2034,7 @@ namespace Barotrauma
                 FilePath = filePath,
                 OutpostModuleInfo = Info.OutpostModuleInfo != null ? new OutpostModuleInfo(Info.OutpostModuleInfo) : null,
                 BeaconStationInfo = Info.BeaconStationInfo != null ? new BeaconStationInfo(Info.BeaconStationInfo) : null,
+                EnemySubmarineInfo = Info.EnemySubmarineInfo != null ? new EnemySubmarineInfo(Info.EnemySubmarineInfo) : null,
                 WreckInfo = Info.WreckInfo != null ? new WreckInfo(Info.WreckInfo) : null,
                 Name = Path.GetFileNameWithoutExtension(filePath)
             };
@@ -2186,7 +2288,7 @@ namespace Barotrauma
             {
                 if (potentialContainer.Removed) { continue; }
                 if (potentialContainer.NonInteractable) { continue; }
-                if (potentialContainer.HiddenInGame) { continue; }
+                if (potentialContainer.IsHidden) { continue; }
                 if (allowConnectedSubs)
                 {
                     if (!connectedSubs.Contains(potentialContainer.Submarine)) { continue; }

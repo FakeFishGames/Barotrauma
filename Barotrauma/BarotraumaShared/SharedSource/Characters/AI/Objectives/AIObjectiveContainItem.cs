@@ -11,7 +11,7 @@ namespace Barotrauma
     class AIObjectiveContainItem: AIObjective
     {
         public override Identifier Identifier { get; set; } = "contain item".ToIdentifier();
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public Func<Item, float> GetItemPriority;
 
@@ -77,9 +77,8 @@ namespace Barotrauma
             this.container = container;
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
-            if (IsCompleted) { return true; }
             if (container?.Item == null || !container.Item.HasAccess(character))
             {
                 Abandon = true;

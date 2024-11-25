@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -23,13 +22,32 @@ namespace Barotrauma.Networking
             get; private set;
         }
 
-        partial void UpdateTransportingProjSpecific(float deltaTime)
+        public DateTime ReturnTime { get; private set; }
+        public DateTime RespawnTime { get; private set; }
+        public State CurrentState { get; private set; }
+        public bool ReturnCountdownStarted { get; private set; }
+        public bool RespawnCountdownStarted { get; private set; }
+
+        public static void ShowDeathPromptIfNeeded(float delay = 1.0f)
         {
-            if (GameMain.Client?.Character == null || GameMain.Client.Character.Submarine != RespawnShuttle) { return; }
-            if (!ReturnCountdownStarted) { return; }
+            if (UseDeathPrompt)
+            {
+                DeathPrompt.Create(delay);
+            }
+        }
+
+        partial void UpdateTransportingProjSpecific(TeamSpecificState teamSpecificState, float deltaTime)
+        {
+            if (GameMain.Client?.Character == null || 
+                GameMain.Client.Character.Submarine is not { IsRespawnShuttle: true } ||
+                GameMain.Client.Character.TeamID != teamSpecificState.TeamID) 
+            {
+                return; 
+            }
+            if (!teamSpecificState.ReturnCountdownStarted) { return; }
 
             //show a warning when there's 20 seconds until the shuttle leaves
-            if ((ReturnTime - DateTime.Now).TotalSeconds < 20.0f && 
+            if ((teamSpecificState.ReturnTime - DateTime.Now).TotalSeconds < 20.0f && 
                 (DateTime.Now - lastShuttleLeavingWarningTime).TotalSeconds > 30.0f)
             {
                 lastShuttleLeavingWarningTime = DateTime.Now;
@@ -37,108 +55,58 @@ namespace Barotrauma.Networking
             }
         }
 
-        private CoroutineHandle respawnPromptCoroutine;
-
-        public void ShowRespawnPromptIfNeeded(float delay = 5.0f)
-        {
-            if (!UseRespawnPrompt) { return; }
-            if (CoroutineManager.IsCoroutineRunning(respawnPromptCoroutine) || GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "respawnquestionprompt")) 
-            { 
-                return;
-            }
-
-            respawnPromptCoroutine = CoroutineManager.Invoke(() =>
-            {
-                if (Character.Controlled != null || (GameMain.GameSession is not { IsRunning: true })) { return; }
-
-                LocalizedString text;
-                GUIMessageBox respawnPrompt;
-                if (SkillLossPercentageOnImmediateRespawn > 0)
-                {
-                    // Respawn asap with extra skill loss?
-                    text = TextManager.GetWithVariable("respawnquestionprompt", "[percentage]", ((int)Math.Round(SkillLossPercentageOnImmediateRespawn)).ToString());
-                    respawnPrompt = new GUIMessageBox(
-                        TextManager.Get("tutorial.tryagainheader"), text,
-                        new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
-                    {
-                        UserData = "respawnquestionprompt"
-                    };
-                }
-                else
-                {
-                    // Respawn asap?
-                    text = TextManager.Get("respawnquestionpromptnoloss");
-                    respawnPrompt = new GUIMessageBox(
-                        TextManager.Get("tutorial.tryagainheader"), text,
-                        new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawnnoloss"), TextManager.Get("respawnquestionpromptwait") })
-                    {
-                        UserData = "respawnquestionprompt"
-                    };
-                }
-                if (SkillLossPercentageOnDeath > 0)
-                {
-                    // You have died... etc added BEFORE the above text
-                    text =
-                        TextManager.GetWithVariable("respawnskillpenalty", "[percentage]", ((int)SkillLossPercentageOnDeath).ToString()) + 
-                        "\n\n" + text;
-                };
-
-                respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                {
-                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
-                    respawnPrompt.Close();
-                    return true;
-                };
-                respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                {
-                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
-                    respawnPrompt.Close();
-                    return true;
-                };
-            }, delay: delay);            
-        }
-
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            bool respawnPromptPending = false;
-            var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
-            ForceSpawnInMainSub = false;
-            switch (newState)
+            var myTeamId = (CharacterTeamType)msg.ReadByte();
+            foreach (var teamSpecificState in teamSpecificStates.Values)
             {
-                case State.Transporting:
-                    ReturnCountdownStarted  = msg.ReadBoolean();
-                    maxTransportTime        = msg.ReadSingle();
-                    float transportTimeLeft = msg.ReadSingle();
+                var teamId = (CharacterTeamType)msg.ReadByte();
 
-                    ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(transportTimeLeft * 1000.0f));
-                    RespawnCountdownStarted = false;
-                    if (CurrentState != newState)
-                    {
-                        CoroutineManager.StopCoroutines("forcepos");
-                    }
-                    break;
-                case State.Waiting:
-                    PendingRespawnCount = msg.ReadUInt16();
-                    RequiredRespawnCount = msg.ReadUInt16();
-                    respawnPromptPending = msg.ReadBoolean();
-                    RespawnCountdownStarted = msg.ReadBoolean();
-                    ForceSpawnInMainSub = msg.ReadBoolean();
-                    ResetShuttle();
-                    float newRespawnTime = msg.ReadSingle();
-                    RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(newRespawnTime * 1000.0f));
-                    break;
-                case State.Returning:
-                    RespawnCountdownStarted = false;
-                    break;
+                bool respawnPromptPending = false;
+                var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
+                switch (newState)
+                {
+                    case State.Transporting:
+                        teamSpecificState.ReturnCountdownStarted = msg.ReadBoolean();
+                        maxTransportTime        = msg.ReadSingle();
+                        float transportTimeLeft = msg.ReadSingle();
+
+                        teamSpecificState.ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(transportTimeLeft * 1000.0f));
+                        teamSpecificState.RespawnCountdownStarted = false;
+                        break;
+                    case State.Waiting:
+                        teamSpecificState.PendingRespawnCount = msg.ReadUInt16();
+                        teamSpecificState.RequiredRespawnCount = msg.ReadUInt16();
+                        respawnPromptPending = msg.ReadBoolean();
+                        teamSpecificState.RespawnCountdownStarted = msg.ReadBoolean();
+                        ResetShuttle(teamSpecificState);
+                        float newRespawnTime = msg.ReadSingle();
+                        teamSpecificState.RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(newRespawnTime * 1000.0f));
+                        break;
+                    case State.Returning:
+                        teamSpecificState.RespawnCountdownStarted = false;
+                        break;
+                }
+                teamSpecificState.CurrentState = newState;
+
+                if (respawnPromptPending)
+                {
+                    GameMain.Client.HasSpawned = true;
+                    DeathPrompt.Create(delay: 1.0f);
+                }
+
+                if (teamId == myTeamId)
+                {
+                    PendingRespawnCount = teamSpecificState.PendingRespawnCount;
+                    RequiredRespawnCount = teamSpecificState.RequiredRespawnCount;
+                    ReturnTime = teamSpecificState.ReturnTime;
+                    RespawnTime = teamSpecificState.RespawnTime;
+                    CurrentState = teamSpecificState.CurrentState;
+                    ReturnCountdownStarted = teamSpecificState.ReturnCountdownStarted;
+                    RespawnCountdownStarted = teamSpecificState.RespawnCountdownStarted;
+                }
             }
-            CurrentState = newState;
-
-            if (respawnPromptPending)
-            {
-                GameMain.Client.HasSpawned = true;
-                ShowRespawnPromptIfNeeded(delay: 1.0f);
-            }
-
+            
             msg.ReadPadBits();
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -25,42 +26,37 @@ namespace Barotrauma
             }
         }
 
-        public MissionMode(GameModePreset preset, MissionType missionType, string seed)
+        public MissionMode(GameModePreset preset, IEnumerable<Identifier> missionTypes, string seed)
             : base(preset)
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
-            var mission = Mission.LoadRandom(locations, seed, false, missionType);
+            var mission = Mission.LoadRandom(locations, seed, requireCorrectLocationType: false, missionTypes, difficultyLevel: GameMain.NetworkMember.ServerSettings.SelectedLevelDifficulty);
             if (mission != null)
             {
                 missions.Add(mission);
             }
         }
 
-        protected static IEnumerable<MissionPrefab> ValidateMissionPrefabs(IEnumerable<MissionPrefab> missionPrefabs, Dictionary<MissionType, Type> missionClasses)
+        protected static IEnumerable<MissionPrefab> ValidateMissionPrefabs(IEnumerable<MissionPrefab> missionPrefabs, Dictionary<Identifier, Type> missionClasses)
         {
             foreach (MissionPrefab missionPrefab in missionPrefabs)
             {
-                if (ValidateMissionType(missionPrefab.Type, missionClasses) != missionPrefab.Type)
+                if (!missionClasses.ContainsValue(missionPrefab.MissionClass))
                 {
-                    throw new InvalidOperationException("Cannot start gamemode with mission type " + missionPrefab.Type);
+                    throw new InvalidOperationException($"Cannot start gamemode with a {missionPrefab.MissionClass} mission.");
                 }
             }
             return missionPrefabs;
         }
 
-        protected static MissionType ValidateMissionType(MissionType missionType, Dictionary<MissionType, Type> missionClasses)
+        /// <summary>
+        /// Returns the mission types that are valid for the given mission classes (e.g. all mission types suitable for the PvP mission classes).
+        /// </summary>
+        public static IEnumerable<Identifier> ValidateMissionTypes(IEnumerable<Identifier> missionTypes, Dictionary<Identifier, Type> missionClasses)
         {
-            var missionTypes = (MissionType[])Enum.GetValues(typeof(MissionType));
-            for (int i = 0; i < missionTypes.Length; i++)
-            {
-                var type = missionTypes[i];
-                if (type == MissionType.None || type == MissionType.All) { continue; }
-                if (!missionClasses.ContainsKey(type))
-                {
-                    missionType &= ~(type);
-                }
-            }
-            return missionType;
+            return missionTypes.Where(type => 
+                MissionPrefab.Prefabs.OrderBy(missionPrefab => missionPrefab.UintIdentifier)
+                    .Any(missionPrefab => missionPrefab.Type == type && missionClasses.ContainsValue(missionPrefab.MissionClass)));
         }
     }
 }

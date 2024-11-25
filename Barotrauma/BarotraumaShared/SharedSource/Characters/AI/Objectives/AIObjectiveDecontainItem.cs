@@ -9,7 +9,7 @@ namespace Barotrauma
     class AIObjectiveDecontainItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "decontain item".ToIdentifier();
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public Func<Item, float> GetItemPriority;
 
@@ -71,7 +71,7 @@ namespace Barotrauma
             this.targetContainer = targetContainer;
         }
 
-        protected override bool CheckObjectiveSpecific() => IsCompleted;
+        protected override bool CheckObjectiveState() => IsCompleted;
 
         protected override void Act(float deltaTime)
         {

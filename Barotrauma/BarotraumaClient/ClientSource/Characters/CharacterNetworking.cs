@@ -154,6 +154,9 @@ namespace Barotrauma
                 case TreatmentEventData _:
                     msg.WriteBoolean(AnimController.Anim == AnimController.Animation.CPR);
                     break;
+                case ConfirmRefundEventData _:
+                    //do nothing
+                    break;
                 case CharacterStatusEventData _:
                     //do nothing
                     break;
@@ -202,11 +205,15 @@ namespace Barotrauma
                 keys[(int)InputType.Use].Held = useInput;
                 keys[(int)InputType.Use].SetState(false, useInput);
 
-                bool crouching = msg.ReadBoolean();
                 if (AnimController is HumanoidAnimController)
                 {
+                    bool crouching = msg.ReadBoolean();
                     keys[(int)InputType.Crouch].Held = crouching;
                     keys[(int)InputType.Crouch].SetState(false, crouching);
+                }
+                else if (AnimController is FishAnimController fishAnim)
+                {
+                    fishAnim.Reverse = msg.ReadBoolean();
                 }
 
                 bool attackInput = msg.ReadBoolean();
@@ -357,6 +364,7 @@ namespace Barotrauma
                 case EventType.Control:
                     bool myCharacter = msg.ReadBoolean();
                     byte ownerID = msg.ReadByte();
+                    bool renamingEnabled = msg.ReadBoolean();
                     ResetNetState();
                     if (myCharacter)
                     {
@@ -385,18 +393,22 @@ namespace Barotrauma
                         }
                         IsRemotePlayer = ownerID > 0;
                     }
+                    if (info != null)
+                    {
+                        info.RenamingEnabled = renamingEnabled;
+                    }
                     break;
                 case EventType.Status:
                     ReadStatus(msg);
                     break;
                 case EventType.UpdateSkills:
-                    int skillCount = msg.ReadByte();
-                    for (int i = 0; i < skillCount; i++)
+                    Identifier skillIdentifier = msg.ReadIdentifier();
+                    if (!skillIdentifier.IsEmpty)
                     {
-                        Identifier skillIdentifier = msg.ReadIdentifier();
+                        bool forceNotification = msg.ReadBoolean();
                         float skillLevel = msg.ReadSingle();
-                        info?.SetSkillLevel(skillIdentifier, skillLevel);
-                    }
+                        info?.SetSkillLevel(skillIdentifier, skillLevel, forceNotification: forceNotification);
+                    }                  
                     break;
                 case EventType.SetAttackTarget:
                 case EventType.ExecuteAttack:
@@ -507,7 +519,12 @@ namespace Barotrauma
                     break;
                 case EventType.UpdateExperience:
                     int experienceAmount = msg.ReadInt32();
-                    info?.SetExperience(experienceAmount);
+                    int additionalTalentPoints = msg.ReadInt32();
+                    if (info != null)
+                    {
+                        info.SetExperience(experienceAmount);
+                        info.AdditionalTalentPoints = additionalTalentPoints;
+                    }
                     break;
                 case EventType.UpdateTalents:
                     ushort talentCount = msg.ReadUInt16();
@@ -521,6 +538,20 @@ namespace Barotrauma
                 case EventType.UpdateMoney:
                     int moneyAmount = msg.ReadInt32();
                     SetMoney(moneyAmount);
+                    break;
+                case EventType.UpdateTalentRefundPoints:
+                    int refundPoints = msg.ReadInt32();
+                    if (info != null)
+                    {
+                        if (refundPoints > info.TalentRefundPoints)
+                        {
+                            info.ShowTalentResetPopupOnOpen = true;
+                        }
+                        info.TalentRefundPoints = refundPoints;
+                    }
+                    break;
+                case EventType.ConfirmTalentRefund:
+                    Info?.RefundTalents();
                     break;
                 case EventType.UpdatePermanentStats:
                     byte savedStatValueCount = msg.ReadByte();
@@ -723,11 +754,19 @@ namespace Barotrauma
                     character.ReadStatus(inc);
                 }
 
-                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None && !character.IsDead)
+                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
-                    GameMain.GameSession.CrewManager.AddCharacter(character);
+                    if (character.isDead)
+                    {
+                        //just add the info if dead (displayed in the round summary, and crew list if the character is revived)
+                        GameMain.GameSession.CrewManager.AddCharacterInfo(character.info);
+                    }
+                    else
+                    {
+                        GameMain.GameSession.CrewManager.AddCharacter(character);
+                    }
                 }
 
                 if (GameMain.Client.SessionId == ownerId)

@@ -57,9 +57,9 @@ namespace Barotrauma
         /// Spawns loot in the specified container. 
         /// </summary>
         /// <param name="skipItemProbability">Probability for an individual loot item to be skipped. I.e. a value of 1.0 means nothing spawns, 0.5 means there's about 50% of the normal amount of loot.</param>
-        public static void RegenerateLoot(Submarine sub, ItemContainer regeneratedContainer, float skipItemProbability = 0.0f)
+        public static IEnumerable<Item> RegenerateLoot(Submarine sub, ItemContainer regeneratedContainer, float skipItemProbability = 0.0f)
         {
-            CreateAndPlace(sub.ToEnumerable(), regeneratedContainer: regeneratedContainer, skipItemProbability);
+            return CreateAndPlace(sub.ToEnumerable(), regeneratedContainer: regeneratedContainer, skipItemProbability);
         }
 
         public static Identifier DefaultStartItemSet = new Identifier("normal");
@@ -136,12 +136,12 @@ namespace Barotrauma
             }
         }
 
-        private static void CreateAndPlace(IEnumerable<Submarine> subs, ItemContainer regeneratedContainer = null, float skipItemProbability = 0.0f)
+        private static IEnumerable<Item> CreateAndPlace(IEnumerable<Submarine> subs, ItemContainer regeneratedContainer = null, float skipItemProbability = 0.0f)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
                 DebugConsole.ThrowError("Clients are not allowed to use AutoItemPlacer.\n" + Environment.StackTrace.CleanupStackTrace());
-                return;
+                return Enumerable.Empty<Item>();
             }
 
             List<Item> itemsToSpawn = new List<Item>(100);
@@ -249,6 +249,8 @@ namespace Barotrauma
                 }
             }
 
+            return itemsToSpawn;
+
             void SpawnItems(ItemPrefab itemPrefab, float skipItemProbability = 0.0f)
             {
                 if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) < skipItemProbability) { return; }
@@ -260,11 +262,13 @@ namespace Barotrauma
                     return;
                 }
                 bool isCampaign = GameMain.GameSession?.GameMode is CampaignMode;
+                bool isPvP = GameMain.GameSession?.GameMode is PvPMode;
                 float levelDifficulty = Level.Loaded?.Difficulty ?? 0.0f;
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {
                     if (preferredContainer.CampaignOnly && !isCampaign) { continue; }
                     if (preferredContainer.NotCampaign && isCampaign) { continue; }
+                    if (preferredContainer.NotPvP && isPvP) { continue; }
                     if (levelDifficulty < preferredContainer.MinLevelDifficulty || levelDifficulty > preferredContainer.MaxLevelDifficulty) { continue; }
                     if (preferredContainer.SpawnProbability <= 0.0f || preferredContainer.MaxAmount <= 0 && preferredContainer.Amount <= 0) { continue; }
                     validContainers = GetValidContainers(preferredContainer, containers, validContainers, primary: true);
@@ -329,7 +333,7 @@ namespace Barotrauma
                 }
                 var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.Prefab == itemPrefab);
                 int quality = existingItem?.Quality ?? Quality.GetSpawnedItemQuality(validContainer.Key.Item.Submarine, Level.Loaded, Rand.RandSync.ServerAndClient);
-                if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
+                if (!validContainer.Key.Inventory.CanProbablyBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine, callOnItemLoaded: false)
                 {
                     SpawnedInCurrentOutpost = validContainer.Key.Item.SpawnedInCurrentOutpost,

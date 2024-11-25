@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
         private string lastSentText;
         private float sendStateTimer;
 
-        [Serialize("", IsPropertySaveable.Yes, description: "The text to display on the label.", alwaysUseInstanceValues: true), Editable(100)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The text to display on the label.", alwaysUseInstanceValues: true), Editable(MaxLength = 100)]
         public string Text
         {
             get;
@@ -34,20 +34,6 @@ namespace Barotrauma.Items.Components
         
         [Editable, Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public float TextScale
-        {
-            get;
-            set;
-        }
-
-        [Editable(DecimalCount = 0, VectorComponentLabels = new string[] { "inputtype.left", "inputtype.up", "inputtype.right", "inputtype.down" }), Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels.")]
-        public Vector4 Padding
-        {
-            get;
-            set;
-        }
-
-        [Editable, Serialize(Alignment.Center, IsPropertySaveable.Yes, description: "The alignment of the label's text.")]
-        public Alignment TextAlignment
         {
             get;
             set;

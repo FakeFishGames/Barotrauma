@@ -162,7 +162,7 @@ namespace Barotrauma
             };
         }
 
-        private void InitCampaignUI()
+        public void InitCampaignUI()
         {
             campaignUIContainer = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
             CampaignUI = new CampaignUI(this, campaignUIContainer)
@@ -541,7 +541,7 @@ namespace Barotrauma
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty, mapSeed);
+                GameMain.GameSession = new GameSession(null, Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty, mapSeed);
                 campaign = (MultiPlayerCampaign)GameMain.GameSession.GameMode;
                 campaign.CampaignID = campaignID;
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
@@ -720,7 +720,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
+                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, isNetworkMessage: true);
                         }
                     }
                     foreach (Item item in Item.ItemList.ToList())
@@ -906,6 +906,8 @@ namespace Barotrauma
 
         public void ClientReadCrew(IReadMessage msg)
         {
+            bool createNotification = msg.ReadBoolean();
+
             ushort availableHireLength = msg.ReadUInt16();
             List<CharacterInfo> availableHires = new List<CharacterInfo>();
             for (int i = 0; i < availableHireLength; i++)
@@ -916,10 +918,10 @@ namespace Barotrauma
             }
 
             ushort pendingHireLength = msg.ReadUInt16();
-            List<int> pendingHires = new List<int>();
+            List<UInt16> pendingHires = new List<UInt16>();
             for (int i = 0; i < pendingHireLength; i++)
             {
-                pendingHires.Add(msg.ReadInt32());
+                pendingHires.Add(msg.ReadUInt16());
             }
 
             ushort hiredLength = msg.ReadUInt16();
@@ -934,30 +936,49 @@ namespace Barotrauma
             bool renameCrewMember = msg.ReadBoolean();
             if (renameCrewMember)
             {
-                int renamedIdentifier = msg.ReadInt32();
+                UInt16 renamedIdentifier = msg.ReadUInt16();
                 string newName = msg.ReadString();
-                CharacterInfo renamedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
-                if (renamedCharacter != null) { CrewManager.RenameCharacter(renamedCharacter, newName); }
+                CharacterInfo renamedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                if (renamedCharacter != null)
+                {
+                    CrewManager.RenameCharacter(renamedCharacter, newName);
+                    // Since renaming can only be done once in permadeath, we can safely set this to false to disable the renaming in the UI.
+                    renamedCharacter.RenamingEnabled = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Could not find a character to rename with the ID {renamedIdentifier}.");
+                }
             }
 
             bool fireCharacter = msg.ReadBoolean();
             if (fireCharacter)
             {
-                int firedIdentifier = msg.ReadInt32();
-                CharacterInfo firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
+                UInt16 firedIdentifier = msg.ReadUInt16();
+                CharacterInfo firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == firedIdentifier);
                 // this one might and is allowed to be null since the character is already fired on the original sender's game
                 if (firedCharacter != null) { CrewManager.FireCharacter(firedCharacter); }
             }
 
-            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.CrewManagement != null && 
-                /*can't apply until we have the latest save file*/
-                !NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
+            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.HRManagerUI != null)
             {
-                CampaignUI.CrewManagement.SetHireables(map.CurrentLocation, availableHires);
-                if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters, takeMoney: false); }
-                CampaignUI.CrewManagement.SetPendingHires(pendingHires, map.CurrentLocation);
-                if (renameCrewMember || fireCharacter) { CampaignUI.CrewManagement.UpdateCrew(); }
+                //can't apply until we have the latest save file
+                if (!NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
+                {
+                    CampaignUI.HRManagerUI.SetHireables(map.CurrentLocation, availableHires);
+                    if (hiredCharacters.Any()) { CampaignUI.HRManagerUI.ValidateHires(hiredCharacters, takeMoney: false, createNotification: createNotification); }
+                    CampaignUI.HRManagerUI.SetPendingHires(pendingHires, map.CurrentLocation);
+                    if (renameCrewMember || fireCharacter) { CampaignUI.HRManagerUI.UpdateCrew(); }
+                }
             }
+            else
+            {
+                //This is pretty nasty: setting hireables is handled through CrewManagement,
+                //which is part of the Campaign UI that might not exist when the client is still initializing the round.
+                //If that's the case, let's force the available hires here so they're available when the UI is created
+                CurrentLocation?.ForceHireableCharacters(availableHires);
+            }
+            
         }
 
         public void ClientReadMoney(IReadMessage inc)
@@ -979,6 +1000,7 @@ namespace Barotrauma
                 else
                 {
                     Bank.Balance = info.Balance;
+                    Bank.RewardDistribution = info.RewardDistribution;
                     TryInvokeEvent(Bank, transaction.ChangedData, info);
                 }
             }
@@ -994,6 +1016,11 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
+            if (price == 0)
+            {
+                return true;
+            }
+
             if (!AllowedToManageCampaign(ClientPermissions.ManageMoney))
             {
                 return PersonalWallet.TryDeduct(price);
@@ -1017,7 +1044,7 @@ namespace Barotrauma
             return false;
         }
 
-        public override void Save(XElement element)
+        public override void Save(XElement element, bool isSavingOnLoading)
         {
             //do nothing, the clients get the save files from the server
         }

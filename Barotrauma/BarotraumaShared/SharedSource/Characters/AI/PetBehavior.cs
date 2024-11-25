@@ -45,7 +45,8 @@ namespace Barotrauma
         public float HappyThreshold { get; set; }
 
         public float MaxHappiness { get; set; }
-
+        
+        public bool HideStatusIndicators { get; set; }
 
         /// <summary>
         /// At which point is the pet considered "hungry" (playing unhappy sounds and showing the icon)
@@ -59,6 +60,14 @@ namespace Barotrauma
         public float PlayForce { get; set; }
 
         public float PlayTimer { get; set; }
+        
+        public float PlayCooldown { get; set; }
+        
+        /// <summary>
+        /// Should the pet lose ownership (and stop following) when the same character interacts with it twice? Unlike with other pets, if another character interacts with the pet, they will become the owner.
+        /// </summary>
+        public bool ToggleOwner { get; set; }
+            
         private float? UnstunY { get; set; }
 
         public EnemyAIController AIController { get; private set; } = null;
@@ -162,7 +171,7 @@ namespace Barotrauma
 
         private class Food
         {
-            public string Tag;
+            public Identifier Tag;
             public Vector2 HungerRange;
             public float Hunger;
             public float Happiness;
@@ -178,11 +187,11 @@ namespace Barotrauma
         public PetBehavior(XElement element, EnemyAIController aiController)
         {
             AIController = aiController;
-            AIController.Character.CanBeDragged = true;
 
             MaxHappiness = element.GetAttributeFloat(nameof(MaxHappiness), 100.0f);
             UnhappyThreshold = element.GetAttributeFloat(nameof(UnhappyThreshold), MaxHappiness * 0.25f);
             HappyThreshold = element.GetAttributeFloat(nameof(HappyThreshold), MaxHappiness * 0.8f);
+            HideStatusIndicators = element.GetAttributeBool(nameof(HideStatusIndicators), false);
 
             MaxHunger = element.GetAttributeFloat(nameof(MaxHunger), 100.0f);
             HungryThreshold = element.GetAttributeFloat(nameof(HungryThreshold), MaxHunger * 0.5f);
@@ -193,7 +202,9 @@ namespace Barotrauma
             HappinessDecreaseRate = element.GetAttributeFloat(nameof(HappinessDecreaseRate), 0.1f);
             HungerIncreaseRate = element.GetAttributeFloat(nameof(HungerIncreaseRate), 0.25f);
 
-            PlayForce = element.GetAttributeFloat("playforce", 15.0f);
+            PlayForce = element.GetAttributeFloat(nameof(PlayForce), 15.0f);
+            PlayCooldown = element.GetAttributeFloat(nameof(PlayCooldown), 5.0f);
+            ToggleOwner = element.GetAttributeBool(nameof(ToggleOwner), false);
 
             foreach (var subElement in element.Elements())
             {
@@ -205,7 +216,7 @@ namespace Barotrauma
                     case "eat":
                         Food food = new Food
                         {
-                            Tag = subElement.GetAttributeString("tag", ""),
+                            Tag = subElement.GetAttributeIdentifier("tag", Identifier.Empty),
                             Hunger = subElement.GetAttributeFloat("hunger", -1),
                             Happiness = subElement.GetAttributeFloat("happiness", 1),
                             Priority = subElement.GetAttributeFloat("priority", 100),
@@ -228,6 +239,7 @@ namespace Barotrauma
 
         public StatusIndicatorType GetCurrentStatusIndicatorType()
         {
+            if (HideStatusIndicators) { return StatusIndicatorType.None; }
             if (Hunger > HungryThreshold) { return StatusIndicatorType.Hungry; }
             if (Happiness > HappyThreshold) { return StatusIndicatorType.Happy; }
             if (Happiness < UnhappyThreshold) { return StatusIndicatorType.Sad; }
@@ -284,14 +296,22 @@ namespace Barotrauma
         public void Play(Character player)
         {
             if (PlayTimer > 0.0f) { return; }
-            Owner ??= player;
-            PlayTimer = 5.0f;
+            if (!AIController.Character.IsFriendly(player)) { return; }
+            if (ToggleOwner)
+            {
+                Owner = Owner == player ? null : player;
+            }
+            else
+            {
+                Owner ??= player;
+            }
+            PlayTimer = PlayCooldown;
             AIController.Character.IsRagdolled = true;
             Happiness += 10.0f;
             AIController.Character.AnimController.MainLimb.body.LinearVelocity += new Vector2(0, PlayForce);
             UnstunY = AIController.Character.SimPosition.Y;
 #if CLIENT
-            AIController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.9f);
+            AIController.Character.PlaySound(Owner == null ? CharacterSound.SoundType.Unhappy : CharacterSound.SoundType.Happy);
 #endif
         }
 
@@ -319,7 +339,7 @@ namespace Barotrauma
 
             if (UnstunY.HasValue)
             {
-                if (PlayTimer > 4.0f)
+                if (PlayTimer > PlayCooldown - 1.0f)
                 {
                     float extent = character.AnimController.MainLimb.body.GetMaxExtent();
                     if (character.SimPosition.Y < (UnstunY.Value + extent * 3.0f) &&
@@ -355,9 +375,12 @@ namespace Barotrauma
                 {
                     if (food.TargetParams == null)
                     {
-                        if (AIController.AIParams.TryGetTarget(food.Tag, out TargetParams target))
+                        if (AIController.AIParams.TryGetTargets(food.Tag, out IEnumerable<TargetParams> existingTargetParams))
                         {
-                            food.TargetParams = target;
+                            foreach (var targetParams in existingTargetParams)
+                            {
+                                food.TargetParams = targetParams;
+                            }
                         }
                         else if (AIController.AIParams.TryAddNewTarget(food.Tag, AIState.Eat, food.Priority, out TargetParams targetParams))
                         {
@@ -445,11 +468,15 @@ namespace Barotrauma
                 }
                 else
                 {
+                    WayPoint spawnPoint = null;
                     //try to find a spawnpoint in the main sub
-                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandomUnsynced();
+                    if (Submarine.MainSub != null)
+                    {
+                        spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandomUnsynced();
+                    }
                     //if not found, try any player sub (shuttle/drone etc)
                     spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandomUnsynced();
-                    spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
+                    spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub?.WorldPosition ?? Vector2.Zero;
                 }
                 
                 var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName.ToIdentifier());

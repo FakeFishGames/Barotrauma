@@ -716,9 +716,7 @@ namespace Barotrauma
 
                 ShowQuestionPrompt("Console command permissions to revoke from \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
                 {
-                    Identifier[] splitCommands = commandsStr.Split(' ')
-                        .Select(s => s.Trim())
-                        .ToIdentifiers().ToArray();
+                    Identifier[] splitCommands = commandsStr.ToIdentifiers(separator: " ").ToArray();
                     List<Command> revokedCommands = new List<Command>();
                     bool revokeAll = splitCommands.Length > 0 && splitCommands[0] == "all";
                     if (revokeAll)
@@ -963,7 +961,7 @@ namespace Barotrauma
                 }
                 client.Muted = true;
                 GameMain.Server.SendDirectChatMessage(TextManager.Get("MutedByServer").Value, client, ChatMessageType.MessageBox);
-            },
+            },  
             () =>
             {
                 if (GameMain.Server == null) return null;
@@ -1351,14 +1349,14 @@ namespace Barotrauma
 
             commands.Add(new Command("mission", "mission [name]: Select the mission type for the next round.", (string[] args) =>
             {
-                GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
-                NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
+                GameMain.NetLobbyScreen.MissionTypes = args.ToIdentifiers();
+                NewMessage("Set mission to " + string.Join(",", GameMain.NetLobbyScreen.MissionTypes), Color.Cyan);
             },
             () =>
             {
                 return new string[][]
                 {
-                    Enum.GetNames(typeof(MissionType))
+                    MissionPrefab.GetAllMultiplayerSelectableMissionTypes().Select(id => id.Value).ToArray()
                 };
             }));
 
@@ -1404,10 +1402,7 @@ namespace Barotrauma
             AssignOnExecute("respawnnow", (string[] args) =>
             {
                 if (GameMain.Server?.RespawnManager == null) { return; }
-                if (GameMain.Server.RespawnManager.CurrentState != RespawnManager.State.Transporting)
-                {
-                    GameMain.Server.RespawnManager.ForceRespawn();
-                }
+                GameMain.Server.RespawnManager.ForceRespawn();                
             });
 
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
@@ -1416,7 +1411,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && 
                     GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
                 {
-                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath, client: null);
+                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.DataPath, client: null);
                 }
                 else
                 {
@@ -1425,7 +1420,9 @@ namespace Barotrauma
                         MultiPlayerCampaign.StartCampaignSetup();
                         return;
                     }
-                    if (!GameMain.Server.TryStartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
+
+                    var result = GameMain.Server.TryStartGame();
+                    if (result != GameServer.TryStartGameResult.Success) { NewMessage($"Failed to start a new round: {TextManager.Get($"TryStartGameError.{result}")}", Color.Yellow); }
                 }
             }));
 
@@ -1599,6 +1596,19 @@ namespace Barotrauma
                     NewMessage("Disabled RequireClientNameMatch");
                 }
             }));
+
+            AssignOnExecute("debugvoip", _ =>
+            {
+                VoipServerDecoder.DebugVoip = !VoipServerDecoder.DebugVoip;
+                NewMessage("Debugging voice chat is now " + (VoipServerDecoder.DebugVoip ? "enabled" : "disabled"), Color.White);
+            });
+
+            AssignOnClientRequestExecute("debugvoip", (client, _, _) =>
+            {
+                VoipServerDecoder.DebugVoip = !VoipServerDecoder.DebugVoip;
+                NewMessage("Debugging voice chat is now " + (VoipServerDecoder.DebugVoip ? "enabled" : "disabled") + " by " + client.Name, Color.White);
+                GameMain.Server.SendConsoleMessage("Debugging voice chat is now " + (VoipServerDecoder.DebugVoip ? "enabled" : "disabled"), client);
+            });
 #endif
 
             AssignOnClientRequestExecute(
@@ -1701,7 +1711,34 @@ namespace Barotrauma
                     SpawnItem(args, cursorWorldPos, client.Character, out string errorMsg);
                     if (!string.IsNullOrWhiteSpace(errorMsg))
                     {
-                        GameMain.Server.SendConsoleMessage(errorMsg, client);
+                        GameMain.Server.SendConsoleMessage(errorMsg, client, Color.Red);
+                    }
+                }
+            );
+            
+            AssignOnClientRequestExecute(
+                "give",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    if (client.Character == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("No character is selected!", client, Color.Red);
+                        return;
+                    }
+
+                    if (args.Length == 0)
+                    {
+                        GameMain.Server.SendConsoleMessage("Please give the name or identifier of the item to spawn.", client, Color.Red);
+                        return;
+                    }
+
+                    var modifiedArgs = new List<string>(args);
+                    modifiedArgs.Insert(1, "inventory");
+                    
+                    SpawnItem(modifiedArgs.ToArray(), cursorWorldPos, client.Character, out string errorMsg);
+                    if (!string.IsNullOrWhiteSpace(errorMsg))
+                    {
+                        GameMain.Server.SendConsoleMessage(errorMsg, client, Color.Red);
                     }
                 }
             );
@@ -1761,11 +1798,7 @@ namespace Barotrauma
                 "teleportcharacter|teleport",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    Character tpCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
-                    if (tpCharacter != null)
-                    {
-                        tpCharacter.TeleportTo(cursorWorldPos);
-                    }
+                    TeleportCharacter(cursorWorldPos, client.Character, args);
                 }
             );
 
@@ -1888,23 +1921,28 @@ namespace Barotrauma
                     }
                 }
             );
+            
+            AssignOnClientRequestExecute(
+                "healme",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    bool healAll = args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    if (client.Character != null)
+                    {
+                        HealCharacter(client.Character, healAll);
+                    }
+                }
+            );
 
             AssignOnClientRequestExecute(
                 "heal",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
-                    Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
+                    Character healedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
                     if (healedCharacter != null)
                     {
-                        healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
-                        healedCharacter.Oxygen = 100.0f;
-                        healedCharacter.Bloodloss = 0.0f;
-                        healedCharacter.SetStun(0.0f, true);
-                        if (healAll)
-                        {
-                            healedCharacter.CharacterHealth.RemoveAllAfflictions();
-                        }
+                        HealCharacter(healedCharacter, healAll);
                     }
                 }
             );
@@ -1922,6 +1960,17 @@ namespace Barotrauma
                         foreach (Client c in GameMain.Server.ConnectedClients)
                         {
                             if (c.Character != revivedCharacter) { continue; }
+                            
+                            // If killed in ironman mode, the character has been wiped from the save mid-round, so its
+                            // original data needs to be restored to the save file (without making a backup of the dead character)
+                            if (GameMain.Server.ServerSettings is { IronmanModeActive: true } && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+                            {
+                                if (mpCampaign.RestoreSingleCharacterFromBackup(c) is CharacterCampaignData characterToRestore)
+                                {
+                                    characterToRestore.CharacterInfo.PermanentlyDead = false;
+                                    mpCampaign.SaveSingleCharacter(characterToRestore, skipBackup: true);
+                                }
+                            }
 
                             //clients stop controlling the character when it dies, force control back
                             GameMain.Server.SetClientCharacter(c, revivedCharacter);
@@ -2526,6 +2575,7 @@ namespace Barotrauma
                         {
                             foreach (Skill skill in character.Info.Job.GetSkills())
                             {
+                                GameMain.NetworkMember.CreateEntityEvent(character, new Character.UpdateSkillsEventData(skill.Identifier, forceNotification: true));
                                 character.Info.SetSkillLevel(skill.Identifier, level);
                             }
                             GameMain.Server.SendConsoleMessage($"Set all {character.Name}'s skills to {level}", senderClient);
@@ -2533,15 +2583,100 @@ namespace Barotrauma
                         else
                         {
                             character.Info.SetSkillLevel(skillIdentifier, level);
+                            GameMain.NetworkMember.CreateEntityEvent(character, new Character.UpdateSkillsEventData(skillIdentifier, forceNotification: true));
                             GameMain.Server.SendConsoleMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", senderClient);
                         }
 
-                        GameMain.NetworkMember.CreateEntityEvent(character, new Character.UpdateSkillsEventData());                
                     }
                     else
                     {
                         GameMain.Server.SendConsoleMessage($"{levelString} is not a valid level. Expected number or \"max\".", senderClient, Color.Red);
                     }                  
+                }
+            );
+
+            commands.Add(new Command("setsalary", "setsalary [0-100] [character/default]: Sets the salary of a certain character or the default salary to a percentage.", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    NewMessage($"Missing arguments. Expected at least 2 but got {args.Length} (amount, character)", Color.Red);
+                    return;
+                }
+
+                if (GameMain.GameSession?.Campaign is not MultiPlayerCampaign mpCampaign)
+                {
+                    NewMessage("No campaign active.", Color.Red);
+                    return;
+                }
+
+                if (!int.TryParse(args[0], out int amount))
+                {
+                    NewMessage($"{args[0]} is not a valid amount.", Color.Red);
+                    return;
+                }
+
+                if (args[1].Equals("default", StringComparison.OrdinalIgnoreCase))
+                {
+                    mpCampaign.Bank.SetRewardDistribution(amount);
+                    NewMessage($"Set the default salary to {amount}%", Color.White);
+                    return;
+                }
+
+                Character character = FindMatchingCharacter(args.Skip(1).ToArray());
+                if (character is null)
+                {
+                    NewMessage($"Character not found \"{args[1]}\".", Color.Red);
+                    return;
+                }
+
+                character.Wallet.SetRewardDistribution(amount);
+                NewMessage($"Set {character.Name}'s salary to {amount}%", Color.White);
+            }));
+            
+            AssignOnClientRequestExecute(
+                "setsalary",
+                (senderClient, cursorWorldPos, args) =>
+                {
+                    if (args.Length < 2)
+                    {
+                        GameMain.Server.SendConsoleMessage($"Missing arguments. Expected at least 2 but got {args.Length} (amount, character)", senderClient, Color.Red);
+                        return;
+                    }
+
+                    if (!CampaignMode.AllowedToManageWallets(senderClient))
+                    {
+                        GameMain.Server.SendConsoleMessage("You are not allowed to manage wallets.", senderClient, Color.Red);
+                        return;
+                    }
+                    
+                    if (GameMain.GameSession?.Campaign is not MultiPlayerCampaign mpCampaign)
+                    {
+                        GameMain.Server.SendConsoleMessage("No campaign active.", senderClient, Color.Red);
+                        return;
+                    }
+
+                    if (!int.TryParse(args[0], out int amount))
+                    {
+                        GameMain.Server.SendConsoleMessage($"{args[0]} is not a valid amount.", senderClient, Color.Red);
+                        return;
+                    }
+
+                    if (args[1].Equals("default", StringComparison.OrdinalIgnoreCase))
+                    {
+                        mpCampaign.Bank.SetRewardDistribution(amount);
+                        GameMain.Server.SendConsoleMessage($"Set the default salary to {amount}%", senderClient);
+                        return;
+                    }
+
+                    Character character = FindMatchingCharacter(args.Skip(1).ToArray());
+                    if (character is null)
+                    {
+                        GameMain.Server.SendConsoleMessage($"Character not found \"{args[1]}\".", senderClient, Color.Red);
+                        return;
+                    }
+
+                    character.Wallet.SetRewardDistribution(amount);
+                    GameMain.Server.SendConsoleMessage($"Set {character.Name}'s salary to {amount}%.", senderClient);
                 }
             );
 
@@ -2607,7 +2742,7 @@ namespace Barotrauma
             }));
 #endif
         }
-
+        
         public static void ServerRead(IReadMessage inc, Client sender)
         {
             string consoleCommand = inc.ReadString();

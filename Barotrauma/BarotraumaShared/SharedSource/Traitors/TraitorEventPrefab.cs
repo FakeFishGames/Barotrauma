@@ -16,14 +16,14 @@ namespace Barotrauma
         {
             public Identifier MissionIdentifier;
             public Identifier MissionTag;
-            public MissionType MissionType;
+            public Identifier MissionType;
 
             public MissionRequirement(XElement element, TraitorEventPrefab prefab)
             {
                 MissionIdentifier = element.GetAttributeIdentifier(nameof(MissionIdentifier), Identifier.Empty);
                 MissionTag = element.GetAttributeIdentifier(nameof(MissionTag), Identifier.Empty);
-                MissionType = element.GetAttributeEnum(nameof(MissionType), MissionType.None);
-                if (MissionIdentifier.IsEmpty && MissionTag.IsEmpty && MissionType == MissionType.None)
+                MissionType = element.GetAttributeIdentifier(nameof(MissionType), Identifier.Empty);
+                if (MissionIdentifier.IsEmpty && MissionTag.IsEmpty && MissionType == Identifier.Empty)
                 {
                     DebugConsole.ThrowError($"Error in traitor event \"{prefab.Identifier}\". Mission requirement with no {nameof(MissionIdentifier)}, {nameof(MissionTag)} or {nameof(MissionType)}.",
                         contentPackage: prefab.ContentPackage);
@@ -32,7 +32,7 @@ namespace Barotrauma
 
             public bool Match(Mission mission)
             {
-                if (mission == null) { return MissionIdentifier.IsEmpty && MissionTag.IsEmpty && MissionType == MissionType.None; }
+                if (mission == null) { return MissionIdentifier.IsEmpty && MissionTag.IsEmpty && MissionType == Identifier.Empty; }
                 if (!MissionIdentifier.IsEmpty)
                 {
                     return mission.Prefab.Identifier == MissionIdentifier;
@@ -41,7 +41,7 @@ namespace Barotrauma
                 {
                     return mission.Prefab.Tags.Contains(MissionTag);
                 }
-                else if (MissionType != MissionType.None)
+                else if (!MissionType.IsEmpty)
                 {
                     return mission.Prefab.Type == MissionType;
                 }
@@ -203,8 +203,6 @@ namespace Barotrauma
         public const int MinDangerLevel = 1;
         public const int MaxDangerLevel = 3;
 
-        public ImmutableHashSet<Identifier> Tags;
-
         private readonly ImmutableArray<ReputationRequirement> reputationRequirements;
         private readonly ImmutableArray<MissionRequirement> missionRequirements;
         private readonly ImmutableArray<LevelRequirement> levelRequirements;
@@ -281,7 +279,6 @@ namespace Barotrauma
 
             MoneyPenaltyForUnfoundedTraitorAccusation = element.GetAttributeInt(nameof(MoneyPenaltyForUnfoundedTraitorAccusation), 100);
 
-            Tags = element.GetAttributeIdentifierImmutableHashSet(nameof(Tags), ImmutableHashSet<Identifier>.Empty);
             RequiredCompletedTags = element.GetAttributeIdentifierImmutableHashSet(nameof(RequiredCompletedTags), ImmutableHashSet<Identifier>.Empty);
 
             StealPercentageOfExperience = element.GetAttributeFloat(nameof(StealPercentageOfExperience), 0.0f);

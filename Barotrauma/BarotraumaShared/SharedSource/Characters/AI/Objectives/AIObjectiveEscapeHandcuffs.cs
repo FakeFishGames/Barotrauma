@@ -8,8 +8,8 @@ namespace Barotrauma
         // Used for prisoner escorts to allow them to escape their binds
         public override Identifier Identifier { get; set; } = "escape handcuffs".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
 
         private int escapeProgress;
         private bool isBeingWatched;
@@ -28,8 +28,7 @@ namespace Barotrauma
         }
 
         public override bool CanBeCompleted => true;
-        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
-        protected override bool CheckObjectiveSpecific() => false;
+        protected override bool CheckObjectiveState() => false;
 
         // escape timer is set to 60 by default to allow players to locate prisoners in time
         private float escapeTimer = 60f;

@@ -10,45 +10,27 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma.Items.Components
 {
-    internal readonly struct MiniMapGUIComponent
+    internal readonly record struct MiniMapGUIComponent(GUIComponent RectComponent, GUIComponent BorderComponent)
     {
-        public readonly GUIComponent RectComponent;
-        public readonly GUIComponent BorderComponent;
-
-        public MiniMapGUIComponent(GUIComponent rectComponent)
+        public MiniMapGUIComponent(GUIComponent rectComponent) : this(rectComponent, rectComponent)
         {
-            RectComponent = rectComponent;
-            BorderComponent = rectComponent;
         }
-
-        public MiniMapGUIComponent(GUIComponent frame, GUIComponent linkedHullComponent)
-        {
-            RectComponent = frame;
-            BorderComponent = linkedHullComponent;
-        }
-
+        
         public void Deconstruct(out GUIComponent component, out GUIComponent borderComponent)
         {
             component = RectComponent;
             borderComponent = BorderComponent;
         }
     }
-
-    internal readonly struct MiniMapSprite
+    
+    internal readonly record struct MiniMapSprite(Sprite? Sprite, Color Color)
     {
-        public readonly Sprite? Sprite;
-        public readonly Color Color;
-
-        public MiniMapSprite(JobPrefab prefab)
+        public MiniMapSprite(JobPrefab prefab) : this(prefab.IconSmall, prefab.UIColor)
         {
-            Sprite = prefab.IconSmall;
-            Color = prefab.UIColor;
         }
-
-        public MiniMapSprite(Order order)
+        
+        public MiniMapSprite(Order order) : this(order.SymbolSprite, order.Color)
         {
-            Sprite = order.SymbolSprite;
-            Color = order.Color;
         }
     }
 
@@ -223,7 +205,27 @@ namespace Barotrauma.Items.Components
                                       NoPowerColor = MiniMapBaseColor * 0.1f,
                                       ElectricalBaseColor = GUIStyle.Orange,
                                       NoPowerElectricalColor = ElectricalBaseColor * 0.1f;
-
+        
+        // If this is portable, only allow displaying data in the player sub (not enemy subs, ruins, wrecks or other unknown places)
+        private bool IsPortableItemAllowed
+        {
+            get
+            {
+                if (IsUsableOutsidePlayerSub) { return true; }
+                if (item.Submarine == null) { return false; }
+                if (item.GetComponent<Pickable>() is not Pickable handheldItem) { return true; }
+                // This will effectively make sure wherever we are, it belongs to the player
+                return handheldItem.Picker?.TeamID == item.Submarine.TeamID;
+            }
+        }
+        
+        [Serialize(false, IsPropertySaveable.No, description: "If this item is portable, should it be usable outside the player submarine?")]
+        public bool IsUsableOutsidePlayerSub
+        {
+            get;
+            set;
+        }
+        
         partial void InitProjSpecific()
         {
             hullDatas = new Dictionary<Hull, HullData>();
@@ -425,22 +427,25 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private bool VisibleOnItemFinder(Item it)
+        private bool VisibleOnItemFinder(Item targetItem)
         {
-            if (it?.Submarine == null) { return false; }
-            if (item.Submarine == null || !item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
-            if (it.NonInteractable || it.HiddenInGame) { return false; }
-            if (it.GetComponent<Pickable>() == null) { return false; }
+            if (targetItem?.Submarine == null || item.Submarine == null) { return false; }
 
-            var holdable = it.GetComponent<Holdable>();
+            if (!IsPortableItemAllowed) { return false; }
+
+            if (!item.Submarine.IsEntityFoundOnThisSub(targetItem, includingConnectedSubs: true)) { return false; }
+            if (targetItem.NonInteractable || targetItem.IsHidden) { return false; }
+            if (targetItem.GetComponent<Pickable>() == null) { return false; }
+
+            var holdable = targetItem.GetComponent<Holdable>();
             if (holdable != null && holdable.Attached) { return false; }
 
-            var wire = it.GetComponent<Wire>();
+            var wire = targetItem.GetComponent<Wire>();
             if (wire != null && wire.Connections.Any(c => c != null)) { return false; }
 
-            if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false } or { AllowAccess: false }) { return false; }
+            if (targetItem.Container?.GetComponent<ItemContainer>() is { DrawInventory: false } or { AllowAccess: false }) { return false; }
 
-            if (it.HasTag(Tags.TraitorMissionItem)) { return false; }
+            if (targetItem.HasTag(Tags.TraitorMissionItem)) { return false; }
 
             return true;
         }
@@ -454,26 +459,32 @@ namespace Barotrauma.Items.Components
                 searchAutoComplete?.AddToGUIUpdateList(order: order + 1);
             }
         }
-
-        private void CreateHUD()
+        
+        private void ClearHUD()
         {
             subEntities.Clear();
-            prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             submarineContainer.ClearChildren();
+            displayedSubs.Clear();
+        }
 
-            if (item.Submarine is null) 
+        private void RefreshHUD()
+        {
+            ClearHUD();
+            
+            if (item.Submarine is null || !IsPortableItemAllowed)
             {
-                displayedSubs.Clear();
                 return; 
             }
+            
+            prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
 
-            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
+            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.IsHidden && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
             miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, hullPointsOfInterest, out hullStatusComponents);
 
-            IEnumerable<Item> electricalPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
+            IEnumerable<Item> electricalPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.IsHidden && !it.NonInteractable && it.GetComponent<Repairable>() != null);
             electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electricalPointsOfInterest, out electricalMapComponents);
 
             Dictionary<MiniMapGUIComponent, GUIComponent> electricChildren = new Dictionary<MiniMapGUIComponent, GUIComponent>();
@@ -566,7 +577,7 @@ namespace Barotrauma.Items.Components
             displayedSubs.Add(item.Submarine);
             displayedSubs.AddRange(item.Submarine.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID));
 
-            subEntities = MapEntity.MapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
+            subEntities = MapEntity.MapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.IsHidden).OrderByDescending(w => w.SpriteDepth).ToList();
 
             BakeSubmarine(item.Submarine, parentRect);
             elementSize = GuiFrame.Rect.Size;
@@ -574,18 +585,25 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
-            //recreate HUD if the subs we should display have changed
-            if (item.Submarine == null && displayedSubs.Count > 0 ||                                         // item not inside a sub anymore, but display is still showing subs
+            // Refresh HUD (including possibly just clearing it away) if the subs we should display have changed
+            if (item.Submarine == null && displayedSubs.Count > 0 || // item not inside a sub anymore, but display is still showing subs
                 item.Submarine is { } itemSub &&
                 (
-                    !displayedSubs.Contains(itemSub) ||                                                                     // current sub not displayed
-                    itemSub.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID).Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
-                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                                   // displaying a sub that shouldn't be displayed
+                    // current sub not displayed
+                    !displayedSubs.Contains(itemSub) ||
+                    // some of the docked subs not displayed
+                    itemSub.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID).Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||
+                    // displaying a sub that shouldn't be displayed
+                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))
                 ) ||
-                prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight || // resolution changed
-                !submarineContainer.Children.Any())                                                          // We lack a GUI
+                // If this item is portable and not in a player sub and using it otherwise is disallowed
+                !IsPortableItemAllowed ||
+                // resolution changed
+                prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight ||
+                // We lack a GUI
+                !submarineContainer.Children.Any())
             {
-                CreateHUD();
+                RefreshHUD();
             }
 
             //reset data if we haven't received anything in a while
@@ -737,7 +755,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (Voltage < MinVoltage)
+            if (!HasPower)
             {
                 Vector2 textSize = GUIStyle.Font.MeasureString(noPowerTip);
                 Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
@@ -747,7 +765,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (currentMode == MiniMapMode.HullStatus && item.Submarine != null)
+            if (currentMode == MiniMapMode.HullStatus && item.Submarine != null && IsPortableItemAllowed)
             {
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
                 spriteBatch.End();
@@ -763,7 +781,7 @@ namespace Barotrauma.Items.Components
                     worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
                     foreach (Gap gap in Gap.GapList)
                     {
-                        if (gap.IsRoomToRoom || gap.linkedTo.Count == 0 || gap.Submarine != item.Submarine || gap.ConnectedDoor != null || gap.HiddenInGame) { continue; }
+                        if (gap.IsRoomToRoom || gap.linkedTo.Count == 0 || gap.Submarine != item.Submarine || gap.ConnectedDoor != null || gap.IsHidden) { continue; }
                         RectangleF entityRect = ScaleRectToUI(gap, miniMapFrame.Rect, worldBorders);
 
                         Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
@@ -930,7 +948,7 @@ namespace Barotrauma.Items.Components
                 if (DisplayAsSameItem(it.Prefab, searchedPrefab))
                 {
                     // ignore items on players and hidden inventories
-                    if (it.FindParentInventory(inv => inv is CharacterInventory || inv is ItemInventory { Owner: Item { HiddenInGame: true }}) is { }) { continue; }
+                    if (it.FindParentInventory(inv => inv is CharacterInventory || inv is ItemInventory { Owner: Item { IsHidden: true }}) is { }) { continue; }
 
                     if (it.FindParentInventory(inventory => inventory is ItemInventory { Owner: Item { ParentInventory: null } }) is ItemInventory parent)
                     {
@@ -958,19 +976,19 @@ namespace Barotrauma.Items.Components
 
             MiniMapBlips = positions.ToImmutableHashSet();
 
-            if (searchAutoComplete is null) { return; }
-            searchAutoComplete.Visible = false;
+            HideGUIComponent(searchAutoComplete);
         }
 
         private void UpdateHUDBack()
         {
-            if (item.Submarine == null) { return; }
-
-            if (hullInfoFrame != null) { hullInfoFrame.Visible = false; }
-            reportFrame.Visible = false;
-            searchBarFrame.Visible = false;
-            electricalFrame.Visible = false;
-            miniMapFrame.Visible = false;
+            // Clear up mode-specific elements before checking if drawing should continue, so they'll be gone if not
+            HideModeSpecificFrames();
+            
+            if (item.Submarine == null || !IsPortableItemAllowed)
+            {
+                ClearHUD();
+                return;
+            }
 
             switch (currentMode)
             {
@@ -988,7 +1006,24 @@ namespace Barotrauma.Items.Components
                     break;
             }
         }
-
+        
+        private void HideModeSpecificFrames()
+        {
+            HideGUIComponent(hullInfoFrame);
+            HideGUIComponent(reportFrame);
+            HideGUIComponent(searchBarFrame);
+            HideGUIComponent(electricalFrame);
+            HideGUIComponent(miniMapFrame);
+        }
+        
+        private static void HideGUIComponent(GUIComponent? component)
+        {
+            if (component != null)
+            {
+                component.Visible = false;
+            }
+        }
+        
         private void UpdateHullStatus()
         {
             bool canHoverOverHull = true;
@@ -1007,7 +1042,7 @@ namespace Barotrauma.Items.Components
                         child.Color = child.OutlineColor = NoPowerDoorColor;
                     }
 
-                    if (Voltage < MinVoltage) { continue; }
+                    if (!HasPower) { continue; }
 
                     child.Color = child.OutlineColor = DoorIndicatorColor;
                     if (GUI.MouseOn == child)
@@ -1037,7 +1072,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (Voltage < MinVoltage) { continue; }
+                if (!HasPower) { continue; }
 
                 hullDatas.TryGetValue(hull, out HullData? hullData);
                 if (hullData is null)
@@ -1112,7 +1147,7 @@ namespace Barotrauma.Items.Components
                 if (ShowHullIntegrity)
                 {
                     float amount = 1f + hullData.LinkedHulls.Count;
-                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => g.linkedTo.Count == 1 && !g.HiddenInGame).Sum(g => g.Open) / amount;
+                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => g.linkedTo.Count == 1 && !g.IsHidden).Sum(g => g.Open) / amount;
                     borderColor = Color.Lerp(neutralColor, GUIStyle.Red, Math.Min(gapOpenSum, 1.0f));
                 }
 
@@ -1187,7 +1222,7 @@ namespace Barotrauma.Items.Components
                     component.Color = component.OutlineColor = NoPowerElectricalColor;
                 }
 
-                if (Voltage < MinVoltage || !miniMapGuiComponent.RectComponent.Visible) { continue; }
+                if (!HasPower || !miniMapGuiComponent.RectComponent.Visible) { continue; }
 
                 int durability = (int)(it.Condition / (it.MaxCondition / it.MaxRepairConditionMultiplier) * 100f);
                 Color color = ToolBox.GradientLerp(durability / 100f, GUIStyle.Red, GUIStyle.Orange, GUIStyle.Green, GUIStyle.Green);
@@ -1229,11 +1264,11 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDBack(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (item.Submarine == null) { return; }
+            if (item.Submarine == null || !IsPortableItemAllowed) { return; }
             
-            DrawSubmarine(spriteBatch);            
+            DrawSubmarine(spriteBatch);
 
-            if (Voltage < MinVoltage) { return; }
+            if (!HasPower) { return; }
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
@@ -1557,7 +1592,7 @@ namespace Barotrauma.Items.Components
             {
                 if (linkedEntity is Hull linkedHull)
                 {
-                    if (linkedHulls.Contains(linkedHull) || linkedHull.HiddenInGame) { continue; }
+                    if (linkedHulls.Contains(linkedHull) || linkedHull.IsHidden) { continue; }
                     linkedHulls.Add(linkedHull);
                     GetLinkedHulls(linkedHull, linkedHulls);
                 }
@@ -1737,7 +1772,7 @@ namespace Barotrauma.Items.Components
 
             bool IsPartofSub(MapEntity entity)
             {
-                if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine) || entity.HiddenInGame) { return false; }
+                if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine) || entity.IsHidden) { return false; }
                 return sub.IsEntityFoundOnThisSub(entity, true);
             }
 

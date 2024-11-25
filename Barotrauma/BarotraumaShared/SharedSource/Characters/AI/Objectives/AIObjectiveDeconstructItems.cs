@@ -11,7 +11,7 @@ namespace Barotrauma
         //Clear periodically, because we may ending up ignoring items when all deconstructors are full
         protected override float IgnoreListClearInterval => 30;
 
-        public override bool AllowInFriendlySubs => true;
+        protected override bool AllowInFriendlySubs => true;
 
         protected override int MaxTargets => 10;
 
@@ -47,7 +47,7 @@ namespace Barotrauma
             checkedDeconstructorExists = false;
         }
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 0; }
             if (objectiveManager.IsOrder(this))
@@ -57,15 +57,17 @@ namespace Barotrauma
             return AIObjectiveManager.RunPriority - 0.5f;
         }
 
-        protected override bool Filter(Item target)
+        protected override bool IsValidTarget(Item target)
         {
+            if (target == null || target.Removed) { return false; }
             // If the target was selected as a valid target, we'll have to accept it so that the objective can be completed.
             // The validity changes when a character picks the item up.
             if (!IsValidTarget(target, character, checkInventory: true)) 
             { 
                 return Objectives.ContainsKey(target) && AIObjectiveCleanupItems.IsItemInsideValidSubmarine(target, character); 
             }
-            if (target.CurrentHull.FireSources.Count > 0) { return false; }
+            //note that the item can be outside hulls and still be a valid target - it can be in the character's inventory
+            if (target.CurrentHull != null && target.CurrentHull.FireSources.Count > 0) { return false; }
 
             foreach (Character c in Character.CharacterList)
             {
@@ -96,7 +98,7 @@ namespace Barotrauma
 
         private static bool IsValidTarget(Item item, Character character, bool checkInventory)
         {
-            if (item == null) { return false; }
+            if (item == null || item.Removed) { return false; }
             if (item.GetRootInventoryOwner() == character) { return true; }
             return AIObjectiveCleanupItems.IsValidTarget(
                 item, 

@@ -196,6 +196,16 @@ namespace Barotrauma
             set;
         }
 
+        /// <summary>
+        /// Is the layer this entity is in currently hidden? If it is, the entity is not updated and should do nothing.
+        /// </summary>
+        public bool IsLayerHidden { get; set; }
+
+        /// <summary>
+        /// Is the entity hidden due to <see cref="HiddenInGame"/> being enabled or the layer the entity is in being hidden?
+        /// </summary>
+        public bool IsHidden => HiddenInGame || IsLayerHidden;
+
         public override Vector2 Position
         {
             get

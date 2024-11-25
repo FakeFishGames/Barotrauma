@@ -585,9 +585,7 @@ namespace Barotrauma
 
         private void UpdateDepthDamage(float deltaTime)
         {
-#if CLIENT
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
-#endif
             if (Level.Loaded == null) { return; }
 
             //camera shake and sounds start playing 500 meters before crush depth
@@ -598,8 +596,11 @@ namespace Barotrauma
             const float MaxWallDamageProbability = 1.0f;
             const float MinWallDamage = 50f;
             const float MaxWallDamage = 500.0f;
-            const float MinCameraShake = 5f;
+            const float MinCameraShake = 10f;
             const float MaxCameraShake = 50.0f;
+            //delay at the start of the round during which you take no depth damage
+            //(gives you a bit of time to react and return if you start the round in a level that's too deep)
+            const float MinRoundDuration = 60.0f;
 
             if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth + CosmeticEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)
             {
@@ -609,14 +610,17 @@ namespace Barotrauma
             damageSoundTimer -= deltaTime;
             if (damageSoundTimer <= 0.0f)
             {
+                const float PressureSoundRange = -CosmeticEffectThreshold;
+                //Ratio between 0 (where the 'approaching crush depth' indication starts) and 1 (at crush depth or past it)
+                float closenessToCrushDepthRatio = Math.Clamp((Submarine.RealWorldDepth - (Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)) / PressureSoundRange, 0f, 1f);
 #if CLIENT
-                SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
+                SoundPlayer.PlayDamageSound("pressure", MathHelper.Lerp(0f, 100f, closenessToCrushDepthRatio), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f, gain: 1f + closenessToCrushDepthRatio * 2);
 #endif
                 damageSoundTimer = Rand.Range(5.0f, 10.0f);
             }
 
             depthDamageTimer -= deltaTime;
-            if (depthDamageTimer <= 0.0f)
+            if (depthDamageTimer <= 0.0f && (GameMain.GameSession == null || GameMain.GameSession.RoundDuration > MinRoundDuration))
             {
                 foreach (Structure wall in Structure.WallList)
                 {
@@ -915,6 +919,13 @@ namespace Barotrauma
         private void HandleSubCollision(Impact impact, Submarine otherSub)
         {
             Debug.Assert(otherSub != submarine);
+
+            //submarine outside the level (despawned respawn shuttle?)
+            //no need to apply impacts between colliding subs
+            if (submarine.IsAboveLevel)
+            {
+                return;
+            }
 
             Vector2 normal = impact.Normal;
             if (impact.Target.Body == otherSub.SubBody.Body.FarseerBody)

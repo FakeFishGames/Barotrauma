@@ -64,6 +64,9 @@ namespace Barotrauma
             }
         }
 
+        private readonly List<Body> limbBodies = new List<Body>();
+        public IEnumerable<Body> LimbBodies => limbBodies;
+
         public bool HasMultipleLimbsOfSameType => limbs != null && limbs.Length > limbDictionary.Count;
 
         private bool frozen;
@@ -91,7 +94,7 @@ namespace Barotrauma
         private bool simplePhysicsEnabled;
 
         public Character Character => character;
-        protected Character character;
+        protected readonly Character character;
 
         protected float strongestImpact;
 
@@ -385,14 +388,15 @@ namespace Barotrauma
             if (ragdollParams != null)
             {
                 RagdollParams = ragdollParams;
-                if (!character.VariantOf.IsEmpty)
-                {
-                    RagdollParams.TryApplyVariantScale(character.Params.VariantFile);
-                }
             }
             else
             {
+                // Only re-equip items if the ragdoll doesn't change, because re-equiping items might throw exceptions if the limbs have changed.
                 items = limbs?.ToDictionary(l => l.Params, l => l.WearingItems);
+            }
+            if (character.Params.VariantFile is XDocument variantFile)
+            {
+                RagdollParams.TryApplyVariantScale(variantFile);
             }
             foreach (var limbParams in RagdollParams.Limbs)
             {
@@ -430,18 +434,13 @@ namespace Barotrauma
 
             if (character.IsHusk && character.Params.UseHuskAppendage)
             {
-                bool inEditor = false;
-#if CLIENT
-                inEditor = Screen.Selected == GameMain.CharacterEditorScreen;
-#endif
-
                 var characterPrefab = CharacterPrefab.FindByFilePath(character.ConfigPath);
                 if (characterPrefab?.ConfigElement != null)
                 {
                     var mainElement = characterPrefab.ConfigElement;
                     foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
                     {
-                        if (!inEditor && huskAppendage.GetAttributeBool("onlyfromafflictions", false)) { continue; }
+                        if (huskAppendage.GetAttributeBool("onlyfromafflictions", false)) { continue; }
 
                         Identifier afflictionIdentifier = huskAppendage.GetAttributeIdentifier("affliction", Identifier.Empty);
                         if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out AfflictionPrefab affliction) ||
@@ -452,7 +451,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            AfflictionHusk.AttachHuskAppendage(character, matchingAffliction, huskAppendage, ragdoll: this);
+                            AfflictionHusk.AttachHuskAppendage(character, matchingAffliction, huskedSpeciesName: character.SpeciesName, huskAppendage, ragdoll: this);
                         }
                     }
                 }
@@ -478,7 +477,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Invalid collider dimensions: " + cParams.Name);
                     break; ;
                 }
-                var body = new PhysicsBody(cParams);
+                var body = new PhysicsBody(cParams, findNewContacts: false);
                 collider.Add(body);
                 body.UserData = character;
                 body.FarseerBody.OnCollision += OnLimbCollision;
@@ -520,7 +519,7 @@ namespace Barotrauma
             {
                 if (joint == null) { continue; }
                 float angle = (joint.LowerLimit + joint.UpperLimit) / 2.0f;
-                joint.LimbB?.body?.SetTransform(
+                joint.LimbB?.body?.SetTransformIgnoreContacts(
                     (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, joint.BodyA.Rotation + angle, true)),
                     joint.BodyA.Rotation + angle);
             }
@@ -528,11 +527,13 @@ namespace Barotrauma
 
         protected void CreateLimbs()
         {
+            limbBodies.Clear();
             limbs?.ForEach(l => l.Remove());
+            Mass = 0;
             DebugConsole.Log($"Creating limbs from {RagdollParams.Name}.");
             limbDictionary = new Dictionary<LimbType, Limb>();
             limbs = new Limb[RagdollParams.Limbs.Count];
-            RagdollParams.Limbs.ForEach(l => AddLimb(l));
+            RagdollParams.Limbs.ForEach(AddLimb);
             if (limbs.Contains(null)) { return; }
             SetupDrawOrder();
         }
@@ -549,11 +550,11 @@ namespace Barotrauma
 
         /// <summary>
         /// Resets the serializable data to the currently selected ragdoll params.
-        /// Force reloading always loads the xml stored on the disk.
+        /// Always loads the xml stored on the disk.
         /// </summary>
-        public void ResetRagdoll(bool forceReload = false)
+        public void ResetRagdoll()
         {
-            RagdollParams.Reset(forceReload);
+            RagdollParams.Reset(forceReload: true);
             ResetJoints();
             ResetLimbs();
         }
@@ -577,7 +578,7 @@ namespace Barotrauma
 
         public void AddJoint(JointParams jointParams)
         {
-            if (!checkLimbIndex(jointParams.Limb2, "Limb1") || !checkLimbIndex(jointParams.Limb2, "Limb2"))
+            if (!checkLimbIndex(jointParams.Limb1, "Limb1") || !checkLimbIndex(jointParams.Limb2, "Limb2"))
             {
                 return;
             }
@@ -621,6 +622,7 @@ namespace Barotrauma
             {
                 throw new Exception($"Failed to add a limb to the character \"{Character?.ConfigPath ?? "null"}\" (limb index {ID} out of bounds). The ragdoll file may be configured incorrectly.");
             }
+            limbBodies.Add(limb.body.FarseerBody);
             Limbs[ID] = limb;
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) { limbDictionary.Add(limb.type, limb); }
@@ -632,6 +634,7 @@ namespace Barotrauma
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
             Array.Resize(ref limbs, Limbs.Length + 1);
             Limbs[Limbs.Length - 1] = limb;
+            limbBodies.Add(limb.body.FarseerBody);
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) { limbDictionary.Add(limb.type, limb); }
             SetupDrawOrder();
@@ -639,14 +642,14 @@ namespace Barotrauma
 
         public void RemoveLimb(Limb limb)
         {
-            if (!Limbs.Contains(limb)) return;
+            if (!Limbs.Contains(limb)) { return; }
 
             Limb[] newLimbs = new Limb[Limbs.Length - 1];
 
             int i = 0;
             foreach (Limb existingLimb in Limbs)
             {
-                if (existingLimb == limb) continue;
+                if (existingLimb == limb) { continue; }
                 newLimbs[i] = existingLimb;
                 i++;
             }
@@ -684,8 +687,10 @@ namespace Barotrauma
                 LimbJoints = newJoints;
             }
 
-            SubtractMass(limb);
+            limbBodies.Remove(limb.body.FarseerBody);
             limb.Remove();
+            System.Diagnostics.Debug.Assert(!limbs.Contains(limb));
+            System.Diagnostics.Debug.Assert(limbs.None(l => l.Removed));
             foreach (LimbJoint limbJoint in attachedJoints)
             {
                 GameMain.World.Remove(limbJoint.Joint);
@@ -1096,8 +1101,8 @@ namespace Barotrauma
                 if (newHull?.Submarine == null && currentHull?.Submarine != null)
                 {
                     //don't teleport out yet if the character is going through a gap
-                    if (Gap.FindAdjacent(Gap.GapList.Where(g => g.Submarine == currentHull.Submarine), findPos, 150.0f) != null) { return; }
-                    if (Limbs.Any(l => Gap.FindAdjacent(currentHull.ConnectedGaps, l.WorldPosition, ConvertUnits.ToDisplayUnits(l.body.GetSize().Combine())) != null)) { return; }
+                    if (Gap.FindAdjacent(Gap.GapList.Where(g => g.Submarine == currentHull.Submarine), findPos, 150.0f, allowRoomToRoom: true) != null) { return; }
+                    if (Limbs.Any(l => Gap.FindAdjacent(currentHull.ConnectedGaps, l.WorldPosition, ConvertUnits.ToDisplayUnits(l.body.GetSize().Combine()), allowRoomToRoom: true) != null)) { return; }
                     character.MemLocalState?.Clear();
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity);
                 }
@@ -1400,7 +1405,12 @@ namespace Barotrauma
                 limb.Update(deltaTime);
             }
 
-            if (!inWater && character.AllowInput && levitatingCollider)
+            bool isAttachedToController =
+                character.SelectedItem?.GetComponent<Items.Components.Controller>() is { } controller && 
+                controller.User == character && 
+                controller.IsAttachedUser(controller.User);
+
+            if (!inWater && character.AllowInput && levitatingCollider && !isAttachedToController)
             {
                 if (onGround && Collider.LinearVelocity.Y > -ImpactTolerance)
                 {
@@ -1910,7 +1920,7 @@ namespace Barotrauma
             }
             else
             {
-                Collider.SetTransform(simPosition, Collider.Rotation);
+                Collider.SetTransformIgnoreContacts(simPosition, Collider.Rotation);
             }
 
             if (!MathUtils.NearlyEqual(limbMoveAmount, Vector2.Zero))
@@ -2009,7 +2019,7 @@ namespace Barotrauma
             }
             else
             {
-                limb.body.SetTransform(movePos, rotation);
+                limb.body.SetTransformIgnoreContacts(movePos, rotation);
                 limb.PullJointWorldAnchorB = limb.PullJointWorldAnchorA;
                 limb.PullJointEnabled = false;
             }
@@ -2113,26 +2123,48 @@ namespace Barotrauma
         /// <summary>
         /// Note that if there are multiple limbs of the same type, only the first (valid) limb is returned.
         /// </summary>
-        public Limb GetLimb(LimbType limbType, bool excludeSevered = true)
+        /// <param name="limbType"></param>
+        /// <param name="excludeSevered">Should we filter out severed limbs?</param>
+        /// <param name="useSecondaryType">Should we target limbs with secondary type instead of (primary) type?</param>
+        /// <param name="excludeLimbsWithSecondaryType">Should we filter out all limbs with a secondary type something else than "None"?</param>
+        /// <returns></returns>
+        public Limb GetLimb(LimbType limbType, bool excludeSevered = true, bool excludeLimbsWithSecondaryType = false, bool useSecondaryType = false)
         {
-            if (limbDictionary.TryGetValue(limbType, out Limb limb))
+            Limb limb = null;
+            if (!HasMultipleLimbsOfSameType && !useSecondaryType && !excludeLimbsWithSecondaryType)
             {
-                if (excludeSevered && limb.IsSevered)
+                // Faster method, but doesn't work when there's multiple limbs of the same type or if we want to seek/exclude limbs with different conditions.
+                if (limbDictionary.TryGetValue(limbType, out limb))
                 {
-                    limb = null;
-                }
+                    if (limb.Removed)
+                    {
+                        limb = null;
+                    }
+                    if (excludeSevered && limb is { IsSevered: true } )
+                    {
+                        limb = null;
+                    }
+                }   
             }
-            if (limb == null && HasMultipleLimbsOfSameType)
+            if (limb == null)
             {
-                // Didn't find a (valid) limb of the matching type. If there's multiple limbs of the same type, check the other limbs.
+                // Didn't seek or find a (valid) limb of the matching type. If there's multiple limbs of the same type, check the other limbs.
                 foreach (var l in limbs)
                 {
-                    if (l.type != limbType) { continue; }
-                    if (!excludeSevered || !l.IsSevered)
+                    if (l.Removed) { continue; }
+                    if (useSecondaryType)
                     {
-                        limb = l;
-                        break;
+                        if (l.Params.SecondaryType != limbType) { continue; }
                     }
+                    else if (l.type != limbType) 
+                    {
+                        continue;
+                    }
+                    if (excludeSevered && l.IsSevered) { continue; }
+                    if (excludeLimbsWithSecondaryType && l.Params.SecondaryType != LimbType.None) { continue; }
+                    // Found a valid and match
+                    limb = l;
+                    break;
                 }
             }
             return limb;
@@ -2220,6 +2252,7 @@ namespace Barotrauma
                 }
                 limbs = null;
             }
+            limbBodies.Clear();
 
             if (collider != null)
             {

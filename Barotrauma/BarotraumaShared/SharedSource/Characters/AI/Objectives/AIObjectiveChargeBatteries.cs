@@ -16,7 +16,7 @@ namespace Barotrauma
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, Identifier option, float priorityModifier) 
             : base(character, objectiveManager, priorityModifier, option) { }
 
-        protected override bool Filter(PowerContainer battery)
+        protected override bool IsValidTarget(PowerContainer battery)
         {
             if (battery == null) { return false; }
             if (battery.OutputDisabled) { return false; }
@@ -37,7 +37,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 0; }
             if (Option == "charge")
@@ -80,7 +80,6 @@ namespace Barotrauma
         protected override AIObjective ObjectiveConstructor(PowerContainer battery) =>
             new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier)
             {
-                IsLoop = false,
                 Override = !character.IsDismissed,
                 completionCondition = () => IsReady(battery)
             };

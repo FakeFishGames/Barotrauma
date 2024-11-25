@@ -48,7 +48,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string text;
-        [Serialize("", IsPropertySaveable.Yes, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(100)]
+        [Serialize("", IsPropertySaveable.Yes, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(MaxLength = 100)]
         public string Text
         {
             get { return text; }
@@ -67,18 +67,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private GUIFont font = GUIStyle.UnscaledSmallFont;
+        private GUIFont font;
         [Editable, Serialize("UnscaledSmallFont", IsPropertySaveable.Yes, "The label's font.")]
-        public Identifier Font
+        public GUIFont Font
         {
-            get => font.Identifier;
-            set
-            {
-                if (GUIStyle.Fonts.TryGetValue(value, out GUIFont newFont))
-                {
-                    font = textBlock.Font = newFont;
-                }
-            }
+            get => font;
+            set => font = textBlock.Font = value;
         }
 
         private bool ignoreLocalization;
@@ -236,7 +230,7 @@ namespace Barotrauma.Items.Components
         private float BaseToRealTextScaleFactor => BaseTextSize / GUIStyle.UnscaledSmallFont.Size;
         private void RecreateTextBlock()
         {
-            textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "", textColor: textColor, font: GUIStyle.UnscaledSmallFont, textAlignment: needsScrolling ? Alignment.CenterLeft : alignment, wrap: !scrollable, style: null)
+            textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "", textColor: textColor, font: font, textAlignment: needsScrolling ? Alignment.CenterLeft : alignment, wrap: !scrollable, style: null)
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,

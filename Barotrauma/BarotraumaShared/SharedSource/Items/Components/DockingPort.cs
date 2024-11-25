@@ -335,7 +335,7 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #else
-                if (GameMain.Client != null && GameMain.Client.MidRoundSyncing && 
+                if (GameMain.Client != null && GameMain.Client.MidRoundSyncing && Submarine.MainSub != null &&
                     (item.Submarine == Submarine.MainSub || DockingTarget.item.Submarine == Submarine.MainSub))
                 {
                     Screen.Selected.Cam.Position = Submarine.MainSub.WorldPosition;
@@ -658,7 +658,8 @@ namespace Barotrauma.Items.Components
                     hulls[i] = new Hull(hullRects[i], subs[i])
                     {
                         RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch",
-                        AvoidStaying = true
+                        AvoidStaying = true,
+                        IsWetRoom = true
                     };
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
@@ -1223,11 +1224,10 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) 
             { 
-                return; 
-            }
-            if (GameMain.GameSession?.Campaign != null && !CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap))
-            {
-                return;
+                if (GameMain.GameSession?.Campaign != null && !CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap))
+                {
+                    return;
+                }
             }
 #endif
 
@@ -1253,9 +1253,12 @@ namespace Barotrauma.Items.Components
 
             if (newDockedState != wasDocked)
             {
-                bool tryingToToggleOutpostDocking = docked ? 
-                    DockingTarget?.Item?.Submarine?.Info?.IsOutpost ?? false :
-                    FindAdjacentPort()?.Item?.Submarine?.Info?.IsOutpost ?? false;
+                var targetPort = docked ? DockingTarget : FindAdjacentPort();
+                bool tryingToToggleOutpostDocking = 
+                    item.Submarine is { Info.IsOutpost: false } &&
+                    //check that the "parent submarine of the submarine" is not an outpost (that this isn't a shuttle/elevator that's part of an outpost)
+                    item.Submarine?.Submarine is not { Info.IsOutpost: true } && 
+                    targetPort is { item.Submarine.Info.IsOutpost: true };
                 //trying to dock/undock from an outpost and the signal was sent by some automated system instead of a character
                 // -> ask if the player really wants to dock/undock to prevent a softlock if someone's wired the docking port
                 //    in a way that makes always makes it dock/undock immediately at the start of the roun

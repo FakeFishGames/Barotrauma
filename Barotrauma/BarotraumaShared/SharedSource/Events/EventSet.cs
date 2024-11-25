@@ -61,25 +61,46 @@ namespace Barotrauma
         }
 #endif
 
-        public static List<EventPrefab> GetAllEventPrefabs()
+        private static readonly Dictionary<Identifier, EventPrefab> AllEventPrefabs = new Dictionary<Identifier, EventPrefab>();
+
+        public static IEnumerable<EventPrefab> GetAllEventPrefabs()
         {
-            List<EventPrefab> eventPrefabs = EventPrefab.Prefabs.ToList();
-            foreach (var eventSet in Prefabs)
-            {
-                AddSetEventPrefabsToList(eventPrefabs, eventSet);
-            }
-            return eventPrefabs;
+            return AllEventPrefabs.Values;
         }
 
-        public static void AddSetEventPrefabsToList(List<EventPrefab> list, EventSet set)
+        /// <summary>
+        /// Finds all the event prefabs (both "normal prefabs" that exists by themselves, present in <see cref="EventPrefab.Prefabs"/>, and the ones that exists only inside child event sets),
+        /// and adds them to <see cref="AllEventPrefabs"/>.
+        /// </summary>
+        public static void RefreshAllEventPrefabs()
         {
-            list.AddRange(set.EventPrefabs.SelectMany(ep => ep.EventPrefabs));
-            foreach (var childSet in set.ChildSets) { AddSetEventPrefabsToList(list, childSet); }
+            AllEventPrefabs.Clear();
+            foreach (var eventPrefab in EventPrefab.Prefabs)
+            {
+                AllEventPrefabs.TryAdd(eventPrefab.Identifier, eventPrefab);
+            }
+            foreach (var eventSet in Prefabs)
+            {
+                AddChildEventPrefabs(eventSet);
+            }
+        }
+
+        private static void AddChildEventPrefabs(EventSet set)
+        {
+            foreach (var subEventPrefabs in set.EventPrefabs)
+            {
+                foreach (var eventPrefab in subEventPrefabs.EventPrefabs)
+                {
+                    AllEventPrefabs.TryAdd(eventPrefab.Identifier, eventPrefab);
+                }
+            }
+
+            foreach (var childSet in set.ChildSets) { AddChildEventPrefabs(childSet); }
         }
 
         public static EventPrefab GetEventPrefab(Identifier identifier)
         {
-            return GetAllEventPrefabs().Find(prefab => prefab.Identifier == identifier);
+            return AllEventPrefabs.GetValueOrDefault(identifier);
         }
 
         /// <summary>
@@ -105,6 +126,16 @@ namespace Barotrauma
         /// If set, the event set can only be chosen in this type of level (outpost level or a connection between outpost levels).
         /// </summary>
         public readonly LevelData.LevelType LevelType;
+
+        /// <summary>
+        /// If set, this layer must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredLayer;
+
+        /// <summary>
+        /// If set, this spawn point tag must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredSpawnPointTag;
 
         /// <summary>
         /// If set, the event set can only be chosen in locations of this type.
@@ -202,7 +233,14 @@ namespace Barotrauma
         /// monsters in addition to the vanilla monsters spawned by vanilla sets, without you having to add your custom monsters to every single vanilla set.
         /// </summary>
         public readonly bool Additive;
-            
+
+        /// <summary>
+        /// This will force the game to always choose this event set if it's suitable for the current level. 
+        /// If the set is additive, it is guaranteed to get chosen regardless of what other sets get selected.
+        /// If the set is NOT additive, the game will choose the first available non-additive set that is configured to be always selected.
+        /// </summary>
+        public readonly bool SelectAlways;
+
         /// <summary>
         /// The commonness of the event set (i.e. how likely it is for this specific set to be chosen).
         /// </summary>
@@ -344,7 +382,8 @@ namespace Barotrauma
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
 
-            Additive = element.GetAttributeBool("additive", false);
+            Additive = element.GetAttributeBool(nameof(Additive), false);
+            SelectAlways = element.GetAttributeBool(nameof(SelectAlways), false);
 
             string levelTypeStr = element.GetAttributeString("leveltype", parentSet?.LevelType.ToString() ?? "LocationConnection");
             if (!Enum.TryParse(levelTypeStr, true, out LevelType))
@@ -368,7 +407,7 @@ namespace Barotrauma
             ChooseRandom = element.GetAttributeBool("chooserandom", false);
             eventCount = element.GetAttributeInt("eventcount", 1);
             SubSetCount = element.GetAttributeInt("setcount", 1);
-            Exhaustible = element.GetAttributeBool("exhaustible", false);
+            Exhaustible = element.GetAttributeBool("exhaustible", parentSet?.Exhaustible ?? false);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
@@ -385,6 +424,9 @@ namespace Barotrauma
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat(nameof(ResetTime), parentSet?.ResetTime ?? 0);
             CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), parentSet?.CampaignTutorialOnly ?? false);
+
+            RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
+            RequiredSpawnPointTag = element.GetAttributeIdentifier(nameof(RequiredSpawnPointTag), Identifier.Empty);
 
             ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
             ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);

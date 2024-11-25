@@ -311,7 +311,11 @@ namespace Barotrauma
                 targets.Add(target);
                 foreach (ContentXElement subElement in chosenElement.Elements())
                 {
-                    LoadTarget(subElement, parentTarget: target);                    
+                    if (subElement.NameAsIdentifier() == "target" ||
+                        subElement.NameAsIdentifier() == "chooserandom")
+                    {
+                        LoadTarget(subElement, parentTarget: target);
+                    }                  
                 }           
             } 
         }
@@ -518,7 +522,9 @@ namespace Barotrauma
                             contentPackage: Prefab.ContentPackage);
                         continue;
                     }
-                
+
+                    target.Item.DontCleanUp = true;
+
                     if (target.ParentTarget.Item.GetComponent<ItemContainer>() is ItemContainer container)
                     {
                         if (!container.Inventory.TryPutItem(target.Item, user: null))

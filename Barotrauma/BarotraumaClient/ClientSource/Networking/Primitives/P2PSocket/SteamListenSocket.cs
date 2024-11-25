@@ -68,7 +68,7 @@ sealed class SteamListenSocket : P2PSocket
         
         public override void OnMessage(Steamworks.Data.Connection connection, Steamworks.Data.NetIdentity identity, IntPtr data, int size, long messageNum, long recvTime, int channel)
         {
-            if (!identity.IsSteamId) { return; }
+            if (!identity.IsSteamId || data == IntPtr.Zero) { return; }
             var endpoint = new SteamP2PEndpoint(new SteamId((Steamworks.SteamId)identity));
 
             var dataArray = new byte[size];

@@ -418,8 +418,44 @@ namespace Barotrauma.Networking
             var randomizeLevelBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform), TextManager.Get("ServerSettingsRandomizeSeed"));
             AssignGUIComponent(nameof(RandomizeSeed), randomizeLevelBox);
 
-            //***********************************************
-
+            // *******  PVP  ********************************
+            NetLobbyScreen.CreateSubHeader("gamemode.pvp", listBox.Content);
+            
+            var teamSelectModeLabel = new GUITextBlock(
+                new RectTransform(new Vector2(1.0f, 0.05f),
+                    listBox.Content.RectTransform),
+                TextManager.Get("TeamSelectionMode"));
+            teamSelectModeLabel.ToolTip = TextManager.Get("TeamSelectionMode.tooltip");
+            var teamSelectionMode = new GUISelectionCarousel<PvpTeamSelectionMode>(
+                new RectTransform(new Vector2(0.5f, 0.6f),
+                    teamSelectModeLabel.RectTransform,
+                    Anchor.CenterRight));
+            foreach (PvpTeamSelectionMode teamSelectionModeOption in Enum.GetValues(typeof(PvpTeamSelectionMode)))
+            {
+                var optionName = teamSelectionModeOption.ToString();
+                teamSelectionMode.AddElement(teamSelectionModeOption,
+                    TextManager.Get($"TeamSelectionMode.{optionName}"),
+                    TextManager.Get($"TeamSelectionMode.{optionName}.tooltip"));
+            }
+            AssignGUIComponent(nameof(PvpTeamSelectionMode), teamSelectionMode);
+            
+            var autoBalanceThresholdLabel = new GUITextBlock(
+                new RectTransform(new Vector2(1.0f, 0.05f),
+                    listBox.Content.RectTransform),
+                TextManager.Get("AutoBalanceThreshold"));
+            var autoBalanceThresholdTooltip = TextManager.Get("AutoBalanceThreshold.tooltip");
+            autoBalanceThresholdLabel.ToolTip = autoBalanceThresholdTooltip;
+            var autoBalanceThreshold = new GUISelectionCarousel<int>(
+                new RectTransform(new Vector2(0.5f, 0.6f),
+                    autoBalanceThresholdLabel.RectTransform,
+                    Anchor.CenterRight));
+            autoBalanceThreshold.AddElement(0, TextManager.Get($"AutoBalanceThreshold.Off"), autoBalanceThresholdTooltip);
+            autoBalanceThreshold.AddElement(1, "1", autoBalanceThresholdTooltip);
+            autoBalanceThreshold.AddElement(2, "2", autoBalanceThresholdTooltip);
+            autoBalanceThreshold.AddElement(3, "3", autoBalanceThresholdTooltip);
+            AssignGUIComponent(nameof(PvpAutoBalanceThreshold), autoBalanceThreshold);
+            
+            // *******  GAMEPLAY  ***************************
             NetLobbyScreen.CreateSubHeader("serversettingsroundstab", listBox.Content);
 
             var voiceChatEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform),
@@ -468,11 +504,31 @@ namespace Barotrauma.Networking
             };
             AssignGUIComponent(nameof(SaveServerLogs), saveLogsBox);
 
+            LocalizedString newCampaignDefaultSalaryLabel = TextManager.Get("ServerSettingsNewCampaignDefaultSalary");
+            NetLobbyScreen.CreateLabeledSlider(listBox.Content, headerTag: "ServerSettingsNewCampaignDefaultSalary", valueLabelTag: "ServerSettingsKickVotesRequired", tooltipTag: "ServerSettingsNewCampaignDefaultSalaryToolTip", 
+                out var defaultSalarySlider, out var defaultSalarySliderLabel);
+            defaultSalarySlider.Range = new Vector2(0, 100);
+            defaultSalarySlider.StepValue = 1;
+            defaultSalarySlider.OnMoved = (scrollBar, _) =>
+            {
+                if (scrollBar.UserData is not GUITextBlock text) { return false; }
+                text.Text = TextManager.AddPunctuation(
+                    ':',
+                    newCampaignDefaultSalaryLabel,
+                    TextManager.GetWithVariable("percentageformat", "[value]", ((int)Math.Round(scrollBar.BarScrollValue, digits: 0)).ToString()));
+                return true;
+            };
+            AssignGUIComponent(nameof(NewCampaignDefaultSalary), defaultSalarySlider);
+            defaultSalarySlider.OnMoved(defaultSalarySlider, defaultSalarySlider.BarScroll);
+
+            var pvpDisembarkPoints = NetLobbyScreen.CreateLabeledNumberInput(listBox.Content, "serversettingsdisembarkpoints", 0, 100, "serversettingsdisembarkpointstooltip");
+            AssignGUIComponent(nameof(DisembarkPointAllowance), pvpDisembarkPoints);
+
             //--------------------------------------------------------------------------------
             //                              game settings 
             //--------------------------------------------------------------------------------
 
-            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform), isHorizontal: true)
+            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform), isHorizontal: true, childAnchor: Anchor.BottomLeft)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -683,7 +739,7 @@ namespace Barotrauma.Networking
             //                              antigriefing
             //--------------------------------------------------------------------------------
 
-            var tickBoxContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), listBox.Content.RectTransform))
+            var tickBoxContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.268f), listBox.Content.RectTransform))
             {
                 AutoHideScrollBar = true,
                 UseGridLayout = true
@@ -693,6 +749,10 @@ namespace Barotrauma.Networking
             var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowFriendlyFire"));
             AssignGUIComponent(nameof(AllowFriendlyFire), allowFriendlyFire);
+            
+            var allowDragAndDropGive = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
+                TextManager.Get("ServerSettingsAllowDragAndDropGive"));
+            AssignGUIComponent(nameof(AllowDragAndDropGive), allowDragAndDropGive);
 
             var killableNPCs = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsKillableNPCs"));

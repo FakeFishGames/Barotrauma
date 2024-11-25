@@ -923,23 +923,25 @@ namespace Barotrauma
 
                     if (GameMain.DebugDraw)
                     {
-                        Vector2 dPos = pos;
+                        //move the debug texts upwards so they don't go under the info panel that appears when highlighted
+                        Vector2 dPos = pos + new Vector2(15, -100);
                         if (location == HighlightedLocation)
                         {
-                            dPos.Y -= 80;
-                            GUI.DrawString(spriteBatch, dPos + new Vector2(15, 32), "Faction: " + (location.Faction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
-                            GUI.DrawString(spriteBatch, dPos + new Vector2(15, 50), "Secondary Faction: " + (location.SecondaryFaction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
-                            dPos.Y += 48;
+                            GUI.DrawString(spriteBatch, dPos, "Faction: " + (location.Faction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
+                            GUI.DrawString(spriteBatch, dPos + new Vector2(0, 18), "Secondary Faction: " + (location.SecondaryFaction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
+                            dPos.Y += 50;
 
                             if (PlayerInput.KeyDown(Keys.LeftShift))
                             {
-                                GUI.DrawString(spriteBatch, new Vector2(150,150), "Dist: " +
+                                GUI.DrawString(spriteBatch, new Vector2(150, 150), "Dist: " +
                                     GetDistanceToClosestLocationOrConnection(CurrentLocation, int.MaxValue, loc => loc == location), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
-
                             }
+                            GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatSingleDecimal()}",
+                                ToolBox.GradientLerp(location.LevelData.Difficulty / 100.0f, GUIStyle.Blue, GUIStyle.Yellow, GUIStyle.Red), Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
+                            
+                            dPos.Y += 25;
+                            GUI.DrawString(spriteBatch, dPos, $"Biome: {location.LevelData.Biome.DisplayName} ({location.LevelData.GenerationParams.Identifier})", Color.White, Color.Black, font: GUIStyle.SmallFont);
                         }
-                        dPos.Y += 48;
-                        GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatSingleDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
                     }
                 }
             }
@@ -1115,13 +1117,23 @@ namespace Barotrauma
 
                 float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
                 string crushDepthWarningIconStyle = null;
-                if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
+
+                var levelData = connection.LevelData;
+                float spawnDepth =
+                    levelData.InitialDepth +
+                    //base the warning on the start or end position of the level, whichever is deeper
+                    levelData.Size.Y * Math.Max(levelData.GenerationParams.StartPosition.Y, levelData.GenerationParams.EndPosition.Y);
+
+                //"high warning" if the sub spawns at/below crush depth
+                if (spawnDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
                     iconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningHighIcon";
                     tooltip = "crushdepthwarninghigh";
                 }
-                else if ((connection.LevelData.InitialDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
+                //"low warning" if the spawn position is less than the level's height away from crush depth
+                //(i.e. the crush depth is pretty close to the spawn pos, possibly inside the level or at least close enough that many parts of the abyss are unreachable)
+                else if ((spawnDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
                     iconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningLowIcon";
@@ -1186,7 +1198,9 @@ namespace Barotrauma
                 Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                 if (viewArea.Contains(center) && connection.Biome != null)
                 {
-                    GUI.DrawString(spriteBatch, center, (connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier) + " (" + connection.Difficulty.FormatSingleDecimal() + ")", Color.White);
+                    GUI.DrawString(spriteBatch, center - Vector2.UnitX * 50,
+                        $"{(connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier)} ({connection.Difficulty.FormatSingleDecimal()})",
+                        ToolBox.GradientLerp(connection.Difficulty / 100.0f, GUIStyle.Blue, GUIStyle.Yellow, GUIStyle.Red), backgroundColor: Color.Black * 0.7f, font: GUIStyle.SmallFont);
                 }
             }
 

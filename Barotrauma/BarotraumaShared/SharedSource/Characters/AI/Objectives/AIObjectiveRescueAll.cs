@@ -9,9 +9,9 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "rescue all".ToIdentifier();
         public override bool ForceRun => true;
-        public override bool InverseTargetEvaluation => true;
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
+        public override bool InverseTargetPriority => true;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
 
         private readonly HashSet<Character> charactersWithMinorInjuries = new HashSet<Character>();
 
@@ -32,7 +32,7 @@ namespace Barotrauma
         public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier) { }
 
-        protected override bool Filter(Character target)
+        protected override bool IsValidTarget(Character target)
         {
             if (!IsValidTarget(target, character, out bool ignoredasMinorWounds))
             {
@@ -61,7 +61,7 @@ namespace Barotrauma
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 100; }
             if (!objectiveManager.IsOrder(this))
@@ -96,13 +96,20 @@ namespace Barotrauma
             {
                 float strength = character.CharacterHealth.GetPredictedStrength(affliction, predictFutureDuration: 10.0f);
                 vitality -= affliction.GetVitalityDecrease(character.CharacterHealth, strength) / character.MaxVitality * 100;
-                if (affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                if (affliction.Strength > affliction.Prefab.TreatmentThreshold)
                 {
-                    vitality -= affliction.Strength;
-                }
-                else if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType)
-                {
-                    vitality -= affliction.Strength;
+                    if (affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                    {
+                        vitality -= affliction.Strength;
+                    }
+                    else if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType)
+                    {
+                        vitality -= affliction.Strength;
+                    }
+                    else if (affliction.Prefab == AfflictionPrefab.HuskInfection)
+                    {
+                        vitality -= affliction.Strength;
+                    }   
                 }
             }
             return Math.Clamp(vitality, 0, 100);

@@ -254,7 +254,7 @@ namespace Barotrauma
                     buttonText = TextManager.Get("map"); 
                 }
                 else if (prevCampaignUIAutoOpenType != availableTransition && 
-                        (availableTransition == TransitionType.ProgressToNextEmptyLocation || availableTransition == TransitionType.ReturnToPreviousEmptyLocation))
+                        availableTransition == TransitionType.ProgressToNextEmptyLocation)
                 {
                     HintManager.OnAvailableTransition(availableTransition);
                     //opening the campaign map pauses the game and prevents HintManager from running -> update it manually to get the hint to show up immediately
@@ -344,18 +344,6 @@ namespace Barotrauma
             }
         }
 
-        protected SubmarineInfo GetPredefinedStartOutpost()
-        {
-            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && !parameters.OutpostFilePath.IsNullOrEmpty())
-            {
-                return new SubmarineInfo(parameters.OutpostFilePath.Value)
-                {
-                    OutpostGenerationParams = parameters
-                };
-            }
-            return null;
-        }
-
         partial void NPCInteractProjSpecific(Character npc, Character interactor)
         {
             if (npc == null || interactor == null) { return; }
@@ -370,7 +358,7 @@ namespace Barotrauma
                     UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade").Value, IsSinglePlayer, npc);
                     return;
                 case InteractionType.Crew when GameMain.NetworkMember != null:
-                    CampaignUI.CrewManagement.SendCrewState(false);
+                    CampaignUI.HRManagerUI.SendCrewState(false);
                     goto default;
                 case InteractionType.MedicalClinic:
                     CampaignUI.MedicalClinic.RequestLatestPending();
@@ -407,13 +395,15 @@ namespace Barotrauma
 
         protected void TryEndRoundWithFuelCheck(Action onConfirm, Action onReturnToMapScreen)
         {
+            if (Submarine.MainSub == null) { return; }
+
             Submarine.MainSub.CheckFuel();
             bool lowFuel = Submarine.MainSub.Info.LowFuel;
             if (PendingSubmarineSwitch != null)
             {
                 lowFuel = TransferItemsOnSubSwitch ? (lowFuel && PendingSubmarineSwitch.LowFuel) : PendingSubmarineSwitch.LowFuel;
             }
-            if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
+            if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains(Tags.ReactorFuel))))
             {
                 var extraConfirmationBox =
                     new GUIMessageBox(TextManager.Get("lowfuelheader"),

@@ -47,62 +47,75 @@ namespace Barotrauma
             if (renderer == null) { return; }
             renderer.DrawDebugOverlay(spriteBatch, cam);
 
-            if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
+            if (GameMain.DebugDraw)
             {
-                foreach (InterestingPosition pos in PositionsOfInterest)
+                if (Screen.Selected.Cam.Zoom > 0.1f)
                 {
-                    Color color = Color.Yellow;
-                    if (pos.PositionType == PositionType.Cave || pos.PositionType == PositionType.AbyssCave)
+                    foreach (InterestingPosition pos in PositionsOfInterest)
                     {
-                        color = Color.DarkOrange;
-                    }
-                    else if (pos.PositionType == PositionType.Ruin)
-                    {
-                        color = Color.LightGray;
-                    }
-                    if (!pos.IsValid)
-                    {
-                        color = Color.Red;
-                    }
+                        Color color = Color.Yellow;
+                        if (pos.PositionType == PositionType.Cave || pos.PositionType == PositionType.AbyssCave)
+                        {
+                            color = Color.DarkOrange;
+                        }
+                        else if (pos.PositionType == PositionType.Ruin)
+                        {
+                            color = Color.LightGray;
+                        }
+                        if (!pos.IsValid)
+                        {
+                            color = Color.Red;
+                        }
                     
-                    GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X - 15.0f, -pos.Position.Y - 15.0f), new Vector2(30.0f, 30.0f), color, true);
+                        GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X - 15.0f, -pos.Position.Y - 15.0f), new Vector2(30.0f, 30.0f), color, true);
+                    }
+
+                    foreach (RuinGeneration.Ruin ruin in Ruins)
+                    {
+                        Rectangle ruinArea = ruin.Area;
+                        ruinArea.Y = -ruinArea.Y - ruinArea.Height;
+
+                        GUI.DrawRectangle(spriteBatch, ruinArea, Color.DarkSlateBlue, false, 0, 5);
+                    }
                 }
-
-                foreach (RuinGeneration.Ruin ruin in Ruins)
-                {
-                    Rectangle ruinArea = ruin.Area;
-                    ruinArea.Y = -ruinArea.Y - ruinArea.Height;
-
-                    GUI.DrawRectangle(spriteBatch, ruinArea, Color.DarkSlateBlue, false, 0, 5);
-                }
-
-                foreach (var positions in wreckPositions.Values)
+                
+                float zoomFactor = MathHelper.Lerp(20, 1, MathUtils.InverseLerp(Screen.Selected.Cam.MinZoom, Screen.Selected.Cam.DefaultZoom, Screen.Selected.Cam.Zoom));
+                foreach ((string debugInfo, List<Vector2> positions) in positionHistory)
                 {
                     for (int i = 0; i < positions.Count; i++)
                     {
                         float t = (i + 1) / (float)positions.Count;
-                        float multiplier = MathHelper.Lerp(0, 1, t);
+                        float multiplier = MathHelper.Lerp(0.1f, 1, t);
                         Color color = Color.Red * multiplier;
                         var pos = positions[i];
                         pos.Y = -pos.Y;
-                        var size = new Vector2(100);
-                        GUI.DrawRectangle(spriteBatch, pos - size / 2, size, color, thickness: 10);
+                        var size = new Vector2(200);
+                        if (i == 0)
+                        {
+                            GUI.DrawRectangle(spriteBatch, pos - size, size * 2, Color.Red, thickness: 2 * zoomFactor);
+                            GUI.DrawString(spriteBatch, pos - new Vector2(10, 20), debugInfo, Color.White, font: GUIStyle.LargeFont, forceUpperCase: ForceUpperCase.Yes);
+                        }
                         if (i < positions.Count - 1)
                         {
+                            if (i > 0)
+                            {
+                                GUI.DrawRectangle(spriteBatch, pos - size / 2, size, Color.Red, isFilled: true);   
+                            }
                             var nextPos = positions[i + 1];
                             nextPos.Y = -nextPos.Y;
-                            GUI.DrawLine(spriteBatch, pos, nextPos, color, width: 10);
+                            GUI.DrawLine(spriteBatch, pos, nextPos, color, width: 4 * zoomFactor);
                         }
                     }
                 }
 
-                foreach (var rects in blockedRects.Values)
+                foreach ((Submarine sub, List<Rectangle> rects) in blockedRects)
                 {
-                    foreach (var rect in rects)
+                    foreach (Rectangle t in rects)
                     {
-                        Rectangle newRect = rect;
+                        Rectangle newRect = t;
                         newRect.Y = -newRect.Y;
-                        GUI.DrawRectangle(spriteBatch, newRect, Color.Red, thickness: 5);
+                        GUI.DrawRectangle(spriteBatch, newRect, Color.Red * 0.1f, isFilled: true);
+                        GUI.DrawString(spriteBatch, newRect.Center.ToVector2(), $"{sub.Info.Name}", Color.White, font: GUIStyle.LargeFont, forceUpperCase: ForceUpperCase.Yes);
                     }
                 }
             }

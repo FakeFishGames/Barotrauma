@@ -25,7 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BarotraumaClient\MacClient.csproj" />
+      <ProjectReference Include="..\BarotraumaClient\MacClient.csproj" Aliases="Client" />
+      <ProjectReference Include="..\BarotraumaServer\MacServer.csproj" Aliases="Server"/>
   </ItemGroup>
 
   <ItemGroup>

@@ -320,8 +320,7 @@ namespace Barotrauma
             Vector2 pos = host.WorldPosition;
             Vector2 diff = currentPath.CurrentNode.WorldPosition - pos;
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
-            // Only humanoids can climb ladders
-            bool canClimb = character.AnimController is HumanoidAnimController && !character.LockHands;
+            bool canClimb = character.CanClimb;
             Ladder currentLadder = GetCurrentLadder();
             Ladder nextLadder = GetNextLadder();
             var ladders = currentLadder ?? nextLadder;
@@ -492,14 +491,20 @@ namespace Barotrauma
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 5, 0, 1));
                 float colliderHeight = collider.Height / 2 + collider.Radius;
-                float heightDiff = currentPath.CurrentNode.SimPosition.Y - collider.SimPosition.Y;
-                if (heightDiff < colliderHeight)
+                if (currentPath.CurrentNode.Stairs == null)
                 {
-                    //the waypoint is between the top and bottom of the collider, no need to move vertically.
-                    diff.Y = 0.0f;
+                    float heightDiff = currentPath.CurrentNode.SimPosition.Y - collider.SimPosition.Y;
+                    if (heightDiff < colliderHeight)
+                    {
+                        // Original comment:
+                        //the waypoint is between the top and bottom of the collider, no need to move vertically.
+                        // Note that the waypoint can be below collider too! This might be incorrect.
+                        diff.Y = 0.0f;
+                    }
                 }
-                if (currentPath.CurrentNode.Stairs != null)
+                else
                 {
+                    // In stairs
                     bool isNextNodeInSameStairs = currentPath.NextNode?.Stairs == currentPath.CurrentNode.Stairs;
                     if (!isNextNodeInSameStairs)
                     {
@@ -553,26 +558,41 @@ namespace Barotrauma
             }
             else
             {
-                // We'll want this to run each time, because the delegate is used to find a valid button component.
                 bool canAccessButtons = false;
-                foreach (var button in door.Item.GetConnectedComponents<Controller>(true, connectionFilter: c => c.Name == "toggle" || c.Name == "set_state"))
+                bool buttonsFound = false;
+                // Check wired controllers (e.g. buttons)
+                // Always run the buttonFilter delegate (inside CanAccessButton method), if defined, because it's used for find a valid controller component that can be used for closing the door, when needed.
+                foreach (Controller button in door.Item.GetConnectedComponents<Controller>(recursive: true, connectionFilter: c => c.Name is "toggle" or "set_state"))
                 {
-                    if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
+                    buttonsFound = true;
+                    if (CanAccessButton(button))
                     {
                         canAccessButtons = true;
                     }
                 }
-                foreach (var linked in door.Item.linkedTo)
+                if (!canAccessButtons)
                 {
-                    if (linked is not Item linkedItem) { continue; }
-                    var button = linkedItem.GetComponent<Controller>();
-                    if (button == null) { continue; }
-                    if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
+                    // Check linked controllers (more complex circuits)
+                    foreach (MapEntity linked in door.Item.linkedTo)
                     {
-                        canAccessButtons = true;
-                    }
-                }                
-                return canAccessButtons || door.IsOpen || ShouldBreakDoor(door);
+                        if (linked is not Item linkedItem) { continue; }
+                        var button = linkedItem.GetComponent<Controller>();
+                        if (button == null) { continue; }
+                        buttonsFound = true;
+                        if (CanAccessButton(button))
+                        {
+                            canAccessButtons = true;
+                        }
+                    }   
+                }
+                if (door.IsOpen || ShouldBreakDoor(door))
+                {
+                    return true;
+                }
+                // If no buttons were found, just trust it if we should have the access to the door. Could be there's some other mechanism controlling the door.
+                return buttonsFound ? canAccessButtons : door.HasAccess(character);
+                
+                bool CanAccessButton(Controller button) => button.HasAccess(character) && (buttonFilter == null || buttonFilter(button));
             }
         }
 
@@ -790,10 +810,9 @@ namespace Barotrauma
             float? penalty = GetSingleNodePenalty(nextNode);
             if (penalty == null) { return null; }
             bool nextNodeAboveWaterLevel = nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y;
-            //non-humanoids can't climb up ladders
-            if (!(character.AnimController is HumanoidAnimController))
+            if (!character.CanClimb)
             {
-                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (!nextNode.Waypoint.Ladders.Item.IsInteractable(character) || character.LockHands)||
+                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (!nextNode.Waypoint.Ladders.Item.IsInteractable(character) || character.LockHands) ||
                     (nextNode.Position.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
                     nextNodeAboveWaterLevel)) //upper node not underwater
                 {
@@ -841,7 +860,7 @@ namespace Barotrauma
             if (!node.Waypoint.IsTraversable) { return null; }
             if (node.IsBlocked()) { return null; }
             float penalty = 0.0f;
-            if (node.Waypoint.ConnectedGap != null && node.Waypoint.ConnectedGap.Open < 0.9f)
+            if (node.Waypoint.ConnectedGap is { Open: < 0.9f })
             {
                 var door = node.Waypoint.ConnectedDoor;
                 if (door == null)
@@ -852,19 +871,19 @@ namespace Barotrauma
                 {
                     if (!CanAccessDoor(door, button =>
                     {
-                        // Ignore buttons that are on the wrong side of the door
+                        // Ignore buttons that are on the wrong side of the door, unless there's a motion sensor connected to the door, which can be triggered by the character.
                         if (door.IsHorizontal)
                         {
                             if (Math.Sign(button.Item.WorldPosition.Y - door.Item.WorldPosition.Y) != Math.Sign(character.WorldPosition.Y - door.Item.WorldPosition.Y))
                             {
-                                return false;
+                                return door.Item.GetDirectlyConnectedComponent<MotionSensor>() is MotionSensor ms && ms.TriggersOn(character);
                             }
                         }
                         else
                         {
                             if (Math.Sign(button.Item.WorldPosition.X - door.Item.WorldPosition.X) != Math.Sign(character.WorldPosition.X - door.Item.WorldPosition.X))
                             {
-                                return false;
+                                return door.Item.GetDirectlyConnectedComponent<MotionSensor>() is MotionSensor ms && ms.TriggersOn(character);
                             }
                         }
                         return true;
@@ -883,7 +902,18 @@ namespace Barotrauma
             //steer away from edges of the hull
             bool wander = false;
             bool inWater = character.AnimController.InWater;
-            var currentHull = character.CurrentHull;
+            Hull currentHull = character.CurrentHull;
+            // TODO: disabled for now, because seems to cause bots to walk towards walls/doors in some places. In some places it's because how the hulls are defined, but there is probably something else too, is it seems to happen also elsewhere.
+            // if (!inWater)
+            // {
+            //     Vector2 colliderBottomPos = ConvertUnits.ToDisplayUnits(character.AnimController.GetColliderBottom());
+            //     if (Hull.FindHull(colliderBottomPos, guess: currentHull, useWorldCoordinates: false) is Hull lowestHull)
+            //     {
+            //         // Use the hull found at the collider bottom, if found.
+            //         // Makes difference in some rooms that have multiple hulls, of which the lowest hull where the feet are might not be the same as where the center position of the main collider is.
+            //         currentHull = lowestHull;
+            //     }
+            // }
             if (currentHull != null && !inWater)
             {
                 float roomWidth = currentHull.Rect.Width;

@@ -15,7 +15,10 @@ namespace Barotrauma
         public virtual string DebugTag => Identifier.Value;
         public virtual bool ForceRun => false;
         public virtual bool IgnoreUnsafeHulls => false;
-        public virtual bool AbandonWhenCannotCompleteSubjectives => true;
+        public virtual bool AbandonWhenCannotCompleteSubObjectives => true;
+        /// <summary>
+        /// Should subobjectives be sorted according to their priority?
+        /// </summary>
         public virtual bool AllowSubObjectiveSorting => false;
         public virtual bool PrioritizeIfSubObjectivesActive => false;
 
@@ -28,8 +31,7 @@ namespace Barotrauma
         /// Run the main objective with all subobjectives concurrently?
         /// If false, the main objective will continue only when all the subobjectives have been removed (done).
         /// </summary>
-        public virtual bool ConcurrentObjectives => false;
-
+        protected virtual bool ConcurrentObjectives => false;
         public virtual bool KeepDivingGearOn => false;
         public virtual bool KeepDivingGearOnAlsoWhenInactive => false;
 
@@ -37,10 +39,36 @@ namespace Barotrauma
         /// There's a separate property for diving suit and mask: KeepDivingGearOn.
         /// </summary>
         public virtual bool AllowAutomaticItemUnequipping => false;
-        public virtual bool AllowOutsideSubmarine => false;
-        public virtual bool AllowInFriendlySubs => false;
-        public virtual bool AllowInAnySub => false;
-        public virtual bool AllowWhileHandcuffed => true;
+        
+        // These booleans are used for defining whether the objective is allowed in different contexts. E.g. AllowOutsideSubmarine needs to be true or the objective cannot be active when the bot is swimming outside.
+        protected virtual bool AllowOutsideSubmarine => false;
+        /// <summary>
+        /// When true, the objective is allowed in the player subs (when in the same team) and on friendly outposts (regardless of the alignment).
+        /// Note: ignored when <see cref="AllowInAnySub"/> is true.
+        /// </summary>
+        protected virtual bool AllowInFriendlySubs => false;
+        protected virtual bool AllowInAnySub => false;
+        protected virtual bool AllowWhileHandcuffed => true;
+        
+        /// <summary>
+        /// Should the objective abandon when it's not allowed in the current context or should it just stay inactive with 0 priority?
+        /// Abandoned automatic objectives are removed and recreated automatically (when new orders are assigned or after a cooldown period).
+        /// Abandoned orders are removed, but the most recent order can be reissued by clicking the small order icon with the arrow in the crew manager panel. 
+        /// </summary>
+        protected virtual bool AbandonIfDisallowed => true;
+        
+        public virtual bool CanBeCompleted => !Abandon;
+        
+        protected virtual float MaxDevotion => 10;
+        
+        /// <summary>
+        /// Which event action (if any) created this objective
+        /// </summary>
+        public EventAction SourceEventAction;
+        /// <summary>
+        /// Which objective (if any) created this objective. When this is a subobjective, the parent objective is used by default.
+        /// </summary>
+        public AIObjective SourceObjective;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         private float _cumulatedDevotion;
@@ -49,8 +77,6 @@ namespace Barotrauma
             get { return _cumulatedDevotion; }
             set { _cumulatedDevotion = MathHelper.Clamp(value, 0, MaxDevotion); }
         }
-
-        protected virtual float MaxDevotion => 10;
 
         /// <summary>
         /// Final priority value after all calculations.
@@ -100,17 +126,13 @@ namespace Barotrauma
                 }
             }
         }
-
-        public virtual bool CanBeCompleted => !Abandon;
-
-        /// <summary>
-        /// When true, the objective is never completed, unless CanBeCompleted returns false.
-        /// </summary>
-        public virtual bool IsLoop { get; set; }
+        
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
+        
         public AIObjective CurrentSubObjective => subObjectives.FirstOrDefault();
 
         private readonly List<AIObjective> all = new List<AIObjective>();
+        
         public IEnumerable<AIObjective> GetSubObjectivesRecursive(bool includingSelf = false)
         {
             all.Clear();
@@ -124,13 +146,11 @@ namespace Barotrauma
             }
             return all;
         }
-
-#pragma warning disable CS0649
+        
         /// <summary>
         /// Aborts the objective when this condition is true.
         /// </summary>
         public Func<AIObjective, bool> AbortCondition;
-#pragma warning restore CS0649
 
         /// <summary>
         /// A single shot event. Automatically cleared after launching. Use OnCompleted method for implementing (internal) persistent behavior.
@@ -186,6 +206,7 @@ namespace Barotrauma
         public void AddSubObjective(AIObjective objective, bool addFirst = false)
         {
             var type = objective.GetType();
+            objective.SourceObjective = this;
             subObjectives.RemoveAll(o => o.GetType() == type);
             if (addFirst)
             {
@@ -259,17 +280,21 @@ namespace Barotrauma
             return character.Submarine.Info.IsOutpost && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC;
         }
 
-        protected void HandleNonAllowed()
+        protected void HandleDisallowed()
         {
             Priority = 0;
-            Abandon = !IsIgnoredAtOutpost();
+            if (AbandonIfDisallowed && !IsIgnoredAtOutpost())
+            {
+                // Never abandon objectives inside a friendly outpost, because otherwise we'd have to reassign most orders every round.
+                Abandon = true;
+            }
         }
 
         protected virtual float GetPriority()
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             if (objectiveManager.IsOrder(this))
@@ -360,7 +385,7 @@ namespace Barotrauma
         /// <summary>
         /// Checks if the subobjectives in the given collection are removed from the subobjectives. And if so, removes it also from the dictionary.
         /// </summary>
-        protected void SyncRemovedObjectives<T1, T2>(Dictionary<T1, T2> dictionary, IEnumerable<T1> collection) where T2 : AIObjective
+        protected virtual void SyncRemovedObjectives<T1, T2>(Dictionary<T1, T2> dictionary, IEnumerable<T1> collection) where T2 : AIObjective
         {
             foreach (T1 key in collection)
             {
@@ -398,6 +423,7 @@ namespace Barotrauma
                 {
                     if (objective.AllowMultipleInstances)
                     {
+                        objective.SourceObjective = this;
                         subObjectives.Add(objective);
                     }
                     else
@@ -482,17 +508,24 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Check whether the objective should be aborted (and abandon if it should), and return whether the objective is completed or not.
+        /// </summary>
         private bool Check()
         {
+            if (isCompleted) { return true; }
             if (AbortCondition != null && AbortCondition(this))
             {
                 Abandon = true;
                 return false;
             }
-            return CheckObjectiveSpecific();
+            return CheckObjectiveState();
         }
 
-        protected abstract bool CheckObjectiveSpecific();
+        /// <summary>
+        /// Should return whether the objective is completed or not.
+        /// </summary>
+        protected abstract bool CheckObjectiveState();
 
         private bool CheckState()
         {
@@ -527,7 +560,7 @@ namespace Barotrauma
                     DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.", Color.Red);
 #endif
                     subObjectives.Remove(subObjective);
-                    if (AbandonWhenCannotCompleteSubjectives)
+                    if (AbandonWhenCannotCompleteSubObjectives)
                     {
                         if (objectiveManager.IsOrder(this))
                         {
@@ -541,8 +574,6 @@ namespace Barotrauma
                 }
             }
         }
-
-        public virtual void SpeakAfterOrderReceived() { }
 
         protected static bool CanPutInInventory(Character character, Item item, bool allowWearing)
         {

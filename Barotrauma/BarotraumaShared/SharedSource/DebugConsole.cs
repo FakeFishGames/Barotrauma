@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Barotrauma.MapCreatures.Behavior;
 using System.Text;
 
+
 namespace Barotrauma
 {
     readonly struct ColoredText
@@ -248,7 +249,7 @@ namespace Barotrauma
                 GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
             }));
 
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team] [add to crew (true/false)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
                 string[] creatureAndJobNames =
@@ -260,53 +261,51 @@ namespace Barotrauma
                 return new string[][]
                 {
                     creatureAndJobNames.ToArray(),
-                    new string[] { "near", "inside", "outside", "cursor" }
+                    new string[] { "near", "inside", "outside", "cursor" },
+                    Enum.GetValues<CharacterTeamType>().Select(v => v.ToString()).ToArray(),
+                    new string[] { "true", "false" },
+
+                };
+            }, isCheat: true));
+            
+            commands.Add(new Command("give|giveitem", "give|giveitem [itemname/itemidentifier] [amount] [condition]: Spawn an item in the inventory of the controlled character",
+            (string[] args) =>
+            {
+                if (Character.Controlled == null)
+                {
+                    ThrowError("No character is selected!");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the name or identifier of the item to spawn.");
+                    return;
+                }
+                
+                var modifiedArgs = new List<string>(args);
+                modifiedArgs.Insert(1, "inventory");
+                TrySpawnItem(modifiedArgs.ToArray());
+            },
+            getValidArgs: () =>
+            {
+                return new string[][]
+                {
+                    GetItemNameOrIdParams().ToArray()
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount] [condition]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the location parameter is omitted or \"random\".",
             (string[] args) =>
             {
-                try
-                {
-#if CLIENT
-                    SpawnItem(args, Screen.Selected.Cam?.ScreenToWorld(PlayerInput.MousePosition) ?? PlayerInput.MousePosition, Character.Controlled, out string errorMsg);
-#elif SERVER
-                    SpawnItem(args, Vector2.Zero, null, out string errorMsg);
-#endif
-                    if (!string.IsNullOrWhiteSpace(errorMsg))
-                    {
-                        ThrowError(errorMsg);
-                    }
-                }
-                catch (Exception e)
-                {
-                    string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
-                    ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
-                }
+                TrySpawnItem(args);
             },
             () =>
             {
-                List<string> itemNames = new List<string>();
-                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
-                {
-                    if (!itemNames.Contains(itemPrefab.Name.Value))
-                    {
-                        itemNames.Add(itemPrefab.Name.Value);
-                    }
-                }
-
-                List<string> spawnPosParams = new List<string>() { "cursor", "inventory" };
-#if SERVER
-                if (GameMain.Server != null) spawnPosParams.AddRange(GameMain.Server.ConnectedClients.Select(c => c.Name));
-#endif
-                spawnPosParams.AddRange(Character.CharacterList.Where(c => c.Inventory != null).Select(c => c.Name).Distinct());
-
                 return new string[][]
                 {
-                    itemNames.ToArray(),
-                    spawnPosParams.ToArray()
+                    GetItemNameOrIdParams().ToArray(),
+                    GetSpawnPosParams().ToArray()
                 };
             }, isCheat: true));
             
@@ -566,11 +565,83 @@ namespace Barotrauma
             
             commands.Add(new Command("banaddress|banip", "banaddress [endpoint]: Ban the IP address/SteamID from the server.", null));
             
-            commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", null,
-            () =>
+            commands.Add(new Command("teleportcharacter|teleport", "teleport [character name] [location]: Teleport the specified character to a location , or the position of the cursor if location is omitted. If the name parameter is omitted, the controlled character will be teleported.", 
+            onExecute: null,
+            getValidArgs:() =>
             {
-                return new string[][] { ListCharacterNames() };
+                var characterList = Character.Controlled != null ? new[] { "Me" } : Array.Empty<string>();
+                var subList = Submarine.MainSub != null ? new[] { "mainsub" } : Array.Empty<string>();
+                return new string[][]
+                {
+                    characterList.Concat(ListCharacterNames()).ToArray(),
+                    subList.Concat(ListAvailableLocations()).ToArray()
+                };
             }, isCheat: true));
+            
+            commands.Add(new Command("monstersignoreplayer", "Toggle if monsters should ignore the player character (and their equipment) when targeting.",
+            onExecute: (string[] args) =>
+            {
+                ToggleEnemyAITargetingRestrictions(EnemyTargetingRestrictions.PlayerCharacters);
+            },
+            getValidArgs: null,
+            isCheat: true));
+            
+            commands.Add(new Command("monstersignoresub", "Toggle if monsters should ignore the player submarines when targeting.",
+            onExecute: (string[] args) =>
+            {
+                ToggleEnemyAITargetingRestrictions(EnemyTargetingRestrictions.PlayerSubmarines);
+            },
+            getValidArgs: null,
+            isCheat: true));
+            
+            commands.Add(new Command("monstersrestoretargets", "Remove any targeting restrictions from monsters.",
+            onExecute: (string[] args) =>
+            {
+                ToggleEnemyAITargetingRestrictions(EnemyTargetingRestrictions.None);
+            },
+            getValidArgs: null,
+            isCheat: true));
+            
+            commands.Add(new Command("monstertargetingrestrictions", "monstertargetingrestrictions [restrictions]: Set targeting restrictions for all monsters. Supports multiple options comma-separated: 'monsterargetingrestrictions PlayerCharacters,PlayerSubmarines'. Use 'None' to remove all restrictions.",
+            onExecute:(string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    // use the set function to keep log consistent
+                    ToggleEnemyAITargetingRestrictions(EnemyAIController.TargetingRestrictions);
+                    return;
+                }
+                
+                // try parse the complete flags from first arg
+                if (Enum.TryParse<EnemyTargetingRestrictions>(args[0], ignoreCase: true, out var restrictions))
+                {
+                    ToggleEnemyAITargetingRestrictions(restrictions);
+                }
+                else
+                {
+                    NewMessage($"Failed to parse argument '{args[0]}'", Color.Red);
+                }
+            },
+            getValidArgs: () =>
+            {
+                return new string[][]
+                {
+                    Enum.GetNames(typeof(EnemyTargetingRestrictions))
+                };
+            },
+            isCheat: true));
+
+            commands.Add(new Command("listlocations|locations", "listlocations: List all the locations in the level: subs, outposts, ruins, caves.", 
+            onExecute:(string[] args) =>
+            {
+                var availableLocations = ListAvailableLocations();
+                NewMessage("***************", Color.Cyan);
+                foreach (var location in availableLocations)
+                {
+                    NewMessage(location, Color.Cyan);
+                }
+                NewMessage("***************", Color.Cyan);
+            }));
 
             commands.Add(new Command("godmode", "godmode [character name]: Toggle character godmode. Makes the targeted character invulnerable to damage. If the name parameter is omitted, the controlled character will receive godmode.",
             (string[] args) =>
@@ -589,7 +660,7 @@ namespace Barotrauma
 
             commands.Add(new Command("godmode_mainsub", "godmode_mainsub: Toggle submarine godmode. Makes the main submarine invulnerable to damage.", (string[] args) =>
             {
-                if (Submarine.MainSub == null) return;
+                if (Submarine.MainSub == null) { return; }
 
                 Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
                 NewMessage(Submarine.MainSub.GodMode ? "Godmode on" : "Godmode off", Color.White);
@@ -689,7 +760,7 @@ namespace Barotrauma
                 {
                     bool.TryParse(args[4], out relativeStrength);
                 }
-                Character targetCharacter = args.Length <= 2 ? Character.Controlled : FindMatchingCharacter(new string[] { args[2] });
+                Character targetCharacter = args.Length <= 2 ? Character.Controlled : FindMatchingCharacter(args.Skip(2).ToArray());
                 if (targetCharacter != null)
                 {
                     Limb targetLimb = targetCharacter.AnimController.MainLimb;
@@ -714,6 +785,22 @@ namespace Barotrauma
                     Enum.GetNames(typeof(LimbType)).ToArray()
                 };
             }, isCheat: true));
+            
+            commands.Add(new Command("healme", "healme [all]: Restore controlled character to full health. By default only heals common afflictions such as physical damage and blood loss: use the \"all\" argument to heal everything, including poisonings/addictions/etc.", (string[] args) =>
+                {
+                    bool healAll = args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    if (Character.Controlled != null)
+                    {
+                        HealCharacter(Character.Controlled, healAll);
+                    }
+                },
+                () =>
+                {
+                    return new string[][]
+                    {
+                        new string[] { "all" }
+                    };
+                }, isCheat: true));
 
             commands.Add(new Command("heal", "heal [character name] [all]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed. By default only heals common afflictions such as physical damage and blood loss: use the \"all\" argument to heal everything, including poisonings/addictions/etc.", (string[] args) =>
             {
@@ -721,21 +808,15 @@ namespace Barotrauma
                 Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
                 if (healedCharacter != null)
                 {
-                    healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
-                    healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bloodloss = 0.0f;
-                    healedCharacter.SetStun(0.0f, true);
-                    if (healAll)
-                    {
-                        healedCharacter.CharacterHealth.RemoveAllAfflictions();
-                    }
+                    HealCharacter(healedCharacter, healAll);
                 }
             },
             () =>
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray(),
+                    new string[] { "all" }
                 };
             }, isCheat: true));
 
@@ -780,6 +861,17 @@ namespace Barotrauma
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
                         if (c.Character != revivedCharacter) { continue; }
+
+                        // If killed in ironman mode, the character has been wiped from the save mid-round, so its
+                        // original data needs to be restored to the save file (without making a backup of the dead character)
+                        if (GameMain.Server?.ServerSettings is { IronmanModeActive: true } && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+                        {
+                            if (mpCampaign.RestoreSingleCharacterFromBackup(c) is CharacterCampaignData characterToRestore)
+                            {
+                                characterToRestore.CharacterInfo.PermanentlyDead = false;
+                                mpCampaign.SaveSingleCharacter(characterToRestore, skipBackup: true);
+                            }
+                        }
 
                         //clients stop controlling the character when it dies, force control back
                         GameMain.Server.SetClientCharacter(c, revivedCharacter);
@@ -843,32 +935,51 @@ namespace Barotrauma
                 }
             }, isCheat: true));
             
-            commands.Add(new Command("triggerevent", "triggerevent [identifier]: Created a new event.", (string[] args) =>
+            commands.Add(new Command("triggerevent", "triggerevent [identifier]: Trigger an event based on identifier.", (string[] args) =>
             {
-                List<EventPrefab> eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => prefab.Identifier != Identifier.Empty).ToList();
+                List<EventPrefab> allEventPrefabsWithId = EventSet.GetAllEventPrefabs().Where(prefab => prefab.Identifier != Identifier.Empty).ToList();
                 if (GameMain.GameSession?.EventManager != null && args.Length > 0)
                 {
-                    EventPrefab eventPrefab = eventPrefabs.Find(prefab => prefab.Identifier == args[0]);
-                    if (eventPrefab is TraitorEventPrefab)
+                    string eventPrefabId = args[0];
+                    if (eventPrefabId == "all")
                     {
-                        ThrowError($"{eventPrefab.Identifier} is a traitor event. You need to use the 'triggertraitorevent' command to start it.");
-                        return;
-                    }
-                    else if (eventPrefab != null)
-                    {
-                        var newEvent = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
-                        if (newEvent == null)
+                        foreach (var eventPrefab in allEventPrefabsWithId.Where(e => e.EventType == typeof(ScriptedEvent)))
                         {
-                            NewMessage($"Could not initialize event {args[0]} because level did not meet requirements");
+                            var newEvent = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
+                            if (newEvent == null)
+                            {
+                                NewMessage($"Could not initialize event {eventPrefabId} because level did not meet requirements");
+                                return;
+                            }
+                            GameMain.GameSession.EventManager.ActivateEvent(newEvent);
+                        }
+                    }
+                    else
+                    {
+                        EventPrefab eventPrefab = allEventPrefabsWithId.Find(prefab => prefab.Identifier == eventPrefabId);
+                        if (eventPrefab is TraitorEventPrefab)
+                        {
+                            ThrowError($"{eventPrefab.Identifier} is a traitor event. You need to use the 'triggertraitorevent' command to start it.");
                             return;
                         }
-                        GameMain.GameSession.EventManager.ActivateEvent(newEvent);
-                        NewMessage($"Initialized event {eventPrefab.Identifier}", Color.Aqua);
+                        else if (eventPrefab != null)
+                        {
+                            var newEvent = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
+                            if (newEvent == null)
+                            {
+                                NewMessage($"Could not initialize event {eventPrefabId} because level did not meet requirements");
+                                return;
+                            }
+                            GameMain.GameSession.EventManager.ActivateEvent(newEvent);
+                            NewMessage($"Initialized event {eventPrefab.Identifier}", Color.Aqua);
+                            return;
+                        }
+                        else
+                        {
+                        NewMessage($"Failed to trigger event because {eventPrefabId} is not a valid event identifier.", Color.Red);
                         return;
+                        }
                     }
-
-                    NewMessage($"Failed to trigger event because {args[0]} is not a valid event identifier.", Color.Red);
-                    return;
                 }
                 NewMessage("Failed to trigger event", Color.Red);
             }, isCheat: true, getValidArgs: () =>
@@ -879,8 +990,8 @@ namespace Barotrauma
                 {
                    eventPrefabs.Select(prefab => prefab.Identifier).Distinct().Select(id => id.Value).ToArray()
                 };
-            }));
-
+            }));            
+            
             commands.Add(new Command("debugevent", "debugevent [identifier]: outputs debug info about a specific event that's currently active. Mainly intended for debugging events in multiplayer: in single player, the same information is available by enabling debugdraw.", (string[] args) =>
             {
                 if (args.Length == 0)
@@ -1175,7 +1286,8 @@ namespace Barotrauma
                 }
             },null));
             
-            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
+            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", 
+            onExecute:(string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
 
@@ -1232,7 +1344,7 @@ namespace Barotrauma
                     }
                 }
             },
-            () =>
+            getValidArgs:() =>
             {
                 return new string[][]
                 {
@@ -1303,6 +1415,46 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
+            commands.Add(new Command("replaceitem", "replaceitem [item name (index)] [new item]: Replaces the specified item with another one.", (string[] args) =>
+            {
+                if (args.Length < 2) { return; }
+
+                string itemName = args[0];
+                int itemIndex = 0;
+                string newItemName = args[1];
+                if (args.Length == 3)
+                {
+                    if (!int.TryParse(args[1], out itemIndex))
+                    {
+                        ThrowError($"Failed to parse the argument {args[1]} as an index. Please give the arguments either in the format [old_item] [new_item] or [old_item] [index] [new_item]");
+                        return;
+                    }
+                    newItemName = args[2];
+                }
+
+                var oldItem = Item.ItemList.FindAll(it => it.Name == args[0]).ElementAtOrDefault(itemIndex);
+                if (oldItem == null)
+                {
+                    ThrowError($"Could not find an item with the name {args[0]} (index {itemIndex}).");
+                    return;
+                }
+                if ((MapEntityPrefab.FindByIdentifier(args[1].ToIdentifier()) ?? MapEntityPrefab.FindByName(args[1])) is not ItemPrefab newItem)
+                {
+                    ThrowError($"Could not find an item with the name or identifier {args[1]}.");
+                    return;
+                }
+                oldItem.ReplaceWithLinkedItems(newItem);
+                NewMessage($"Replaced {oldItem.Name} with {newItem.Name}.");
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Item.ItemList.Select(it => it.Name).Distinct().ToArray(),
+                    ItemPrefab.Prefabs.Select(it => it.Name.Value).Distinct().ToArray(),
+                };
+            }, isCheat: true));
+
             commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
                 float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;
@@ -1314,13 +1466,104 @@ namespace Barotrauma
                 Hull.WaveDampening = damp;
             }, null));
 
-            commands.Add(new Command("testlevels", "testlevels", (string[] args) =>
+            commands.Add(new Command("testmaps", "testmaps [amount]: generates campaign maps and checks whether there are any errors or exceptions. If the amount argument is omitted, the command will keep testing maps until it's cancelled.", (string[] args) =>
             {
-                CoroutineManager.StartCoroutine(TestLevels());
+                if (args.Length > 0 && int.TryParse(args[0], out int amount)) 
+                {
+                    CoroutineManager.StartCoroutine(TestMaps(amount: amount));
+                }
+                else
+                {
+                    CoroutineManager.StartCoroutine(TestMaps());
+                }
             },
             null));
 
-            IEnumerable<CoroutineStatus> TestLevels()
+            commands.Add(new Command("testmap", "testmap [seed]: generates a campaign map and checks whether there are any errors or exceptions.", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    ThrowError("Please provide the seed of the map to test.");
+                    return;
+                }
+                CoroutineManager.StartCoroutine(TestMaps(fixedSeed: args[0], amount: 1));
+            },
+            null));
+
+            IEnumerable<CoroutineStatus> TestMaps(string fixedSeed = null, int? amount = null)
+            {
+                int count = 0;
+#if CLIENT
+                while (!PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.C))
+#else
+                while (!input.Equals("c", StringComparison.OrdinalIgnoreCase))
+#endif
+                {
+                    using var errorCatcher = DebugConsole.ErrorCatcher.Create();
+                    {
+                        string seed = fixedSeed ?? ToolBox.RandomSeed(16);
+                        Map map = new Map(campaign: MultiPlayerCampaign.StartNew(seed, new CampaignSettings()), seed: seed);
+
+                        //check path to the first end location, because there are no normal connections between the end locations
+                        var lastLocation = map.EndLocations[0];
+                        int endDistance = Map.GetDistanceToClosestLocationOrConnection(map.StartLocation, maxDistance: int.MaxValue, criteria: (Location location) => location == lastLocation);
+                        if (endDistance == int.MaxValue)
+                        {
+                            ThrowError($"No path to the end of the map found. Seed: {seed}");
+                        }
+
+                        if (map.Locations.None(l => l.Type.Identifier == "outpost" && map.GetZoneIndex(l.MapPosition.X) == 1))
+                        {
+                            ThrowError($"No outpost in the first zone of the map. Seed: {seed}");
+                        }
+
+                        if (errorCatcher.Errors.Any())
+                        {
+                            ThrowError($"Error(s) found when generating a level. Seed: {seed}");
+                            yield return CoroutineStatus.Success;
+                        }
+
+                        count++;
+                        NewMessage($"Map seed {seed} ok (test #{count}). Press C to abort.");
+
+                        map.Remove();
+
+                        if (amount.HasValue && count >= amount)
+                        {
+                            NewMessage("Testing finished successfully.");
+                            break;
+                        }
+                    }
+
+                    yield return CoroutineStatus.Running;
+                }
+            }
+
+            commands.Add(new Command("testlevels", "testlevels [amount]: generates levels and checks whether there are any errors or exceptions. If the amount argument is omitted, the command will keep testing levels until it's cancelled.", (string[] args) =>
+            {
+                if (args.Length > 0 && int.TryParse(args[0], out int amount))
+                {
+                    CoroutineManager.StartCoroutine(TestLevels(amount: amount));
+                }
+                else
+                {
+                    CoroutineManager.StartCoroutine(TestLevels());
+                }
+            },
+            null));
+
+            commands.Add(new Command("testlevel", "testlevel [seed]: generates a levels and checks whether there are any errors or exceptions.", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    ThrowError("Please provide the seed of the level to test.");
+                    return;
+                }
+                CoroutineManager.StartCoroutine(TestLevels(fixedSeed: args[0], amount: 1));
+            },
+            null));
+
+            IEnumerable<CoroutineStatus> TestLevels(string fixedSeed = null, int? amount = null)
             {
                 SubmarineInfo selectedSub = null;
                 Identifier subName = GameSettings.CurrentConfig.QuickStartSub;
@@ -1330,12 +1573,17 @@ namespace Barotrauma
                 }
 
                 int count = 0;
-                while (true)
+#if CLIENT
+                while (!PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.C))
+#else
+                while (!input.Equals("c", StringComparison.OrdinalIgnoreCase))
+#endif
                 {
                     var gamesession = new GameSession(
                         SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)),
+                        Option.None,
                         GameModePreset.DevSandbox ?? GameModePreset.Sandbox);
-                    string seed = ToolBox.RandomSeed(16);
+                    string seed = fixedSeed ?? ToolBox.RandomSeed(16);
                     gamesession.StartRound(seed);
 
                     Rectangle subWorldRect = Submarine.MainSub.Borders;
@@ -1375,11 +1623,17 @@ namespace Barotrauma
                     Submarine.Unload();
 
                     count++;
-                    NewMessage("Level seed " + seed + " ok (test #" + count + ")");
+                    NewMessage("Level seed " + seed + " ok (test #" + count + "). Press C to abort.");
 #if CLIENT
                     //dismiss round summary and any other message boxes
                     GUIMessageBox.CloseAll();
 #endif
+                    if (amount.HasValue && count >= amount) 
+                    {
+                        NewMessage("Testing finished successfully.");
+                        break;
+                    }
+
                     yield return CoroutineStatus.Running;
                 }
             }
@@ -1923,6 +2177,7 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("debugvoip", "Toggle the server writing VOIP into audio files.", null, isCheat: false));
 
             commands.Add(new Command("simulatedlongloadingtime", "simulatedlongloadingtime [minimum loading time]: forces loading a round to take at least the specified amount of seconds.", (string[] args) =>
             {
@@ -2020,6 +2275,22 @@ namespace Barotrauma
             commands.Sort((c1, c2) => c1.Names.First().CompareTo(c2.Names.First()));
         }
 
+        private static void HealCharacter(Character healedCharacter, bool healAll)
+        {
+            healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
+            healedCharacter.Oxygen = 100.0f;
+            healedCharacter.Bloodloss = 0.0f;
+            healedCharacter.SetStun(0.0f, true);
+            if (healAll)
+            {
+                healedCharacter.CharacterHealth.RemoveAllAfflictions();
+            }
+
+            string characterNameText = healedCharacter == Character.Controlled ? $"{healedCharacter.Name} (you)" : healedCharacter.Name;
+            string text = healAll ? $"Healed {characterNameText}: all afflictions" : $"Healed {characterNameText}: damage and common afflictions";
+            NewMessage(text, Color.Yellow);
+        }
+
         public static string AutoComplete(string command, int increment = 1)
         {
             string[] splitCommand = ToolBox.SplitCommand(command);
@@ -2046,6 +2317,11 @@ namespace Barotrauma
                 string[] validArgs = allArgs[autoCompletedArgIndex].Where(arg =>
                     currentAutoCompletedCommand.Trim().Length <= arg.Length &&
                     arg.Substring(0, currentAutoCompletedCommand.Trim().Length).ToLower() == currentAutoCompletedCommand.Trim().ToLower()).ToArray();
+                
+                // add all completions that contain the current argument, to the end of the list
+                validArgs = validArgs.Concat(allArgs[autoCompletedArgIndex].Where(arg => 
+                    arg.ToLower().Contains(currentAutoCompletedCommand.Trim().ToLower()) && 
+                    !validArgs.Contains(arg))).ToArray();
 
                 if (validArgs.Length == 0) { return command; }
 
@@ -2094,116 +2370,340 @@ namespace Barotrauma
             currentAutoCompletedIndex = 0;
         }
 
-        public static void ExecuteCommand(string command)
+        /// <summary>
+        /// Executes the specific command or commands
+        /// </summary>
+        /// <param name="inputtedCommands">Command, or multiple commands separated by newlines.</param>  
+        public static void ExecuteCommand(string inputtedCommands)
         {
-            if (activeQuestionCallback != null)
+            if (string.IsNullOrWhiteSpace(inputtedCommands) || inputtedCommands == "\\" || inputtedCommands == "\n") { return; }
+
+            string[] commandsToExecute = inputtedCommands.Split("\n");
+            foreach (string command in commandsToExecute)
             {
-#if CLIENT
-                activeQuestionText = null;
-#endif
-                NewCommand(command);
-                //reset the variable before invoking the delegate because the method may need to activate another question
-                var temp = activeQuestionCallback;
-                activeQuestionCallback = null;
-                temp(command);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(command) || command == "\\" || command == "\n") { return; }
-
-            string[] splitCommand = ToolBox.SplitCommand(command);
-            if (splitCommand.Length == 0)
-            {
-                ThrowError("Failed to execute command \"" + command + "\"!");
-                GameAnalyticsManager.AddErrorEventOnce(
-                    "DebugConsole.ExecuteCommand:LengthZero",
-                    GameAnalyticsManager.ErrorSeverity.Error,
-                    "Failed to execute command \"" + command + "\"!");
-                return;
-            }
-
-            Identifier firstCommand = splitCommand[0].ToIdentifier();
-
-            if (firstCommand != "admin")
-            {
-                NewCommand(command);
-            }
-
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                Command matchingCommand = commands.Find(c => c.Names.Contains(firstCommand));
-                if (matchingCommand == null)
+                if (activeQuestionCallback != null)
                 {
-                    //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
-                    GameMain.Client.SendConsoleCommand(command);
-                    NewMessage("Server command: " + command, Color.Cyan);
+#if CLIENT
+                    activeQuestionText = null;
+#endif
+                    NewCommand(command);
+                    //reset the variable before invoking the delegate because the method may need to activate another question
+                    var temp = activeQuestionCallback;
+                    activeQuestionCallback = null;
+                    temp(command);
                     return;
                 }
-                else if (GameMain.Client.HasConsoleCommandPermission(firstCommand))
+
+                if (string.IsNullOrWhiteSpace(command) || command == "\\") { return; }
+
+                string[] splitCommand = ToolBox.SplitCommand(command);
+                if (splitCommand.Length == 0)
                 {
-                    if (matchingCommand.RelayToServer)
+                    ThrowError("Failed to execute command \"" + command + "\"!");
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "DebugConsole.ExecuteCommand:LengthZero",
+                        GameAnalyticsManager.ErrorSeverity.Error,
+                        "Failed to execute command \"" + command + "\"!");
+                    return;
+                }
+
+                Identifier firstCommand = splitCommand[0].ToIdentifier();
+
+                if (firstCommand != "admin")
+                {
+                    NewCommand(command);
+                }
+
+#if CLIENT
+                if (GameMain.Client != null)
+                {
+                    Command matchingCommand = commands.Find(c => c.Names.Contains(firstCommand));
+                    if (matchingCommand == null)
                     {
+                        //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
                         GameMain.Client.SendConsoleCommand(command);
                         NewMessage("Server command: " + command, Color.Cyan);
+                        return;
                     }
-                    else
+                    else if (GameMain.Client.HasConsoleCommandPermission(firstCommand))
                     {
-                        matchingCommand.ClientExecute(splitCommand.Skip(1).ToArray());
+                        if (matchingCommand.RelayToServer)
+                        {
+                            GameMain.Client.SendConsoleCommand(command);
+                            NewMessage("Server command: " + command, Color.Cyan);
+                        }
+                        else
+                        {
+                            matchingCommand.ClientExecute(splitCommand.Skip(1).ToArray());
+                        }
+                        return;
                     }
-                    return;
-                }
-                if (!IsCommandPermitted(firstCommand, GameMain.Client))
-                {
+                    if (!IsCommandPermitted(firstCommand, GameMain.Client))
+                    {
 #if DEBUG
-                    AddWarning($"You're not permitted to use the command \"{firstCommand}\". Executing the command anyway because this is a debug build.");
+                        AddWarning($"You're not permitted to use the command \"{firstCommand}\". Executing the command anyway because this is a debug build.");
 #else
                     ThrowError($"You're not permitted to use the command \"{firstCommand}\"!");
                     return;
 #endif
+                    }
                 }
-            }
 #endif
 
-            bool commandFound = false;
-            foreach (Command c in commands)
-            {
-                if (!c.Names.Contains(firstCommand)) { continue; }                
-                c.Execute(splitCommand.Skip(1).ToArray());
-                commandFound = true;
-                break;                
-            }
+                bool commandFound = false;
+                foreach (Command c in commands)
+                {
+                    if (!c.Names.Contains(firstCommand)) { continue; }
+                    c.Execute(splitCommand.Skip(1).ToArray());
+                    commandFound = true;
+                    break;
+                }
 
-            if (!commandFound)
-            {
-                ThrowError("Command \"" + splitCommand[0] + "\" not found.");
+                if (!commandFound)
+                {
+                    ThrowError("Command \"" + splitCommand[0] + "\" not found.");
+                }
             }
         }
 
-        private static string[] ListCharacterNames() => Character.CharacterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).ThenBy(c => c.Name).Select(c => c.Name).Distinct().ToArray();
-
-        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
+        private static string[] ListAvailableLocations()
         {
-            if (args.Length == 0) return null;
-
-            string characterName;
-            if (int.TryParse(args.Last(), out int characterIndex) && args.Length > 1)
+            List<string> locationNames = new();
+            foreach(var submarine in Submarine.Loaded)
             {
-                characterName = string.Join(" ", args.Take(args.Length - 1)).ToLowerInvariant();
-            }
-            else
-            {
-                characterName = string.Join(" ", args).ToLowerInvariant();
-                characterIndex = -1;
+                locationNames.Add(submarine.Info.Name);
             }
 
-            var matchingCharacters = Character.CharacterList.FindAll(c => 
-                c.Name.Equals(characterName, StringComparison.OrdinalIgnoreCase) &&
-                (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
-
-            if (!matchingCharacters.Any())
+            if (Level.Loaded != null)
             {
-                NewMessage("Character \""+ characterName + "\" not found", Color.Red);
+                foreach (var cave in Level.Loaded.Caves)
+                {
+                    string caveName = cave.CaveGenerationParams.Name;
+                    // add index in case there are duplicate names
+                    int index = 1;
+                    while (locationNames.Contains($"{caveName}_{index}"))
+                    {
+                        index++;
+                    }
+                    locationNames.Add($"{caveName}_{index}");
+                }
+            }
+            
+            return locationNames.ToArray();
+        }
+        
+        private static bool TryFindTeleportPosition(string locationName, out Vector2 teleportPosition)
+        {
+            if (Submarine.MainSub is Submarine mainSub && string.Equals(locationName, "mainsub", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var randomWaypoint = GetRandomWaypoint(mainSub.GetWaypoints(alsoFromConnectedSubs:false));
+                if (randomWaypoint != null)
+                {
+                    teleportPosition = randomWaypoint.WorldPosition;
+                    return true;
+                }
+                LogError("No waypoints found in the main sub!");
+            }
+            
+            foreach (var submarine in Submarine.Loaded)
+            {
+                if (string.Equals(submarine.Info.Name, locationName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var randomWaypoint = GetRandomWaypoint(submarine.GetWaypoints(alsoFromConnectedSubs:false));
+                    if (randomWaypoint != null)
+                    {
+                        teleportPosition = randomWaypoint.WorldPosition;
+                        return true;
+                    }
+                    LogError($"No waypoints found in sub {submarine.Info.Name}!");
+                }
+            }
+
+            if (Level.Loaded is Level loadedLevel)
+            {
+                (string locationNameNoIndex, int locationIndex) = SplitIndex(locationName);
+                int caveIndex = 1;
+                foreach (var cave in loadedLevel.Caves)
+                {
+                    if (string.Equals(cave.CaveGenerationParams.Name, locationNameNoIndex, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (caveIndex != locationIndex)
+                        {
+                            caveIndex++;
+                            continue;
+                        }
+                        
+                        var randomWaypoint = GetRandomWaypoint(cave.Tunnels.GetRandom(Rand.RandSync.Unsynced).WayPoints);
+                        if (randomWaypoint != null)
+                        {
+                            teleportPosition = randomWaypoint.WorldPosition;
+                            return true;
+                        }
+                        LogError($"No waypoints found in cave {cave.CaveGenerationParams.Name}!");
+                    }
+                }
+            }
+            teleportPosition = Vector2.Zero;
+            return false;
+            
+            WayPoint GetRandomWaypoint(IReadOnlyList<WayPoint> waypoints)
+            {
+                if (waypoints.None())
+                {
+                    return null;
+                }
+                
+                if (waypoints.Any(point => point.SpawnType == SpawnType.Human))
+                {
+                    return waypoints.GetRandom(point => point.SpawnType == SpawnType.Human, Rand.RandSync.Unsynced);
+                }
+                
+                if (waypoints.Any(point => point.SpawnType == SpawnType.Path))
+                {
+                    return waypoints.GetRandom(point => point.SpawnType == SpawnType.Path, Rand.RandSync.Unsynced);
+                }
+                
+                return waypoints.GetRandom(Rand.RandSync.Unsynced);
+            }
+            
+            (string, int) SplitIndex(string caveName)
+            { 
+                string[] splitName = caveName.Split('_');
+                if (splitName.Length == 1)
+                {
+                    return (splitName[0], -1);
+                }
+                else
+                {
+                    return (splitName[0], int.Parse(splitName[1]));
+                }
+            }
+        }
+        
+        
+        private static TFile GetSubmarineFile<TFile>(string submarineName) where TFile : BaseSubFile
+        {
+            List<TFile> submarineFiles = GetContentFiles<TFile>();
+            
+            foreach (var file in submarineFiles)
+            {
+                var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(i => i.FilePath == file.Path.Value);
+                if (matchingSub != null && string.Equals(matchingSub.Name, submarineName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return file;
+                }
+            }
+            
+            return null;
+        }
+        
+        private static List<TFile> GetContentFiles<TFile>() where TFile : ContentFile
+        {
+            var contentFiles = ContentPackageManager.EnabledPackages.All
+                .SelectMany(p => p.GetFiles<TFile>())
+                .ToList();
+            
+            return contentFiles;
+        }
+        
+        private static List<TFile> GetSubmarineFiles<TFile>() where TFile : BaseSubFile
+        {
+            var submarineFiles = GetContentFiles<TFile>()
+                .OrderBy(f => f.UintIdentifier).ToList();
+            
+            return submarineFiles;
+        }
+        
+        private static ContentFile GetContentFile(string path)
+        {
+            var contentFiles = GetContentFiles<ContentFile>();
+            return contentFiles.FirstOrDefault(file => string.Equals(file.Path.Value, path, StringComparison.InvariantCultureIgnoreCase));
+        }
+        
+        private static string[] ListContentFilePaths()
+        {
+            List<string> contentFilePaths = new();
+            
+            var contentFiles = GetContentFiles<ContentFile>();
+            foreach (var contentFile in contentFiles)
+            {
+                contentFilePaths.Add(contentFile.Path.Value);
+            }
+            
+            return contentFilePaths.ToArray();
+        }
+        
+        private static string[] ListSubmarineFileNames<TFile>() where TFile : BaseSubFile
+        {
+            List<string> submarineFileNames = new List<string>();
+            
+            var submarineFiles = GetSubmarineFiles<TFile>();
+            
+            foreach (var file in submarineFiles)
+            {
+                var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(i => i.FilePath == file.Path.Value);
+                if (matchingSub != null)
+                {
+                    submarineFileNames.Add(matchingSub.Name);
+                }
+            }
+            
+            return submarineFileNames.ToArray();
+        }
+
+        private static IOrderedEnumerable<Character> SortSpawnedSpecies(IEnumerable<Character> characterList) => characterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).ThenBy(c => c.Name);
+
+        private static string[] ListCharacterNames() => GetCharacterNames();
+
+        private static string[] GetCharacterNames() => SortSpawnedSpecies(Character.CharacterList).Select(c => c.Name).Distinct().ToArray();
+
+        private static string[] GetSpawnedSpeciesNames() => SortSpawnedSpecies(Character.CharacterList).Select(c => c.SpeciesName.Value).Distinct().ToArray();
+
+        private static IEnumerable<Character> FindMatchingSpecies(string[] args)
+        {
+            if (args.Length == 0) { return Array.Empty<Character>(); }
+            string speciesName = args[0].ToLowerInvariant();
+            return FindMatchingSpecies(speciesName);
+        }
+        
+        private static IEnumerable<Character> FindMatchingSpecies(string speciesName) => Character.CharacterList.FindAll(c => c.SpeciesName.Value.Equals(speciesName, StringComparison.OrdinalIgnoreCase));
+
+        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null, bool botsOnly = false)
+        {
+            if (args.Length == 0) { return null; }
+            
+            List<Character> matchingCharacters = null;
+            string characterName = null;
+            int characterIndex = -1;
+            foreach (string arg in args)
+            {
+                // First try to parse the character name from all the arguments.
+                if (matchingCharacters == null || matchingCharacters.None())
+                {
+                    string possibleCharacterName = arg?.ToLowerInvariant();
+                    matchingCharacters = Character.CharacterList.FindAll(c => 
+                        c.Name.Equals(possibleCharacterName, StringComparison.OrdinalIgnoreCase) &&
+                        (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
+                
+                    if (botsOnly)
+                    {
+                        matchingCharacters = matchingCharacters.FindAll(c => c is AICharacter);
+                    }
+                    if (matchingCharacters.Any())
+                    {
+                        characterName = possibleCharacterName;
+                    }
+                }
+                else if (characterName != null && int.TryParse(arg, out int possibleIndex))
+                {
+                    // If we've already found the character name, let's seek for the index.
+                    characterIndex = possibleIndex;
+                }
+            }
+
+            if (matchingCharacters == null || matchingCharacters.None())
+            {
+                NewMessage("No matching character found!", Color.Red);
                 return null;
             }
 
@@ -2231,6 +2731,63 @@ namespace Barotrauma
 
             return null;
         }
+        
+        private static void TeleportCharacter(Vector2 cursorWorldPos, Character controlledCharacter, string[] args)
+        {
+            if (Screen.Selected != GameMain.GameScreen)
+            {
+                NewMessage("Cannot teleport a character in the menu or the editor screens.", color: Color.Yellow);
+                return;
+            }
+            
+            Character targetCharacter = controlledCharacter;
+            Vector2 worldPosition = cursorWorldPos;
+            string locationNameArgument = "";
+            if (args.Length > 0)
+            {
+                string firstArgument = args.First().ToLowerInvariant();
+                string lastArgument = args.Last();
+                // First seek the matching character.
+                if (firstArgument != "me")
+                {
+                    var availableLocations = Submarine.MainSub != null ? new[] { "mainsub", "cursor" } : Array.Empty<string>(); 
+                    availableLocations = availableLocations.Concat(ListAvailableLocations()).ToArray();
+                    if (args.Length > 1 || availableLocations.None(locationName => string.Equals(locationName, lastArgument, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        // Try to find a matching character, if there's more than one argument or if the last argument is not a valid location argument.
+                        // If there's only one argument, and it's a valid location argument, we shouldn't try to parse a target character from it.
+                        targetCharacter = FindMatchingCharacter(args, ignoreRemotePlayers: false);   
+                    }
+                }
+                // Then seek the possible location argument.
+                if (targetCharacter == null || !targetCharacter.Name.Equals(lastArgument, StringComparison.OrdinalIgnoreCase) && !int.TryParse(lastArgument, out _))
+                {
+                    locationNameArgument = lastArgument;
+                }
+            }
+            
+            if (!string.IsNullOrWhiteSpace(locationNameArgument) && !string.Equals(locationNameArgument, "cursor", comparisonType: StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (TryFindTeleportPosition(locationNameArgument, out Vector2 teleportPosition))
+                {
+                    worldPosition = teleportPosition;
+                }
+                else
+                {
+                    ThrowError($"No teleport position for location \"{locationNameArgument}\" was found.");
+                    return;
+                }
+            }
+            
+            if (targetCharacter != null)
+            {
+                targetCharacter.TeleportTo(worldPosition);
+            }
+            else
+            {
+                NewMessage("Invalid arguments", color: Color.Yellow);
+            }
+        }
 
         private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg)
         {
@@ -2252,14 +2809,13 @@ namespace Barotrauma
             {
                 job = JobPrefab.Prefabs[characterLowerCase];
             }
-            bool human = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
-            
+            bool isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             if (args.Length > 1)
             {
                 switch (args[1].ToLowerInvariant())
                 {
                     case "inside":
-                        spawnPoint = WayPoint.GetRandom(SpawnType.Human, job, Submarine.MainSub);
+                        spawnPoint = WayPoint.GetRandom(SpawnType.Human, job, Submarine.MainSub) ?? WayPoint.GetRandom(SpawnType.Human, assignedJob: null, Submarine.MainSub);
                         break;
                     case "outside":
                         spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
@@ -2287,53 +2843,145 @@ namespace Barotrauma
                         spawnPosition = cursorWorldPos;
                         break;
                     default:
-                        spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
+                        spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
                         break;
                 }
             }
             else
             {
-                spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
+                spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
             }
 
             if (string.IsNullOrWhiteSpace(args[0])) { return; }
-            CharacterTeamType teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+            
+            CharacterTeamType defaultTeamType = isHuman ? CharacterTeamType.Team1 : CharacterTeamType.None;
+            CharacterTeamType teamType = defaultTeamType;
             if (args.Length > 2)
             {
-                try
+                string team = args[2];
+                if (!Enum.TryParse(team, ignoreCase: true, out teamType) && !string.IsNullOrWhiteSpace(team))
                 {
-                    teamType = (CharacterTeamType)int.Parse(args[2]);
-                }
-                catch
-                {
-                    ThrowError($"\"{args[2]}\" is not a valid team id.");
+                    try
+                    {
+                        teamType = (CharacterTeamType)int.Parse(team);
+                    }
+                    catch
+                    {
+                        ThrowError($"\"{team}\" is not a valid team id.");
+                    }
                 }
             }
-
+            
+            bool addToCrew = isHuman && teamType == defaultTeamType;
+            if (args.Length > 3)
+            {
+                addToCrew = args[3].Equals("true", StringComparison.OrdinalIgnoreCase);
+            }
+            
             if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
 
-            if (human)
+            if (isHuman)
             {
                 var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
                 CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
-                if (GameMain.GameSession != null)
-                {
-                    spawnedCharacter.TeamID = teamType;
-#if CLIENT
-                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
-#endif
-                }
-                spawnedCharacter.GiveJobItems(spawnPoint);
-                spawnedCharacter.GiveIdCardTags(spawnPoint);
-                spawnedCharacter.Info.StartItemsGiven = true;
             }
             else
             {
-                if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) != null)
+                CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier());
+                if (prefab != null)
                 {
-                    Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
+                    CharacterInfo characterInfo = null;
+                    if (prefab.HasCharacterInfo)
+                    {
+                        characterInfo = new CharacterInfo(prefab.Identifier);
+                    }
+                    spawnedCharacter = Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8), characterInfo);
                 }
+            }
+            if (spawnedCharacter == null)
+            {
+                DebugConsole.ThrowError("Failed to spawn a character with the provided arguments!");
+                return;
+            }
+            spawnedCharacter.TeamID = teamType;
+#if CLIENT
+            if (addToCrew && GameMain.GameSession?.CrewManager is CrewManager crewManager)
+            {
+                crewManager.AddCharacter(spawnedCharacter);
+            }
+#endif
+            if (isHuman)
+            {
+                spawnedCharacter.GiveJobItems(isPvPMode: GameMain.GameSession?.GameMode is PvPMode, spawnPoint);
+                spawnedCharacter.GiveIdCardTags(spawnPoint);
+                spawnedCharacter.Info.StartItemsGiven = true;
+            }
+        }
+
+        private static IEnumerable<string> GetSpawnPosParams()
+        {
+            yield return "cursor";
+            yield return "inventory";
+
+#if SERVER
+            if (GameMain.Server != null)
+            {
+                foreach (var clientName in GameMain.Server.ConnectedClients.Select(c => c.Name))
+                {
+                    yield return clientName;
+                }
+            }
+#endif
+
+            foreach (var characterName in Character.CharacterList.Where(c => c.Inventory != null).Select(c => c.Name).Distinct())
+            {
+                yield return characterName;
+            }
+        }
+
+        private static IEnumerable<string> GetItemNameOrIdParams()
+        {
+            HashSet<string> seen = new HashSet<string>();
+
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+            {
+                if (seen.Add(itemPrefab.Name.Value))
+                {
+                    yield return itemPrefab.Name.Value;
+                }
+            }
+            
+            seen.Clear();
+            
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+            {
+                if (seen.Add(itemPrefab.Identifier.Value))
+                {
+                    yield return itemPrefab.Identifier.Value;
+                }
+            }
+        }
+
+        private static void TrySpawnItem(string[] args)
+        {
+            try
+            {
+#if CLIENT
+                SpawnItem(args, Screen.Selected.Cam?.ScreenToWorld(PlayerInput.MousePosition) ?? PlayerInput.MousePosition, Character.Controlled, out string errorMsg);
+#elif SERVER
+                SpawnItem(args, Vector2.Zero, null, out string errorMsg);
+#endif
+                if (!string.IsNullOrWhiteSpace(errorMsg))
+                {
+                    ThrowError(errorMsg);
+                }
+            }
+            catch (Exception e)
+            {
+                string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
+                ThrowError(errorMsg, e);
+                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
             }
         }
 
@@ -2364,17 +3012,20 @@ namespace Barotrauma
                 return;
             }
 
-            int amount = 1;
-            if (args.Length > 1)
+            bool TryGetSpawnPosParam(out string spawnLocation, out int spawnLocationIndex)
             {
-                string spawnLocation = args.Last();
-                if (args.Length > 2)
-                {
-                    spawnLocation = args[^2];
-                    if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out amount)) { amount = 1; }
-                    amount = Math.Min(amount, 100);
-                }
-                
+                var allSpawnPosParams = GetSpawnPosParams();
+                spawnLocation = args.FirstOrDefault(s => allSpawnPosParams.Contains(s));
+                spawnLocationIndex = spawnLocation != null ? args.IndexOf(spawnLocation) : -1;
+
+                return spawnLocation != null;
+            }
+
+            int amount = 1;
+            int conditionPrc = 100;
+            
+            if (TryGetSpawnPosParam(out string spawnLocation, out int spawnLocationIndex))
+            {
                 switch (spawnLocation)
                 {
                     case "cursor":
@@ -2395,7 +3046,20 @@ namespace Barotrauma
                         if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
                         break;
                 }
+
+                if (args.Length > spawnLocationIndex + 1)
+                {
+                    if (!int.TryParse(args[spawnLocationIndex + 1], NumberStyles.Any, CultureInfo.InvariantCulture, out amount)) { amount = 1; }
+                    amount = Math.Min(amount, 100);
+                }
+                
+                if (args.Length > spawnLocationIndex + 2)
+                {
+                    if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out conditionPrc)) { conditionPrc = 100; }
+                }
             }
+            
+            float itemCondition = itemPrefab.Health * Math.Clamp(conditionPrc / 100f, 0f, 1f);
             
             if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
@@ -2413,7 +3077,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnPos.Value);
+                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnPos.Value, condition: itemCondition);
                     }
                 }
                 else if (spawnInventory != null)
@@ -2429,7 +3093,7 @@ namespace Barotrauma
                         Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
                     }
 
-                    static void onItemSpawned(Item item)
+                    void onItemSpawned(Item item)
                     {
                         if (item.ParentInventory?.Owner is Character character)
                         {
@@ -2438,6 +3102,8 @@ namespace Barotrauma
                                 wifiComponent.TeamID = character.TeamID;
                             }
                         }
+
+                        item.Condition = item.Health * Math.Clamp(conditionPrc / 100f, 0f, 1f);
                     }
                 }
             }
@@ -2685,7 +3351,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    Directory.CreateDirectory(SavePath);
+                    Directory.CreateDirectory(SavePath, catchUnauthorizedAccessExceptions: false);
                 }
                 catch (Exception e)
                 {
@@ -2721,13 +3387,38 @@ namespace Barotrauma
 
             try
             {
-                File.WriteAllLines(filePath + ".txt", unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
+                File.WriteAllLines(filePath + ".txt", unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text), catchUnauthorizedAccessExceptions: false);
             }
             catch (Exception e)
             {
                 unsavedMessages.Clear();
                 ThrowError("Saving debug console log to " + filePath + " failed", e);
             }
+        }
+        
+        private static void ToggleEnemyAITargetingRestrictions(EnemyTargetingRestrictions restrictions)
+        {
+            if (restrictions == EnemyTargetingRestrictions.None)
+            {
+                // If restriction is None, clear all restrictions
+                EnemyAIController.TargetingRestrictions = EnemyTargetingRestrictions.None;
+            }
+            else
+            {
+                // Toggle the restriction
+                if (EnemyAIController.TargetingRestrictions.HasFlag(restrictions))
+                {
+                    // If the restriction is already set, remove it
+                    EnemyAIController.TargetingRestrictions &= ~restrictions;
+                }
+                else
+                {
+                    // If the restriction is not set, add it
+                    EnemyAIController.TargetingRestrictions |= restrictions;
+                }
+            }
+
+            NewMessage($"Monster targeting restrictions is now '{EnemyAIController.TargetingRestrictions}'", Color.Yellow);
         }
 
         public static void DeactivateCheats()

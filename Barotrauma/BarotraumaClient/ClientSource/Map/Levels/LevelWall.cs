@@ -1,8 +1,10 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -40,6 +42,24 @@ namespace Barotrauma
                 level.GenerationParams.WallSprite.Texture,
                 level.GenerationParams.WallEdgeSprite.Texture,
                 color);
+        }
+
+        public bool IsVisible(Rectangle worldView)
+        {
+            RectangleF worldViewInSimUnits = new RectangleF(
+                ConvertUnits.ToSimUnits(worldView.Location.ToVector2()), 
+                ConvertUnits.ToSimUnits(worldView.Size.ToVector2()));
+
+            foreach (var fixture in Body.FixtureList)
+            {
+                fixture.GetAABB(out var aabb, 0);
+                Vector2 lowerBound = aabb.LowerBound + Body.Position;
+                if (lowerBound.X > worldViewInSimUnits.Right || lowerBound.Y > worldViewInSimUnits.Y) { continue; }
+                Vector2 upperBound = aabb.UpperBound + Body.Position;
+                if (upperBound.X < worldViewInSimUnits.X || upperBound.Y < worldViewInSimUnits.Y - worldViewInSimUnits.Height) { continue; }
+                return true;                
+            }
+            return false;
         }
     }
 }

@@ -19,9 +19,9 @@ namespace Barotrauma
         public Item PrioritizedItem { get; private set; }
 
         public override bool AllowMultipleInstances => true;
-        public override bool AllowInFriendlySubs => true;
+        protected override bool AllowInFriendlySubs => true;
 
-        public readonly static float RequiredSuccessFactor = 0.4f;
+        public const float RequiredSuccessFactor = 0.4f;
 
         public override bool IsDuplicate<T>(T otherObjective) => otherObjective is AIObjectiveRepairItems repairObjective && objectiveManager.IsOrder(repairObjective) == objectiveManager.IsOrder(this);
 
@@ -62,7 +62,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Filter(Item item)
+        protected override bool IsValidTarget(Item item)
         {
             if (!ViableForRepair(item, character, HumanAIController)) { return false; };
             if (!Objectives.ContainsKey(item))
@@ -94,7 +94,7 @@ namespace Barotrauma
             return item.Repairables.All(r => !r.IsBelowRepairThreshold);
         }
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             var selectedItem = character.SelectedItem;
             if (selectedItem != null && AIObjectiveRepairItem.IsRepairing(character, selectedItem) && selectedItem.ConditionPercentage < 100)

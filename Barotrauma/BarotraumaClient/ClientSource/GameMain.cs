@@ -779,7 +779,7 @@ namespace Barotrauma
                             {
                                 try
                                 {
-                                    SaveUtil.LoadGame(saveFiles.OrderBy(file => file.SaveTime).Last().FilePath);
+                                    SaveUtil.LoadGame(CampaignDataPath.CreateRegular(saveFiles.OrderBy(file => file.SaveTime).Last().FilePath));
                                 }
                                 catch (Exception e)
                                 {
@@ -1137,20 +1137,15 @@ namespace Barotrauma
             if (save)
             {
                 GUI.SetSavingIndicatorState(true);
+
+                GameSession.Campaign?.HandleSaveAndQuit();
                 if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
                 {
                     GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
                 }
-                if (GameSession.Campaign is CampaignMode campaign)
-                {
-                    if (campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost)
-                    {
-                        spCampaign.UpdateStoreStock();
-                    }
-                    GameSession.EventManager?.RegisterEventHistory(registerFinishedOnly: true);
-                    campaign.End();
-                }
-                SaveUtil.SaveGame(GameSession.SavePath);
+                GameSession.Campaign?.End();
+                
+                SaveUtil.SaveGame(GameSession.DataPath);
             }
 
             if (Client != null)

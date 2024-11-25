@@ -326,7 +326,7 @@ namespace Barotrauma
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, IEnumerable<SerializableProperty> properties, bool showName, string style = "", int elementHeight = 24, GUIFont titleFont = null)
             : base(style, new RectTransform(Vector2.One, parent))
         {
-            this.elementHeight =  (int)(elementHeight * GUI.Scale);
+            elementHeight =  (int)(elementHeight * GUI.Scale);
             var tickBoxStyle = GUIStyle.GetComponentStyle("GUITickBox");
             var textBoxStyle = GUIStyle.GetComponentStyle("GUITextBox");
             var numberInputStyle = GUIStyle.GetComponentStyle("GUINumberInput");
@@ -343,7 +343,50 @@ namespace Barotrauma
                     Color = Color.Black
                 };
             }
-            properties.ForEach(ep => CreateNewField(ep, entity));
+
+            List<Header> headers = new List<Header>() 
+            { 
+                //"no header" comes first = properties under no header are listed first
+                null 
+            };
+            //check which header each property is under
+            Dictionary<SerializableProperty, Header> propertyHeaders = new Dictionary<SerializableProperty, Header>();
+            Header prevHeader = null;
+            foreach (var property in properties)
+            {
+                var header = property.GetAttribute<Header>();
+                if (header != null)
+                {
+                    prevHeader = header;
+                    //Attribute.Equals is based on the equality of the fields,
+                    //so in practice we treat identical headers split into different files/classes as the same header
+                    if (!headers.Contains(header)) 
+                    { 
+                        //collect headers into a list in the order they're encountered in
+                        //(to keep them in the same order as they're defined in the code, as the dictionary is not in any particular order)                        
+                        headers.Add(header); 
+                    }
+                }
+                propertyHeaders[property] = prevHeader;
+            }
+
+            prevHeader = null;
+            foreach (Header header in headers)
+            {
+                //go through all the properties that belong under this header
+                foreach (var property in properties)
+                {
+                    if (!Equals(propertyHeaders[property], header)) { continue; }
+                    //don't create a header if the previous header has the same text as this one (= if we already created this header before)
+                    if (header != null && !Equals(header, prevHeader))
+                    {
+                        new GUITextBlock(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform, isFixedSize: true),
+                            header.Text, textColor: GUIStyle.TextColorBright, font: GUIStyle.SubHeadingFont);
+                        prevHeader = header;
+                    }
+                    CreateNewField(property, entity);
+                }
+            }
 
             //scale the size of this component and the layout group to fit the children
             Recalculate();
@@ -424,63 +467,25 @@ namespace Barotrauma
                 toolTip = property.GetAttribute<Serialize>().Description;
             }
 
-            GUIComponent propertyField = null;
-            if (value is bool boolVal)
+            return value switch
             {
-                propertyField = CreateBoolField(entity, property, boolVal, displayName, toolTip);
-            }
-            else if (value.GetType().IsEnum)
-            {
-                if (value.GetType().IsDefined(typeof(FlagsAttribute), inherit: false))
-                {
-                    propertyField = CreateEnumFlagField(entity, property, value, displayName, toolTip);
-                }
-                else
-                {
-                    propertyField = CreateEnumField(entity, property, value, displayName, toolTip);
-                }
-            }
-            else if (value is int i)
-            {
-                propertyField = CreateIntField(entity, property, i, displayName, toolTip);
-            }
-            else if (value is float f)
-            {
-                propertyField = CreateFloatField(entity, property, f, displayName, toolTip);
-            }
-            else if (value is Point p)
-            {
-                propertyField = CreatePointField(entity, property, p, displayName, toolTip);
-            }
-            else if (value is Vector2 v2)
-            {
-                propertyField = CreateVector2Field(entity, property, v2, displayName, toolTip);
-            }
-            else if (value is Vector3 v3)
-            {
-                propertyField = CreateVector3Field(entity, property, v3, displayName, toolTip);
-            }
-            else if (value is Vector4 v4)
-            {
-                propertyField = CreateVector4Field(entity, property, v4, displayName, toolTip);
-            }
-            else if (value is Color c)
-            {
-                propertyField = CreateColorField(entity, property, c, displayName, toolTip);
-            }
-            else if (value is Rectangle r)
-            {
-                propertyField = CreateRectangleField(entity, property, r, displayName, toolTip);
-            }
-            else if(value is string[] a)
-            {
-                propertyField = CreateStringArrayField(entity, property, a, displayName, toolTip);
-            }
-            else if (value is string or Identifier)
-            {
-                propertyField = CreateStringField(entity, property, value.ToString(), displayName, toolTip);
-            }
-            return propertyField;
+                bool @bool => CreateBoolField(entity, property, @bool, displayName, toolTip),
+                Enum @enum => value.GetType().IsDefined(typeof(FlagsAttribute), inherit: false)
+                    ? CreateEnumFlagField(entity, property, value, displayName, toolTip)
+                    : CreateDropDownField(entity, property, value, @enum.ToDictionary().Select(kvp => (kvp.Key, kvp.Value)), displayName, toolTip),
+                int @int => CreateIntField(entity, property, @int, displayName, toolTip),
+                float @float => CreateFloatField(entity, property, @float, displayName, toolTip),
+                Point point => CreatePointField(entity, property, point, displayName, toolTip),
+                Vector2 vector2 => CreateVector2Field(entity, property, vector2, displayName, toolTip),
+                Vector3 vector3 => CreateVector3Field(entity, property, vector3, displayName, toolTip),
+                Vector4 vector4 => CreateVector4Field(entity, property, vector4, displayName, toolTip),
+                Color color => CreateColorField(entity, property, color, displayName, toolTip),
+                Rectangle rect => CreateRectangleField(entity, property, rect, displayName, toolTip),
+                string[] stringArr => CreateStringArrayField(entity, property, stringArr, displayName, toolTip),
+                GUIFont font => CreateDropDownField(entity, property, font, GUIStyle.Fonts.Select(kvp => (kvp.Key.Value, kvp.Value)), displayName, toolTip),
+                string or Identifier => CreateStringField(entity, property, value.ToString(), displayName, toolTip),
+                _ => null
+            };
         }
 
         public GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value, LocalizedString displayName, LocalizedString toolTip)
@@ -645,39 +650,6 @@ namespace Barotrauma
             numberInput.MinusButton.OnClicked += HandleSetterModifyingInputOnButtonClicked;
         }
 
-        public GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value, LocalizedString displayName, LocalizedString toolTip)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform, isFixedSize: true), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(1.0f - inputFieldWidth, 1), frame.RectTransform), displayName, font: GUIStyle.SmallFont)
-            {
-                ToolTip = toolTip
-            };
-            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(inputFieldWidth, 1), frame.RectTransform, Anchor.TopRight),
-                elementCount: Enum.GetValues(value.GetType()).Length)
-            {
-                ToolTip = toolTip
-            };
-            foreach (object enumValue in Enum.GetValues(value.GetType()))
-            {
-                enumDropDown.AddItem(enumValue.ToString(), enumValue);
-            }
-            enumDropDown.SelectItem(value);
-            enumDropDown.OnSelected += (selected, val) =>
-            {
-                if (SetPropertyValue(property, entity, val))
-                {
-                    TrySendNetworkUpdate(entity, property);
-                }
-                return true;
-            };
-            refresh += () =>
-            {
-                if (!enumDropDown.Dropped) { enumDropDown.SelectItem(property.GetValue(entity)); }
-            };
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name.ToIdentifier(), new GUIComponent[] { enumDropDown }); }
-            return frame;
-        }
-
         public GUIComponent CreateEnumFlagField(ISerializableEntity entity, SerializableProperty property, object value, LocalizedString displayName, LocalizedString toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform, isFixedSize: true), color: Color.Transparent);
@@ -705,7 +677,7 @@ namespace Barotrauma
                 }
             }
             enumDropDown.MustSelectAtLeastOne = !hasNoneOption;
-            enumDropDown.OnSelected += (selected, val) =>
+            enumDropDown.AfterSelected += (selected, val) =>
             {
                 if (SetPropertyValue(property, entity, string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
                 {
@@ -745,8 +717,12 @@ namespace Barotrauma
                 ToolTip = toolTip,
                 Font = GUIStyle.SmallFont,
                 Text = StripPrefabTags(value),
-                OverflowClip = true
+                OverflowClip = true,
             };
+            if (editableAttribute != null && editableAttribute.MaxLength > 0)
+            {
+                propertyBox.MaxTextLength = editableAttribute.MaxLength;
+            }
 
             HashSet<MapEntity> editedEntities = new HashSet<MapEntity>();
             propertyBox.OnTextChanged += (textBox, text) =>
@@ -762,8 +738,7 @@ namespace Barotrauma
             refresh += () =>
             {
                 if (propertyBox.Selected) { return; }
-
-                propertyBox.Text = StripPrefabTags(property.GetValue(entity).ToString());
+                propertyBox.Text = StripPrefabTags(property.GetValue(entity)?.ToString());
             };
 
             bool OnApply(GUITextBox textBox)
@@ -1463,6 +1438,38 @@ namespace Barotrauma
                     };
                 }
             }
+        }
+
+        public GUIComponent CreateDropDownField<T>(ISerializableEntity entity, SerializableProperty property, T value, IEnumerable<(string, T)> values, LocalizedString displayName, LocalizedString toolTip)
+        {
+            GUIFrame frame = new(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform, isFixedSize: true), color: Color.Transparent);
+            GUITextBlock label = new(new RectTransform(new Vector2(1f - inputFieldWidth, 1f), frame.RectTransform), displayName, font: GUIStyle.SmallFont)
+            {
+                ToolTip = toolTip
+            };
+            GUIDropDown dropDown = new GUIDropDown(new RectTransform(new Vector2(inputFieldWidth, 1), frame.RectTransform, Anchor.TopRight), elementCount: GUIStyle.Fonts.Count)
+            {
+                ToolTip = toolTip
+            };
+            foreach ((string valueString, T value2) in values)
+            {
+                dropDown.AddItem(valueString, value2);
+            }
+            dropDown.SelectItem(value);
+            dropDown.OnSelected += (selected, val) =>
+            {
+                if (SetPropertyValue(property, entity, val))
+                {
+                    TrySendNetworkUpdate(entity, property);
+                }
+                return true;
+            };
+            refresh += () =>
+            {
+                if (!dropDown.Dropped) { dropDown.SelectItem(property.GetValue(entity)); }
+            };
+            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name.ToIdentifier(), new GUIComponent[] { dropDown }); }
+            return frame;
         }
 
         private static void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)

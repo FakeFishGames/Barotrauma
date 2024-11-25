@@ -261,8 +261,7 @@ namespace Barotrauma
 
             foreach (var endLocation in EndLocations)
             {
-                if (endLocation.Type?.ForceLocationName != null &&
-                    !endLocation.Type.ForceLocationName.IsEmpty)
+                if (endLocation.Type?.ForceLocationName is { IsEmpty: false })
                 {
                     endLocation.ForceName(endLocation.Type.ForceLocationName);
                 }
@@ -450,17 +449,6 @@ namespace Barotrauma
                     }
 
                     LocationType forceLocationType = null;
-                    if (!possibleStartOutpostCreated)
-                    {
-                        float zoneWidth = Width / generationParams.DifficultyZones;
-                        float threshold = zoneWidth * 0.1f;
-                        if (position.X < threshold)
-                        {
-                            LocationType.Prefabs.TryGet("outpost", out forceLocationType);
-                            possibleStartOutpostCreated = true;
-                        }
-                    }
-
                     if (forceLocationType == null)
                     {
                         foreach (LocationType locationType in LocationType.Prefabs.OrderBy(lt => lt.Identifier))
@@ -605,6 +593,10 @@ namespace Barotrauma
                 {
                     connectionsBetweenZones[zone1].Add(connection);
                 }
+                if (connectionsBetweenZones[zone1].None())
+                {
+                    DebugConsole.ThrowError($"Potential error during map generation: no connections between zones {zone1} and {zone2} found. Traversing through to the end of the map may be impossible.");
+                }
             }
 
             var gateFactions = campaign.Factions.Where(f => f.Prefab.ControlledOutpostPercentage > 0).OrderBy(f => f.Prefab.Identifier).ToList();
@@ -674,8 +666,9 @@ namespace Barotrauma
                     connection.Locations[0] :
                     connection.Locations[1];
 
-                //if there's only one connection (= the connection between biomes), create a new connection to the closest location to the right
-                if (rightMostLocation.Connections.Count == 1)
+                //if all of the other connected locations are to the left (= if there's no path forwards from the outpost),
+                //create a new connection to the closest location to the right 
+                if (rightMostLocation.Connections.All(c => c.OtherLocation(rightMostLocation).MapPosition.X < rightMostLocation.MapPosition.X))
                 {
                     Location closestLocation = null;
                     float closestDist = float.PositiveInfinity;
@@ -713,6 +706,13 @@ namespace Barotrauma
                 {
                     connection.Difficulty = CalculateDifficulty(connection.CenterPos.X, connection.Biome);
                 }
+            }
+
+            //ensure there's an outpost (a valid starting location) at the very left side of the map
+            Location startLocation = Locations.MinBy(l => l.MapPosition.X);
+            if (LocationType.Prefabs.TryGet("outpost", out LocationType startLocationType))
+            {
+                startLocation.ChangeType(campaign, startLocationType, createStores: false);
             }
 
             foreach (Location location in Locations)
@@ -764,7 +764,7 @@ namespace Barotrauma
 
         partial void GenerateLocationConnectionVisuals(LocationConnection connection);
 
-        private int GetZoneIndex(float xPos)
+        public int GetZoneIndex(float xPos)
         {
             float zoneWidth = Width / generationParams.DifficultyZones;
             return MathHelper.Clamp((int)Math.Floor(xPos / zoneWidth) + 1, 1, generationParams.DifficultyZones);

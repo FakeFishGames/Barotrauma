@@ -269,10 +269,15 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            switch (inc.SenderConnection.Status)
+            NetConnectionStatus status = inc.ReadHeader<NetConnectionStatus>();
+            switch (status)
             {
                 case NetConnectionStatus.Disconnected:
                     LidgrenConnection? conn = connectedClients.Select(c => c.Connection).FirstOrDefault(c => c.NetConnection == inc.SenderConnection);
+
+                    string disconnectMsg = inc.ReadString();
+                    var peerDisconnectPacket = 
+                        PeerDisconnectPacket.FromLidgrenStringRepresentation(disconnectMsg).Fallback(PeerDisconnectPacket.WithReason(DisconnectReason.Unknown));
                     if (conn != null)
                     {
                         if (conn == OwnerConnection)
@@ -283,7 +288,7 @@ namespace Barotrauma.Networking
                         }
                         else
                         {
-                            Disconnect(conn, PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
+                            Disconnect(conn, peerDisconnectPacket);
                         }
                     }
                     else
@@ -291,7 +296,7 @@ namespace Barotrauma.Networking
                         PendingClient? pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == inc.SenderConnection);
                         if (pendingClient != null)
                         {
-                            RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
+                            RemovePendingClient(pendingClient, peerDisconnectPacket);
                         }
                     }
 
@@ -332,7 +337,9 @@ namespace Barotrauma.Networking
             if (status == Steamworks.AuthResponse.OK)
             {
                 pendingClient.Connection.SetAccountInfo(new AccountInfo(new SteamId(steamId), new SteamId(ownerId)));
-                pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
+                pendingClient.InitializationStep = ShouldAskForPassword(serverSettings, pendingClient.Connection)
+                    ? ConnectionInitialization.Password
+                    : ConnectionInitialization.ContentPackageOrder;
                 pendingClient.UpdateTime = Timing.TotalTime;
             }
             else
@@ -450,7 +457,9 @@ namespace Barotrauma.Networking
                 pendingClient.Connection.SetAccountInfo(accountInfo);
                 pendingClient.Name = packet.Name;
                 pendingClient.OwnerKey = packet.OwnerKey;
-                pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
+                pendingClient.InitializationStep = ShouldAskForPassword(serverSettings, pendingClient.Connection)
+                                                       ? ConnectionInitialization.Password
+                                                       : ConnectionInitialization.ContentPackageOrder;
             }
 
             void rejectClient()
@@ -458,15 +467,35 @@ namespace Barotrauma.Networking
                 RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
             }
 
+            if (authenticators is null && 
+                GameMain.Server.ServerSettings.RequireAuthentication)
+            {
+                DebugConsole.NewMessage(
+                    "The server is configured to require authentication from clients, but there are no authenticators available. " +
+                    $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.", 
+                    Microsoft.Xna.Framework.Color.Yellow);
+            }
+
             if (authenticators is null
                 || !packet.AuthTicket.TryUnwrap(out var authTicket)
                 || !authenticators.TryGetValue(authTicket.Kind, out var authenticator))
             {
 #if DEBUG
-                DebugConsole.NewMessage($"Debug server accepts unauthenticated connections", Microsoft.Xna.Framework.Color.Yellow);
-                acceptClient(new AccountInfo(packet.AccountId));
+                DebugConsole.NewMessage("Debug server accepts unauthenticated connections", Microsoft.Xna.Framework.Color.Yellow);
+                acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
 #else
-                rejectClient();
+                if (GameMain.Server.ServerSettings.RequireAuthentication)
+                {
+                    DebugConsole.NewMessage(
+                        "A client attempted to join without an authentication ticket, but the server is configured to require authentication. " +
+                        $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.",
+                        Microsoft.Xna.Framework.Color.Yellow);
+                    rejectClient();
+                }
+                else
+                {
+                    acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
+                }
 #endif
                 return;
             }

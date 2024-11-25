@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using Barotrauma.Extensions;
@@ -31,7 +31,7 @@ namespace Barotrauma.Abilities
 
             if (!TalentTree.JobTalentTrees.TryGet(apprentice.Identifier, out TalentTree? talentTree)) { return; }
 
-            ImmutableHashSet<Character> characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            var characters = Character.GetFriendlyCrew(Character);
 
             HashSet<ImmutableHashSet<Identifier>> talentsTrees = new HashSet<ImmutableHashSet<Identifier>>();
             foreach (TalentSubTree subTree in talentTree.TalentSubTrees)
@@ -60,13 +60,14 @@ namespace Barotrauma.Abilities
                 talentsTrees.Add(identifiers.ToImmutableHashSet());
             }
 
-            ImmutableHashSet<Identifier> selectedTalentTree = talentsTrees.GetRandomUnsynced();
-
-            foreach (Identifier identifier in selectedTalentTree)
+            ImmutableHashSet<Identifier>? selectedTalentTree = talentsTrees.GetRandomUnsynced();
+            if (selectedTalentTree != null)
             {
-                if (Character.HasTalent(identifier)) { continue; }
-
-                Character.GiveTalent(identifier);
+                foreach (Identifier identifier in selectedTalentTree)
+                {
+                    if (Character.HasTalent(identifier)) { continue; }
+                    Character.GiveTalent(identifier);
+                }
             }
 
             static bool IsShowCaseTalent(Identifier identifier, TalentOption option)

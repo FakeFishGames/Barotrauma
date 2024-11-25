@@ -1,11 +1,13 @@
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -17,6 +19,7 @@ namespace Barotrauma.Items.Components
         public bool DistanceBasedForce { get; set; }
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Determines if the force fluctuates over time or if it stays constant.", alwaysUseInstanceValues: true)]
         public bool ForceFluctuation { get; set; }
+
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "How much the fluctuation affects the force. 1 is the maximum fluctuation, 0 is no fluctuation.", alwaysUseInstanceValues: true)]
         private float ForceFluctuationStrength
         {
@@ -55,7 +58,65 @@ namespace Barotrauma.Items.Components
         }
 
         public PhysicsBody PhysicsBody { get; private set; }
-        private float Radius { get; set; }
+
+        private float radius;
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float Radius
+        {
+            get => radius;
+            
+            set
+            {
+                if (radius == value) { return; }
+                radius = value;
+                if (PhysicsBody != null) { RefreshPhysicsBodySize(); }
+            }
+        }
+
+        private float width;
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float Width
+        {
+            get => width;
+
+            set
+            {
+                if (width == value) { return; }
+                width = value;
+                if (PhysicsBody != null) { RefreshPhysicsBodySize(); }
+            }
+        }
+
+        private float height;
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float Height
+        {
+            get => height;
+
+            set
+            {
+                if (height == value) { return; }
+                height = value;
+                if (PhysicsBody != null) { RefreshPhysicsBodySize(); }
+            }
+        }
+
+        private float currentRadius, currentWidth, currentHeight;
+
+        private Vector2 bodyOffset;
+        [Editable, Serialize("0,0", IsPropertySaveable.Yes)]
+        public Vector2 BodyOffset
+        {
+            get => bodyOffset;
+
+            set
+            {
+                if (bodyOffset == value) { return; }
+                bodyOffset = value;
+                if (PhysicsBody != null) { SetPhysicsBodyPosition(); }
+            }
+        }
+
         private float RadiusInDisplayUnits { get; set; }
         private bool TriggeredOnce { get; set; }
         private float CurrentForceFluctuation { get; set; } = 1.0f;
@@ -75,7 +136,24 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public bool MoveOutsideSub { get; set; }
 
+        public override bool IsActive 
+        {
+            get => base.IsActive;
+            set
+            {
+                base.IsActive = value;
+                if (!IsActive)
+                {
+                    TriggerActive = false;
+                    triggerers.Clear();
+                }
+            }
+        }
+
         private readonly LevelTrigger.TriggererType triggeredBy;
+        private readonly Identifier triggerSpeciesOrGroup;
+        private readonly PropertyConditional.LogicalComparison conditionals;
+        
         private readonly HashSet<Entity> triggerers = new HashSet<Entity>();
         private readonly bool triggerOnce;
         private readonly List<ISerializableEntity> statusEffectTargets = new List<ISerializableEntity>();
@@ -94,11 +172,20 @@ namespace Barotrauma.Items.Components
 
         public TriggerComponent(Item item, ContentXElement element) : base(item, element)
         {
-            string triggeredByAttribute = element.GetAttributeString("triggeredby", "Character");
-            if (!Enum.TryParse(triggeredByAttribute, out triggeredBy))
+            string triggeredByString = element.GetAttributeString("triggeredby", "Character");
+            if (!Enum.TryParse(triggeredByString, out triggeredBy))
             {
-                DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByAttribute}\" is not a valid triggerer type.",
-                    contentPackage: element.ContentPackage);
+                Identifier speciesOrGroup = triggeredByString.ToIdentifier();
+                if (CharacterPrefab.Prefabs.Any(p => p.MatchesSpeciesNameOrGroup(speciesOrGroup)))
+                {
+                    triggerSpeciesOrGroup = speciesOrGroup;
+                    triggeredBy = LevelTrigger.TriggererType.Character;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByString}\" is not a valid triggerer type.",
+                        contentPackage: element.ContentPackage);
+                }
             }
             triggerOnce = element.GetAttributeBool("triggeronce", false);
             string parentDebugName = $"TriggerComponent in {item.Name}";
@@ -115,36 +202,93 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+            conditionals = PropertyConditional.LoadConditionals(element);
             IsActive = true;
         }
 
         public override void OnItemLoaded()
         {
-            base.OnItemLoaded();
-            float radiusAttribute = originalElement.GetAttributeFloat("radius", 10.0f);
-            Radius = ConvertUnits.ToSimUnits(radiusAttribute * item.Scale);
-            PhysicsBody = new PhysicsBody(0.0f, 0.0f, Radius, 1.5f, BodyType.Static, Physics.CollisionWall, LevelTrigger.GetCollisionCategories(triggeredBy))
+            RefreshPhysicsBodySize();
+        }
+
+        private void RefreshPhysicsBodySize()
+        {
+            PhysicsBody?.Remove();
+
+            currentWidth = ConvertUnits.ToSimUnits(Width * item.Scale);
+            currentHeight = ConvertUnits.ToSimUnits(Height * item.Scale);
+            if (currentWidth > 0 && currentHeight > 0)
             {
-                UserData = item
-            };
-            PhysicsBody.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
-            PhysicsBody.FarseerBody.SetIsSensor(true);
+                PhysicsBody = new PhysicsBody(currentWidth, currentHeight, radius: 0.0f, density: 1.5f, BodyType.Static, Physics.CollisionWall, LevelTrigger.GetCollisionCategories(triggeredBy))
+                {
+                    UserData = item
+                };
+            }
+            else
+            {
+                currentRadius = Math.Max(ConvertUnits.ToSimUnits(Radius * item.Scale), 0.01f);
+                PhysicsBody = new PhysicsBody(width: 0.0f, height: 0.0f, radius: currentRadius, density: 1.5f, BodyType.Static, Physics.CollisionWall, LevelTrigger.GetCollisionCategories(triggeredBy))
+                {
+                    UserData = item
+                };
+            }
+
+            SetPhysicsBodyPosition();
+            PhysicsBody.FarseerBody.SetIsSensor(originalElement.GetAttributeBool("sensor", true));
             PhysicsBody.FarseerBody.OnCollision += OnCollision;
             PhysicsBody.FarseerBody.OnSeparation += OnSeparation;
             RadiusInDisplayUnits = ConvertUnits.ToDisplayUnits(PhysicsBody.Radius);
         }
 
+        public void SetPhysicsBodyPosition(bool ignoreContacts = true)
+        {
+            if (PhysicsBody == null) { return; }
+
+            Vector2 offset = ConvertUnits.ToSimUnits(BodyOffset * item.Scale);
+            if (item.FlippedX)
+            {
+                offset.X = -offset.X;
+            }
+            if (item.FlippedY)
+            {
+                offset.Y = -offset.Y;
+            }
+            if (!MathUtils.NearlyEqual(item.RotationRad, 0))
+            {
+                Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
+                offset = Vector2.Transform(offset, transform);
+            }
+            if (ignoreContacts)
+            {
+                PhysicsBody.SetTransformIgnoreContacts(item.SimPosition + offset, -item.RotationRad);
+            }
+            else
+            {
+                PhysicsBody.SetTransform(item.SimPosition + offset, -item.RotationRad);
+            }
+            PhysicsBody.UpdateDrawPosition();
+        }
+
+        public override void FlipX(bool relativeToSub)
+        {
+            SetPhysicsBodyPosition();
+        }
+        public override void FlipY(bool relativeToSub)
+        {
+            SetPhysicsBodyPosition();
+        }
+
         public override void OnMapLoaded()
         {
             base.OnMapLoaded();
-            PhysicsBody.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
+            SetPhysicsBodyPosition(true);
             PhysicsBody.Submarine = item.Submarine;
         }
 
         private bool OnCollision(Fixture sender, Fixture other, Contact contact)
         {
             if (LevelTrigger.GetEntity(other) is not Entity entity) { return false; }
-            if (!LevelTrigger.IsTriggeredByEntity(entity, triggeredBy, mustBeOnSpecificSub: (!MoveOutsideSub, item.Submarine))) { return false; }
+            if (!LevelTrigger.IsTriggeredByEntity(entity, triggeredBy, triggerSpeciesOrGroup, conditionals, mustBeOnSpecificSub: (!MoveOutsideSub, item.Submarine))) { return false; }
             triggerers.Add(entity);
             return true;
         }
@@ -174,7 +318,12 @@ namespace Barotrauma.Items.Components
                 item.SetTransform(ConvertUnits.ToSimUnits(item.WorldPosition), item.Rotation);
                 item.CurrentHull = null;
                 item.Submarine = null;
-                PhysicsBody.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
+                SetPhysicsBodyPosition();
+                PhysicsBody.Submarine = item.Submarine;
+            }
+            else if (item.body is { BodyType: BodyType.Dynamic })
+            {
+                SetPhysicsBodyPosition();
                 PhysicsBody.Submarine = item.Submarine;
             }
 
@@ -187,11 +336,34 @@ namespace Barotrauma.Items.Components
                 {
                     TriggeredOnce = true;
                     IsActive = false;
-                    triggerers.Clear();
                 }
             }
 
             TriggerActive = triggerers.Any();
+            if (TriggerActive && conditionals != null)
+            {
+                switch (conditionals.LogicalOperator)
+                {
+                    case PropertyConditional.LogicalOperatorType.And:
+                    {
+                        if (triggerers.Any(t => !PropertyConditional.CheckConditionals((ISerializableEntity)t, conditionals.Conditionals, conditionals.LogicalOperator)))
+                        {
+                            // Some of the conditionals doesn't match
+                            IsActive = false;
+                        }
+                        break;
+                    }
+                    case PropertyConditional.LogicalOperatorType.Or:
+                    {
+                        if (triggerers.None(t => !PropertyConditional.CheckConditionals((ISerializableEntity)t, conditionals.Conditionals, conditionals.LogicalOperator)))
+                        {
+                            // None of the conditionals match
+                            IsActive = false;
+                        }
+                        break;
+                    }
+                }
+            }
 
             if (ForceFluctuation && TriggerActive && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
@@ -208,7 +380,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Entity triggerer in triggerers)
             {
-                LevelTrigger.ApplyStatusEffects(statusEffects, item.WorldPosition, triggerer, deltaTime, statusEffectTargets);
+                LevelTrigger.ApplyStatusEffects(statusEffects, item.WorldPosition, triggerer, deltaTime, statusEffectTargets, targetItem: Item);
 
                 if (triggerer is IDamageable damageable)
                 {
@@ -260,12 +432,17 @@ namespace Barotrauma.Items.Components
 
         private void ApplyForce(PhysicsBody body, float multiplier = 1.0f)
         {
-            Vector2 diff = ConvertUnits.ToDisplayUnits(PhysicsBody.SimPosition - body.SimPosition);
+            Vector2 diff = ConvertUnits.ToDisplayUnits(item.SimPosition - body.SimPosition);
             if (diff.LengthSquared() < 0.0001f) { return; }
             float distanceFactor = DistanceBasedForce ? LevelTrigger.GetDistanceFactor(body, PhysicsBody, RadiusInDisplayUnits) : 1.0f;
             if (distanceFactor <= 0.0f) { return; }
             Vector2 force = distanceFactor * (CurrentForceFluctuation * Force) * Vector2.Normalize(diff) * multiplier;
             if (force.LengthSquared() < 0.01f) { return; }
+            if (body.Mass < 1)
+            {
+                //restrict the force if the body is very light, otherwise it can end up moving at a speed that breaks physics
+                force *= body.Mass;
+            }
             body.ApplyForce(force);
         }
 
@@ -273,14 +450,7 @@ namespace Barotrauma.Items.Components
         {
             if (PhysicsBody != null)
             {
-                if (ignoreContacts)
-                {
-                    PhysicsBody.SetTransformIgnoreContacts(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
-                }
-                else
-                {
-                    PhysicsBody.SetTransform(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
-                }
+                SetPhysicsBodyPosition(ignoreContacts);
                 PhysicsBody.Submarine = item.Submarine;
             }
         }

@@ -556,7 +556,7 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct || spawnSeed)
             {
-                VineTile vine = Vines.GetRandomUnsynced();
+                VineTile vine = Vines.GetRandomUnsynced()!;
                 spawnPos = vine.GetWorldPosition(planter, slot.Offset);
             }
             else
@@ -896,9 +896,9 @@ namespace Barotrauma.Items.Components
             return element;
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             flowerTiles = componentElement.GetAttributeIntArray("flowertiles", Array.Empty<int>())!;
             Decayed = componentElement.GetAttributeBool("decayed", false);
 

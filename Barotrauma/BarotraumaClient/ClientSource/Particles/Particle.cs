@@ -72,7 +72,7 @@ namespace Barotrauma.Particles
 
         public float VelocityChangeMultiplier;
 
-        public bool DrawOnTop { get; private set; }
+        public ParticleDrawOrder DrawOrder { get; private set; }
 
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -110,7 +110,7 @@ namespace Barotrauma.Particles
         {
             return debugName;
         }
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, ParticleDrawOrder drawOrder = ParticleDrawOrder.Default, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
 #if DEBUG
@@ -205,7 +205,7 @@ namespace Barotrauma.Particles
                 prevRotation = rotation;
             }
 
-            DrawOnTop = drawOnTop;
+            DrawOrder = drawOrder;
 
             this.collisionIgnoreTimer = collisionIgnoreTimer;
         }

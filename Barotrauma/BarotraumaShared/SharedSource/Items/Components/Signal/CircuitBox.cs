@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -82,8 +82,13 @@ namespace Barotrauma.Items.Components
 
         public bool IsFull => ComponentContainer?.Inventory is { } inventory && inventory.IsFull(true);
 
+        /// <summary>
+        /// Works the same way as the Locked property, but isn't persistent.
+        /// </summary>
+        public bool TemporarilyLocked;
+
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Locked circuit boxes can only be viewed and not interacted with.")]
-        public bool Locked { get; set; }
+        public bool Locked { get; private set; }
 
         public CircuitBox(Item item, ContentXElement element) : base(item, element)
         {
@@ -125,9 +130,9 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private Option<ContentXElement> delayedElementToLoad;
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             if (delayedElementToLoad.IsSome()) { return; }
             delayedElementToLoad = Option.Some(componentElement);
         }
@@ -375,6 +380,18 @@ namespace Barotrauma.Items.Components
             {
                 if (node.ID != id) { continue; }
                 node.ApplyResize(size, pos);
+                break;
+            }
+            OnViewUpdateProjSpecific();
+        }
+
+        private void RenameConnectionLabelsInternal(CircuitBoxInputOutputNode.Type type, Dictionary<string, string> overrides)
+        {
+            foreach (var node in InputOutputNodes)
+            {
+                if (node.NodeType != type) { continue; }
+
+                node.ReplaceAllConnectionLabelOverrides(overrides);
                 break;
             }
             OnViewUpdateProjSpecific();
@@ -743,6 +760,8 @@ namespace Barotrauma.Items.Components
                 ItemInventory ii => ii.Container.DrawInventory,
                 _ => true
             };
+
+        public bool IsLocked() => Locked || TemporarilyLocked;
 
         public static Option<Item> GetApplicableResourcePlayerHas(ItemPrefab prefab, Character? character)
         {

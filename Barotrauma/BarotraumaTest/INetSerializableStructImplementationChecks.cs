@@ -1,10 +1,11 @@
-﻿using System;
+﻿extern alias Client;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
-using Barotrauma;
-using Barotrauma.Extensions;
+using Client::Barotrauma;
+using Client::Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using Xunit;
 

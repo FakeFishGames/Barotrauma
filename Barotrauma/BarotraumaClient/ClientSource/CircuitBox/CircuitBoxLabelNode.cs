@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -80,6 +81,18 @@ namespace Barotrauma
                 return true;
             };
 
+            var characterLimit = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), frame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.03f, 0.02f) }, text: $"{bodyTextBox.Text.Length}/{NetLimitedString.MaxLength}", font: GUIStyle.SmallFont, textAlignment: Alignment.Right);
+
+            bodyTextBox.OnTextChanged += (textBox, _) =>
+            {
+                textBox.TextColor = textBox.TextBlock.SelectedTextColor = textBox.Text.Length > NetLimitedString.MaxLength
+                    ? GUIStyle.Red
+                    : GUIStyle.TextColorNormal;
+
+                characterLimit.Text = $"{textBox.Text.Length}/{NetLimitedString.MaxLength}";
+                return true;
+            };
+
             static void UpdateLabelColor(GUITextBox box)
             {
                 bool found = TextManager.ContainsTag(box.Text);
@@ -97,8 +110,8 @@ namespace Barotrauma
                 }
             }
 
-            bodyTextBox.OnDeselected += (textBox, _) => UpdateLabelColor(textBox);
-            headerTextBox.OnDeselected += (textBox, _) => UpdateLabelColor(textBox);
+            bodyTextBox.OnDeselected += static (textBox, _) => UpdateLabelColor(textBox);
+            headerTextBox.OnDeselected += static (textBox, _) => UpdateLabelColor(textBox);
             UpdateLabelColor(bodyTextBox);
             UpdateLabelColor(headerTextBox);
 

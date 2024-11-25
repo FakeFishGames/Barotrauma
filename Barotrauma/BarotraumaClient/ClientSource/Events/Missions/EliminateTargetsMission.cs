@@ -2,7 +2,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    partial class AlienRuinMission : Mission
+    partial class EliminateTargetsMission : Mission
     {
         public override bool DisplayAsCompleted => State > 0;
         public override bool DisplayAsFailed => false;

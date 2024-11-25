@@ -81,16 +81,12 @@ namespace Barotrauma
         public override bool IsVisible(Rectangle worldView)
         {
             if (BallastFlora != null) { return true; }
-
             if (Screen.Selected != GameMain.SubEditorScreen && !GameMain.DebugDraw)
             {
                 if (decals.Count == 0 && paintAmount < minimumPaintAmountToDraw) { return false; }
 
-                Rectangle worldRect = WorldRect;
-                if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) { return false; }
-                if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) { return false; }
             }
-            return true;
+            return base.IsVisible(worldView);
         }
 
         public override bool IsMouseOn(Vector2 position)
@@ -103,12 +99,31 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
+            int heightScaled = GUI.IntScale(20);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
             {
                 CanTakeKeyBoardFocus = false
             };
-            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont);
+            var hullEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont);
+
+            if (!inGame)
+            {
+                if (Linkable)
+                {
+                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("HoldToLink"), font: GUIStyle.SmallFont);
+                    var hullLinkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("hulllinkinfo"), font: GUIStyle.SmallFont);
+                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("AllowedLinks"), font: GUIStyle.SmallFont);
+                    LocalizedString allowedItems = AllowedLinks.None() ? TextManager.Get("None") : string.Join(", ", AllowedLinks);
+                    itemsText.Text = TextManager.AddPunctuation(':', itemsText.Text, allowedItems);
+                    hullEditor.AddCustomContent(linkText, 1);
+                    hullEditor.AddCustomContent(hullLinkText, 2);
+                    hullEditor.AddCustomContent(itemsText, 3);
+                    linkText.TextColor = GUIStyle.Orange;
+                    hullLinkText.TextColor = GUIStyle.Orange;
+                    itemsText.TextColor = GUIStyle.Orange;
+                }
+            }
 
             PositionEditingHUD();
 
@@ -210,7 +225,9 @@ namespace Barotrauma
         {
             bool primaryMouseButtonHeld = PlayerInput.PrimaryMouseButtonHeld();
             bool secondaryMouseButtonHeld = PlayerInput.SecondaryMouseButtonHeld();
-            if (!primaryMouseButtonHeld && !secondaryMouseButtonHeld) { return; }
+            bool doubleClicked = PlayerInput.DoubleClicked();
+            bool secondaryDoubleClicked = PlayerInput.SecondaryDoubleClicked();
+            if (!primaryMouseButtonHeld && !secondaryMouseButtonHeld && !doubleClicked && !secondaryDoubleClicked) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
             Hull hull = FindHull(position);
@@ -218,29 +235,67 @@ namespace Barotrauma
             if (hull == null || hull.IdFreed) { return; }
             if (EditWater)
             {
+                const float waterIncrement = 100000.0f;
                 if (primaryMouseButtonHeld)
                 {
-                    ShowHulls = true;
-                    hull.WaterVolume += 100000.0f * deltaTime;
-                    hull.networkUpdatePending = true;
-                    hull.serverUpdateDelay = 0.5f;
+                    SetWaterVolume(hull.WaterVolume + waterIncrement * deltaTime);
                 }
                 else if (secondaryMouseButtonHeld)
                 {
-                    hull.WaterVolume -= 100000.0f * deltaTime;
+                    SetWaterVolume(hull.WaterVolume - waterIncrement * deltaTime);
+                }
+                
+                if (doubleClicked)
+                {
+                    SetWaterVolume(hull.Volume * MaxCompress);
+                }
+                else if (secondaryDoubleClicked)
+                {
+                    SetWaterVolume(0f);
+                }
+                
+                void SetWaterVolume(float newVolume)
+                {
+                    ShowHulls = true;
+                    hull.WaterVolume = newVolume;
                     hull.networkUpdatePending = true;
                     hull.serverUpdateDelay = 0.5f;
                 }
-                
             }
             else if (EditFire)
             {
+                bool networkUpdate = false;
+                
                 if (primaryMouseButtonHeld)
                 {
                     new FireSource(position, hull, isNetworkMessage: true);
+                    networkUpdate = true;
+                }
+                else if (secondaryMouseButtonHeld || secondaryDoubleClicked)
+                {
+                    for (int index = hull.FireSources.Count - 1; index >= 0; index--)
+                    {
+                        var currentFireSource = hull.FireSources[index];
+                        
+                        if (secondaryMouseButtonHeld)
+                        {
+                            const float extinguishAmount = 120f;
+                            currentFireSource.Extinguish(deltaTime, extinguishAmount);
+                            networkUpdate = true;
+                        }
+                        else
+                        {
+                            currentFireSource.Remove();
+                            networkUpdate = true;
+                        }
+                    }
+                }
+                
+                if (networkUpdate)
+                {
                     hull.networkUpdatePending = true;
                     hull.serverUpdateDelay = 0.5f;
-                }                
+                }
             }
         }
 

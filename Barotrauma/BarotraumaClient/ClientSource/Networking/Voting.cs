@@ -59,22 +59,77 @@ namespace Barotrauma
             switch (voteType)
             {
                 case VoteType.Sub:
-                case VoteType.Mode:
-                    GUIListBox listBox = (voteType == VoteType.Sub) ?
-                        GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
+                    var subList = GameMain.NetLobbyScreen.SubList;
 
-                    foreach (GUIComponent comp in listBox.Content.Children)
+                    foreach (GUIComponent comp in subList.Content.Children)
                     {
-                        if (comp.FindChild("votes") is GUITextBlock voteText) { comp.RemoveChild(voteText); }
+                        TryRemoveVoteText(comp);
+
+                        var container = comp.GetChild<GUILayoutGroup>();
+                        var imageFrame = container.GetChild<GUIFrame>();
+                        var coalIcon = imageFrame.GetChildByUserData(NetLobbyScreen.CoalitionIconUserData);
+                        var sepIcon = imageFrame.GetChildByUserData(NetLobbyScreen.SeparatistsIconUserData);
+
+                        coalIcon.Enabled = false;
+                        sepIcon.Enabled = false;
+
+                        TryRemoveVoteText(coalIcon);
+                        TryRemoveVoteText(sepIcon);
+
+                        static void TryRemoveVoteText(GUIComponent component)
+                        {
+                            if (component.FindChild("votes") is GUITextBlock foundText)
+                            {
+                                component.RemoveChild(foundText);
+                            }
+                        }
                     }
 
                     if (clients == null) { return; }
-                    
-                    IReadOnlyDictionary<object, int> voteList = GetVoteCounts<object>(voteType, clients);
-                    foreach (KeyValuePair<object, int> votable in voteList)
+
+                    bool isPvP = GameMain.NetLobbyScreen?.SelectedMode == GameModePreset.PvP;
+
+                    if (isPvP)
                     {
-                        SetVoteText(listBox, votable.Key, votable.Value);
-                    }                    
+                        var coalitionVoteList = GetVoteCounts<SubmarineInfo>(voteType, clients.Where(static c => c.PreferredTeam is CharacterTeamType.Team1));
+                        var separatistVoteList = GetVoteCounts<SubmarineInfo>(voteType, clients.Where(static c => c.PreferredTeam is CharacterTeamType.Team2));
+                        foreach (var (subInfo, amount) in coalitionVoteList)
+                        {
+                            SetSubVoteText(subList, subInfo, amount, CharacterTeamType.Team1);
+                        }
+
+                        foreach (var (subInfo, amount) in separatistVoteList)
+                        {
+                            SetSubVoteText(subList, subInfo, amount, CharacterTeamType.Team2);
+                        }
+                    }
+                    else
+                    {
+                        var subVoteList = GetVoteCounts<SubmarineInfo>(voteType, clients);
+                        foreach (var (subInfo, amount) in subVoteList)
+                        {
+                            SetSubVoteText(subList, subInfo, amount, CharacterTeamType.None);
+                        }
+                    }
+
+                    break;
+                case VoteType.Mode:
+                    var modeList = GameMain.NetLobbyScreen.ModeList;
+                    foreach (GUIComponent comp in modeList.Content.Children)
+                    {
+                        if (comp.FindChild("votes") is GUITextBlock voteText)
+                        {
+                            comp.RemoveChild(voteText);
+                        }
+                    }
+
+                    if (clients == null) { return; }
+
+                    var modeVoteList = GetVoteCounts<GameModePreset>(voteType, clients);
+                    foreach (var (preset, amount) in modeVoteList)
+                    {
+                        SetVoteText(modeList, preset, amount);
+                    }
                     break;
                 case VoteType.StartRound:
                     if (clients == null) { return; }
@@ -90,12 +145,70 @@ namespace Barotrauma
             }
         }
 
+        private void SetSubVoteText(GUIListBox subListBox, SubmarineInfo userData, int votes, CharacterTeamType type)
+        {
+            GUIComponent subElement = subListBox.Content.GetChildByUserData(userData);
+
+            if (subElement is null)
+            {
+                DebugConsole.ThrowError("Failed to find the submarine element in the listbox");
+                return;
+            }
+            var (coalIcon, sepIcon) = GetPvPIcons(subElement);
+
+            switch (type)
+            {
+                case CharacterTeamType.None:
+                {
+                    SetVoteText(subListBox, userData, votes);
+                    break;
+                }
+                case CharacterTeamType.Team1:
+                {
+                    coalIcon.Enabled = votes > 0;
+                    CreateSubmarineVoteText(coalIcon, votes);
+                    break;
+                }
+                case CharacterTeamType.Team2:
+                {
+                    sepIcon.Enabled = votes > 0;
+                    CreateSubmarineVoteText(sepIcon, votes);
+                    break;
+                }
+                default:
+                    return;
+            }
+
+            static void CreateSubmarineVoteText(GUIComponent parent, int votes)
+            {
+                if (parent is null) { return; }
+                var voteText = new GUITextBlock(new RectTransform(Vector2.One, parent.RectTransform, Anchor.TopLeft), $"{votes}", textAlignment: Alignment.Center)
+                {
+                    Padding = Vector4.Zero,
+                    UserData = "votes",
+                    Shadow = true
+                };
+                voteText.RectTransform.RelativeOffset = new Vector2(0.33f, 0.33f);
+            }
+
+            static (GUIComponent CoalitionIcon, GUIComponent SeparatistsIcon) GetPvPIcons(GUIComponent child)
+            {
+                var container = child.GetChild<GUILayoutGroup>();
+                var imageFrame = container.GetChild<GUIFrame>();
+                var coalIcon = imageFrame.GetChildByUserData(NetLobbyScreen.CoalitionIconUserData);
+                var sepIcon = imageFrame.GetChildByUserData(NetLobbyScreen.SeparatistsIconUserData);
+
+                return (CoalitionIcon: coalIcon, SeparatistsIcon: sepIcon);
+            }
+        }
+
         private void SetVoteText(GUIListBox listBox, object userData, int votes)
         {
             if (userData == null) { return; }
             foreach (GUIComponent comp in listBox.Content.Children)
             {
                 if (comp.UserData != userData) { continue; }
+
                 if (comp.FindChild("votes") is not GUITextBlock voteText)
                 {
                     voteText = new GUITextBlock(new RectTransform(new Point(GUI.IntScale(30), comp.Rect.Height), comp.RectTransform, Anchor.CenterRight),
@@ -197,28 +310,48 @@ namespace Barotrauma
             msg.WritePadBits();
             return true;
         }
-        
+
         public void ClientRead(IReadMessage inc)
         {
             GameMain.Client.ServerSettings.AllowSubVoting = inc.ReadBoolean();
             if (GameMain.Client.ServerSettings.AllowSubVoting)
             {
                 UpdateVoteTexts(null, VoteType.Sub);
+                bool isMultiSub = inc.ReadBoolean();
                 int votableCount = inc.ReadByte();
+
+                List<SubmarineInfo> serversubs = new List<SubmarineInfo>();
+                if (GameMain.NetLobbyScreen?.SubList?.Content != null)
+                {
+                    foreach (GUIComponent item in GameMain.NetLobbyScreen.SubList.Content.Children)
+                    {
+                        if (item.UserData is SubmarineInfo info)
+                        {
+                            serversubs.Add(info);
+                        }
+                    }
+                }
+
                 for (int i = 0; i < votableCount; i++)
                 {
                     int votes = inc.ReadByte();
                     string subName = inc.ReadString();
-                    List<SubmarineInfo> serversubs = new List<SubmarineInfo>();
-                    if (GameMain.NetLobbyScreen?.SubList?.Content != null)
-                    {
-                        foreach (GUIComponent item in GameMain.NetLobbyScreen.SubList.Content.Children)
-                        {
-                            if (item.UserData != null && item.UserData is SubmarineInfo) { serversubs.Add(item.UserData as SubmarineInfo); }
-                        }
-                    }
+
                     SubmarineInfo sub = serversubs.FirstOrDefault(s => s.Name == subName);
-                    SetVoteText(GameMain.NetLobbyScreen.SubList, sub, votes);
+                    SetSubVoteText(GameMain.NetLobbyScreen.SubList, sub, votes, isMultiSub ? CharacterTeamType.Team1 : CharacterTeamType.None);
+                }
+
+                if (isMultiSub)
+                {
+                    int separatistsCount = inc.ReadByte();
+                    for (int i = 0; i < separatistsCount; i++)
+                    {
+                        int votes = inc.ReadByte();
+                        string subName = inc.ReadString();
+
+                        SubmarineInfo sub = serversubs.FirstOrDefault(s => s.Name == subName);
+                        SetSubVoteText(GameMain.NetLobbyScreen.SubList, sub, votes, CharacterTeamType.Team2);
+                    }
                 }
             }
             GameMain.Client.ServerSettings.AllowModeVoting = inc.ReadBoolean();

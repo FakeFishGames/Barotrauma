@@ -403,9 +403,9 @@ namespace Barotrauma
             {
                 senderName = (message.Type == ChatMessageType.Private ? "[PM] " : "") + message.SenderName;
             }
-            if (message.Sender?.Info?.Job != null)
+            if (message.SenderCharacter?.Info?.Job != null)
             {
-                senderColor = Color.Lerp(message.Sender.Info.Job.Prefab.UIColor, Color.White, 0.25f);
+                senderColor = Color.Lerp(message.SenderCharacter.Info.Job.Prefab.UIColor, Color.White, 0.25f);
             }
 
             var msgHolder = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.0f), chatBox.Content.RectTransform, Anchor.TopCenter), style: null,
