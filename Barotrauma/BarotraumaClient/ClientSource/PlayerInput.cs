@@ -228,8 +228,11 @@ namespace Barotrauma
         static MouseState latestMouseState; //the absolute latest state, do NOT use for player interaction
         static KeyboardState keyboardState, oldKeyboardState;
 
-        static double timeSinceClick;
-        static Point lastClickPosition;
+        static double timeSincePrimaryClick;
+        static Point lastPrimaryClickPosition;
+        
+        static double timeSinceSecondaryClick;
+        static Point lastSecondaryClickPosition;
 
         const float DoubleClickDelay = 0.4f;
         public static float MaxDoubleClickDistance 
@@ -237,7 +240,8 @@ namespace Barotrauma
             get { return Math.Max(15.0f * Math.Max(GameMain.GraphicsHeight / 1920.0f, GameMain.GraphicsHeight / 1080.0f), 10.0f); }
         }
 
-        static bool doubleClicked;
+        static bool primaryDoubleClicked;
+        static bool secondaryDoubleClicked;
 
         static bool allowInput;
         static bool wasWindowActive;
@@ -406,7 +410,12 @@ namespace Barotrauma
 
         public static bool DoubleClicked()
         {
-            return AllowInput && doubleClicked;
+            return AllowInput && primaryDoubleClicked;
+        }
+        
+        public static bool SecondaryDoubleClicked()
+        {
+            return AllowInput && secondaryDoubleClicked;
         }
 
         public static bool KeyHit(InputType inputType)
@@ -466,7 +475,8 @@ namespace Barotrauma
 
         public static void Update(double deltaTime)
         {
-            timeSinceClick += deltaTime;
+            timeSincePrimaryClick += deltaTime;
+            timeSinceSecondaryClick += deltaTime;
 
             if (!GameMain.WindowActive)
             {
@@ -495,11 +505,33 @@ namespace Barotrauma
             MouseSpeedPerSecond = MouseSpeed / (float)deltaTime;
 
             // Split into two to not accept drag & drop releasing as part of a double-click
-            doubleClicked = false;
+            primaryDoubleClicked = false;
             if (PrimaryMouseButtonClicked())
             {
-                float dist = (mouseState.Position - lastClickPosition).ToVector2().Length();
+                primaryDoubleClicked = UpdateDoubleClicking(ref lastPrimaryClickPosition, ref timeSincePrimaryClick);
+            }           
 
+            if (PrimaryMouseButtonDown())
+            {
+                lastPrimaryClickPosition = mouseState.Position;                
+            }
+            
+            secondaryDoubleClicked = false;
+            if (SecondaryMouseButtonClicked())
+            {
+                secondaryDoubleClicked = UpdateDoubleClicking(ref lastSecondaryClickPosition, ref timeSinceSecondaryClick);
+            }
+            
+            if (SecondaryMouseButtonDown())
+            {
+                lastSecondaryClickPosition = mouseState.Position;
+            }
+            
+            bool UpdateDoubleClicking(ref Point lastClickPosition, ref double timeSinceClick)
+            {
+                bool doubleClicked = false;
+                float dist = (mouseState.Position - lastClickPosition).ToVector2().Length();
+                
                 if (timeSinceClick < DoubleClickDelay && dist < MaxDoubleClickDistance)
                 {
                     doubleClicked = true;
@@ -513,11 +545,8 @@ namespace Barotrauma
                 {
                     timeSinceClick = 0.0;
                 }
-            }           
-
-            if (PrimaryMouseButtonDown())
-            {
-                lastClickPosition = mouseState.Position;                
+                
+                return doubleClicked;
             }
         }
 

@@ -918,5 +918,12 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"GUITextBox: Invalid selection: ({exception})");
             }
         }
+
+        public void ResetDelegates()
+        {
+            OnKeyHit = null;
+            OnEnterPressed = null;
+            OnTextChanged = null;
+        }
     }
 }

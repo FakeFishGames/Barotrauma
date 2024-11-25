@@ -13,13 +13,15 @@
         {
             if (GameMain.GameSession == null) { return false; }
 
-            foreach (Character character in GameMain.GameSession.Casualties)
+            foreach (Character deadCharacter in GameMain.GameSession.Casualties)
             {
-                if (assistantsDontCount && character.Info?.Job?.Prefab.Identifier == "assistant")
+                if (deadCharacter.TeamID != character.TeamID) { continue; }
+
+                if (assistantsDontCount && deadCharacter.Info?.Job?.Prefab.Identifier == "assistant")
                 {
                     continue;
                 }
-                if (character.CauseOfDeath != null && character.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
+                if (deadCharacter.CauseOfDeath != null && deadCharacter.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
                     return false;
                 }

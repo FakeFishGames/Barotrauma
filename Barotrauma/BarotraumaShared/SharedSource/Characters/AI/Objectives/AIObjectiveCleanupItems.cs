@@ -31,7 +31,7 @@ namespace Barotrauma
             this.prioritizedItems.AddRange(prioritizedItems.Where(i => i != null));
         }
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 0; }
             if (objectiveManager.IsOrder(this))
@@ -47,7 +47,7 @@ namespace Barotrauma
             return AIObjectiveManager.RunPriority - 0.5f;
         }
 
-        protected override bool Filter(Item target)
+        protected override bool IsValidTarget(Item target)
         {
             System.Diagnostics.Debug.Assert(target.GetComponent<Pickable>() is { } pickable && !pickable.IsAttached, "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking pickable, non-attached items.");
             System.Diagnostics.Debug.Assert(target.Prefab.PreferredContainers.Any(), "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking items that have preferred containers defined.");
@@ -81,6 +81,8 @@ namespace Barotrauma
 
         public static bool IsItemInsideValidSubmarine(Item item, Character character)
         {
+            if (item == null || item.Removed) { return false; }
+            if (character == null || character.Removed) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }
@@ -100,7 +102,7 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (item.DontCleanUp) { return false; }
-            if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
+            if (item.Illegitimate == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)
             {
                 if (item.Container == null)

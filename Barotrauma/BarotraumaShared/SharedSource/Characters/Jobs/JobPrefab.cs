@@ -95,20 +95,59 @@ namespace Barotrauma
             }
         }
 
-        public class PreviewItem
+        public class JobItem
         {
-            public readonly Identifier ItemIdentifier;
-            public readonly bool ShowPreview;
-
-            public PreviewItem(Identifier itemIdentifier, bool showPreview)
+            public enum GameModeType
             {
-                ItemIdentifier = itemIdentifier;
-                ShowPreview = showPreview;
+                Any, PvP, PvE
+            }
+
+            public readonly Identifier ItemIdentifier;
+            public readonly Identifier ItemIdentifierTeam2;
+            public readonly bool ShowPreview;
+            public readonly bool Equip;
+            public readonly bool Outfit;
+            public readonly int Amount = 1;
+
+            public readonly JobItem ParentItem;
+
+            public readonly GameModeType GameMode;
+
+            public JobItem(ContentXElement element, JobItem parentItem)
+            {
+                ItemIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+                ItemIdentifierTeam2 = element.GetAttributeIdentifier("identifierteam2", Identifier.Empty);
+                ShowPreview = element.GetAttributeBool("showpreview", true);
+                GameMode = element.GetAttributeEnum("gamemode", parentItem?.GameMode ?? GameModeType.Any);
+                Amount = element.GetAttributeInt("amount", 1);
+                Equip = element.GetAttributeBool("equip", false);
+                Outfit = element.GetAttributeBool("outfit", false);
+                ParentItem = parentItem;
+            }
+
+            public Identifier GetItemIdentifier(CharacterTeamType team, bool isPvPMode)
+            {
+                switch (GameMode)
+                {
+                    case GameModeType.PvP:
+                        if (!isPvPMode) { return Identifier.Empty; }
+                        break;
+                    case GameModeType.PvE:
+                        if (isPvPMode) { return Identifier.Empty; }
+                        break;
+                }
+
+                return 
+                    team == CharacterTeamType.Team2 && !ItemIdentifierTeam2.IsEmpty ? 
+                    ItemIdentifierTeam2 : 
+                    ItemIdentifier;
             }
         }
 
-        public readonly Dictionary<int, ContentXElement> ItemSets = new Dictionary<int, ContentXElement>();
-        public readonly ImmutableDictionary<int, ImmutableArray<PreviewItem>> PreviewItems;
+        /// <summary>
+        /// The items the character can get when spawning. The key is the index of the job variant.
+        /// </summary>
+        public readonly ImmutableDictionary<int, ImmutableArray<JobItem>> JobItems;
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutonomousObjectives = new List<AutonomousObjective>();
         public readonly List<Identifier> AppropriateOrders = new List<Identifier>();
@@ -140,6 +179,13 @@ namespace Barotrauma
 
         [Serialize(0, IsPropertySaveable.No, description: "The number of these characters in the crew the player starts with in the single player campaign.")]
         public int InitialCount
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(10, IsPropertySaveable.No, description: "Determines the order of the characters in the campaign setup ui.")]
+        public int CampaignSetupUIOrder
         {
             get;
             private set;
@@ -211,7 +257,7 @@ namespace Barotrauma
             Description = TextManager.Get("JobDescription." + Identifier);
             Element = element;
 
-            var previewItems = new Dictionary<int, List<PreviewItem>>();
+            var jobItems = new Dictionary<int, List<JobItem>>();
 
             int variant = 0;
             foreach (var subElement in element.Elements())
@@ -219,9 +265,8 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "itemset":
-                        ItemSets.Add(variant, subElement);
-                        previewItems[variant] = new List<PreviewItem>();
-                        loadItemIdentifiers(subElement, variant);
+                        jobItems[variant] = new List<JobItem>();
+                        loadJobItems(subElement, variant, parentItem: null);
                         variant++;
                         break;
                     case "skills":
@@ -246,35 +291,39 @@ namespace Barotrauma
                 }
             }
 
-            void loadItemIdentifiers(XElement parentElement, int variant)
+            void loadJobItems(ContentXElement parentElement, int variant, JobItem parentItem)
             {
-                foreach (XElement itemElement in parentElement.GetChildElements("Item"))
+                foreach (ContentXElement itemElement in parentElement.GetChildElements("Item"))
                 {
-                    if (itemElement.Element("name") != null)
+                    if (itemElement.GetAttribute("name") != null)
                     {
-                        DebugConsole.ThrowErrorLocalized("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
+                        DebugConsole.ThrowErrorLocalized("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.",
+                            contentPackage: parentElement.ContentPackage);
                         continue;
                     }
 
                     Identifier itemIdentifier = itemElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    JobItem jobItem = null;
                     if (itemIdentifier.IsEmpty)
                     {
-                        DebugConsole.ThrowErrorLocalized("Error in job config \"" + Name + "\" - item with no identifier.");
+                        DebugConsole.ThrowErrorLocalized("Error in job config \"" + Name + "\" - item with no identifier.",
+                            contentPackage: parentElement.ContentPackage);
                     }
                     else
                     {
-                        previewItems[variant].Add(new PreviewItem(itemIdentifier, itemElement.GetAttributeBool("showpreview", true)));
+                        jobItem = new JobItem(itemElement, parentItem);
+                        jobItems[variant].Add(jobItem);
                     }
-                    loadItemIdentifiers(itemElement, variant);
+                    loadJobItems(itemElement, variant, parentItem: jobItem);
                 }
             }
 
-            PreviewItems = previewItems.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray()))
+            JobItems = jobItems.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray()))
                 .ToImmutableDictionary();
             
             Variants = variant;
 
-            Skills.Sort((x,y) => y.LevelRange.Start.CompareTo(x.LevelRange.Start));
+            Skills.Sort((x,y) => y.GetLevelRange(isPvP: false).Start.CompareTo(x.GetLevelRange(isPvP: false).Start));
         }
 
         public static JobPrefab Random(Rand.RandSync sync, Func<JobPrefab, bool> predicate = null) => Prefabs.GetRandom(p => !p.HiddenJob && (predicate == null || predicate(p)), sync);

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Collections.Immutable;
@@ -10,7 +12,7 @@ namespace Barotrauma.Extensions
         /// <summary>
         /// Randomizes the collection (using OrderBy) and returns it.
         /// </summary>
-        public static T[] Randomize<T>(this IList<T> source, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static T[] Randomize<T>(this IList<T> source, Rand.RandSync randSync)
         {
             return source.OrderBy(i => Rand.Value(randSync)).ToArray();
         }
@@ -18,7 +20,7 @@ namespace Barotrauma.Extensions
         /// <summary>
         /// Randomizes the list in place without creating a new collection, using a Fisher-Yates-based algorithm.
         /// </summary>
-        public static void Shuffle<T>(this IList<T> list, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static void Shuffle<T>(this IList<T> list, Rand.RandSync randSync)
             => list.Shuffle(Rand.GetRNG(randSync));
 
         public static void Shuffle<T>(this IList<T> list, Random rng)
@@ -34,7 +36,7 @@ namespace Barotrauma.Extensions
             }
         }
 
-        public static T GetRandom<T>(this IReadOnlyList<T> source, Func<T, bool> predicate, Rand.RandSync randSync)
+        public static T? GetRandom<T>(this IReadOnlyList<T> source, Func<T, bool> predicate, Rand.RandSync randSync)
         {
             if (predicate == null) { return GetRandom(source, randSync); }
             return source.Where(predicate).ToArray().GetRandom(randSync);
@@ -49,13 +51,13 @@ namespace Barotrauma.Extensions
         /// <param name="randSync">Which RNG to use</param>
         /// <returns>A random item from the list. Return value should match between clients and
         /// the server, if applicable.</returns>
-        public static T GetRandom<T>(this IReadOnlyList<T> source, Rand.RandSync randSync)
+        public static T? GetRandom<T>(this IReadOnlyList<T> source, Rand.RandSync randSync)
         {
             int count = source.Count;
             return count == 0 ? default : source[Rand.Range(0, count, randSync)];
         }
 
-        public static T GetRandom<T>(this IReadOnlyList<T> source, Random random)
+        public static T? GetRandom<T>(this IReadOnlyList<T> source, Random random)
         {
             int count = source.Count;
             return count == 0 ? default : source[random.Next(0, count)];
@@ -64,13 +66,13 @@ namespace Barotrauma.Extensions
         // The reason these "GetRandomUnsynced" methods exist is because
         // they can be used on all enumerables; GetRandom can only be used
         // on lists as they can be sorted to guarantee a certain order.
-        public static T GetRandomUnsynced<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        public static T? GetRandomUnsynced<T>(this IEnumerable<T> source, Func<T, bool> predicate)
         {
             if (predicate == null) { return GetRandomUnsynced(source); }
             return source.Where(predicate).GetRandomUnsynced();
         }
 
-        public static T GetRandomUnsynced<T>(this IEnumerable<T> source)
+        public static T? GetRandomUnsynced<T>(this IEnumerable<T> source)
         {
             if (source is IReadOnlyList<T> list)
             {
@@ -83,19 +85,19 @@ namespace Barotrauma.Extensions
             }
         }
 
-        public static T GetRandom<T>(this IEnumerable<T> source, Random rand)
+        public static T? GetRandom<T>(this IEnumerable<T> source, Random rand)
             where T : PrefabWithUintIdentifier
         {
             return source.OrderBy(p => p.UintIdentifier).ToArray().GetRandom(rand);
         }
 
-        public static T GetRandom<T>(this IEnumerable<T> source, Rand.RandSync randSync)
+        public static T? GetRandom<T>(this IEnumerable<T> source, Rand.RandSync randSync)
             where T : PrefabWithUintIdentifier
         {
             return source.OrderBy(p => p.UintIdentifier).ToArray().GetRandom(randSync);
         }
 
-        public static T GetRandom<T>(this IEnumerable<T> source, Func<T, bool> predicate, Rand.RandSync randSync)
+        public static T? GetRandom<T>(this IEnumerable<T> source, Func<T, bool> predicate, Rand.RandSync randSync)
             where T : PrefabWithUintIdentifier
         {
             return source.Where(predicate).OrderBy(p => p.UintIdentifier).ToArray().GetRandom(randSync);
@@ -140,7 +142,7 @@ namespace Barotrauma.Extensions
         /// <summary>
         /// Shorthand for !source.Any(predicate) -> i.e. not any.
         /// </summary>
-        public static bool None<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
+        public static bool None<T>(this IEnumerable<T> source, Func<T, bool>? predicate = null)
         {
             if (predicate == null)
             {
@@ -152,7 +154,7 @@ namespace Barotrauma.Extensions
             }
         }
 
-        public static bool Multiple<T>(this IEnumerable<T> source, Func<T, bool> predicate = null)
+        public static bool Multiple<T>(this IEnumerable<T> source, Func<T, bool>? predicate = null)
         {
             if (predicate == null)
             {
@@ -167,6 +169,17 @@ namespace Barotrauma.Extensions
         public static IEnumerable<T> ToEnumerable<T>(this T item)
         {
             yield return item;
+        }
+
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) where T : class
+        {
+            foreach (var item in enumerable)
+            {
+                if (item != null)
+                {
+                    yield return item;
+                }
+            }
         }
 
         // source: https://stackoverflow.com/questions/19237868/get-all-children-to-one-list-recursive-c-sharp
@@ -184,6 +197,7 @@ namespace Barotrauma.Extensions
         {
             if (value != null) { source.Add(value); }
         }
+
 
         public static NetCollection<T> ToNetCollection<T>(this IEnumerable<T> enumerable) => new NetCollection<T>(enumerable.ToImmutableArray());
 

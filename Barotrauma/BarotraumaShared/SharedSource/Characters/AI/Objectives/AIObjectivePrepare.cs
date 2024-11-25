@@ -13,7 +13,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool KeepDivingGearOnAlsoWhenInactive => true;
         public override bool PrioritizeIfSubObjectivesActive => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         private AIObjectiveGetItem getSingleItemObjective;
         private AIObjectiveGetItems getAllItemsObjective;
@@ -22,7 +22,6 @@ namespace Barotrauma
         private readonly Item targetItem;
         private readonly ImmutableArray<Identifier> requiredItems;
         private readonly ImmutableArray<Identifier> optionalItems;
-        private readonly HashSet<Item> items = new HashSet<Item>();
         public bool KeepActiveWhenReady { get; set; }
         public bool CheckInventory { get; set; }
         public bool FindAllItems { get; set; }
@@ -55,18 +54,18 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific() => IsCompleted;
+        protected override bool CheckObjectiveState() => IsCompleted;
 
         protected override float GetPriority()
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             Priority = objectiveManager.GetOrderPriority(this);
             var subObjective = GetSubObjective();
-            if (subObjective != null && subObjective.IsCompleted)
+            if (subObjective is { IsCompleted: true })
             {
                 Priority = 0;
             }
@@ -113,20 +112,7 @@ namespace Barotrauma
                         },
                         onCompleted: () =>
                         {
-                            if (KeepActiveWhenReady)
-                            {
-                                if (objectiveReference != null)
-                                {
-                                    foreach (var item in objectiveReference.achievedItems)
-                                    {
-                                        if (item?.IsOwnedBy(character) != null)
-                                        {
-                                            items.Add(item);
-                                        }
-                                    }
-                                }
-                            }
-                            else
+                            if (!KeepActiveWhenReady)
                             {
                                 IsCompleted = true;
                             }
@@ -165,22 +151,11 @@ namespace Barotrauma
                     if (!TryAddSubObjective(ref getSingleItemObjective, getItemConstructor,
                         onCompleted: () =>
                         {
-                            if (KeepActiveWhenReady)
-                            {
-                                if (getSingleItemObjective != null)
-                                {
-                                    var item = getSingleItemObjective?.TargetItem;
-                                    if (item?.IsOwnedBy(character) != null)
-                                    {
-                                        items.Add(item);
-                                    }
-                                }
-                            }
-                            else
+                            if (!KeepActiveWhenReady)
                             {
                                 IsCompleted = true;
                             }
-                        },
+                        }, 
                         onAbandon: () => Abandon = true))
                     {
                         Abandon = true;
@@ -193,7 +168,6 @@ namespace Barotrauma
         public override void Reset()
         {
             base.Reset();
-            items.Clear();
             subObjectivesCreated = false;
             getMultipleItemsObjective = null;
             getSingleItemObjective = null;

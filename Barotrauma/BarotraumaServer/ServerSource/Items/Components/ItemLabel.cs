@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
         private string lastSentText;
         private float sendStateTimer;
 
-        [Serialize("", IsPropertySaveable.Yes, description: "The text to display on the label.", alwaysUseInstanceValues: true), Editable(100)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The text to display on the label.", alwaysUseInstanceValues: true), Editable(MaxLength = 100)]
         public string Text
         {
             get;

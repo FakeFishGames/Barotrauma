@@ -52,7 +52,9 @@ namespace Barotrauma
             {
                 if (orderedCharacter != CommandingCharacter)
                 {
-                    CommandingCharacter.Speak(SuggestedOrder.GetChatMessage(OrderedCharacter.Name, "", givingOrderToSelf: false), minDurationBetweenSimilar: 5);
+                    CommandingCharacter.Speak(SuggestedOrder.GetChatMessage(OrderedCharacter.Name, "", givingOrderToSelf: false),
+                        minDurationBetweenSimilar: 5,
+                        identifier: ("GiveOrder." + SuggestedOrder.Prefab.Identifier).ToIdentifier());
                 }
                 CurrentOrder = SuggestedOrder
                     .WithOption(Option)
@@ -60,7 +62,9 @@ namespace Barotrauma
                     .WithOrderGiver(CommandingCharacter)
                     .WithManualPriority(CharacterInfo.HighestManualOrderPriority);
                 OrderedCharacter.SetOrder(CurrentOrder, CommandingCharacter != OrderedCharacter);
-                OrderedCharacter.Speak(TextManager.Get("DialogAffirmative").Value, delay: 1.0f, minDurationBetweenSimilar: 5);
+                OrderedCharacter.Speak(TextManager.Get("DialogAffirmative").Value, delay: 1.0f,
+                    minDurationBetweenSimilar: 5,
+                    identifier: ("ReceiveOrder." + SuggestedOrder.Prefab.Identifier).ToIdentifier());
             }
             TimeSinceLastAttempt = 0f;
         }

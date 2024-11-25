@@ -319,7 +319,7 @@ namespace Barotrauma
                         }
                     }
 
-                    string colorStr = (item.SpawnedInCurrentOutpost && !item.AllowStealing ? GUIStyle.Red : Color.White).ToStringHex();
+                    string colorStr = (item.Illegitimate ? GUIStyle.Red : Color.White).ToStringHex();
 
                     toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
                     if (item.GetComponent<Quality>() != null)
@@ -478,10 +478,11 @@ namespace Barotrauma
             {
                 int row = (int)Math.Floor((double)i / slotsPerRow);
                 int slotsPerThisRow = Math.Min(slotsPerRow, capacity - row * slotsPerRow);
+                int slotNumberOnThisRow = i - row * slotsPerRow;
 
                 int rowWidth = (int)(rectSize.X * slotsPerThisRow + spacing.X * (slotsPerThisRow - 1));
                 slotRect.X = (int)(center.X) - rowWidth / 2;
-                slotRect.X += (int)((rectSize.X + spacing.X) * (i % slotsPerThisRow));
+                slotRect.X += (int)((rectSize.X + spacing.X) * (slotNumberOnThisRow % slotsPerThisRow));
 
                 slotRect.Y = (int)(topLeft.Y + (rectSize.Y + spacing.Y) * row);
                 visualSlots[i] = new VisualSlot(slotRect);
@@ -1185,6 +1186,7 @@ namespace Barotrauma
             {
                 DraggingItems.RemoveAll(it => !Character.Controlled.CanInteractWith(it));
             }
+            
             if (DraggingItems.Any() && PlayerInput.PrimaryMouseButtonReleased())
             {
                 Character.Controlled.ClearInputs();
@@ -1193,198 +1195,234 @@ namespace Barotrauma
                 if (!DetermineMouseOnInventory(ignoreDraggedItem: true) &&
                     (CharacterHealth.OpenHealthWindow != null || mouseOnPortrait))
                 {
-                    bool dropSuccessful = false;
-                    foreach (Item item in DraggingItems)
+                    if (TryPortraitAndHealthDrop(mouseOnPortrait))
                     {
-                        var inventory = item.ParentInventory;
-                        var indices = inventory?.FindIndices(item);
-                        dropSuccessful |= (CharacterHealth.OpenHealthWindow ?? Character.Controlled.CharacterHealth).OnItemDropped(item, ignoreMousePos: mouseOnPortrait);
-                        if (dropSuccessful)
-                        {
-                            if (indices != null && inventory.visualSlots != null)
-                            {
-                                foreach (int i in indices)
-                                {
-                                    inventory.visualSlots[i]?.ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.4f);
-                                }
-                            }
-                            break;
-                        }
-                    }
-                    if (dropSuccessful)
-                    {
-                        DraggingItems.Clear();
                         return;
                     }
                 }
 
                 if (selectedSlot == null)
                 {
-                    if (DraggingItemToWorld &&
-                        Character.Controlled.FocusedItem is { OwnInventory: { } inventory } item && item.GetComponent<ItemContainer>() is { } container && 
-                        container.HasRequiredItems(Character.Controlled, addMessage: false) && 
-                        container.AllowDragAndDrop && 
-                        inventory.CanBePut(DraggingItems.FirstOrDefault()))
+                    HandleOutsideInventoryDrop();
+                }
+                else if (!DraggingItems.Any(it => selectedSlot.ParentInventory.slots[selectedSlot.SlotIndex].Contains(it)))
+                {
+                    HandleInventorySlotDrop();
+                }
+
+                DraggingItems.Clear();
+            } 
+
+            if (selectedSlot != null && !CanSelectSlot(selectedSlot))
+            {
+                selectedSlot = null;
+            }
+
+            bool TryPortraitAndHealthDrop(bool mouseOnPortrait)
+            {
+                bool dropSuccessful = false;
+                foreach (Item item in DraggingItems)
+                {
+                    var inventory = item.ParentInventory;
+                    var indices = inventory?.FindIndices(item);
+                    dropSuccessful |= (CharacterHealth.OpenHealthWindow ?? Character.Controlled.CharacterHealth).OnItemDropped(item, ignoreMousePos: mouseOnPortrait);
+                    if (dropSuccessful)
                     {
-                        bool anySuccess = false;
-                        foreach (Item it in DraggingItems)
+                        if (indices != null && inventory.visualSlots != null)
                         {
-                            bool success = Character.Controlled.FocusedItem.OwnInventory.TryPutItem(it, Character.Controlled);
-                            if (!success) { break; }
-                            anySuccess |= success;
-                        }
-                        if (anySuccess) { SoundPlayer.PlayUISound(GUISoundType.PickItem); }                       
-                    }
-                    else
-                    {
-                        if (Screen.Selected is SubEditorScreen)
-                        {
-                            if (DraggingItems.First()?.ParentInventory != null)
+                            foreach (int i in indices)
                             {
-                                SubEditorScreen.StoreCommand(new InventoryPlaceCommand(DraggingItems.First().ParentInventory, new List<Item>(DraggingItems), true));
+                                inventory.visualSlots[i]?.ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.4f);
                             }
                         }
-                        
-                        SoundPlayer.PlayUISound(GUISoundType.DropItem);
-                        bool removed = false;
-                        if (Screen.Selected is SubEditorScreen editor)
+                        break;
+                    }
+                }
+                if (dropSuccessful)
+                {
+                    DraggingItems.Clear();
+                    return true;
+                }
+
+                return false;
+            }
+
+            void HandleOutsideInventoryDrop()
+            {
+                bool isTargetingValidContainer = Character.Controlled.FocusedItem is { OwnInventory: { } inventory } item &&
+                                                 item.GetComponent<ItemContainer>() is { } container &&
+                                                 container.HasRequiredItems(Character.Controlled, addMessage: false) &&
+                                                 container.AllowDragAndDrop &&
+                                                 inventory.CanBePut(DraggingItems.FirstOrDefault());
+
+                bool isTargetingValidCharacter = IsValidTargetForDragDropGive(Character.Controlled, Character.Controlled.FocusedCharacter);
+
+                if (DraggingItemToWorld && (isTargetingValidContainer || isTargetingValidCharacter))
+                {
+                    bool anySuccess = false;
+                    foreach (Item it in DraggingItems)
+                    {
+                        bool success = false;
+                        if (isTargetingValidContainer)
                         {
-                            if (editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition))
+                            success = Character.Controlled.FocusedItem.OwnInventory.TryPutItem(it, Character.Controlled);
+                        }
+                        if (!success && isTargetingValidCharacter)
+                        {
+                            success = Character.Controlled.FocusedCharacter.Inventory.TryPutItem(it, Character.Controlled, CharacterInventory.AnySlot);
+                        }
+
+                        if (!success) { break; }
+                        anySuccess = true;
+                    }
+                        
+                    if (anySuccess) { SoundPlayer.PlayUISound(GUISoundType.PickItem); }  
+                }
+                else
+                {
+                    if (Screen.Selected is SubEditorScreen)
+                    {
+                        if (DraggingItems.First()?.ParentInventory != null)
+                        {
+                            SubEditorScreen.StoreCommand(new InventoryPlaceCommand(DraggingItems.First().ParentInventory, new List<Item>(DraggingItems), true));
+                        }
+                    }
+                        
+                    SoundPlayer.PlayUISound(GUISoundType.DropItem);
+                    bool removed = false;
+                    if (Screen.Selected is SubEditorScreen editor)
+                    {
+                        if (editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition))
+                        {
+                            DraggingItems.ForEachMod(it => it.Remove());
+                            removed = true;
+                        }
+                        else
+                        {
+                            if (editor.WiringMode)
                             {
                                 DraggingItems.ForEachMod(it => it.Remove());
                                 removed = true;
                             }
                             else
                             {
-                                if (editor.WiringMode)
-                                {
-                                    DraggingItems.ForEachMod(it => it.Remove());
-                                    removed = true;
-                                }
-                                else
-                                {
-                                    DraggingItems.ForEachMod(it => it.Drop(Character.Controlled));
-                                }
+                                DraggingItems.ForEachMod(it => it.Drop(Character.Controlled));
                             }
                         }
-                        else
-                        {
-                            DraggingItems.ForEachMod(it => it.Drop(Character.Controlled));
-                            DraggingItems.First().CreateDroppedStack(DraggingItems, allowClientExecute: false);
-                        }
-                        SoundPlayer.PlayUISound(removed ? GUISoundType.PickItem : GUISoundType.DropItem);
                     }
-                }
-                else if (!DraggingItems.Any(it => selectedSlot.ParentInventory.slots[selectedSlot.SlotIndex].Contains(it)))
-                {
-                    Inventory oldInventory = DraggingItems.First().ParentInventory;
-                    Inventory selectedInventory = selectedSlot.ParentInventory;
-                    int slotIndex = selectedSlot.SlotIndex;
-                    int oldSlot = oldInventory == null ? 0 : Array.IndexOf(oldInventory.slots, DraggingItems);
-
-                    //if attempting to drop into an invalid slot in the same inventory, try to move to the correct slot
-                    if (selectedInventory.slots[slotIndex].Empty() &&
-                        selectedInventory == Character.Controlled.Inventory &&
-                        !DraggingItems.First().AllowedSlots.Any(a => a.HasFlag(Character.Controlled.Inventory.SlotTypes[slotIndex])) &&
-                        DraggingItems.Any(it => selectedInventory.TryPutItem(it, Character.Controlled, it.AllowedSlots)))
+                    else
                     {
-                        if (selectedInventory.visualSlots != null)
+                        DraggingItems.ForEachMod(it => it.Drop(Character.Controlled));
+                        DraggingItems.First().CreateDroppedStack(DraggingItems, allowClientExecute: false);
+                    }
+                    SoundPlayer.PlayUISound(removed ? GUISoundType.PickItem : GUISoundType.DropItem);
+                }
+            }
+
+            void HandleInventorySlotDrop()
+            {
+                Inventory oldInventory = DraggingItems.First().ParentInventory;
+                Inventory selectedInventory = selectedSlot.ParentInventory;
+                int slotIndex = selectedSlot.SlotIndex;
+                int oldSlot = oldInventory == null ? 0 : Array.IndexOf(oldInventory.slots, DraggingItems);
+
+                //if attempting to drop into an invalid slot in the same inventory, try to move to the correct slot
+                if (selectedInventory.slots[slotIndex].Empty() &&
+                    selectedInventory == Character.Controlled.Inventory &&
+                    !DraggingItems.First().AllowedSlots.Any(a => a.HasFlag(Character.Controlled.Inventory.SlotTypes[slotIndex])) &&
+                    DraggingItems.Any(it => selectedInventory.TryPutItem(it, Character.Controlled, it.AllowedSlots)))
+                {
+                    if (selectedInventory.visualSlots != null)
+                    {
+                        for (int i = 0; i < selectedInventory.visualSlots.Length; i++)
                         {
-                            for (int i = 0; i < selectedInventory.visualSlots.Length; i++)
+                            if (DraggingItems.Any(it => selectedInventory.slots[i].Contains(it)))
                             {
-                                if (DraggingItems.Any(it => selectedInventory.slots[i].Contains(it)))
+                                selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                            }
+                        }
+                        selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
+                    }
+                    SoundPlayer.PlayUISound(GUISoundType.PickItem);
+                }
+                else
+                {
+                    bool anySuccess = false;
+                    //if we're dragging a stack of partial items or trying to drag to a stack of partial items
+                    //(which should not normally exist, but can happen when e.g. fire damages a stack of items)
+                    //don't allow combining because it leads to weird behavior (stack of items of mixed quality)
+                    bool allowCombine = !(DraggingItems.Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1 || 
+                                          selectedInventory.GetItemsAt(slotIndex).Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1);
+                    int itemCount = 0;
+                    foreach (Item item in DraggingItems)
+                    {
+                        if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container &&
+                            container.Inventory.CanBePut(item))
+                        {
+                            if (!container.AllowDragAndDrop || !container.IsAccessible())
+                            {
+                                allowCombine = false;
+                            }
+                        }
+                        bool success = selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, allowCombine, Character.Controlled);
+                        if (success)
+                        {
+                            anySuccess = true;
+                            itemCount++;
+                        }
+                        if (!success || itemCount >= item.Prefab.GetMaxStackSize(selectedInventory)) 
+                        { 
+                            break; 
+                        }
+                    }
+
+                    if (anySuccess)
+                    {
+                        highlightedSubInventorySlots.RemoveWhere(s => s.ParentInventory == oldInventory || s.ParentInventory == selectedInventory);
+                        if (SubEditorScreen.IsSubEditor())
+                        {
+                            foreach (Item draggingItem in DraggingItems)
+                            {
+                                if (selectedInventory.slots[slotIndex].Contains(draggingItem))
                                 {
-                                    selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                                    SubEditorScreen.StoreCommand(new InventoryMoveCommand(oldInventory, selectedInventory, draggingItem, oldSlot, slotIndex));
                                 }
                             }
-                            selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
                         }
+                        if (selectedInventory.visualSlots != null) { selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f); }
                         SoundPlayer.PlayUISound(GUISoundType.PickItem);
                     }
                     else
                     {
-                        bool anySuccess = false;
-                        bool allowCombine = true;
-                        //if we're dragging a stack of partial items or trying to drag to a stack of partial items
-                        //(which should not normally exist, but can happen when e.g. fire damages a stack of items)
-                        //don't allow combining because it leads to weird behavior (stack of items of mixed quality)
-                        if (DraggingItems.Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1 || 
-                            selectedInventory.GetItemsAt(slotIndex).Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1) 
-                        { 
-                            allowCombine = false;
-                        }
-                        int itemCount = 0;
-                        foreach (Item item in DraggingItems)
-                        {
-                            if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container &&
-                                container.Inventory.CanBePut(item))
-                            {
-                                if (!container.AllowDragAndDrop || !container.AllowAccess)
-                                {
-                                    allowCombine = false;
-                                }
-                            }
-                            bool success = selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, allowCombine, Character.Controlled);
-                            if (success)
-                            {
-                                anySuccess = true;
-                                itemCount++;
-                            }
-                            if (!success || itemCount >= item.Prefab.GetMaxStackSize(selectedInventory)) 
-                            { 
-                                break; 
-                            }
-                        }
-
-                        if (anySuccess)
-                        {
-                            highlightedSubInventorySlots.RemoveWhere(s => s.ParentInventory == oldInventory || s.ParentInventory == selectedInventory);
-                            if (SubEditorScreen.IsSubEditor())
-                            {
-                                foreach (Item draggingItem in DraggingItems)
-                                {
-                                    if (selectedInventory.slots[slotIndex].Contains(draggingItem))
-                                    {
-                                        SubEditorScreen.StoreCommand(new InventoryMoveCommand(oldInventory, selectedInventory, draggingItem, oldSlot, slotIndex));
-                                    }
-                                }
-                            }
-                            if (selectedInventory.visualSlots != null) { selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f); }
-                            SoundPlayer.PlayUISound(GUISoundType.PickItem);
-                        }
-                        else
-                        {
-                            if (selectedInventory.visualSlots != null){ selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
-                            SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
-                        }
+                        if (selectedInventory.visualSlots != null){ selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
+                        SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
                     }
-
-                    selectedInventory.HideTimer = 2.0f;
-                    if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
-                    {
-                        for (int i = 0; i < parentItem.ParentInventory.capacity; i++)
-                        {
-                            if (parentItem.ParentInventory.HideSlot(i)) { continue; }
-                            if (parentItem.ParentInventory.slots[i].FirstOrDefault() != parentItem) { continue; }
-
-                            highlightedSubInventorySlots.Add(new SlotReference(
-                                parentItem.ParentInventory, parentItem.ParentInventory.visualSlots[i],
-                                i, false, selectedSlot.ParentInventory));
-                            break;
-                        }
-
-                    }
-                    DraggingItems.Clear();
-                    DraggingSlot = null;
                 }
 
-                DraggingItems.Clear();
-            }
+                selectedInventory.HideTimer = 2.0f;
+                if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
+                {
+                    for (int i = 0; i < parentItem.ParentInventory.capacity; i++)
+                    {
+                        if (parentItem.ParentInventory.HideSlot(i)) { continue; }
+                        if (parentItem.ParentInventory.slots[i].FirstOrDefault() != parentItem) { continue; }
 
-            if (selectedSlot != null && !CanSelectSlot(selectedSlot))
-            {
-                selectedSlot = null;
-            }            
+                        highlightedSubInventorySlots.Add(new SlotReference(
+                            parentItem.ParentInventory, parentItem.ParentInventory.visualSlots[i],
+                            i, false, selectedSlot.ParentInventory));
+                        break;
+                    }
+                }
+                DraggingItems.Clear();
+                DraggingSlot = null;
+            }
+        }
+        
+        private static bool IsValidTargetForDragDropGive(Character giver, Character receiver)
+        {
+            if (giver == null || receiver == null) { return false; }
+            if (receiver == giver) { return false; }
+            return receiver.IsInventoryAccessibleTo(giver, IsDragAndDropGiveAllowed ? CharacterInventory.AccessLevel.Allowed : CharacterInventory.AccessLevel.Limited);
         }
 
         private static bool CanSelectSlot(SlotReference selectedSlot)
@@ -1505,6 +1543,31 @@ namespace Barotrauma
 
             if (DraggingItems.Any())
             {
+                DrawDragRelated();
+            }
+
+            if (selectedSlot != null && selectedSlot.Item != null)
+            {
+                Rectangle slotRect = selectedSlot.Slot.Rect;
+                slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
+                if (selectedSlot.TooltipNeedsRefresh())
+                {
+                    selectedSlot.RefreshTooltip();
+                }
+
+                if (!slotIconTooltip.IsNullOrEmpty())
+                {
+                    DrawToolTip(spriteBatch, slotIconTooltip, slotRect);
+                }
+                else
+                {
+                    DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect);
+                }
+                slotIconTooltip = string.Empty;
+            }
+
+            void DrawDragRelated()
+            {
                 if (DraggingSlot == null || (!DraggingSlot.MouseOn()))
                 {
                     Sprite sprite = DraggingItems.First().Prefab.InventoryIcon ?? DraggingItems.First().Sprite;
@@ -1521,10 +1584,8 @@ namespace Barotrauma
                     if ((GUI.MouseOn == null || mouseOnHealthInterface) && selectedSlot == null)
                     {
                         var shadowSprite = GUIStyle.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0];
-                        LocalizedString toolTip = mouseOnHealthInterface ? TextManager.Get("QuickUseAction.UseTreatment") :
-                            Character.Controlled.FocusedItem != null ?
-                                TextManager.GetWithVariable("PutItemIn", "[itemname]", Character.Controlled.FocusedItem.Name, FormatCapitals.Yes) :
-                                TextManager.Get(Screen.Selected is SubEditorScreen editor && editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition) ? "Delete" : "DropItem");
+                        
+                        (LocalizedString toolTip, Color toolTipColor) = GetDragLabelTextAndColor(mouseOnHealthInterface);
 
                         Vector2 nameSize = GUIStyle.Font.MeasureString(DraggingItems.First().Name);
                         Vector2 toolTipSize = GUIStyle.SmallFont.MeasureString(toolTip);
@@ -1544,7 +1605,7 @@ namespace Barotrauma
 
                         GUI.DrawString(spriteBatch, textPos + new Vector2(nameSize.X * textOffset, -iconSize / 2), DraggingItems.First().Name, Color.White);
                         GUI.DrawString(spriteBatch, textPos + new Vector2(toolTipSize.X * textOffset, 0), toolTip,
-                            color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? GUIStyle.Red : Color.LightGreen,
+                            color: toolTipColor,
                             font: GUIStyle.SmallFont);
                     }
 
@@ -1587,24 +1648,31 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedSlot != null && selectedSlot.Item != null)
+            (LocalizedString, Color) GetDragLabelTextAndColor(bool mouseOnHealthInterface)
             {
-                Rectangle slotRect = selectedSlot.Slot.Rect;
-                slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
-                if (selectedSlot.TooltipNeedsRefresh())
+                bool useDragDropGive = IsValidTargetForDragDropGive(Character.Controlled, Character.Controlled.FocusedCharacter);
+                
+                Color toolTipColor = Color.LightGreen;
+                
+                LocalizedString toolTip;
+                if (mouseOnHealthInterface)
                 {
-                    selectedSlot.RefreshTooltip();
+                    toolTip = TextManager.Get("QuickUseAction.UseTreatment");
                 }
-
-                if (!slotIconTooltip.IsNullOrEmpty())
+                else if (Character.Controlled.FocusedItem != null)
                 {
-                    DrawToolTip(spriteBatch, slotIconTooltip, slotRect);
+                    toolTip = TextManager.GetWithVariable("PutItemIn", "[itemname]", Character.Controlled.FocusedItem.Name, FormatCapitals.Yes);
+                }
+                else if (useDragDropGive)
+                {
+                    toolTip = TextManager.GetWithVariable("GiveItemTo", "[character]", Character.Controlled.FocusedCharacter.Name, FormatCapitals.Yes);
                 }
                 else
                 {
-                    DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect);
+                    toolTipColor = GUIStyle.Red;
+                    toolTip = TextManager.Get(Screen.Selected is SubEditorScreen editor && editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition) ? "Delete" : "DropItem");
                 }
-                slotIconTooltip = string.Empty;
+                return (toolTip, toolTipColor);
             }
         }
 
@@ -1801,7 +1869,7 @@ namespace Barotrauma
                     DrawSideIcon(deconstructOrder.SymbolSprite, Direction.Right, TextManager.Get("tooltip.markedfordeconstruction"), GUIStyle.Red, out bool mouseOn);
                     if (mouseOn) { availableContextualOrder = (item, Tags.DontDeconstructThis); }
                 }
-                else if (((item.SpawnedInCurrentOutpost && !item.AllowStealing) || (inventory != null && inventory.slots[slotIndex].Items.Any(it => it.SpawnedInCurrentOutpost && !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                else if ((item.Illegitimate || (inventory != null && inventory.slots[slotIndex].Items.Any(it => it.Illegitimate))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     DrawSideIcon(CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand], Direction.Left, TextManager.Get("tooltip.stolenitem"), GUIStyle.Red, out _);
                 }

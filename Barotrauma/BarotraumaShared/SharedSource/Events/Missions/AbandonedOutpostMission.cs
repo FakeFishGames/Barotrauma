@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -27,9 +27,9 @@ namespace Barotrauma
         private const float EndDelay = 5.0f;
         private float endTimer;
 
-        private bool allowOrderingRescuees;
+        private readonly bool allowOrderingRescuees;
 
-        public override bool AllowRespawn => false;
+        public override bool AllowRespawning => false;
 
         public override bool AllowUndocking
         {
@@ -233,7 +233,18 @@ namespace Barotrauma
 
             bool requiresRescue = element.GetAttributeBool("requirerescue", false);
             var teamId = element.GetAttributeEnum("teamid", requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None);
-            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, teamId, spawnPos);
+            var originalTeam = Level.Loaded.StartOutpost?.TeamID ?? teamId;
+            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, originalTeam, spawnPos);
+            //consider the NPC to be "originally" from the team of the outpost it spawns in, and change it to the desired (hostile) team afterwards
+            //that allows the NPC to fight intruders and otherwise function in the outpost if the mission is configured to spawn the hostile NPCs in a friendly outpost
+            if (teamId != originalTeam)
+            {
+                spawnedCharacter.SetOriginalTeamAndChangeTeam(teamId);
+            }
+            if (element.GetAttribute("color") != null)
+            {
+                spawnedCharacter.UniqueNameColor = element.GetAttributeColor("color", Color.Red);
+            }
             if (Level.Loaded?.StartOutpost?.Info is { } outPostInfo)
             {
                 outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, humanPrefab.Identifier);
@@ -265,11 +276,7 @@ namespace Barotrauma
                     .WithManualPriority(CharacterInfo.HighestManualOrderPriority);
                 spawnedCharacter.SetOrder(order, isNewOrder: true, speak: false);
             }
-
-            if (element.GetAttributeBool("requirekill", false))
-            {
-                requireKill.Add(spawnedCharacter);
-            }
+            InitCharacter(spawnedCharacter, element);
         }
 
         private void LoadMonster(CharacterPrefab monsterPrefab, XElement element, Submarine submarine)
@@ -280,10 +287,6 @@ namespace Barotrauma
             spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
             Character spawnedCharacter = Character.Create(monsterPrefab.Identifier, spawnPos.WorldPosition, ToolBox.RandomSeed(8), createNetworkEvent: false);
             characters.Add(spawnedCharacter);
-            if (element.GetAttributeBool("requirekill", false))
-            {
-                requireKill.Add(spawnedCharacter);
-            }
             if (spawnedCharacter.Inventory != null)
             {
                 characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
@@ -297,9 +300,31 @@ namespace Barotrauma
                     enemyAi.UnattackableSubmarines.Add(sub);
                 }
             }
+            InitCharacter(spawnedCharacter, element);
         }
-
-
+        
+        private void InitCharacter(Character character, XElement element)
+        {
+            if (element.GetAttributeBool("requirekill", false))
+            {
+                requireKill.Add(character);
+            }
+            float playDeadProbability = element.GetAttributeFloat("playdeadprobability", -1);
+            if (playDeadProbability >= 0)
+            {
+                character.EvaluatePlayDeadProbability(playDeadProbability);
+            }
+            float huskProbability = element.GetAttributeFloat("huskprobability", 0);
+            if (huskProbability > 0 && Rand.Value() <= huskProbability)
+            {
+                character.TurnIntoHusk();
+            }
+            else if (element.GetAttributeBool("corpse", false))
+            {
+                character.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
+            }
+        }
+        
         protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (State != HostagesKilledState)

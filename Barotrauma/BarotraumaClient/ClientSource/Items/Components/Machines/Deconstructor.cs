@@ -154,12 +154,14 @@ namespace Barotrauma.Items.Components
                 {
                     infoArea.Text = TextManager.Get(InfoText).Fallback(InfoText);
                 }
+                
                 if (IsActive)
                 {
                     activateButton.Text = TextManager.Get("DeconstructorCancel");
                     infoArea.Text = string.Empty;
                     return;
                 }
+                
                 bool outputsFound = false;
                 foreach (var (inputItem, deconstructItem) in GetAvailableOutputs(checkRequiredOtherItems: true))
                 {
@@ -174,27 +176,34 @@ namespace Barotrauma.Items.Components
                         }
                         inputItem.GetComponent<GeneticMaterial>()?.ModifyDeconstructInfo(this, ref buttonText, ref infoText);
                         activateButton.Text = buttonText;
-                        if (infoArea != null)
-                        {
-                            infoArea.Text = infoText;
-                        }
+                        infoArea.Text = infoText;
+                        
                         return;
                     }
                 }
+                
+                LocalizedString activateButtonText = TextManager.Get(ActivateButtonText);
+                activateButton.Enabled = outputsFound || !InputContainer.Inventory.IsEmpty();
+                activateButton.Text = activateButtonText;
+                
                 //no valid outputs found: check if we're missing some required items from the input slots and display a message about it if possible
                 if (!outputsFound && infoArea != null)
                 {
                     foreach (var (inputItem, deconstructItem) in GetAvailableOutputs(checkRequiredOtherItems: false))
                     {
+                        LocalizedString infoText =  string.Empty;
                         if (deconstructItem.RequiredOtherItem.Any() && !string.IsNullOrEmpty(deconstructItem.InfoTextOnOtherItemMissing))
                         {
                             LocalizedString missingItemName = TextManager.Get("entityname." + deconstructItem.RequiredOtherItem.First());
-                            infoArea.Text = TextManager.GetWithVariable(deconstructItem.InfoTextOnOtherItemMissing, "[itemname]", missingItemName);
+                            infoText = TextManager.GetWithVariable(deconstructItem.InfoTextOnOtherItemMissing, "[itemname]", missingItemName);
                         }
+                        
+                        inputItem.GetComponent<GeneticMaterial>()?.ModifyDeconstructInfo(this, ref activateButtonText, ref infoText);
+                        
+                        activateButton.Text = activateButtonText;
+                        infoArea.Text = infoText;
                     }
                 }
-                activateButton.Enabled = outputsFound || !InputContainer.Inventory.IsEmpty();
-                activateButton.Text = TextManager.Get(ActivateButtonText);
             };
         }
 
@@ -415,7 +424,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
-            inSufficientPowerWarning.Visible = IsActive && !hasPower;
+            inSufficientPowerWarning.Visible = IsActive && !HasPower;
         }
 
         private bool OnActivateButtonClicked(GUIButton button, object obj)

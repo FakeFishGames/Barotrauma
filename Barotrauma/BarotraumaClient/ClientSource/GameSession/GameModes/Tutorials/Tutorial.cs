@@ -86,7 +86,7 @@ namespace Barotrauma.Tutorials
 
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefabs: null);
+            GameMain.GameSession = new GameSession(subInfo, Option.None, GameModePreset.Tutorial, missionPrefabs: null);
             (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
 
             if (generationParams is not null)
@@ -138,7 +138,7 @@ namespace Barotrauma.Tutorials
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", isRemotePlayer: false, hasAi: false);
             character.TeamID = CharacterTeamType.Team1;
             Character.Controlled = character;
-            character.GiveJobItems(null);
+            character.GiveJobItems(isPvPMode: false, null);
 
             var idCard = character.Inventory.FindItemByTag("identitycard".ToIdentifier());
             if (idCard == null)

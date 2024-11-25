@@ -107,7 +107,7 @@ namespace Barotrauma
 
         static partial void AddToList(Sprite sprite);
 
-        public Sprite(ContentXElement element, string path = "", string file = "", bool lazyLoad = false)
+        public Sprite(ContentXElement element, string path = "", string file = "", bool lazyLoad = false, float sourceRectScale = 1)
         {
             if (element is null)
             {
@@ -137,7 +137,7 @@ namespace Barotrauma
                 LoadTexture(ref sourceVector, ref shouldReturn);
             }
             if (shouldReturn) { return; }
-            sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
+            sourceRect = new Rectangle((int)(sourceVector.X * sourceRectScale), (int)(sourceVector.Y * sourceRectScale), (int)(sourceVector.Z * sourceRectScale), (int)(sourceVector.W * sourceRectScale));
             size = SourceElement.GetAttributeVector2("size", Vector2.One);
             RelativeSize = size;
             size.X *= sourceRect.Width;
@@ -145,7 +145,6 @@ namespace Barotrauma
             RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
 #if CLIENT
-            Identifier = GetIdentifier(SourceElement);
             AddToList(this);
 #endif
         }
@@ -282,9 +281,6 @@ namespace Barotrauma
                 size.Y *= sourceRect.Height;
                 RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                 Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
-#if CLIENT
-                Identifier = GetIdentifier(SourceElement);
-#endif
             }
         }
 

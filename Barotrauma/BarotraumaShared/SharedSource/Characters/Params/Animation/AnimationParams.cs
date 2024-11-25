@@ -22,6 +22,7 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
+        [Header("Legs")]
         [Serialize("1.0, 1.0", IsPropertySaveable.Yes, description: "How big steps the character takes."), Editable(DecimalCount = 2, ValueStep = 0.01f)]
         public Vector2 StepSize
         {
@@ -29,20 +30,19 @@ namespace Barotrauma
             set;
         }
 
+        [Header("Standing")]
         [Serialize(0f, IsPropertySaveable.Yes, description: "How high above the ground the character's head is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float HeadPosition { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "How high above the ground the character's torso is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float TorsoPosition { get; set; }
 
+        [Header("Step lift")]
         [Serialize(1f, IsPropertySaveable.Yes, description: "Separate multiplier for the head lift"), Editable(MinValueFloat = 0, MaxValueFloat = 2, ValueStep = 0.1f)]
         public float StepLiftHeadMultiplier { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "How much the body raises when taking a step."), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 0.1f)]
         public float StepLiftAmount { get; set; }
-
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
-        public bool MultiplyByDir { get; set; }
 
         [Serialize(0.5f, IsPropertySaveable.Yes, description: "When does the body raise when taking a step. The default (0.5) is in the middle of the step."), Editable(MinValueFloat = -1, MaxValueFloat = 1, DecimalCount = 2, ValueStep = 0.1f)]
         public float StepLiftOffset { get; set; }
@@ -50,8 +50,51 @@ namespace Barotrauma
         [Serialize(2f, IsPropertySaveable.Yes, description: "How frequently the body raises when taking a step. The default is 2 (after every step)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f)]
         public float StepLiftFrequency { get; set; }
 
+        [Header("Movement")]
         [Serialize(0.75f, IsPropertySaveable.Yes, description: "The character's movement speed is multiplied with this value when moving backwards."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2)]
         public float BackwardsMovementMultiplier { get; set; }
+        
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "Adjusts the maximum speed while climbing. The actual speed is affected by the MovementSpeed."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10f, DecimalCount = 2)]
+        public float ClimbSpeed { get; set; }
+        
+        [Serialize(2.0f, IsPropertySaveable.Yes, description: "Used instead of ClimbSpeed when descending ladders while moving fast (running). Not used if lower than ClimbSpeed."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10f, DecimalCount = 2)]
+        public float SlideSpeed { get; set; }
+        
+        [Serialize(10.5f, IsPropertySaveable.Yes, description: "Force applied to the main collider, torso and head, when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbBodyMoveForce { get; set; }
+        
+        [Serialize(5.2f, IsPropertySaveable.Yes, description: "Force applied to the hands when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbHandMoveForce { get; set; }
+        
+        [Serialize(10.0f, IsPropertySaveable.Yes, description: "Force applied to the feet when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbFootMoveForce { get; set; }
+        
+        [Serialize(30.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
+        public float ClimbStepHeight { get; set; }
+        
+        protected override bool Deserialize(XElement element = null)
+        {
+            if (element.GetAttributeEnum(nameof(AnimationType), AnimationType.NotDefined) is AnimationType.Run)
+            {
+                // These values were previously hard-coded when running, so we need to set different default values for the run animations, when they are not defined.
+                const string climbSpeedName = nameof(ClimbSpeed);
+                if (element.GetAttribute(climbSpeedName) == null)
+                {
+                    element.SetAttribute(climbSpeedName, 2.0f);
+                }
+                const string climbStepName = nameof(ClimbStepHeight);
+                if (element.GetAttribute(climbStepName) == null)
+                {
+                    element.SetAttribute(climbStepName, 60.0f);
+                }
+                const string slideSpeedName = nameof(SlideSpeed);
+                if (element.GetAttribute(slideSpeedName) == null)
+                {
+                    element.SetAttribute(slideSpeedName, 4.0f);
+                }
+            }
+            return base.Deserialize(element);
+        }
     }
 
     abstract class SwimParams : AnimationParams
@@ -69,11 +112,15 @@ namespace Barotrauma
         public bool IsGroundedAnimation => AnimationType is AnimationType.Walk or AnimationType.Run or AnimationType.Crouch;
         public bool IsSwimAnimation => AnimationType is AnimationType.SwimSlow or AnimationType.SwimFast;
 
+        [Header("General")]
+        [Serialize(AnimationType.NotDefined, IsPropertySaveable.Yes), Editable]
+        public virtual AnimationType AnimationType { get; protected set; }
         /// <summary>
         /// The cached animations of all the characters that have been loaded.
         /// </summary>
         private static readonly Dictionary<Identifier, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<Identifier, Dictionary<string, AnimationParams>>();
 
+        [Header("Movement")]
         [Serialize(1.0f, IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED, ValueStep = 0.1f)]
         public float MovementSpeed { get; set; }
         
@@ -84,6 +131,7 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
+        [Header("Orientation")]
         [Serialize(float.NaN, IsPropertySaveable.Yes), Editable(-360f, 360f)]
         public float HeadAngle
         {
@@ -122,12 +170,11 @@ namespace Barotrauma
         [Serialize(50.0f, IsPropertySaveable.Yes, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float TorsoTorque { get; set; }
 
+        [Header("Legs")]
         [Serialize(25.0f, IsPropertySaveable.Yes, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float FootTorque { get; set; }
 
-        [Serialize(AnimationType.NotDefined, IsPropertySaveable.Yes), Editable]
-        public virtual AnimationType AnimationType { get; protected set; }
-
+        [Header("Arms")]
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to rotate the arms to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float ArmIKStrength { get; set; }
 

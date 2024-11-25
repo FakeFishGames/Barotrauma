@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -41,7 +43,7 @@ namespace Barotrauma
             }
         }
 
-        public void Save(XElement element)
+        public virtual void Save(XElement element)
         {
             SerializableProperty.SerializeProperties(this, element);
         }
@@ -51,6 +53,9 @@ namespace Barotrauma
     {
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool AllowDamagedWalls { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        public bool AllowDamagedDevices { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool AllowDisconnectedWires { get; set; }
@@ -73,16 +78,94 @@ namespace Barotrauma
 
     class WreckInfo : ExtraSubmarineInfo
     {
+        // Unknown -> older submarines before this property was added
+        public enum HasThalamus { Unknown, Yes, No }
+
+        [Serialize(HasThalamus.Unknown, IsPropertySaveable.Yes)]
+        public HasThalamus WreckContainsThalamus { get; private set; }
+
         public WreckInfo(SubmarineInfo submarineInfo, XElement element) : base(submarineInfo, element)
         {
             Name = $"{nameof(WreckInfo)} ({submarineInfo.Name})";
+            TryDetermineThalamusIfUnknown(element);
         }
 
         public WreckInfo(SubmarineInfo submarineInfo) : base(submarineInfo)
         {
             Name = $"{nameof(WreckInfo)} ({submarineInfo.Name})";
+            TryDetermineThalamusIfUnknown(submarineInfo.SubmarineElement);
         }
 
         public WreckInfo(WreckInfo original) : base(original) { }
+
+        // Attempts to determine if the wreck contains a thalamus item
+        private void TryDetermineThalamusIfUnknown(XElement element)
+        {
+            if (WreckContainsThalamus != HasThalamus.Unknown) { return; }
+
+            if (element == null)
+            {
+                // nothing we can do, oh well
+                WreckContainsThalamus = HasThalamus.Unknown;
+                return;
+            }
+
+            foreach (var subElement in element.Elements())
+            {
+                if (!string.Equals(subElement.Name.ToString(), nameof(Item), StringComparison.InvariantCultureIgnoreCase)) { continue; }
+
+                var tags = subElement.GetAttributeIdentifierImmutableHashSet(nameof(ItemPrefab.Tags), ImmutableHashSet<Identifier>.Empty);
+
+                if (tags.Contains(Tags.Thalamus))
+                {
+                    WreckContainsThalamus = HasThalamus.Yes;
+                    return;
+                }
+            }
+
+            WreckContainsThalamus = HasThalamus.No;
+        }
+    }
+
+    class EnemySubmarineInfo : ExtraSubmarineInfo
+    {
+        [Serialize(4000.0f, IsPropertySaveable.Yes), Editable]
+        public float Reward { get; set; }
+
+        [Serialize(50.0f, IsPropertySaveable.Yes), Editable]
+        public float PreferredDifficulty { get; set; }
+
+        private readonly HashSet<Identifier> missionTags = new HashSet<Identifier>();
+
+        public HashSet<Identifier> MissionTags => missionTags;
+
+        public EnemySubmarineInfo(SubmarineInfo submarineInfo, XElement element) : base(submarineInfo, element)
+        {
+            Name = $"{nameof(EnemySubmarineInfo)} ({submarineInfo.Name})";
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            foreach (var missionTag in element.GetAttributeIdentifierArray(nameof(MissionTags), Array.Empty<Identifier>()))
+            {
+                missionTags.Add(missionTag);
+            }
+        }
+
+        public EnemySubmarineInfo(SubmarineInfo submarineInfo) : base(submarineInfo)
+        {
+            Name = $"{nameof(EnemySubmarineInfo)} ({submarineInfo.Name})";
+        }
+
+        public EnemySubmarineInfo(EnemySubmarineInfo original) : base(original)
+        {
+            foreach (var missionTag in original.missionTags)
+            {
+                missionTags.Add(missionTag);
+            }
+        }
+
+        public override void Save(XElement element)
+        {
+            base.Save(element);
+            element.Add(new XAttribute(nameof(MissionTags), string.Join(',', missionTags)));
+        }
     }
 }

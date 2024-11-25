@@ -155,7 +155,7 @@ namespace Barotrauma.Items.Components
             if (DisplayName.IsNullOrEmpty())
             {
 #if DEBUG
-                DebugConsole.ThrowError("Missing display name in connection " + item.Name + ": " + Name);
+                DebugConsole.ThrowError($"Could not find a display name for the connection {Name} in the item {item.Name} (submarine: {item.Submarine?.Info?.Name ?? "none"})");
 #endif
                 DisplayName = Name;
             }

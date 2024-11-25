@@ -21,16 +21,16 @@ namespace Barotrauma
             CauseOfDeath = null;
         }
 
-        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel)
+        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel, bool forceNotification)
         {
             if (Character == null || Character.Removed) { return; }
             if (!prevSentSkill.ContainsKey(skillIdentifier))
             {
                 prevSentSkill[skillIdentifier] = prevLevel;
             }
-            if (Math.Abs(prevSentSkill[skillIdentifier] - newLevel) > 0.01f)
+            if (Math.Abs(prevSentSkill[skillIdentifier] - newLevel) > 0.1f || forceNotification)
             {
-                GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdateSkillsEventData());
+                GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdateSkillsEventData(skillIdentifier, forceNotification));
                 prevSentSkill[skillIdentifier] = newLevel;
             }            
         }
@@ -56,6 +56,7 @@ namespace Barotrauma
             msg.WriteUInt16(ID);
             msg.WriteString(Name);
             msg.WriteString(OriginalName);
+            msg.WriteBoolean(RenamingEnabled);
             msg.WriteByte((byte)Head.Preset.TagSet.Count);
             foreach (Identifier tag in Head.Preset.TagSet)
             {
@@ -96,6 +97,9 @@ namespace Barotrauma
 
             msg.WriteInt32(ExperiencePoints);
             msg.WriteRangedInteger(AdditionalTalentPoints, 0, MaxAdditionalTalentPoints);
+            msg.WriteBoolean(PermanentlyDead);
+            msg.WriteInt32(TalentRefundPoints);
+            msg.WriteInt32(TalentResetCount);
         }
     }
 }

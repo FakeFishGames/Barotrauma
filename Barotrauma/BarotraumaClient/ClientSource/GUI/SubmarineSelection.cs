@@ -742,8 +742,8 @@ namespace Barotrauma
 
         private (LocalizedString header, LocalizedString body) GetItemTransferWarningText()
         {
-            var header = TextManager.Get("itemtransferheader").Fallback("lowfuelheader");
-            var body = TextManager.Get("itemtransferwarning").Fallback("lowfuelwarning");
+            var header = TextManager.Get("itemtransferheader").Fallback(TextManager.Get("lowfuelheader"), useDefaultLanguageIfFound: false);
+            var body = TextManager.Get("itemtransferwarning").Fallback(TextManager.Get("lowfuelwarning"), useDefaultLanguageIfFound: false);
             return (header, body);
         }
 

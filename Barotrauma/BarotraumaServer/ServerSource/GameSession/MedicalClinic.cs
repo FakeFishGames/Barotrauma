@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -21,6 +21,36 @@ namespace Barotrauma
         private readonly record struct AfflictionSubscriber(Client Subscriber, CharacterInfo Target, DateTimeOffset Expiry);
 
         private readonly List<AfflictionSubscriber> afflictionSubscribers = new();
+
+        public void Update(float deltaTime)
+        {
+            processAfflictionChangesTimer -= deltaTime;
+            if (processAfflictionChangesTimer <= 0.0f)
+            {
+                foreach (var character in charactersWithAfflictionChanges)
+                {
+                    ImmutableArray<NetAffliction> afflictions = GetAllAfflictions(character.CharacterHealth);
+                    foreach (AfflictionSubscriber sub in afflictionSubscribers.ToList())
+                    {
+                        if (sub.Expiry < DateTimeOffset.Now)
+                        {
+                            afflictionSubscribers.Remove(sub);
+                            continue;
+                        }
+
+                        if (sub.Target == character.Info)
+                        {
+                            ServerSend(new NetCrewMember(character.Info, afflictions),
+                                header: NetworkHeader.AFFLICTION_UPDATE,
+                                deliveryMethod: DeliveryMethod.Unreliable,
+                                targetClient: sub.Subscriber);
+                        }
+                    }
+                }
+                charactersWithAfflictionChanges.Clear();
+                processAfflictionChangesTimer = ProcessAfflictionChangesInterval;
+            }
+        }
 
         public void ServerRead(IReadMessage inc, Client sender)
         {
@@ -141,7 +171,7 @@ namespace Barotrauma
             if (foundInfo is { Character.CharacterHealth: { } health })
             {
                 pendingAfflictions = GetAllAfflictions(health);
-                infoId = foundInfo.GetIdentifierUsingOriginalName();
+                infoId = foundInfo.ID;
             }
 
             INetSerializableStruct writeCrewMember = new NetCrewMember

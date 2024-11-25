@@ -1,9 +1,9 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
-using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -11,24 +11,32 @@ namespace Barotrauma.Items.Components
     {
         [Editable, Serialize(new string[0], IsPropertySaveable.Yes, description: "Signals sent when the corresponding buttons are pressed.", alwaysUseInstanceValues: true)]
         public string[] Signals { get; set; }
+        
         [Editable, Serialize("", IsPropertySaveable.Yes, description: "Identifiers or tags of items that, when contained, allow the terminal buttons to be used. Multiple ones should be separated by commas.", alwaysUseInstanceValues: true)]
         public string ActivatingItems { get; set; }
-
-        private int RequiredSignalCount { get; set; }
+        
+        private readonly int requiredSignalCount;
         private ItemContainer Container { get; set; }
         private HashSet<ItemPrefab> ActivatingItemPrefabs { get; set; } = new HashSet<ItemPrefab>();
 
-
-        private bool AllowUsingButtons => ActivatingItemPrefabs.None() || (Container != null && Container.Inventory.AllItems.Any(i => i != null && ActivatingItemPrefabs.Any(p => p == i.Prefab)));
+        private bool IsActivated => ActivatingItemPrefabs.None() || (Container != null && Container.Inventory.AllItems.Any(i => i != null && ActivatingItemPrefabs.Any(p => p == i.Prefab)));
+        
+        private readonly IReadOnlyList<string> buttonSignalDefinitions;
 
         public ButtonTerminal(Item item, ContentXElement element) : base(item, element)
         {
-            RequiredSignalCount = element.GetChildElements("TerminalButton").Count(c => c.GetAttribute("style") != null);
-            if (RequiredSignalCount < 1)
+            var buttons = element.GetChildElements("TerminalButton").Where(c => c.GetAttribute("style") != null);
+            if (buttons.None())
             {
-                DebugConsole.ThrowError($"Error in item \"{item.Name}\": no TerminalButton elements defined for the ButtonTerminal component!",
-                    contentPackage: element.ContentPackage);
+                DebugConsole.ThrowError($"Error in item \"{item.Name}\": no TerminalButton elements with a style defined for the ButtonTerminal component!", contentPackage: element.ContentPackage);
             }
+            requiredSignalCount = buttons.Count();
+            List<string> buttonSignals = new ();
+            foreach (ContentXElement button in buttons)
+            {
+                buttonSignals.Add(button.GetAttributeString("signal", null));
+            }
+            buttonSignalDefinitions = buttonSignals.ToImmutableList();
             InitProjSpecific(element);
         }
 
@@ -37,57 +45,10 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
-
-            if (Signals == null)
-            {
-                Signals = new string[RequiredSignalCount];
-                for (int i = 0; i < RequiredSignalCount; i++)
-                {
-                    Signals[i] = string.Empty;
-                }
-            }
-            else if (Signals.Length != RequiredSignalCount)
-            {
-                string[] newSignals = new string[RequiredSignalCount];
-                if (Signals.Length < RequiredSignalCount)
-                {
-                    Signals.CopyTo(newSignals, 0);
-                    for (int i = Signals.Length; i < RequiredSignalCount; i++)
-                    {
-                        newSignals[i] = string.Empty;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < RequiredSignalCount; i++)
-                    {
-                        newSignals[i] = Signals[i];
-                    }
-                }
-                Signals = newSignals;
-            }
-
-            ActivatingItemPrefabs.Clear();
-            if (!string.IsNullOrEmpty(ActivatingItems))
-            {
-                foreach (var activatingItem in ActivatingItems.Split(','))
-                {
-                    if (MapEntityPrefab.Find(null, identifier: activatingItem, showErrorMessages: false) is ItemPrefab prefab)
-                    {
-                        ActivatingItemPrefabs.Add(prefab);
-                    }
-                    else
-                    {
-                        ItemPrefab.Prefabs.Where(p => p.Tags.Any(t => t == activatingItem))
-                            .ForEach(p => ActivatingItemPrefabs.Add(p));
-                    }
-                }
-                if (ActivatingItemPrefabs.None())
-                {
-                    DebugConsole.ThrowError($"Error in item \"{item.Name}\": no activating item prefabs found with identifiers or tags \"{ActivatingItems}\"");
-                }
-            }
-
+            
+            LoadSignals();
+            LoadActivatingItems();
+            
             var containers = item.GetComponents<ItemContainer>();
             if (containers.Count() != 1)
             {
@@ -97,16 +58,100 @@ namespace Barotrauma.Items.Components
             Container = containers.FirstOrDefault();
 
             OnItemLoadedProjSpecific();
+            // Set active so that update loop is active and we can send the state_out signal.
+            IsActive = true;
         }
 
         partial void OnItemLoadedProjSpecific();
-
-        private bool SendSignal(int signalIndex, Character sender, bool isServerMessage = false)
+        
+        public override void Update(float deltaTime, Camera cam)
         {
-            if (!isServerMessage && !AllowUsingButtons) { return false; }
-            string signal = Signals[signalIndex];
+            base.Update(deltaTime, cam);
+            item.SendSignal(IsActivated ? "1" : "0", "state_out");
+        }
+        
+        private void LoadSignals()
+        {
+            if (Signals == null || Signals.None())
+            {
+                Signals = new string[requiredSignalCount];
+                for (int i = 0; i < requiredSignalCount; i++)
+                {
+                    Signals[i] = string.Empty;
+                }
+                // Load signals from the button elements, if defined.
+                for (int i = 0; i < buttonSignalDefinitions.Count; i++)
+                {
+                    Debug.Assert(Signals.Length > i);
+                    string overrideDefinition = buttonSignalDefinitions[i];
+                    if (overrideDefinition != null)
+                    {
+                        Signals[i] = overrideDefinition;
+                    }
+                }
+            }
+            else if (Signals.Length != requiredSignalCount)
+            {
+                string[] newSignals = new string[requiredSignalCount];
+                if (Signals.Length < requiredSignalCount)
+                {
+                    Signals.CopyTo(newSignals, 0);
+                    for (int i = Signals.Length; i < requiredSignalCount; i++)
+                    {
+                        newSignals[i] = string.Empty;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < requiredSignalCount; i++)
+                    {
+                        newSignals[i] = Signals[i];
+                    }
+                }
+                Signals = newSignals;
+            }
+        }
+        
+        private void LoadActivatingItems()
+        {
+            ActivatingItemPrefabs.Clear();
+            if (!string.IsNullOrEmpty(ActivatingItems))
+            {
+                foreach (string activatingItem in ActivatingItems.Split(','))
+                {
+                    Identifier itemIdentifier = activatingItem.ToIdentifier();
+                    if (MapEntityPrefab.FindByIdentifier(itemIdentifier) is ItemPrefab prefab)
+                    {
+                        ActivatingItemPrefabs.Add(prefab);
+                    }
+                    else
+                    {
+                        ItemPrefab.Prefabs.Where(p => p.Tags.Any(t => t == itemIdentifier))
+                            .ForEach(p => ActivatingItemPrefabs.Add(p));
+                    }
+                }
+                if (ActivatingItemPrefabs.None())
+                {
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\": no activating item prefabs found with identifiers or tags \"{ActivatingItems}\"");
+                }
+            }
+        }
+        
+        public override void Reset()
+        {
+            base.Reset();
+            Signals = null;
+            LoadSignals();
+            LoadActivatingItems();
+        }
+        
+        private bool SendSignal(int signalIndex, Character sender, bool ignoreState = false, string overrideSignal = null)
+        {
+            if (!ignoreState && !IsActivated) { return false; }
+            string signal = overrideSignal ?? Signals[signalIndex];
             string connectionName = $"signal_out{signalIndex + 1}";
             item.SendSignal(new Signal(signal, sender: sender), connectionName);
+            AchievementManager.OnButtonTerminalSignal(item, sender);
             return true;
         }
 

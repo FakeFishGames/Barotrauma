@@ -94,9 +94,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (isOn == value && IsActive == value) { return; }
-
                 IsActive = isOn = value;
-                SetLightSourceState(value, value ? lightBrightness : 0.0f);
+                bool isLightOn = isOn && item.Condition > 0;
+                SetLightSourceState(isLightOn, isLightOn ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
@@ -259,7 +259,6 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
-            item.AddTag("light");
         }
 
         public override void OnItemLoaded()
@@ -284,7 +283,7 @@ namespace Barotrauma.Items.Components
         public override void OnMapLoaded()
         {
 #if CLIENT
-            if (item.HiddenInGame)
+            if (item.IsHidden)
             {
                 Light.Enabled = false;
             }

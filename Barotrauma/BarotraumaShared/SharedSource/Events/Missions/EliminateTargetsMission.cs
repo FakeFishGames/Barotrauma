@@ -7,7 +7,8 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class AlienRuinMission : Mission
+    [TypePreviouslyKnownAs("AlienRuinMission")]
+    partial class EliminateTargetsMission : Mission
     {
         private readonly Identifier[] targetItemIdentifiers;
         private readonly Identifier[] targetEnemyIdentifiers;
@@ -16,7 +17,10 @@ namespace Barotrauma
         private readonly HashSet<Character> spawnedTargets = new HashSet<Character>();
         private readonly HashSet<Entity> allTargets = new HashSet<Entity>();
 
-        private Ruin TargetRuin { get; set; }
+        public readonly SubmarineType TargetSubType;
+        public readonly bool PrioritizeThalamus;
+
+        private Submarine TargetSub { get; set; }
 
         public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
@@ -35,11 +39,13 @@ namespace Barotrauma
             }
         }
 
-        public AlienRuinMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
+        public EliminateTargetsMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
             targetItemIdentifiers = prefab.ConfigElement.GetAttributeIdentifierArray("targetitems", Array.Empty<Identifier>());
             targetEnemyIdentifiers = prefab.ConfigElement.GetAttributeIdentifierArray("targetenemies", Array.Empty<Identifier>());
             minEnemyCount = prefab.ConfigElement.GetAttributeInt("minenemycount", 0);
+            TargetSubType = prefab.ConfigElement.GetAttributeEnum("targetsub", SubmarineType.Ruin);
+            PrioritizeThalamus = prefab.RequireThalamusWreck;
         }
 
         protected override void StartMissionSpecific(Level level)
@@ -48,23 +54,48 @@ namespace Barotrauma
             spawnedTargets.Clear();
             allTargets.Clear();
             if (IsClient) { return; }
-            TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.ServerAndClient);
-            if (TargetRuin == null)
+
+            TargetSub = TargetSubType switch
             {
-                DebugConsole.ThrowError($"Failed to initialize an Alien Ruin mission (\"{Prefab.Identifier}\"): level contains no alien ruins",
+                SubmarineType.Wreck => FindWreck(),
+                SubmarineType.Ruin => Level.Loaded?.Ruins?.GetRandom(Rand.RandSync.ServerAndClient).Submarine,
+                SubmarineType.BeaconStation => Level.Loaded?.BeaconStation,
+                _ => null
+            };
+
+            Submarine FindWreck()
+            {
+                var wrecks = Level.Loaded?.Wrecks;
+                if (wrecks == null || wrecks.None()) { return null; }
+
+                if (PrioritizeThalamus)
+                {
+                    var thalamusWrecks = wrecks.Where(w => w.WreckAI != null).ToArray();
+                    if (thalamusWrecks.Any())
+                    {
+                        return thalamusWrecks.GetRandom(Rand.RandSync.ServerAndClient);
+                    }
+                }
+
+                return wrecks.GetRandom(Rand.RandSync.ServerAndClient);
+            }
+
+            if (TargetSub == null)
+            {
+                DebugConsole.ThrowError($"Failed to initialize an {nameof(EliminateTargetsMission)} mission (\"{Prefab.Identifier}\"): level contains no submarines",
                     contentPackage: Prefab.ContentPackage);
                 return;
             }
             if (targetItemIdentifiers.Length < 1 && targetEnemyIdentifiers.Length < 1)
             {
-                DebugConsole.ThrowError($"Failed to initialize an Alien Ruin mission (\"{Prefab.Identifier}\"): no target identifiers set in the mission definition",
+                DebugConsole.ThrowError($"Failed to initialize an {nameof(EliminateTargetsMission)} mission (\"{Prefab.Identifier}\"): no target identifiers set in the mission definition",
                     contentPackage: Prefab.ContentPackage);
                 return;
             }
             foreach (var item in Item.ItemList)
             {
                 if (!targetItemIdentifiers.Contains(item.Prefab.Identifier)) { continue; }
-                if (item.Submarine != TargetRuin.Submarine) { continue; }
+                if (item.Submarine != TargetSub) { continue; }
                 existingTargets.Add(item);
                 allTargets.Add(item);
             }
@@ -73,7 +104,7 @@ namespace Barotrauma
             {
                 if (character.SpeciesName.IsEmpty) { continue; }
                 if (!targetEnemyIdentifiers.Contains(character.SpeciesName)) { continue; }
-                if (character.Submarine != TargetRuin.Submarine) { continue; }
+                if (character.Submarine != TargetSub) { continue; }
                 existingTargets.Add(character);
                 allTargets.Add(character);
                 existingEnemyCount++;
@@ -103,7 +134,7 @@ namespace Barotrauma
                 for (int i = 0; i < (minEnemyCount - existingEnemyCount); i++)
                 {
                     var prefab = enemyPrefabs.GetRandomUnsynced();
-                    var spawnPos = TargetRuin.Submarine.GetWaypoints(false).GetRandomUnsynced(w => w.CurrentHull != null)?.WorldPosition;
+                    var spawnPos = TargetSub.GetWaypoints(false).GetRandomUnsynced(w => w.CurrentHull != null)?.WorldPosition;
                     if (!spawnPos.HasValue)
                     {
                         DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): no valid spawn positions could be found for the additional ({minEnemyCount - existingEnemyCount}) enemies to be spawned",

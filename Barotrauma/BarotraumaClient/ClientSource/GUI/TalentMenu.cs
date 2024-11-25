@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using static Barotrauma.TalentTree;
 using static Barotrauma.TalentTree.TalentStages;
@@ -71,7 +72,9 @@ namespace Barotrauma
         private HashSet<Identifier> selectedTalents = new HashSet<Identifier>();
 
         private readonly Queue<Identifier> showCaseClosureQueue = new();
-
+        
+        private GUITextBlock? nameBlock;
+        private GUIButton? renameButton;
         private GUIListBox? skillListBox;
         private GUITextBlock? talentPointText;
         private GUIProgressBar? experienceBar;
@@ -80,6 +83,10 @@ namespace Barotrauma
 
         private GUIButton? talentApplyButton,
                            talentResetButton;
+
+        private delegate void StartAnimation(RectangleF start, RectangleF end, float duration);
+        private StartAnimation? startAnimation;
+        private GUIComponent? talentMainArea;
 
         public void CreateGUI(GUIFrame parent, Character? targetCharacter)
         {
@@ -133,43 +140,65 @@ namespace Barotrauma
             GUIFrame containerFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.9f), characterLayout.RectTransform), style: null);
             GUILayoutGroup playerFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), containerFrame.RectTransform, Anchor.TopCenter));
             GameMain.NetLobbyScreen.CreatePlayerFrame(playerFrame, alwaysAllowEditing: true, createPendingText: false);
-
-            GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
-                text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"), style: "GUIButtonSmall")
+            
+            if (!GameMain.NetLobbyScreen.PermadeathMode && GameMain.GameSession?.GameMode is not PvPMode)
             {
-                IgnoreLayoutGroups = false,
-                TextBlock =
+                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
+                    text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"), style: "GUIButtonSmall")
                 {
-                    AutoScaleHorizontal = true
-                }
-            };
-
-            newCharacterBox.OnClicked = (button, o) =>
-            {
-                if (!GameMain.NetLobbyScreen.CampaignCharacterDiscarded)
-                {
-                    GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(() =>
+                    IgnoreLayoutGroups = false,
+                    TextBlock =
                     {
-                        newCharacterBox.Text = TextManager.Get("settings");
-                        if (TabMenu.PendingChangesFrame != null)
-                        {
-                            NetLobbyScreen.CreateChangesPendingFrame(TabMenu.PendingChangesFrame);
-                        }
+                        AutoScaleHorizontal = true
+                    }
+                };
 
-                        OpenMenu();
-                    });
-                    return true;
-                }
-
-                OpenMenu();
-                return true;
-
-                void OpenMenu()
+                newCharacterBox.OnClicked = (button, o) =>
                 {
-                    characterSettingsFrame!.Visible = true;
-                    content.Visible = false;
-                }
-            };
+                    if (!GameMain.NetLobbyScreen.CampaignCharacterDiscarded)
+                    {
+                        GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(() =>
+                        {
+                            newCharacterBox.Text = TextManager.Get("settings");
+                            if (TabMenu.PendingChangesFrame != null)
+                            {
+                                NetLobbyScreen.CreateChangesPendingFrame(TabMenu.PendingChangesFrame);
+                            }
+
+                            OpenMenu();
+                        });
+                        return true;
+                    }
+
+                    OpenMenu();
+                    return true;
+
+                    void OpenMenu()
+                    {
+                        characterSettingsFrame!.Visible = true;
+                        content.Visible = false;
+                    }
+                };
+            }
+            else if (characterInfo != null)
+            {
+                renameButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
+                    text: TextManager.Get("button.RenameCharacter"), style: "GUIButtonSmall")
+                {
+                    Enabled = characterInfo.RenamingEnabled,
+                    ToolTip = TextManager.Get("permadeath.rename.description"),
+                    IgnoreLayoutGroups = false,
+                    TextBlock =
+                    {
+                        AutoScaleHorizontal = true
+                    },
+                    OnClicked = (_, _) =>
+                    {
+                        CreateRenamePopup();
+                        return true;
+                    }
+                };
+            }
 
             GUILayoutGroup characterCloseButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), characterLayout.RectTransform), childAnchor: Anchor.BottomCenter);
             new GUIButton(new RectTransform(new Vector2(0.4f, 1f), characterCloseButtonLayout.RectTransform), TextManager.Get("ApplySettingsButton")) //TODO: Is this text appropriate for this circumstance for all languages?
@@ -177,11 +206,63 @@ namespace Barotrauma
                 OnClicked = (button, o) =>
                 {
                     GameMain.Client?.SendCharacterInfo(GameMain.Client.PendingName);
+                    GameMain.NetLobbyScreen.CampaignCharacterDiscarded = false;
                     characterSettingsFrame.Visible = false;
                     content.Visible = true;
                     return true;
                 }
             };
+        }
+
+        private void CreateRenamePopup()
+        {
+            GUIMessageBox renamePopup = new(
+                TextManager.Get("button.RenameCharacter"), TextManager.Get("permadeath.rename.description"),
+                new LocalizedString[] { TextManager.Get("Confirm"), TextManager.Get("Cancel") }, minSize: new Point(0, GUI.IntScale(230)));
+            GUITextBox newNameBox = new(new(Vector2.One, renamePopup.Content.RectTransform), "")
+            {
+                OnEnterPressed = (textBox, text) =>
+                {
+                    textBox.Text = text.Trim();
+                    return true;
+                }
+            };
+            renamePopup.Buttons[0].OnClicked += (_, _) =>
+            {
+                if (newNameBox.Text?.Trim() is string newName && newName != "")
+                {
+                    if (characterInfo != null)
+                    {
+                        if (newNameBox.Text == characterInfo.Name)
+                        {
+                            renamePopup.Close();
+                            return true;
+                        }
+                        if (GameMain.GameSession?.Campaign?.CampaignUI?.HRManagerUI is { } crewManagement)
+                        {
+                            crewManagement.RenameCharacter(characterInfo, newName);
+                            if (nameBlock != null)
+                            {
+                                nameBlock.Text = newName;
+                            }
+                            if (renameButton != null)
+                            {
+                                renameButton.Enabled = false;
+                            }
+                            renamePopup.Close();
+                        }
+                        return true;
+                    }
+                    DebugConsole.ThrowError("Tried to rename character, but CharacterInfo completely missing!");
+                    return true;
+                }
+                else
+                {
+                    newNameBox.Flash();
+                    return false;
+                }
+            };
+            renamePopup.Buttons[1].OnClicked += renamePopup.Close;
         }
 
         private void CreateStatPanel(GUIComponent parent, CharacterInfo info)
@@ -201,7 +282,7 @@ namespace Barotrauma
                 CanBeFocused = true
             };
 
-            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
+            nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
 
             if (!info.OmitJobInMenus)
             {
@@ -265,7 +346,15 @@ namespace Barotrauma
 
         private void CreateTalentMenu(GUIComponent parent, CharacterInfo info, TalentTree tree)
         {
-            GUIListBox mainList = new GUIListBox(new RectTransform(new Vector2(1f, 0.9f), parent.RectTransform, anchor: Anchor.TopCenter));
+            talentMainArea = new GUIFrame(new RectTransform(new Vector2(1f, 0.9f), parent.RectTransform, Anchor.TopCenter), style: null );
+
+            GUIListBox mainList = new GUIListBox(new RectTransform(Vector2.One, talentMainArea.RectTransform));
+            startAnimation = CreatePopupAnimationHandler(talentMainArea);
+
+            if (info is { TalentRefundPoints: > 0, ShowTalentResetPopupOnOpen: true })
+            {
+                CreateTalentResetPopup(talentMainArea);
+            }
 
             selectedTalents = info.GetUnlockedTalentsInTree().ToHashSet();
 
@@ -347,6 +436,124 @@ namespace Barotrauma
                 GUIListBox newSpecializationList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), mainList.Content.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
                 return newSpecializationList;
             }
+        }
+
+        private void CreateTalentResetPopup(GUIComponent parent)
+        {
+            bool hasResetTalentsBefore = character?.Info.TalentResetCount > 0;
+            var bgBlocker = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform, anchor: Anchor.Center), style: "GUIBackgroundBlocker")
+            {
+                IgnoreLayoutGroups = true
+            };
+
+            var popup = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.8f), bgBlocker.RectTransform, Anchor.Center));
+
+            var popupLayout = new GUILayoutGroup(new RectTransform(ToolBox.PaddingSizeParentRelative(popup.RectTransform, 0.95f), popup.RectTransform, Anchor.Center), isHorizontal: false);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), popupLayout.RectTransform), TextManager.Get("talentresetheader"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, hasResetTalentsBefore ? 0.25f : 0.5f), popupLayout.RectTransform), TextManager.Get("talentresetprompt"), wrap: true);
+
+            if (hasResetTalentsBefore)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), popupLayout.RectTransform), TextManager.Get("talentresetpromptwarning"), wrap: true)
+                {
+                    TextColor = GUIStyle.Red
+                };
+            }
+
+            var buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), popupLayout.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true);
+
+            var confirmButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonLayout.RectTransform), TextManager.Get("holdtoconfirm"))
+            {
+                RequireHold = true,
+                HoldDurationSeconds = 1.5f,
+                OnClicked = (button, o) =>
+                {
+                    if (character is null || characterInfo is null) { return false; }
+
+                    characterInfo.RefundTalents();
+                    selectedTalents.Clear();
+                    UpdateTalentInfo();
+                    bgBlocker.Visible = false;
+                    return true;
+                }
+            };
+            var denyButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonLayout.RectTransform), TextManager.Get("decidelater"))
+            {
+                RequireHold = false,
+                OnClicked = (button, userData) =>
+                {
+                    if (talentResetButton is not { } resetButton) { return false; }
+                    startAnimation?.Invoke(popup.Rect, resetButton.Rect, 0.25f);
+                    resetButton.Flash(GUIStyle.Green);
+                    bgBlocker.Visible = false;
+                    if (characterInfo != null)
+                    {
+                        characterInfo.ShowTalentResetPopupOnOpen = false;
+                    }
+                    return true;
+                }
+            };
+        }
+
+        private static StartAnimation CreatePopupAnimationHandler(GUIComponent parent)
+        {
+            bool drawAnimation = false;
+
+            float animDur = 1f,
+                  animTimer = 0f;
+
+            RectangleF drawRect = RectangleF.Empty,
+                       animStartRect = RectangleF.Empty,
+                       animEndRect = RectangleF.Empty;
+
+            void StartAnimation(RectangleF start, RectangleF end, float duration)
+            {
+                animStartRect = start;
+                animEndRect = end;
+                animTimer = 0;
+                animDur = duration;
+                drawRect = start;
+                drawAnimation = true;
+            }
+
+            void OnDraw(SpriteBatch batch, GUICustomComponent component)
+            {
+                if (!drawAnimation) { return; }
+
+                GUIComponentStyle style = GUIStyle.GetComponentStyle("GUIFrame");
+
+                style.Sprites[GUIComponent.ComponentState.None][0].Draw(batch, drawRect, Color.White);
+            }
+
+            void OnUpdate(float f, GUICustomComponent component)
+            {
+                if (!drawAnimation) { return; }
+
+                animTimer += f;
+                if (animTimer > animDur)
+                {
+                    drawRect = animEndRect;
+                    drawAnimation = false;
+                    return;
+                }
+
+                float lerp = animTimer / animDur;
+
+                drawRect = new RectangleF(
+                    MathHelper.Lerp(animStartRect.X, animEndRect.X, lerp),
+                    MathHelper.Lerp(animStartRect.Y, animEndRect.Y, lerp),
+                    MathHelper.Lerp(animStartRect.Width, animEndRect.Width, lerp),
+                    MathHelper.Lerp(animStartRect.Height, animEndRect.Height, lerp));
+            }
+
+            new GUICustomComponent(new RectTransform(Vector2.One, parent.RectTransform), onDraw: OnDraw, onUpdate: OnUpdate)
+            {
+                IgnoreLayoutGroups = true,
+                CanBeFocused =  false
+            };
+
+            return StartAnimation;
         }
 
         private void CreateTalentOption(GUIComponent parent, TalentSubTree subTree, int index, TalentOption talentOption, CharacterInfo info, int specializationCount)
@@ -603,6 +810,15 @@ namespace Barotrauma
         private bool ResetTalentSelection(GUIButton guiButton, object userData)
         {
             if (characterInfo is null) { return false; }
+
+            int newTalentCount = selectedTalents.Count - characterInfo.GetUnlockedTalentsInTree().Count();
+            // if we don't have talents selected, and we have points to refund, show the refund popup
+            if (characterInfo.TalentRefundPoints > 0 && newTalentCount == 0)
+            {
+                CreateTalentResetPopup(talentMainArea!);
+                return true;
+            }
+
             selectedTalents = characterInfo.GetUnlockedTalentsInTree().ToHashSet();
             UpdateTalentInfo();
             return true;
@@ -768,12 +984,31 @@ namespace Barotrauma
             }
         }
 
+        private static readonly LocalizedString refundText = TextManager.Get("refund"),
+                                                resetText = TextManager.Get("reset");
+
         public void Update()
         {
             if (characterInfo is null || talentResetButton is null || talentApplyButton is null) { return; }
 
             int talentCount = selectedTalents.Count - characterInfo.GetUnlockedTalentsInTree().Count();
-            talentResetButton.Enabled = talentApplyButton.Enabled = talentCount > 0;
+            talentApplyButton.Enabled = talentCount > 0;
+            talentResetButton.Enabled = talentCount > 0 || characterInfo.TalentRefundPoints > 0;
+
+            if (talentCount == 0 && characterInfo.TalentRefundPoints > 0)
+            {
+                if (talentResetButton.FlashTimer <= 0.0f)
+                {
+                    talentResetButton.Flash(GUIStyle.Orange);
+                }
+
+                talentResetButton.Text = refundText;
+            }
+            else
+            {
+                talentResetButton.Text = resetText;
+            }
+
             if (talentApplyButton.Enabled && talentApplyButton.FlashTimer <= 0.0f)
             {
                 talentApplyButton.Flash(GUIStyle.Orange);
@@ -817,6 +1052,22 @@ namespace Barotrauma
             return info.GetIdentifierUsingOriginalName() == ownCharacterInfo.GetIdentifierUsingOriginalName();
         }
 
+        private static bool IsOnSameTeam(CharacterInfo? info)
+        {
+            if (info is null) { return false; }
+
+            CharacterTeamType? ownCharacterTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID;
+            if (ownCharacterTeam is null) { return false; }
+
+            return info.TeamID == ownCharacterTeam;
+        }
+
+        private static bool IsSpectatingInMultiplayer()
+        {
+            if (GameMain.Client?.MyClient is not { } myClient) { return false; }
+            return myClient.Spectating;
+        }
+
         public static bool CanManageTalents(CharacterInfo targetInfo)
         {
             // in singleplayer we can do whatever we want
@@ -825,10 +1076,16 @@ namespace Barotrauma
             // always allow managing talents for own character
             if (IsOwnCharacter(targetInfo)) { return true; }
 
+            // disallow managing talents while spectating
+            if (IsSpectatingInMultiplayer()) { return false; }
+
             // don't allow controlling non-bot characters
             if (targetInfo.Character is not { IsBot: true }) { return false; }
 
-            // lastly check if we have the permission to do this
+            // only allow managing talents for bots on the same team
+            if (!IsOnSameTeam(targetInfo)) { return false; }
+
+            // lastly, check if we have the permission to do this
             return GameMain.Client is { } client && client.HasPermission(ClientPermissions.ManageBotTalents);
         }
     }

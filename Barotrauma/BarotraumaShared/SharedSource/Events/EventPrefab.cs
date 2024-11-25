@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 
@@ -10,6 +12,9 @@ namespace Barotrauma
 
         public readonly ContentXElement ConfigElement;
         public readonly Type EventType;
+
+        private readonly ImmutableHashSet<Identifier> tags;
+        public ImmutableHashSet<Identifier> Tags => tags;
 
         /// <summary>
         /// The probability for the event to do something if it gets selected. For example, the probability for a MonsterEvent to spawn the monster(s).
@@ -31,6 +36,16 @@ namespace Barotrauma
         /// If set, the event set can only be chosen in this biome.
         /// </summary>
         public readonly Identifier BiomeIdentifier;
+
+        /// <summary>
+        /// If set, this layer must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredLayer;
+
+        /// <summary>
+        /// If set, this spawn point tag must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredSpawnPointTag;
 
         /// <summary>
         /// If set, the event set can only be chosen in locations that belong to this faction.
@@ -88,11 +103,15 @@ namespace Barotrauma
 
             Name = TextManager.Get($"eventname.{Identifier}").Fallback(Identifier.ToString());
 
+            tags = ConfigElement.GetAttributeIdentifierImmutableHashSet(nameof(tags), ImmutableHashSet<Identifier>.Empty);
             BiomeIdentifier = ConfigElement.GetAttributeIdentifier("biome", Identifier.Empty);
             Faction = ConfigElement.GetAttributeIdentifier("faction", Identifier.Empty);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             Probability = Math.Clamp(element.GetAttributeFloat(1.0f, "probability", "spawnprobability"), 0, 1);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", EventType != typeof(ScriptedEvent));
+
+            RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
+            RequiredSpawnPointTag = element.GetAttributeIdentifier(nameof(RequiredSpawnPointTag), Identifier.Empty);
 
             UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
             UnlockPathTooltip = element.GetAttributeString("unlockpathtooltip", "lockedpathtooltip");
@@ -138,6 +157,40 @@ namespace Barotrauma
             return
                 unlockPathEvents.FirstOrDefault(ep => ep.BiomeIdentifier == biomeIdentifier) ??
                 unlockPathEvents.FirstOrDefault(ep => ep.BiomeIdentifier == Identifier.Empty);
+        }
+
+        /// <summary>
+        /// Finds an event prefab with the specified identifier, or if it isn't defined, a random event prefab with the specified tag.
+        /// </summary>
+        /// <param name="source">Which content package is trying to find the event (if any)? Only used for logging error messages.</param>
+        /// <returns></returns>
+        public static EventPrefab FindEventPrefab(Identifier identifier, Identifier tag, ContentPackage source)
+        {
+            EventPrefab eventPrefab = null;
+            if (!identifier.IsEmpty)
+            {
+                eventPrefab = EventSet.GetEventPrefab(identifier);
+                if (eventPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Failed to find an event prefab with the identifier {identifier}.",
+                        contentPackage: source);
+                }
+            }
+            else if (!tag.IsEmpty)
+            {
+                eventPrefab = EventSet.GetAllEventPrefabs().Where(e => e.Tags.Contains(tag)).GetRandomUnsynced();
+                if (eventPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Failed to find an event prefab with the tag {tag}.",
+                        contentPackage: source);
+                }
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Failed to find an event prefab: neither an identifier or tag were defined.",
+                    contentPackage: source);
+            }
+            return eventPrefab;
         }
     }
 }

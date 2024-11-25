@@ -337,18 +337,24 @@ namespace Barotrauma
             }
         }
 
-        public float GetResistance(Identifier afflictionId)
+        /// <summary>
+        /// How much resistance to the specified affliction does this affliction currently give?
+        /// </summary>
+        public float GetResistance(Identifier afflictionId, LimbType limbType)
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
             var affliction = AfflictionPrefab.Prefabs[afflictionId];
             AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
-            if (!currentEffect.ResistanceFor.Any(r =>
-                r == affliction.Identifier ||
-                r == affliction.AfflictionType))
-            {
-                return 0.0f;
-            }
+
+            bool hasResistanceForAffliction = currentEffect.ResistanceFor.Any(identifier =>
+                identifier == affliction.Identifier ||
+                identifier == affliction.AfflictionType);
+            if (!hasResistanceForAffliction) { return 0.0f; }
+            
+            bool hasResistanceForLimb = limbType == LimbType.None || currentEffect.ResistanceLimbs.None() || currentEffect.ResistanceLimbs.Contains(limbType);
+            if (!hasResistanceForLimb) { return 0.0f; }
+            
             return MathHelper.Lerp(
                 currentEffect.MinResistance,
                 currentEffect.MaxResistance,
@@ -430,7 +436,7 @@ namespace Barotrauma
             }
             else if (currentEffect.StrengthChange > 0) // Reduce strengthening of afflictions if resistant
             {
-                _strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab));
+                _strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab, targetLimb?.type ?? LimbType.None));
             }
             // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);

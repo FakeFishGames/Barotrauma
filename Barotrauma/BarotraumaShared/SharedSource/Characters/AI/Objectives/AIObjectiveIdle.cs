@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "idle".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowInAnySub => true;
 
         private BehaviorType behavior;
         public BehaviorType Behavior
@@ -88,10 +88,8 @@ namespace Barotrauma
             CalculatePriority();
         }
 
-        protected override bool CheckObjectiveSpecific() => false;
+        protected override bool CheckObjectiveState() => false;
         public override bool CanBeCompleted => true;
-
-        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
 
         public readonly HashSet<Identifier> PreferredOutpostModuleTypes = new HashSet<Identifier>();
 
@@ -160,8 +158,17 @@ namespace Barotrauma
             {
                 character.DeselectCharacter();
             }
-
-            character.SelectedItem = null;
+            if (character.SelectedItem != null)
+            {
+                if (character.SelectedItem.Prefab.AllowDeselectWhenIdling)
+                {
+                    character.SelectedItem = null;
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             if (!character.IsClimbing)
             {
@@ -266,7 +273,7 @@ namespace Barotrauma
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
                             return true;
                             //don't stop at ladders when idling
-                        }, endNodeFilter: node => node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
+                        }, endNodeFilter: node => node.Waypoint.Stairs == null && node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -299,7 +306,7 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, 
                         nodeFilter: node => node.Waypoint.CurrentHull != null, 
-                        endNodeFilter: node => node.Waypoint.Ladders == null);
+                        endNodeFilter: node => node.Waypoint.Ladders == null && node.Waypoint.Stairs == null);
                 }
                 else
                 {
@@ -491,27 +498,26 @@ namespace Barotrauma
             if (checkItemsTimer <= 0)
             {
                 checkItemsTimer = checkItemsInterval * Rand.Range(0.9f, 1.1f);
-                var hull = character.CurrentHull;
-                if (hull != null)
+                if (character.Submarine is not Submarine sub) { return; }
+                if (sub.TeamID != character.TeamID) { return; }
+                if (character.CurrentHull is not Hull currentHull) { return; }
+                itemsToClean.Clear();
+                foreach (Item item in Item.CleanableItems)
                 {
-                    itemsToClean.Clear();
-                    foreach (Item item in Item.CleanableItems)
+                    if (item.CurrentHull != currentHull) { continue; }
+                    if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true, allowUnloading: false) && !ignoredItems.Contains(item))
                     {
-                        if (item.CurrentHull != hull) { continue; }
-                        if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true, allowUnloading: false) && !ignoredItems.Contains(item))
-                        {
-                            itemsToClean.Add(item);
-                        }
+                        itemsToClean.Add(item);
                     }
-                    if (itemsToClean.Any())
+                }
+                if (itemsToClean.Any())
+                {
+                    var targetItem = itemsToClean.MinBy(i => Math.Abs(character.WorldPosition.X - i.WorldPosition.X));
+                    if (targetItem != null)
                     {
-                        var targetItem = itemsToClean.OrderBy(i => Math.Abs(character.WorldPosition.X - i.WorldPosition.X)).FirstOrDefault();
-                        if (targetItem != null)
-                        {
-                            var cleanupObjective = new AIObjectiveCleanupItem(targetItem, character, objectiveManager, PriorityModifier);
-                            cleanupObjective.Abandoned += () => ignoredItems.Add(targetItem);
-                            subObjectives.Add(cleanupObjective);
-                        }
+                        var cleanupObjective = new AIObjectiveCleanupItem(targetItem, character, objectiveManager, PriorityModifier);
+                        cleanupObjective.Abandoned += () => ignoredItems.Add(targetItem);
+                        subObjectives.Add(cleanupObjective);
                     }
                 }
             }
@@ -536,6 +542,8 @@ namespace Barotrauma
             itemsToClean.Clear();
             ignoredItems.Clear();
             autonomousObjectiveRetryTimer = 10;
+            timerMargin = 0;
+            newTargetTimer = 0;
         }
 
         public override void OnDeselected()

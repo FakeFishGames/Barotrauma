@@ -75,7 +75,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (!Active || character.IsArrested) { return; }
+            if (!Active || character.IsHandcuffed) { return; }
             decisionTimer -= deltaTime;
             if (decisionTimer <= 0.0f)
             {

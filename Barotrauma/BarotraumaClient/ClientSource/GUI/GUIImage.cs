@@ -201,7 +201,7 @@ namespace Barotrauma
             }
             else if (sprite?.Texture is { IsDisposed: false })
             {
-                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currentColor * (currentColor.A / 255.0f), Rotation, origin,
+                spriteBatch.Draw(sprite.Texture, new Vector2(Rect.X + Rect.Width / 2.0f, Rect.Y + Rect.Height / 2.0f), sourceRect, currentColor * (currentColor.A / 255.0f), Rotation, origin,
                     Scale, SpriteEffects, 0.0f);
             }
 

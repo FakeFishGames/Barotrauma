@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -18,10 +18,13 @@ namespace Barotrauma.Items.Components
         private bool needsServerInitialization;
 
         /// <summary>
-        /// When in multiplayer and the circuit box is loaded from the players inventory,
-        /// We only load the components from XML on server side since only the server has access to CharacterCampaignData
-        /// and then send a network event syncing the loaded properties. But circuit box properties are too complex to
-        /// sync using the existing syncing logic so we instead send the state using <see cref="CircuitBoxInitializeStateFromServerEvent"/>.
+        /// When in multiplayer and the circuit box are loaded from the player inventory,
+        /// We only load the components from XML on the server side
+        /// since only the server has access to CharacterCampaignData
+        /// and then send a network event syncing the loaded properties.
+        /// But circuit box properties are too complex to
+        /// sync using the existing syncing logic,
+        /// so we instead send the state using <see cref="CircuitBoxInitializeStateFromServerEvent"/>.
         /// </summary>
         public void MarkServerRequiredInitialization()
             => needsServerInitialization = true;
@@ -280,6 +283,15 @@ namespace Barotrauma.Items.Components
                     CreateServerEvent(data with { Size = Vector2.Max(data.Size, CircuitBoxLabelNode.MinSize) });
                     break;
                 }
+                case CircuitBoxOpcode.RenameConnections:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRenameConnectionLabelsEvent>(msg);
+                    if (!CanAccessAndUnlocked(c)) { break; }
+
+                    RenameConnectionLabelsInternal(data.Type, data.Override.ToDictionary());
+                    CreateServerEvent(data);
+                    break;
+                }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(header), header, "This opcode cannot be handled using entity events");
             }
@@ -298,7 +310,13 @@ namespace Barotrauma.Items.Components
                 return wire.BackingWire.TryUnwrap(out var backingWire) ? backingWire.Name : "a wire";
             }
 
-            bool CanAccessAndUnlocked(Client client) => item.CanClientAccess(client) && !Locked;
+            bool CanAccessAndUnlocked(Client client) =>
+                !IsLocked() &&
+                item.CanClientAccess(client) &&
+                ClientHasRequiredItems(client);
+
+            bool ClientHasRequiredItems(Client client) =>
+                client.Character is { } chara && HasRequiredItems(chara, addMessage: false);
         }
 
         /// <summary>
@@ -327,6 +345,7 @@ namespace Barotrauma.Items.Components
                 Components: Components.Select(EventFromComponent).ToImmutableArray(),
                 Wires: Wires.Select(EventFromWire).ToImmutableArray(),
                 Labels: Labels.Select(EventFromLabel).ToImmutableArray(),
+                LabelOverrides: InputOutputNodes.Select(EventFromLabelOverride).ToImmutableArray(),
                 InputPos: inputPos,
                 OutputPos: outputPos);
 
@@ -347,6 +366,9 @@ namespace Barotrauma.Items.Components
 
             static CircuitBoxServerAddLabelEvent EventFromLabel(CircuitBoxLabelNode label)
                 => new(label.ID, label.Position, label.Size, label.Color, label.HeaderText, label.BodyText);
+
+            static CircuitBoxRenameConnectionLabelsEvent EventFromLabelOverride(CircuitBoxInputOutputNode node)
+                => new(node.NodeType, node.ConnectionLabelOverrides.ToNetDictionary());
         }
 
         // we don't care about updating the view on server

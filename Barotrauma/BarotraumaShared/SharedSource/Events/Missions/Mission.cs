@@ -111,7 +111,7 @@ namespace Barotrauma
             get { return failed; }
         }
 
-        public virtual bool AllowRespawn
+        public virtual bool AllowRespawning
         {
             get { return true; }
         }
@@ -211,46 +211,34 @@ namespace Barotrauma
 
         public virtual void SetLevel(LevelData level) { }
 
-        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
-            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer);
+            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionTypes, isSinglePlayer, difficultyLevel);
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
-            if (missionType == MissionType.None)
+            if (missionTypes.None())
             {
                 return null;
             }
             else
             {
-                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => ((int)(missionType & m.Type)) != 0));
+                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => missionTypes.Contains(m.Type)));
             }
-
-            allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
+            allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);
             if (requireCorrectLocationType)
             {
                 allowedMissions.RemoveAll(m => !m.IsAllowed(locations[0], locations[1]));
             }
-
-            if (allowedMissions.Count == 0)
+            if (difficultyLevel.HasValue)
             {
-                return null;
+                allowedMissions.RemoveAll(m => !m.IsAllowedDifficulty(difficultyLevel.Value));
             }
-
-            int probabilitySum = allowedMissions.Sum(m => m.Commonness);
-            int randomNumber = rand.NextInt32() % probabilitySum;
-            foreach (MissionPrefab missionPrefab in allowedMissions)
-            {
-                if (randomNumber <= missionPrefab.Commonness)
-                {
-                    return missionPrefab.Instantiate(locations, Submarine.MainSub);
-                }
-                randomNumber -= missionPrefab.Commonness;
-            }
-
-            return null;
+            if (allowedMissions.Count == 0) { return null; }
+            MissionPrefab missionPrefab = ToolBox.SelectWeightedRandom(allowedMissions, m => m.Commonness, rand);
+            return missionPrefab.Instantiate(locations, Submarine.MainSub);
         }
 
         /// <summary>
@@ -288,7 +276,7 @@ namespace Barotrauma
             {
                 foreach (MapEntity entityToShow in MapEntity.MapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
-                    entityToShow.HiddenInGame = false;
+                    entityToShow.IsLayerHidden = false;
                 }
             }
             this.level = level;
@@ -362,11 +350,12 @@ namespace Barotrauma
         private void TriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
             if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
-            var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier == trigger.EventIdentifier);
+            //clients are not allowed to trigger events, they're handled by the server
+            if (GameMain.NetworkMember is { IsClient: true }) { return; }
+            EventPrefab eventPrefab = EventPrefab.FindEventPrefab(trigger.EventIdentifier, trigger.EventTag, Prefab.ContentPackage);
             if (eventPrefab == null)
             {
-                DebugConsole.ThrowError($"Mission \"{Name}\" failed to trigger an event (couldn't find an event with the identifier \"{trigger.EventIdentifier}\").",
-                    contentPackage: Prefab.ContentPackage);
+                DebugConsole.ThrowError($"Mission {Prefab.Identifier} failed to trigger an event (identifier: {trigger.EventIdentifier}, tag: {trigger.EventTag}).", contentPackage: Prefab.ContentPackage);
                 return;
             }
             if (GameMain.GameSession?.EventManager != null)
@@ -381,9 +370,12 @@ namespace Barotrauma
         /// </summary>
         public void End()
         {
-            completed = 
-                DetermineCompleted() && 
-                (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            if (GameMain.NetworkMember is not { IsClient: true })
+            {
+                completed =                 
+                    DetermineCompleted() && 
+                    (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            }
             if (completed)
             {
                 if (Prefab.LocationTypeChangeOnCompleted != null)
@@ -576,7 +568,7 @@ namespace Barotrauma
 
             Identifier characterIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
             Identifier characterFrom = element.GetAttributeIdentifier("from", Identifier.Empty);
-            HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
+            HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier, contentPackageToLogInError: Prefab.ContentPackage);
             if (humanPrefab == null)
             {
                 DebugConsole.ThrowError($"Couldn't spawn character for mission: character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".",

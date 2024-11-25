@@ -12,9 +12,9 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "fix leak".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-        public override bool AllowInFriendlySubs => true;
-        public override bool AllowInAnySub => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowInFriendlySubs => true;
+        protected override bool AllowInAnySub => true;
+        protected override bool AllowWhileHandcuffed => false;
 
         public Gap Leak { get; private set; }
 
@@ -31,13 +31,13 @@ namespace Barotrauma
             this.isPriority = isPriority;
         }
 
-        protected override bool CheckObjectiveSpecific() => Leak.Open <= 0 || Leak.Removed;
+        protected override bool CheckObjectiveState() => Leak.Open <= 0 || Leak.Removed;
 
         protected override float GetPriority()
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             float coopMultiplier = 1;
@@ -166,7 +166,7 @@ namespace Barotrauma
             // TODO: use the collider size/reach?
             if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
             {
-                HumanAIController.AnimController.Crouching = true;
+                HumanAIController.AnimController.Crouch();
             }
             float reach = CalculateReach(repairTool, character);
             bool canOperate = toLeak.LengthSquared() < reach * reach;
@@ -180,7 +180,7 @@ namespace Barotrauma
                 onAbandon: () => Abandon = true,
                 onCompleted: () =>
                 {
-                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    if (CheckObjectiveState()) { IsCompleted = true; }
                     else
                     {
                         // Failed to operate. Probably too far.
@@ -202,11 +202,11 @@ namespace Barotrauma
                     endNodeFilter = IsSuitableEndNode,
                     // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
                     // Only report about contextual targets.
-                    SpeakCannotReachCondition = () => isPriority && !CheckObjectiveSpecific()
+                    SpeakCannotReachCondition = () => isPriority && !CheckObjectiveState()
                 },
                 onAbandon: () =>
                 {
-                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    if (CheckObjectiveState()) { IsCompleted = true; }
                     else if ((Leak.WorldPosition - character.AnimController.AimSourceWorldPos).LengthSquared() > MathUtils.Pow(reach * 2, 2))
                     {
                         // Too far

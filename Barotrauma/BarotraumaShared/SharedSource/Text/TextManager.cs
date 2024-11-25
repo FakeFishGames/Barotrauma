@@ -60,7 +60,9 @@ namespace Barotrauma
             = new[]
             {
                 (SpeciallyHandledCharCategory.CJK, UnicodeToIntRanges(
+                    UnicodeRanges.HalfwidthandFullwidthForms,
                     UnicodeRanges.HangulJamo,
+                    UnicodeRanges.HangulCompatibilityJamo,
                     UnicodeRanges.CjkRadicalsSupplement,
                     UnicodeRanges.CjkSymbolsandPunctuation,
                     UnicodeRanges.EnclosedCjkLettersandMonths,

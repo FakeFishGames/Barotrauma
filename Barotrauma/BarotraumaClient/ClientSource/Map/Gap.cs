@@ -20,7 +20,8 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
-            return Screen.Selected == GameMain.SubEditorScreen || GameMain.DebugDraw;
+            if (Screen.Selected != GameMain.SubEditorScreen && !GameMain.DebugDraw) { return false; }
+            return base.IsVisible(worldView);
         }
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
@@ -215,7 +216,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) { return; }
+                    //do not emit particles unless water is flowing towards the target hull
+                    //(using lerpedFlowForce smooths out "flickers" when the direction of flow is rapidly changing)
+                    if (Math.Sign(flowTargetHull.WorldPosition.Y - WorldPosition.Y) != Math.Sign(lerpedFlowForce.Y)) { return; }
 
                     float particlesPerSec = Math.Max(open * rect.Width * particleAmountMultiplier, 10.0f);
                     float emitInterval = 1.0f / particlesPerSec;

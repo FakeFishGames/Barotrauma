@@ -13,7 +13,7 @@ namespace Barotrauma
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool AllowMultipleInstances => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public bool AllowStealing { get; set; }
         public bool TakeWholeStack { get; set; }
@@ -44,7 +44,7 @@ namespace Barotrauma
             ignoredTags = AIObjectiveGetItem.ParseIgnoredTags(identifiersOrTags).ToImmutableHashSet();
         }
 
-        protected override bool CheckObjectiveSpecific() => subObjectivesCreated && subObjectives.None();
+        protected override bool CheckObjectiveState() => subObjectivesCreated && subObjectives.None();
 
         protected override void Act(float deltaTime)
         {
@@ -56,7 +56,7 @@ namespace Barotrauma
                 AIObjectiveGetItem? getItem = null;
                 TryAddSubObjective(ref getItem, () =>
                 {
-                   var getItem = new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
+                   getItem = new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
                     {
                         AllowVariants = AllowVariants,
                         Wear = Wear,

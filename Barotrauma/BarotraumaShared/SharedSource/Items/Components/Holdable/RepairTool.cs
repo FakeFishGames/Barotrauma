@@ -764,7 +764,7 @@ namespace Barotrauma.Items.Components
                 if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController humanAnim &&
                     Math.Abs(fromCharacterToLeak.X) < 100.0f && fromCharacterToLeak.Y < 0.0f && fromCharacterToLeak.Y > -150.0f)
                 {
-                    humanAnim.Crouching = true;
+                    humanAnim.Crouch();
                 }
             }
             if (!character.IsClimbing)

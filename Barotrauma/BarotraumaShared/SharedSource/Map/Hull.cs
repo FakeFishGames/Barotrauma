@@ -542,7 +542,7 @@ namespace Barotrauma
             var clone = new Hull(rect, Submarine);
             foreach (KeyValuePair<Identifier, SerializableProperty> property in SerializableProperties)
             {
-                if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
+                if (!property.Value.Attributes.OfType<Serialize>().Any()) { continue; }
                 clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
 #if CLIENT

@@ -241,7 +241,7 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 ownerEndpoint);
-            Server.StartServer();
+            Server.StartServer(registerToServerList: true);
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {

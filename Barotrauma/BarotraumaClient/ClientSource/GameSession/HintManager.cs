@@ -205,7 +205,7 @@ namespace Barotrauma
 
             if (Character.Controlled.SelectedItem.GetComponent<Reactor>() is Reactor reactor && reactor.PowerOn &&
                 Character.Controlled.SelectedItem.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
-                containedItems.Count(i => i.HasTag(Tags.Fuel)) > 1)
+                containedItems.Count(i => i.HasTag(Tags.ReactorFuel)) > 1)
             {
                 if (DisplayHint("onisinteracting.reactorwithextrarods".ToIdentifier())) { return; }
             }

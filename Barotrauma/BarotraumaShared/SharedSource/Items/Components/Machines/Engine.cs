@@ -6,7 +6,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Engine : Powered, IServerSerializable, IClientSerializable
+    partial class Engine : Powered, IServerSerializable, IClientSerializable, IDeteriorateUnderStress
     {
         private float force;
 
@@ -76,10 +76,7 @@ namespace Barotrauma.Items.Components
             set { force = MathHelper.Clamp(value, -100.0f, 100.0f); }
         }
 
-        public float CurrentVolume
-        {
-            get { return Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage, 1.0f))); }
-        }
+        public float CurrentVolume => CurrentStress;
 
         public float CurrentBrokenVolume
         {
@@ -90,6 +87,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public float CurrentStress => Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage, 1.0f)));
+    
         private const float TinkeringForceIncrease = 1.5f;
 
         public Engine(Item item, ContentXElement element)
@@ -127,7 +126,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                hasPower = Voltage > MinVoltage;
+                hasPower = HasPower;
             }
 
             if (lastReceivedTargetForce.HasValue)
@@ -147,7 +146,7 @@ namespace Barotrauma.Items.Components
                 float forceMultiplier = 0.1f;
                 if (User != null)
                 {
-                    forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
+                    forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel(Tags.HelmSkill) / 100));
                 }
                 currForce *= item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.EngineMaxSpeed, MaxForce) * forceMultiplier;
                 if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)

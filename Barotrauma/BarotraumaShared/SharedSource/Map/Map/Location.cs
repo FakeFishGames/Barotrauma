@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -62,6 +63,8 @@ namespace Barotrauma
         private int nameFormatIndex;
         private Identifier nameIdentifier;
 
+        public int NameFormatIndex => nameFormatIndex;
+
         /// <summary>
         /// For backwards compatibility: a non-localizable name from the old text files.
         /// </summary>
@@ -80,7 +83,7 @@ namespace Barotrauma
         /// <summary>
         /// Is some mission blocking this location from changing its type, or have location type changes been forcibly disabled on the location?
         /// </summary>
-        public bool LocationTypeChangesBlocked => DisallowLocationTypeChanges || availableMissions.Any(m => m.Prefab.BlockLocationTypeChanges);
+        public bool LocationTypeChangesBlocked => DisallowLocationTypeChanges || availableMissions.Any(m => !m.Completed && m.Prefab.BlockLocationTypeChanges);
 
         public bool DisallowLocationTypeChanges;
 
@@ -188,18 +191,7 @@ namespace Barotrauma
 
             public static PurchasedItem CreateInitialStockItem(ItemPrefab itemPrefab, PriceInfo priceInfo)
             {
-                int quantity = PriceInfo.DefaultAmount;
-                if (priceInfo.MaxAvailableAmount > 0)
-                {
-                    quantity =
-                    priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount ?
-                    Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1) :
-                        priceInfo.MaxAvailableAmount;
-                }
-                else if (priceInfo.MinAvailableAmount > 0)
-                {
-                    quantity = priceInfo.MinAvailableAmount;
-                }
+                int quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
                 return new PurchasedItem(itemPrefab, quantity, buyer: null);
             }
 
@@ -256,7 +248,7 @@ namespace Barotrauma
                     if (stockItem.ItemPrefab.GetPriceInfo(this) is PriceInfo priceInfo)
                     {
                         if (!priceInfo.CanBeSpecial) { continue; }
-                        var baseQuantity = priceInfo.MinAvailableAmount > 0 ? priceInfo.MinAvailableAmount : PriceInfo.DefaultAmount;
+                        var baseQuantity = priceInfo.MinAvailableAmount;
                         weight += (float)(stockItem.Quantity - baseQuantity) / baseQuantity;
                         if (weight < 0.0f) { continue; }
                     }
@@ -906,8 +898,8 @@ namespace Barotrauma
                     }
                     MissionPrefab missionPrefab = 
                         random != null ? 
-                        ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, random) :
-                        ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, Rand.RandSync.Unsynced);
+                        ToolBox.SelectWeightedRandom(suitableMissions, m => m.Commonness, random) :
+                        ToolBox.SelectWeightedRandom(suitableMissions, m => m.Commonness, Rand.RandSync.Unsynced);
 
                     var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
                     //don't allow duplicate missions in the same connection
@@ -1141,6 +1133,12 @@ namespace Barotrauma
             return HireManager.AvailableCharacters;
         }
 
+        public void ForceHireableCharacters(IEnumerable<CharacterInfo> hireableCharacters)
+        {
+            HireManager ??= new HireManager();
+            HireManager.AvailableCharacters = hireableCharacters.ToList();
+        }
+
         private void CreateRandomName(LocationType type, Random rand, IEnumerable<Location> existingLocations)
         {
             if (!type.ForceLocationName.IsEmpty)
@@ -1182,9 +1180,22 @@ namespace Barotrauma
             }
         }
 
-        private static LocalizedString GetName(LocationType type, int nameFormatIndex, Identifier nameId)
+        public static LocalizedString GetName(Identifier locationTypeIdentifier, int nameFormatIndex, Identifier nameId)
         {
-            if (type?.NameFormats == null || !type.NameFormats.Any())
+            if (LocationType.Prefabs.TryGet(locationTypeIdentifier, out LocationType locationType))
+            {
+                return GetName(locationType, nameFormatIndex, nameId);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Could not find the location type {locationTypeIdentifier}.\n" + Environment.StackTrace.CleanUpPath());
+                return new RawLString(nameId.Value);
+            }
+        }
+
+        public static LocalizedString GetName(LocationType type, int nameFormatIndex, Identifier nameId)
+        {
+            if (type?.NameFormats == null || !type.NameFormats.Any() || nameFormatIndex < 0)
             {
                 return TextManager.Get(nameId);
             }
@@ -1402,12 +1413,12 @@ namespace Barotrauma
                             existingStock.Quantity =
                                 Math.Min(
                                     existingStock.Quantity + 1, 
-                                    priceInfo.MaxAvailableAmount > 0 ? priceInfo.MaxAvailableAmount : CargoManager.MaxQuantity);
+                                    priceInfo.MaxAvailableAmount);
                         }
                     }
                     else if (existingStock != null)
                     {
-                        stockToRemove.Add(existingStock);                        
+                        stockToRemove.Add(existingStock);
                     }
                 }
 

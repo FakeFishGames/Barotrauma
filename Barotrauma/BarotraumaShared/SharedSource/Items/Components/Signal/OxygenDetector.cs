@@ -1,13 +1,11 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Items.Components
+﻿namespace Barotrauma.Items.Components
 {
     class OxygenDetector : ItemComponent
     {
         public const int LowOxygenPercentage = 35;
 
         private int prevSentOxygenValue;
-        private string oxygenSignal;
+        public string OxygenSignal { get; private set; }
 
         public OxygenDetector(Item item, ContentXElement element)
             : base (item, element)
@@ -20,13 +18,13 @@ namespace Barotrauma.Items.Components
             if (item.CurrentHull == null) { return; }
 
             int currOxygenPercentage = (int)item.CurrentHull.OxygenPercentage;
-            if (prevSentOxygenValue != currOxygenPercentage || oxygenSignal == null)
+            if (prevSentOxygenValue != currOxygenPercentage || OxygenSignal == null)
             {
                 prevSentOxygenValue = currOxygenPercentage;
-                oxygenSignal = prevSentOxygenValue.ToString();
+                OxygenSignal = prevSentOxygenValue.ToString();
             }
 
-            item.SendSignal(oxygenSignal, "signal_out");
+            item.SendSignal(OxygenSignal, "signal_out");
             item.SendSignal(currOxygenPercentage <= LowOxygenPercentage ? "1" : "0", "low_oxygen");
         }
 

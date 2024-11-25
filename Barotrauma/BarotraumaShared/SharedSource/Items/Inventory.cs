@@ -58,7 +58,12 @@ namespace Barotrauma
                 return true;
             }
 
-            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
+            /// <summary>
+            /// Can an instance of the item prefab be put into the slot? 
+            /// Note that if the condition and quality aren't given, they are ignored, and the method can return true even if the item can't go in the slot
+            /// due to it being occupied by another item with a different condition or quality (which disallows stacking).
+            /// </summary>
+            public bool CanProbablyBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
             {
                 if (itemPrefab == null) { return false; }
                 if (items.Count > 0)
@@ -228,6 +233,9 @@ namespace Barotrauma
 
         public readonly Entity Owner;
 
+        /// <summary>
+        /// Capacity, or the number of slots in the inventory.
+        /// </summary>
         protected readonly int capacity;
         protected readonly ItemSlot[] slots;
 
@@ -272,6 +280,21 @@ namespace Barotrauma
         {
             get { return capacity; }
         }
+        
+        public static bool IsDragAndDropGiveAllowed
+        {
+            get
+            {
+                // allowed for single player
+                if (GameMain.NetworkMember == null)
+                {
+                    return true;
+                }
+                
+                // controlled by server setting in multiplayer
+                return GameMain.NetworkMember.ServerSettings.AllowDragAndDropGive;
+            }
+        }
 
         public int EmptySlotCount => slots.Count(i => !i.Empty());
 
@@ -309,7 +332,7 @@ namespace Barotrauma
 #endif
         }
 
-        protected IEnumerable<Item> GetAllItems(bool checkForDuplicates)
+        public IEnumerable<Item> GetAllItems(bool checkForDuplicates)
         {
             for (int i = 0; i < capacity; i++)
             {
@@ -500,7 +523,12 @@ namespace Barotrauma
             return slots[i].CanBePut(item, ignoreCondition);
         }
 
-        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
+        /// <summary>
+        /// Can an instance of the item prefab be put into the inventory? 
+        /// Note that if the condition and quality aren't given, they are ignored, and the method can return true even if the item can't go in the inventory
+        /// due to the slots being occupied by another item with a different condition or quality (which disallows stacking).
+        /// </summary>
+        public bool CanProbablyBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
         {
             for (int i = 0; i < capacity; i++)
             {
@@ -512,7 +540,7 @@ namespace Barotrauma
         public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null, int? quality = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
-            return slots[i].CanBePut(itemPrefab, condition);
+            return slots[i].CanProbablyBePut(itemPrefab, condition, quality);
         }
 
         public int HowManyCanBePut(ItemPrefab itemPrefab, float? condition = null)
@@ -778,14 +806,15 @@ namespace Barotrauma
             {
                 for (int j = 0; j < otherInventory.capacity; j++)
                 {
-                    if (otherInventory.slots[j].Contains(item)) 
+                    // in case the item is in multiple slots like OuterClothes | InnerClothes, prevent it from being added twice to the list
+                    if (otherInventory.slots[j].Contains(item) && !stackedItems.Contains(item)) 
                     {
                         stackedItems.AddRange(otherInventory.slots[j].Items);
                         otherInventory.slots[j].RemoveAllItems(); 
                     }
                 }
             }
-            else
+            else if (!stackedItems.Contains(item))
             {
                 stackedItems.Add(item);
                 otherInventory.slots[otherIndex].RemoveItem(item);

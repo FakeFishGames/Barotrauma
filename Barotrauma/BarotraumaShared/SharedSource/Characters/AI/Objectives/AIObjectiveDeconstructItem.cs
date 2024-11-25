@@ -6,15 +6,16 @@ namespace Barotrauma
     class AIObjectiveDeconstructItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "deconstruct item".ToIdentifier();
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
-        public override bool AllowInFriendlySubs => true;
+        protected override bool AllowInFriendlySubs => true;
 
         public readonly Item Item;
 
         private Deconstructor deconstructor;
 
         private AIObjectiveDecontainItem decontainObjective;
+        private AIObjectiveGoTo gotoObjective;
 
         public AIObjectiveDeconstructItem(Item item, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -45,20 +46,42 @@ namespace Barotrauma
                 },
                 onCompleted: () =>
                 {
-                    StartDeconstructor();
-                    //make sure the item gets moved to the main sub if the crew leaves while a bot is deconstructing something in the outpost
-                    if (deconstructor.Item.Submarine is { Info.IsOutpost: true })
+                    if (character.CanInteractWith(deconstructor.Item))
                     {
-                        HumanAIController.HandleRelocation(Item);
-                        deconstructor.RelocateOutputToMainSub = true;
+                        StartDeconstruction();
                     }
-                    IsCompleted = true; 
+                    else
+                    {
+                        TryAddSubObjective(ref gotoObjective,
+                            constructor: () => new AIObjectiveGoTo(Item, character, objectiveManager, priorityModifier: PriorityModifier),
+                            onCompleted: () =>
+                            {
+                                StartDeconstruction();
+                                RemoveSubObjective(ref gotoObjective);
+                            },
+                            onAbandon: () =>
+                            {
+                                Abandon = true;
+                            });
+                    }
                     RemoveSubObjective(ref decontainObjective);
                 },
                 onAbandon: () =>
                 {
                     Abandon = true;
                 });
+        }
+
+        private void StartDeconstruction()
+        {
+            StartDeconstructor();
+            //make sure the item gets moved to the main sub if the crew leaves while a bot is deconstructing something in the outpost
+            if (deconstructor.Item.Submarine is { Info.IsOutpost: true })
+            {
+                HumanAIController.HandleRelocation(Item);
+                deconstructor.RelocateOutputToMainSub = true;
+            }
+            IsCompleted = true;
         }
 
         private Deconstructor FindDeconstructor()
@@ -86,7 +109,7 @@ namespace Barotrauma
             deconstructor.SetActive(active: true, user: character, createNetworkEvent: true);
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
             if (Item.IgnoreByAI(character))
             {

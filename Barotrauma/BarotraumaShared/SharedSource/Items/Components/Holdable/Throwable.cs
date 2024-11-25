@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     throwAngle = ThrowAngleStart;
-                    ac.HoldItem(deltaTime, item, handlePos, itemPos: aimPos, aim: false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle);
                 }
             }
             else

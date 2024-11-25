@@ -469,7 +469,7 @@ namespace Barotrauma
                             "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                         soundTextY += yStep;
 
-                        for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
+                        for (int i = 0; i < SoundManager.SourceCount; i++)
                         {
                             Color clr = Color.White;
                             string soundStr = i + ": ";
@@ -717,9 +717,9 @@ namespace Barotrauma
         private static readonly Queue<GUIComponent> removals = new Queue<GUIComponent>();
         private static readonly Queue<GUIComponent> additions = new Queue<GUIComponent>();
         // A helpers list for all elements that have a draw order less than 0.
-        private static readonly List<GUIComponent> first = new List<GUIComponent>();
+        private static readonly List<GUIComponent> firstAdditions = new List<GUIComponent>();
         // A helper list for all elements that have a draw order greater than 0.
-        private static readonly List<GUIComponent> last = new List<GUIComponent>();
+        private static readonly List<GUIComponent> lastAdditions = new List<GUIComponent>();
 
         /// <summary>
         /// Adds the component on the addition queue.
@@ -737,11 +737,11 @@ namespace Barotrauma
                 if (!component.Visible) { return; }
                 if (component.UpdateOrder < 0)
                 {
-                    first.Add(component);
+                    firstAdditions.Add(component);
                 }
                 else if (component.UpdateOrder > 0)
                 {
-                    last.Add(component);
+                    lastAdditions.Add(component);
                 }
                 else
                 {
@@ -800,9 +800,9 @@ namespace Barotrauma
                         RemoveFromUpdateList(component);
                     }
                 }
-                ProcessHelperList(first);
+                ProcessHelperList(firstAdditions);
                 ProcessAdditions();
-                ProcessHelperList(last);
+                ProcessHelperList(lastAdditions);
                 ProcessRemovals();
             }
         }
@@ -897,7 +897,7 @@ namespace Barotrauma
 
         public static IEnumerable<GUIComponent> GetAdditions()
         {
-            return additions;
+            return additions.Union(firstAdditions).Union(lastAdditions);
         }
         #endregion
 
@@ -1546,7 +1546,7 @@ namespace Barotrauma
         private static readonly VertexPositionColorTexture[] donutVerts = new VertexPositionColorTexture[DonutSegments * 4];
 
         public static void DrawDonutSection(
-            SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float depth = 0.0f)
+            SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float depth = 0.0f, float rotationRad = 0.0f)
         {
             float getRadius(int vertexIndex)
                 => (vertexIndex % 4) switch
@@ -1589,7 +1589,7 @@ namespace Barotrauma
             for (int vertexIndex = 0; vertexIndex < maxDirectionIndex * 4; vertexIndex++)
             {
                 donutVerts[vertexIndex].Color = clr;
-                donutVerts[vertexIndex].Position = new Vector3(center + getDirection(vertexIndex) * getRadius(vertexIndex), 0.0f);
+                donutVerts[vertexIndex].Position = new Vector3(center + Vector2.Transform(getDirection(vertexIndex) * getRadius(vertexIndex), Matrix.CreateRotationZ(rotationRad)), 0.0f);
             }
             sb.Draw(solidWhiteTexture, donutVerts, depth, count: maxDirectionIndex);
         }
@@ -1856,9 +1856,16 @@ namespace Barotrauma
             Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
             sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
-#endregion
 
-#region Element creation
+        public static void DrawCapsule(SpriteBatch sb, Vector2 origin, float length, float radius, float rotation, Color clr, float depth = 0, float thickness = 1)
+        {
+            DrawDonutSection(sb, origin + Vector2.Transform(-new Vector2(length / 2, 0), Matrix.CreateRotationZ(rotation)), new Range<float>(radius - thickness / 2, radius + thickness / 2), MathHelper.Pi, clr, depth, rotation - MathHelper.Pi);
+            DrawRectangle(sb, origin, new Vector2(length, radius * 2), new Vector2(length / 2, radius), rotation, clr, depth, thickness);
+            DrawDonutSection(sb, origin + Vector2.Transform(new Vector2(length / 2, 0), Matrix.CreateRotationZ(rotation)), new Range<float>(radius - thickness / 2, radius + thickness / 2), MathHelper.Pi, clr, depth, rotation);
+        }
+        #endregion
+
+        #region Element creation
 
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
@@ -2169,6 +2176,28 @@ namespace Barotrauma
                 numberInput.DecimalsToDisplay = decimalsToDisplay;
             }
             return frame;
+        }
+
+        public static GUITextBox CreateTextBoxWithPlaceholder(RectTransform rectT, string text, LocalizedString placeholder)
+        {
+            var holder = new GUIFrame(rectT, style: null);
+            var textBox = new GUITextBox(new RectTransform(Vector2.One, holder.RectTransform, Anchor.CenterLeft), text, createClearButton: false);
+            var placeholderElement = new GUITextBlock(new RectTransform(Vector2.One, holder.RectTransform, Anchor.CenterLeft),
+                textColor: Color.DarkGray * 0.6f,
+                text: placeholder,
+                textAlignment: Alignment.CenterLeft)
+            {
+                CanBeFocused = false
+            };
+
+            new GUICustomComponent(new RectTransform(Vector2.Zero, holder.RectTransform),
+                onUpdate: delegate { placeholderElement.RectTransform.NonScaledSize = textBox.Frame.RectTransform.NonScaledSize; });
+
+            textBox.OnSelected += delegate { placeholderElement.Visible = false; };
+            textBox.OnDeselected += delegate { placeholderElement.Visible = textBox.Text.IsNullOrWhiteSpace(); };
+
+            placeholderElement.Visible = string.IsNullOrWhiteSpace(text);
+            return textBox;
         }
 
         public static void NotifyPrompt(LocalizedString header, LocalizedString body)

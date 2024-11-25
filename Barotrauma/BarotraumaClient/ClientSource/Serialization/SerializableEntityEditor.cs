@@ -326,7 +326,7 @@ namespace Barotrauma
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, IEnumerable<SerializableProperty> properties, bool showName, string style = "", int elementHeight = 24, GUIFont titleFont = null)
             : base(style, new RectTransform(Vector2.One, parent))
         {
-            this.elementHeight =  (int)(elementHeight * GUI.Scale);
+            elementHeight =  (int)(elementHeight * GUI.Scale);
             var tickBoxStyle = GUIStyle.GetComponentStyle("GUITickBox");
             var textBoxStyle = GUIStyle.GetComponentStyle("GUITextBox");
             var numberInputStyle = GUIStyle.GetComponentStyle("GUINumberInput");
@@ -343,7 +343,50 @@ namespace Barotrauma
                     Color = Color.Black
                 };
             }
-            properties.ForEach(ep => CreateNewField(ep, entity));
+
+            List<Header> headers = new List<Header>() 
+            { 
+                //"no header" comes first = properties under no header are listed first
+                null 
+            };
+            //check which header each property is under
+            Dictionary<SerializableProperty, Header> propertyHeaders = new Dictionary<SerializableProperty, Header>();
+            Header prevHeader = null;
+            foreach (var property in properties)
+            {
+                var header = property.GetAttribute<Header>();
+                if (header != null)
+                {
+                    prevHeader = header;
+                    //Attribute.Equals is based on the equality of the fields,
+                    //so in practice we treat identical headers split into different files/classes as the same header
+                    if (!headers.Contains(header)) 
+                    { 
+                        //collect headers into a list in the order they're encountered in
+                        //(to keep them in the same order as they're defined in the code, as the dictionary is not in any particular order)                        
+                        headers.Add(header); 
+                    }
+                }
+                propertyHeaders[property] = prevHeader;
+            }
+
+            prevHeader = null;
+            foreach (Header header in headers)
+            {
+                //go through all the properties that belong under this header
+                foreach (var property in properties)
+                {
+                    if (!Equals(propertyHeaders[property], header)) { continue; }
+                    //don't create a header if the previous header has the same text as this one (= if we already created this header before)
+                    if (header != null && !Equals(header, prevHeader))
+                    {
+                        new GUITextBlock(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform, isFixedSize: true),
+                            header.Text, textColor: GUIStyle.TextColorBright, font: GUIStyle.SubHeadingFont);
+                        prevHeader = header;
+                    }
+                    CreateNewField(property, entity);
+                }
+            }
 
             //scale the size of this component and the layout group to fit the children
             Recalculate();
@@ -705,7 +748,7 @@ namespace Barotrauma
                 }
             }
             enumDropDown.MustSelectAtLeastOne = !hasNoneOption;
-            enumDropDown.OnSelected += (selected, val) =>
+            enumDropDown.AfterSelected += (selected, val) =>
             {
                 if (SetPropertyValue(property, entity, string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
                 {
@@ -745,8 +788,12 @@ namespace Barotrauma
                 ToolTip = toolTip,
                 Font = GUIStyle.SmallFont,
                 Text = StripPrefabTags(value),
-                OverflowClip = true
+                OverflowClip = true,
             };
+            if (editableAttribute != null && editableAttribute.MaxLength > 0)
+            {
+                propertyBox.MaxTextLength = editableAttribute.MaxLength;
+            }
 
             HashSet<MapEntity> editedEntities = new HashSet<MapEntity>();
             propertyBox.OnTextChanged += (textBox, text) =>
@@ -762,8 +809,7 @@ namespace Barotrauma
             refresh += () =>
             {
                 if (propertyBox.Selected) { return; }
-
-                propertyBox.Text = StripPrefabTags(property.GetValue(entity).ToString());
+                propertyBox.Text = StripPrefabTags(property.GetValue(entity)?.ToString());
             };
 
             bool OnApply(GUITextBox textBox)

@@ -123,6 +123,12 @@ namespace Barotrauma
 
         public bool IsDuplicate(CharacterCampaignData other)
         {
+#if DEBUG
+            if (RequireClientNameMatch)
+            {
+                return AccountId == other.AccountId && other.ClientAddress == ClientAddress && Name == other.Name;    
+            }
+#endif
             return AccountId == other.AccountId && other.ClientAddress == ClientAddress;
         }
 
@@ -131,6 +137,14 @@ namespace Barotrauma
             itemData = null;
             healthData = null;
             WalletData = null;
+        }
+
+        public void ApplyPermadeath()
+        {
+            Reset();
+            CharacterInfo.PermanentlyDead = true;
+            GameMain.GameSession?.IncrementPermadeath(AccountId);    
+            DebugConsole.NewMessage($"Permadeath applied on {Name}'s CharacterCampaignData.CharacterInfo.");
         }
 
         public void SpawnInventoryItems(Character character, Inventory inventory)
@@ -158,7 +172,7 @@ namespace Barotrauma
 
         public void ApplyWalletData(Character character)
         {
-            character.Wallet = new Wallet(Option<Character>.Some(character), WalletData);
+            character.Wallet = new Wallet(Option.Some(character), WalletData);
         }
 
         public XElement Save()
@@ -167,7 +181,6 @@ namespace Barotrauma
                 new XAttribute("name", Name),
                 new XAttribute("address", ClientAddress),
                 new XAttribute("accountid", AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : ""));
-
             CharacterInfo?.Save(element);
             if (itemData != null) { element.Add(itemData); }
             if (healthData != null) { element.Add(healthData); }

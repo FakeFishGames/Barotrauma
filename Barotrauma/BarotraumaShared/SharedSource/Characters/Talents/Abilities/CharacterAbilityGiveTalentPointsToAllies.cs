@@ -20,9 +20,8 @@ namespace Barotrauma.Abilities
         {
             if (!addingFirstTime) { return; }
 
-            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            foreach (Character character in Character.GetFriendlyCrew(Character))
             {
-                if (character.Info is null) { return; }
                 character.Info.AdditionalTalentPoints += amount;
             }
         }

@@ -7,6 +7,7 @@ using System.Linq;
 using Barotrauma.Eos;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -281,8 +282,8 @@ namespace Barotrauma
             Spacer(right);
 
             Label(right, TextManager.Get("VisibleLightLimit"), GUIStyle.SubHeadingFont);
-            Slider(right, (10, 210), 21, v => v > 200 ? TextManager.Get("unlimited").Value : Round(v).ToString(), unsavedConfig.Graphics.VisibleLightLimit, 
-                v =>  unsavedConfig.Graphics.VisibleLightLimit = v > 200 ? int.MaxValue : Round(v), TextManager.Get("VisibleLightLimitTooltip"));
+            Slider(right, (10, 510), 21, v => v > 500 ? TextManager.Get("unlimited").Value : Round(v).ToString(), unsavedConfig.Graphics.VisibleLightLimit, 
+                v =>  unsavedConfig.Graphics.VisibleLightLimit = v > 500 ? int.MaxValue : Round(v), TextManager.Get("VisibleLightLimitTooltip"));
             Spacer(right);
 
             Tickbox(right, TextManager.Get("RadialDistortion"), TextManager.Get("RadialDistortionTooltip"), unsavedConfig.Graphics.RadialDistortion, v => unsavedConfig.Graphics.RadialDistortion = v);
@@ -403,20 +404,37 @@ namespace Barotrauma
             Spacer(audio);
 
             Label(audio, TextManager.Get("SoundVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.SoundVolume, v => unsavedConfig.Audio.SoundVolume = v);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.SoundVolume, v =>
+            {
+                unsavedConfig.Audio.SoundVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryDefault, v);
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryWaterAmbience, v);
+            });
 
             Label(audio, TextManager.Get("MusicVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.MusicVolume, v => unsavedConfig.Audio.MusicVolume = v);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.MusicVolume, v =>
+            {
+                unsavedConfig.Audio.MusicVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryMusic, v);
+            });
 
             Label(audio, TextManager.Get("UiSoundVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.UiVolume, v => unsavedConfig.Audio.UiVolume = v);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.UiVolume, v =>
+            {
+                unsavedConfig.Audio.UiVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryUi, v);
+            });
 
             Tickbox(audio, TextManager.Get("MuteOnFocusLost"), TextManager.Get("MuteOnFocusLostTooltip"), unsavedConfig.Audio.MuteOnFocusLost, v => unsavedConfig.Audio.MuteOnFocusLost = v);
             Tickbox(audio, TextManager.Get("DynamicRangeCompression"), TextManager.Get("DynamicRangeCompressionTooltip"), unsavedConfig.Audio.DynamicRangeCompressionEnabled, v => unsavedConfig.Audio.DynamicRangeCompressionEnabled = v);
             Spacer(audio);
 
             Label(audio, TextManager.Get("VoiceChatVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 2), 201, Percentage, unsavedConfig.Audio.VoiceChatVolume, v => unsavedConfig.Audio.VoiceChatVolume = v);
+            Slider(audio, (0, 2), 201, Percentage, unsavedConfig.Audio.VoiceChatVolume, v =>
+            {
+                unsavedConfig.Audio.VoiceChatVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryVoip, v);
+            });
 
             Tickbox(audio, TextManager.Get("DirectionalVoiceChat"), TextManager.Get("DirectionalVoiceChatTooltip"), unsavedConfig.Audio.UseDirectionalVoiceChat, v => unsavedConfig.Audio.UseDirectionalVoiceChat = v);
             Tickbox(audio, TextManager.Get("VoipAttenuation"), TextManager.Get("VoipAttenuationTooltip"), unsavedConfig.Audio.VoipAttenuationEnabled, v => unsavedConfig.Audio.VoipAttenuationEnabled = v);
@@ -832,6 +850,8 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
+                    // reset any modified audio settings to current config
+                    GameMain.SoundManager?.ApplySettings();
                     Close();
                     return false;
                 }

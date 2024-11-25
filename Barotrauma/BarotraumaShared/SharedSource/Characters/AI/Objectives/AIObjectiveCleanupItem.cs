@@ -12,7 +12,7 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "cleanup item".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public readonly Item item;
         public bool IsPriority { get; set; }
@@ -24,7 +24,7 @@ namespace Barotrauma
         /// <summary>
         /// Allows decontainObjective to be interrupted if this objective gets abandoned (e.g. due to the item no longer being eligible for cleanup)
         /// </summary>
-        public override bool ConcurrentObjectives => true;
+        protected override bool ConcurrentObjectives => true;
 
         public AIObjectiveCleanupItem(Item item, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -36,7 +36,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             else
@@ -117,7 +117,7 @@ namespace Barotrauma
             objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
             if (item.IgnoreByAI(character) || Item.DeconstructItems.Contains(item))
             {

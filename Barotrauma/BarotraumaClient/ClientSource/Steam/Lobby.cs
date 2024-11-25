@@ -99,10 +99,10 @@ namespace Barotrauma.Steam
             {
                 currentLobby?.SetData("EosEndpoint", puids[0].Value);
             }
-            
+
             DebugConsole.Log("Lobby updated!");
         }
-        
+
         private static void SetServerListInfo(Identifier key, object value)
         {
             switch (value)
@@ -115,7 +115,7 @@ namespace Barotrauma.Steam
                         .JoinEscaped(','));
                     return;
             }
-            
+
             currentLobby?.SetData(key.Value.ToLowerInvariant(), value.ToString());
         }
 

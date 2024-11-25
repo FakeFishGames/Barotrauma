@@ -11,7 +11,12 @@ namespace Barotrauma.Sounds
 {
     class SoundManager : IDisposable
     {
-        public const int SOURCE_COUNT = 32;
+        public const int SourceCount = 32;
+        public const string SoundCategoryDefault = "default";
+        public const string SoundCategoryUi = "ui";
+        public const string SoundCategoryWaterAmbience = "waterambience";
+        public const string SoundCategoryMusic = "music";
+        public const string SoundCategoryVoip = "voip";
 
         public bool Disabled
         {
@@ -204,7 +209,7 @@ namespace Barotrauma.Sounds
             updateChannelsThread = null;
 
             sourcePools = new SoundSourcePool[2];
-            playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
+            playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SourceCount];
             playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
             string deviceName = GameSettings.CurrentConfig.Audio.AudioOutputDevice;
@@ -334,7 +339,7 @@ namespace Barotrauma.Sounds
                 return false;
             }
 
-            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
+            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SourceCount);
             sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
 
             ReloadSounds();
@@ -353,11 +358,19 @@ namespace Barotrauma.Sounds
                 throw new System.IO.FileNotFoundException("Sound file \"" + filename + "\" doesn't exist!");
             }
 
+#if DEBUG
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
             Sound newSound = new OggSound(this, filename, stream, null);
             lock (loadedSounds)
             {
                 loadedSounds.Add(newSound);
             }
+#if DEBUG
+            sw.Stop();
+            System.Diagnostics.Debug.WriteLine($"Loaded sound \"{filename}\" ({sw.ElapsedMilliseconds} ms).");
+#endif
             return newSound;
         }
 
@@ -672,10 +685,10 @@ namespace Barotrauma.Sounds
             {
                 voipAttenuatedGain = 1.0f;
             }
-            SetCategoryGainMultiplier("default", VoipAttenuatedGain, 1);
-            SetCategoryGainMultiplier("ui", VoipAttenuatedGain, 1);
-            SetCategoryGainMultiplier("waterambience", VoipAttenuatedGain, 1);
-            SetCategoryGainMultiplier("music", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryDefault, VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryUi, VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryWaterAmbience, VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryMusic, VoipAttenuatedGain, 1);
 
             if (GameSettings.CurrentConfig.Audio.DynamicRangeCompressionEnabled)
             {
@@ -721,11 +734,11 @@ namespace Barotrauma.Sounds
 
         public void ApplySettings()
         {
-            SetCategoryGainMultiplier("default", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
-            SetCategoryGainMultiplier("ui", GameSettings.CurrentConfig.Audio.UiVolume, 0);
-            SetCategoryGainMultiplier("waterambience", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
-            SetCategoryGainMultiplier("music", GameSettings.CurrentConfig.Audio.MusicVolume, 0);
-            SetCategoryGainMultiplier("voip", Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);
+            SetCategoryGainMultiplier(SoundCategoryDefault, GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryUi, GameSettings.CurrentConfig.Audio.UiVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryWaterAmbience, GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryMusic, GameSettings.CurrentConfig.Audio.MusicVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryVoip, Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);
         }
 
         /// <summary>

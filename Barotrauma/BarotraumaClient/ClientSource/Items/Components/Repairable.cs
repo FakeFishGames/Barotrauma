@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
 
         public override bool ShouldDrawHUD(Character character)
         {
-            if (item.HiddenInGame) { return false; }
+            if (item.IsHidden) { return false; }
             if (!HasRequiredItems(character, false) || character.SelectedItem != item) { return false; }
             if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
             if (item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold) { return true; }
@@ -224,7 +224,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (item.HiddenInGame) { return; }
+            if (item.IsHidden) { return; }
             if (FakeBrokenTimer > 0.0f)
             {
                 item.FakeBroken = true;
@@ -299,6 +299,8 @@ namespace Barotrauma.Items.Components
         
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
+
             IsActive = true;
             
             float defaultMaxCondition = (item.MaxCondition / item.MaxRepairConditionMultiplier);
@@ -397,6 +399,12 @@ namespace Barotrauma.Items.Components
                 GUI.DrawString(spriteBatch,
                     new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
                     GUIStyle.Orange);
+                if (MaxStressDeteriorationMultiplier > 1.0f)
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 40), "Stress multiplier: " + StressDeteriorationMultiplier.ToString("0.00"),
+                        GUIStyle.Red);
+                }
             }
         }
 

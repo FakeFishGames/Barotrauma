@@ -135,6 +135,12 @@ namespace Barotrauma
         public bool SetActive;
 
         /// <summary>
+        ///  Only valid when used in the Containable definitions of an ItemContainer.
+        ///  Should the character who equipped the item be blamed if the wearer / character who's inventory the item is in dies?
+        /// </summary>
+        public bool BlameEquipperForDeath;
+
+        /// <summary>
         /// Only valid for the RequiredItems of an ItemComponent. Can be used to make the requirement optional, 
         /// meaning that you don't need to have the item to interact with something, but having it may still affect what the interaction does (such as using a crowbar on a door).
         /// </summary>
@@ -142,13 +148,8 @@ namespace Barotrauma
 
         public string JoinedIdentifiers
         {
-            get { return string.Join(",", Identifiers); }
-            set
-            {
-                if (value == null) return;
-
-                Identifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
-            }
+            get => Identifiers.ConvertToString();
+            set => Identifiers = value.ToIdentifiers().ToImmutableHashSet();
         }
 
         /// <summary>
@@ -158,13 +159,8 @@ namespace Barotrauma
 
         public string JoinedExcludedIdentifiers
         {
-            get { return string.Join(",", ExcludedIdentifiers); }
-            set
-            {
-                if (value == null) return;
-
-                ExcludedIdentifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
-            }
+            get => ExcludedIdentifiers.ConvertToString();
+            set => ExcludedIdentifiers = value.ToIdentifiers().ToImmutableHashSet();
         }
 
         public bool MatchesItem(Item item)
@@ -272,6 +268,7 @@ namespace Barotrauma
             AllowVariants = element.GetAttributeBool("allowvariants", true);
             Rotation = element.GetAttributeFloat("rotation", 0f);
             SetActive = element.GetAttributeBool("setactive", false);
+            BlameEquipperForDeath = element.GetAttributeBool(nameof(BlameEquipperForDeath), false);
 
             CharacterInventorySlotType = element.GetAttributeEnum(nameof(CharacterInventorySlotType), InvSlotType.None);
 
@@ -314,7 +311,9 @@ namespace Barotrauma
 #if CLIENT
                 foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
                 {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType));
+                    string inputTag = $"[{inputType.ToString().ToLowerInvariant()}]";
+                    if (!msg.Contains(inputTag)) { continue; }
+                    msg = msg.Replace(inputTag, GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType));
                 }
                 Msg = msg;
 #endif

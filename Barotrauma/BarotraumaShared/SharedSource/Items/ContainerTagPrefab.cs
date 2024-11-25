@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using Barotrauma.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -129,7 +130,8 @@ namespace Barotrauma
             {
                 if (!allContainerTagsInTheGame.Contains(prefab.Identifier))
                 {
-                    DebugConsole.ThrowError($"Container tag \"{prefab.Identifier}\" defined in ContainerTagPrefab is not used in any item prefabs, did you misspell it?", contentPackage: prefab.ContentPackage);
+                    DebugConsole.AddWarning($"Container tag \"{prefab.Identifier}\" defined in ContainerTagPrefab is not used in any item prefabs, did you misspell it? It's also possible mods override container tags in a way that causes some of the pre-defined tags to become unused.", 
+                        contentPackage: prefab.ContentPackage);
                 }
             }
 
@@ -137,9 +139,25 @@ namespace Barotrauma
             // We only check vanilla item prefabs because we don't want to force modders to define all vanilla container tags.
             foreach (var vanillaTag in vanillaContainerTags)
             {
-                if (Prefabs.All(p => p.Identifier != vanillaTag))
+                //mission types can be appended to the respawn container tags for mission-specific respawn items,
+                //check those too so we don't unnecessarily log a warning
+                if (vanillaTag.StartsWith(Tags.RespawnContainer))
                 {
-                    DebugConsole.ThrowError($"Container tag \"{vanillaTag}\" is used in vanilla item prefabs but not defined in a ContainerTagPrefab.");
+                    bool isMissionSpecificRespawnContainer = false;
+                    foreach (var missionType in MissionPrefab.Prefabs.Select(p => p.Type).Distinct())
+                    {
+                        if (vanillaTag == Tags.RespawnContainer + "_" + missionType)
+                        {
+                            isMissionSpecificRespawnContainer = true;
+                            break;
+                        }
+                    }
+                    if (isMissionSpecificRespawnContainer) { continue; }
+
+                }
+                if (Prefabs.None(p => p.Identifier == vanillaTag))
+                {
+                    DebugConsole.AddWarning($"Container tag \"{vanillaTag}\" is used in vanilla item prefabs but not defined in a ContainerTagPrefab.");
                 }
             }
         }

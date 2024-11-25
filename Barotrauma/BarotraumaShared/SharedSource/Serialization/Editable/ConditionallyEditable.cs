@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Barotrauma.Items.Components;
 
 namespace Barotrauma;
@@ -28,7 +29,8 @@ sealed class ConditionallyEditable : Editable
         OnlyByStatusEffectsAndNetwork,
         HasIntegratedButtons,
         IsToggleableController,
-        HasConnectionPanel
+        HasConnectionPanel,
+        DeteriorateUnderStress
     }
 
     public bool IsEditable(ISerializableEntity entity)
@@ -42,7 +44,7 @@ sealed class ConditionallyEditable : Editable
             ConditionType.IsSwappableItem
                 => entity is Item item && item.Prefab.SwappableItem != null,
             ConditionType.AllowRotating
-                => (entity is Item { body: null } item && item.Prefab.AllowRotatingInEditor)
+                => (entity is Item item && (item.body == null || item.body.BodyType == FarseerPhysics.BodyType.Static) && item.Prefab.AllowRotatingInEditor)
                    || (entity is Structure structure && structure.Prefab.AllowRotatingInEditor),
             ConditionType.Attachable
                 => GetComponent<Holdable>(entity) is Holdable { Attachable: true },
@@ -55,10 +57,12 @@ sealed class ConditionallyEditable : Editable
             ConditionType.HasIntegratedButtons
                 => GetComponent<Door>(entity) is { HasIntegratedButtons: true },
             ConditionType.IsToggleableController
-                => GetComponent<Controller>(entity) is Controller { IsToggle: true } controller && 
+                => GetComponent<Controller>(entity) is Controller { IsToggle: true } controller &&
                 controller.Item.GetComponent<ConnectionPanel>() != null,
             ConditionType.HasConnectionPanel
                 => GetComponent<ConnectionPanel>(entity) != null,
+            ConditionType.DeteriorateUnderStress
+                => entity is Item repairableItem && repairableItem.Components.Any(c => c is IDeteriorateUnderStress),
             _
                 => false
         };

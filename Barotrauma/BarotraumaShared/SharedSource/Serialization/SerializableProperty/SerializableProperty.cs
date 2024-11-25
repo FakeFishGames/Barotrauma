@@ -9,9 +9,6 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-
-//TODO: come back to this later, clever use of reflection would make this nicer >:)
 
 namespace Barotrauma
 {
@@ -45,11 +42,22 @@ namespace Barotrauma
         /// Setting the value to a non-empty string will let the user select the text from one whose tag starts with the given string (e.g. RoomName. would show all texts with a RoomName.* tag)</param>
         public Serialize(object defaultValue, IsPropertySaveable isSaveable, string description = "", string translationTextTag = "", bool alwaysUseInstanceValues = false)
         {
-            this.DefaultValue = defaultValue;
-            this.IsSaveable = isSaveable;
-            this.TranslationTextTag = translationTextTag.ToIdentifier();
+            DefaultValue = defaultValue;
+            IsSaveable = isSaveable;
+            TranslationTextTag = translationTextTag.ToIdentifier();
             Description = description;
             AlwaysUseInstanceValues = alwaysUseInstanceValues;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class Header : Attribute
+    {
+        public readonly LocalizedString Text;
+
+        public Header(string text = "", string localizedTextTag = null)
+        {
+            Text = localizedTextTag != null ? TextManager.Get(localizedTextTag) : text;
         }
     }
 
@@ -206,10 +214,10 @@ namespace Barotrauma
                         PropertyInfo.SetValue(parentObject, new RawLString(value));
                         break;
                     case "stringarray":
-                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
+                        PropertyInfo.SetValue(parentObject, ParseStringArray(value));
                         break;
                     case "identifierarray":
-                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray(value));
+                        PropertyInfo.SetValue(parentObject, ParseIdentifierArray(value));
                         break;
                 }
             }
@@ -219,6 +227,17 @@ namespace Barotrauma
                 return false;
             }
             return true;
+        }
+
+
+        private static string[] ParseStringArray(string stringArrayValues)
+        {
+            return string.IsNullOrEmpty(stringArrayValues) ? Array.Empty<string>() : stringArrayValues.Split(';');
+        }
+
+        private static Identifier[] ParseIdentifierArray(string stringArrayValues)
+        {
+            return ParseStringArray(stringArrayValues).ToIdentifiers();
         }
 
         public bool TrySetValue(object parentObject, object value)
@@ -290,10 +309,10 @@ namespace Barotrauma
                                 PropertyInfo.SetValue(parentObject, new RawLString((string)value));
                                 return true;
                             case "stringarray":
-                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
+                                PropertyInfo.SetValue(parentObject, ParseStringArray((string)value));
                                 return true;
                             case "identifierarray":
-                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray((string)value));
+                                PropertyInfo.SetValue(parentObject, ParseIdentifierArray((string)value));
                                 return true;
                             default:
                                 DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
@@ -754,6 +773,9 @@ namespace Barotrauma
                 case nameof(Character.PropulsionSpeedMultiplier):
                     { if (parentObject is Character character) { character.PropulsionSpeedMultiplier = value; return true; } }
                     break;
+                case nameof(Character.ObstructVisionAmount):
+                    { if (parentObject is Character character) { character.ObstructVisionAmount = value; return true; } }
+                    break;
                 case nameof(Item.Scale):
                     { if (parentObject is Item item) { item.Scale = value; return true; } }
                     break;
@@ -1071,7 +1093,7 @@ namespace Barotrauma
                 {
                     var componentElement = subElement.FirstElement();
                     if (componentElement == null) { continue; }
-                    ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
+                    ItemComponent itemComponent = item2.Components.FirstOrDefault(c => c.Name == componentElement.Name.ToString());
                     if (itemComponent == null) { continue; }
                     foreach (XAttribute attribute in componentElement.Attributes())
                     {

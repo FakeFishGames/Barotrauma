@@ -21,6 +21,14 @@ namespace Barotrauma.Items.Components
         
         class CustomInterfaceElement : ISerializableEntity
         {
+            public enum InputTypeOption
+            {
+                Number,
+                Text,
+                Button,
+                TickBox
+            }
+
             public bool ContinuousSignal;
             public bool State;
             public string ConnectionName;
@@ -33,6 +41,7 @@ namespace Barotrauma.Items.Components
             public string Signal { get; set; }
 
             public Identifier PropertyName { get; }
+            public Identifier TargetItemComponent { get; }
             public bool TargetOnlyParentProperty { get; }
 
             public string NumberInputMin { get; }
@@ -44,10 +53,20 @@ namespace Barotrauma.Items.Components
 
             public const string DefaultNumberInputMin = "0", DefaultNumberInputMax = "99", DefaultNumberInputStep = "1";
             public const int DefaultNumberInputDecimalPlaces = 0;
-            public bool IsNumberInput { get; }
+            public InputTypeOption InputType { get; }
             public NumberType? NumberType { get; }
             public bool HasPropertyName { get; }
             public bool ShouldSetProperty { get; set; }
+
+            /// <summary>
+            /// By default, the elements in the interface only set values of the item or send signals. 
+            /// This can be used to make them additionally work the other way around, periodically getting the current value of the property from the item and refreshing the UI.
+            /// </summary>
+            public float GetValueInterval { get; set; } = -1.0f;
+
+#if CLIENT
+            public float GetValueTimer;
+#endif
 
             public string Name => "CustomInterfaceElement";
 
@@ -59,24 +78,26 @@ namespace Barotrauma.Items.Components
             /// Pass the parent component to the constructor to access the serializable properties
             /// for elements which change property values.
             /// </summary>
-            public CustomInterfaceElement(Item item, ContentXElement element, CustomInterface parent)
+            public CustomInterfaceElement(Item item, ContentXElement element, CustomInterface parent, InputTypeOption inputType)
             {
                 Label = element.GetAttributeString("text", "");
                 ConnectionName = element.GetAttributeString("connection", "");
-                PropertyName = element.GetAttributeIdentifier("propertyname", "");
+                PropertyName = element.GetAttributeIdentifier("propertyname", Identifier.Empty);
+                TargetItemComponent = element.GetAttributeIdentifier("targetitemcomponent", Identifier.Empty);
                 TargetOnlyParentProperty = element.GetAttributeBool("targetonlyparentproperty", false);
                 NumberInputMin = element.GetAttributeString("min", DefaultNumberInputMin);
                 NumberInputMax = element.GetAttributeString("max", DefaultNumberInputMax);
                 NumberInputStep = element.GetAttributeString("step", DefaultNumberInputStep);
                 NumberInputDecimalPlaces = element.GetAttributeInt("decimalplaces", DefaultNumberInputDecimalPlaces);
                 MaxTextLength = element.GetAttributeInt("maxtextlength", int.MaxValue);
+                GetValueInterval = element.GetAttributeFloat(nameof(GetValueInterval), -1.0f);
+
+                InputType = inputType;
 
                 HasPropertyName = !PropertyName.IsEmpty;
                 if (HasPropertyName)
                 {
-                    string elementName = element.Name.ToString().ToLowerInvariant();
-                    IsNumberInput = elementName == "numberinput" || elementName == "integerinput"; // backwards compatibility
-                    if (IsNumberInput)
+                    if (inputType == InputTypeOption.Number)
                     {
                         string numberType = element.GetAttributeString("numbertype", string.Empty);
                         switch (numberType)
@@ -101,22 +122,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (HasPropertyName && parent != null)
                 {
-                    if (TargetOnlyParentProperty)
-                    {
-                        if (parent.SerializableProperties.ContainsKey(PropertyName))
-                        {
-                            Signal = parent.SerializableProperties[PropertyName].GetValue(parent) as string;
-                        }
-                    }
-                    else
-                    {
-                        foreach (ISerializableEntity e in parent.item.AllPropertyObjects)
-                        {
-                            if (!e.SerializableProperties.ContainsKey(PropertyName)) { continue; }
-                            Signal = e.SerializableProperties[PropertyName].GetValue(e) as string;
-                            break;
-                        }
-                    }
+                    parent.SetSignalToPropertyValue(this);
                 }
                 else
                 {
@@ -125,7 +131,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (var subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().Equals("statuseffect", System.StringComparison.OrdinalIgnoreCase))
+                    if (subElement.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
                     {
                         StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName: "custom interface element (label " + Label + ")"));
                     }
@@ -193,6 +199,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool ShowInsufficientPowerWarning
+        {
+            get;
+            set;            
+        }
+
         private readonly List<CustomInterfaceElement> customInterfaceElementList = new List<CustomInterfaceElement>();
         
         public CustomInterface(Item item, ContentXElement element)
@@ -200,36 +213,44 @@ namespace Barotrauma.Items.Components
         {
             foreach (var subElement in element.Elements())
             {
+                bool continuousSignalByDefault = false;
+                CustomInterfaceElement.InputTypeOption inputType = CustomInterfaceElement.InputTypeOption.Number;
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "button":
+                        inputType = CustomInterfaceElement.InputTypeOption.Button;
+                        continuousSignalByDefault = false;
+                        break;
                     case "textbox":
+                        inputType = CustomInterfaceElement.InputTypeOption.Text;
+                        continuousSignalByDefault = false;
+                        break;
                     case "integerinput": // backwards compatibility
                     case "numberinput":
-                        var button = new CustomInterfaceElement(item, subElement, this)
-                        {
-                            ContinuousSignal = false
-                        };
-                        if (string.IsNullOrEmpty(button.Label))
-                        {
-                            button.Label = "Signal out " + customInterfaceElementList.Count(e => !e.ContinuousSignal);
-                        }
-                        customInterfaceElementList.Add(button);
+                        inputType = CustomInterfaceElement.InputTypeOption.Number;
+                        continuousSignalByDefault = false;
                         break;
                     case "tickbox":
-                        var tickBox = new CustomInterfaceElement(item, subElement, this)
-                        {
-                            ContinuousSignal = true
-                        };
-                        if (string.IsNullOrEmpty(tickBox.Label))
-                        {
-                            tickBox.Label = "Signal out " + customInterfaceElementList.Count(e => e.ContinuousSignal);
-                        }
-                        customInterfaceElementList.Add(tickBox);
+                        inputType = CustomInterfaceElement.InputTypeOption.TickBox;
+                        //the default behavior of tickboxes is different for mainly backwards compatibility reasons
+                        //(e.g. keeps sending a true/false signal depending on the state of the tickbox, while the others send a signal when the value changes)
+                        continuousSignalByDefault = true;
                         break;
+                    default:
+                        continue;
                 }
+                var ciElement = new CustomInterfaceElement(item, subElement, this, inputType)
+                {
+                    ContinuousSignal = subElement.GetAttributeBool(nameof(CustomInterfaceElement.ContinuousSignal), def: continuousSignalByDefault)
+                };
+                if (string.IsNullOrEmpty(ciElement.Label))
+                {
+                    ciElement.Label = "Signal out " + customInterfaceElementList.Count(e => e.ContinuousSignal == ciElement.ContinuousSignal);
+                }
+                customInterfaceElementList.Add(ciElement);
+                IsActive |= ciElement.ContinuousSignal;
             }
-            IsActive = true;
+
             InitProjSpecific();
             //load these here to ensure the UI elements (created in InitProjSpecific) are up-to-date
             Labels = element.GetAttributeString("labels", "");
@@ -268,26 +289,54 @@ namespace Barotrauma.Items.Components
 
                 if (element.HasPropertyName && element.ShouldSetProperty)
                 {
-                    if (element.TargetOnlyParentProperty)
-                    {
-                        if (SerializableProperties.ContainsKey(element.PropertyName))
-                        {
-                            SerializableProperties[element.PropertyName].TrySetValue(this, element.Signal);
-                        }
-                    }
-                    else
-                    {
-                        foreach (var po in item.AllPropertyObjects)
-                        {
-                            if (!po.SerializableProperties.ContainsKey(element.PropertyName)) { continue; }
-                            po.SerializableProperties[element.PropertyName].TrySetValue(po, element.Signal);
-                        }
-                    }
+                    SetPropertyValueToSignal(element);
                     customInterfaceElementList[i].ShouldSetProperty = false;
                 }
             }
             UpdateSignalsProjSpecific();
         }
+
+        private void SetPropertyValueToSignal(CustomInterfaceElement element)
+        {
+            if (element.TargetOnlyParentProperty)
+            {
+                if (SerializableProperties.ContainsKey(element.PropertyName))
+                {
+                    SerializableProperties[element.PropertyName].TrySetValue(this, element.Signal);
+                }
+            }
+            else
+            {
+                foreach (var po in item.AllPropertyObjects)
+                {
+                    if (!po.SerializableProperties.ContainsKey(element.PropertyName)) { continue; }
+                    if (!element.TargetItemComponent.IsEmpty && po.Name != element.TargetItemComponent) { continue; }
+                    po.SerializableProperties[element.PropertyName].TrySetValue(po, element.Signal);
+                }
+            }
+        }
+
+        private void SetSignalToPropertyValue(CustomInterfaceElement element)
+        {
+            if (element.TargetOnlyParentProperty)
+            {
+                if (SerializableProperties.ContainsKey(element.PropertyName))
+                {
+                    element.Signal = SerializableProperties[element.PropertyName].GetValue(this)?.ToString();
+                }
+            }
+            else
+            {
+                foreach (ISerializableEntity e in item.AllPropertyObjects)
+                {
+                    if (!e.SerializableProperties.ContainsKey(element.PropertyName)) { continue; }
+                    if (!element.TargetItemComponent.IsEmpty && e.Name != element.TargetItemComponent) { continue; }
+                    element.Signal = e.SerializableProperties[element.PropertyName].GetValue(e)?.ToString();
+                    break;
+                }
+            }
+        }
+
 
         public override void OnItemLoaded()
         {
@@ -333,41 +382,28 @@ namespace Barotrauma.Items.Components
         {
             if (tickBoxElement == null) { return; }
             tickBoxElement.State = state;
+            tickBoxElement.Signal = state.ToString();
+            if (!tickBoxElement.ContinuousSignal)
+            {
+                SetPropertyValueToSignal(tickBoxElement);
+            }
         }
 
         private void TextChanged(CustomInterfaceElement textElement, string text)
         {
             if (textElement == null) { return; }
             textElement.Signal = text;
-            if (!textElement.TargetOnlyParentProperty)
-            {
-                foreach (ISerializableEntity e in item.AllPropertyObjects)
-                {
-                    if (!e.SerializableProperties.ContainsKey(textElement.PropertyName)) { continue; }
-                    e.SerializableProperties[textElement.PropertyName].TrySetValue(e, text);
-                }
-            }
-            else if (SerializableProperties.ContainsKey(textElement.PropertyName))
-            {
-                SerializableProperties[textElement.PropertyName].TrySetValue(this, text);
-            }
+            SetPropertyValueToSignal(textElement);
         }
 
         private void ValueChanged(CustomInterfaceElement numberInputElement, int value)
         {
             if (numberInputElement == null) { return; }
             numberInputElement.Signal = value.ToString();
-            if (!numberInputElement.TargetOnlyParentProperty)
+            SetPropertyValueToSignal(numberInputElement);
+            foreach (StatusEffect effect in numberInputElement.StatusEffects)
             {
-                foreach (ISerializableEntity e in item.AllPropertyObjects)
-                {
-                    if (!e.SerializableProperties.ContainsKey(numberInputElement.PropertyName)) { continue; }
-                    e.SerializableProperties[numberInputElement.PropertyName].TrySetValue(e, value);
-                }
-            }
-            else if (SerializableProperties.ContainsKey(numberInputElement.PropertyName))
-            {
-                SerializableProperties[numberInputElement.PropertyName].TrySetValue(this, value);
+                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, character: item.ParentInventory?.Owner as Character);
             }
         }
 
@@ -375,25 +411,14 @@ namespace Barotrauma.Items.Components
         {
             if (numberInputElement == null) { return; }
             numberInputElement.Signal = value.ToString();
-            if (!numberInputElement.TargetOnlyParentProperty)
-            {
-                foreach (ISerializableEntity e in item.AllPropertyObjects)
-                {
-                    if (!e.SerializableProperties.ContainsKey(numberInputElement.PropertyName)) { continue; }
-                    e.SerializableProperties[numberInputElement.PropertyName].TrySetValue(e, value);
-                }
-            }
-            else if (SerializableProperties.ContainsKey(numberInputElement.PropertyName))
-            {
-                SerializableProperties[numberInputElement.PropertyName].TrySetValue(this, value);
-            }
+            SetPropertyValueToSignal(numberInputElement);
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
             foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
             {
-                if (!ciElement.ContinuousSignal) { continue; }
+                if (!ciElement.ContinuousSignal && ciElement.PropertyName != "Voltage") { continue; }
                 //TODO: allow changing output when a tickbox is not selected
                 if (!string.IsNullOrEmpty(ciElement.Signal) && ciElement.Connection != null)
                 {
@@ -405,6 +430,13 @@ namespace Barotrauma.Items.Components
                     item.ApplyStatusEffect(effect, ciElement.State ? ActionType.OnUse : ActionType.OnSecondaryUse, 1.0f, null, null, null, true, false);
                 }
             }
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            //CustomInterface works even when broken (it should be possible to tick the checkboxes and change values,
+            //it's up to the other components to work or not work depending on whether the item is broken)
+            Update(deltaTime, cam);
         }
 
         public override XElement Save(XElement parentElement)
