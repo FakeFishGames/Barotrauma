@@ -80,9 +80,7 @@ namespace Barotrauma
             { typeof(Color), "color" },
             { typeof(string[]), "stringarray" },
             { typeof(Identifier[]), "identifierarray" },
-#if CLIENT
             { typeof(GUIFont), "font" }
-#endif
         }.ToImmutableDictionary();
 
         private static readonly Dictionary<Type, Dictionary<Identifier, SerializableProperty>> cachedProperties = 
@@ -222,11 +220,9 @@ namespace Barotrauma
                     case "identifierarray":
                         PropertyInfo.SetValue(parentObject, ParseIdentifierArray(value));
                         break;
-#if CLIENT
                     case "font":
                         PropertyInfo.SetValue(parentObject, GUIStyle.Fonts.TryGetValue(new(value), out GUIFont font) ? font : null);
                         break;
-#endif
                 }
             }
             catch (Exception e)
@@ -956,11 +952,9 @@ namespace Barotrauma
                             Identifier[] identifierArray = (Identifier[])value;
                             stringValue =  identifierArray != null ? string.Join(';', identifierArray) : "";
                             break;
-#if CLIENT
                         case "font":
                             stringValue = ((GUIFont)value).Identifier.Value;
                             break;
-#endif
                         default:
                             stringValue = value.ToString();
                             break;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Extensions
 {
@@ -45,12 +44,6 @@ namespace Barotrauma.Extensions
             {
                 if (flagsEnum.HasFlag(value)) { yield return value; }
             }
-        }
-
-        public static Dictionary<string, object> ToDictionary(this Enum @enum)
-        {
-            Type enumType = @enum.GetType();
-            return Enum.GetValues(enumType).Cast<object>().ToDictionary(obj => Enum.GetName(enumType, obj)!);
         }
     }
 }

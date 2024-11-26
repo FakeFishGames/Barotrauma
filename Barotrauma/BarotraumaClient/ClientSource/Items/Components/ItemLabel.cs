@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -28,7 +29,7 @@ namespace Barotrauma.Items.Components
 
         private Vector4 padding;
 
-        [Editable(DecimalCount = 0, VectorComponentLabels = new string[] { "inputtype.left", "inputtype.up", "inputtype.right", "inputtype.down" }), Serialize("0,0,0,0", IsPropertySaveable.Yes, "The amount of padding around the text in pixels.")]
+        [Editable(DecimalCount = 0, VectorComponentLabels = new string[] { "inputtype.left", "inputtype.up", "inputtype.right", "inputtype.down" }), Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels.")]
         public Vector4 Padding
         {
             get { return padding; }
@@ -230,7 +231,8 @@ namespace Barotrauma.Items.Components
         private float BaseToRealTextScaleFactor => BaseTextSize / GUIStyle.UnscaledSmallFont.Size;
         private void RecreateTextBlock()
         {
-            textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "", textColor: textColor, font: font, textAlignment: needsScrolling ? Alignment.CenterLeft : alignment, wrap: !scrollable, style: null)
+            textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
+                textColor: textColor, font: font, textAlignment: needsScrolling ? Alignment.CenterLeft : alignment, wrap: !scrollable, style: null)
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,
@@ -355,5 +357,6 @@ namespace Barotrauma.Items.Components
         {
             Text = msg.ReadString();
         }
+
     }
 }
