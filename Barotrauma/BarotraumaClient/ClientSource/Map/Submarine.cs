@@ -32,6 +32,8 @@ namespace Barotrauma
         /// </summary>
         private const int CullMoveThreshold = 50;
 
+        public override bool IsUnderCursor => VisibleBorders.ContainsWorld(PlayerInput.MouseWorldPosition - WorldPosition);
+
         public static void CullEntities(Camera cam)
         {
             Rectangle camView = cam.WorldView;

@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Character
+    partial class Character : Entity
     {
         public static bool DisableControls;
 
@@ -42,6 +42,15 @@ namespace Barotrauma
             get;
             private set;
         } = true;
+
+        public override bool IsUnderCursor
+        {
+            get
+            {
+                Vector2 MouseSimPos = ConvertUnits.ToSimUnits(PlayerInput.MouseWorldPosition) - (Submarine?.SimPosition ?? Vector2.Zero);
+                return AnimController.Limbs.SelectMany(limb => limb.body.FarseerBody.FixtureList).Any(fixture => fixture.TestPoint(ref MouseSimPos));
+            }
+        }
 
         public bool ShowInteractionLabels { get; private set; }
 

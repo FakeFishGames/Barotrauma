@@ -147,6 +147,14 @@ namespace Barotrauma
         }
         #endregion
 
+        public static readonly Color[] DebugColors =
+        {
+            Color.Lime,
+            Color.Yellow,
+            Color.Aqua,
+            Color.Red
+        };
+
         public bool AutoUpdate { get; set; } = true;
         public bool AutoDraw { get; set; } = true;
         public int UpdateOrder { get; set; }
@@ -1373,6 +1381,31 @@ namespace Barotrauma
                 return true;
             };
             return button;
+        }
+
+        public void DrawGUIDebugOverlay(SpriteBatch spriteBatch)
+        {
+            if (PlayerInput.IsCtrlDown())
+            {
+                List<GUIComponent> hierarchy = new List<GUIComponent>();
+                GUIComponent currComponent = this;
+                while (currComponent is not null)
+                {
+                    hierarchy.Add(currComponent);
+                    currComponent = currComponent.Parent;
+                }
+
+                for (int index = hierarchy.Count - 1; index >= 0; index--)
+                {
+                    GUIComponent comp = hierarchy[index];
+                    GUI.DrawRectangle(spriteBatch, comp.CanBeFocused ? comp.MouseRect : comp.Rect, DebugColors[index % DebugColors.Length] * (PlayerInput.IsAltDown() ? 0.5f : 1f), PlayerInput.IsAltDown());
+                }
+            }
+            else
+            {
+                GUI.DrawRectangle(spriteBatch, MouseRect, Color.Lime * (PlayerInput.IsAltDown() ? 0.5f : 1f), PlayerInput.IsAltDown());
+                GUI.DrawRectangle(spriteBatch, Rect, Color.Cyan * (PlayerInput.IsAltDown() ? 0.5f : 1f), PlayerInput.IsAltDown());
+            }
         }
     }
 }

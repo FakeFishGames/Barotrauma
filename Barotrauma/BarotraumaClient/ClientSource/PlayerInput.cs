@@ -272,6 +272,8 @@ namespace Barotrauma
             get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
         }
 
+        public static Vector2 MouseWorldPosition => Screen.Selected?.Cam?.ScreenToWorld(MousePosition) ?? MousePosition;
+
         public static Vector2 LatestMousePosition
         {
             get { return new Vector2(latestMouseState.Position.X, latestMouseState.Position.Y); }
