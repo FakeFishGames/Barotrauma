@@ -9,9 +9,6 @@ namespace Barotrauma
 {
     internal abstract class DebugWindow
     {
-        // TODO: Debug infos/overlays toggles window
-        // TODO: GUIComponent/RectTransform editors
-
         private static readonly List<DebugWindow> AllWindows = new();
         private static readonly Queue<DebugWindow> ToClose = new();
 
