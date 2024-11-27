@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -42,13 +42,13 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
-            bool isPlayerTeam = TeamID == CharacterTeamType.Team1 || TeamID == CharacterTeamType.Team2;
+            bool isPlayerTeam = TeamID is CharacterTeamType.Team1 or CharacterTeamType.Team2;
 
-            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
-            foreach (var npc in affectedNpcs)
+            affectedNpcs = ParentEvent.GetTargets(NPCTag).OfType<Character>().ToList();
+            foreach (Character npc in affectedNpcs)
             {
                 // characters will still remain on friendlyNPC team for rest of the tick
-                npc.SetOriginalTeam(TeamID);
+                npc.SetOriginalTeamAndChangeTeam(TeamID);
                 foreach (Item item in npc.Inventory.AllItems)
                 {
                     var idCard = item.GetComponent<Items.Components.IdCard>();
@@ -61,26 +61,43 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (AddToCrew && isPlayerTeam)
+                if (GameMain.GameSession.CrewManager is CrewManager crewManager)
                 {
-                    npc.Info.StartItemsGiven = true;
-                    GameMain.GameSession.CrewManager.AddCharacter(npc);
-                    ChangeItemTeam(Submarine.MainSub, true);
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                    if (AddToCrew && isPlayerTeam)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamID, npc.Inventory.AllItems));
-                    }                  
-                }
-                else if (RemoveFromCrew && (npc.TeamID == CharacterTeamType.Team1 || npc.TeamID == CharacterTeamType.Team2))
-                {
-                    npc.Info.StartItemsGiven = true;
-                    GameMain.GameSession.CrewManager.RemoveCharacter(npc, removeInfo: true);
-                    var sub = Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamID);
-                    ChangeItemTeam(sub, false);
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                    {
-                        GameMain.NetworkMember.CreateEntityEvent(npc, new Character.RemoveFromCrewEventData(TeamID, npc.Inventory.AllItems));
+                        if (npc.Info is CharacterInfo info)
+                        {
+                            info.StartItemsGiven = true;
+                            crewManager.AddCharacter(npc);
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Attempted to change the team of a character ({npc.Name}) that doesn't have Character Info. Can't add to the crew.");
+                        }
+                        ChangeItemTeam(Submarine.MainSub ?? Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamID), allowStealing: true);
+                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                        {
+                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamID, npc.Inventory.AllItems));
+                        }                  
                     }
+                    else if (RemoveFromCrew && npc.TeamID is CharacterTeamType.Team1 or CharacterTeamType.Team2)
+                    {
+                        if (npc.Info is CharacterInfo info)
+                        {
+                            info.StartItemsGiven = true;
+                            crewManager.RemoveCharacter(npc, removeInfo: true);
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Attempted to change the team of a character ({npc.Name}) that doesn't have Character Info. Can't remove from the crew.");
+                        }
+                        Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamID);
+                        ChangeItemTeam(sub, false);
+                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                        {
+                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.RemoveFromCrewEventData(TeamID, npc.Inventory.AllItems));
+                        }
+                    }   
                 }
 
                 void ChangeItemTeam(Submarine sub, bool allowStealing)
@@ -98,7 +115,7 @@ namespace Barotrauma
                         }
                     }
                     WayPoint subWaypoint =
-                        WayPoint.WayPointList.Find(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Human && wp.AssignedJob == npc.Info.Job?.Prefab) ??
+                        WayPoint.WayPointList.Find(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Human && wp.AssignedJob == npc.Info?.Job?.Prefab) ??
                         WayPoint.WayPointList.Find(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Human);
                     if (subWaypoint != null)
                     {

@@ -45,7 +45,6 @@ namespace Barotrauma
                 foreach (ContentXElement subElement in conditionalElements)
                 {
                     conditionalList.AddRange(PropertyConditional.FromXElement(subElement));
-                    break;
                 }
                 Conditionals = conditionalList.ToImmutableArray();
             }

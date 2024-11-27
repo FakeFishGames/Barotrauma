@@ -78,7 +78,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool HasPower => IsActive && Voltage >= MinVoltage;
+        public override bool HasPower => IsActive && Voltage >= MinVoltage;
         public bool IsAutoControlled => pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
 
         private const float TinkeringSpeedIncrease = 4.0f;
@@ -140,13 +140,11 @@ namespace Barotrauma.Items.Components
 
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
 
-            currFlow = flowPercentage / 100.0f * item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.PumpMaxFlow, MaxFlow) * powerFactor;
-
+            currFlow = flowPercentage / 100.0f * MaxFlow * powerFactor;
             if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)
             {
                 currFlow *= 1f + repairable.TinkeringStrength * TinkeringSpeedIncrease;
             }
-
             currFlow = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.PumpSpeed, currFlow);
 
             //less effective when in a bad condition

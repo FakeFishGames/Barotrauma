@@ -103,6 +103,9 @@ namespace Barotrauma
             get { return map; }
         }
 
+        /// <summary>
+        /// Which missions have been selected for the current round?
+        /// </summary>
         public override IEnumerable<Mission> Missions
         {
             get
@@ -112,10 +115,13 @@ namespace Barotrauma
                 {
                     if (Map.CurrentLocation != null)
                     {
+                        var currentLevelData = Level.Loaded?.LevelData ?? GameMain.GameSession?.LevelData;
                         foreach (Mission mission in map.CurrentLocation.SelectedMissions)
                         {
-                            if (mission.Locations[0] == mission.Locations[1] ||
-                                mission.Locations.Contains(Map.SelectedLocation))
+                            if (//mission takes place in current location
+                                mission.Locations[0] == mission.Locations[1] ||
+                                //mission takes place between two locations, and we're in the level between those locations
+                                mission.Locations.Contains(Map.SelectedLocation) && currentLevelData is { Type: LevelData.LevelType.LocationConnection })
                             {
                                 yield return mission;
                             }
@@ -170,6 +176,7 @@ namespace Barotrauma
         protected CampaignMode(GameModePreset preset, CampaignSettings settings)
             : base(preset)
         {
+            Settings = settings;
             Bank = new Wallet(Option<Character>.None())
             {
                 Balance = settings.InitialMoney
@@ -211,7 +218,7 @@ namespace Barotrauma
 
         public virtual bool TryPurchase(Client client, int price)
         {
-            return GetWallet(client).TryDeduct(price);
+            return price == 0 || GetWallet(client).TryDeduct(price);
         }
 
         public virtual int GetBalance(Client client = null)
@@ -246,8 +253,21 @@ namespace Barotrauma
                 sub != leavingSub &&
                 !leavingSub.DockedTo.Contains(sub) &&
                 sub.Info.Type == SubmarineType.Player && sub.TeamID == CharacterTeamType.Team1 && // pirate subs are currently tagged as player subs as well
-                sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                !sub.IsRespawnShuttle &&
                 (sub.AtEndExit != leavingSub.AtEndExit || sub.AtStartExit != leavingSub.AtStartExit));
+        }
+
+        public SubmarineInfo GetPredefinedStartOutpost()
+        {
+            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && 
+                !parameters.OutpostFilePath.IsNullOrEmpty())
+            {
+                return new SubmarineInfo(parameters.OutpostFilePath.Value)
+                {
+                    OutpostGenerationParams = parameters
+                };
+            }
+            return null;
         }
 
         public override void Start()
@@ -388,9 +408,9 @@ namespace Barotrauma
                         currentLocation.DeselectMission(mission);
                     }
                 }
-                if (levelData.HasBeaconStation && !levelData.IsBeaconActive && Missions.None(m => m.Prefab.Type == MissionType.Beacon))
+                if (levelData.HasBeaconStation && !levelData.IsBeaconActive && Missions.None(m => m.Prefab.Type == Tags.MissionTypeBeacon))
                 {
-                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.IsSideObjective && m.Type == MissionType.Beacon);
+                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.IsSideObjective && m.Type == Tags.MissionTypeBeacon);
                     if (beaconMissionPrefabs.Any())
                     {
                         var filteredMissions = beaconMissionPrefabs.Where(m => levelData.Difficulty >= m.MinLevelDifficulty && levelData.Difficulty <= m.MaxLevelDifficulty);
@@ -477,7 +497,7 @@ namespace Barotrauma
                             if (missionPrefabs.Any())
                             {
                                 var missionPrefab = ToolBox.SelectWeightedRandom(missionPrefabs, p => p.Commonness, rand);
-                                if (missionPrefab.Type == MissionType.Pirate && Missions.Any(m => m.Prefab.Type == MissionType.Pirate))
+                                if (missionPrefab.Type == Tags.MissionTypePirate && Missions.Any(m => m.Prefab.Type == Tags.MissionTypePirate))
                                 {
                                     continue;                                    
                                 }
@@ -756,7 +776,7 @@ namespace Barotrauma
                     {
                         foreach (var dockedSub in Level.Loaded.StartOutpost.DockedTo)
                         {
-                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            if (dockedSub.IsRespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
                             return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                         }
                     }
@@ -796,7 +816,7 @@ namespace Barotrauma
                     {
                         foreach (var dockedSub in Level.Loaded.EndOutpost.DockedTo)
                         {
-                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            if (dockedSub.IsRespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
                             return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                         }
                     }
@@ -1044,7 +1064,7 @@ namespace Barotrauma
             return ToolBox.SelectWeightedRandom(factionsList, weights, random);
         }
 
-        public bool TryHireCharacter(Location location, CharacterInfo characterInfo, bool takeMoney = true, Client client = null)
+        public bool TryHireCharacter(Location location, CharacterInfo characterInfo, bool takeMoney = true, Client client = null, bool buyingNewCharacter = false)
         {
             if (characterInfo == null) { return false; }
             if (characterInfo.MinReputationToHire.factionId != Identifier.Empty)
@@ -1054,7 +1074,8 @@ namespace Barotrauma
                     return false;
                 }
             }
-            if (takeMoney && !TryPurchase(client, HireManager.GetSalaryFor(characterInfo))) { return false; }
+            var price = buyingNewCharacter ? NewCharacterCost(characterInfo) : HireManager.GetSalaryFor(characterInfo);
+            if (takeMoney && !TryPurchase(client, price)) { return false; }
 
             characterInfo.IsNewHire = true;
             characterInfo.Title = null;
@@ -1062,6 +1083,17 @@ namespace Barotrauma
             CrewManager.AddCharacterInfo(characterInfo);
             GameAnalyticsManager.AddMoneySpentEvent(characterInfo.Salary, GameAnalyticsManager.MoneySink.Crew, characterInfo.Job?.Prefab.Identifier.Value ?? "unknown");
             return true;
+        }
+        
+        public int NewCharacterCost(CharacterInfo characterInfo)
+        {
+            float characterCostPercentage = GameMain.NetworkMember?.ServerSettings.ReplaceCostPercentage ?? 100f;
+            return (int)MathF.Round(HireManager.GetSalaryFor(characterInfo) * (characterCostPercentage/100f));
+        }
+        
+        public bool CanAffordNewCharacter(CharacterInfo characterInfo)
+        {
+            return CanAfford(NewCharacterCost(characterInfo));
         }
 
         private void NPCInteract(Character npc, Character interactor)
@@ -1262,7 +1294,7 @@ namespace Barotrauma
             return Faction.GetPlayerAffiliationStatus(faction);
         }
 
-        public abstract void Save(XElement element);
+        public abstract void Save(XElement element, bool isSavingOnLoading);
 
         protected void LoadStats(XElement element)
         {

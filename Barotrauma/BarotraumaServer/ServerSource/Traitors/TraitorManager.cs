@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
@@ -273,8 +273,11 @@ namespace Barotrauma
             for (int i = 0; i < amountToChoose; i++)
             {
                 var traitor = viableTraitors.GetRandomUnsynced();
-                viableTraitors.Remove(traitor);
-                traitors.Add(traitor);
+                if (traitor != null)
+                {
+                    viableTraitors.Remove(traitor);
+                    traitors.Add(traitor);
+                }
             }
             return traitors;
         }
@@ -388,7 +391,7 @@ namespace Barotrauma
             {
                 if (level?.LevelData is { Type: LevelData.LevelType.LocationConnection })
                 {
-                    if (Submarine.MainSub.WorldPosition.X > level.Size.X / 2)
+                    if (Submarine.MainSub != null && Submarine.MainSub.WorldPosition.X > level.Size.X / 2)
                     {
                         //try starting ASAP if the submarine is already half-way through the level
                         //(brief delay regardless, because otherwise we might retry every frame if finding a suitable event fails below)

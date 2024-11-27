@@ -7,9 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
+
+    /// <summary>
+    /// Responsible for keeping track of the characters in the player crew, saving and loading their orders, managing the crew list UI
+    /// </summary>
     partial class CrewManager
     {
         const float ConversationIntervalMin = 100.0f;
@@ -27,7 +32,10 @@ namespace Barotrauma
         {
             return characters;
         }
-
+        /// <summary>
+        /// Note: this only returns AI characters' infos in multiplayer. The infos are used to manage hiring/firing/renaming, which only applies to AI characters.
+        /// Use <see cref="GetSessionCrewCharacters"/> to get all the characters regardless if they're player or AI controlled.
+        /// </summary>
         public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
             return characterInfos;
@@ -174,7 +182,7 @@ namespace Barotrauma
             characterInfos.Remove(characterInfo);
         }
         
-        public void AddCharacter(Character character, bool sortCrewList = true)
+        public void AddCharacter(Character character)
         {
             if (character.Removed)
             {
@@ -208,10 +216,6 @@ namespace Barotrauma
             }
 #if CLIENT
             var characterComponent = AddCharacterToCrewList(character);
-            if (sortCrewList)
-            {
-                SortCrewList();
-            }
             if (character.CurrentOrders != null)
             {
                 foreach (var order in character.CurrentOrders)
@@ -316,7 +320,7 @@ namespace Barotrauma
                 Character character = Character.Create(info, spawnWaypoints[i].WorldPosition, info.Name);
                 InitializeCharacter(character, mainSubWaypoints[i], spawnWaypoints[i]);
 
-                AddCharacter(character, sortCrewList: false);
+                AddCharacter(character);
 #if CLIENT
                 if (IsSinglePlayer && (Character.Controlled == null || character.Info.LastControlled)) { Character.Controlled = character; }
 #endif
@@ -356,7 +360,7 @@ namespace Barotrauma
                 }
                 else if (!character.Info.StartItemsGiven)
                 {
-                    character.GiveJobItems(mainSubWaypoint);
+                    character.GiveJobItems(isPvPMode: GameMain.GameSession?.GameMode is PvPMode, mainSubWaypoint);
                     foreach (Item item in character.Inventory.AllItems)
                     {
                         //if the character is loaded from a human prefab with preconfigured items, its ID card gets assigned to the sub it spawns in
@@ -387,15 +391,8 @@ namespace Barotrauma
 
         public void RenameCharacter(CharacterInfo characterInfo, string newName)
         {
-            int identifier = characterInfo.GetIdentifierUsingOriginalName();
-            var match = characterInfos.FirstOrDefault(ci => ci.GetIdentifierUsingOriginalName() == identifier);
-            if (match == null)
-            {
-                DebugConsole.ThrowError($"Tried to rename an invalid crew member ({identifier})");
-                return;
-            }
-            match.Rename(newName);
-            RenameCharacterProjSpecific(match);
+            characterInfo.Rename(newName);
+            RenameCharacterProjSpecific(characterInfo);
         }
 
         partial void RenameCharacterProjSpecific(CharacterInfo characterInfo);

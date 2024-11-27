@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Barotrauma.Extensions
 {
@@ -35,6 +36,14 @@ namespace Barotrauma.Extensions
             int enumValue = Convert.ToInt32(@enum);
             int flagValue = Convert.ToInt32(flag);
             return (T)(object)(enumValue & ~flagValue);
+        }
+
+        public static IEnumerable<T> GetIndividualFlags<T>(T flagsEnum) where T : Enum
+        {
+            foreach (T value in Enum.GetValues(typeof(T)))
+            {
+                if (flagsEnum.HasFlag(value)) { yield return value; }
+            }
         }
     }
 }

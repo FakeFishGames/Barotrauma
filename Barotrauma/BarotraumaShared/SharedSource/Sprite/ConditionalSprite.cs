@@ -39,14 +39,7 @@ namespace Barotrauma
 
         public void CheckConditionals()
         {
-            if (Target == null)
-            {
-                IsActive = false;
-            }
-            else
-            {
-                IsActive = LogicalOperator == PropertyConditional.LogicalOperatorType.And ? conditionals.All(c => c.Matches(Target)) : conditionals.Any(c => c.Matches(Target));
-            }
+            IsActive = Target != null && PropertyConditional.CheckConditionals(Target, conditionals, LogicalOperator);
         }
     }
 }

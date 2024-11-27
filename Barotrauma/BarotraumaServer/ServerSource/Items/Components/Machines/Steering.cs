@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
             if (!AutoPilot)
             {
                 steeringInput = newSteeringInput;
-                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("helm") / 100.0f);
+                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel(Tags.HelmSkill) / 100.0f);
             }
             else
             {

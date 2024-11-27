@@ -906,6 +906,7 @@ namespace Barotrauma
             }
             var gamesession = new GameSession(
                 selectedSub,
+                Option.None,
                 GameModePreset.DevSandbox,
                 missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
@@ -1251,12 +1252,12 @@ namespace Barotrauma
 
             if (!Directory.Exists(SaveUtil.TempPath))
             {
-                Directory.CreateDirectory(SaveUtil.TempPath);
+                Directory.CreateDirectory(SaveUtil.TempPath, catchUnauthorizedAccessExceptions: true);
             }
 
             try
             {
-                File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
+                File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), overwrite: true, catchUnauthorizedAccessExceptions: false);
             }
             catch (System.IO.IOException e)
             {
@@ -1270,7 +1271,7 @@ namespace Barotrauma
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
-            GameMain.GameSession = new GameSession(selectedSub, savePath, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
+            GameMain.GameSession = new GameSession(selectedSub, Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.SinglePlayerCampaign, settings, mapSeed);
             GameMain.GameSession.CrewManager.ClearCharacterInfos();
             foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
             {
@@ -1279,17 +1280,22 @@ namespace Barotrauma
             ((SinglePlayerCampaign)GameMain.GameSession.GameMode).LoadNewLevel();
         }
 
-        private void LoadGame(string saveFile)
+        private void LoadGame(string path, Option<uint> backupIndex)
         {
-            if (string.IsNullOrWhiteSpace(saveFile)) return;
+            if (string.IsNullOrWhiteSpace(path)) return;
 
             try
             {
-                SaveUtil.LoadGame(saveFile);
+                CampaignDataPath dataPath =
+                    backupIndex.TryUnwrap(out uint index)
+                        ? new CampaignDataPath(loadPath: SaveUtil.GetBackupPath(path, index), path)
+                        : CampaignDataPath.CreateRegular(path);
+
+                SaveUtil.LoadGame(dataPath);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading save \"" + saveFile + "\" failed", e);
+                DebugConsole.ThrowError("Loading save \"" + path + "\" failed", e);
                 return;
             }
 

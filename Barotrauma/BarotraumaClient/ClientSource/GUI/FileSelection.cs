@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
-using System.Text;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -84,16 +83,31 @@ namespace Barotrauma
                 {
                     currentDirectory += "/";
                 }
-                fileSystemWatcher?.Dispose();
-                fileSystemWatcher = new System.IO.FileSystemWatcher(currentDirectory)
+                try
                 {
-                    Filter = "*",
-                    NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.DirectoryName
-                };
-                fileSystemWatcher.Created += OnFileSystemChanges;
-                fileSystemWatcher.Deleted += OnFileSystemChanges;
-                fileSystemWatcher.Renamed += OnFileSystemChanges;
-                fileSystemWatcher.EnableRaisingEvents = true;
+                    fileSystemWatcher?.Dispose();
+                    fileSystemWatcher = new System.IO.FileSystemWatcher(currentDirectory)
+                    {
+                        Filter = "*",
+                        NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.DirectoryName
+                    };
+                    fileSystemWatcher.Created += OnFileSystemChanges;
+                    fileSystemWatcher.Deleted += OnFileSystemChanges;
+                    fileSystemWatcher.Renamed += OnFileSystemChanges;
+                    fileSystemWatcher.EnableRaisingEvents = true;
+                }
+                catch (System.IO.FileNotFoundException exception)
+                {
+                    DebugConsole.ThrowError("Failed to set the current directory, possibly due to insufficient access permissions.", exception);
+                }
+                catch (ArgumentException exception)
+                {
+                    DebugConsole.ThrowError("Failed to set the current directory, possibly because it was deleted.", exception);
+                }
+                catch (Exception exception)
+                {
+                    DebugConsole.ThrowError("Failed to set the current directory for an unknown reason.", exception);
+                }
                 RefreshFileList();
             }
         }
@@ -218,6 +232,14 @@ namespace Barotrauma
                 {
                     if (Directory.Exists(txt))
                     {
+                        var attributes = System.IO.File.GetAttributes(txt);
+                        if (attributes.HasAnyFlag(System.IO.FileAttributes.System) || attributes.HasAnyFlag(System.IO.FileAttributes.Hidden))
+                        {
+                            // System and hidden folders should be filtered out when populating the options, but the user can still write or copy-paste the path in the text field,
+                            // which will throw a file not found exception when the file system watcher starts. Therefore, this extra check.
+                            tb.Text = CurrentDirectory;
+                            return false;
+                        }
                         CurrentDirectory = txt;
                         return true;
                     }
@@ -354,20 +376,19 @@ namespace Barotrauma
                 var directories = Directory.EnumerateDirectories(currentDirectory, "*" + filterBox!.Text + "*");
                 foreach (var directory in directories)
                 {
-                    string txt = directory;
-                    if (txt.StartsWith(currentDirectory)) { txt = txt.Substring(currentDirectory.Length); }
-                    if (!txt.EndsWith("/")) { txt += "/"; }
-                    //get directory info
-                    DirectoryInfo dirInfo = new DirectoryInfo(directory);
                     try
                     {
-                        //this will throw an exception if the directory can't be opened
-                        Directory.GetDirectories(directory);
+                        //this will intentionally throw an exception if the directory can't be opened
+                        System.IO.Directory.GetDirectories(directory);
                     }
                     catch (UnauthorizedAccessException)
                     {
+                        // Skip the folders that can't be accessed.
                         continue;
                     }
+                    string txt = directory;
+                    if (txt.StartsWith(currentDirectory)) { txt = txt.Substring(currentDirectory.Length); }
+                    if (!txt.EndsWith("/")) { txt += "/"; }
                     var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt)
                     {
                         UserData = ItemIsDirectory.Yes

@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Barotrauma.IO;
@@ -10,7 +10,19 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
-        public Identifier Identifier { get; private set; }
+        private Identifier identifier;
+        public Identifier Identifier
+        {
+            get
+            {
+                if (identifier.IsEmpty)
+                {
+                    identifier = GetIdentifier(SourceElement);
+                }
+                return identifier;
+            }
+        }
+
         public static IEnumerable<Sprite> LoadedSprites
         {
             get
@@ -71,8 +83,6 @@ namespace Barotrauma
             }
         }
 
-        private string disposeStackTrace;
-        
         public bool Loaded
         {
             get { return texture != null && !cannotBeLoaded; }
@@ -419,7 +429,6 @@ namespace Barotrauma
 
         partial void DisposeTexture()
         {
-            disposeStackTrace = Environment.StackTrace;
             if (texture != null)
             {
                 //check if another sprite is using the same texture

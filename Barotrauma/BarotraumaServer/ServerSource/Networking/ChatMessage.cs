@@ -125,7 +125,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                GameMain.Server.SendChatMessage(txt, senderClient: c, chatMode: chatMode);
+                GameMain.Server.SendChatMessage(txt, senderClient: c, chatMode: chatMode, type: type == ChatMessageType.Team ? type : null);
             }
         }
 

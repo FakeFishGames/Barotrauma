@@ -86,7 +86,7 @@ namespace Barotrauma
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame: !isEditor, showName: false, titleFont: GUIStyle.SubHeadingFont)
                 {
-                    Readonly = CircuitBox.Locked
+                    Readonly = CircuitBox.IsLocked()
                 };
                 fieldCount += componentEditor.Fields.Count;
 

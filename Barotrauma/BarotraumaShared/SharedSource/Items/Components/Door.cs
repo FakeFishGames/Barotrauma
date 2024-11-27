@@ -59,6 +59,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public bool IgnoreSignals { get; private set; }
+
         //how much "less stuck" partially doors get when opened
         const float StuckReductionOnOpen = 30.0f;
 
@@ -350,6 +352,7 @@ namespace Barotrauma.Items.Components
             if (!HasAccess(picker))
             {
                 ToggleState(ActionType.OnPicked, picker);
+                ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
             }
             return false;
         }
@@ -707,6 +710,7 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (!c.Enabled) { continue; }
+                if (c.SelectedItem?.GetComponent<Controller>() is { } controller && controller.IsAttachedUser(c)) { continue; }
                 if (!MathUtils.IsValid(c.SimPosition))
                 {
                     if (!characterPosErrorShown.Contains(c))
@@ -797,23 +801,20 @@ namespace Barotrauma.Items.Components
         }
 
         partial void OnFailedToOpen();
-
+        
         public override bool HasAccess(Character character)
         {
             if (!item.IsInteractable(character)) { return false; }
-            if (HasIntegratedButtons)
-            {
-                return base.HasAccess(character);
-            }
-            else
-            {
-                return base.HasAccess(character) && Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character));
-            }
+            if (!base.HasAccess(character)) { return false; }
+            if (HasIntegratedButtons) { return true; }
+            var buttons = Item.GetConnectedComponents<Controller>(recursive: true);
+            // If there are no buttons, and we can access the door, treat it accessible. Might be controlled by some mechanism, such as motion sensor.
+            return buttons.None() || buttons.Any(b => b.HasAccess(character));
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (IsStuck || IsJammed) { return; }
+            if (IsStuck || IsJammed || IgnoreSignals) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             

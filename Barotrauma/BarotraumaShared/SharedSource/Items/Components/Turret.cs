@@ -14,6 +14,7 @@ namespace Barotrauma.Items.Components
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
         private Sprite barrelSprite, railSprite;
+        private Sprite barrelSpriteBroken, railSpriteBroken;
         private readonly List<(Sprite sprite, Vector2 position)> chargeSprites = new List<(Sprite sprite, Vector2 position)>();
         private readonly List<Sprite> spinningBarrelSprites = new List<Sprite>();
 
@@ -88,6 +89,8 @@ namespace Barotrauma.Items.Components
         private float resetActiveUserTimer;
 
         private List<LightComponent> lightComponents;
+
+        private Projectile lastProjectile;
 
         private readonly bool isSlowTurret;
 
@@ -269,9 +272,13 @@ namespace Barotrauma.Items.Components
         public Color HudTint { get; set; }
         
         [Header(localizedTextTag: "sp.turret.AutoOperate.propertyheader")]
-        [Serialize(false, IsPropertySaveable.Yes, description:"Should the turret operate automatically using AI targeting? Comes with some optional random movement that can be adjusted below."),
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the turret operate automatically using AI targeting? Comes with some optional random movement that can be adjusted below."),
          Editable(TransferToSwappedItem = true)]
         public bool AutoOperate { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Can the Auto Operate functionality be enabled using signals to the turret?"),
+            Editable(TransferToSwappedItem = true)]
+        public bool AllowAutoOperateWithWiring { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How much the turret should adjust the aim off the target randomly instead of tracking the target perfectly? In Degrees."),
          Editable(TransferToSwappedItem = true)]
@@ -316,11 +323,14 @@ namespace Barotrauma.Items.Components
         [Serialize("", IsPropertySaveable.Yes, description: "[Auto Operate] Group or SpeciesName that the AI ignores when the turret is operated automatically."), 
          Editable(TransferToSwappedItem = true)]
         public Identifier FriendlyTag { get; private set; }
-        
+
+        [Serialize("None", IsPropertySaveable.Yes, description: "[Auto Operate] Team that the turret considers friendly. If set to None, the team the submarine/outpost belongs to is considered the friendly team."),
+         Editable(TransferToSwappedItem = true)]
+        public CharacterTeamType FriendlyTeam { get; private set; }
         #endregion
-        
-        private const string SetAutoOperatePin = "set_auto_operate";
-        private const string ToggleAutoOperatePin = "toggle_auto_operate";
+
+        private const string SetAutoOperateConnection = "set_auto_operate";
+        private const string ToggleAutoOperateConnection = "toggle_auto_operate";
 
         public Turret(Item item, ContentXElement element)
             : base(item, element)
@@ -336,6 +346,12 @@ namespace Barotrauma.Items.Components
                         break;
                     case "railsprite":
                         railSprite = new Sprite(subElement);
+                        break;
+                    case "barrelspritebroken":
+                        barrelSpriteBroken = new Sprite(subElement);
+                        break;
+                    case "railspritebroken":
+                        railSpriteBroken = new Sprite(subElement);
                         break;
                     case "chargesprite":
                         chargeSprites.Add((new Sprite(subElement), subElement.GetAttributeVector2("chargetarget", Vector2.Zero)));
@@ -374,12 +390,14 @@ namespace Barotrauma.Items.Components
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
             targetRotation = Rotation;
             UpdateTransformedBarrelPos();
-            if (!AutoOperate)
+            if (!AllowAutoOperateWithWiring && 
+                Screen.Selected is { IsEditor: false })
             {
-                // If the turret is not set to auto operate, don't allow changing the state with wirings.
+                // If the turret is not set to auto operate and the auto operate connections haven't been wired to anything,
+                // don't allow changing the state with wirings.
                 foreach (ConnectionPanel connectionPanel in Item.GetComponents<ConnectionPanel>())
                 {
-                    connectionPanel.Connections.RemoveAll(c => c.Name is ToggleAutoOperatePin or SetAutoOperatePin);
+                    connectionPanel.Connections.RemoveAll(c => c.Name is ToggleAutoOperateConnection or SetAutoOperateConnection && c.Wires.None());
                 }
             }
         }
@@ -773,6 +791,12 @@ namespace Barotrauma.Items.Components
 
                 if (launchedProjectile != null || LaunchWithoutProjectile)
                 {
+                    if (launchedProjectile?.Item.GetComponent<Rope>() != null &&
+                        lastProjectile?.Item.GetComponent<Rope>() is { SnapWhenWeaponFiredAgain: true } rope)
+                    {
+                        rope.Snap();
+                    }
+
                     if (projectiles.Any())
                     {
                         foreach (Projectile projectile in projectiles)
@@ -799,6 +823,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            lastProjectile = launchedProjectile;
 
 #if SERVER
             if (character != null && launchedProjectile != null)
@@ -894,6 +920,10 @@ namespace Barotrauma.Items.Components
                         projectileComponent.Attack.DamageMultiplier = (1f * DamageMultiplier) + (TinkeringDamageIncrease * tinkeringStrength);
                     }
                     projectileComponent.Use(null, LaunchImpulse);
+                    if (item.GetComponent<TriggerComponent>() is { } trigger)
+                    {
+                        projectileComponent.IgnoredBodies.Add(trigger.PhysicsBody.FarseerBody);
+                    }
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);
                     projectileComponent.User = user;
 
@@ -1675,14 +1705,18 @@ namespace Barotrauma.Items.Components
             {
                 if (target.SpeciesName.Equals(friendlyTag) || target.Group.Equals(friendlyTag)) { return false; }
             }
+            if (FriendlyTeam != CharacterTeamType.None)
+            {
+                if (target.TeamID == FriendlyTeam) { return false; }
+            }
             bool isHuman = target.IsHuman || target.Group == CharacterPrefab.HumanSpeciesName;
             if (isHuman)
             {
                 if (item.Submarine != null)
                 {
-                    if (item.Submarine.Info.IsOutpost) { return false; }
                     // Check that the target is not in the friendly team, e.g. pirate or a hostile player sub (PvP).
-                    return !target.IsOnFriendlyTeam(item.Submarine.TeamID) && TargetHumans;
+                    var turretTeam = FriendlyTeam == CharacterTeamType.None ? item.Submarine.TeamID : FriendlyTeam;
+                    return !target.IsOnFriendlyTeam(turretTeam) && TargetHumans;
                 }
                 return TargetHumans;
             }
@@ -1786,6 +1820,8 @@ namespace Barotrauma.Items.Components
 
             barrelSprite?.Remove(); barrelSprite = null;
             railSprite?.Remove(); railSprite = null;
+            barrelSpriteBroken?.Remove(); barrelSpriteBroken = null;
+            railSpriteBroken?.Remove(); railSpriteBroken = null;
 
 #if CLIENT
             crosshairSprite?.Remove(); crosshairSprite = null;
@@ -1952,10 +1988,12 @@ namespace Barotrauma.Items.Components
                         UpdateLightComponents();
                     }
                     break;
-                case SetAutoOperatePin:
+                case SetAutoOperateConnection:
+                    if (!AllowAutoOperateWithWiring) { return; }
                     AutoOperate = signal.value != "0";
                     break;
-                case ToggleAutoOperatePin:
+                case ToggleAutoOperateConnection:
+                    if (!AllowAutoOperateWithWiring) { return; }
                     if (signal.value != "0")
                     {
                         AutoOperate = !AutoOperate;

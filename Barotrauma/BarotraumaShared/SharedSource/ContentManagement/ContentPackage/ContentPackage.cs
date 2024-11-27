@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using System;
@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Xml;
+using Barotrauma.IO;
 
 namespace Barotrauma
 {
@@ -34,9 +36,9 @@ namespace Barotrauma
         public const string FileListFileName = "filelist.xml";
         public const string DefaultModVersion = "1.0.0";
 
-        public readonly string Name;
+        public string Name { get; private set; }
         public readonly ImmutableArray<string> AltNames;
-        public readonly string Path;
+        public string Path { get; private set; }
         public string Dir => Barotrauma.IO.Path.GetDirectoryName(Path) ?? "";
         public readonly Option<ContentPackageId> UgcId;
 
@@ -265,7 +267,7 @@ namespace Barotrauma
                         //The game should be able to work just fine with a completely arbitrary file load order.
                         //To make sure we don't mess this up, debug builds randomize it so it has a higher chance
                         //of breaking anything that's not implemented correctly.
-                        .Randomize()
+                        .Randomize(Rand.RandSync.Unsynced)
 #endif
                     ;
 
@@ -396,6 +398,52 @@ namespace Barotrauma
 
             static string errorToStr(LoadError error)
                 => error.ToString();
+        }
+
+        public bool TryRenameLocal(string newName)
+        {
+            if (!ContentPackageManager.LocalPackages.Contains(this)) { return false; }
+
+            if (newName.IsNullOrWhiteSpace())
+            {
+                DebugConsole.ThrowError($"New name is blank!");
+                return false;
+            }
+
+            string newDir = IO.Path.Combine(IO.Path.GetFullPath(LocalModsDir), File.SanitizeName(newName));
+            if (ContentPackageManager.LocalPackages.Any(lp => lp.NameMatches(newName)) || Directory.Exists(newDir))
+            {
+                DebugConsole.ThrowError($"A local package with the name or directory \"{newName}\" already exists!");
+                return false;
+            }
+
+            XDocument doc = XMLExtensions.TryLoadXml(Path);
+            doc.Root!.SetAttributeValue("name", newName);
+            using (IO.XmlWriter writer = IO.XmlWriter.Create(Path, new XmlWriterSettings { Indent = true }))
+            {
+                doc.WriteTo(writer);
+                writer.Flush();
+            }
+
+            Directory.Move(Dir, newDir);
+            return true;
+        }
+
+        public bool TryDeleteLocal() => ContentPackageManager.LocalPackages.Contains(this) && Directory.TryDelete(Dir);
+
+        public bool TryCreateLocalFromWorkshop()
+        {
+            if (!ContentPackageManager.WorkshopPackages.Contains(this)) { return false; }
+
+            string newDir = IO.Path.Combine(IO.Path.GetFullPath(LocalModsDir), File.SanitizeName(Name));
+            if (ContentPackageManager.LocalPackages.Any(lp => lp.NameMatches(Name)) || Directory.Exists(newDir))
+            {
+                DebugConsole.ThrowError($"A local package with the name or directory \"{Name}\" already exists!");
+                return false;
+            }
+
+            Directory.Copy(Dir, newDir);
+            return true;
         }
     }
 }

@@ -13,7 +13,7 @@
         public override void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             base.Update(characterHealth, targetLimb, deltaTime);
-            float bloodlossResistance = GetResistance(characterHealth.BloodlossAffliction.Identifier);
+            float bloodlossResistance = characterHealth.GetResistance(characterHealth.BloodlossAffliction.Prefab, targetLimb?.type ?? LimbType.None);
             characterHealth.BloodlossAmount += Strength * (1.0f - bloodlossResistance) / 60.0f * deltaTime;
             if (Source != null)
             {

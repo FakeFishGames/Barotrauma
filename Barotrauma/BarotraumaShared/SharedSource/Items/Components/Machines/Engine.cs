@@ -126,7 +126,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                hasPower = Voltage > MinVoltage;
+                hasPower = HasPower;
             }
 
             if (lastReceivedTargetForce.HasValue)
@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
                 float forceMultiplier = 0.1f;
                 if (User != null)
                 {
-                    forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
+                    forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel(Tags.HelmSkill) / 100));
                 }
                 currForce *= item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.EngineMaxSpeed, MaxForce) * forceMultiplier;
                 if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)

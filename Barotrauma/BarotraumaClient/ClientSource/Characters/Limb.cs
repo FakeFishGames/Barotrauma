@@ -184,12 +184,6 @@ namespace Barotrauma
 
         public Sprite DamagedSprite { get; private set; }
 
-        public bool Hide
-        {
-            get => Params.Hide;
-            set => Params.Hide = value;
-        }
-
         public List<ConditionalSprite> ConditionalSprites { get; private set; } = new List<ConditionalSprite>();
         private Dictionary<DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<DecorativeSprite, SpriteState>();
         private Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
@@ -198,6 +192,7 @@ namespace Barotrauma
         {
             public float RotationState;
             public float OffsetState;
+            public float ScaleState;
             public Vector2 RandomOffsetMultiplier = new Vector2(Rand.Range(-1.0f, 1.0f), Rand.Range(-1.0f, 1.0f));
             public float RandomRotationFactor = Rand.Range(0.0f, 1.0f);
             public float RandomScaleFactor = Rand.Range(0.0f, 1.0f);
@@ -301,7 +296,16 @@ namespace Barotrauma
                         DamagedSprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.damagedSpriteParams, ref _damagedTexturePath), sourceRectScale: sourceRectScale);
                         break;
                     case "conditionalsprite":
-                        var conditionalSprite = new ConditionalSprite(subElement, GetConditionalTarget(), file: GetSpritePath(subElement, null, ref _texturePath), sourceRectScale: sourceRectScale);
+                        string conditionalSpritePath = string.Empty;
+                        GetSpritePath(subElement.GetChildElement("sprite") ?? subElement.GetChildElement("deformablesprite") ?? subElement, null, ref conditionalSpritePath);
+                        if  (conditionalSpritePath.IsNullOrEmpty())
+                        {
+                            DebugConsole.ThrowError($"Failed to find a sprite path in the conditional sprite defined in {character.SpeciesName}, limb {type}.", 
+                                contentPackage: subElement.ContentPackage);
+                        }
+                        var conditionalSprite = new ConditionalSprite(subElement, GetConditionalTarget(), 
+                            file: conditionalSpritePath, 
+                            sourceRectScale: sourceRectScale);
                         ConditionalSprites.Add(conditionalSprite);
                         if (conditionalSprite.DeformableSprite != null)
                         {
@@ -475,7 +479,7 @@ namespace Barotrauma
         private string _damagedTexturePath;
         private string GetSpritePath(ContentXElement element, SpriteParams spriteParams, ref string path)
         {
-            if (path == null)
+            if (path.IsNullOrEmpty())
             {
                 if (spriteParams != null)
                 {
@@ -952,8 +956,8 @@ namespace Barotrauma
                     var ca = (float)Math.Cos(-body.Rotation);
                     var sa = (float)Math.Sin(-body.Rotation);
                     Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
-                    decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c,
-                        -body.Rotation + rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffect,
+                    decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c, decorativeSprite.Sprite.Origin,
+                        -body.Rotation + rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffect,
                         depth: activeSprite.Depth - depthStep);
                     depthStep += step;
                 }

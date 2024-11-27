@@ -30,7 +30,7 @@
                     foreach (Character otherCharacter in Character.GetFriendlyCrew(Character))
                     {
                         if (otherCharacter == Character) { continue; }
-                        otherCharacter.Info?.IncreaseSkillLevel(identifier, abilitySkillGain.Value, gainedFromAbility: true);
+                        otherCharacter.Info.IncreaseSkillLevel(identifier, abilitySkillGain.Value, gainedFromAbility: true);
                     }
                 }
                 else

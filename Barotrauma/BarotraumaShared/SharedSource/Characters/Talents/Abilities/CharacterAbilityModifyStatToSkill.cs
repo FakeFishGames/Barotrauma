@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
     {
         private readonly StatTypes statType;
         private readonly float maxValue;
-        private readonly string skillIdentifier;
+        private readonly Identifier skillIdentifier;
         private readonly bool useAll;
         private float lastValue = 0f;
         public override bool AllowClientSimulation => true;
@@ -15,7 +15,7 @@ namespace Barotrauma.Abilities
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", 0f);
-            skillIdentifier = abilityElement.GetAttributeString("skillidentifier", string.Empty);
+            skillIdentifier = abilityElement.GetAttributeIdentifier("skillidentifier", Identifier.Empty);
             useAll = skillIdentifier == "all";
         }
 

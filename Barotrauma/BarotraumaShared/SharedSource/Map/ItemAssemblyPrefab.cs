@@ -96,6 +96,7 @@ namespace Barotrauma
                 
                 Identifier identifier = entityElement.GetAttributeIdentifier("identifier", entityElement.Name.ToString().ToLowerInvariant());
                 Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
+                float scale = entityElement.GetAttributeFloat("scale", 1.0f);
                 float rotation = MathHelper.ToRadians(entityElement.GetAttributeFloat("rotation", 0.0f));
                 if (!entityElement.GetAttributeBool("hideinassemblypreview", false)) 
                 { 
@@ -180,7 +181,7 @@ namespace Barotrauma
                 if (ContentPackage is { Files: { Length: 1 } }
                     && ContentPackageManager.LocalPackages.Contains(ContentPackage))
                 {
-                    Directory.Delete(ContentPackage.Dir, recursive: true);
+                    Directory.Delete(ContentPackage.Dir, recursive: true, catchUnauthorizedAccessExceptions: false);
                     ContentPackageManager.LocalPackages.Refresh();
                     ContentPackageManager.EnabledPackages.DisableRemovedMods();
                 }

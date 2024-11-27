@@ -291,7 +291,7 @@ namespace Barotrauma
                     if (characterInfos.Count >= 3) { break; }
                 }
             }
-            characterInfos.Sort((a, b) => Math.Sign(b.Job.MinKarma - a.Job.MinKarma));
+            characterInfos.Sort((a, b) => Math.Sign(a.Job.CampaignSetupUIOrder - b.Job.CampaignSetupUIOrder));
 
             characterInfoColumns.ClearChildren();
             CharacterMenus?.ForEach(m => m.Dispose());
@@ -653,8 +653,7 @@ namespace Barotrauma
                 {
                     if (saveList.SelectedData is not CampaignMode.SaveInfo saveInfo) { return false; }
                     if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
-                    LoadGame?.Invoke(saveInfo.FilePath);
-                    
+                    LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None);
                     return true;
                 },
                 Enabled = false
@@ -685,6 +684,15 @@ namespace Barotrauma
 
             string mapseed = docRoot.GetAttributeString("mapseed", "unknown");
 
+            Identifier locationNameIdentifier = docRoot.GetAttributeIdentifier("currentlocation", Identifier.Empty);
+            int locationNameFormatIndex = docRoot.GetAttributeInt("currentlocationnameformatindex", -1);
+            Identifier locationType = docRoot.GetAttributeIdentifier("locationtype", Identifier.Empty);
+            LevelData.LevelType levelType = docRoot.GetAttributeEnum("nextleveltype", LevelData.LevelType.LocationConnection);
+
+            LocalizedString locationName = locationType.IsEmpty || locationNameIdentifier.IsEmpty ?
+                LocalizedString.EmptyString :
+                Location.GetName(locationType, locationNameFormatIndex, locationNameIdentifier);
+
             var saveFileFrame = new GUIFrame(
                 new RectTransform(new Vector2(0.45f, 0.6f), loadGameContainer.RectTransform, Anchor.TopRight)
                 {
@@ -708,6 +716,15 @@ namespace Barotrauma
                     RelativeOffset = new Vector2(0, 0.1f)
                 });
 
+            if (!locationName.IsNullOrEmpty())
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                    locationName, font: GUIStyle.SmallFont);
+                new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                    TextManager.Get($"savestate.{levelType}"), font: GUIStyle.SmallFont);
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(0.0f, 0.05f), layoutGroup.RectTransform), style: null);
+            }
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("Submarine")} : {subName}", font: GUIStyle.SmallFont);
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
@@ -715,15 +732,40 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("MapSeed")} : {mapseed}", font: GUIStyle.SmallFont);
 
-            new GUIButton(new RectTransform(new Vector2(0.4f, 0.15f), saveFileFrame.RectTransform, Anchor.BottomCenter)
+            GUILayoutGroup buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.15f), saveFileFrame.RectTransform, Anchor.BottomCenter)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
-            }, TextManager.Get("Delete"), style: "GUIButtonSmall")
+            }, isHorizontal: true)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1f), buttonContainer.RectTransform, Anchor.CenterLeft), TextManager.Get("Delete"), style: "GUIButtonSmall")
             {
                 UserData = saveInfo,
                 OnClicked = DeleteSave
             };
 
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1f), buttonContainer.RectTransform, Anchor.CenterLeft), TextManager.Get("rollbackbutton"), style: "GUIButtonSmall")
+            {
+                UserData = saveInfo,
+                ToolTip = TextManager.Get("backuptooltip"),
+                OnClicked = ViewBackupMenu
+            };
+
+            return true;
+        }
+
+        private bool ViewBackupMenu(GUIButton btn, object obj)
+        {
+            if (obj is not CampaignMode.SaveInfo saveInfo) { return false; }
+
+            var indexData = SaveUtil.GetIndexData(saveInfo.FilePath);
+            CreateBackupMenu(indexData, index =>
+            {
+                LoadGame(saveInfo.FilePath, Option.Some(index.Index));
+            });
             return true;
         }
 

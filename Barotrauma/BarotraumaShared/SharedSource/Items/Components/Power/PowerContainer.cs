@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
                 if (Math.Abs(charge - lastSentCharge) / adjustedCapacity > 0.05f)
                 {
 #if SERVER
-                    if (GameMain.Server != null && (!item.Submarine?.Loading ?? true)) { item.CreateServerEvent(this); }
+                    if (GameMain.Server != null && item.FullyInitialized) { item.CreateServerEvent(this); }
 #endif
                     lastSentCharge = charge;
                 }

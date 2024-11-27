@@ -172,7 +172,7 @@ namespace Barotrauma.Items.Components
                 if (item.Connections == null)
                 {
                     //no connections and can't be wired = must be powered by something like batteries
-                    hasPower = Voltage > MinVoltage;
+                    hasPower = HasPower;
                 }
                 else
                 {

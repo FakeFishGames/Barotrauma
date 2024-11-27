@@ -1,9 +1,5 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Barotrauma;
-using Barotrauma.Items.Components;
+﻿extern alias Client;
+using Client::Barotrauma.Items.Components;
 using FluentAssertions;
 using FsCheck;
 using Microsoft.Xna.Framework;

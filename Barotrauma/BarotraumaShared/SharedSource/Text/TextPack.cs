@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -128,7 +128,7 @@ namespace Barotrauma
                 }
                 
                 string infoContent = subElement.Value;
-                if (string.IsNullOrEmpty(infoContent)) continue;
+                if (string.IsNullOrEmpty(infoContent)) { continue; }
                 if (!contentCounts.ContainsKey(infoContent))
                 {
                     contentCounts.Add(infoContent, 1);
@@ -146,15 +146,18 @@ namespace Barotrauma
             sb.AppendLine();
             sb.AppendLine();
 
+            List<string> lines = new List<string>();
             for (int i = 0; i < tagCounts.Keys.Count; i++)
             {
                 if (tagCounts[Texts.Keys.ElementAt(i)] > 1)
                 {
-                    sb.Append(Texts.Keys.ElementAt(i) + " | Count: " + tagCounts[Texts.Keys.ElementAt(i)]);
-                    sb.AppendLine();
+                    lines.Add(Texts.Keys.ElementAt(i) + " | Count: " + tagCounts[Texts.Keys.ElementAt(i)]);
                 }
             }
-
+            foreach (string line in lines.OrderBy(l => l))
+            {
+                sb.AppendLine(line);
+            }
             sb.AppendLine();
             sb.AppendLine();
             sb.Append("Duplicate content:");

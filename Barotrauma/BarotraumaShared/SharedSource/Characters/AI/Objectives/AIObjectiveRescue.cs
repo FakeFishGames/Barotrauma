@@ -70,7 +70,7 @@ namespace Barotrauma
             if (otherRescuer != null && otherRescuer != character)
             {
                 // Someone else is rescuing/holding the target.
-                Abandon = otherRescuer.IsPlayer || character.GetSkillLevel("medical") < otherRescuer.GetSkillLevel("medical");
+                Abandon = otherRescuer.IsPlayer || character.GetSkillLevel(Tags.MedicalSkill) < otherRescuer.GetSkillLevel(Tags.MedicalSkill);
                 return;
             }
             if (Target != character)
@@ -391,9 +391,18 @@ namespace Barotrauma
                                 ("[treatmentlist]", itemListStr, FormatCapitals.Yes)).Value,
                                 null, 2.0f, $"listrequiredtreatments{Target.Name}".ToIdentifier(), 60.0f);
                         }
+
+                        var itemsToFind = currentTreatmentSuitabilities
+                            //items that have a positive effect and that the bot doesn't yet have
+                            .Where(kvp => kvp.Value > 0.0f &&  character.Inventory.AllItems.None(it => it.Prefab.Identifier == kvp.Key))
+                            .Select(kvp => kvp.Key);
+
                         RemoveSubObjective(ref getItemObjective);
                         TryAddSubObjective(ref getItemObjective,
-                            constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC),
+                            constructor: () => new AIObjectiveGetItem(character, itemsToFind, objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                            {
+                                GetItemPriority = it => currentTreatmentSuitabilities.GetValueOrDefault(it.Prefab.Identifier)
+                            },
                             onCompleted: () => RemoveSubObjective(ref getItemObjective),
                             onAbandon: () =>
                             {
@@ -468,16 +477,16 @@ namespace Barotrauma
             item.ApplyTreatment(character, Target, Target.CharacterHealth.GetAfflictionLimb(affliction));
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
-            bool isCompleted = AIObjectiveRescueAll.GetVitalityFactor(Target) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, Target);
-            if (isCompleted && Target != character && character.IsOnPlayerTeam)
+            IsCompleted = AIObjectiveRescueAll.GetVitalityFactor(Target) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, Target);
+            if (IsCompleted && Target != character && character.IsOnPlayerTeam)
             {
                 string textTag = performedCpr ? "DialogTargetResuscitated" : "DialogTargetHealed";
                 string message = TextManager.GetWithVariable(textTag, "[targetname]", Target.Name)?.Value;
                 character.Speak(message, delay: 1.0f, identifier: $"targethealed{Target.Name}".ToIdentifier(), minDurationBetweenSimilar: 60.0f);
             }
-            return isCompleted;
+            return IsCompleted;
         }
 
         protected override float GetPriority()

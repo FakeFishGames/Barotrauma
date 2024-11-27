@@ -38,6 +38,11 @@ namespace Barotrauma.Networking
         public bool EndpointMatches(Endpoint endPoint)
             => Endpoint == endPoint;
 
+        /// <summary>
+        /// Similar to EndpointMatches but ignores port on LidgrenEndpoint
+        /// </summary>
+        public abstract bool AddressMatches(NetworkConnection other);
+
         public NetworkConnectionStatus Status = NetworkConnectionStatus.Disconnected;
 
         public void SetAccountInfo(AccountInfo newInfo)

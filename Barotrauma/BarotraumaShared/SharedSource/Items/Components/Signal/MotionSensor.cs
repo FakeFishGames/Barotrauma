@@ -1,7 +1,10 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -32,6 +35,14 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+        
+        [Editable, Serialize("", IsPropertySaveable.Yes, description: "Does the sensor react only to certain characters (species names, groups or tags)? Doesn't have an effect, if the Target Type is incorrect.", alwaysUseInstanceValues: true)]
+        public string TargetCharacters
+        {
+            get => targetCharacters.ConvertToString();
+            set => targetCharacters = value.ToIdentifiers().ToHashSet();
+        }
+        private HashSet<Identifier> targetCharacters;
 
         [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
         public bool IgnoreDead
@@ -39,7 +50,6 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
 
         [InGameEditable, Serialize(0.0f, IsPropertySaveable.Yes, description: "Horizontal detection range.", alwaysUseInstanceValues: true)]
         public float RangeX
@@ -259,40 +269,22 @@ namespace Barotrauma.Items.Components
             bool triggerFromMonsters = Target.HasFlag(TargetType.Monster);
             bool hasTriggers = triggerFromHumans || triggerFromPets || triggerFromMonsters;
             if (!hasTriggers) { return; }
-            foreach (Character c in Character.CharacterList)
+            foreach (Character character in Character.CharacterList)
             {
-                if (IgnoreDead && c.IsDead) { continue; }
-
                 //ignore characters that have spawned a second or less ago
                 //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
-                if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
-                if (c.IsHuman)
-                {
-                    if (!triggerFromHumans) { continue; }
-                }
-                else if (c.IsPet)
-                {
-                    if (!triggerFromPets) { continue; }
-                }
-                else
-                {
-                    // Not a human or a pet -> monster?
-                    if (!triggerFromMonsters) { continue; }
-                    if (CharacterParams.CompareGroup(c.Group, CharacterPrefab.HumanGroup))
-                    {
-                        //characters in the "human" group aren't considered monsters (even if they were something like a friendly mudraptor)
-                        continue;
-                    }
-                }
-
+                if (character.SpawnTime > Timing.TotalTime - 1.0) { continue; }
+                
+                if (!TriggersOn(character)) { continue; }
+                
                 //do a rough check based on the position of the character's collider first
                 //before the more accurate limb-based check
-                if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
+                if (Math.Abs(character.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(character.WorldPosition.Y - detectPos.Y) > broadRangeY)
                 {
                     continue;
                 }
 
-                foreach (Limb limb in c.AnimController.Limbs)
+                foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb.IsSevered) { continue; }
                     if (limb.LinearVelocity.LengthSquared() < MinimumVelocity * MinimumVelocity) { continue; }
@@ -304,7 +296,56 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
+        
+        public bool TriggersOn(Character character)
+        {
+            bool triggerFromHumans = Target.HasFlag(TargetType.Human);
+            bool triggerFromPets = Target.HasFlag(TargetType.Pet);
+            bool triggerFromMonsters = Target.HasFlag(TargetType.Monster);
+            bool hasTriggers = triggerFromHumans || triggerFromPets || triggerFromMonsters;
+            if (!hasTriggers) { return false; }
+            return TriggersOn(character, triggerFromHumans, triggerFromPets, triggerFromMonsters);
+        }
+        
+        private bool TriggersOn(Character character, bool triggerFromHumans, bool triggerFromPets, bool triggerFromMonsters)
+        {
+            if (IgnoreDead && character.IsDead) { return false; }
+            if (character.IsHuman)
+            {
+                if (!triggerFromHumans) { return false; }
+            }
+            else if (character.IsPet)
+            {
+                if (!triggerFromPets) { return false; }
+            }
+            else
+            {
+                // Not a human or a pet -> monster?
+                if (!triggerFromMonsters) { return false; }
+                if (CharacterParams.CompareGroup(character.Group, CharacterPrefab.HumanGroup))
+                {
+                    //characters in the "human" group aren't considered monsters (even if they were something like a friendly mudraptor)
+                    return false;
+                }
+            }
+            // Check matching character, if defined.
+            if (targetCharacters.Any())
+            {
+                // Performance critical code -> using a foreach loop to avoid having to capture variables in lambdas.
+                bool matchFound = false;
+                foreach (Identifier target in targetCharacters)
+                {
+                    if (character.MatchesSpeciesNameOrGroup(target) || character.Params.HasTag(target))
+                    {
+                        matchFound = true;
+                        break;
+                    }
+                }
+                if (!matchFound) { return false; }
+            }
+            return true;
+        }
+        
         public override XElement Save(XElement parentElement)
         {
             Vector2 prevDetectOffset = detectOffset;

@@ -141,7 +141,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (chargeSound != null)
                         {
-                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling, freqMult: chargeSound.GetRandomFrequencyMultiplier());
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound, item.WorldPosition, hullGuess: item.CurrentHull);
                             if (chargeSoundChannel != null) { chargeSoundChannel.Looping = true; }
                         }
                     }
@@ -176,6 +176,8 @@ namespace Barotrauma.Items.Components
             if (character.ViewTarget is Item viewTargetItem && viewTargetItem.Prefab.FocusOnSelected) { return; }
             //don't draw the crosshair if the item is in some other type of equip slot than hands (e.g. assault rifle in the bag slot)
             if (!character.HeldItems.Contains(item)) { return; }
+
+            base.DrawHUD(spriteBatch, character);
 
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;

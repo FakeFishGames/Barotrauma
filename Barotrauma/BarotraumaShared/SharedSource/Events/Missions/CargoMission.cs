@@ -150,7 +150,7 @@ namespace Barotrauma
                         int maxCount = subElement.GetAttributeInt("maxcount", 10);
                         if (itemsToSpawn.Count(it => it.element == subElement) >= maxCount) { continue; }
                         ItemPrefab itemPrefab = FindItemPrefab(subElement);
-                        while (containers[i].freeSlots > 0 && containers[i].container.Inventory.CanBePut(itemPrefab))
+                        while (containers[i].freeSlots > 0 && containers[i].container.Inventory.CanProbablyBePut(itemPrefab))
                         {
                             containers[i] = (containers[i].container, containers[i].freeSlots - 1);
                             itemsToSpawn.Add((subElement, containers[i].container));

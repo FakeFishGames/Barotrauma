@@ -145,7 +145,6 @@ namespace Barotrauma
             RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
 #if CLIENT
-            Identifier = GetIdentifier(SourceElement);
             AddToList(this);
 #endif
         }
@@ -282,9 +281,6 @@ namespace Barotrauma
                 size.Y *= sourceRect.Height;
                 RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                 Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
-#if CLIENT
-                Identifier = GetIdentifier(SourceElement);
-#endif
             }
         }
 

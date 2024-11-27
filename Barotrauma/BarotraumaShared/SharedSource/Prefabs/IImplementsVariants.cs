@@ -19,19 +19,31 @@ namespace Barotrauma
 
     public static class VariantExtensions
     {
-        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement)
-        {
-            #warning TODO: fix %ModDir% instances in the base element such that they become %ModDir:BaseMod% if necessary
-            return variantElement.Element.CreateVariantXML(baseElement.Element).FromPackage(variantElement.ContentPackage);
-        }
-
         public delegate void VariantXMLChecker(XElement originalElement, XElement? variantElement, XElement result);
 
-        public static XElement CreateVariantXML(this XElement variantElement, XElement baseElement, VariantXMLChecker? checker = null)
+        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement, VariantXMLChecker? checker = null)
         {
-            XElement newElement = new XElement(variantElement.Name);
-            newElement.Add(baseElement.Attributes());
-            newElement.Add(baseElement.Elements());
+            XElement newElement = new XElement(baseElement);
+
+            //if the base element is from a different content package, we must make sure the %ModDir% elements inherited from it refer to that content package
+            //otherwise there can be situations in which mod B defines a variant of some item without overriding the sprite,
+            //and then when you enable mod A which overrides that item and replaces it's sprite, mod B would attempt to find the sprite for the variant item from it's own folder (even though it's in mod A's folder).            
+            if (baseElement!.ContentPackage != null &&
+                baseElement!.ContentPackage != variantElement.ContentPackage)
+            {
+                foreach (var subElement in newElement.Descendants())
+                {
+                    foreach (var attribute in subElement.Attributes())
+                    {
+                        if (attribute.Value.Contains(ContentPath.ModDirStr))
+                        {
+                            //make mod dir point to the original content package
+                            attribute.SetValue(
+                                attribute.Value.Replace(ContentPath.ModDirStr, string.Format(ContentPath.OtherModDirFmt, baseElement!.ContentPackage.Name), StringComparison.OrdinalIgnoreCase));
+                        }
+                    }
+                }
+            }
 
             ReplaceElement(newElement, variantElement);
 
@@ -52,6 +64,7 @@ namespace Barotrauma
 
                     int i = 0;
                     bool matchingElementFound = false;
+                    bool cleared = false;
                     foreach (var subElement in element.Elements())
                     {
                         if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))
@@ -59,6 +72,12 @@ namespace Barotrauma
                             matchingElementFound = true;
                             newElementsFromBase.Clear();
                             elementsToRemove.AddRange(element.Elements());
+                            //add all the other elements defined after <Clear>
+                            foreach (var elementAfterClear in replacementSubElement.ElementsAfterSelf())
+                            {
+                                element.Add(elementAfterClear);
+                            }
+                            cleared = true;
                             break;
                         }
                         if (!subElement.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -84,6 +103,9 @@ namespace Barotrauma
                     {
                         element.Add(replacementSubElement);
                     }
+                    //this element cleared all the subelements from the base xml and potentially added new elements after the <Clear>,
+                    //no need to handle any other subelements here
+                    if (cleared) { break; }
                 }
                 elementsToRemove.ForEach(e => e.Remove());
                 checker?.Invoke(originalElement, replacement, element);
@@ -134,7 +156,7 @@ namespace Barotrauma
                 }
             }
 
-            return newElement;
+            return newElement.FromPackage(variantElement.ContentPackage);
         }
         
     }

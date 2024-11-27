@@ -61,7 +61,7 @@ namespace Barotrauma
 
         public static bool ShowLinks = true;
 
-        private readonly HashSet<Identifier> tags;
+        private HashSet<Identifier> tags;
 
         private readonly bool isWire, isLogic;
 
@@ -428,6 +428,10 @@ namespace Barotrauma
                     foreach (var turret in GetComponents<Turret>())
                     {
                         turret.UpdateLightComponents();
+                    }
+                    foreach (var triggerComponent in GetComponents<TriggerComponent>())
+                    {
+                        triggerComponent.SetPhysicsBodyPosition();
                     }
                 }
 #endif
@@ -821,22 +825,14 @@ namespace Barotrauma
         [Editable, Serialize("", IsPropertySaveable.Yes)]
         public string Tags
         {
-            get { return string.Join(",", tags); }
+            get => tags.ConvertToString();
             set
             {
                 tags.Clear();
                 // Always add prefab tags
                 base.Prefab.Tags.ForEach(t => tags.Add(t));
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    string[] splitTags = value.Split(',');
-                    foreach (string tag in splitTags)
-                    {
-                        string[] splitTag = tag.Trim().Split(':');
-                        splitTag[0] = splitTag[0].ToLowerInvariant();
-                        tags.Add(string.Join(":", splitTag).ToIdentifier());
-                    }
-                }
+                // Then add new tags
+                tags = tags.Union(value.ToIdentifiers()).ToHashSet();
             }
         }
 
@@ -1160,7 +1156,6 @@ namespace Barotrauma
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale, density, collisionCategory, collidesWith, findNewContacts: false);
                         body.FarseerBody.AngularDamping = subElement.GetAttributeFloat("angulardamping", 0.2f);
                         body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
-                        body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
                         body.UserData = this;
                         break;
                     case "trigger":
@@ -1326,7 +1321,7 @@ namespace Barotrauma
                 {
                     conditionMultiplierCampaign *= campaign.Settings.OxygenMultiplier;
                 }
-                if (HasTag(Barotrauma.Tags.Fuel))
+                if (HasTag(Barotrauma.Tags.ReactorFuel))
                 {
                     conditionMultiplierCampaign *= campaign.Settings.FuelMultiplier;
                 }
@@ -1590,13 +1585,13 @@ namespace Barotrauma
                 try
                 {
 #endif
-                    if (body.PhysEnabled)
+                    if (!body.PhysEnabled || Submarine.Unloading)
                     {
-                        body.SetTransform(simPosition, rotation, setPrevTransform);
+                        body.SetTransformIgnoreContacts(simPosition, rotation, setPrevTransform);
                     }
                     else
                     {
-                        body.SetTransformIgnoreContacts(simPosition, rotation, setPrevTransform);
+                        body.SetTransform(simPosition, rotation, setPrevTransform);
                     }
 #if DEBUG
                 }
@@ -1936,17 +1931,46 @@ namespace Barotrauma
             }
             if (string.IsNullOrEmpty(conditional.TargetItemComponent))
             {
-                if (!conditional.Matches(this)) { return false; }
+                return conditional.Matches(this);
             }
             else
             {
-                foreach (ItemComponent component in components)
+                switch (conditional.ItemComponentComparison)
                 {
-                    if (component.Name != conditional.TargetItemComponent) { continue; }
-                    if (!conditional.Matches(component)) { return false; }
+                    case PropertyConditional.LogicalOperatorType.Or:
+                    {
+                        foreach (ItemComponent c in components)
+                        {
+                            if (MatchesComponent(c, conditional) && conditional.Matches(c))
+                            {
+                                // Some conditional matched, which is enough.
+                                return true;
+                            }
+                        }
+                        // Didn't find any matching components.
+                        return false;
+                    }
+                    case PropertyConditional.LogicalOperatorType.And:
+                    {
+                        bool matchingComponentFound = false;
+                        foreach (ItemComponent c in components)
+                        {
+                            if (!MatchesComponent(c, conditional)) { continue; }
+                            matchingComponentFound = true;
+                            if (!conditional.Matches(c))
+                            {
+                                // Some conditional didn't match -> fail.
+                                return false;
+                            }
+                        }
+                        // Found at least one matching component and no mismatches.
+                        return matchingComponentFound;
+                    }
+                    default:
+                        throw new NotSupportedException();
                 }
+                static bool MatchesComponent(ItemComponent comp, PropertyConditional cond) => comp.Name == cond.TargetItemComponent;
             }
-            return true;
         }
 
         /// <summary>
@@ -2011,6 +2035,21 @@ namespace Barotrauma
             {
                 hasTargets = true;
                 targets.Add(serializableTarget);
+            }
+
+            if (effect.HasTargetType(StatusEffect.TargetType.LinkedEntities))
+            {
+                foreach (var linkedEntity in linkedTo)
+                {
+                    if (linkedEntity is Item linkedItem)
+                    {
+                        targets.AddRange(linkedItem.AllPropertyObjects);
+                    }
+                    else if (linkedEntity is ISerializableEntity serializableEntity)
+                    {
+                        targets.Add(serializableEntity);
+                    }
+                }
             }
 
             if (!hasTargets) { return; }
@@ -2506,7 +2545,7 @@ namespace Barotrauma
         /// </summary>
         private void ApplyWaterForces()
         {
-            if (body.Mass <= 0.0f || body.Density <= 0.0f)
+            if (body.Mass <= 0.0f || body.Density <= 0.0f || body.BodyType != BodyType.Dynamic)
             {
                 return;
             }
@@ -2548,7 +2587,7 @@ namespace Barotrauma
             //no need to apply buoyancy if the item is still and not light enough to float
             if (moving || body.Density <= 10.0f)
             {
-                Vector2 buoyancy = -GameMain.World.Gravity * forceFactor * volume * Physics.NeutralDensity;
+                Vector2 buoyancy = -GameMain.World.Gravity * body.FarseerBody.GravityScale * forceFactor * volume * Physics.NeutralDensity;
                 body.ApplyForce(buoyancy);
             }
 
@@ -2669,9 +2708,32 @@ namespace Barotrauma
             }
             SetContainedItemPositions();
         }
+        
+        /// <summary>
+        /// Simpler, non-recursive version of <see cref="GetConnectedComponents{T}"/> for getting a directly connected component of the specified type wired to the connection panel.
+        /// </summary>
+        public T GetDirectlyConnectedComponent<T>(Func<Connection, bool> connectionFilter = null) where T : ItemComponent
+        {
+            ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
+            if (connectionPanel == null) { return null; }
+            foreach (Connection c in connectionPanel.Connections)
+            {
+                if (connectionFilter != null && !connectionFilter(c)) { continue; }
+                foreach (Connection recipient in c.Recipients)
+                {
+                    var component = recipient.Item.GetComponent<T>();
+                    if (component != null)
+                    {
+                        return component;
+                    }
+                }
+            }
+            return null;
+        }
 
         /// <summary>
-        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
+        /// Searches through the connection panel and looks for connections of specific type.
+        /// Note: This function generates garbage and is too heavy to be used on each frame.
         /// </summary>
         public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true, Func<Connection, bool> connectionFilter = null) where T : ItemComponent
         {
@@ -2689,7 +2751,7 @@ namespace Barotrauma
 
             foreach (Connection c in connectionPanel.Connections)
             {
-                if (connectionFilter != null && !connectionFilter.Invoke(c)) { continue; }
+                if (connectionFilter != null && !connectionFilter(c)) { continue; }
                 foreach (Connection recipient in c.Recipients)
                 {
                     var component = recipient.Item.GetComponent<T>();
@@ -2710,8 +2772,7 @@ namespace Barotrauma
 
             foreach (Connection c in connectionPanel.Connections)
             {
-                if (alreadySearched.Contains(c)) { continue; }
-                alreadySearched.Add(c);
+                if (!alreadySearched.Add(c)) { continue; }
                 GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
             }
         }
@@ -3366,6 +3427,9 @@ namespace Barotrauma
                 ParentInventory = null;
             }
 
+            //force updating the item's transform when it drops (making sure the current hull and submarine refresh)
+            transformDirty = true;
+
             SetContainedItemPositions();
 #if CLIENT
             Submarine.ForceVisibilityRecheck();
@@ -3666,7 +3730,7 @@ namespace Barotrauma
 
             if (propertyIndex >= allProperties.Count || propertyIndex < 0)
             {
-                throw new Exception($"Error in ReadPropertyChange. Property index out of bounds (index: {propertyIndex}, property count: {allProperties.Count}, in-game editable only: {inGameEditableOnly})");
+                throw new Exception($"Error in ReadPropertyChange. Property index out of bounds (item: {Prefab.Identifier}, index: {propertyIndex}, property count: {allProperties.Count}, in-game editable only: {inGameEditableOnly})");
             }
 
             bool allowEditing = true;
@@ -3691,7 +3755,7 @@ namespace Barotrauma
                 {
                     //items inside circuit boxes are inaccessible by "normal" means,
                     //but the properties can still be edited through the circuit box UI
-                    canAccess = !cb.Locked;
+                    canAccess = !cb.IsLocked();
                 }
                 else
                 {
@@ -3709,6 +3773,12 @@ namespace Barotrauma
             if (type == typeof(string))
             {
                 string val = msg.ReadString();
+                var editableAttribute = property.GetAttribute<Editable>();
+                if (editableAttribute != null && editableAttribute.MaxLength > 0 &&
+                    val.Length > editableAttribute.MaxLength)
+                {
+                    val = val.Substring(0, editableAttribute.MaxLength);
+                }
                 logValue = val;
                 if (allowEditing) 
                 { 
@@ -4111,6 +4181,178 @@ namespace Barotrauma
             item.FullyInitialized = true;
 
             return item;
+        }
+
+        /// <summary>
+        /// Replaces this item with another one, intended to be called on the client from network data.
+        /// Does not swap connected items since it is assumed that the server will send separate entity events for them.
+        /// </summary>
+        /// <param name="replacement">The item prefab to replace this one with.</param>
+        /// <param name="newId">ID to assign the newly created item. Should match the one created on server.</param>
+        private void ReplaceFromNetwork(ItemPrefab replacement, ushort newId)
+            => Replace(replacement, newId: Option.Some(newId), createEntityEvent: false);
+
+        /// <summary>
+        /// Replaces this item with another one, creating a network event in multiplayer and
+        /// swapping the connected items if the replacement is a valid swap.
+        /// </summary>
+        /// <param name="replacement">The item prefab to replace this one with.</param>
+        public void ReplaceWithLinkedItems(ItemPrefab replacement)
+            => Replace(replacement, newId: Option.None, createEntityEvent: true);
+
+        /// <summary>
+        /// Replaces this item with another one, inheriting properties that are meant to be inherited when swapping items like turrets.
+        /// Should not be called by itself but by <see cref="ReplaceWithLinkedItems(ItemPrefab)"/> and <see cref="ReplaceFromNetwork(ItemPrefab, ushort)"/>.
+        /// </summary>
+        /// <param name="replacement">The item prefab to replace this one with.</param>
+        /// <param name="newId">
+        /// ID of the new item to swap to or Option.None to automatically assign one.
+        /// </param>
+        /// <param name="createEntityEvent">
+        /// Should an entity event be created to notify clients about the item swap.
+        /// </param>
+        /// <remarks>
+        /// When ID is set to Option.None
+        /// the linked items will recursively be swapped to the new ones too, but not when the ID is set to a specific value.
+        /// this is because it is assumed that the function is run on the client when the ID is known and the server will send
+        /// separate entity events for the linked items.
+        /// </remarks>
+        private void Replace(ItemPrefab replacement, Option<ushort> newId, bool createEntityEvent)
+        {
+            Vector2 centerPos = Position;
+
+            var newItem = new Item(replacement, Position, Submarine, id: newId.Fallback(NullEntityID))
+            {
+                SpriteDepth = SpriteDepth,
+                SpriteColor = SpriteColor,
+                Rotation = Rotation
+            };
+
+            float scaleRelativeToPrefab = Scale / Prefab.Scale;
+            newItem.Scale *= scaleRelativeToPrefab;
+
+            if (Prefab.SwappableItem != null && replacement.SwappableItem != null)
+            {
+                Vector2 oldRelativeOrigin = (Prefab.SwappableItem.SwapOrigin - Prefab.Size / 2) * scale;
+                oldRelativeOrigin.Y = -oldRelativeOrigin.Y;
+                oldRelativeOrigin = MathUtils.RotatePoint(oldRelativeOrigin, -RotationRad);
+                Vector2 oldOrigin = centerPos + oldRelativeOrigin;
+
+                Vector2 relativeOrigin = (Prefab.SwappableItem.SwapOrigin - Prefab.Size / 2) * Scale;
+                relativeOrigin.Y = -relativeOrigin.Y;
+                relativeOrigin = MathUtils.RotatePoint(relativeOrigin, -RotationRad);
+                Vector2 origin = new Vector2(rect.X + rect.Width / 2f, rect.Y - rect.Height / 2f) + relativeOrigin;
+
+                newItem.rect.Location -= (origin - oldOrigin).ToPoint();
+            }
+
+            if (!string.IsNullOrEmpty(Prefab.SwappableItem?.SpawnWithId))
+            {
+                var newContainer = newItem.GetComponent<ItemContainer>();
+                if (newContainer != null)
+                {
+                    newContainer.SpawnWithId = Prefab.SwappableItem.SpawnWithId;
+                }
+            }
+
+            foreach (ItemComponent originalComponent in components)
+            {
+                var originalComponents = components.Where(c => c.GetType() == originalComponent.GetType()).ToList();
+                var newComponents = newItem.components.Where(c => c.GetType() == originalComponent.GetType()).ToList();
+                int originalIndex = originalComponents.IndexOf(originalComponent);
+                if (originalIndex >= newComponents.Count)
+                {
+                    //original item has components the new one doesn't -> no need to copy anything from them
+                    continue;
+                }
+                var newComponent = newComponents[originalIndex];
+
+                foreach (var originalProperty in originalComponent.SerializableProperties)
+                {
+                    if (originalProperty.Value.OverridePrefabValues || originalProperty.Value.GetAttribute<Editable>() is { TransferToSwappedItem: true })
+                    {
+                        newComponent.SerializableProperties[originalProperty.Key].TrySetValue(newComponent, originalProperty.Value.GetValue(originalComponent));
+                    }
+                }
+            }
+
+            foreach (var linked in linkedTo)
+            {
+                newItem.linkedTo.Add(linked);
+                if (linked.linkedTo.Contains(this))
+                {
+                    linked.linkedTo.Add(newItem);
+                }
+            }
+
+            var thisConnectionPanel = GetComponent<ConnectionPanel>();
+            var newConnectionPanel = newItem.GetComponent<ConnectionPanel>();
+            if (thisConnectionPanel != null && newConnectionPanel != null)
+            {
+                foreach (var connection in thisConnectionPanel.Connections)
+                {
+                    var newConnection = newConnectionPanel.Connections.FirstOrDefault(c => c.Name == connection.Name);
+                    if (newConnection == null) { continue; }
+                    foreach (var wire in connection.Wires)
+                    {
+                        int connectionIndex = wire.Connections.IndexOf(connection);
+                        wire.RemoveConnection(this);
+                        wire.Connect(newConnection, connectionIndex, addNode: false);
+                        newConnection.ConnectWire(wire);
+                    }
+                }
+            }
+
+            if (newId.IsNone() && replacement.SwappableItem != null)
+            {
+                var connectedItemsToSwap = newItem.GetConnectedItemsToSwap(replacement.SwappableItem);
+                foreach (var kvp in connectedItemsToSwap)
+                {
+                    Item itemToSwap = kvp.Key;
+                    ItemPrefab swapTo = kvp.Value;
+                    itemToSwap.Replace(swapTo, newId: Option.None, createEntityEvent);
+                }
+            }
+
+#if SERVER
+            if (createEntityEvent && GameMain.Server is { } server)
+            {
+                server.CreateEntityEvent(this, new SwapItemEventData(newItem.Prefab, newItem.ID));
+            }
+#endif
+            Remove();
+        }
+
+        public Dictionary<Item, ItemPrefab> GetConnectedItemsToSwap(SwappableItem swappingTo)
+        {
+            Dictionary<Item, ItemPrefab> itemsToSwap = new();
+            foreach (var (requiredTag, swapTo) in swappingTo.ConnectedItemsToSwap)
+            {
+                if (MapEntityPrefab.FindByIdentifier(swapTo) is not ItemPrefab replacement) { continue; }
+
+                foreach (var linked in linkedTo)
+                {
+                    if (linked is Item linkedItem && linkedItem.HasTag(requiredTag))
+                    {
+                        itemsToSwap.Add(linkedItem, replacement);
+                    }
+                }
+                if (GetComponent<ConnectionPanel>() is ConnectionPanel connectionPanel)
+                {
+                    foreach (Connection c in connectionPanel.Connections)
+                    {
+                        foreach (var connectedComponent in GetConnectedComponentsRecursive<ItemComponent>(c))
+                        {
+                            if (!itemsToSwap.ContainsKey(connectedComponent.Item) && 
+                                connectedComponent.Item.HasTag(requiredTag))
+                            {
+                                itemsToSwap.Add(connectedComponent.Item, replacement);
+                            }
+                        }
+                    }
+                }
+            }
+            return itemsToSwap;
         }
 
         public override XElement Save(XElement parentElement)

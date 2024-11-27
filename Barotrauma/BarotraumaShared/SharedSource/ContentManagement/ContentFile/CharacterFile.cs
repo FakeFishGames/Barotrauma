@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -86,23 +86,27 @@ namespace Barotrauma
 
             if (ragdollParams != null)
             {
-                HashSet<string> texturePaths = new HashSet<string>
-                {
-                    ContentPath.FromRaw(CharacterPrefab.Prefabs[speciesName].ContentPackage, ragdollParams.Texture).Value
-                };
+                HashSet<ContentPath> texturePaths = new HashSet<ContentPath>();
+                AddTexturePath(ragdollParams.Texture);
                 foreach (RagdollParams.LimbParams limb in ragdollParams.Limbs)
                 {
-                    if (!string.IsNullOrEmpty(limb.normalSpriteParams?.Texture)) { texturePaths.Add(limb.normalSpriteParams.Texture); }
-                    if (!string.IsNullOrEmpty(limb.deformSpriteParams?.Texture)) { texturePaths.Add(limb.deformSpriteParams.Texture); }
-                    if (!string.IsNullOrEmpty(limb.damagedSpriteParams?.Texture)) { texturePaths.Add(limb.damagedSpriteParams.Texture); }
+                    AddTexturePath(limb.normalSpriteParams?.Texture);
+                    AddTexturePath(limb.deformSpriteParams?.Texture);
+                    AddTexturePath(limb.damagedSpriteParams?.Texture);
                     foreach (var decorativeSprite in limb.decorativeSpriteParams)
                     {
-                        if (!string.IsNullOrEmpty(decorativeSprite.Texture)) { texturePaths.Add(decorativeSprite.Texture); }
+                        AddTexturePath(decorativeSprite.Texture);
                     }
                 }
-                foreach (string texturePath in texturePaths)
+                foreach (ContentPath texturePath in texturePaths)
                 {
-                    addPreloadedSprite(new Sprite(texturePath, Vector2.Zero));
+                    addPreloadedSprite(new Sprite(texturePath.Value, Vector2.Zero));
+                }
+
+                void AddTexturePath(string path)
+                {
+                    if (string.IsNullOrEmpty(path)) { return; }
+                    texturePaths.Add(ContentPath.FromRaw(characterPrefab.ContentPackage, ragdollParams.Texture));
                 }
             }
 #endif

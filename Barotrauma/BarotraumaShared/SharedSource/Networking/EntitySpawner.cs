@@ -25,8 +25,8 @@ namespace Barotrauma
             public readonly Vector2 Position;
             public readonly Inventory Inventory;
             public readonly Submarine Submarine;
-            public readonly float Condition;
-            public readonly int Quality;
+            public readonly Option<float> Condition;
+            public readonly Option<int> Quality;
 
             public bool SpawnIfInventoryFull = true;
             public bool IgnoreLimbSlots = false;
@@ -35,30 +35,29 @@ namespace Barotrauma
             private readonly Action<Item> onSpawned;
 
             public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition, Action<Item> onSpawned, float? condition = null, int? quality = null)
+                : this(prefab, onSpawned, condition, quality)
             {
-                Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = worldPosition;
-                Condition = condition ?? prefab.Health;
-                Quality = quality ?? 0;
-                this.onSpawned = onSpawned;
             }
 
             public ItemSpawnInfo(ItemPrefab prefab, Vector2 position, Submarine sub, Action<Item> onSpawned, float? condition = null, int? quality = null)
+                : this(prefab, onSpawned, condition, quality)
             {
-                Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = position;
                 Submarine = sub;
-                Condition = condition ?? prefab.Health;
-                Quality = quality ?? 0;
-                this.onSpawned = onSpawned;
             }
             
             public ItemSpawnInfo(ItemPrefab prefab, Inventory inventory, Action<Item> onSpawned, float? condition = null, int? quality = null)
+                : this(prefab, onSpawned, condition, quality)
+            {
+                Inventory = inventory;
+            }
+
+            private ItemSpawnInfo(ItemPrefab prefab, Action<Item> onSpawned, float? condition = null, int? quality = null)
             {
                 Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
-                Inventory = inventory;
-                Condition = condition ?? prefab.Health;
-                Quality = quality ?? 0;
+                Condition = condition.HasValue ? Option<float>.Some(condition.Value) : Option<float>.None();
+                Quality = quality.HasValue ? Option<int>.Some(quality.Value) : Option<int>.None();
                 this.onSpawned = onSpawned;
             }
 
@@ -71,15 +70,15 @@ namespace Barotrauma
                 Item spawnedItem;
                 if (Inventory?.Owner != null)
                 {
-                    if (!SpawnIfInventoryFull && !Inventory.CanBePut(Prefab))
+                    if (!SpawnIfInventoryFull && !Inventory.CanProbablyBePut(Prefab))
                     {
                         return null;
                     }
-                    spawnedItem = new Item(Prefab, Vector2.Zero, null)
-                    {
-                        Condition = Condition,
-                        Quality = Quality
-                    };
+                    spawnedItem = new Item(Prefab, Vector2.Zero, null);
+                    //this needs to be done before attempting to put the item in the inventory,
+                    //because the quality and condition may affect whether it can go in the inventory (into an existing stack)
+                    SetItemProperties(spawnedItem);
+
                     var slot = Slot != InvSlotType.None ? Slot.ToEnumerable() : spawnedItem.AllowedSlots;
                     if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, slot))
                     {
@@ -99,13 +98,22 @@ namespace Barotrauma
                 }
                 else
                 {
-                    spawnedItem = new Item(Prefab, Position, Submarine)
-                    {
-                        Condition = Condition,
-                        Quality = Quality
-                    };
+                    spawnedItem = new Item(Prefab, Position, Submarine);
+                    SetItemProperties(spawnedItem);
                 }
                 return spawnedItem;
+
+                void SetItemProperties(Item spawnedItem)
+                {
+                    if (Condition.TryUnwrap(out float condition))
+                    {
+                        spawnedItem.Condition = condition;
+                    }
+                    if (Quality.TryUnwrap(out int quality))
+                    {
+                        spawnedItem.Quality = quality;
+                    }
+                }
             }
 
             public void OnSpawned(Entity spawnedItem)
@@ -370,9 +378,8 @@ namespace Barotrauma
             if (IsInRemoveQueue(item) || item.Removed) { return; }
 
             spawnOrRemoveQueue.Enqueue(item);
-            var containedItems = item.OwnInventory?.AllItems;
-            if (containedItems == null) { return; }
-            foreach (Item containedItem in containedItems)
+
+            foreach (var containedItem in item.ContainedItems)
             {
                 if (containedItem != null)
                 {

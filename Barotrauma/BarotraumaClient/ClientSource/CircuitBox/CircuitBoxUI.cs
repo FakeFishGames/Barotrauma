@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public List<CircuitBoxWireRenderer> VirtualWires = new();
 
-        public bool Locked => CircuitBox.Locked;
+        public bool Locked => CircuitBox.IsLocked();
 
         public CircuitBoxUI(CircuitBox box)
         {
@@ -786,6 +786,7 @@ namespace Barotrauma
                 if (wireOption.TryUnwrap(out var wire))
                 {
                     CircuitBox.RemoveWires(wire.IsSelected ? wireSelection : ImmutableArray.Create(wire));
+                    return;
                 }
 
                 switch (nodeOption)

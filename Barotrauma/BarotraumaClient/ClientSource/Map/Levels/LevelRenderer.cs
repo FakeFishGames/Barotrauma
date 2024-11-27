@@ -1,4 +1,5 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -239,7 +240,8 @@ namespace Barotrauma
 
         public void DrawBackground(SpriteBatch spriteBatch, Camera cam,
             LevelObjectManager backgroundSpriteManager = null,
-            BackgroundCreatureManager backgroundCreatureManager = null)
+            BackgroundCreatureManager backgroundCreatureManager = null,
+            ParticleManager particleManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap);
 
@@ -277,7 +279,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.NonPremultiplied,
                 SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
-                cam.Transform);            
+                cam.Transform);
 
             backgroundSpriteManager?.DrawObjectsBack(spriteBatch, cam);
             if (cam.Zoom > 0.05f)
@@ -321,6 +323,9 @@ namespace Barotrauma
                         color: level.GenerationParams.WaterParticleColor * alpha, textureScale: new Vector2(texScale));                    
                 }
             }
+
+            GameMain.ParticleManager?.Draw(spriteBatch, inWater: true, inSub: false, ParticleBlendState.AlphaBlend, background: true);
+
             spriteBatch.End();
 
             RenderWalls(GameMain.Instance.GraphicsDevice, cam);
@@ -465,7 +470,8 @@ namespace Barotrauma
                 var wallList = i == 0 ? level.ExtraWalls : level.UnsyncedExtraWalls;
                 foreach (LevelWall wall in wallList)
                 {
-                    if (!(wall is DestructibleLevelWall destructibleWall) || destructibleWall.Destroyed) { continue; }
+                    if (wall is not DestructibleLevelWall destructibleWall || destructibleWall.Destroyed) { continue; }
+                    if (!wall.IsVisible(cam.WorldView)) { continue; }
 
                     wallCenterEffect.Texture = level.GenerationParams.DestructibleWallSprite?.Texture ?? level.GenerationParams.WallSprite.Texture;
                     wallCenterEffect.World = wall.GetTransform() * transformMatrix;
@@ -521,6 +527,7 @@ namespace Barotrauma
                 foreach (LevelWall wall in wallList)
                 {
                     if (wall is DestructibleLevelWall) { continue; }
+                    if (!wall.IsVisible(cam.WorldView)) { continue; }
                     //TODO: use LevelWallVertexBuffers for extra walls as well
                     wallCenterEffect.World = wall.GetTransform() * transformMatrix;
                     wallCenterEffect.Alpha = wall.Alpha;
