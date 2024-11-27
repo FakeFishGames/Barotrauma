@@ -582,8 +582,6 @@ namespace Barotrauma
             CharacterEditorScreen   = new CharacterEditor.CharacterEditorScreen();
             CampaignEndScreen       = new CampaignEndScreen();
 
-            DebugMenus.Init();
-
 #if DEBUG
             LevelGenerationParams.CheckValidity();
 #endif
@@ -966,7 +964,7 @@ namespace Barotrauma
 
                     Client?.Update((float)Timing.Step);
 
-                    DebugMenus.Update();
+                    DebugMenu.Update();
 
                     GUI.Update((float)Timing.Step);
                 }
@@ -1056,7 +1054,7 @@ namespace Barotrauma
                 Screen.Selected.Draw(deltaTime, base.GraphicsDevice, spriteBatch);
             }
 
-            DebugMenus.Draw(spriteBatch);
+            DebugMenu.Draw(spriteBatch);
 
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw", sw.ElapsedTicks);
