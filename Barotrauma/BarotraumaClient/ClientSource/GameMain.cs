@@ -964,7 +964,8 @@ namespace Barotrauma
 
                     Client?.Update((float)Timing.Step);
 
-                    DebugMenu.Update();
+                    DebugWindow.UpdateAll();
+                    EntityInspector.Update();
 
                     GUI.Update((float)Timing.Step);
                 }
@@ -1054,7 +1055,8 @@ namespace Barotrauma
                 Screen.Selected.Draw(deltaTime, base.GraphicsDevice, spriteBatch);
             }
 
-            DebugMenu.Draw(spriteBatch);
+            DebugWindow.DrawAll(spriteBatch);
+            EntityInspector.Draw(spriteBatch);
 
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw", sw.ElapsedTicks);

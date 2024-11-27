@@ -26,6 +26,8 @@ namespace Barotrauma
             return dictionary.Values;
         }
 
+        public static IEnumerable<Entity> GetEntities(Func<Entity, bool> predicate) => dictionary.Values.Where(predicate);
+
         public static int EntityCount => dictionary.Count;
 
         public static EntitySpawner Spawner;
@@ -86,7 +88,11 @@ namespace Barotrauma
         public readonly UInt64 CreationIndex;
         public string ErrorLine
             => $"-   {ID}: {this} ({Submarine?.Info?.Name ?? "[null]"} {Submarine?.ID ?? 0}) {CreationStackTrace}";
-        
+
+#if CLIENT
+        public virtual bool IsUnderCursor => false;
+#endif
+
         public Entity(Submarine submarine, ushort id)
         {
             this.Submarine = submarine;
@@ -349,5 +355,13 @@ namespace Barotrauma
                 File.WriteAllLines(filename, lines);
             }
         }
+
+        public string GetName() => this switch
+        {
+            Character character => character.DisplayName,
+            Submarine sub => sub.Info.DisplayName.Value,
+            ISerializableEntity serializable => serializable.Name,
+            _ => "Unknown"
+        };
     }
 }

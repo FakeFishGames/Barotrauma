@@ -1,0 +1,10 @@
+<UIStyle>
+  <GUITickBoxNoMinimum color="White" hovercolor="White" selectedcolor="White" disabledcolor="Gray">
+    <Sprite name="GUITickBox.None" texture="Content/UI/UIAtlasGeneral.png" state="None" sourcerect="6,112,36,36" tile="false"/>
+    <Sprite name="GUITickBox.Pressed" texture="Content/UI/UIAtlasGeneral.png" state="Pressed" sourcerect="109,112,36,36" tile="false"/>
+    <Sprite name="GUITickBox.Hover" texture="Content/UI/UIAtlasGeneral.png" state="Hover" sourcerect="160,112,36,36" tile="false"/>
+    <Sprite name="GUITickBox.Selected" texture="Content/UI/UIAtlasGeneral.png" state="Selected" sourcerect="57,112,36,36" tile="false"/>
+    <Sprite name="GUITickBox.HoverSelected" texture="Content/UI/UIAtlasGeneral.png" state="HoverSelected" sourcerect="211,112,36,36" tile="false"/>
+    <GUITextBlock textcolor="GUI.TextColorNormal" hovertextcolor="White" disabledtextcolor="Gray" selectedcolor="255,153,0,76" padding="10,0,10,0"/>
+  </GUITickBoxNoMinimum>
+</UIStyle>

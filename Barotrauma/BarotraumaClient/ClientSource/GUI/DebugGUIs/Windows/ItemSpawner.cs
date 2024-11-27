@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,28 +10,24 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    internal class ItemSpawner
+    internal sealed class ItemSpawner : DebugWindow
     {
-        public GUIFrame window;
-        public GUIListBox categorizedEntityList, allEntityList;
-        public GUITextBox entityFilterBox;
-        public MapEntityCategory? selectedCategory;
+        private readonly GUIListBox categorizedEntityList, allEntityList;
+        private readonly GUITextBox entityFilterBox;
+        private MapEntityCategory? selectedCategory;
 
-        public static IEnumerable<MapEntityCategory> itemCategories
-            => Enum.GetValues(typeof(MapEntityCategory))
-            .Cast<MapEntityCategory>()
+        private static IEnumerable<MapEntityCategory> ItemCategories
+            => Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>()
             .Where(category
-                => category is not MapEntityCategory.None
+                => category != MapEntityCategory.None
                 && ItemPrefab.Prefabs.Any(ip => ip.Category.HasFlag(category)));
 
-        public readonly Dictionary<(ItemPrefab, int), int> selectedItemPrefabs = new Dictionary<(ItemPrefab, int), int>();
-        public int selectedQuality;
+        private readonly Dictionary<(ItemPrefab, int), int> selectedItemPrefabs = new();
+        private int selectedQuality;
 
-        public ItemSpawner()
+        private ItemSpawner() : base()
         {
-            GUILayoutGroup content = DebugMenu.CreateWindowBase(out window);
-
-            GUILayoutGroup entityMenuTop = new(new(new Vector2(1, 0.13f), content.RectTransform), true, Anchor.CenterLeft);
+            GUILayoutGroup entityMenuTop = new(new(new Vector2(1, 0.13f), Content.RectTransform), true, Anchor.CenterLeft);
 
             new GUIButton(new(Vector2.One, entityMenuTop.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CategoryButton.All")
             {
@@ -45,7 +40,7 @@ namespace Barotrauma
                 }
             };
 
-            foreach (MapEntityCategory category in itemCategories)
+            foreach (MapEntityCategory category in ItemCategories)
             {
                 new GUIButton(new(Vector2.One, entityMenuTop.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CategoryButton." + category.ToString())
                 {
@@ -71,14 +66,13 @@ namespace Barotrauma
                 };
             });
 
-            entityFilterBox = DebugMenu.CreateFilterBox(content);
-            entityFilterBox.OnTextChanged += (_, text) =>
+            entityFilterBox = CreateFilterBox(Content, (_, text) =>
             {
                 FilterEntities(text);
                 return true;
-            };
+            });
 
-            GUIFrame entityListContainer = new(new(new Vector2(1, 0.9f), content.RectTransform), null);
+            GUIFrame entityListContainer = new(new(new Vector2(1, 0.9f), Content.RectTransform), null);
             categorizedEntityList = new(new(Vector2.One, entityListContainer.RectTransform), useMouseDownToSelect: true);
             allEntityList = new(new(Vector2.One, entityListContainer.RectTransform), useMouseDownToSelect: true)
             {
@@ -89,7 +83,7 @@ namespace Barotrauma
                 PlaySoundOnSelect = true,
             };
 
-            GUILayoutGroup qualitySelection = new(new(Vector2.UnitX, content.RectTransform), true);
+            GUILayoutGroup qualitySelection = new(new(Vector2.UnitX, Content.RectTransform), true);
             for (int i = 0; i <= Quality.MaxQuality; i++)
             {
                 Color color = GUIStyle.GetQualityColor(i);
@@ -118,15 +112,12 @@ namespace Barotrauma
                 };
             });
 
-            GUIButton closeButton = new(new(Vector2.UnitX, content.RectTransform), TextManager.Get("Close"))
-            {
-                OnClicked = (_, _) => window.Visible = false
-            };
-
             OpenEntityMenu(null);
         }
 
-        public void FilterEntities(string filter)
+        public static ItemSpawner OpenNew() => new();
+
+        private void FilterEntities(string filter)
         {
             if (string.IsNullOrWhiteSpace(filter))
             {
@@ -158,7 +149,7 @@ namespace Barotrauma
             allEntityList.BarScroll = 0;
         }
 
-        public void OpenEntityMenu(MapEntityCategory? entityCategory)
+        private void OpenEntityMenu(MapEntityCategory? entityCategory)
         {
             categorizedEntityList.Content.ClearChildren();
             allEntityList.Content.ClearChildren();
@@ -167,7 +158,7 @@ namespace Barotrauma
             Dictionary<string, List<ItemPrefab>> entityLists = new Dictionary<string, List<ItemPrefab>>();
             Dictionary<string, MapEntityCategory> categoryKeys = new Dictionary<string, MapEntityCategory>();
 
-            foreach (MapEntityCategory category in itemCategories)
+            foreach (MapEntityCategory category in ItemCategories)
             {
                 LocalizedString categoryName = TextManager.Get("MapEntityCategory." + category);
                 maxTextWidth = (int)Math.Max(maxTextWidth, GUIStyle.SubHeadingFont.MeasureString(categoryName.Replace(" ", "\n")).X + GUI.IntScale(50));
@@ -268,29 +259,29 @@ namespace Barotrauma
             categorizedEntityList.BarScroll = 0;
         }
 
-        public void CreateEntityElement(ItemPrefab ip, int entitiesPerRow, GUIComponent parent)
+        private void CreateEntityElement(ItemPrefab prefab, int entitiesPerRow, GUIComponent parent)
         {
-            bool legacy = ip.Category.HasFlag(MapEntityCategory.Legacy);
+            bool legacy = prefab.Category.HasFlag(MapEntityCategory.Legacy);
 
             float relWidth = 1f / entitiesPerRow;
             GUIFrame frame = new(new(new Vector2(relWidth, relWidth * ((float)parent.Rect.Width / parent.Rect.Height)), parent.RectTransform, minSize: new(0, 50)), style: "GUITextBox")
             {
-                UserData = ip,
+                UserData = prefab,
                 ClampMouseRectToParent = true,
                 OnSecondaryClicked = DeselectPrefab,
             };
             frame.RectTransform.MinSize = new Point(0, frame.Rect.Width);
             frame.RectTransform.MaxSize = new Point(int.MaxValue, frame.Rect.Width);
 
-            LocalizedString name = legacy ? TextManager.GetWithVariable("legacyitemformat", "[name]", ip.Name) : ip.Name;
-            frame.ToolTip = ip.CreateTooltipText();
+            LocalizedString name = legacy ? TextManager.GetWithVariable("legacyitemformat", "[name]", prefab.Name) : prefab.Name;
+            frame.ToolTip = prefab.CreateTooltipText();
 
-            if (ip.IsModded)
+            if (prefab.IsModded)
             {
                 frame.Color = Color.Magenta;
             }
 
-            if (ip.HideInMenus || ip.HideInEditors)
+            if (prefab.HideInMenus || prefab.HideInEditors)
             {
                 frame.Color = Color.Red;
                 name = "[HIDDEN] " + name;
@@ -304,8 +295,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            Sprite icon = ip.InventoryIcon ?? ip.Sprite;
-            Color iconColor = ip.InventoryIcon is not null ? ip.InventoryIconColor : ip.SpriteColor;
+            Sprite icon = prefab.InventoryIcon ?? prefab.Sprite;
+            Color iconColor = prefab.InventoryIcon != null ? prefab.InventoryIconColor : prefab.SpriteColor;
             GUIImage img = new(new(new Vector2(1, 0.8f), paddedFrame.RectTransform, Anchor.TopCenter), icon)
             {
                 CanBeFocused = false,
@@ -324,23 +315,23 @@ namespace Barotrauma
             }
             if (name.IsNullOrEmpty())
             {
-                DebugConsole.AddWarning($"Entity \"{ip.Identifier.Value}\" has no name!", contentPackage: ip.ContentPackage);
-                textBlock.Text = frame.ToolTip = ip.Identifier.Value;
+                DebugConsole.AddWarning($"Entity \"{prefab.Identifier.Value}\" has no name!", contentPackage: prefab.ContentPackage);
+                textBlock.Text = frame.ToolTip = prefab.Identifier.Value;
                 textBlock.TextColor = GUIStyle.Red;
             }
             textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
             paddedFrame.Recalculate();
-            if (img.Sprite is not null)
+            if (img.Sprite != null)
             {
                 img.Scale = Math.Min(Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y), 1.5f);
                 img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
             }
         }
 
-        public bool SelectPrefab(GUIComponent component, object userData)
+        private bool SelectPrefab(GUIComponent component, object userData)
         {
-            if (userData is not ItemPrefab prefab) return false;
+            if (userData is not ItemPrefab prefab) { return false; }
 
             SoundPlayer.PlayUISound(GUISoundType.PickItem);
             (ItemPrefab, int) key = new(prefab, selectedQuality);
@@ -352,9 +343,9 @@ namespace Barotrauma
             return true;
         }
 
-        public bool DeselectPrefab(GUIComponent component, object userData)
+        private bool DeselectPrefab(GUIComponent component, object userData)
         {
-            if (userData is not ItemPrefab prefab) return false;
+            if (userData is not ItemPrefab prefab) { return false; }
 
             SoundPlayer.PlayUISound(GUISoundType.DropItem);
             (ItemPrefab, int) key = new(prefab, selectedQuality);
@@ -370,7 +361,7 @@ namespace Barotrauma
             return true;
         }
 
-        public static void SpawnItem(ItemPrefab prefab, Either<Vector2, Inventory> spawnLocation, Submarine sub, int quality, int amount)
+        private static void SpawnItem(ItemPrefab prefab, Either<Vector2, Inventory> spawnLocation, Submarine sub, int quality, int amount)
         {
             for (int i = 0; i < amount; i++)
             {
@@ -398,31 +389,9 @@ namespace Barotrauma
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        protected override void Update()
         {
-            if (!selectedItemPrefabs.Any()) { return; }
-
-            spriteBatch.Begin();
-
-            Vector2 drawPos = PlayerInput.MousePosition + (25f, 0f);
-            float iconHeight = 32f;
-
-            foreach (((ItemPrefab item, int quality), int amount) in selectedItemPrefabs)
-            {
-                Sprite icon = item.InventoryIcon ?? item.Sprite;
-                spriteBatch.Draw(icon.Texture, new Rectangle(drawPos.ToPoint(), new Vector2(iconHeight / icon.SourceRect.Height * icon.SourceRect.Width, iconHeight).ToPoint()), icon.SourceRect, item.InventoryIcon is not null ? item.InventoryIconColor : item.SpriteColor);
-                GUI.DrawString(spriteBatch, drawPos + (iconHeight * 0.75f, iconHeight * 0.5f), $"x{amount}", GUIStyle.GetQualityColor(quality));
-                drawPos.Y += iconHeight;
-            }
-
-            spriteBatch.End();
-        }
-
-        public void Update()
-        {
-            window.AddToGUIUpdateList();
-
-            if (selectedItemPrefabs.Any() && !window.GetAllChildren().Prepend(window).Contains(GUI.MouseOn))
+            if (selectedItemPrefabs.Any() && !Frame.GetAllChildren().Prepend(Frame).Contains(GUI.MouseOn))
             {
                 if (PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.KeyHit(Keys.Escape))
                 {
@@ -430,8 +399,8 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.PrimaryMouseButtonClicked())
                 {
-                    Submarine sub = DebugMenu.EntitiesUnderCursor.OfType<Submarine>().FirstOrDefault();
-                    Either<Vector2, Inventory> spawnLocation = Character.Controlled?.Inventory?.visualSlots.Any(vs => vs.MouseOn()) ?? false ? Character.Controlled.Inventory : DebugMenu.CursorPosWorld - (sub is not null ? sub.Position : Vector2.Zero);
+                    Submarine sub = Entity.GetEntities(entity => entity.IsUnderCursor).OfType<Submarine>().FirstOrDefault();
+                    Either<Vector2, Inventory> spawnLocation = Character.Controlled?.Inventory?.visualSlots is { } slots && slots.Any(slot => slot.MouseOn()) ? Character.Controlled.Inventory : PlayerInput.MouseWorldPosition - (sub?.Position ?? Vector2.Zero);
                     foreach (((ItemPrefab item, int quality), int amount) in selectedItemPrefabs)
                     {
                         SpawnItem(item, spawnLocation, sub, quality, amount);
@@ -443,11 +412,28 @@ namespace Barotrauma
                     }
                 }
             }
+
+            base.Update();
         }
 
-        public static void UpdateAll()
+        protected override void Draw(SpriteBatch spriteBatch)
         {
+            if (!selectedItemPrefabs.Any()) { return; }
 
+            spriteBatch.Begin();
+
+            Vector2 drawPos = PlayerInput.MousePosition + (25f, 0f);
+            int iconHeight = 32;
+
+            foreach (((ItemPrefab item, int quality), int amount) in selectedItemPrefabs)
+            {
+                Sprite icon = item.InventoryIcon ?? item.Sprite;
+                spriteBatch.Draw(icon.Texture, new Rectangle(drawPos.ToPoint(), (iconHeight / icon.SourceRect.Height * icon.SourceRect.Width, iconHeight)), icon.SourceRect, item.InventoryIcon != null ? item.InventoryIconColor : item.SpriteColor);
+                GUI.DrawString(spriteBatch, drawPos + (iconHeight * 0.75f, iconHeight * 0.5f), $"x{amount}", GUIStyle.GetQualityColor(quality));
+                drawPos.Y += iconHeight;
+            }
+
+            spriteBatch.End();
         }
     }
 }
