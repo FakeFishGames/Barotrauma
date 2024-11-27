@@ -13,8 +13,6 @@ namespace Barotrauma.Items.Components
     {
         private GUITextBlock textBlock;
 
-        private Color textColor;
-
         private float scrollAmount;
         private string scrollingText;
         private float scrollPadding;
@@ -27,101 +25,10 @@ namespace Barotrauma.Items.Components
         private Rectangle prevRect;
         private StringBuilder sb;
 
-        private Vector4 padding;
-
-        [Editable(DecimalCount = 0, VectorComponentLabels = new string[] { "inputtype.left", "inputtype.up", "inputtype.right", "inputtype.down" }), Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels.")]
-        public Vector4 Padding
-        {
-            get { return padding; }
-            set 
-            {
-                padding = value;
-                TextBlock.Padding = value * item.Scale; 
-            }
-        }
-
-        private Alignment alignment;
-        [Editable, Serialize(Alignment.Center, IsPropertySaveable.Yes, description: "The alignment of the label's text.")]
-        public Alignment TextAlignment
-        {
-            get => alignment;
-            set => alignment = textBlock.TextAlignment = value;
-        }
-
-        private string text;
-        [Serialize("", IsPropertySaveable.Yes, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(MaxLength = 100)]
-        public string Text
-        {
-            get { return text; }
-            set
-            {
-                if (value == text || item.Rect.Width < 5) { return; }
-
-                if (TextBlock.Rect.Width != item.Rect.Width || textBlock.Rect.Height != item.Rect.Height)
-                {
-                    textBlock = null;
-                }
-
-                text = value;
-                SetDisplayText(value); 
-                UpdateScrollingText();
-            }
-        }
-
-        private GUIFont font;
-        [Editable, Serialize("UnscaledSmallFont", IsPropertySaveable.Yes, "The label's font.")]
-        public GUIFont Font
-        {
-            get => font;
-            set => font = textBlock.Font = value;
-        }
-
-        private bool ignoreLocalization;
-
-        [Editable, Serialize(false, IsPropertySaveable.Yes, "Whether or not to skip localization and always display the raw value.")]
-        public bool IgnoreLocalization
-        {
-            get => ignoreLocalization;
-            set
-            {
-                ignoreLocalization = value;
-                SetDisplayText(Text);
-            }
-        }
-
         public LocalizedString DisplayText
         {
             get;
             private set;
-        }
-
-        [Editable, Serialize("0,0,0,255", IsPropertySaveable.Yes, description: "The color of the text displayed on the label (R,G,B,A).", alwaysUseInstanceValues: true)]
-        public Color TextColor
-        {
-            get { return textColor; }
-            set
-            {
-                if (textBlock != null) { textBlock.TextColor = value; }
-                textColor = value;
-            }
-        }
-
-        [Editable(0.0f, 10.0f), Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
-        public float TextScale
-        {
-            get { return textBlock == null ? 1.0f : textBlock.TextScale / BaseToRealTextScaleFactor; }
-            set
-            {
-                if (textBlock != null) 
-                {
-                    float prevScale = TextBlock.TextScale;
-                    textBlock.TextScale = MathHelper.Clamp(value * BaseToRealTextScaleFactor, 0.1f, 10.0f); 
-                    if (!MathUtils.NearlyEqual(prevScale, TextBlock.TextScale))
-                    {
-                        SetScrollingText();
-                    }
-                }
-            }
         }
 
         private bool scrollable;
