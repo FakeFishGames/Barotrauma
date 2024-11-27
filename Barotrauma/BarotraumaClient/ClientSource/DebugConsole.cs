@@ -1386,43 +1386,20 @@ namespace Barotrauma
                 {
                     switch (args[0])
                     {
-                        case "close" or "closeall":
+                        case "closeall":
                             DebugWindow.CloseAll();
-                            EntityInspector.InspectorMode = InspectorMode.Disabled;
                             break;
-                        case "entities" or "entityexplorer":
+                        case "entityexplorer":
                             EntityExplorer.OpenNew();
                             break;
-                        case "gui" or "guiexplorer" or "guiheirarchy":
+                        case "guiexplorer":
                             GUIExplorer.TryOpenNew(Screen.Selected.Frame);
                             break;
-                        case "inspect":
-                            if (args.Length > 1)
-                            {
-                                switch (args[1])
-                                {
-                                    case "entities":
-                                        EntityInspector.InspectorMode = InspectorMode.Entities;
-                                        break;
-                                    case "gui":
-                                        EntityInspector.InspectorMode = InspectorMode.GUI;
-                                        break;
-                                    default:
-                                        NewMessage($"'{args[1]}' is not a valid inspector mode", Color.Yellow);
-                                        EntityInspector.InspectorMode = InspectorMode.Disabled;
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                EntityInspector.InspectorMode = InspectorMode.Entities;
-                            }
-                            break;
-                        case "spawnitems" or "spawnitem" or "itemspawner":
+                        case "itemspawner":
                             ItemSpawner.TryOpenNew();
                             break;
                         default:
-                            NewMessage($"'{args[0]}' is not a valid window", Color.Yellow);
+                            NewMessage($"'{args[0]}' is not a valid debug window.", Color.Yellow);
                             break;
                     }
                 }
@@ -1432,6 +1409,33 @@ namespace Barotrauma
                 }
             });
             AssignRelayToServer("debugmenu", false);
+
+            AssignOnExecute("inspect", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    switch (args[0])
+                    {
+                        case "entities":
+                            EntityInspector.InspectorMode = InspectorMode.Entities;
+                            break;
+                        case "gui":
+                            EntityInspector.InspectorMode = InspectorMode.GUI;
+                            break;
+                        case "none":
+                            EntityInspector.InspectorMode = InspectorMode.Disabled;
+                            break;
+                        default:
+                            NewMessage($"'{args[0]}' is not a valid inspector mode.", Color.Yellow);
+                            break;
+                    }
+                }
+                else
+                {
+                    EntityInspector.InspectorMode = InspectorMode.Entities;
+                }
+            });
+            AssignRelayToServer("inspect", false);
 
             AssignOnExecute("debugdraw", (string[] args) =>
             {

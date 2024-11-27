@@ -1,8 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -26,8 +23,7 @@ namespace Barotrauma
             entityList = new(new(Vector2.One, Content.RectTransform));
             entityList.OnSelected += (component, obj) =>
             {
-                if (obj is Submarine sub) { DebugConsole.NewMessage(sub.VisibleBorders.ToString()); }
-                if (Entity.GetEntities().Contains(obj) && !(obj as Entity).Removed)
+                if (obj is Entity { Removed: false })
                 {
                     EntityEditor.TryOpenNew(obj as Entity);
                     return true;
@@ -49,6 +45,8 @@ namespace Barotrauma
             entityList.ClearChildren();
             foreach (Entity entity in focusedEntities)
             {
+                if (entity is not { Removed: false }) { return; }
+
                 GUITextBlock entry = CreateListEntry(entityList, entity, out GUILayoutGroup right);
                 entry.Text = RichString.Rich($"{entity.GetName()} (‖color:GUI.Green‖{entity.GetType().Name}‖end‖) {entity.WorldPosition.ToPoint()}");
 
