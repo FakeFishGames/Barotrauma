@@ -1419,7 +1419,7 @@ namespace Barotrauma
                             }
                             break;
                         case "spawnitems" or "spawnitem" or "itemspawner":
-                            ItemSpawner.OpenNew();
+                            ItemSpawner.TryOpenNew();
                             break;
                         default:
                             NewMessage($"'{args[0]}' is not a valid window", Color.Yellow);

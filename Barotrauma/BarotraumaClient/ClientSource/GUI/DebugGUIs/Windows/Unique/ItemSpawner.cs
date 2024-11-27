@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    internal sealed class ItemSpawner : DebugWindow
+    internal sealed class ItemSpawner : UniqueDebugWindow<ItemSpawner>
     {
         private readonly GUIListBox categorizedEntityList, allEntityList;
         private readonly GUITextBox entityFilterBox;
@@ -115,7 +115,13 @@ namespace Barotrauma
             OpenEntityMenu(null);
         }
 
-        public static ItemSpawner OpenNew() => new();
+        public static void TryOpenNew()
+        {
+            if (!WindowExists())
+            {
+                new ItemSpawner();
+            }
+        }
 
         private void FilterEntities(string filter)
         {

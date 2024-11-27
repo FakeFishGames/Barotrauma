@@ -16,9 +16,9 @@ namespace Barotrauma
 
         protected static bool WindowExists(T obj)
         {
-            if (AllWindows.ContainsKey(obj))
+            if (AllWindows.TryGetValue(obj, out ExclusiveDebugWindow<T> window))
             {
-                AllWindows[obj].Frame.Flash(GUIStyle.Green);
+                window.Frame.Flash(GUIStyle.Green);
                 return true;
             }
             return false;
@@ -37,8 +37,8 @@ namespace Barotrauma
 
         protected override void Close()
         {
-            base.Close();
             AllWindows.Remove(FocusedObject);
+            base.Close();
         }
     }
 }
