@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -13,7 +11,6 @@ namespace Barotrauma
         private EntityEditor(Entity entity) : base(entity, createRefreshButton: true)
         {
             editorList = new(new(Vector2.One, Content.RectTransform));
-
             Refresh();
         }
 

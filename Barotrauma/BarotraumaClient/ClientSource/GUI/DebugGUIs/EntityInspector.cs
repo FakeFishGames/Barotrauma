@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -18,19 +17,19 @@ namespace Barotrauma
 
     internal static class EntityInspector
     {
-        public static InspectorMode InspectorMode = InspectorMode.Disabled;
+        public static InspectorMode Mode = InspectorMode.Disabled;
 
         public static void Update()
         {
-            if (InspectorMode == InspectorMode.Disabled) { return; }
+            if (Mode == InspectorMode.Disabled) { return; }
 
             if (PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.KeyHit(Keys.Escape))
             {
-                InspectorMode = InspectorMode.Disabled;
+                Mode = InspectorMode.Disabled;
             }
             else if (PlayerInput.PrimaryMouseButtonClicked())
             {
-                switch (InspectorMode)
+                switch (Mode)
                 {
                     case InspectorMode.Entities:
                         IEnumerable<Entity> EntitiesUnderCursor = Entity.GetEntities(entity => entity.IsUnderCursor);
@@ -40,21 +39,18 @@ namespace Barotrauma
                         GUIExplorer.TryOpenNew(GUI.MouseOn);
                         break;
                 }
-                InspectorMode = InspectorMode.Disabled;
+                Mode = InspectorMode.Disabled;
             }
         }
 
         public static void Draw(SpriteBatch spriteBatch)
         {
-            if (InspectorMode == InspectorMode.Disabled)
+            if (Mode == InspectorMode.Disabled)
             {
-                if (GameMain.DebugDraw)
-                {
-                    spriteBatch.Begin();
-                    GUI.MouseOn?.DrawGUIDebugOverlay(spriteBatch);
-                    spriteBatch.End();
-                }
-
+                if (!GameMain.DebugDraw) { return; }
+                spriteBatch.Begin();
+                GUI.MouseOn?.DrawGUIDebugOverlay(spriteBatch);
+                spriteBatch.End();
                 return;
             }
 
@@ -63,7 +59,7 @@ namespace Barotrauma
             Vector2 cursorOffset = PlayerInput.MousePosition + (25f, 0f);
             string tooltip = $"Inspector mode (RMB to cancel)\nCursor pos: {PlayerInput.MouseWorldPosition}";
 
-            switch (InspectorMode)
+            switch (Mode)
             {
                 case InspectorMode.Entities:
                     IEnumerable<Entity> entities = Entity.GetEntities(entity => entity.IsUnderCursor);

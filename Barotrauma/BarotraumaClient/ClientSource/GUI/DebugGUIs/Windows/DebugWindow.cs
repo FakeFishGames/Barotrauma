@@ -17,7 +17,7 @@ namespace Barotrauma
 
         protected DebugWindow(bool createRefreshButton = false)
         {
-            Frame = new(new(new Vector2(0.25f, 0.5f), GUI.Canvas, Anchor.Center), "ItemUI")
+            Frame = new(new((0.25f, 0.5f), GUI.Canvas, Anchor.Center), "ItemUI")
             {
                 CanBeFocused = false
             };

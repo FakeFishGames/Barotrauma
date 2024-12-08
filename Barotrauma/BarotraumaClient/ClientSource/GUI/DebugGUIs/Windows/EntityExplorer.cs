@@ -23,16 +23,14 @@ namespace Barotrauma
             entityList = new(new(Vector2.One, Content.RectTransform));
             entityList.OnSelected += (component, obj) =>
             {
-                if (obj is Entity { Removed: false })
+                if (obj is Entity { Removed: false } entity)
                 {
-                    EntityEditor.TryOpenNew(obj as Entity);
+                    EntityEditor.TryOpenNew(entity);
                     return true;
                 }
-                else
-                {
-                    component.RectTransform.Parent = null;
-                    return false;
-                }
+
+                component.RectTransform.Parent = null;
+                return false;
             };
 
             Refresh();
@@ -57,12 +55,13 @@ namespace Barotrauma
                     OnClicked = (_, _) =>
                     {
                         entry.RectTransform.Parent = null;
-                        if (!entity.Removed) entity.Remove();
+                        if (!entity.Removed) { entity.Remove(); }
+
                         return true;
                     }
                 };
 
-                new GUITextBlock(new(new Vector2(0.1f, 1), right.RectTransform), entity.ID.ToString(), Color.Gray, textAlignment: Alignment.Right)
+                new GUITextBlock(new((0.1f, 1f), right.RectTransform), entity.ID.ToString(), Color.Gray, textAlignment: Alignment.Right)
                 {
                     CanBeFocused = false
                 };

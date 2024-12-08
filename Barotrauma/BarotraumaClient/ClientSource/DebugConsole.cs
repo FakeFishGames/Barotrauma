@@ -1417,13 +1417,13 @@ namespace Barotrauma
                     switch (args[0])
                     {
                         case "entities":
-                            EntityInspector.InspectorMode = InspectorMode.Entities;
+                            EntityInspector.Mode = InspectorMode.Entities;
                             break;
                         case "gui":
-                            EntityInspector.InspectorMode = InspectorMode.GUI;
+                            EntityInspector.Mode = InspectorMode.GUI;
                             break;
                         case "none":
-                            EntityInspector.InspectorMode = InspectorMode.Disabled;
+                            EntityInspector.Mode = InspectorMode.Disabled;
                             break;
                         default:
                             NewMessage($"'{args[0]}' is not a valid inspector mode.", Color.Yellow);
@@ -1432,7 +1432,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    EntityInspector.InspectorMode = InspectorMode.Entities;
+                    EntityInspector.Mode = InspectorMode.Entities;
                 }
             });
             AssignRelayToServer("inspect", false);

@@ -14,12 +14,9 @@ namespace Barotrauma
 
         protected static bool WindowExists()
         {
-            if (AllWindows.TryGetValue(typeof(T), out UniqueDebugWindow<T> window))
-            {
-                window.Frame.Flash(GUIStyle.Green);
-                return true;
-            }
-            return false;
+            if (!AllWindows.TryGetValue(typeof(T), out UniqueDebugWindow<T> window)) { return false; }
+            window.Frame.Flash(GUIStyle.Green);
+            return true;
         }
 
         protected override void Close()

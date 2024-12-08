@@ -16,12 +16,9 @@ namespace Barotrauma
 
         protected static bool WindowExists(T obj)
         {
-            if (AllWindows.TryGetValue(obj, out ExclusiveDebugWindow<T> window))
-            {
-                window.Frame.Flash(GUIStyle.Green);
-                return true;
-            }
-            return false;
+            if (!AllWindows.TryGetValue(obj, out ExclusiveDebugWindow<T> window)) { return false; }
+            window.Frame.Flash(GUIStyle.Green);
+            return true;
         }
 
         protected override void Update()

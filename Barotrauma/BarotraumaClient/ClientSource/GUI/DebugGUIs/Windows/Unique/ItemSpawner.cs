@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -25,7 +24,7 @@ namespace Barotrauma
         private readonly Dictionary<(ItemPrefab, int), int> selectedItemPrefabs = new();
         private int selectedQuality;
 
-        private ItemSpawner() : base()
+        private ItemSpawner()
         {
             GUILayoutGroup entityMenuTop = new(new(new Vector2(1, 0.13f), Content.RectTransform), true, Anchor.CenterLeft);
 
@@ -56,13 +55,13 @@ namespace Barotrauma
             IEnumerable<GUIButton> entityCategoryButtons = entityMenuTop.Children.OfType<GUIButton>();
             Point buttonSize = new(entityMenuTop.Rect.Width / entityCategoryButtons.Count());
             entityMenuTop.RectTransform.MaxSize = new(entityMenuTop.Rect.Width, buttonSize.Y);
-            entityCategoryButtons.ForEach(b =>
+            entityCategoryButtons.ForEach(button =>
             {
-                b.RectTransform.MaxSize = buttonSize;
-                b.OnClicked += (_, _) =>
+                button.RectTransform.MaxSize = buttonSize;
+                button.OnClicked += (_, _) =>
                 {
                     entityCategoryButtons.ForEach(b => b.Selected = false);
-                    return b.Selected = true;
+                    return button.Selected = true;
                 };
             });
 
@@ -90,7 +89,7 @@ namespace Barotrauma
                 new GUIButton(new(new Vector2(1f / (Quality.MaxQuality + 1), 0), qualitySelection.RectTransform), TextManager.Get($"qualityname{i}"), color: color)
                 {
                     UserData = i,
-                    OnClicked = (button, obj) =>
+                    OnClicked = (_, obj) =>
                     {
                         selectedQuality = (int)obj;
                         return true;
@@ -102,12 +101,12 @@ namespace Barotrauma
             }
             qualitySelection.RectTransform.MinSize = new(0, qualitySelection.GetChild(0).Rect.Height);
             IEnumerable<GUIButton> qualityButtons = qualitySelection.Children.OfType<GUIButton>();
-            qualityButtons.ForEach(b =>
+            qualityButtons.ForEach(button =>
             {
-                b.OnClicked += (_, _) =>
+                button.OnClicked += (_, _) =>
                 {
                     qualityButtons.ForEach(b => b.Selected = false);
-                    b.Selected = true;
+                    button.Selected = true;
                     return true;
                 };
             });
@@ -132,13 +131,14 @@ namespace Barotrauma
 
                 foreach (GUIComponent child in categorizedEntityList.Content.Children)
                 {
-                    if (!(child.Visible = !selectedCategory.HasValue || selectedCategory == (MapEntityCategory)child.UserData)) return;
-                    GUIListBox innerList = child.GetChild<GUIListBox>();
-                    foreach (GUIComponent grandChild in innerList.Content.Children)
+                    if (!(child.Visible = !selectedCategory.HasValue) && selectedCategory != (MapEntityCategory)child.UserData) { return; }
+
+                    foreach (GUIComponent grandChild in child.GetChild<GUIListBox>().Content.Children)
                     {
-                        grandChild.Visible = ((MapEntityPrefab)grandChild.UserData).Name.Value.Contains(filter, StringComparison.OrdinalIgnoreCase);
+                        grandChild.Visible = true;
                     }
-                };
+                }
+
                 categorizedEntityList.UpdateScrollBarSize();
                 categorizedEntityList.BarScroll = 0;
                 return;
@@ -179,11 +179,7 @@ namespace Barotrauma
                     entityLists[category + ip.Subcategory].Add(ip);
                     categoryKeys[category + ip.Subcategory] = category;
                     LocalizedString subcategoryName = TextManager.Get("SubCategory." + ip.Subcategory).Fallback(ip.Subcategory);
-                    if (subcategoryName != null)
-                    {
-                        maxTextWidth = (int)Math.Max(maxTextWidth, GUIStyle.SubHeadingFont.MeasureString(subcategoryName.Replace(" ", "\n")).X + GUI.IntScale(50));
-                    }
-                }
+                    maxTextWidth = (int)Math.Max(maxTextWidth, GUIStyle.SubHeadingFont.MeasureString(subcategoryName.Replace(" ", "\n")).X + GUI.IntScale(50)); }
             }
 
             categorizedEntityList.Content.ClampMouseRectToParent = true;
@@ -215,9 +211,15 @@ namespace Barotrauma
                     CheckSelected = MapEntityPrefab.GetSelected,
                     ClampMouseRectToParent = true,
                     PlaySoundOnSelect = true,
+                    ContentBackground =
+                    {
+                        ClampMouseRectToParent = true
+                    },
+                    Content =
+                    {
+                        ClampMouseRectToParent = true
+                    }
                 };
-                entityListInner.ContentBackground.ClampMouseRectToParent = true;
-                entityListInner.Content.ClampMouseRectToParent = true;
 
                 foreach (ItemPrefab ip in entityLists[categoryKey])
                 {
@@ -328,11 +330,9 @@ namespace Barotrauma
             textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
             paddedFrame.Recalculate();
-            if (img.Sprite != null)
-            {
-                img.Scale = Math.Min(Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y), 1.5f);
-                img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
-            }
+            if (img.Sprite == null) { return; }
+            img.Scale = Math.Min(Math.Min(img.Rect.Width / img.Sprite.size.X, img.Rect.Height / img.Sprite.size.Y), 1.5f);
+            img.RectTransform.NonScaledSize = new Point((int)(img.Sprite.size.X * img.Scale), img.Rect.Height);
         }
 
         private bool SelectPrefab(GUIComponent component, object userData)
@@ -355,25 +355,19 @@ namespace Barotrauma
 
             SoundPlayer.PlayUISound(GUISoundType.DropItem);
             (ItemPrefab, int) key = new(prefab, selectedQuality);
-            if (selectedItemPrefabs.TryGetValue(key, out int amount) && amount > 0)
-            {
-                selectedItemPrefabs[key]--;
-                if (selectedItemPrefabs[key] <= 0)
-                {
-                    selectedItemPrefabs.Remove(key);
-                }
-            }
-
+            if (!selectedItemPrefabs.TryGetValue(key, out int amount) || amount <= 0) { return true; }
+            selectedItemPrefabs[key]--;
+            if (selectedItemPrefabs[key] <= 0) { selectedItemPrefabs.Remove(key); }
             return true;
         }
-
+        
         private static void SpawnItem(ItemPrefab prefab, Either<Vector2, Inventory> spawnLocation, Submarine sub, int quality, int amount)
         {
             for (int i = 0; i < amount; i++)
             {
                 if (spawnLocation.TryGet(out Vector2 pos))
                 {
-                    Item item = new(prefab, pos, sub)
+                    new Item(prefab, pos, sub)
                     {
                         Quality = quality
                     };

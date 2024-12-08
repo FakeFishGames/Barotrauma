@@ -1,9 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -26,9 +24,9 @@ namespace Barotrauma
             {
                 OnSelected = (_, obj) =>
                 {
-                    if (obj is GUIComponent component)
+                    if (obj is GUIComponent componentToFocus)
                     {
-                        TryOpenNew(component);
+                        TryOpenNew(componentToFocus);
                     }
                     return true;
                 }
@@ -84,18 +82,18 @@ namespace Barotrauma
                     }
                 };
 
-                GUITickBox visibleCheck = new(new(new Point(right.Rect.Height), right.RectTransform), "", style: "GUITickBoxNoMinimum")
+                new GUITickBox(new(new Point(right.Rect.Height), right.RectTransform), "", style: "GUITickBoxNoMinimum")
                 {
                     ToolTip = TextManager.Get("VisibleSubmarines"),
                     Selected = component1.Visible,
-                    OnSelected = (obj) =>
+                    OnSelected = obj =>
                     {
                         component1.Visible = obj.Selected;
                         return true;
                     }
                 };
 
-                new GUITextBlock(new(new Vector2(0.1f, 1f), right.RectTransform), component1.UpdateOrder.ToString(), Color.Gray, textAlignment: Alignment.Right)
+                new GUITextBlock(new((0.1f, 1f), right.RectTransform), component1.UpdateOrder.ToString(), Color.Gray, textAlignment: Alignment.Right)
                 {
                     CanBeFocused = false
                 };
@@ -120,7 +118,7 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             spriteBatch.Begin();
-            componentEntries.Where(i => i.State is GUIComponent.ComponentState.Hover or GUIComponent.ComponentState.HoverSelected).ForEach(i => (i.UserData as GUIComponent).DrawGUIDebugOverlay(spriteBatch));
+            componentEntries.Where(i => i.State is GUIComponent.ComponentState.Hover or GUIComponent.ComponentState.HoverSelected).ForEach(i => (i.UserData as GUIComponent)!.DrawGUIDebugOverlay(spriteBatch));
             spriteBatch.End();
         }
     }
