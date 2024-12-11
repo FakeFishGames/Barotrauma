@@ -1,0 +1,4 @@
+<ContentPackage name="Debug Menus Mod">
+  <Text file="%ModDir%/English.xml"/>
+  <UIStyle file="%ModDir%/style.xml"/>
+</ContentPackage>

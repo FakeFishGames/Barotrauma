@@ -79,6 +79,8 @@ namespace Barotrauma
 
         public bool IsIncludedInSelection { get; set; }
 
+        public override bool IsUnderCursor => WorldRect.ContainsWorld(PlayerInput.MouseWorldPosition);
+
         public virtual bool IsVisible(Rectangle worldView)
         {
             Rectangle worldRect = WorldRect;

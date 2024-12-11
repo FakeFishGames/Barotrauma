@@ -96,6 +96,8 @@ namespace Barotrauma
             }
         }
 
+        public override bool IsUnderCursor => !IsContained && (Components.OfType<Wire>().Any(wire => wire.IsMouseOn()) || base.IsUnderCursor);
+
         public override bool DrawBelowWater => (!(Screen.Selected is SubEditorScreen editor) || !editor.WiringMode || !isWire || !isLogic) && (base.DrawBelowWater || ParentInventory is CharacterInventory);
 
         public override bool DrawOverWater => base.DrawOverWater || (IsSelected || Screen.Selected is SubEditorScreen editor && editor.WiringMode) && (isWire || isLogic);

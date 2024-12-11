@@ -2254,6 +2254,14 @@ namespace Barotrauma
             commands.Add(new Command("los", "Toggle the line of sight effect on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
+            commands.Add(new Command("debugmenu", "debugmenu [menu]: Open a debug window (client-only).", null,
+            () => new string[][] {
+                new string[] { "closeall", "entityexplorer", "guiexplorer", "itemspawner" }
+            }, isCheat: true));
+            commands.Add(new Command("inspect", "inspect [mode]: Enable the inspector (client-only).", null,
+            () => new string[][] {
+                new string[] { "entities", "gui", "none" }
+            }));
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("debugwiring", "Toggle the wiring debug mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("debugdrawlocalization", "Toggle the localization debug drawing mode on/off (client-only). Colors all text that hasn't been fetched from a localization file magenta, making it easier to spot hard-coded or missing texts.", null, isCheat: false));

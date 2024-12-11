@@ -587,11 +587,11 @@ namespace Barotrauma
                 }
                 GameMain.CharacterEditorScreen.Select();
             }));
-            
-            commands.Add(new Command("settainted", "settainted [true/false]: Sets tainted effect on hovered genetic material.", 
+
+            commands.Add(new Command("settainted", "settainted [true/false]: Sets tainted effect on hovered genetic material.",
             onExecute: (string[] args) =>
             {
-                
+
                 if (Character.Controlled == null)
                 {
                     NewMessage("No controlled character!", Color.Red);
@@ -599,7 +599,7 @@ namespace Barotrauma
                 }
 
                 Item focusedItem = Character.Controlled?.FocusedItem ?? Inventory.SelectedSlot?.Item;
-            
+
                 if (focusedItem == null)
                 {
                     NewMessage("No focused item, hover on something!", Color.Red);
@@ -658,20 +658,20 @@ namespace Barotrauma
                 GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName, difficulty, levelGenerationParams);
 
             }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().OrderBy(s => s).ToArray() }));
-            
+
             commands.Add(new Command("forcewreck", "forcewreck [wreckname] (optional, ThalamusSpawn)[Random/Forced/Disabled]: When generating levels, ensures a specific wreck is generated. Second optional parameter to control thalamus spawning.", (string[] args) =>
             {
                 if (args.Length > 0)
                 {
                     var submarineFile = GetSubmarineFile<WreckFile>(args[0]);
-                    
+
                     if (submarineFile != null)
                     {
                         var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(i => i.FilePath == submarineFile.Path.Value);
                         if (matchingSub != null)
                         {
                             NewMessage($"Setting ForceWreck to: {matchingSub.Name}, {submarineFile.Path}", color: Color.Yellow);
-                            
+
                             LevelData.ConsoleForceWreck = matchingSub;
                         }
                     }
@@ -680,7 +680,7 @@ namespace Barotrauma
                         NewMessage($"Can't find: {args[0]}", color: Color.Red);
                     }
                 }
-                
+
                 if (args.Length > 1)
                 {
                     string forceThalamusArg = args[1];
@@ -704,24 +704,24 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    ListSubmarineFileNames<WreckFile>(),
-                    new string[] { LevelData.ThalamusSpawn.Random.ToString(), LevelData.ThalamusSpawn.Forced.ToString(), LevelData.ThalamusSpawn.Disabled.ToString() }
+                                ListSubmarineFileNames<WreckFile>(),
+                                new string[] { LevelData.ThalamusSpawn.Random.ToString(), LevelData.ThalamusSpawn.Forced.ToString(), LevelData.ThalamusSpawn.Disabled.ToString() }
                 };
             }, isCheat: true));
-            
+
             commands.Add(new Command("forcebeaconstation|forcebeacon", "forcebeaconstation [station name]: When generating levels, ensures a specific beacon station is generated.", (string[] args) =>
             {
                 if (args.Length > 0)
                 {
                     var submarineFile = GetSubmarineFile<BeaconStationFile>(args[0]);
-                    
+
                     if (submarineFile != null)
                     {
                         var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(i => i.FilePath == submarineFile.Path.Value);
                         if (matchingSub != null)
                         {
                             NewMessage($"Setting ForceBeaconStation to: {matchingSub.Name}, {submarineFile.Path}", color: Color.Yellow);
-                            
+
                             LevelData.ConsoleForceBeaconStation = matchingSub;
                         }
                     }
@@ -738,14 +738,14 @@ namespace Barotrauma
                     ListSubmarineFileNames<BeaconStationFile>()
                 };
             }, isCheat: true));
-            
+
             commands.Add(new Command("reloadcontentfile", "reloadcontentfile [filepath]: Reloads a specific content xml file during runtime.", (string[] args) =>
             {
                 if (args.Length > 0)
                 {
                     string pathArgument = args[0];
                     var contentFile = GetContentFile(pathArgument);
-                    
+
                     if (contentFile != null)
                     {
                         NewMessage($"Reloading content file: {pathArgument}", Color.Yellow);
@@ -1379,6 +1379,63 @@ namespace Barotrauma
 
                 msgBox.Buttons[0].OnClicked = msgBox.Close;
             }));
+
+            AssignOnExecute("debugmenu", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    switch (args[0])
+                    {
+                        case "closeall":
+                            DebugWindow.CloseAll();
+                            break;
+                        case "entityexplorer":
+                            EntityExplorer.OpenNew();
+                            break;
+                        case "guiexplorer":
+                            GUIExplorer.TryOpenNew(Screen.Selected.Frame);
+                            break;
+                        case "itemspawner":
+                            ItemSpawner.TryOpenNew();
+                            break;
+                        default:
+                            NewMessage($"'{args[0]}' is not a valid debug window.", Color.Yellow);
+                            break;
+                    }
+                }
+                else
+                {
+                    EntityExplorer.OpenNew();
+                }
+            });
+            AssignRelayToServer("debugmenu", false);
+
+            AssignOnExecute("inspect", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    switch (args[0])
+                    {
+                        case "entities":
+                            EntityInspector.Mode = InspectorMode.Entities;
+                            break;
+                        case "gui":
+                            EntityInspector.Mode = InspectorMode.GUI;
+                            break;
+                        case "none":
+                            EntityInspector.Mode = InspectorMode.Disabled;
+                            break;
+                        default:
+                            NewMessage($"'{args[0]}' is not a valid inspector mode.", Color.Yellow);
+                            break;
+                    }
+                }
+                else
+                {
+                    EntityInspector.Mode = InspectorMode.Entities;
+                }
+            });
+            AssignRelayToServer("inspect", false);
 
             AssignOnExecute("debugdraw", (string[] args) =>
             {
@@ -2926,6 +2983,7 @@ namespace Barotrauma
 
                 foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs())
                 {
+                    if (eventPrefab is not TraitorEventPrefab) { continue; }
                     if (eventPrefab.Identifier.IsEmpty) 
                     {
                         continue;
@@ -3157,10 +3215,10 @@ namespace Barotrauma
 
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
-                if (args.Length != 1) 
+                if (args.Length != 1)
                 {
                     ThrowError("Please specify a language to check.");
-                    return; 
+                    return;
                 }
                 TextManager.CheckForDuplicates(args[0].ToIdentifier().ToLanguageIdentifier());
             }));
@@ -3713,9 +3771,9 @@ namespace Barotrauma
                         character.AnimController.RecreateAndRespawn();
                     }
                 }
-            }, isCheat: true, 
+            }, isCheat: true,
                 getValidArgs: () => new[] { GetSpawnedSpeciesNames() }));
-            
+
             commands.Add(new Command("loadanimation", "Loads an animation variation by name for the controlled character. The animation file has to be in the correct animations folder. Note: the changes are not saved!", (string[] args) =>
             {
                 var character = Character.Controlled;
