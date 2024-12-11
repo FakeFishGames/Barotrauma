@@ -562,6 +562,7 @@ namespace Barotrauma
                 bool buttonsFound = false;
                 // Check wired controllers (e.g. buttons)
                 // Always run the buttonFilter delegate (inside CanAccessButton method), if defined, because it's used for find a valid controller component that can be used for closing the door, when needed.
+                // TODO: connectionFilter is ignored in the recursive searches, so it does nothing here.
                 foreach (Controller button in door.Item.GetConnectedComponents<Controller>(recursive: true, connectionFilter: c => c.Name is "toggle" or "set_state"))
                 {
                     buttonsFound = true;
@@ -727,12 +728,15 @@ namespace Barotrauma
                         float distance = Vector2.DistanceSquared(button.Item.WorldPosition, character.WorldPosition);
                         //heavily prefer buttons linked to the door, so sub builders can help the bots figure out which button to use by linking them
                         if (door.Item.linkedTo.Contains(button.Item)) { distance *= 0.1f; }
-                        if (closestButton == null || distance < closestDist && character.CanSeeTarget(button.Item))
+                        if (closestButton == null || distance < closestDist)
                         {
-                            closestButton = button;
-                            closestDist = distance;
+                            if (distance < MathUtils.Pow2(button.Item.InteractDistance + GetColliderLength()) && character.CanSeeTarget(button.Item))
+                            {
+                                closestButton = button;
+                                closestDist = distance;
+                            }
                         }
-                        return true;
+                        return closestButton != null;
                     });
                     if (canAccess)
                     {
@@ -755,41 +759,19 @@ namespace Barotrauma
                         }
                         else if (closestButton != null)
                         {
-                            if (closestDist < MathUtils.Pow2(closestButton.Item.InteractDistance + GetColliderLength()))
+                            if (pressButton)
                             {
-                                if (pressButton)
+                                if (closestButton.Item.TryInteract(character, forceSelectKey: true))
                                 {
-                                    if (closestButton.Item.TryInteract(character, forceSelectKey: true))
-                                    {
-                                        lastDoor = (door, shouldBeOpen);
-                                        buttonPressTimer = shouldBeOpen ? ButtonPressCooldown : 0;
-                                    }
-                                    else
-                                    {
-                                        buttonPressTimer = 0;
-                                    }
+                                    lastDoor = (door, shouldBeOpen);
+                                    buttonPressTimer = shouldBeOpen ? ButtonPressCooldown : 0;
                                 }
-                                break;
-                            }
-                            else
-                            {
-                                // Can't reach the button closest to the character.
-                                // It's possible that we could reach another buttons.
-                                // If this becomes an issue, we could go through them here and check if any of them are reachable
-                                // (would have to cache a collection of buttons instead of a single reference in the CanAccess filter method above)
-                                var body = Submarine.PickBody(character.SimPosition, character.GetRelativeSimPosition(closestButton.Item), collisionCategory: Physics.CollisionWall | Physics.CollisionLevel);
-                                if (body != null)
+                                else
                                 {
-                                    if (body.UserData is Item item)
-                                    {
-                                        var d = item.GetComponent<Door>();
-                                        if (d == null || d.IsOpen) { return; }
-                                    }
-                                    // The button is on the wrong side of the door or a wall
-                                    currentPath.Unreachable = true;
+                                    buttonPressTimer = 0;
                                 }
-                                return;
                             }
+                            break;
                         }
                     }
                     else if (shouldBeOpen)
@@ -871,6 +853,16 @@ namespace Barotrauma
                 {
                     if (!CanAccessDoor(door, button =>
                     {
+                        if (Vector2.DistanceSquared(door.Item.WorldPosition, button.Item.WorldPosition) > MathUtils.Pow2(button.Item.InteractDistance + GetColliderLength()))
+                        {
+                            // Too far from the door.
+                            return false;
+                        }
+                        if (!ISpatialEntity.IsTargetVisible(button.Item, door.Item))
+                        {
+                            // Obstructed.
+                            return false;
+                        }
                         // Ignore buttons that are on the wrong side of the door, unless there's a motion sensor connected to the door, which can be triggered by the character.
                         if (door.IsHorizontal)
                         {

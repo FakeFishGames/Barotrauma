@@ -790,12 +790,16 @@ namespace Barotrauma
 
             var winScoreContainer = CreateLabeledSlider(gameModeSettingsContent, headerTag: string.Empty, valueLabelTag: string.Empty, tooltipTag: "ServerSettingsWinScorePvPTooltip",
                 out var winScorePvPSlider, out var winScorePvPSliderLabel);
-            winScorePvPSlider.Range = new Vector2(1, 1000);
-            winScorePvPSlider.StepValue = 1;
+            winScorePvPSlider.Range = new Vector2(10, 1000);
+            winScorePvPSlider.StepValue = 10;
             winScorePvPSlider.OnMoved = (scrollBar, _) =>
             {
                 if (scrollBar.UserData is not GUITextBlock text) { return false; }
                 text.Text = TextManager.GetWithVariable("ServerSettingsWinScoreValuePvP", "[value]", ((int)Math.Round(scrollBar.BarScrollValue, digits: 0)).ToString());
+                return true;
+            };
+            winScorePvPSlider.OnReleased = (scrollBar, _) =>
+            {
                 GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
                 return true;
             };
@@ -931,7 +935,7 @@ namespace Barotrauma
             //do this before adding the contents, otherwise they get disabled too (and we just want to disable the dropdown itself)
             clientDisabledElements.AddRange(biomeHolder.GetAllChildren());
             biomeDropdown.AddItem(TextManager.Get("random"), "Random".ToIdentifier());
-            foreach (var biome in Biome.Prefabs)
+            foreach (var biome in Biome.Prefabs.OrderBy(b => b.MinDifficulty))
             {
                 if (biome.IsEndBiome) { continue; }
                 biomeDropdown.AddItem(biome.DisplayName, biome.Identifier);
@@ -1195,7 +1199,7 @@ namespace Barotrauma
             var respawnModeHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
             respawnModeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.0f), respawnModeHolder.RectTransform), TextManager.Get("RespawnMode"), wrap: true);
             respawnModeSelection = new GUISelectionCarousel<RespawnMode>(new RectTransform(new Vector2(0.6f, 1.0f), respawnModeHolder.RectTransform));
-            foreach (var respawnMode in Enum.GetValues(typeof(RespawnMode)).Cast<RespawnMode>())
+            foreach (var respawnMode in Enum.GetValues(typeof(RespawnMode)).Cast<RespawnMode>().Where(rm => rm != RespawnMode.None))
             {
                 respawnModeSelection.AddElement(respawnMode, TextManager.Get($"respawnmode.{respawnMode}"), TextManager.Get($"respawnmode.{respawnMode}.tooltip"));
             }
@@ -3005,10 +3009,13 @@ namespace Barotrauma
                     }
                 }
                 outpostDropdown.ListBox.Select(prevSelected);
+                GameMain.Client.ServerSettings.AssignGUIComponent(nameof(ServerSettings.SelectedOutpostName), outpostDropdown);
             }
             else
             {
                 outpostDropdown.Parent.Visible = false;
+                //remove assignment, we shouldn't try selecting the outpost when there's none to select
+                GameMain.Client.ServerSettings.AssignGUIComponent(nameof(ServerSettings.SelectedOutpostName), null);
             }
             outpostDropdownUpToDate = true;
         }

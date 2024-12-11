@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -191,6 +192,26 @@ namespace Barotrauma
                     GameMain.Server?.UpdateMissionState(this);
                 }
             }
+        }
+
+        public void AddToScore(CharacterTeamType team, int amount)
+        {
+            if (!HasWinScore) { return; }
+            int index;
+            switch (team)
+            {
+                case CharacterTeamType.Team1:
+                    index = 0;
+                    break;
+                case CharacterTeamType.Team2:
+                    index = 1;
+                    break;
+                default:
+                    DebugConsole.AddSafeError($"Attempted to increase the score of an invalid team ({team}).");
+                    return;
+            }
+            Scores[index] = MathHelper.Clamp(Scores[index] + amount, 0, WinScore);            
+            GameMain.Server?.UpdateMissionState(this);
         }
 
         private void AddKill(Character character)

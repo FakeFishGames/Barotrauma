@@ -1286,11 +1286,8 @@ namespace Barotrauma.Networking
                     //check if midround syncing is needed due to missed unique events
                     if (!midroundSyncingDone) { entityEventManager.InitClientMidRoundSync(c); }
                     MissionAction.NotifyMissionsUnlockedThisRound(c);
-                    if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign)
-                    {
-                        mpCampaign.SendCrewState();
-                    }
-                    else if (GameMain.GameSession.GameMode is PvPMode)
+                
+                    if (GameMain.GameSession.GameMode is PvPMode)
                     {
                         if (c.TeamID == CharacterTeamType.None)
                         {
@@ -1299,6 +1296,10 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
+                        if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign)
+                        {
+                            mpCampaign.SendCrewState();
+                        }
                         //everyone's in team 1 in non-pvp game modes
                         c.TeamID = CharacterTeamType.Team1;
                     }
@@ -2231,12 +2232,13 @@ namespace Barotrauma.Networking
                     outmsg.WriteUInt16((UInt16)settingsBuf.LengthBytes);
                     outmsg.WriteBytes(settingsBuf.Buffer, 0, settingsBuf.LengthBytes);
 
-                    outmsg.WriteBoolean(c.LastRecvLobbyUpdate < 1);
-                    if (c.LastRecvLobbyUpdate < 1)
+                    outmsg.WriteBoolean(!c.InitialLobbyUpdateSent);
+                    if (!c.InitialLobbyUpdateSent)
                     {
                         isInitialUpdate = true;
                         initialUpdateBytes = outmsg.LengthBytes;
                         ClientWriteInitial(c, outmsg);
+                        c.InitialLobbyUpdateSent = true;
                         initialUpdateBytes = outmsg.LengthBytes - initialUpdateBytes;
                     }
                     outmsg.WriteString(GameMain.NetLobbyScreen.SelectedSub.Name);
@@ -3106,6 +3108,7 @@ namespace Barotrauma.Networking
             {
                 msg.WriteString(levelSeed);
                 msg.WriteSingle(ServerSettings.SelectedLevelDifficulty);
+                msg.WriteIdentifier(ServerSettings.Biome == "Random".ToIdentifier() ? Identifier.Empty : ServerSettings.Biome);
                 msg.WriteString(gameSession.SubmarineInfo.Name);
                 msg.WriteString(gameSession.SubmarineInfo.MD5Hash.StringRepresentation);
                 var selectedShuttle = GameStarted && RespawnManager != null && RespawnManager.UsingShuttle ? 
@@ -3740,13 +3743,13 @@ namespace Barotrauma.Networking
                     }
                     else //msg sent by an AI character
                     {
-                        senderName = senderCharacter.Name;
+                        senderName = senderCharacter.DisplayName;
                     }
                 }
                 else //msg sent by a client
                 {
                     senderCharacter = senderClient.Character;
-                    senderName = senderCharacter == null ? senderClient.Name : senderCharacter.Name;
+                    senderName = senderCharacter == null ? senderClient.Name : senderCharacter.DisplayName;
                     if (type == ChatMessageType.Private)
                     {
                         if (senderCharacter != null && !senderCharacter.IsDead || targetClient.Character != null && !targetClient.Character.IsDead)

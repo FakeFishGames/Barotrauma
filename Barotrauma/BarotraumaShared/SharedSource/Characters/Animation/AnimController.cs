@@ -921,19 +921,15 @@ namespace Barotrauma
             {
                 isRemote = character.IsRemotelyControlled;
             }
-            if (isRemote)
+            //if the character is remotely controlled,
+            //let the server decide when to deselect the ladder and stop climbing
+            if (!isRemote)
             {
-                if (Math.Abs(targetMovement.X) > 0.05f ||
-                    (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) || 
-                    (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
+                if ((character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right)) &&
+                    (!character.IsKeyDown(InputType.Up) && !character.IsKeyDown(InputType.Down)))
                 {
                     isClimbing = false;
                 }
-            }
-            else if ((character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right)) &&
-                    (!character.IsKeyDown(InputType.Up) && !character.IsKeyDown(InputType.Down)))
-            {
-                isClimbing = false;
             }
 
             if (!isClimbing)

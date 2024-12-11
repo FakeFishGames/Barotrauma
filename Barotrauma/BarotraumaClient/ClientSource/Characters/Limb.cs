@@ -137,7 +137,16 @@ namespace Barotrauma
         {
             get
             {
-                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.Exclusive && c.IsActive && c.DeformableSprite != null);
+                // Performance-sensitive, hence implemented without Linq.
+                ConditionalSprite conditionalSprite = null;
+                foreach (ConditionalSprite cs in ConditionalSprites)
+                {
+                    if (cs.Exclusive && cs.IsActive && cs.DeformableSprite != null)
+                    {
+                        conditionalSprite = cs;
+                        break;
+                    }
+                }
                 if (conditionalSprite != null)
                 {
                     return conditionalSprite.DeformableSprite;
@@ -155,7 +164,16 @@ namespace Barotrauma
         {
             get
             {
-                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.Exclusive && c.IsActive && c.ActiveSprite != null);
+                // Performance-sensitive, hence implemented without Linq.
+                ConditionalSprite conditionalSprite = null;
+                foreach (ConditionalSprite cs in ConditionalSprites)
+                {
+                    if (cs.Exclusive && cs.IsActive && cs.ActiveSprite != null)
+                    {
+                        conditionalSprite = cs;
+                        break;
+                    }
+                }
                 if (conditionalSprite != null)
                 {
                     return conditionalSprite.ActiveSprite;
@@ -483,9 +501,20 @@ namespace Barotrauma
             {
                 if (spriteParams != null)
                 {
-                    //1. check if the variant file redefines the texture
-                    ContentPath texturePath = character.Params.VariantFile?.Root?.GetAttributeContentPath("texture", character.Prefab.ContentPackage);
-                    //2. check if the base prefab defines the texture
+                    ContentPath texturePath;
+                    //1. check if the limb defines the texture directly
+                    var definedTexturePath = element?.GetAttributeContentPath("texture");
+                    if (!definedTexturePath.IsNullOrEmpty())
+                    {
+                        texturePath = definedTexturePath;
+                    }
+                    else
+                    {
+                        //2. check if the character file defines the texture directly
+                        texturePath = character.Params.VariantFile?.Root?.GetAttributeContentPath("texture", character.Prefab.ContentPackage);
+                    }
+                    
+                    //3. check if the base prefab defines the texture
                     if (texturePath.IsNullOrEmpty() && !character.Prefab.VariantOf.IsEmpty)
                     {
                         Identifier speciesName = character.GetBaseCharacterSpeciesName();
@@ -495,7 +524,7 @@ namespace Barotrauma
  
                         texturePath = parentRagdollParams.OriginalElement?.GetAttributeContentPath("texture");
                     }
-                    //3. "default case", get the texture from this character's XML
+                    //4. "default case", get the texture from this character's XML
                     texturePath ??= ContentPath.FromRaw(spriteParams.Element.ContentPackage ?? character.Prefab.ContentPackage, spriteParams.GetTexturePath());
                     path = GetSpritePath(texturePath);
                 }
@@ -753,9 +782,29 @@ namespace Barotrauma
             
             float herpesStrength = character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.SpaceHerpesType);
 
-            bool hideLimb = Hide || 
-                OtherWearables.Any(w => w.HideLimb) || 
-                WearingItems.Any(w => w.HideLimb);
+            bool hideLimb = ShouldHideLimb(this);
+            if (!hideLimb && Params.InheritHiding != LimbType.None)
+            {
+                if (character.AnimController.GetLimb(Params.InheritHiding) is Limb otherLimb)
+                {
+                    hideLimb = ShouldHideLimb(otherLimb);
+                }
+            }
+
+            static bool ShouldHideLimb(Limb limb)
+            {
+                if (limb.Hide) { return true; }
+                // Performance-sensitive code -> implemented without Linq
+                foreach (var wearable in limb.OtherWearables)
+                {
+                    if (wearable.HideLimb) { return true; }
+                }
+                foreach (var wearable in limb.WearingItems)
+                {
+                    if (wearable.HideLimb) { return true; }
+                }
+                return false;
+            }
 
             bool drawHuskSprite = HuskSprite != null && !wearableTypesToHide.Contains(WearableType.Husk);
 
@@ -887,28 +936,28 @@ namespace Barotrauma
                     }
                     depthStep += step;
                 }
-                foreach (WearableSprite wearable in OtherWearables)
+                if (!hideLimb)
                 {
-                    if (wearable.Type == WearableType.Husk) { continue; }
-                    if (wearableTypesToHide.Contains(wearable.Type)) 
+                    foreach (WearableSprite wearable in OtherWearables)
                     {
-                        if (wearable.Type == WearableType.Hair)
+                        if (wearable.Type == WearableType.Husk) { continue; }
+                        if (wearableTypesToHide.Contains(wearable.Type)) 
                         {
-                            if (HairWithHatSprite != null && !hideLimb)
+                            // Draws the short hair
+                            if (wearable.Type == WearableType.Hair)
                             {
-                                DrawWearable(HairWithHatSprite, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
-                                depthStep += step;
-                                continue;
+                                if (HairWithHatSprite != null)
+                                {
+                                    DrawWearable(HairWithHatSprite, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
+                                    depthStep += step;
+                                }
                             }
-                        }
-                        else
-                        {
                             continue;
                         }
+                        DrawWearable(wearable, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
+                        //if there are multiple sprites on this limb, make the successive ones be drawn in front
+                        depthStep += step;
                     }
-                    DrawWearable(wearable, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
-                    //if there are multiple sprites on this limb, make the successive ones be drawn in front
-                    depthStep += step;
                 }
             }
             foreach (WearableSprite wearable in WearingItems)
@@ -967,7 +1016,7 @@ namespace Barotrauma
                         new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                         colorWithoutTint * damageOverlayStrength, activeSprite.Origin,
                         -body.DrawRotation,
-                        Scale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
+                        Scale * TextureScale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
                 }
             }
 

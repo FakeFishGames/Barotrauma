@@ -298,24 +298,27 @@ namespace Barotrauma
         /// Last version of the game that had broken handling of sprites that were scaled, flipped and offset
         /// </summary>
         public static readonly Version LastBrokenTiledSpriteGameVersion = new Version(major: 1, minor: 2, build: 7, revision: 0);
+        
+        public void DrawTiled(ISpriteBatch spriteBatch, Vector2 position, Vector2 targetSize, float rotation = 0f, Vector2? origin = null, Color? color = null, Vector2? startOffset = null, Vector2? textureScale = null, float? depth = null)
+        {
+            DrawTiled(spriteBatch, position, targetSize, effects, rotation, origin, color, startOffset, textureScale, depth);
+        }
 
         public void DrawTiled(ISpriteBatch spriteBatch,
             Vector2 position,
             Vector2 targetSize,
+            SpriteEffects spriteEffects,
             float rotation = 0f,
             Vector2? origin = null,
             Color? color = null,
             Vector2? startOffset = null,
             Vector2? textureScale = null,
-            float? depth = null,
-            SpriteEffects? spriteEffects = null)
+            float? depth = null)
         {
             if (Texture == null) { return; }
 
-            spriteEffects ??= effects;
-
-            bool flipHorizontal = spriteEffects.Value.HasFlag(SpriteEffects.FlipHorizontally);
-            bool flipVertical = spriteEffects.Value.HasFlag(SpriteEffects.FlipVertically);
+            bool flipHorizontal = (spriteEffects & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally; // optimized from spriteEffects.HasFlag(SpriteEffects.FlipHorizontally)
+            bool flipVertical = (spriteEffects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically; // optimized from spriteEffects.HasFlag(SpriteEffects.FlipVertically)
 
             float addedRotation = rotation + this.rotation;
             if (flipHorizontal != flipVertical) { addedRotation = -addedRotation; }
@@ -354,7 +357,7 @@ namespace Barotrauma
                     rotation: addedRotation,
                     origin: Vector2.Zero,
                     scale: scale,
-                    effects: spriteEffects.Value,
+                    effects: spriteEffects,
                     layerDepth: depth ?? this.depth);
             }
 

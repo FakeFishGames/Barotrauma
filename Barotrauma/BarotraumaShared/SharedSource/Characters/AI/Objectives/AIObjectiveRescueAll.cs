@@ -47,9 +47,9 @@ namespace Barotrauma
                         if (objectiveManager.GetFirstActiveObjective<AIObjectiveRescue>() == null)
                         {
                             charactersWithMinorInjuries.Add(target);
-                            character.Speak(TextManager.GetWithVariable("dialogignoreminorinjuries", "[targetname]", target.Name).Value,
+                            character.Speak(TextManager.GetWithVariable("dialogignoreminorinjuries", "[targetname]", target.DisplayName).Value,
                                 delay: 1.0f,
-                                identifier: $"notreatableafflictions{target.Name}".ToIdentifier(),
+                                identifier: $"notreatableafflictions{target.DisplayName}".ToIdentifier(),
                                 minDurationBetweenSimilar: 10.0f);
                         }
                     }

@@ -1771,7 +1771,7 @@ namespace Barotrauma.CharacterEditor
 
             // Ragdoll
             RagdollParams.ClearCache();
-            string ragdollPath = RagdollParams.GetDefaultFile(name, contentPackage);
+            string ragdollPath = RagdollParams.GetDefaultFile(name);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, name, ragdoll)
                 : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, name, ragdoll);

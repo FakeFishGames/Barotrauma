@@ -313,6 +313,8 @@ namespace Barotrauma
                 GameSettings.SetCurrentConfig(config);
             }
 
+            int display = GameSettings.CurrentConfig.Graphics.Display;
+
             GraphicsWidth = GameSettings.CurrentConfig.Graphics.Width;
             GraphicsHeight = GameSettings.CurrentConfig.Graphics.Height;
 
@@ -340,7 +342,7 @@ namespace Barotrauma
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = GameSettings.CurrentConfig.Graphics.VSync;
-            SetWindowMode(GameSettings.CurrentConfig.Graphics.DisplayMode);
+            SetWindowMode(GameSettings.CurrentConfig.Graphics.DisplayMode, display);
 
             defaultViewport = new Viewport(0, 0, GraphicsWidth, GraphicsHeight);
 
@@ -353,8 +355,17 @@ namespace Barotrauma
             ResolutionChanged?.Invoke();
         }
 
-        public void SetWindowMode(WindowMode windowMode)
+        public void SetWindowMode(WindowMode windowMode, int display)
         {
+            // We can't move the monitor while the window is fullscreen because of a restriction in SDL2, so as a workaround we switch to windowed mode first
+            var prevDisplayMode = WindowMode;
+            if (Window.TargetDisplay != display && prevDisplayMode != WindowMode.Windowed)
+            {
+                GraphicsDeviceManager.IsFullScreen = false;
+                GraphicsDeviceManager.ApplyChanges();
+            }
+            Window.TargetDisplay = display;
+
             WindowMode = windowMode;
             GraphicsDeviceManager.HardwareModeSwitch = windowMode != WindowMode.BorderlessWindowed;
             GraphicsDeviceManager.IsFullScreen = windowMode == WindowMode.Fullscreen || windowMode == WindowMode.BorderlessWindowed;

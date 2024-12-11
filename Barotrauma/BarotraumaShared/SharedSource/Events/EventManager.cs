@@ -1018,8 +1018,8 @@ namespace Barotrauma
                 }
                 else if (character.AIController is HumanAIController humanAi && !character.IsOnFriendlyTeam(CharacterTeamType.Team1))
                 {
-                    if (character.Submarine != null &&
-                        character.Submarine.PhysicsBody is { BodyType: BodyType.Dynamic } &&
+                    if (character.Submarine != null && Submarine.MainSub != null &&
+                        character.Submarine.PhysicsBody is { BodyType: BodyType.Dynamic } &&                       
                         Vector2.DistanceSquared(character.Submarine.WorldPosition, Submarine.MainSub.WorldPosition) < Sonar.DefaultSonarRange * Sonar.DefaultSonarRange)
                     {
                         //we have no easy way to define the strength of a human enemy (depends more on the sub and it's state than the character),

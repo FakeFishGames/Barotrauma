@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Xml.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -301,12 +302,13 @@ namespace Barotrauma
 
         protected void LoadDescription(ContentXElement element)
         {
-            Identifier descriptionIdentifier = element.GetAttributeIdentifier("descriptionidentifier", "");
-            Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", "");
-
+            Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", Identifier.Empty);
             string originalDescription = Description.Value;
-            if (descriptionIdentifier != Identifier.Empty)
+            const string descriptionIdentifierAttributeName = "descriptionidentifier";
+            XAttribute descriptionIdenfifierAttribute = element.GetAttribute(descriptionIdentifierAttributeName);
+            if (descriptionIdenfifierAttribute != null)
             {
+                Identifier descriptionIdentifier = element.GetAttributeIdentifier(descriptionIdentifierAttributeName, Identifier.Empty);
                 Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
             }
             else if (nameIdentifier == Identifier.Empty)

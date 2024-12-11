@@ -897,10 +897,11 @@ namespace Barotrauma
             }
             else
             {
-                drawPosition = prevPosition = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
+                prevPosition = FarseerBody.Position;
+                drawPosition = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
                 drawRotation = prevRotation = FarseerBody.Rotation;
                 drawOffset = Vector2.Zero;
-                drawRotation = 0.0f;
+                rotationOffset = 0.0f;
             }
         }
         

@@ -211,7 +211,7 @@ namespace Barotrauma
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
-        public override int GetBaseReward(Submarine sub)
+        public override float GetBaseReward(Submarine sub)
         {
             // If we are not at the location of the mission, skip the calculation of the reward
             if (GameMain.GameSession?.StartLocation != Locations[0])

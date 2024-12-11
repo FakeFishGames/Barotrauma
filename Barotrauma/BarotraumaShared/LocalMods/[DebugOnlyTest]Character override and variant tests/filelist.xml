@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="Character override and variant tests" modversion="1.0.1" corepackage="False" gameversion="1.7.0.0">
+  <Character file="%ModDir%/Human.xml" />
+  <Character file="%ModDir%/Mudraptor.xml" />
+  <Character file="%ModDir%/Testcyborgworm_m.xml" />
+  <Character file="%ModDir%/Characters/Crawler/Crawler.xml" />  
+  <Character file="%ModDir%/Spineling_morbusine_m.xml" />  
+</contentpackage>

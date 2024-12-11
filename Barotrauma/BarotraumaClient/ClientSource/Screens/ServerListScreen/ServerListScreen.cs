@@ -1003,6 +1003,8 @@ namespace Barotrauma
         
         private bool ShouldShowServer(ServerInfo serverInfo)
         {
+            if (serverInfo == null) { return false; }
+
 #if !DEBUG
             //never show newer versions
             //(ignore revision number, it doesn't affect compatibility)

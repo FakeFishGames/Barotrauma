@@ -140,13 +140,14 @@ namespace Barotrauma
 
         private static readonly Dictionary<string, MultiplierSettings> _multiplierSettings = new Dictionary<string, MultiplierSettings>
         {
-            { "default",                        new MultiplierSettings { Min = 0.2f, Max = 2.0f, Step = 0.1f } },
-            { nameof(CrewVitalityMultiplier),   new MultiplierSettings { Min = 0.5f, Max = 2.0f, Step = 0.1f } },
-            { nameof(NonCrewVitalityMultiplier),new MultiplierSettings { Min = 0.5f, Max = 3.0f, Step = 0.1f } },
-            { nameof(MissionRewardMultiplier),  new MultiplierSettings { Min = 0.5f, Max = 2.0f, Step = 0.1f } },
-            { nameof(RepairFailMultiplier),     new MultiplierSettings { Min = 0.5f, Max = 5.0f, Step = 0.5f } },
-            { nameof(ShopPriceMultiplier),      new MultiplierSettings { Min = 0.1f, Max = 3.0f, Step = 0.1f } },
-            { nameof(ShipyardPriceMultiplier),  new MultiplierSettings { Min = 0.1f, Max = 3.0f, Step = 0.1f } }
+            { "default",                            new MultiplierSettings { Min = 0.2f, Max = 2.0f, Step = 0.1f } },
+            { nameof(CrewVitalityMultiplier),       new MultiplierSettings { Min = 0.5f, Max = 2.0f, Step = 0.1f } },
+            { nameof(NonCrewVitalityMultiplier),    new MultiplierSettings { Min = 0.5f, Max = 3.0f, Step = 0.1f } },
+            { nameof(MissionRewardMultiplier),      new MultiplierSettings { Min = 0.5f, Max = 2.0f, Step = 0.1f } },
+            { nameof(ExperienceRewardMultiplier),   new MultiplierSettings { Min = 0.5f, Max = 2.0f, Step = 0.1f } },
+            { nameof(RepairFailMultiplier),         new MultiplierSettings { Min = 0.5f, Max = 5.0f, Step = 0.5f } },
+            { nameof(ShopPriceMultiplier),          new MultiplierSettings { Min = 0.1f, Max = 3.0f, Step = 0.1f } },
+            { nameof(ShipyardPriceMultiplier),      new MultiplierSettings { Min = 0.1f, Max = 3.0f, Step = 0.1f } }
             // Add overrides for default values here
         };
 
@@ -164,6 +165,9 @@ namespace Barotrauma
 
         [Serialize(1.0f, IsPropertySaveable.Yes), NetworkSerialize]
         public float MissionRewardMultiplier { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes), NetworkSerialize]
+        public float ExperienceRewardMultiplier { get; set; }
 
         [Serialize(1.0f, IsPropertySaveable.Yes), NetworkSerialize]
         public float ShopPriceMultiplier { get; set; }

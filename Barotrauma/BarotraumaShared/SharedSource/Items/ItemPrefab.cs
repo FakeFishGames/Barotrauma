@@ -223,6 +223,7 @@ namespace Barotrauma
         public readonly int Amount;
         public readonly int? Quality;
         public readonly bool HideForNonTraitors;
+        public readonly InvSlotType MoveToSlot;
 
         /// <summary>
         /// How many of this item the fabricator can create (< 0 = unlimited)
@@ -257,6 +258,7 @@ namespace Barotrauma
             FabricationLimitMax = element.GetAttributeInt(nameof(FabricationLimitMax), limitDefault);
 
             HideForNonTraitors = element.GetAttributeBool(nameof(HideForNonTraitors), false);
+            MoveToSlot = element.GetAttributeEnum(nameof(MoveToSlot), InvSlotType.None);
 
             if (element.GetAttribute(nameof(Quality)) != null)
             {
@@ -1000,7 +1002,7 @@ namespace Barotrauma
             ParseConfigElement(variantOf: null);
         }
 
-        private string GetTexturePath(ContentXElement subElement, ItemPrefab variantOf)
+        public string GetTexturePath(ContentXElement subElement, ItemPrefab variantOf)
             => subElement.DoesAttributeReferenceFileNameAlone("texture")
                 ? Path.GetDirectoryName(variantOf?.ContentFile.Path ?? ContentFile.Path)
                 : "";

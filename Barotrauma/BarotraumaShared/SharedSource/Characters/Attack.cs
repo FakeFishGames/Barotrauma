@@ -197,7 +197,22 @@ namespace Barotrauma
         /// <summary>
         /// Used for multiplying all the damage.
         /// </summary>
-        public float DamageMultiplier { get; set; } = 1;
+        public float DamageMultiplier
+        {
+            get => _damageMultiplier ?? initialDamageMultiplier;
+            set
+            {
+                if (!_damageMultiplier.HasValue)
+                {
+                    SetInitialDamageMultiplier(value);
+                }
+                _damageMultiplier = value;
+            }
+        }
+        private float? _damageMultiplier;
+        private float initialDamageMultiplier = 1.0f;
+        public void ResetDamageMultiplier() => _damageMultiplier = initialDamageMultiplier;
+        public void SetInitialDamageMultiplier(float value) => initialDamageMultiplier = value;
 
         /// <summary>
         /// Used for multiplying all the ranges.
@@ -274,6 +289,8 @@ namespace Barotrauma
 
         [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
         public Vector2 RootForceWorldEnd { get; private set; }
+
+        public bool HasRootForce => RootForceWorldStart != Vector2.Zero || RootForceWorldMiddle != Vector2.Zero || RootForceWorldEnd != Vector2.Zero;
 
         [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes, description:"Applied to the main limb. The transition smoothing of the applied force."), Editable]
         public TransitionMode RootTransitionEasing { get; private set; }

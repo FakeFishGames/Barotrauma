@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
@@ -12,6 +12,11 @@ namespace Barotrauma
     /// </summary>
     class WaitForItemUsedAction : EventAction
     {
+        /// <summary>
+        /// Counter used to ensure we have a unique identifier to use for the ItemComponent.OnUsed event
+        /// </summary>
+        private static int IdCounter;
+
         [Serialize("", IsPropertySaveable.Yes, description: "Tag of the item that must be used. Note that the item needs to have been tagged by the event - this does not refer to the tags that can be set per-item in the sub editor.")]
         public Identifier ItemTag { get; set; }
 
@@ -50,7 +55,8 @@ namespace Barotrauma
             {
                 if (onUseEventIdentifier.IsEmpty)
                 {
-                    onUseEventIdentifier = (ParentEvent.Prefab.Identifier + ParentEvent.Actions.IndexOf(this).ToString()).ToIdentifier();
+                    onUseEventIdentifier = (ParentEvent.Prefab.Identifier + ParentEvent.Actions.IndexOf(this).ToString() + IdCounter).ToIdentifier();
+                    IdCounter++;
                 }
                 return onUseEventIdentifier;
             }

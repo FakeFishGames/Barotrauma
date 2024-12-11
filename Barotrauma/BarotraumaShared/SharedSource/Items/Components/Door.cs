@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
         private Gap linkedGap;
         private bool isOpen;
 
-        private float openState;
+        private float openState, lastOpenState;
         private readonly Sprite doorSprite, weldedSprite, brokenSprite;
         private readonly bool scaleBrokenSprite, fadeBrokenSprite;
         private readonly bool autoOrientGap;
@@ -218,6 +218,7 @@ namespace Barotrauma.Items.Components
             get { return openState; }
             set 
             {
+                lastOpenState = openState;
                 openState = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
                 float size = IsHorizontal ? item.Rect.Width : item.Rect.Height;
@@ -329,13 +330,24 @@ namespace Barotrauma.Items.Components
         private readonly LocalizedString cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
         public override bool HasRequiredItems(Character character, bool addMessage, LocalizedString msg = null)
         {
-            Msg = HasAccess(character) ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
+            if (IsBroken)
+            {
+                return false;
+            }
+            if (isOpen)
+            {
+                Msg = HasAccess(character) ? "ItemMsgClose" : "ItemMsgForceCloseCrowbar";
+            }
+            else
+            {
+                Msg = HasAccess(character) ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
+            }
             ParseMsg();
             if (addMessage)
             {
-                msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText).Value;
+                msg ??= (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText).Value;
             }
-            return isBroken || base.HasRequiredItems(character, addMessage, msg);
+            return base.HasRequiredItems(character, addMessage, msg);
         }
 
         public override bool Pick(Character picker)
@@ -461,12 +473,12 @@ namespace Barotrauma.Items.Components
                 if (PredictedState == null)
                 {
                     OpenState += deltaTime * (isOpen ? OpeningSpeed : -ClosingSpeed);
-                    isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
+                    isClosing = openState is > 0.0f and < 1.0f && !isOpen;
                 }
                 else
                 {
-                    OpenState += deltaTime * ((bool)PredictedState ? OpeningSpeed : -ClosingSpeed);
-                    isClosing = openState > 0.0f && openState < 1.0f && !(bool)PredictedState;
+                    OpenState += deltaTime * (PredictedState.Value ? OpeningSpeed : -ClosingSpeed);
+                    isClosing = openState is > 0.0f and < 1.0f && !PredictedState.Value;
 
                     resetPredictionTimer -= deltaTime;
                     if (resetPredictionTimer <= 0.0f)
@@ -479,7 +491,11 @@ namespace Barotrauma.Items.Components
             
             if (isClosing)
             {
-                if (OpenState < 0.9f) { PushCharactersAway(); }
+                //server gives the clients more leeway on moving through closing doors
+                //latency can often otherwise make a client get blocked by a closing door server-side even if it seemed like they made it through client-side
+                float pushCharactersAwayThreshold = GameMain.NetworkMember is { IsServer: true } ? 0.1f : 0.9f;
+
+                if (OpenState < pushCharactersAwayThreshold) { PushCharactersAway(); }
                 if (CheckSubmarinesInDoorWay())
                 {
                     PredictedState = null;
@@ -771,11 +787,11 @@ namespace Barotrauma.Items.Components
             {
                 if (IsHorizontal)
                 {
-                    body.SetTransform(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * doorRectSimSize.Y * 2.0f), body.Rotation);
+                    body.SetTransformIgnoreContacts(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * doorRectSimSize.Y * 2.0f), body.Rotation);
                 }
                 else
                 {
-                    body.SetTransform(new Vector2(item.SimPosition.X + dir * doorRectSimSize.X * 1.2f, body.SimPosition.Y), body.Rotation);
+                    body.SetTransformIgnoreContacts(new Vector2(item.SimPosition.X + dir * doorRectSimSize.X * 1.2f, body.SimPosition.Y), body.Rotation);
                 }
             }
 

@@ -22,6 +22,8 @@ namespace Barotrauma.Networking
         public UInt16 LastRecvLobbyUpdate
             = NetIdUtils.GetIdOlderThan(GameMain.NetLobbyScreen.LastUpdateID);
 
+        public bool InitialLobbyUpdateSent;
+
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
         public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
 
@@ -166,8 +168,8 @@ namespace Barotrauma.Networking
             LastSentChatMsgID = 0;
             LastRecvChatMsgID = ChatMessage.LastID;
 
-            LastRecvLobbyUpdate = 0;
-
+            LastRecvLobbyUpdate = NetIdUtils.GetIdOlderThan(GameMain.NetLobbyScreen.LastUpdateID);
+            InitialLobbyUpdateSent = false;
             LastRecvEntityEventID = 0;
 
             UnreceivedEntityEventCount = 0;

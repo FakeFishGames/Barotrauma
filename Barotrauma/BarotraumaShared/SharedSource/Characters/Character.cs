@@ -35,6 +35,8 @@ namespace Barotrauma
         public const float MaxHighlightDistance = 150.0f;
         public const float MaxDragDistance = 200.0f;
 
+        public override ContentPackage ContentPackage => Prefab?.ContentPackage;
+
         partial void UpdateLimbLightSource(Limb limb);
 
         private bool enabled = true;
@@ -663,8 +665,22 @@ namespace Barotrauma
         public bool RequireConsciousnessForCustomInteract = true;
         public bool AllowCustomInteract
         {
-            get { return (!RequireConsciousnessForCustomInteract || (!IsIncapacitated && Stun <= 0.0f)) && !Removed; }
+            get 
+            {
+                if (CampaignMode.HostileFactionDisablesInteraction(CampaignInteractionType) &&
+                    AIController is HumanAIController humanAi && humanAi.IsInHostileFaction())
+                {
+                    return false;
+                }
+
+                return (!RequireConsciousnessForCustomInteract || (!IsIncapacitated && Stun <= 0.0f)) && !Removed;
+            }
         }
+
+        public bool ShouldShowCustomInteractText =>
+            !CustomInteractHUDText.IsNullOrEmpty() &&
+            AllowCustomInteract &&
+            (AIController is not HumanAIController humanAi || humanAi.AllowCampaignInteraction());
 
         private float lockHandsTimer;
         public bool LockHands
@@ -1209,6 +1225,7 @@ namespace Barotrauma
         }
 
         public CampaignMode.InteractionType CampaignInteractionType;
+
         public Identifier MerchantIdentifier;
 
         private bool accessRemovedCharacterErrorShown;
@@ -1262,6 +1279,10 @@ namespace Barotrauma
 
         public bool IsInFriendlySub => Submarine != null && Submarine.TeamID == TeamID;
         public bool IsInPlayerSub => Submarine != null && Submarine.Info.IsPlayer;
+        /// <summary>
+        /// Alias for <see cref="IsInPlayerSub"/>, so the same property name works on both items and characters.
+        /// </summary>
+        public bool InPlayerSubmarine => IsInPlayerSub;
 
         public float AITurretPriority
         {
@@ -1406,7 +1427,7 @@ namespace Barotrauma
             if (characterInfo?.HumanPrefabIds is { } prefabIds &&
                 prefabIds.NpcSetIdentifier != default && prefabIds.NpcIdentifier != default)
             {
-                humanPrefab = NPCSet.Get(
+                HumanPrefab = NPCSet.Get(
                     characterInfo.HumanPrefabIds.NpcSetIdentifier,
                     characterInfo.HumanPrefabIds.NpcIdentifier);
             }
@@ -1759,6 +1780,11 @@ namespace Barotrauma
                 }
             }
 
+            if (this == Controlled && inputType == InputType.Run && ToggleRun)
+            {
+                return true;
+            }
+
             return keys[(int)inputType].Held;
         }
 
@@ -1956,6 +1982,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        public bool ToggleRun;
 
         public bool CanRunWhileDragging()
         {
@@ -2162,8 +2190,9 @@ namespace Barotrauma
                 SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }
 
-            bool aiControlled = this is AICharacter && Controlled != this && !IsRemotelyControlled;
-            if (!aiControlled)
+            bool aiControlled = this is AICharacter && Controlled != this && !IsRemotePlayer;
+            bool controlledByServer = GameMain.NetworkMember is { IsClient: true } && IsRemotelyControlled;
+            if (!aiControlled && !controlledByServer)
             {
                 Vector2 targetMovement = GetTargetMovement();
                 AnimController.TargetMovement = targetMovement;
@@ -2192,7 +2221,8 @@ namespace Barotrauma
                 {
                     AnimController.TargetDir = Direction.Right;
                 }
-                else
+                //only humanoids' flipping is controlled by the cursor, monster flipping is driven by their movement in FishAnimController
+                else if (AnimController is HumanoidAnimController)
                 {
                     if (CursorPosition.X < AnimController.Collider.Position.X - cursorFollowMargin)
                     {
@@ -2255,15 +2285,9 @@ namespace Barotrauma
             }
             else if (IsKeyDown(InputType.Attack))
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Controlled != this)
-                {
-                    if ((currentAttackTarget.DamageTarget as Entity)?.Removed ?? false)
-                    {
-                        currentAttackTarget = default;
-                    }
-                    currentAttackTarget.AttackLimb?.UpdateAttack(deltaTime, currentAttackTarget.AttackPos, currentAttackTarget.DamageTarget, out _);
-                }
-                else if (IsPlayer)
+                //normally the attack target, where to aim the attack and such is handled by EnemyAIController,
+                //but in the case of player-controlled monsters, we handle it here
+                if (IsPlayer)
                 {
                     float dist = -1;
                     Vector2 attackPos = SimPosition + ConvertUnits.ToSimUnits(cursorPosition - Position);
@@ -2308,13 +2332,16 @@ namespace Barotrauma
                         }
                     }
                     var currentContexts = GetAttackContexts();
-                    var validLimbs = AnimController.Limbs.Where(l =>
+                    var attackLimbs = AnimController.Limbs.Where(static l => l.attack != null);
+                    bool hasAttacksWithoutRootForce = attackLimbs.Any(static l=> !l.attack.HasRootForce);
+                    var validLimbs = attackLimbs.Where(l =>
                     {
                         if (l.IsSevered || l.IsStuck) { return false; }
                         if (l.Disabled) { return false; }
                         var attack = l.attack;
-                        if (attack == null) { return false; }
                         if (attack.CoolDownTimer > 0) { return false; }
+                        //disallow attacks with root force if there's any other attacks available
+                        if (hasAttacksWithoutRootForce && attack.HasRootForce) { return false; }
                         if (!attack.IsValidContext(currentContexts)) { return false; }
                         if (attackTarget != null)
                         {
@@ -2351,6 +2378,14 @@ namespace Barotrauma
                             attackCoolDown = 1.0f;
                         }
                     }
+                }
+                else if (GameMain.NetworkMember is { IsClient: true } && Controlled != this)
+                {
+                    if (currentAttackTarget.DamageTarget is Entity { Removed: true })
+                    {
+                        currentAttackTarget = default;
+                    }
+                    currentAttackTarget.AttackLimb?.UpdateAttack(deltaTime, currentAttackTarget.AttackPos, currentAttackTarget.DamageTarget, out _);
                 }
             }
 
@@ -2472,119 +2507,11 @@ namespace Barotrauma
             seeingEntity ??= AnimController.SimplePhysicsEnabled ? this : GetSeeingLimb();
             if (target is Character targetCharacter)
             {
-                return IsCharacterVisible(targetCharacter, seeingEntity, seeThroughWindows, checkFacing);
+                return ISpatialEntity.IsCharacterVisible(targetCharacter, seeingEntity, seeThroughWindows, checkFacing);
             }
             else
             {
-                return CheckVisibility(target, seeingEntity, seeThroughWindows, checkFacing);
-            }
-        }
-
-        public static bool IsTargetVisible(ISpatialEntity target, ISpatialEntity seeingEntity, bool seeThroughWindows = false, bool checkFacing = false)
-        {
-            if (seeingEntity is Character seeingCharacter)
-            {
-                return seeingCharacter.CanSeeTarget(target, seeThroughWindows: seeThroughWindows, checkFacing: checkFacing);
-            }
-            if (target is Character targetCharacter)
-            {
-                return IsCharacterVisible(targetCharacter, seeingEntity, seeThroughWindows, checkFacing);
-            }
-            else
-            {
-                return CheckVisibility(target, seeingEntity, seeThroughWindows, checkFacing);
-            }
-        }
-
-        private static bool IsCharacterVisible(Character target, ISpatialEntity seeingEntity, bool seeThroughWindows = false, bool checkFacing = false)
-        {
-            System.Diagnostics.Debug.Assert(target != null);
-            if (target == null || target.Removed) { return false; }
-            if (seeingEntity == null) { return false; }
-            if (CheckVisibility(target, seeingEntity, seeThroughWindows, checkFacing)) { return true; }
-            if (!target.AnimController.SimplePhysicsEnabled)
-            {
-                //find the limbs that are furthest from the target's position (from the viewer's point of view)
-                Limb leftExtremity = null, rightExtremity = null;
-                float leftMostDot = 0.0f, rightMostDot = 0.0f;
-                Vector2 dir = target.WorldPosition - seeingEntity.WorldPosition;
-                Vector2 leftDir = new Vector2(dir.Y, -dir.X);
-                Vector2 rightDir = new Vector2(-dir.Y, dir.X);
-                foreach (Limb limb in target.AnimController.Limbs)
-                {
-                    if (limb.IsSevered || limb == target.AnimController.MainLimb) { continue; }
-                    if (limb.Hidden) { continue; }
-                    Vector2 limbDir = limb.WorldPosition - seeingEntity.WorldPosition;
-                    float leftDot = Vector2.Dot(limbDir, leftDir);
-                    if (leftDot > leftMostDot)
-                    {
-                        leftMostDot = leftDot;
-                        leftExtremity = limb;
-                        continue;
-                    }
-                    float rightDot = Vector2.Dot(limbDir, rightDir);
-                    if (rightDot > rightMostDot)
-                    {
-                        rightMostDot = rightDot;
-                        rightExtremity = limb;
-                        continue;
-                    }
-                }
-                if (leftExtremity != null && CheckVisibility(leftExtremity, seeingEntity, seeThroughWindows, checkFacing)) { return true; }
-                if (rightExtremity != null && CheckVisibility(rightExtremity, seeingEntity, seeThroughWindows, checkFacing)) { return true; }
-            }
-            return false;
-        }
-
-        private static bool CheckVisibility(ISpatialEntity target, ISpatialEntity seeingEntity, bool seeThroughWindows = true, bool checkFacing = false)
-        {
-            System.Diagnostics.Debug.Assert(target != null);
-            if (target == null) { return false; }
-            if (seeingEntity == null) { return false; }
-            // TODO: Could we just use the method below? If not, let's refactor it so that we can.
-            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - seeingEntity.WorldPosition);
-            if (checkFacing && seeingEntity is Character seeingCharacter)
-            {
-                if (Math.Sign(diff.X) != seeingCharacter.AnimController.Dir) { return false; }
-            }
-            //both inside the same sub (or both outside)
-            //OR the we're inside, the other character outside
-            if (target.Submarine == seeingEntity.Submarine || target.Submarine == null)
-            {
-                return Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null;
-            }
-            //we're outside, the other character inside
-            else if (seeingEntity.Submarine == null)
-            {
-                return Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff, blocksVisibilityPredicate: IsBlocking) == null;
-            }
-            //both inside different subs
-            else
-            {
-                return 
-                    Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null &&
-                    Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff, blocksVisibilityPredicate: IsBlocking) == null;                
-            }
-
-            bool IsBlocking(Fixture f)
-            {
-                var body = f.Body;
-                if (body == null) { return false; }
-                if (body.UserData is Structure wall)
-                {
-                    if (!wall.CastShadow && seeThroughWindows) { return false; }
-                    return wall != target;
-                }
-                else if (body.UserData is Item item)
-                {
-                    if (item.GetComponent<Door>() is { HasWindow: true } door && seeThroughWindows)
-                    {
-                        if (door.IsPositionOnWindow(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition))) { return false; }
-                    }
-
-                    return item != target;
-                }
-                return true;
+                return ISpatialEntity.CheckVisibility(target, seeingEntity, seeThroughWindows, checkFacing);
             }
         }
 
@@ -2733,7 +2660,7 @@ namespace Barotrauma
         public bool CanBeDraggedBy(Character character)
         {
             if (!IsDraggable) { return false; }
-            return IsKnockedDown || LockHands || IsPet || (IsBot && character.TeamID == TeamID);
+            return IsKnockedDown || LockHands || (IsPet && character.IsFriendly(this)) || (IsBot && character.TeamID == TeamID);
         }
         
         /// <summary>
@@ -3650,7 +3577,12 @@ namespace Barotrauma
                 { 
                     humanAnimController.Crouching = false; 
                 }
-                if (IsRagdolled) { AnimController.IgnorePlatforms = true; }
+                //ragdolling manually makes the character go through platforms
+                //EXCEPT for clients, they rely on the server telling whether platforms should be ignored or not
+                if (IsRagdolled && GameMain.NetworkMember is not { IsClient: true }) 
+                { 
+                    AnimController.IgnorePlatforms = true; 
+                }
                 AnimController.ResetPullJoints();
                 SelectedItem = SelectedSecondaryItem = null;
                 return;
@@ -4102,6 +4034,7 @@ namespace Barotrauma
                                 if (character.TeamID != TeamID) { continue; }
                                 if (character.AIController is not HumanAIController) { continue; }
                                 if (!HumanAIController.IsActive(character)) { continue; }
+                                if (character.Info == null) { continue; }
                                 foreach (var currentOrder in character.CurrentOrders)
                                 {
                                     if (currentOrder == null) { continue; }
@@ -4117,12 +4050,15 @@ namespace Barotrauma
                         case OrderCategory.Movement:
                             // If there character has another movement order, dismiss that order
                             Order orderToReplace = null;
-                            foreach (var currentOrder in CurrentOrders)
+                            if (CurrentOrders != null)
                             {
-                                if (currentOrder == null) { continue; }
-                                if (currentOrder.Category != OrderCategory.Movement) { continue; }
-                                orderToReplace = currentOrder;
-                                break;
+                                foreach (var currentOrder in CurrentOrders)
+                                {
+                                    if (currentOrder == null) { continue; }
+                                    if (currentOrder.Category != OrderCategory.Movement) { continue; }
+                                    orderToReplace = currentOrder;
+                                    break;
+                                }
                             }
                             if (orderToReplace is { AutoDismiss: true })
                             {
@@ -4158,6 +4094,7 @@ namespace Barotrauma
 
         private void AddCurrentOrder(Order newOrder)
         {
+            if (CurrentOrders == null) { return; }
             if (newOrder == null || newOrder.Identifier == "dismissed")
             {
                 if (newOrder.Option != Identifier.Empty)
@@ -4199,9 +4136,9 @@ namespace Barotrauma
             }
         }
 
-        private bool RemoveDuplicateOrders(Order order)
+        private void RemoveDuplicateOrders(Order order)
         {
-            bool removed = false;
+            if (CurrentOrders == null) { return; }
             int? priorityOfRemoved = null;
             for (int i = CurrentOrders.Count - 1; i >= 0; i--)
             {
@@ -4210,12 +4147,11 @@ namespace Barotrauma
                 {
                     priorityOfRemoved = orderInfo.ManualPriority;
                     CurrentOrders.RemoveAt(i);
-                    removed = true;
                     break;
                 }
             }
 
-            if (!priorityOfRemoved.HasValue) { return removed; }
+            if (!priorityOfRemoved.HasValue) { return; }
 
             for (int i = 0; i < CurrentOrders.Count; i++)
             {
@@ -4226,11 +4162,9 @@ namespace Barotrauma
                 }
             }
 
-            CurrentOrders.RemoveAll(order => order.ManualPriority <= 0);
+            CurrentOrders.RemoveAll(o => o.ManualPriority <= 0);
             // Sort the current orders so the one with the highest priority comes first
             CurrentOrders.Sort((x, y) => y.ManualPriority.CompareTo(x.ManualPriority));
-
-            return removed;
         }
 
         public Order GetCurrentOrderWithTopPriority()
@@ -4315,6 +4249,30 @@ namespace Barotrauma
             aiChatMessageQueue.Add(new AIChatMessage(message, messageType, identifier, delay));
         }
 
+#if CLIENT
+        public void SendSinglePlayerMessage(AIChatMessage message, bool canUseRadio, WifiComponent radio)
+        {
+            if (message.MessageType == null)
+            {
+                message.MessageType = canUseRadio ? ChatMessageType.Radio : ChatMessageType.Default;
+            }
+            if (GameMain.GameSession?.CrewManager is { IsSinglePlayer: true } crewManager)
+            {
+                string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
+                if (!string.IsNullOrEmpty(modifiedMessage))
+                {
+                    crewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
+                }
+                if (canUseRadio)
+                {
+                    Signal s = new Signal(modifiedMessage, sender: this, source: radio.Item);
+                    radio.TransmitSignal(s, sentFromChat: true);
+                }
+            }
+            ShowSpeechBubble(ChatMessage.MessageColor[(int)message.MessageType.Value], message.Message);
+        }
+#endif
+
         private void UpdateAIChatMessages(float deltaTime)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
@@ -4331,28 +4289,13 @@ namespace Barotrauma
                     message.MessageType = canUseRadio ? ChatMessageType.Radio : ChatMessageType.Default;
                 }
 #if CLIENT
-                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
-                {
-                    string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
-                    if (!string.IsNullOrEmpty(modifiedMessage))
-                    {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
-                    }
-                    if (canUseRadio)
-                    {
-                        Signal s = new Signal(modifiedMessage, sender: this, source: radio.Item);
-                        radio.TransmitSignal(s, sentFromChat: true);
-                    }
-                }
+                SendSinglePlayerMessage(message, canUseRadio, radio);
 #endif
 #if SERVER
                 if (GameMain.Server != null && message.MessageType != ChatMessageType.Order)
                 {
                     GameMain.Server.SendChatMessage(message.Message, message.MessageType.Value, null, this);
                 }
-#endif
-#if CLIENT
-                ShowSpeechBubble(ChatMessage.MessageColor[(int)message.MessageType.Value], message.Message);
 #endif
                 sentMessages.Add(message);
             }
@@ -4432,10 +4375,12 @@ namespace Barotrauma
             {
                 attackAfflictions = attack.Afflictions.Keys;
             }
-
+            
+            float damageMultiplier = attack.DamageMultiplier * attackData.DamageMultiplier;
+            
             var attackResult = targetLimb == null ?
-                AddDamage(worldPosition, attackAfflictions, attack.Stun, playSound, attackImpulse, out limbHit, attacker, attack.DamageMultiplier * attackData.DamageMultiplier) :
-                DamageLimb(worldPosition, targetLimb, attackAfflictions, attack.Stun, playSound, attackImpulse, attacker, attack.DamageMultiplier * attackData.DamageMultiplier, penetration: penetration + attackData.AddedPenetration, shouldImplode: attackData.ShouldImplode);
+                AddDamage(worldPosition, attackAfflictions, attack.Stun, playSound, attackImpulse, out limbHit, attacker, damageMultiplier) :
+                DamageLimb(worldPosition, targetLimb, attackAfflictions, attack.Stun, playSound, attackImpulse, attacker, damageMultiplier, penetration: penetration + attackData.AddedPenetration, shouldImplode: attackData.ShouldImplode);
 
             if (attacker != null)
             {
@@ -5311,7 +5256,7 @@ namespace Barotrauma
         {
             SpawnInventoryItemsRecursive(inventory, itemData, new List<Item>());
         }
-
+        
         private void SpawnInventoryItemsRecursive(Inventory inventory, ContentXElement element, List<Item> extraDuffelBags)
         {
             foreach (var itemElement in element.Elements())
@@ -5326,8 +5271,8 @@ namespace Barotrauma
                 }
 #if SERVER
                 newItem.GetComponent<Terminal>()?.SyncHistory();
-                if (newItem.GetComponent<WifiComponent>() is WifiComponent wifiComponent) { newItem.CreateServerEvent(wifiComponent); }
                 if (newItem.GetComponent<GeneticMaterial>() is GeneticMaterial geneticMaterial) { newItem.CreateServerEvent(geneticMaterial); }
+                SyncInGameEditables(newItem);
 #endif
                 int[] slotIndices = itemElement.GetAttributeIntArray("i", new int[] { 0 });
                 if (!slotIndices.Any())
@@ -5550,7 +5495,7 @@ namespace Barotrauma
         /// <summary>
         /// Removes the talents the character has unlocked in their talent tree.
         /// </summary>
-        public void ResetTalents(bool applyXpPenalty)
+        public void ResetTalents(int talentPointReduction)
         {
             characterTalents.Clear();
             abilityResistances.Clear();
@@ -5558,12 +5503,16 @@ namespace Barotrauma
             CharacterHealth.RemoveAfflictions(affliction => affliction.Prefab.AfflictionType == Tags.AfflictionTypeTalentBuff);
             statValues.Clear();
 
-            if (applyXpPenalty)
+            for (int i = 0; i < talentPointReduction; i++)
             {
                 int currentLevel = info.GetCurrentLevel();
                 if (currentLevel > 0)
                 {
                     info.SetExperience(info.ExperiencePoints - CharacterInfo.ExperienceRequiredPerLevel(currentLevel));
+                }
+                else
+                {
+                    break;
                 }
             }
         }
@@ -5919,7 +5868,7 @@ namespace Barotrauma
             }
 
             // NOTE: Resistance is handled as a multiplier here, so 1.0 == 0% resistance
-            return hadResistance ? resistance : 1f;
+            return hadResistance ? Math.Max(0, resistance) : 1f;
         }
 
         public float GetAbilityResistance(AfflictionPrefab affliction)
@@ -5938,7 +5887,7 @@ namespace Barotrauma
             }
 
             // NOTE: Resistance is handled as a multiplier here, so 1.0 == 0% resistance
-            return hadResistance ? resistance : 1f;
+            return hadResistance ? Math.Max(0, resistance) : 1f;
         }
 
         public void ChangeAbilityResistance(TalentResistanceIdentifier identifier, float value)
@@ -5975,7 +5924,7 @@ namespace Barotrauma
                 // NPCs are friendly to the same team and the friendly NPCs
                 CharacterTeamType.Team1 or CharacterTeamType.Team2 => otherTeam == CharacterTeamType.FriendlyNPC,
                 // Friendly NPCs are friendly to both player teams
-                CharacterTeamType.FriendlyNPC => otherTeam == CharacterTeamType.Team1 || otherTeam == CharacterTeamType.Team2,
+                CharacterTeamType.FriendlyNPC => otherTeam is CharacterTeamType.Team1 or CharacterTeamType.Team2,
                 // None (bandits and such) consider friendly NPCs friendly, not attacking them unless they attack first
                 // Otherwise bandits would for example attach the hostages.
                 CharacterTeamType.None => otherTeam == CharacterTeamType.FriendlyNPC,

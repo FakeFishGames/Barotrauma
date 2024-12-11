@@ -11,7 +11,7 @@ namespace Barotrauma
         {
             if (Character == Character.Controlled) { return; }
             if (!DebugAI) { return; }
-            Vector2 pos = Character.WorldPosition;
+            Vector2 pos = Character.DrawPosition;
             pos.Y = -pos.Y;
             Vector2 textOffset = new Vector2(-40, -160);
             textOffset.Y -= Math.Max(ObjectiveManager.CurrentOrders.Count - 1, 0) * 20;

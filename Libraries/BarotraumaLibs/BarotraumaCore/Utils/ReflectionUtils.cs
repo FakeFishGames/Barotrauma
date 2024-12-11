@@ -113,10 +113,9 @@ namespace Barotrauma
         /// Gets a type by its name, with backwards compatibility for types that have been renamed.
         /// <see cref="TypePreviouslyKnownAs"/>
         /// </summary>
-        public static Type? GetTypeWithBackwardsCompatibility(string nameSpace, string typeName, bool throwOnError, bool ignoreCase)
+        public static Type? GetTypeWithBackwardsCompatibility(Assembly assembly, string nameSpace, string typeName, bool throwOnError, bool ignoreCase)
         {
-            if (Assembly.GetEntryAssembly() is not { } entryAssembly) { return null; }
-            var types = entryAssembly
+            var types = assembly
                 .GetTypes()
                 .Where(t => NameMatches(t.Namespace, nameSpace, ignoreCase));
 

@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -84,6 +85,17 @@ namespace Barotrauma
         partial void OnTalentGiven(TalentPrefab talentPrefab)
         {
             GameServer.Log($"{GameServer.CharacterLogName(this)} has gained the talent '{talentPrefab.DisplayName}'", ServerLog.MessageType.Talent);
+        }
+        
+        private void SyncInGameEditables(Item item)
+        {
+            foreach (ItemComponent itemComponent in item.Components)
+            {
+                foreach (var serializableProperty in SerializableProperty.GetProperties<InGameEditable>(itemComponent))
+                {
+                    GameMain.Server.CreateEntityEvent(item, new Item.ChangePropertyEventData(serializableProperty, itemComponent));
+                }
+            }
         }
     }
 }

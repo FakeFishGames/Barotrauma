@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -21,13 +22,16 @@ namespace Barotrauma.Items.Components
         private GUIListBox historyBox;
         private GUITextBlock fillerBlock;
         private GUITextBox inputBox;
+        private GUILayoutGroup layoutGroup;
         private bool shouldSelectInputBox;
+
+        private readonly List<GUIComponent> inputElements = new List<GUIComponent>();
 
         partial void InitProjSpecific(XElement element)
         {
             float marginMultiplier = element.GetAttributeFloat("marginmultiplier", 1.0f);
 
-            var layoutGroup = new GUILayoutGroup(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin.Multiply(marginMultiplier), GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset.Multiply(marginMultiplier) })
+            layoutGroup = new GUILayoutGroup(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin.Multiply(marginMultiplier), GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset.Multiply(marginMultiplier) })
             {
                 ChildAnchor = Anchor.TopCenter,
                 RelativeSpacing = 0.02f,
@@ -39,43 +43,53 @@ namespace Barotrauma.Items.Components
                 AutoHideScrollBar = this.AutoHideScrollbar
             };
 
-            if (!Readonly)
+            inputElements.Add(CreateFillerBlock());
+            inputElements.Add(new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine"));
+
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: TextColor)
             {
-                CreateFillerBlock();
-
-                new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
-
-                inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: TextColor)
+                MaxTextLength = MaxMessageLength,
+                OverflowClip = true,
+                OnEnterPressed = (GUITextBox textBox, string text) =>
                 {
-                    MaxTextLength = MaxMessageLength,
-                    OverflowClip = true,
-                    OnEnterPressed = (GUITextBox textBox, string text) =>
+                    if (GameMain.NetworkMember == null)
                     {
-                        if (GameMain.NetworkMember == null)
-                        {
-                            SendOutput(text);
-                        }
-                        else
-                        {
-                            item.CreateClientEvent(this, new ClientEventData(text));
-                        }
-                        textBox.Text = string.Empty;
-                        return true;
+                        SendOutput(text);
                     }
-                };
-            }
+                    else
+                    {
+                        item.CreateClientEvent(this, new ClientEventData(text));
+                    }
+                    textBox.Text = string.Empty;
+                    return true;
+                }
+            };
+            inputElements.Add(inputBox);
+            RefreshInputElements();
+        }
 
-            layoutGroup.Recalculate();
+        /// <summary>
+        /// Refreshes the visibility of the input box and the layout of the UI depending on whether the terminal is readonly or not.
+        /// </summary>
+        private void RefreshInputElements()
+        {
+            foreach (var inputElement in inputElements)
+            {
+                inputElement.Visible = !_readonly;
+                inputElement.IgnoreLayoutGroups = !inputElement.Visible;
+            }
+            layoutGroup?.Recalculate();
         }
 
         // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
         // This could be removed if GUIListBox supported aligning its children
-        public void CreateFillerBlock()
+        public GUIComponent CreateFillerBlock()
         {
             fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
             {
                 CanBeFocused = false
             };
+            return fillerBlock;
         }
 
         private void SendOutput(string input)

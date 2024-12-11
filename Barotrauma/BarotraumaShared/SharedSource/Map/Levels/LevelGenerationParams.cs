@@ -236,7 +236,7 @@ namespace Barotrauma
         }
 
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.5f, IsPropertySaveable.Yes, description: "How much the individual wall cells are rounded. "
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.5f, IsPropertySaveable.Yes, description: "How much the individual wall cells are rounded. "
             + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellRoundingAmount
         {
@@ -247,7 +247,7 @@ namespace Barotrauma
             }
         }
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.1f, IsPropertySaveable.Yes, description: "How much random variance is applied to the edges of the cells. "
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.1f, IsPropertySaveable.Yes, description: "How much random variance is applied to the edges of the cells. "
             + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellIrregularity
         {
@@ -525,19 +525,19 @@ namespace Barotrauma
         [Serialize(5, IsPropertySaveable.Yes, description: "The maximum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MaxCorpseCount { get; set; }
         
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a character set to be spawned as a corpse spawns as a human husk instead? Percentage from 0 to 1 per character."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a character set to be spawned as a corpse spawns as a human husk instead? Percentage from 0 to 1 per character."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float HuskProbability { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float ThalamusProbability { get; set; }
 
-        [Serialize(0.5f, IsPropertySaveable.Yes, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float WreckHullFloodingChance { get; set; }
 
-        [Serialize(0.1f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float WreckFloodingHullMinWaterPercentage { get; set; }
 
-        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float WreckFloodingHullMaxWaterPercentage { get; set; }
         #endregion
 
@@ -597,6 +597,13 @@ namespace Barotrauma
 
         [Serialize(1000.0f, IsPropertySaveable.Yes, description: "How far inside the level walls the edge texture continues."), Editable(minValue: 0.0f, maxValue: 10000.0f)]
         public float WallEdgeExpandInwardsAmount
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1000.0f, IsPropertySaveable.Yes, description: "How deep inside the walls the wall texture extends to before fading to black."), Editable(minValue: 0.0f, maxValue: 10000.0f)]
+        public float WallTextureExpandInwardsAmount
         {
             get;
             private set;

@@ -736,9 +736,9 @@ namespace Barotrauma
         public static string ElementInnerText(this XElement el)
         {
             StringBuilder str = new StringBuilder();
-            foreach (XNode element in el.DescendantNodes().Where(x => x.NodeType == XmlNodeType.Text))
+            foreach (XText textNode in el.DescendantNodes().OfType<XText>())
             {
-                str.Append(element.ToString());
+                str.Append(textNode.Value);
             }
             return str.ToString();
         }

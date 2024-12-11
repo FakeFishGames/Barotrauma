@@ -678,7 +678,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// divide a convex hull into triangles
+        /// Divide a convex hull into triangles
         /// </summary>
         /// <returns>List of triangle vertices (sorted counter-clockwise)</returns>
         public static List<Vector2[]> TriangulateConvexHull(List<Vector2> vertices, Vector2 center)
@@ -1156,4 +1156,5 @@ namespace Barotrauma
             return -CompareCW.Compare(a, b, center);
         }
     }
+
 }

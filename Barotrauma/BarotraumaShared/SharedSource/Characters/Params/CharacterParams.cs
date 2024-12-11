@@ -193,25 +193,32 @@ namespace Barotrauma
             {
                 return newXml;
             }
-            // CreateVariantXML seems to merge the ai targets so that in the new xml we have both the old and the new target definitions.
+
+            // CreateVariantXML does not understand anything about targeting tags, it just replaces the <target> elements in the order they're defined in.
+            // We can do better here by replacing the target with a matching tag, so let's clear the element and do that.
             var finalAiElement = newXml.GetChildElement("ai");
-            var processedTags = new HashSet<string>();
-            foreach (var aiTarget in finalAiElement.Elements().ToArray())
+            finalAiElement.Elements().Remove();
+
+            //add all the targets from the base character
+            baseAi.Elements().ForEach(e => finalAiElement.Add(e));
+
+            var processedTags = new List<Identifier>();
+            foreach (var variantTargetElement in variantAi.Elements())
             {
-                string tag = aiTarget.GetAttributeString("tag", null);
-                if (tag == null) { continue; }
-                if (processedTags.Contains(tag))
+                Identifier tag = variantTargetElement.GetAttributeIdentifier("tag", Identifier.Empty);
+                var matchingElements = finalAiElement.Elements().Where(e => e.GetAttributeIdentifier("tag", Identifier.Empty) == tag);
+                int alreadyProcessed = processedTags.Count(t => t == tag);
+                if (matchingElements.Count() > alreadyProcessed)
                 {
-                    aiTarget.Remove();
-                    continue;
+                    //more matching elements found, replace the first one that hasn't been processed yet
+                    matchingElements.Skip(alreadyProcessed).First().ReplaceWith(variantTargetElement);
+                }
+                else
+                {
+                    //no more matching elements in the base XML, this must be a new target
+                    finalAiElement.Add(variantTargetElement);
                 }
                 processedTags.Add(tag);
-                var matchInSelf = variantAi.Elements().FirstOrDefault(e => e.GetAttributeString("tag", null) == tag);
-                var matchInParent = baseAi.Elements().FirstOrDefault(e => e.GetAttributeString("tag", null) == tag);
-                if (matchInSelf != null && matchInParent != null)
-                {
-                    aiTarget.ReplaceWith(new XElement(matchInSelf));
-                }
             }
             return newXml;
         }

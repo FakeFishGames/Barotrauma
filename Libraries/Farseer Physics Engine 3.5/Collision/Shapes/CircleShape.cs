@@ -115,7 +115,7 @@ namespace FarseerPhysics.Collision.Shapes
             }
 
             // Find the point of intersection of the line with the circle.
-            float a = -(c + (float)Math.Sqrt(sigma));
+            float a = -(c + MathF.Sqrt(sigma));
 
             // Is the intersection point on the segment?
             if (0.0f <= a && a <= input.MaxFraction * rr)
@@ -177,8 +177,8 @@ namespace FarseerPhysics.Collision.Shapes
 
             //Magic
             float l2 = l * l;
-            float area = _2radius * (float)((Math.Asin(l / Radius) + MathHelper.Pi / 2) + l * Math.Sqrt(_2radius - l2));
-            float com = -2.0f / 3.0f * (float)Math.Pow(_2radius - l2, 1.5f) / area;
+            float area = _2radius * ((MathF.Asin(l / Radius) + MathHelper.Pi / 2) + l * MathF.Sqrt(_2radius - l2));
+            float com = -2.0f / 3.0f * MathF.Pow(_2radius - l2, 1.5f) / area;
 
             sc.X = p.X + normal.X * com;
             sc.Y = p.Y + normal.Y * com;

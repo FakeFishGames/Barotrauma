@@ -777,8 +777,7 @@ namespace Barotrauma.Steam
                         {
                             GUIMessageBox msgBox = new(TextManager.Get("DeleteMods"), TextManager.GetWithVariables("DeleteModsConfirm", ("[amount]", selectedMods.Length.ToString())), 
                                 new LocalizedString[] { TextManager.Get("Confirm"), TextManager.Get("Cancel")}, textAlignment: Alignment.TopCenter);
-                            msgBox.Buttons[0].OnClicked += msgBox.Close;
-                            msgBox.Buttons[1].OnClicked += (_, _) =>
+                            msgBox.Buttons[0].OnClicked += (_, _) =>
                             {
                                 foreach (ContentPackage mod in selectedMods)
                                 {
@@ -788,6 +787,7 @@ namespace Barotrauma.Steam
                                 msgBox.Close();
                                 return true;
                             };
+                            msgBox.Buttons[1].OnClicked += msgBox.Close;
                         }
                     });
 

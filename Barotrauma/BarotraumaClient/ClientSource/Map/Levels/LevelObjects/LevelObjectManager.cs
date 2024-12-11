@@ -10,9 +10,11 @@ namespace Barotrauma
 {
     partial class LevelObjectManager
     {
-        private readonly List<LevelObject> visibleObjectsBack = new List<LevelObject>();
-        private readonly List<LevelObject> visibleObjectsMid = new List<LevelObject>();
-        private readonly List<LevelObject> visibleObjectsFront = new List<LevelObject>();
+        // Pre-initialized to the max size, so that we don't have to resize the lists at runtime. TODO: Could the capacity (of some collections?) be lower?
+        private readonly List<LevelObject> visibleObjectsBack = new List<LevelObject>(MaxVisibleObjects);
+        private readonly List<LevelObject> visibleObjectsMid = new List<LevelObject>(MaxVisibleObjects);
+        private readonly List<LevelObject> visibleObjectsFront = new List<LevelObject>(MaxVisibleObjects);
+        private readonly HashSet<LevelObject> allVisibleObjects = new HashSet<LevelObject>(MaxVisibleObjects);
 
         private double NextRefreshTime;
 
@@ -47,9 +49,25 @@ namespace Barotrauma
             }
         }
         
-        public IEnumerable<LevelObject> GetVisibleObjects()
+        /// <summary>
+        /// Returns all visible objects, but not in order, because internally uses a HashSet.
+        /// </summary>
+        public IEnumerable<LevelObject> GetAllVisibleObjects()
         {
-            return visibleObjectsBack.Union(visibleObjectsMid).Union(visibleObjectsFront);
+            allVisibleObjects.Clear();
+            foreach (LevelObject obj in visibleObjectsBack)
+            {
+                allVisibleObjects.Add(obj);
+            }
+            foreach (LevelObject obj in visibleObjectsMid)
+            {
+                allVisibleObjects.Add(obj);
+            }
+            foreach (LevelObject obj in visibleObjectsFront)
+            {
+                allVisibleObjects.Add(obj);
+            }
+            return allVisibleObjects;
         }
 
         /// <summary>

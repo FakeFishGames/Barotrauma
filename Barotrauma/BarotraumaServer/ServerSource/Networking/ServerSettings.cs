@@ -74,7 +74,7 @@ namespace Barotrauma.Networking
             {
                 var property = netProperties[key];
                 property.SyncValue();
-                if (NetIdUtils.IdMoreRecent(property.LastUpdateID, c.LastRecvLobbyUpdate))
+                if (NetIdUtils.IdMoreRecent(property.LastUpdateID, c.LastRecvLobbyUpdate) || !c.InitialLobbyUpdateSent)
                 {
                     outMsg.WriteUInt32(key);
                     netProperties[key].Write(outMsg);

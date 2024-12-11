@@ -363,7 +363,7 @@ namespace Barotrauma
                         s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&
                         !nonPlayerFiles.Any(f => f.Path == s.FilePath));
                     GameSession gameSession = new GameSession(subInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
-                    gameSession.StartRound(Level.Loaded.LevelData);
+                    gameSession.StartRound(Level.Loaded.LevelData, mirrorLevel.Selected);
                     (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
                     {
                         GameMain.LevelEditorScreen.Select();
@@ -560,9 +560,13 @@ namespace Barotrauma
                     new Vector2(relWidth, relWidth * ((float)levelObjectList.Content.Rect.Width / levelObjectList.Content.Rect.Height)), 
                     levelObjectList.Content.RectTransform) { MinSize = new Point(0, 60) }, style: "ListBoxElementSquare")
                 {
-                    UserData = levelObjPrefab
+                    UserData = levelObjPrefab,
+                    ToolTip = levelObjPrefab.Name
                 };
-                var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
+                var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null)
+                {
+                    CanBeFocused = false
+                };
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
                     text: ToolBox.LimitString(levelObjPrefab.Name, GUIStyle.SmallFont, paddedFrame.Rect.Width), textAlignment: Alignment.Center, font: GUIStyle.SmallFont)
@@ -876,9 +880,22 @@ namespace Barotrauma
             {
                 var levelObj = levelObjFrame.UserData as LevelObjectPrefab;
                 float commonness = levelObj.GetCommonness(levelData);
-                levelObjFrame.Color = commonness > 0.0f ? GUIStyle.Green * 0.4f : Color.Transparent;
-                levelObjFrame.SelectedColor = commonness > 0.0f ? GUIStyle.Green * 0.6f : Color.White * 0.5f;
-                levelObjFrame.HoverColor = commonness > 0.0f ? GUIStyle.Green * 0.7f : Color.White * 0.6f;
+
+                Color color = GUIStyle.Green;
+
+                if (commonness > 0.0f && levelData?.GenerationParams != null)
+                {
+                    if (levelObj.MinSurfaceWidth > levelData.GenerationParams.CellSubdivisionLength &&
+                        levelObj.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.Wall))
+                    {
+                        color = Color.Orange;
+                        levelObjFrame.ToolTip = $"Potential issue: the level walls in \"{levelData.GenerationParams.Identifier}\" are set to be subdivided every {levelData.GenerationParams.CellSubdivisionLength} pixels, but the level object requires wall segments of at least {levelObj.MinSurfaceWidth} px. The object may be rarer than intended (or fail to spawn at all) in the level.";
+                    }
+                }
+
+                levelObjFrame.Color = commonness > 0.0f ? color * 0.4f : Color.Transparent;
+                levelObjFrame.SelectedColor = commonness > 0.0f ? color * 0.6f : Color.White * 0.5f;
+                levelObjFrame.HoverColor = commonness > 0.0f ? color * 0.7f : Color.White * 0.6f;
 
                 levelObjFrame.GetAnyChild<GUIImage>().Color = commonness > 0.0f ? Color.White : Color.DarkGray;
                 if (commonness <= 0.0f)

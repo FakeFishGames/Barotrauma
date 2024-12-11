@@ -1184,7 +1184,11 @@ namespace Barotrauma
         /// </summary>
         /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
         /// <param name="predictFutureDuration">If above 0, the method will take into account how much currently active status effects while affect the afflictions in the next x seconds.</param>   
-        public void GetSuitableTreatments(Dictionary<Identifier, float> treatmentSuitability, Character user, Limb limb = null, bool ignoreHiddenAfflictions = false, float predictFutureDuration = 0.0f)
+        /// <param name="checkTreatmentThreshold">Should the method check whether the afflictions are above <see cref="AfflictionPrefab.TreatmentThreshold"/> (whether they're severe enough for AI to treat)?</param>
+        /// <param name="checkTreatmentSuggestionThreshold">Should the method check whether the afflictions are above <see cref="AfflictionPrefab.TreatmentSuggestionThreshold"/> (whether treatment suggestions are shown in the health interface)?</param>
+        public void GetSuitableTreatments(Dictionary<Identifier, float> treatmentSuitability, Character user, Limb limb = null, bool ignoreHiddenAfflictions = false,
+            bool checkTreatmentThreshold = true, bool checkTreatmentSuggestionThreshold = true, 
+            float predictFutureDuration = 0.0f)
         {
             //key = item identifier
             //float = suitability
@@ -1235,7 +1239,14 @@ namespace Barotrauma
                         //if this a suitable treatment, ignore it if the affliction isn't severe enough to treat
                         //if the suitability is negative though, we need to take it into account!
                         //otherwise we may end up e.g. giving too much opiates to someone already close to overdosing
-                        if (totalAfflictionStrength < affliction.Prefab.TreatmentThreshold) { continue; }
+                        if (checkTreatmentThreshold)
+                        {
+                            if (totalAfflictionStrength < affliction.Prefab.TreatmentThreshold) { continue; }
+                        }
+                        if (checkTreatmentSuggestionThreshold)
+                        {
+                            if (totalAfflictionStrength < affliction.Prefab.TreatmentSuggestionThreshold) { continue; }
+                        }
                     }
                     if (treatment.Value > strength)
                     {

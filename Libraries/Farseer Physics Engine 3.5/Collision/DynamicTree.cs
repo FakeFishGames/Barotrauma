@@ -53,7 +53,7 @@ namespace FarseerPhysics.Collision
         internal int Height;
         internal int ParentOrNext;
 
-        public object Body;
+        public Body Body;
 
         internal T UserData;
 
@@ -319,7 +319,7 @@ namespace FarseerPhysics.Collision
             return _nodes[proxyId].AABB;
         }
 
-        public object GetBody(int proxyId)
+        public Body GetBody(int proxyId)
         {
             Debug.Assert(0 <= proxyId && proxyId < _nodeCapacity);
             return _nodes[proxyId].Body;
@@ -344,7 +344,7 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="callback">The callback.</param>
         /// <param name="aabb">The aabb.</param>
-        public void Query(Func<int, bool> callback, ref AABB aabb, ref object body)
+        public void Query(Func<int, bool> callback, ref AABB aabb, ref Body body)
         {
             _queryStack.Clear();
             _queryStack.Push(_root);
@@ -357,22 +357,38 @@ namespace FarseerPhysics.Collision
                     continue;
                 }
 
-                //TreeNode<T>* node = &_nodes[nodeId];
-                if (!ReferenceEquals(_nodes[nodeId].Body, body) && AABB.TestOverlap(ref _nodes[nodeId].AABB, ref aabb))
+                TreeNode<T> node = _nodes[nodeId];
+                if (node.Body != body && AABB.TestOverlap(ref node.AABB, ref aabb))
                 {
-                    if (_nodes[nodeId].IsLeaf())
+                    if (node.IsLeaf())
                     {
+                        if (node.Body.CollidesWithMatchesBetweenFixtures && 
+                            body.CollisionCategoriesMatchBetweenFixtures)
+                        {
+                            //equivalent to
+                            //collide = node.Body.CollidesWith.HasAnyFlag(body.CollisionCategories) && body.CollidesWith.HasAnyFlag(node.Body.CollisionCategories)
+                            //same check as in ContactManager.ShouldCollide
+                            //inlined here using binary operations because this is performance critical code
+                            bool collide = 
+                                (node.Body.CollidesWith & body.CollisionCategories) != 0 &&
+                                (body.CollidesWith & node.Body.CollisionCategories) != 0;
+                            if (!collide)
+                            {
+                                continue;
+                            }                         
+                        }
                         bool proceed = callback(nodeId);
                         if (proceed == false)
                         {
                             return;
                         }
+                        
                     }
                     else
                     {
-                        _queryStack.Push(_nodes[nodeId].Child1);
-                        _queryStack.Push(_nodes[nodeId].Child2);
-                    }
+                        _queryStack.Push(node.Child1);
+                        _queryStack.Push(node.Child2);
+                    }                    
                 }
             }
         }

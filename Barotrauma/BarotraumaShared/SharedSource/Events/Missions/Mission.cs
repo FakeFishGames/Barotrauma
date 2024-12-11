@@ -244,25 +244,23 @@ namespace Barotrauma
         /// <summary>
         /// Calculates the base reward, can be overridden for different mission types
         /// </summary>
-        public virtual int GetBaseReward(Submarine sub)
+        public virtual float GetBaseReward(Submarine sub)
         {
             return Prefab.Reward;
         }
 
         /// <summary>
-        /// Calculates the available reward, taking into account universal modifiers such as campaign settings
+        /// Calculates the available monetary reward, taking into account universal modifiers such as campaign settings.
         /// </summary>
         public int GetReward(Submarine sub)
         {
-            int reward = GetBaseReward(sub);
-
+            float reward = GetBaseReward(sub);
             // Some modifiers should apply universally to all implementations of GetBaseReward
             if (GameMain.GameSession?.Campaign is CampaignMode campaign)
             {
-                reward = (int)Math.Round(reward * campaign.Settings.MissionRewardMultiplier);
+                reward *= campaign.Settings.MissionRewardMultiplier;
             }
-
-            return reward;
+            return (int)Math.Round(reward);
         }
 
         public void Start(Level level)
@@ -428,15 +426,23 @@ namespace Barotrauma
             finalReward = (int)(reward * missionMoneyGainMultiplier.Value);
         }
 
+        private float CalculateDifficultyXPMultiplier()
+        {
+            const float minMissionDifficulty = 1;
+            const float maxMissionDifficulty = 4;
+            const float maxXpBonus = 1.3f;
+            float selectedMissionDifficulty = MathUtils.InverseLerp(minMissionDifficulty, maxMissionDifficulty, Prefab.Difficulty.GetValueOrDefault());
+            float xpBonusMultiplier = MathHelper.Lerp(1.0f, maxXpBonus, selectedMissionDifficulty);
+
+            return xpBonusMultiplier;
+        }
+
         private void GiveReward()
         {
             if (GameMain.GameSession.GameMode is not CampaignMode campaign) { return; }
-            int reward = GetReward(Submarine.MainSub);
 
-            float baseExperienceGain = reward * 0.09f;
-
-            float difficultyMultiplier = 1 + level.Difficulty / 100f;
-            baseExperienceGain *= difficultyMultiplier;
+            float xpReward = GetBaseReward(Submarine.MainSub) * Prefab.ExperienceMultiplier * campaign.Settings.ExperienceRewardMultiplier;
+            float xpGain = xpReward * level.LevelData.Biome.ExperienceFromMissionRewards * CalculateDifficultyXPMultiplier();
 
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
@@ -444,7 +450,7 @@ namespace Barotrauma
             var experienceGainMultiplier = new AbilityMissionExperienceGainMultiplier(this, 1f, character: null);
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
-            DistributeExperienceToCrew(crewCharacters, (int)(baseExperienceGain * experienceGainMultiplier.Value));
+            DistributeExperienceToCrew(crewCharacters, (int)(xpGain * experienceGainMultiplier.Value));
 
             CalculateFinalReward(Submarine.MainSub);
 #if SERVER

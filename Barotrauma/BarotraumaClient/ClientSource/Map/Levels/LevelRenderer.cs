@@ -11,10 +11,25 @@ namespace Barotrauma
 {
     class LevelWallVertexBuffer : IDisposable
     {
-        public VertexBuffer WallEdgeBuffer, WallBuffer;
+        /// <summary>
+        /// Buffer for the vertices of the "actual" wall texture.
+        /// </summary>
+        public VertexBuffer WallBuffer;
+
+        /// <summary>
+        /// Buffer for the vertices of the repeating edge texture drawn at the edges of the walls.
+        /// </summary>
+        public VertexBuffer WallEdgeBuffer;
+
+        /// <summary>
+        /// Buffer for the vertices of the inner, non-textured black part of the wall.
+        /// </summary>
+        public VertexBuffer WallInnerBuffer;
+
         public readonly Texture2D WallTexture, EdgeTexture;
         private VertexPositionColorTexture[] wallVertices;
         private VertexPositionColorTexture[] wallEdgeVertices;
+        private VertexPositionColor[] wallInnerVertices;
 
         public bool IsDisposed
         {
@@ -22,7 +37,7 @@ namespace Barotrauma
             private set;
         }
 
-        public LevelWallVertexBuffer(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Texture2D wallTexture, Texture2D edgeTexture, Color color)
+        public LevelWallVertexBuffer(VertexPositionColorTexture[] wallVertices, VertexPositionColorTexture[] wallEdgeVertices,  VertexPositionColor[] wallInnerVertices, Texture2D wallTexture, Texture2D edgeTexture)
         {
             if (wallVertices.Length == 0)
             {
@@ -32,32 +47,41 @@ namespace Barotrauma
             {
                 throw new ArgumentException("Failed to instantiate a LevelWallVertexBuffer (no wall edge vertices).");
             }
-            this.wallVertices = LevelRenderer.GetColoredVertices(wallVertices, color);
+            this.wallVertices = wallVertices;
             WallBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, wallVertices.Length, BufferUsage.WriteOnly);
             WallBuffer.SetData(this.wallVertices);
             WallTexture = wallTexture;
 
-            this.wallEdgeVertices = LevelRenderer.GetColoredVertices(wallEdgeVertices, color);
+            this.wallEdgeVertices = wallEdgeVertices;
             WallEdgeBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, wallEdgeVertices.Length, BufferUsage.WriteOnly);
             WallEdgeBuffer.SetData(this.wallEdgeVertices);
             EdgeTexture = edgeTexture;
+
+            if (wallInnerVertices != null)
+            {
+                this.wallInnerVertices = wallInnerVertices;
+                WallInnerBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, wallInnerVertices.Length, BufferUsage.WriteOnly);
+                WallInnerBuffer.SetData(this.wallInnerVertices);
+            }
         }
 
-        public void Append(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Color color)
+        public void Append(VertexPositionColorTexture[] newWallVertices, VertexPositionColorTexture[] newWallEdgeVertices, VertexPositionColor[] newWallInnerVertices)
         {
-            WallBuffer.Dispose();
-            WallBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, this.wallVertices.Length + wallVertices.Length, BufferUsage.WriteOnly);
-            int originalWallVertexCount = this.wallVertices.Length;
-            Array.Resize(ref this.wallVertices, originalWallVertexCount + wallVertices.Length);
-            Array.Copy(LevelRenderer.GetColoredVertices(wallVertices, color), 0, this.wallVertices, originalWallVertexCount, wallVertices.Length);
-            WallBuffer.SetData(this.wallVertices);
+            WallBuffer = Append(WallBuffer, ref wallVertices, newWallVertices, VertexPositionColorTexture.VertexDeclaration);
+            WallEdgeBuffer = Append(WallEdgeBuffer, ref wallEdgeVertices, newWallEdgeVertices, VertexPositionColorTexture.VertexDeclaration);
+            WallInnerBuffer = Append(WallInnerBuffer, ref wallInnerVertices, newWallInnerVertices, VertexPositionColor.VertexDeclaration);
 
-            WallEdgeBuffer.Dispose();
-            WallEdgeBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, this.wallEdgeVertices.Length + wallEdgeVertices.Length, BufferUsage.WriteOnly);
-            int originalWallEdgeVertexCount = this.wallEdgeVertices.Length;
-            Array.Resize(ref this.wallEdgeVertices, originalWallEdgeVertexCount + wallEdgeVertices.Length);
-            Array.Copy(LevelRenderer.GetColoredVertices(wallEdgeVertices, color), 0, this.wallEdgeVertices, originalWallEdgeVertexCount, wallEdgeVertices.Length);
-            WallEdgeBuffer.SetData(this.wallEdgeVertices);
+            static VertexBuffer Append<T>(VertexBuffer buffer, ref T[] currentVertices, T[] newVertices, VertexDeclaration vertexDeclaration) where T : struct, IVertexType
+            {
+                buffer?.Dispose(); 
+                int originalVertexCount = currentVertices.Length;
+                int newBufferSize = originalVertexCount + newVertices.Length;
+                buffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, vertexDeclaration, newBufferSize, BufferUsage.WriteOnly);               
+                Array.Resize(ref currentVertices, newBufferSize);
+                Array.Copy(newVertices, 0, currentVertices, originalVertexCount, newVertices.Length);
+                buffer.SetData(currentVertices);
+                return buffer;
+            }
         }
 
         public void Dispose()
@@ -70,7 +94,7 @@ namespace Barotrauma
 
     class LevelRenderer : IDisposable
     {
-        private static BasicEffect wallEdgeEffect, wallCenterEffect;
+        private static BasicEffect wallEdgeEffect, wallCenterEffect, wallInnerEffect;
 
         private Vector2 waterParticleOffset;
         private Vector2 waterParticleVelocity;
@@ -129,7 +153,16 @@ namespace Barotrauma
                 };
                 wallCenterEffect.CurrentTechnique = wallCenterEffect.Techniques["BasicEffect_Texture"];
             }
-                
+
+            if (wallInnerEffect == null)
+            {
+                wallInnerEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                {
+                    VertexColorEnabled = true,
+                    TextureEnabled = false
+                };
+                wallInnerEffect.CurrentTechnique = wallInnerEffect.Techniques["BasicEffect_Texture"];
+            }
             this.level = level;
         }
 
@@ -184,7 +217,7 @@ namespace Barotrauma
             //calculate the sum of the forces of nearby level triggers
             //and use it to move the water texture and water distortion effect
             Vector2 currentWaterParticleVel = level.GenerationParams.WaterParticleVelocity;
-            foreach (LevelObject levelObject in level.LevelObjectManager.GetVisibleObjects())
+            foreach (LevelObject levelObject in level.LevelObjectManager.GetAllVisibleObjects())
             {
                 if (levelObject.Triggers == null) { continue; }
                 //use the largest water flow velocity of all the triggers
@@ -225,16 +258,16 @@ namespace Barotrauma
             return verts;
         }
 
-        public void SetVertices(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Texture2D wallTexture, Texture2D edgeTexture, Color color)
+        public void SetVertices(VertexPositionColorTexture[] wallVertices, VertexPositionColorTexture[] wallEdgeVertices, VertexPositionColor[] wallInnerVertices, Texture2D wallTexture, Texture2D edgeTexture)
         {
             var existingBuffer = vertexBuffers.Find(vb => vb.WallTexture == wallTexture && vb.EdgeTexture == edgeTexture);
             if (existingBuffer != null)
             {
-                existingBuffer.Append(wallVertices, wallEdgeVertices,color);
+                existingBuffer.Append(wallVertices, wallEdgeVertices, wallInnerVertices);
             }
             else
             {
-                vertexBuffers.Add(new LevelWallVertexBuffer(wallVertices, wallEdgeVertices, wallTexture, edgeTexture, color));
+                vertexBuffers.Add(new LevelWallVertexBuffer(wallVertices, wallEdgeVertices, wallInnerVertices, wallTexture, edgeTexture));
             }
         }
 
@@ -497,15 +530,16 @@ namespace Barotrauma
                 }
             }
 
-            wallEdgeEffect.Alpha = 1.0f;
-            wallCenterEffect.Alpha = 1.0f;
-
-            wallCenterEffect.World = transformMatrix;
-            wallEdgeEffect.World = transformMatrix;
+            wallEdgeEffect.Alpha = wallInnerEffect.Alpha = wallCenterEffect.Alpha = 1.0f;
+            wallCenterEffect.World =  wallInnerEffect.World =  wallEdgeEffect.World = transformMatrix;
 
             //render static walls
             foreach (var vertexBuffer in vertexBuffers)
             {
+                wallInnerEffect.CurrentTechnique.Passes[0].Apply();
+                graphicsDevice.SetVertexBuffer(vertexBuffer.WallInnerBuffer);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(vertexBuffer.WallInnerBuffer.VertexCount / 3.0f));
+
                 wallCenterEffect.Texture = vertexBuffer.WallTexture;
                 wallCenterEffect.CurrentTechnique.Passes[0].Apply();
                 graphicsDevice.SetVertexBuffer(vertexBuffer.WallBuffer);

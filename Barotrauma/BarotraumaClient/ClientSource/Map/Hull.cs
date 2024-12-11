@@ -404,8 +404,8 @@ namespace Barotrauma
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
 
-
-                GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
+                float worldSurface = surface + Submarine.DrawPosition.Y;
+                GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -worldSurface), new Vector2(drawRect.Right, -worldSurface), Color.Cyan * 0.5f);
                 for (int i = 0; i < waveY.Length - 1; i++)
                 {
                     GUI.DrawLine(spriteBatch,
@@ -578,8 +578,7 @@ namespace Barotrauma
                 corners[4] = new Vector3(x, bottom, 0.0f);
                 //bottom right
                 corners[5] = new Vector3(x + width, bottom, 0.0f);
-
-                Vector2[] uvCoords = new Vector2[4];
+                
                 for (int n = 0; n < 4; n++)
                 {
                     uvCoords[n] = Vector2.Transform(new Vector2(corners[n].X, -corners[n].Y), transform);

@@ -87,6 +87,22 @@ namespace Microsoft.Xna.Framework
             }
         }
 
+        public override int TargetDisplay
+        {
+            get => Sdl.Window.GetDisplayIndex(Handle);
+            set
+            {
+                int maxDisplayIndex = Sdl.Display.GetNumVideoDisplays() - 1;
+
+                // if the value is out of range, set it to 0 (the primary display)
+                if (value > maxDisplayIndex || value < 0) { value = 0; }
+
+                if (value == Sdl.Window.GetDisplayIndex(Handle)) { return; }
+
+                Sdl.Window.SetPosition(Handle, Sdl.Window.PosCentered | value, Sdl.Window.PosCentered | value);
+            }
+        }
+
         public static GameWindow Instance;
         public uint? Id;
         public bool IsFullScreen;
@@ -162,13 +178,6 @@ namespace Microsoft.Xna.Framework
 
             var winx = Sdl.Window.PosCentered;
             var winy = Sdl.Window.PosCentered;
-
-            // if we are on Linux, start on the current screen
-            if (CurrentPlatform.OS == OS.Linux)
-            {
-                winx |= GetMouseDisplay();
-                winy |= GetMouseDisplay();
-            }
 
             _handle = Sdl.Window.Create(AssemblyHelper.GetDefaultWindowTitle(),
                 winx, winy, _width, _height, initflags);
@@ -269,11 +278,8 @@ namespace Microsoft.Xna.Framework
 
             OnClientSizeChanged();
 
-            int ignore, minx = 0, miny = 0;
-            Sdl.Window.GetBorderSize(_handle, out miny, out minx, out ignore, out ignore);
-
-            var centerX = Math.Max(prevBounds.X + ((prevBounds.Width - clientWidth) / 2), minx);
-            var centerY = Math.Max(prevBounds.Y + ((prevBounds.Height - clientHeight) / 2), miny);
+            var centerX = prevBounds.X + ((prevBounds.Width - clientWidth) / 2);
+            var centerY = prevBounds.Y + ((prevBounds.Height - clientHeight) / 2);
 
             if (IsFullScreen && !_willBeFullScreen)
             {
@@ -291,7 +297,7 @@ namespace Microsoft.Xna.Framework
             // after the window gets resized, window position information
             // becomes wrong (for me it always returned 10 8). Solution is
             // to not try and set the window position because it will be wrong.
-            if ((Sdl.Patch > 4 || !AllowUserResizing) && !_wasMoved)
+            if (((Sdl.Patch > 4 && Sdl.Minor == 0) || !AllowUserResizing) && !_wasMoved)
                 Sdl.Window.SetPosition(Handle, centerX, centerY);
 
             Sdl.Window.Show(Handle);

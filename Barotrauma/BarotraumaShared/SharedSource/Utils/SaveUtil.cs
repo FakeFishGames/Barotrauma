@@ -11,6 +11,7 @@ using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -149,17 +150,23 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to clear folder", e);
+                LogErrorAndSendToClients("Failed to clear folder", e);
                 return;
             }
 
             try
             {
                 GameMain.GameSession.Save(Path.Combine(TempPath, GameSessionFileName), isSavingOnLoading);
+
+                if (!isSavingOnLoading)
+                {
+                    // Reset the campaign data path, since if we had a different load path, it would be invalid now
+                    GameMain.GameSession.DataPath = CampaignDataPath.CreateRegular(filePath.SavePath);
+                }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error saving gamesession", e);
+                LogErrorAndSendToClients("Error saving gamesession", e);
                 return;
             }
 
@@ -192,7 +199,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error saving submarine", e);
+                LogErrorAndSendToClients("Error saving submarine", e);
                 return;
             }
 
@@ -202,7 +209,21 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error compressing save file", e);
+                LogErrorAndSendToClients("Error compressing save file", e);
+            }
+
+            void LogErrorAndSendToClients(string errorMsg, Exception e)
+            {
+                DebugConsole.ThrowError(errorMsg, e);
+#if SERVER
+                if (GameMain.Server != null)
+                {
+                    foreach (var client in GameMain.Server.ConnectedClients)
+                    {
+                        GameMain.Server.SendDirectChatMessage(errorMsg + '\n' + e.StackTrace.CleanupStackTrace(), client, ChatMessageType.Error);
+                    }
+                }
+#endif
             }
         }
 
@@ -378,6 +399,7 @@ namespace Barotrauma
                         FilePath: file,
                         SaveTime: Option.None,
                         SubmarineName: "",
+                        RespawnMode: RespawnMode.None,
                         EnabledContentPackageNames: ImmutableArray<string>.Empty));
                 }
                 else
@@ -413,6 +435,7 @@ namespace Barotrauma
                         FilePath: file,
                         SaveTime: docRoot.GetAttributeDateTime("savetime"),
                         SubmarineName: docRoot.GetAttributeStringUnrestricted("submarine", ""),
+                        RespawnMode: docRoot.GetAttributeEnum("respawnmode", RespawnMode.None),
                         EnabledContentPackageNames: enabledContentPackageNames.ToImmutableArray()));
                 }
             }

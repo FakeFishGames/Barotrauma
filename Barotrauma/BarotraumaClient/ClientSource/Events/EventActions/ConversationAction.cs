@@ -36,7 +36,8 @@ namespace Barotrauma
         {
             return 
                 lastActiveAction != null && 
-                lastActiveAction.ParentEvent != ParentEvent && 
+                !lastActiveAction.ParentEvent.IsFinished &&
+                lastActiveAction.ParentEvent != ParentEvent &&
                 Timing.TotalTime < lastActiveAction.lastActiveTime + duration;
         }
 
@@ -101,6 +102,7 @@ namespace Barotrauma
                     conversationList.BarScroll = (prevSize - conversationList.Content.Rect.Height) / (conversationList.TotalSize - conversationList.Content.Rect.Height);
                     conversationList.ScrollToEnd(duration: 0.5f);
                     lastMessageBox.SetBackgroundIcon(eventSprite);
+                    MarkMessageBoxAsLastAction(lastMessageBox);
                     return;
                 }
             }
@@ -123,16 +125,7 @@ namespace Barotrauma
             messageBox.AutoClose = false;
             GUIStyle.Apply(messageBox.InnerFrame, "DialogBox");
 
-            if (actionInstance != null)
-            {
-                lastActiveAction = actionInstance;
-                actionInstance.lastActiveTime = Timing.TotalTime;
-                actionInstance.dialogBox = messageBox;
-            }
-            else
-            {
-                messageBox.UserData = new Pair<string, UInt16>("ConversationAction", actionId.Value);
-            }
+            MarkMessageBoxAsLastAction(messageBox);
 
             int padding = GUI.IntScale(16);
 
@@ -154,6 +147,20 @@ namespace Barotrauma
                 Color = Color.Black * 0.7f
             };
             shadow.SetAsFirstChild();
+
+            void MarkMessageBoxAsLastAction(GUIMessageBox messageBox)
+            {
+                if (actionInstance != null)
+                {
+                    lastActiveAction = actionInstance;
+                    actionInstance.lastActiveTime = Timing.TotalTime;
+                    actionInstance.dialogBox = messageBox;
+                }
+                else
+                {
+                    messageBox.UserData = new Pair<string, UInt16>("ConversationAction", actionId.Value);
+                }
+            }
 
             static void RecalculateLastMessage(GUIListBox conversationList, bool append)
             {

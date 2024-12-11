@@ -19,7 +19,7 @@ namespace Barotrauma
         public SkillPrefab(ContentXElement element) 
         {
             Identifier = element.GetAttributeIdentifier("identifier", "");
-            PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 25.0f);
+            PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 15.0f);
             levelRange = GetSkillRange("level", element, defaultValue: new Range<float>(0, 0));
             levelRangePvP = GetSkillRange("pvplevel", element, defaultValue: levelRange);
             IsPrimarySkill = element.GetAttributeBool("primary", false);

@@ -59,7 +59,7 @@ namespace Barotrauma
         public static bool IsValidTarget(Character target, Character character, bool targetCharactersInOtherSubs)
         {
             if (target == null || target.Removed) { return false; }
-            if (target.IsDead) { return false; }
+            if (target.IsDead || target.InDetectable) { return false; }
             if (target.IsUnconscious && target.Params.Health.ConstantHealthRegeneration <= 0.0f) { return false; }
             if (target == character) { return false; }
             if (target.Submarine == null) { return false; }

@@ -296,7 +296,9 @@ namespace Barotrauma.Items.Components
                         //which doesn't support multiple attached ropes (see Holdable.GetRope and the references to it)
                         lastProjectile?.Item.GetComponent<Rope>()?.Snap();
                     }
-                    float damageMultiplier = (1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier)) * WeaponDamageModifier;
+
+                    float rangedAttackMultiplier = character?.GetStatValue(StatTypes.RangedAttackMultiplier) ?? 0;
+                    float damageMultiplier = (1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier) + rangedAttackMultiplier) * WeaponDamageModifier;
                     projectile.Launcher = item;
 
                     ignoredBodies.Clear();
@@ -306,6 +308,9 @@ namespace Barotrauma.Items.Components
                         {
                             if (l.IsSevered) { continue; }
                             ignoredBodies.Add(l.body.FarseerBody);
+#if SERVER
+                            ignoredBodies.Add(l.LagCompensatedBody.FarseerBody);
+#endif
                         }
 
                         foreach (Item heldItem in character.HeldItems)

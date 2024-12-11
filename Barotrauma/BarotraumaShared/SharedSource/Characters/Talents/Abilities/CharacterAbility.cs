@@ -100,7 +100,7 @@ namespace Barotrauma.Abilities
             string type = abilityElement.Name.ToString().ToLowerInvariant();
             try
             {
-                abilityType = ReflectionUtils.GetTypeWithBackwardsCompatibility("Barotrauma.Abilities", type, false, true);
+                abilityType = ReflectionUtils.GetTypeWithBackwardsCompatibility(ToolBox.BarotraumaAssembly, "Barotrauma.Abilities", type, false, true);
                 if (abilityType == null)
                 {
                     if (errorMessages) DebugConsole.ThrowError("Could not find the CharacterAbility \"" + type + "\" (" + characterAbilityGroup.CharacterTalent.DebugIdentifier + ")",

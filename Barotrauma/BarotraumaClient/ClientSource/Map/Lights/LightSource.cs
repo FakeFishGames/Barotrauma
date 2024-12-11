@@ -592,7 +592,17 @@ namespace Barotrauma.Lights
         private void CheckHullsInRange(Submarine sub)
         {
             //find the list of convexhulls that belong to the sub
-            ConvexHullList chList = convexHullsInRange.FirstOrDefault(chList => chList.Submarine == sub);
+            
+            // Performance-sensitive code, hence implemented without Linq.
+            ConvexHullList chList = null;
+            foreach (var chl in convexHullsInRange)
+            {
+                if (chl.Submarine == sub)
+                {
+                    chList = chl;
+                    break;
+                }
+            }
             
             //not found -> create one
             if (chList == null)

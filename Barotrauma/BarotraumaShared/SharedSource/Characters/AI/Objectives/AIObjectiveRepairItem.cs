@@ -50,7 +50,7 @@ namespace Barotrauma
                 }
                 return Priority;
             }
-            if (HumanAIController.IsItemRepairedByAnother(Item, out _))
+            if (AIObjectiveRepairItems.IsItemRepairedByAnother(character, Item))
             {
                 Priority = 0;
                 IsCompleted = true;

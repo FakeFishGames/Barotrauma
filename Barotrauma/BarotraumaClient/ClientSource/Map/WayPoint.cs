@@ -46,6 +46,10 @@ namespace Barotrauma
             }
             if (IsHighlighted || IsHighlighted) { clr = Color.Lerp(clr, Color.White, 0.8f); }
 
+            if (Stairs is { Removed: true }) { Stairs = null; }
+            if (Ladders is { Item.Removed: true }) { Ladders = null; }
+            if (ConnectedGap is { Removed: true }) { ConnectedGap = null; }
+
             int iconSize = spawnType == SpawnType.Path ? WaypointSize : SpawnPointSize;
             if (ConnectedDoor != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path)
             {

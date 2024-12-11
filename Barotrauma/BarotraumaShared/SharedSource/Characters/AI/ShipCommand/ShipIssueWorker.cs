@@ -50,7 +50,8 @@ namespace Barotrauma
             if (OrderedCharacter.AIController is HumanAIController humanAI && 
                 humanAI.ObjectiveManager.CurrentOrders.None(o => o.MatchesOrder(SuggestedOrder.Identifier, Option) && o.TargetEntity == TargetItem))
             {
-                if (orderedCharacter != CommandingCharacter)
+                bool orderGivenByDifferentCharacter = orderedCharacter != CommandingCharacter;
+                if (orderGivenByDifferentCharacter)
                 {
                     CommandingCharacter.Speak(SuggestedOrder.GetChatMessage(OrderedCharacter.Name, "", givingOrderToSelf: false),
                         minDurationBetweenSimilar: 5,
@@ -62,9 +63,12 @@ namespace Barotrauma
                     .WithOrderGiver(CommandingCharacter)
                     .WithManualPriority(CharacterInfo.HighestManualOrderPriority);
                 OrderedCharacter.SetOrder(CurrentOrder, CommandingCharacter != OrderedCharacter);
-                OrderedCharacter.Speak(TextManager.Get("DialogAffirmative").Value, delay: 1.0f,
-                    minDurationBetweenSimilar: 5,
-                    identifier: ("ReceiveOrder." + SuggestedOrder.Prefab.Identifier).ToIdentifier());
+                if (orderGivenByDifferentCharacter)
+                {
+                    OrderedCharacter.Speak(TextManager.Get("DialogAffirmative").Value, delay: 1.0f,
+                        minDurationBetweenSimilar: 5,
+                        identifier: ("ReceiveOrder." + SuggestedOrder.Prefab.Identifier).ToIdentifier());
+                }
             }
             TimeSinceLastAttempt = 0f;
         }

@@ -150,7 +150,7 @@ namespace FarseerPhysics.Common.Decomposition.Seidel
         {
             Point a = (p.Next - p);
             Point b = (p.Prev - p);
-            return (float)Math.Atan2(a.Cross(b), a.Dot(b));
+            return MathF.Atan2(a.Cross(b), a.Dot(b));
         }
 
         private bool AngleSign()

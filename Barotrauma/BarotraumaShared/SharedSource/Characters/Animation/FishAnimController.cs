@@ -147,20 +147,7 @@ namespace Barotrauma
 
             if (!character.CanMove)
             {
-                levitatingCollider = false;
-                Collider.FarseerBody.FixedRotation = false;
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
-                {
-                    Collider.Enabled = false;
-                    Collider.LinearVelocity = mainLimb.LinearVelocity;
-                    Collider.SetTransformIgnoreContacts(mainLimb.SimPosition, mainLimb.Rotation);
-                    //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
-                    //(except when dragging, then we need the pull joints)
-                    if (!Draggable || character.SelectedBy == null)
-                    {
-                        ResetPullJoints();
-                    }
-                }
+                UpdateRagdollControlsMovement();
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
@@ -186,11 +173,11 @@ namespace Barotrauma
 
                 if (InWater)
                 {
-                    Collider.SetTransform(new Vector2(Collider.SimPosition.X, MainLimb.SimPosition.Y), 0.0f);
+                    Collider.SetTransformIgnoreContacts(new Vector2(Collider.SimPosition.X, MainLimb.SimPosition.Y), 0.0f);
                 }
                 else
                 {
-                    Collider.SetTransform(new Vector2(
+                    Collider.SetTransformIgnoreContacts(new Vector2(
                         Collider.SimPosition.X,
                         Math.Max(lowestLimb.SimPosition.Y + (Collider.Radius + Collider.Height / 2), Collider.SimPosition.Y)),
                         0.0f);
@@ -995,7 +982,7 @@ namespace Barotrauma
                 if (RagdollParams.IsSpritesheetOrientationHorizontal)
                 {
                     //horizontally aligned limbs need to be flipped 180 degrees
-                    l.body.SetTransform(l.SimPosition, l.body.Rotation + MathHelper.Pi * Dir);
+                    l.body.SetTransformIgnoreContacts(l.SimPosition, l.body.Rotation + MathHelper.Pi * Dir);
 				}
                 //no need to do anything when flipping vertically oriented limbs
                 //the sprite gets flipped horizontally, which does the job

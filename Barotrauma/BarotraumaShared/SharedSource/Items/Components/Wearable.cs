@@ -165,10 +165,11 @@ namespace Barotrauma
         {
             if (element.DoesAttributeReferenceFileNameAlone("texture"))
             {
+                var basePrefab = WearableComponent.Item.Prefab.ParentPrefab ?? WearableComponent.Item.Prefab;
                 string textureName = element.GetAttributeString("texture", "");
                 return ContentPath.FromRaw(
                     element.ContentPackage,
-                    $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{textureName}");
+                    $"{Path.GetDirectoryName(basePrefab.FilePath)}/{textureName}");
             }
             else
             {

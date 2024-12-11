@@ -440,6 +440,14 @@ namespace Barotrauma.Items.Components
             //can't launch if already launched
             if (StickTarget != null || IsActive) { return false; }
 
+#if SERVER
+            var owner = GameMain.Server.ConnectedClients.FirstOrDefault(c => c.Character == User);
+            if (owner != null)
+            {
+                Limb.SetLagCompensatedBodyPositions(owner);
+            }
+#endif
+
             float initialRotation = item.body.Rotation;
             //if the item is being launched from an inventory, assume it's being fired by a gun that handles setting the rotation correctly
             //but if the item is e.g. being thrown by a character, we need to take the direction into account
@@ -461,10 +469,10 @@ namespace Barotrauma.Items.Components
                 spreadIndex++;
 
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
+                Vector2 prevSimpos = item.SimPosition;
+                item.body.SetTransformIgnoreContacts(item.body.SimPosition, launchAngle);
                 if (Hitscan)
                 {
-                    Vector2 prevSimpos = item.SimPosition;
-                    item.body.SetTransformIgnoreContacts(item.body.SimPosition, launchAngle);
                     DoHitscan(launchDir);
                     if (i < HitScanCount - 1)
                     {
@@ -473,7 +481,6 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    item.body.SetTransform(item.body.SimPosition, launchAngle);
                     float modifiedLaunchImpulse = (LaunchImpulse + launchImpulseModifier) * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse);
                 }
@@ -670,8 +677,6 @@ namespace Barotrauma.Items.Components
                 }
                 if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.CollidesWith == Category.None) { return true; }
-                //only collides with characters = probably an "outsideCollisionBlocker" created by a gap
-                if (fixture.CollidesWith == Physics.CollisionCharacter) { return true; }
 
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body.UserData is Hull || fixture.UserData is Hull) { return true; }
 
@@ -689,6 +694,11 @@ namespace Barotrauma.Items.Components
                     if (item == Item) { return true; }
                     if (item.Condition <= 0) { return true; }
                     if (!item.Prefab.DamagedByProjectiles && item.GetComponent<Door>() == null) { return true; }
+                }
+                else if (fixture.Body.UserData is Gap)
+                {
+                    //an "outsideCollisionBlocker" created by a gap, should never collide
+                    return true;
                 }
                 else if (fixture.Body.UserData is Holdable { CanPush: false })
                 {
@@ -724,13 +734,16 @@ namespace Barotrauma.Items.Components
                     return -1;
                 }
                 if (fixture.Body.UserData is VineTile) { return -1; }
-                if (fixture.CollidesWith == Category.None) { return -1; }
-                //only collides with characters = probably an "outsideCollisionBlocker" created by a gap
-                if (fixture.CollidesWith == Physics.CollisionCharacter) { return -1; }
+                if (fixture.CollidesWith == Category.None && fixture.CollisionCategories != Physics.CollisionLagCompensationBody) { return -1; }
                 if (fixture.Body.UserData is Item item)
                 {
                     if (item.Condition <= 0) { return -1; }
                     if (!item.Prefab.DamagedByProjectiles && item.GetComponent<Door>() == null) { return -1; }
+                }
+                else if (fixture.Body.UserData is Gap)
+                {
+                    //an "outsideCollisionBlocker" created by a gap, should never collide
+                    return -1;
                 }
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body?.UserData is Hull || fixture.UserData is Hull) { return -1; }
 
@@ -779,7 +792,7 @@ namespace Barotrauma.Items.Components
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
                 return 1;
-            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking | Physics.CollisionProjectile);
+            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking | Physics.CollisionProjectile | Physics.CollisionLagCompensationBody);
 
             return hits;
         }

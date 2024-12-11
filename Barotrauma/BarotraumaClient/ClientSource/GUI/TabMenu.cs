@@ -902,7 +902,7 @@ namespace Barotrauma
                 }
             }
 
-            return 0;
+            return teamIDs.IndexOf(client.TeamID);
         }
 
         private void CreateWalletCrewFrame(Character character, GUILayoutGroup paddedFrame)
@@ -1694,6 +1694,7 @@ namespace Barotrauma
                         textContent, 
                         mission.Difficulty ?? 0, 
                         mission.Prefab.Icon, mission.Prefab.IconColor,
+                        mission.GetDifficultyToolTipText(),
                         out GUIImage missionIcon);
                     if (missionIcon != null)
                     {

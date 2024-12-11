@@ -526,6 +526,17 @@ namespace Barotrauma
             else
             {
                 origin = attachment.Sprite.Origin;
+                if (spriteEffects.HasFlag(SpriteEffects.FlipHorizontally))
+                {
+                    origin.X = attachment.Sprite.size.X - origin.X;
+                }
+                if (spriteEffects.HasFlag(SpriteEffects.FlipVertically))
+                {
+                    origin.Y = attachment.Sprite.size.Y - origin.Y;
+                }
+                //the portrait's origin is forced to 0,0 (presumably for easier drawing on the UI?), see LoadHeadElement
+                //we need to take that into account here and draw the attachment at where the origin of the "actual" head sprite would be
+                drawPos += HeadSprite.Origin * scale;
             }
             float depth = attachment.Sprite.Depth;
             if (attachment.InheritLimbDepth)

@@ -151,11 +151,11 @@ namespace Barotrauma
                 //increase the strength of the herpes affliction in steps instead of linearly
                 //otherwise clients could determine their exact karma value from the strength
                 float herpesStrength = 0.0f;
-                if (client.Karma < 20)
+                if (client.Karma < HerpesThreshold * 0.5f)
                     herpesStrength = 100.0f;
-                else if (client.Karma < 30)
+                else if (client.Karma < HerpesThreshold * 0.75f)
                     herpesStrength = 60.0f;
-                else if (client.Karma < 40.0f)
+                else if (client.Karma < HerpesThreshold)
                     herpesStrength = 30.0f;
                 
                 var existingAffliction = client.Character.CharacterHealth.GetAffliction<AfflictionSpaceHerpes>(AfflictionPrefab.SpaceHerpesType);

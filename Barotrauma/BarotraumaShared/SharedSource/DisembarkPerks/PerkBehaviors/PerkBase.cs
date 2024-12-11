@@ -54,7 +54,7 @@ namespace Barotrauma.PerkBehaviors
 
         public static bool TryLoadFromXml(ContentXElement element, DisembarkPerkPrefab prefab, [NotNullWhen(true)] out PerkBase? perk)
         {
-            Type? type = ReflectionUtils.GetTypeWithBackwardsCompatibility("Barotrauma.PerkBehaviors", element.Name.ToString(), throwOnError: false, ignoreCase: true);
+            Type? type = ReflectionUtils.GetTypeWithBackwardsCompatibility(ToolBox.BarotraumaAssembly, "Barotrauma.PerkBehaviors", element.Name.ToString(), throwOnError: false, ignoreCase: true);
             if (type is null)
             {
                 DebugConsole.ThrowError($"Could not find a perk behavior of the type \"{element.Name}\".", contentPackage: element.ContentPackage);

@@ -160,7 +160,9 @@ namespace Barotrauma
 #if DEBUG || UNSTABLE
             if (State == 1 && !level.CheckBeaconActive())
             {
-                DebugConsole.ThrowError("Beacon became inactive!");
+                DebugConsole.ThrowError(
+                    "Debug/unstable only error message: beacon became inactive mid-mission after it had been activated! If this happened unexpectedly while you were away from the beacon, it may be a sign of a bug."+
+                    " If possible, please try to check what caused the beacon to go inactive.");
                 State = 2;
             }
 #endif

@@ -75,6 +75,9 @@ namespace Barotrauma.Items.Components
 
         public readonly ContentXElement originalElement;
 
+        /// <summary>
+        /// The default delay for delayed client-side corrections (see <see cref="StartDelayedCorrection"/>.
+        /// </summary>
         protected const float CorrectionDelay = 1.0f;
         protected CoroutineHandle delayedCorrectionCoroutine;
 
@@ -667,8 +670,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
         
-        protected string GetTextureDirectory(ContentXElement subElement)
-            => subElement.DoesAttributeReferenceFileNameAlone("texture") ? Path.GetDirectoryName(item.Prefab.FilePath) : string.Empty;
+        protected string GetTextureDirectory(ContentXElement subElement) => item.Prefab.GetTexturePath(subElement, item.Prefab.ParentPrefab);
 
         public bool HasRequiredSkills(Character character)
         {

@@ -93,6 +93,10 @@ namespace Barotrauma.Networking
             return cursorPositionError *= 0.7f;
         }
 
+        /// <summary>
+        /// Quantizes the value so it's "as accurate as it can be" when the value is represented using the specified number of bits.
+        /// Relevant e.g. when writing float values into network messages using some specific number of bits.
+        /// </summary>
         public static Vector2 Quantize(Vector2 value, float min, float max, int numberOfBits)
         {
             return new Vector2(
@@ -100,15 +104,21 @@ namespace Barotrauma.Networking
                 Quantize(value.Y, min, max, numberOfBits));
         }
 
+        /// <summary>
+        /// Quantizes the value so it's "as accurate as it can be" when the value is represented using the specified number of bits.
+        /// Relevant e.g. when writing float values into network messages using some specific number of bits.
+        /// </summary>
         public static float Quantize(float value, float min, float max, int numberOfBits)
         {
-            float step = (max - min) / (1 << (numberOfBits + 1));
+            value = MathHelper.Clamp(value, min, max);
+
+            float step = (max - min) / ((1 << numberOfBits) - 1);
             if (Math.Abs(value) < step + 0.00001f)
             {
                 return 0.0f;
             }
 
-            return MathUtils.RoundTowardsClosest(MathHelper.Clamp(value, min, max), step);
+            return MathUtils.RoundTowardsClosest(value - min, step) + min;
         }
     }
 }

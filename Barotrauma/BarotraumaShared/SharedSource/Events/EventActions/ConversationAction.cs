@@ -240,7 +240,7 @@ namespace Barotrauma
             {
                 humanAI.ClearForcedOrder();
                 if (prevIdleObjective != null) { humanAI.ObjectiveManager.AddObjective(prevIdleObjective); }
-                if (prevGotoObjective != null) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
+                if (prevGotoObjective != null && !prevGotoObjective.Abandon) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
                 humanAI.ObjectiveManager.SortObjectives();
             }
         }
@@ -402,7 +402,7 @@ namespace Barotrauma
                 if (!targets.Any() || IsBlockedByAnotherConversation(targets, BlockOtherConversationsDuration)) { return; }
             }
 
-            if (targetCharacter != null && IsBlockedByAnotherConversation(targetCharacter.ToEnumerable(), 0.1f)) { return; }
+            if (IsBlockedByAnotherConversation(targetCharacter?.ToEnumerable(), BlockOtherConversationsDuration)) { return; }
 
             if (speaker?.AIController is HumanAIController humanAI)
             {

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Barotrauma.Networking;
 using System.Linq;
 using System;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -89,12 +90,12 @@ namespace Barotrauma
     {
         public bool IsAlive { get; private set; }
 
-        private readonly List<Item> allItems;
         private readonly List<Item> thalamusItems;
         private readonly List<Structure> thalamusStructures;
         private readonly List<WayPoint> wayPoints = new List<WayPoint>();
         private readonly List<Hull> hulls = new List<Hull>();
         private readonly List<Item> spawnOrgans = new List<Item>();
+        private readonly List<Door> jammedDoors = new List<Door>();
         private readonly Item brain;
 
         private bool initialCellsSpawned;
@@ -105,7 +106,7 @@ namespace Barotrauma
 
         private bool IsThalamus(MapEntityPrefab entityPrefab) => IsThalamus(entityPrefab, Config.Entity);
 
-        private static IEnumerable<T> GetThalamusEntities<T>(Submarine wreck, Identifier tag) where T : MapEntity => GetThalamusEntities(wreck, tag).Where(e => e is T).Select(e => e as T);
+        private static IEnumerable<T> GetThalamusEntities<T>(Submarine wreck, Identifier tag) where T : MapEntity => GetThalamusEntities(wreck, tag).OfType<T>();
 
         private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, Identifier tag) => MapEntity.MapEntityList.Where(e => e.Submarine == wreck && e.Prefab != null && IsThalamus(e.Prefab, tag));
 
@@ -122,93 +123,52 @@ namespace Barotrauma
         {
             GetConfig();
             if (Config == null) { return; }
-            var thalamusPrefabs = ItemPrefab.Prefabs.Where(p => IsThalamus(p));
+            var thalamusPrefabs = ItemPrefab.Prefabs.Where(IsThalamus);
             var brainPrefab = thalamusPrefabs.GetRandom(i => i.Tags.Contains(Config.Brain), Rand.RandSync.ServerAndClient);
             if (brainPrefab == null)
             {
-                DebugConsole.ThrowError($"WreckAI: Could not find any brain prefab with the tag {Config.Brain}! Cannot continue. Failed to create wreck AI.");
+                DebugConsole.ThrowError($"WreckAI {wreck.Info.Name}: Could not find any brain prefab with the tag {Config.Brain}! Cannot continue. Failed to create wreck AI.", contentPackage: Config.ContentPackage);
                 return;
             }
-            allItems = wreck.GetItems(false);
-            thalamusItems = allItems.FindAll(i => IsThalamus(((MapEntity)i).Prefab));
-            hulls.AddRange(wreck.GetHulls(false));
-            var potentialBrainHulls = new List<(Hull hull, float weight)>();
+            thalamusItems = GetThalamusEntities<Item>(wreck, Config.Entity).ToList();
+            hulls.AddRange(wreck.GetHulls(alsoFromConnectedSubs: false));
             brain = new Item(brainPrefab, Vector2.Zero, wreck);
             thalamusItems.Add(brain);
             Point minSize = brain.Rect.Size.Multiply(brain.Scale);
-            // Bigger hulls are allowed, but not preferred more than what's sufficent.
-            Vector2 sufficentSize = new Vector2(minSize.X * 2, minSize.Y * 1.1f);
-            // Shrink the horizontal axis so that the brain is not placed in the left or right side, where we often have curved walls.
-            Rectangle shrinkedBounds = ToolBox.GetWorldBounds(wreck.WorldPosition.ToPoint(), new Point(wreck.Borders.Width - 500, wreck.Borders.Height));
-            foreach (Hull hull in hulls)
-            {
-                float distanceFromCenter = Vector2.Distance(wreck.WorldPosition, hull.WorldPosition);
-                float distanceFactor = MathHelper.Lerp(1.0f, 0.5f, MathUtils.InverseLerp(0, Math.Max(shrinkedBounds.Width, shrinkedBounds.Height) / 2, distanceFromCenter));
-                float horizontalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.X, sufficentSize.X, hull.Rect.Width));
-                float verticalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.Y, sufficentSize.Y, hull.Rect.Height));
-                float weight = verticalSizeFactor * horizontalSizeFactor * distanceFactor;
-                if (hull.GetLinkedEntities<Hull>().Any())
-                {
-                    // Ignore hulls that have any linked hulls to keep the calculations simple.
-                    continue;
-                }
-                else if (hull.ConnectedGaps.Any(g => g.Open > 0 && (!g.IsRoomToRoom || g.Position.Y < hull.Position.Y)))
-                {
-                    // Ignore hulls that have open gaps to outside or below the center point, because we'll want the room to be full of water and not be accessible without breaking the wall.
-                    continue;
-                }
-                else if (thalamusItems.Any(i => i.CurrentHull == hull))
-                {
-                    // Don't create the brain in a room that already has thalamus items inside it.
-                    continue;
-                }
-                else if (hull.Rect.Width < minSize.X || hull.Rect.Height < minSize.Y)
-                {
-                    // Don't select too small rooms.
-                    continue;
-                }
-                if (weight > 0)
-                {
-                    potentialBrainHulls.Add((hull, weight));
-                }
-            }
+            var potentialBrainHulls = GetPotentialBrainRooms(wreck, Config, minSize, thalamusItems);
             Hull brainHull = ToolBox.SelectWeightedRandom(potentialBrainHulls.Select(pbh => pbh.hull).ToList(), potentialBrainHulls.Select(pbh => pbh.weight).ToList(), Rand.RandSync.ServerAndClient);
             var thalamusStructurePrefabs = StructurePrefab.Prefabs.Where(IsThalamus);
             if (brainHull == null)
             {
-                DebugConsole.AddWarning("Wreck AI: Cannot find a proper room for the brain. Using a random room.");
+                DebugConsole.ThrowError($"Wreck AI {wreck.Info.Name}: Cannot find a suitable room for the Thalamus brain. Using a random room. " +
+                                        $"The wreck should be fixed so that there's at least one room where the following conditions are met: No linked hulls, no open gaps in the floor or to outside the sub, and no other Thalamus items present in the hull.",
+                    contentPackage: Config.ContentPackage);
+                
                 brainHull = hulls.GetRandom(Rand.RandSync.ServerAndClient);
             }
             if (brainHull == null)
             {
-                DebugConsole.ThrowError("Wreck AI: Cannot find any room for the brain! Failed to create the Thalamus.");
+                DebugConsole.ThrowError($"Wreck AI {wreck.Info.Name}: Cannot find any room for the brain! Failed to create the Thalamus.", contentPackage: Config.ContentPackage);
                 return;
             }
+            Debug.WriteLine($"Wreck AI {wreck.Info.Name}: Selected brain room: {brainHull.DisplayName}");
             brainHull.WaterVolume = brainHull.Volume;
             brain.SetTransform(brainHull.SimPosition, rotation: 0, findNewHull: false);
             brain.CurrentHull = brainHull;
+            
+            // Jam the doors, mainly to prevent any mechanisms from opening them. Also makes it a little bit more difficult for the player to breach into the brain room, because they now have to break the door.
+            foreach (Door door in brainHull.ConnectedGaps.Select(g => g.ConnectedDoor))
+            {
+                if (door == null) { continue; }
+                door.IsJammed = true;
+                jammedDoors.Add(door);
+            }
+            
             var backgroundPrefab = thalamusStructurePrefabs.GetRandom(i => i.Tags.Contains(Config.BrainRoomBackground), Rand.RandSync.ServerAndClient);
             if (backgroundPrefab != null)
             {
-                new Structure(brainHull.Rect, backgroundPrefab, wreck);
-            }
-            var horizontalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.Contains(Config.BrainRoomHorizontalWall), Rand.RandSync.ServerAndClient);
-            if (horizontalWallPrefab != null)
-            {
-                int height = (int)horizontalWallPrefab.Size.Y;
-                int halfHeight = height / 2;
-                int quarterHeight = halfHeight / 2;
-                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, wreck);
-                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top - brainHull.Rect.Height + halfHeight + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, wreck);
-            }
-            var verticalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.Contains(Config.BrainRoomVerticalWall), Rand.RandSync.ServerAndClient);
-            if (verticalWallPrefab != null)
-            {
-                int width = (int)verticalWallPrefab.Size.X;
-                int halfWidth = width / 2;
-                int quarterWidth = halfWidth / 2;
-                new Structure(new Rectangle(brainHull.Rect.Left - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, wreck);
-                new Structure(new Rectangle(brainHull.Rect.Right - halfWidth - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, wreck);
+                var background = new Structure(brainHull.Rect, backgroundPrefab, wreck);
+                background.SpriteDepth -= 0.01f;
             }
             foreach (Item item in thalamusItems)
             {
@@ -360,6 +320,7 @@ namespace Barotrauma
 
         public void Kill()
         {
+            jammedDoors.ForEach(d => d.IsJammed = false);
             thalamusItems.ForEach(i => i.Condition = 0);
             foreach (var turret in turrets)
             {
@@ -376,27 +337,24 @@ namespace Barotrauma
             protectiveCells.ForEach(c => c.OnDeath -= OnCellDeath);
             if (!IsClient)
             {
-                if (Config != null)
+                if (Config is { KillAgentsWhenEntityDies: true })
                 {
-                    if (Config.KillAgentsWhenEntityDies)
+                    protectiveCells.ForEach(c => c.Kill(CauseOfDeathType.Unknown, null));
+                    if (!string.IsNullOrWhiteSpace(Config.OffensiveAgent))
                     {
-                        protectiveCells.ForEach(c => c.Kill(CauseOfDeathType.Unknown, null));
-                        if (!string.IsNullOrWhiteSpace(Config.OffensiveAgent))
+                        foreach (var character in Character.CharacterList)
                         {
-                            foreach (var character in Character.CharacterList)
+                            // Kills ALL offensive agents that are near the thalamus. Not the ideal solution, 
+                            // but as long as spawning is handled via status effects, I don't know if there is any better way.
+                            // In practice there shouldn't be terminal cells from different thalamus organisms at the same time.
+                            // And if there was, the distance check should prevent killing the agents of a different organism.
+                            if (character.SpeciesName == Config.OffensiveAgent)
                             {
-                                // Kills ALL offensive agents that are near the thalamus. Not the ideal solution, 
-                                // but as long as spawning is handled via status effects, I don't know if there is any better way.
-                                // In practice there shouldn't be terminal cells from different thalamus organisms at the same time.
-                                // And if there was, the distance check should prevent killing the agents of a different organism.
-                                if (character.SpeciesName == Config.OffensiveAgent)
+                                // Sonar distance is used also for wreck positioning. No wreck should be closer to each other than this.
+                                float maxDistance = Sonar.DefaultSonarRange;
+                                if (Vector2.DistanceSquared(character.WorldPosition, Submarine.WorldPosition) < maxDistance * maxDistance)
                                 {
-                                    // Sonar distance is used also for wreck positioning. No wreck should be closer to each other than this.
-                                    float maxDistance = Sonar.DefaultSonarRange;
-                                    if (Vector2.DistanceSquared(character.WorldPosition, Submarine.WorldPosition) < maxDistance * maxDistance)
-                                    {
-                                        character.Kill(CauseOfDeathType.Unknown, null);
-                                    }
+                                    character.Kill(CauseOfDeathType.Unknown, null);
                                 }
                             }
                         }
@@ -515,5 +473,62 @@ namespace Barotrauma
             msg.WriteBoolean(IsAlive);
         }
 #endif
+        
+        public static List<(Hull hull, float weight)> GetPotentialBrainRooms(Submarine wreck, WreckAIConfig wreckAI, Point minSize, IEnumerable<Item> thalamusItems = null)
+        {
+            var potentialBrainHulls = new List<(Hull hull, float weight)>();
+            // Bigger hulls are allowed, but not preferred more than what's sufficient.
+            Vector2 sufficientSize = new Vector2(minSize.X * 2, minSize.Y * 1.1f);
+            Rectangle worldBounds = ToolBox.GetWorldBounds(wreck.WorldPosition.ToPoint(), new Point(wreck.Borders.Width, wreck.Borders.Height));
+            thalamusItems ??= GetThalamusEntities<Item>(wreck, wreckAI.Entity);
+            foreach (Hull hull in wreck.GetHulls(alsoFromConnectedSubs: false))
+            {
+                if (hull.GetLinkedEntities<Hull>().Any())
+                {
+                    // Ignore hulls that have any linked hulls to keep the calculations simple.
+                    continue;
+                }
+                else if (hull.ConnectedGaps.Any(g => (g.Open > 0 || g.ConnectedDoor?.Item.Condition <= 0) && (!g.IsRoomToRoom || g.Position.Y < hull.Position.Y)))
+                {
+                    // Ignore hulls that have open gaps to outside or below the center point, because we'll want the room to be full of water and not be accessible without breaking the wall.
+                    // Gaps in the broken doors are not yet open at this stage. Also Door.IsBroken is not yet up-to-date, so we'll have to check the item condition.
+                    continue;
+                }
+                else if (thalamusItems.Any(i => i.CurrentHull == hull && !i.HasTag(Tags.WireItem)))
+                {
+                    // Don't create the brain in a room that already has thalamus items inside it.
+                    continue;
+                }
+                else if (hull.Rect.Width < minSize.X || hull.Rect.Height < minSize.Y)
+                {
+                    // Don't select too small rooms.
+                    continue;
+                }
+                float weight = 0;
+                if (hull.IsAirlock)
+                {
+                    // Prefer something else than airlocks
+                    weight = 0;
+                }
+                else
+                {
+                    float distanceFromCenter = Vector2.Distance(wreck.WorldPosition, hull.WorldPosition);
+                    float distanceFactor = MathHelper.Lerp(1.0f, 0.5f, MathUtils.InverseLerp(0, Math.Max(worldBounds.Width, worldBounds.Height) / 2f, distanceFromCenter));
+                    float horizontalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.X, sufficientSize.X, hull.Rect.Width));
+                    float verticalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.Y, sufficientSize.Y, hull.Rect.Height));
+                    weight = verticalSizeFactor * horizontalSizeFactor * distanceFactor;
+                }
+                if (weight > 0 || potentialBrainHulls.None())
+                {
+                    potentialBrainHulls.Add((hull, weight));
+                }
+            }
+            Debug.WriteLine($"Wreck AI {wreck.Info.Name}: Potential brain rooms: {potentialBrainHulls.Count}");
+            foreach ((Hull hull, float weight) in potentialBrainHulls)
+            {
+                Debug.WriteLine($"Wreck AI: Potential brain room: {hull.DisplayName}, {weight.FormatSingleDecimal()}");
+            }
+            return potentialBrainHulls;
+        }
     }
 }

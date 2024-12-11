@@ -115,7 +115,11 @@ namespace Barotrauma
             {
                 outpostInfos.Add(new SubmarineInfo(outpostFile.Path.Value));
             }
-            if (!generationParams.OutpostTag.IsEmpty)
+            if (generationParams.OutpostTag.IsEmpty)
+            {
+                outpostInfos = outpostInfos.FindAll(o => o.OutpostTags.None());
+            }
+            else
             {
                 if (outpostInfos.Any(o => o.OutpostTags.Contains(generationParams.OutpostTag)))
                 {
@@ -448,6 +452,8 @@ namespace Barotrauma
                     entities[selectedModule] = moduleEntities;
                 }
 
+                int maxMoveAmount = Math.Max(2000, selectedModules.Max(m => Math.Max(m.Bounds.Width, m.Bounds.Height)));
+
                 bool overlapsFound = true;
                 int iteration = 0;
                 while (overlapsFound)
@@ -465,7 +471,7 @@ namespace Barotrauma
                         while (FindOverlap(subsequentModules, otherModules, out var module1, out var module2) && remainingTries > 0)
                         {
                             overlapsFound = true;
-                            if (FindOverlapSolution(subsequentModules, module1, module2, selectedModules, out Dictionary<PlacedModule, Vector2> solution))
+                            if (FindOverlapSolution(subsequentModules, module1, module2, selectedModules, maxMoveAmount, out Dictionary<PlacedModule, Vector2> solution))
                             {
                                 foreach (KeyValuePair<PlacedModule, Vector2> kvp in solution)
                                 {
@@ -909,7 +915,12 @@ namespace Barotrauma
         /// <param name="allmodules">All generated modules</param>
         /// <param name="solution">The solution to the overlap (if any). Key = placed module, value = distance to move the module</param>
         /// <returns>Was a solution found for resolving the overlap.</returns>
-        private static bool FindOverlapSolution(IEnumerable<PlacedModule> movableModules, PlacedModule module1, PlacedModule module2, IEnumerable<PlacedModule> allmodules, out Dictionary<PlacedModule, Vector2> solution)
+        private static bool FindOverlapSolution(
+            IEnumerable<PlacedModule> movableModules, 
+            PlacedModule module1, PlacedModule module2, 
+            IEnumerable<PlacedModule> allmodules, 
+            int maxMoveAmount,
+            out Dictionary<PlacedModule, Vector2> solution)
         {
             solution = new Dictionary<PlacedModule, Vector2>();
             foreach (PlacedModule module in movableModules)
@@ -925,7 +936,6 @@ namespace Barotrauma
                 Vector2 moveDir = GetMoveDir(module.ThisGapPosition);
                 Vector2 moveStep = moveDir * 50.0f;
                 Vector2 currentMove = Vector2.Zero;
-                float maxMoveAmount = 2000.0f;
 
                 List<PlacedModule> subsequentModules2 = new List<PlacedModule>();
                 GetSubsequentModules(module, movableModules, ref subsequentModules2);

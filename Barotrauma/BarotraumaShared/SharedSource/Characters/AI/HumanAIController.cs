@@ -574,7 +574,7 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != Character.Submarine) { continue; }
-                if (c.Removed || c.IsDead || c.IsIncapacitated) { continue; }
+                if (c.Removed || c.IsDead || c.IsIncapacitated || c.InDetectable) { continue; }
                 if (IsFriendly(c)) { continue; }
                 Vector2 toTarget = c.WorldPosition - WorldPosition;
                 float dist = toTarget.LengthSquared();
@@ -1045,7 +1045,7 @@ namespace Barotrauma
                 {
                     foreach (Character target in Character.CharacterList)
                     {
-                        if (target.CurrentHull != hull || !target.Enabled) { continue; }
+                        if (target.CurrentHull != hull || !target.Enabled || target.InDetectable) { continue; }
                         if (AIObjectiveFightIntruders.IsValidTarget(target, Character, false))
                         {
                             if (!target.IsHandcuffed && AddTargets<AIObjectiveFightIntruders, Character>(Character, target) && newOrder == null)
@@ -1696,16 +1696,25 @@ namespace Barotrauma
 
         public bool AllowCampaignInteraction()
         {
-            if (Character == null || Character.Removed || Character.IsIncapacitated) { return false; }
+            if (Character == null || Character.Removed) { return false; }
 
-            switch (ObjectiveManager.CurrentObjective)
+            //some events might want to allow talking/examining characters that are incapacitated or in some "emergency" ai state,
+            //so let's ignore those here
+            var type = Character.CampaignInteractionType;
+            if (type != CampaignMode.InteractionType.None &&
+                type != CampaignMode.InteractionType.Talk &&
+                type != CampaignMode.InteractionType.Examine)
             {
-                case AIObjectiveCombat _:
-                case AIObjectiveFindSafety _:
-                case AIObjectiveExtinguishFires _:
-                case AIObjectiveFightIntruders _:
-                case AIObjectiveFixLeaks _:
-                    return false;
+                if (Character.IsIncapacitated) { return false; }
+                switch (ObjectiveManager.CurrentObjective)
+                {
+                    case AIObjectiveCombat _:
+                    case AIObjectiveFindSafety _:
+                    case AIObjectiveExtinguishFires _:
+                    case AIObjectiveFightIntruders _:
+                    case AIObjectiveFixLeaks _:
+                        return false;
+                }
             }
             return true;
         }
@@ -2272,7 +2281,7 @@ namespace Barotrauma
 
         public static bool IsFriendly(Character me, Character other, bool onlySameTeam = false)
         {
-            if (other.IsHusk)
+            if (other.IsHusk && !onlySameTeam)
             {
                 // Disguised as husk
                 return me.IsDisguisedAsHusk;
@@ -2305,15 +2314,14 @@ namespace Barotrauma
             {
                 if (!me.IsSameSpeciesOrGroup(other)) { return false; }
             }
-            if (GameMain.GameSession?.GameMode is CampaignMode)
+            if (GameMain.GameSession?.GameMode is CampaignMode && 
+                //ignore hostile faction if offering services that don't get disabled by faction hostility
+                (me.CampaignInteractionType == CampaignMode.InteractionType.None || CampaignMode.HostileFactionDisablesInteraction(me.CampaignInteractionType)))
             {
                 if ((me.TeamID == CharacterTeamType.FriendlyNPC && other.TeamID == CharacterTeamType.Team1) ||
                     (me.TeamID == CharacterTeamType.Team1 && other.TeamID == CharacterTeamType.FriendlyNPC))
                 {
                     Character npc = me.TeamID == CharacterTeamType.FriendlyNPC ? me : other;
-
-                    //NPCs that allow some campaign interaction are not turned hostile by low reputation
-                    if (npc.CampaignInteractionType != CampaignMode.InteractionType.None) { return true; }
 
                     if (npc.AIController is HumanAIController npcAI)
                     {
@@ -2347,7 +2355,7 @@ namespace Barotrauma
             return false;
         }
 
-        public static bool IsActive(Character c) => c != null && c.Enabled && !c.IsUnconscious;
+        public static bool IsActive(Character c) => c is { Enabled: true, IsUnconscious: false };
 
         public static bool IsTrueForAllBotsInTheCrew(Character character, Func<HumanAIController, bool> predicate)
         {
@@ -2359,7 +2367,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-        }
+            }
             return true;
         }
 
@@ -2468,11 +2476,11 @@ namespace Barotrauma
                     operatingCharacter = c;
                     return true;
                 }
-                if (c.AIController is HumanAIController humanAI && humanAI.ObjectiveManager is AIObjectiveManager objectiveManager)
+                if (c.AIController is HumanAIController { ObjectiveManager: AIObjectiveManager objectiveManager })
                 {
                     foreach (var objective in objectiveManager.Objectives)
                     {
-                        if (!(objective is AIObjectiveOperateItem operateObjective)) { continue; }
+                        if (objective is not AIObjectiveOperateItem operateObjective) { continue; }
                         if (operateObjective.Component?.Item != target.Item) { continue; }
                         if (operateObjective.Priority < highestPriority) { continue; }
                         if (operateObjective.PriorityModifier < highestPriorityModifier) { continue; }
@@ -2483,136 +2491,6 @@ namespace Barotrauma
                 }
             }
             return operatingCharacter != null;
-        }
-
-        // There's some duplicate logic in the two methods below, but making them use the same code would require some changes in the target classes so that we could use exactly the same checks.
-        // And even then there would be some differences that could end up being confusing (like the exception for steering).
-        public bool IsItemOperatedByAnother(ItemComponent target, out Character other)
-        {
-            other = null;
-            if (target?.Item == null) { return false; }
-            bool isOrder = IsOrderedToOperateTarget(this);
-            foreach (Character c in Character.CharacterList)
-            {
-                if (!IsActive(c)) { continue; }
-                if (c == Character) { continue; }
-                if (c.TeamID != Character.TeamID) { continue; }
-                if (c.IsPlayer)
-                {
-                    if (c.SelectedItem == target.Item)
-                    {
-                        // If the other character is player, don't try to operate
-                        other = c;
-                        break;
-                    }
-                }
-                else if (c.AIController is HumanAIController otherAI)
-                {
-                    if (otherAI.ObjectiveManager.Objectives.None(o => o is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item))
-                    {
-                        // Not targeting the same item.
-                        continue;
-                    }
-                    bool isTargetOrdered = IsOrderedToOperateTarget(otherAI);
-                    if (!isOrder && isTargetOrdered)
-                    {
-                        // If the other bot is ordered to operate the item, let him do it, unless we are ordered too
-                        other = c;
-                        break;
-                    }
-                    else
-                    {
-                        if (isOrder && !isTargetOrdered)
-                        {
-                            // We are ordered and the target is not -> allow to operate
-                            continue;
-                        }
-                        else
-                        {
-                            if (!IsOperatingTarget(otherAI))
-                            {
-                                // The other bot is doing something else -> stick to the target.
-                                continue;
-                            }
-                            if (target is Steering)
-                            {
-                                // Steering is hard-coded -> cannot use the required skills collection defined in the xml
-                                if (Character.GetSkillLevel(Tags.HelmSkill) <= c.GetSkillLevel(Tags.HelmSkill))
-                                {
-                                    other = c;
-                                    break;
-                                }
-                            }
-                            else if (target.DegreeOfSuccess(Character) <= target.DegreeOfSuccess(c))
-                            {
-                                other = c;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            return other != null;
-            bool IsOrderedToOperateTarget(HumanAIController ai) => ai.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.Component.Item == target.Item;
-            bool IsOperatingTarget(HumanAIController ai) => ai.ObjectiveManager.CurrentObjective is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item;
-        }
-
-        public bool IsItemRepairedByAnother(Item target, out Character other)
-        {
-            other = null;
-            if (Character == null) { return false; }
-            if (target == null) { return false; }
-            bool isOrder = IsOrderedToRepairThis(Character.AIController as HumanAIController);
-            foreach (var c in Character.CharacterList)
-            {
-                if (!IsActive(c)) { continue; }
-                if (c == Character) { continue; }
-                if (c.TeamID != Character.TeamID) { continue; }
-                other = c;
-                if (c.IsPlayer)
-                {
-                    if (target.Repairables.Any(r => r.CurrentFixer == c))
-                    {
-                        // If the other character is player, don't try to repair
-                        return true;
-                    }
-                }
-                else if (c.AIController is HumanAIController operatingAI)
-                {
-                    var repairItemsObjective = operatingAI.ObjectiveManager.GetObjective<AIObjectiveRepairItems>();
-                    if (repairItemsObjective == null) { continue; }
-                    if (repairItemsObjective.SubObjectives.FirstOrDefault(o => o is AIObjectiveRepairItem) is not AIObjectiveRepairItem activeObjective || activeObjective.Item != target)
-                    {
-                        // Not targeting the same item.
-                        continue;
-                    }
-                    bool isTargetOrdered = IsOrderedToRepairThis(operatingAI);
-                    if (!isOrder && isTargetOrdered)
-                    {
-                        // If the other bot is ordered to repair the item, let him do it, unless we are ordered too
-                        return true;
-                    }
-                    else
-                    {
-                        if (isOrder && !isTargetOrdered)
-                        {
-                            // We are ordered and the target is not -> allow to repair
-                            continue;
-                        }
-                        else
-                        {
-                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder != operatingAI.ObjectiveManager.CurrentObjective)
-                            {
-                                // The other bot is ordered to do something else
-                                continue;
-                            }
-                            return target.Repairables.Max(r => r.DegreeOfSuccess(Character)) <= target.Repairables.Max(r => r.DegreeOfSuccess(c));
-                        }
-                    }
-                }
-            }
-            return false;
-            bool IsOrderedToRepairThis(HumanAIController ai) => ai.ObjectiveManager.CurrentOrder is AIObjectiveRepairItems repairOrder && repairOrder.PrioritizedItem == target;
         }
 
         #region Wrappers

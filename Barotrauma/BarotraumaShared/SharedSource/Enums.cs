@@ -312,6 +312,11 @@ namespace Barotrauma
         RangedAttackSpeed,
 
         /// <summary>
+        /// Increases the damage dealt by ranged weapons held by the character by a percentage.
+        /// </summary>
+        RangedAttackMultiplier,
+
+        /// <summary>
         /// Decreases the reload time of submarine turrets operated by the character by a percentage.
         /// </summary>
         TurretAttackSpeed,

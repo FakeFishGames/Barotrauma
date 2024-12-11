@@ -246,6 +246,57 @@ namespace Barotrauma
         {
             get { return new Vector2(Rect.Center.X, Rect.Center.Y); }
         }
+        
+        /// <summary>
+        /// Clamps the component's rect position to the specified area. Does not resize the component.
+        /// </summary>
+        /// <param name="clampArea">Area to contain the Rect of this component to</param>
+        public void ClampToArea(Rectangle clampArea)
+        {
+            Rectangle componentRect = Rect;
+
+            int x = componentRect.X;
+            int y = componentRect.Y;
+
+            // Adjust the X position
+            if (componentRect.Width <= clampArea.Width)
+            {
+                if (componentRect.Left < clampArea.Left)
+                {
+                    x = clampArea.Left;
+                }
+                else if (componentRect.Right > clampArea.Right)
+                {
+                    x = clampArea.Right - componentRect.Width;
+                }
+            }
+            else
+            {
+                // Component is wider than clamp area, osition it to overlap as much as possible
+                x = clampArea.Left - (componentRect.Width - clampArea.Width) / 2;
+            }
+
+            // Adjust the Y position
+            if (componentRect.Height <= clampArea.Height)
+            {
+                if (componentRect.Top < clampArea.Top)
+                {
+                    y = clampArea.Top;
+                }
+                else if (componentRect.Bottom > clampArea.Bottom)
+                {
+                    y = clampArea.Bottom - componentRect.Height;
+                }
+            }
+            else
+            {
+                // Component is taller than clamp area, osition it to overlap as much as possible
+                y = clampArea.Top - (componentRect.Height - clampArea.Height) / 2;
+            }
+            
+            Point moveAmount = new Point(x - componentRect.X, y - componentRect.Y);
+            RectTransform.ScreenSpaceOffset += moveAmount;
+        }
 
         protected Rectangle ClampRect(Rectangle r)
         {

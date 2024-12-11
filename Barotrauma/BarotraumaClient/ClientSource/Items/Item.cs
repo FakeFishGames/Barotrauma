@@ -1552,10 +1552,19 @@ namespace Barotrauma
             debugInitialHudPositions.Clear();
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) { continue; }
-                if (!ignoreLocking && ic.LockGuiFramePosition) { continue; }
-                //if the frame covers nearly all of the screen, don't trying to prevent overlaps because it'd fail anyway
-                if (ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f) { continue; }
+                if (ic.GuiFrame == null || ic.GetLinkUIToComponent() != null) { continue; }
+                
+                bool nearlyCoversScreen = ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && 
+                                          ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f;
+                
+                // when we are not using overlap prevention, we still need to clamp the frame to the screen area to
+                // prevent frames becoming inaccessible outside the screen for example after a resolution change
+                if (ic.AllowUIOverlap || (!ignoreLocking && ic.LockGuiFramePosition) || nearlyCoversScreen)
+                {
+                    ic.GuiFrame.ClampToArea(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight));
+                    continue;
+                }
+
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = ic.GuiFrameOffset;
                 elementsToMove.Add(ic.GuiFrame);
                 debugInitialHudPositions.Add(ic.GuiFrame.Rect);
@@ -2281,7 +2290,13 @@ namespace Barotrauma
             if (!components.Contains(ic)) { return; }
 
             var eventData = new ComponentStateEventData(ic, extraData);
-            if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false"); }
+            if (!ic.ValidateEventData(eventData)) {
+                string errorMsg =
+                    $"Client-side component event creation for the item \"{Prefab.Identifier}\" failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false. " +
+                    $"Data: {extraData?.GetType().ToString() ?? "null"}";
+                GameAnalyticsManager.AddErrorEventOnce($"Item.CreateClientEvent:ValidateEventData:{Prefab.Identifier}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                throw new Exception(errorMsg);
+            }
             GameMain.Client.CreateEntityEvent(this, eventData);
         }
 
@@ -2487,12 +2502,18 @@ namespace Barotrauma
 
             if (inventory != null)
             {
-                if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
+                if (inventorySlotIndex is >= 0 and < 255)
                 {
-                    return item;
+                    if (!inventory.TryPutItem(item, inventorySlotIndex, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false, ignoreCondition: true) &&
+                        inventory.IsSlotEmpty(inventorySlotIndex))
+                    {
+                        //If the item won't go nicely, force it to the slot. If the server says the item is in the slot, it should go in the slot.
+                        //May happen e.g. when a character is configured to spawn with an item that won't normally go in its inventory slots.
+                        inventory.ForceToSlot(item, index: inventorySlotIndex);
+                        return item;
+                    }
                 }
-                inventory.TryPutItem(item, null, item.AllowedSlots, false);
+                inventory.TryPutItem(item, user: null, allowedSlots: item.AllowedSlots, createNetworkEvent: false);
             }
 
             return item;

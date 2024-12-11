@@ -213,7 +213,9 @@ namespace Barotrauma
         public readonly Ragdoll ragdoll;
         public readonly LimbParams Params;
 
-        //the physics body of the limb
+        /// <summary>
+        /// The physics body of the limb
+        /// </summary>
         public PhysicsBody body;
 
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
@@ -528,6 +530,9 @@ namespace Barotrauma
 
         public readonly List<WearableSprite> WearingItems = new List<WearableSprite>();
 
+        /// <summary>
+        /// Other wearables attached to the head. I.e. husk sprite, hair, beard, moustache, and face attachments.
+        /// </summary>
         public readonly List<WearableSprite> OtherWearables = new List<WearableSprite>();
 
         public bool PullJointEnabled
@@ -721,7 +726,7 @@ namespace Barotrauma
                             var attackElement = character.Params.VariantFile.GetRootExcludingOverride().GetChildElement("attack");
                             if (attackElement != null)
                             {
-                                attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
+                                attack.SetInitialDamageMultiplier(attackElement.GetAttributeFloat("damagemultiplier", 1f));
                                 attack.RangeMultiplier = attackElement.GetAttributeFloat("rangemultiplier", 1f);
                                 attack.ImpactMultiplier = attackElement.GetAttributeFloat("impactmultiplier", 1f);
                             }
@@ -1014,7 +1019,6 @@ namespace Barotrauma
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
             attack.UpdateAttackTimer(deltaTime, character);
-            attack.DamageMultiplier = 1.0f + character.GetStatValue(attack.Ranged ? StatTypes.NaturalRangedAttackMultiplier : StatTypes.NaturalMeleeAttackMultiplier);
             
             if (attack.Blink)
             {
@@ -1164,7 +1168,7 @@ namespace Barotrauma
                 // Set the main collider where the body lands after the attack
                 if (Vector2.DistanceSquared(character.AnimController.Collider.SimPosition, character.AnimController.MainLimb.body.SimPosition) > 0.1f * 0.1f)
                 {
-                    character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
+                    character.AnimController.Collider.SetTransformIgnoreContacts(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
                 }
             }
             return wasHit;
@@ -1180,9 +1184,11 @@ namespace Barotrauma
                 LastAttackSoundTime = SoundInterval;
             }
 #endif
-            if (damageTarget is Character targetCharacter && targetLimb != null)
-            {
-                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body, this);
+            attack.ResetDamageMultiplier();
+            attack.DamageMultiplier *= 1.0f + character.GetStatValue(attack.Ranged ? StatTypes.NaturalRangedAttackMultiplier : StatTypes.NaturalMeleeAttackMultiplier);
+            if (damageTarget is Character && targetLimb != null)
+            { 
+                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, deltaTime: 1.0f, playSound, body, sourceLimb: this);
             }
             else
             {
@@ -1192,7 +1198,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body, this);
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, deltaTime: 1.0f, playSound, body, sourceLimb: this);
                 }
             }
             /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient))

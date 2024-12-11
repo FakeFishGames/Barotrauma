@@ -10,6 +10,7 @@ namespace Barotrauma.Particles
     {
         public static readonly PrefabCollection<ParticlePrefab> Prefabs = new PrefabCollection<ParticlePrefab>();
 
+        [Flags]
         public enum DrawTargetType { Air = 1, Water = 2, Both = 3 }
 
         public readonly List<Sprite> Sprites;

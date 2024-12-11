@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>1.6.19.1</Version>
+    <Version>1.7.7.0</Version>
     <Copyright>Copyright © FakeFish 2018-2024</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
@@ -63,7 +63,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
-    <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" Exclude="..\BarotraumaShared\Data\Saves\*.save;..\BarotraumaShared\ModLists\*.xml" />
+    <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" Exclude="..\BarotraumaShared\Data\Saves\*.save;..\BarotraumaShared\ModLists\*.xml;..\BarotraumaShared\LocalMods\[DebugOnlyTest]*\**" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" />

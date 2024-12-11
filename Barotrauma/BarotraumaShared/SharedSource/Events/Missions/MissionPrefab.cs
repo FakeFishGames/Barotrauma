@@ -101,6 +101,8 @@ namespace Barotrauma
 
         public readonly int Reward;
 
+        public readonly float ExperienceMultiplier;
+
         // The titles and bodies of the popup messages during the mission, shown when the state of the mission changes. The order matters.
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
@@ -218,6 +220,7 @@ namespace Barotrauma
             }
 
             Reward      = element.GetAttributeInt("reward", 1);
+            ExperienceMultiplier = element.GetAttributeFloat("experiencemultiplier", 1.0f);
             AllowRetry  = element.GetAttributeBool("allowretry", false);
             ShowInMenus = element.GetAttributeBool("showinmenus", true);
             ShowStartMessage = element.GetAttributeBool("showstartmessage", true);

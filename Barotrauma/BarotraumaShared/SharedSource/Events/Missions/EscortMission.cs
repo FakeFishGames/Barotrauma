@@ -61,7 +61,7 @@ namespace Barotrauma
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
-        public override int GetBaseReward(Submarine sub)
+        public override float GetBaseReward(Submarine sub)
         {
             if (sub != missionSub)
             {

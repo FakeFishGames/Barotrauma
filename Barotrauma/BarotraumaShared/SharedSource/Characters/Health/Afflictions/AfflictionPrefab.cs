@@ -398,7 +398,7 @@ namespace Barotrauma
                 public readonly float MinValue;
 
                 /// <summary>
-                /// Minimum value to apply
+                /// Maximum value to apply
                 /// </summary>
                 public readonly float MaxValue;
 
@@ -765,6 +765,12 @@ namespace Barotrauma
         public readonly float TreatmentThreshold;
 
         /// <summary>
+        /// How strong the affliction needs to be for treatment suggestions to be shown in the health interface.
+        /// Defaults to <see cref="TreatmentThreshold"/>.
+        /// </summary>
+        public readonly float TreatmentSuggestionThreshold;
+
+        /// <summary>
         /// Bots will not try to treat the affliction if the character has any of these afflictions
         /// </summary>
         public ImmutableHashSet<Identifier> IgnoreTreatmentIfAfflictedBy;
@@ -941,6 +947,7 @@ namespace Barotrauma
             ShowInHealthScannerThreshold = element.GetAttributeFloat(nameof(ShowInHealthScannerThreshold), 
                 Math.Max(ActivationThreshold, AfflictionType == "talentbuff" ? float.MaxValue : ShowIconToOthersThreshold));
             TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 10.0f));
+            TreatmentSuggestionThreshold = element.GetAttributeFloat(nameof(TreatmentSuggestionThreshold), TreatmentThreshold);
 
             DamageOverlayAlpha  = element.GetAttributeFloat(nameof(DamageOverlayAlpha), 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat(nameof(BurnOverlayAlpha), 0.0f);

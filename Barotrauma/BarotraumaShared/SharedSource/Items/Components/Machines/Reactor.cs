@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
             private set
             {
                 if (lastUser == value) { return; }
+                if (Screen.Selected.IsEditor) { return; }
                 lastUser = value;
                 if (lastUser == null)
                 {
@@ -244,6 +245,13 @@ namespace Barotrauma.Items.Components
                     if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
                     LastAIUser = null;
                 }
+            }
+
+            //rapidly adjust the reactor in the first few seconds of the round to prevent overvoltages if the load changed between rounds
+            //(unless the reactor is being operated by a player)
+            if (GameMain.GameSession is { RoundDuration: <5 } && lastUser is not { IsPlayer: true })
+            {
+                UpdateAutoTemp(100.0f, (float)(Timing.Step * 10.0f));
             }
 
 #if CLIENT

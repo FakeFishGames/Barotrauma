@@ -2628,7 +2628,7 @@ namespace Barotrauma
             float margin = MathHelper.PiOver4 * distanceFactor;
             if (angle < margin || dist < minDistance)
             {
-                var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;                
+                var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
                 var pickedBody = Submarine.PickBody(weapon.SimPosition, Character.GetRelativeSimPosition(target), myBodies, collisionCategories, allowInsideFixture: true);
                 if (pickedBody != null)
                 {
@@ -2643,7 +2643,6 @@ namespace Barotrauma
                             return true;
                         }
                     }
-
                     Character t = null;
                     if (pickedBody.UserData is Character c)
                     {
@@ -2655,6 +2654,16 @@ namespace Barotrauma
                     }
                     if (t != null && (t == target || (!Character.IsFriendly(t) || IsAttackingOwner(t))))
                     {
+                        return true;
+                    }
+                    if (pickedBody.UserData is Item item && item.Prefab.DamagedByProjectiles)
+                    {
+                        // Target behind an item -> allow shooting.
+                        return true;
+                    }
+                    if (pickedBody.UserData is Holdable holdable && holdable.Item.Prefab.DamagedByProjectiles)
+                    {
+                        // Target behind a blocking but destructible item -> allow shooting.
                         return true;
                     }
                 }
@@ -2889,7 +2898,7 @@ namespace Barotrauma
                 if (aiTarget.ShouldBeIgnored()) { continue; }
                 if (ignoredTargets.Contains(aiTarget)) { continue; }
                 if (aiTarget.Type == AITarget.TargetType.HumanOnly) { continue; }
-                if (!TargetOutposts && GameMain.GameSession.GameMode is not TestGameMode)
+                if (!TargetOutposts && GameMain.GameSession?.GameMode is not TestGameMode)
                 {
                     if (aiTarget.Entity.Submarine != null && aiTarget.Entity.Submarine.Info.IsOutpost) { continue; }
                 }
@@ -3918,7 +3927,13 @@ namespace Barotrauma
             return false;
         }
 
+        /// <summary>
+        /// Parameters originally defined in the AI params and modified temporarily.
+        /// </summary>
         private readonly Dictionary<Identifier, IEnumerable<CharacterParams.TargetParams>> modifiedParams = new Dictionary<Identifier, IEnumerable<CharacterParams.TargetParams>>();
+        /// <summary>
+        /// Parameters created temporarily. Not originally defined in the AI params at all.
+        /// </summary>
         private readonly Dictionary<Identifier, CharacterParams.TargetParams> tempParams = new Dictionary<Identifier, CharacterParams.TargetParams>();
         private readonly List<CharacterParams.TargetParams> tempParamsList = new List<CharacterParams.TargetParams>();
 
@@ -3952,11 +3967,6 @@ namespace Barotrauma
                 {
                     if (AIParams.TryAddNewTarget(tag, state, priority ?? minPriority, out CharacterParams.TargetParams targetParams))
                     {
-                        if (state == AIState.Attack)
-                        {
-                            // Only applies to new temp target params. Shouldn't affect any existing definitions (handled below).
-                            targetParams.IgnoreIfNotInSameSub = ignoreAttacksIfNotInSameSub;
-                        }
                         tempParams.Add(tag, targetParams);
                     }
                 }
@@ -3970,6 +3980,15 @@ namespace Barotrauma
                         targetParams.Priority = Math.Max(targetParams.Priority, priority.Value);
                     }
                     targetParams.State = state;
+                    if (state == AIState.Attack)
+                    {
+                        targetParams.IgnoreIfNotInSameSub = ignoreAttacksIfNotInSameSub;
+                        targetParams.IgnoreInside = false;
+                        targetParams.IgnoreOutside = false;
+                        targetParams.IgnoreTargetInside = false;
+                        targetParams.IgnoreTargetOutside = false;
+                        targetParams.IgnoreIncapacitated = false;
+                    }
                 }
                 modifiedParams.TryAdd(tag, existingTargetParams);
             }

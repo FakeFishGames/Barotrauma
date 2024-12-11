@@ -1,4 +1,164 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.7.7.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed damage modifiers not working on creature variants (meaning that e.g. mudraptor hatchlings and veterans did the same amount of damage as normal mudraptors).
+- Fixed crew list appearing empty when freecaming in single player.
+- Fixed alien coils blocking the boss at the end of the campaign.
+- Fixed a waypoint issue in Camel.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.7.6.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added a "toggle run" input (so you no longer have to keep holding shift to run). Not bound to anything by default, but can be set in the settings menu.
+- Improvements to environment visuals: the inside of level walls fades to black to make the texture tiling less obvious when zoomed far out, improvements to the shapes of the level walls (more natural shapes, less long and straight wall segments).
+- Ruin scan missions show a progress bar indicating the status of the scans.
+- Made dry or partially dry rooms more common in wrecks.
+- Option to change the sound of the alarm sirens to a claxon horn sound (the "traditional" AWOOGA-AWOOGA submarine alarm sound).
+- "giveaffliction" console command now auto-completes identifiers as well as names.
+- Reworked Berilia (kudos to WJohnston): layout improvements, added a bottom docking port, more windows, replaced cameras with searchlights, simplified battery setup and increased reactor output, minor visual improvements and a lot of miscellaneous tweaks.
+- Reworked Kastrull drone (less ugly, a little sturdier, the ballast can be accessed through a hatch).
+- New playstyle banners.
+- Added an option in the settings to launch the game on a specific display.
+- Option to refresh the available audio devices (both playback and input devices) in the game settings. The game should now also automatically attempt switch to another device if the current one is disconnected. However, whether this can be done automatically can depend on the audio device, driver and the operating system, and in some cases it may be necessary to choose a new device manually from the game settings.
+- Made electrician's goggles easier to get (spawns as a part of the sub's initial supplies, can be purchased from outposts, doesn't require fulgurium to fabricate). The goggles are intended to help less experienced engineers get a hang of wiring in particular, so it doesn't make sense for them to be so difficult to get.
+- "Safe rooms" are no longer indestructible in beacon stations (felt confusing, especially when it wasn't apparent from the look of the walls).
+- One new research outpost events to foreshadow the longer ruin event chain.
+
+Optimization:
+- Rendering optimizations that should give a major performance boost to situations in which there's lots of structures visible.
+- Changes to the physics engine to improve collision detection performance. In technical terms, the game now disregards potential collisions between things that can never collide (such as two characters and most items) much earlier in the collision detection logic.
+- Significant optimizations to memory usage. These will mainly reduce load times and lag spikes as the game needs to do less cleanup to free memory that's no longer needed by the game.
+- Optimized character ragdolls (building them out of simpler collision shapes).
+- Optimized LevelTriggers (things in the level that can react to objects and apply effects to them, such as water currents).
+- Optimized the logic for refreshing the positions of items that are inside a moving inventory (such as a character's inventory).
+- Miscellaneous optimizations to things such as explosions, AI logic when a bot is operating a turret, psychosis effects, idling NPCs' AI.
+- Text rendering optimizations.
+- Optimizations to periscopes, chairs and other items that force the character to a certain pose.
+- Optimizations to piezo crystals.
+- Optimized lighting in the nightclub module.
+- Minor miscellaneous optimizations to the physics logic, such as simplifying math and the way positions of entities are set.
+
+AI:
+- Fixed bandits occasionally failing to power up the beacon station they reside in.
+- Fixed non-humans enemies not firing ranged weapons if there's a dropped riot shield (or other "blocking" item) in the way.
+- Fixed bots sometimes getting stuck walking towards a door if the button/mechanism for opening the door is somewhere far away the bot can't reach.
+- Fixed bots and husks being unable to enter Barsuk, Camel and Remora through the airlock.
+- Fixed bots being unable to enter through Camel's bottom hatch.
+- Fixed bots spotting characters that should be indetectable by AI (e.g. camouflaged Mantises).
+- Fixed some bot dialog using the "technical" names (e.g. Mudraptor_passive) of characters instead of the proper display name.
+
+Multiplayer/networking fixes:
+- Implemented lag compensation for hitscan weapons. Should make cases of shots seemingly landing client-side just for the health to rubberband back shortly after significantly less likely. The issue had to do with the lack of lag compensation by the game: a client might fire exactly at a monster, but when the server found out about that shot some fraction of a second later, the monster might've moved and the server would consider the shot to have missed. Now the server takes the latency into account, and checks if the shot would've hit at the point when the client fired the gun. The maximum amount of lag compensation is currently 150 milliseconds, but this can be changed in the server config with the setting "MaxLagCompensation".
+- Improvements to syncing character positions (further reducing issues such as shots missing): fixed a bug that caused minor inaccuraries in character velocities between the server and clients, and made the clients better at extrapolating positions while waiting for the next positional update from the server.
+- Fixes to syncing ragdolled characters' positions. Should fix corpses and unconscious characters often getting stuck in a glitchy state around platforms, rubberbanding up and down.
+- Fixed inability to disable Steam authentication for LAN play if the server is connected to Steam.
+- Fixed clients sometimes choosing an incorrect biome in the sandbox, mission and PvP modes, leading to a "level equality check failed" error at the start of the round.
+- Fixed character occasionally teleporting out of the sub for a split-second in multiplayer, particularly when the sub was travelling fast during bad networking conditions.
+- Fixed occasional crashes with an error message about "SpamFilter.IsFiltered" after getting disconnected from a server and kicked back to the server list.
+- Fixed "herpes threshold" server setting doing nothing (should determine how low a player's karma needs to drop for them to contract space herpes).
+- Fixed networking errors when multiple clients have died during a permadeath round, and you attempt to continue to the next level.
+- Fixed loot that can only go in specific kinds of inventory slots (e.g. mudraptor shell) failing to spawn in the monsters' inventories if they don't have slots of the correct type.
+- Fixed occasional "entity event data exceeds the size of the buffer" errors. These happened when the server failed to write a network event for some item (in which case the server should've just skipped that event), which can be caused by issues in mods for example.
+- Fixed other clients not seeing creature attacks if the creature is being controlled by a player.
+- Fix to clients often getting stuck behind closing doors in MP despite the character seeming to make it through in time client-side.
+- Fixed server lobby sometimes appearing empty/nonfunctional when clients join a server. In technical terms, this happened when the lobby's update ID had reached a very large value, which could happen if the server has run for a very long time or if there's been some issues that have caused the server to create a very large number of lobby updates.
+- Fixed PvP outpost setting causing unnecessary server lobby updates (even when the PvP mode was not selected), potentially leading to the lobby becoming unusable due to the issue described above.
+- Fixed flipping monsters behaving inconsistently in multiplayer when controlling a monster: other clients saw the monster facing in the position of the cursor, even if it hadn't turned at all at the end of the client controlling it. 
+- Fixed "ignore" and "unignore" orders not working on stacks of items in multiplayer (just marking the first item in the stack). 
+- Fixed components inside a circuit box losing their settings when saving the game while the box is in a player's inventory.
+- Fixed moving an item UI potentially moving it outside the screen on other clients' screens when using different resolutions.
+- Fixed clients syncing the selected outpost PvP setting unnecessarily to the server when a non-PvP mode was changed. When there were no outposts to select from, the clients would think the setting has changed (since the selected value of "nothing" doesn't match the server setting), and send the value. This could potentially have caused the reported issue of multiple admins constantly changing settings and messing up the lobby.
+- Fixed clients sending the value of the win condition slider too eagerly (whenever it moves, as opposed to when it's released). Also changed it adjust in steps of 10 for a little nicer values.
+- Fixed occasional "Unexpected error" console errors when the game attempts to unlock an achiement on the Epic Store or with EOS crossplay enabled.
+
+Extra logging for diagnosing networking errors:
+- Mention the entity that caused an error to be thrown when reading a network event, and the content package that entity is from (makes it easier to tell when the error is caused by some specific mod).
+- Improved logging of the "event count very high" errors: mention the content package the events are from if they're non-vanilla, log the errors client-side too. We are suspecting the occasional "expected old/removed event" disconnects could be due to the server creating so many events the clients can't keep up, and this should give us some more clues for diagnosing the issue.
+- Added more info to the "component event creation failed" error messages, the errors are logged into GameAnalytics.
+
+Balance:
+- Each successive use of the Mindwipe item increases the penalty to talent points, making it more costly to use it to "farm talents" by repeatedly unlocking talents that unlock other talents or give extra talent points.
+- XP gain balancing: the XP is no longer directly tied to mission rewards, but adjusted based on the difficulty of the mission.
+- Lowered cost of high-skilled NPCs to hire. High reputation with Coalition or Separatists results in more cost-effective hires.
+- Tweaks to monster nest missions: higher reward (as they're some of the riskiest missions in the game) and less monsters in SP (in MP it's the same amount).
+- Campaign setting for adjusting the XP gain rates.
+- Higher XP gains in later biomes.
+- Concussions wears off faster.
+- Beds are a bit more effective for some afflictions like nausea and drunkness.
+- Added chem addiction and chem withdrawal reduction to beds/bunks.
+- Reduced how fast chem addiction and chem withdrawal build up.
+- Reduced the amount of devices you need to repair to get the effects of the "Machine Maniac" talent.
+- Health scanners spawn as a part of the sub's initial supplies, not given to every respawning medic (a too easy source of free resources).
+- Deconstructing headsets no longer yields materials (a too easy source of free resources).
+
+Fixes:
+- Fixed choosing "retry" in the pause menu after you've started playing from a backup save loading that same backup save instead of the most recent save.
+- Fixed relay components not passing power until they've been toggled on and off.
+- Fixed ability to sell the 2nd gene of a combined genetic material in stores.
+- Fixed combined genes appearing untainted if the 2nd gene is tainted instead of the 1st one.
+- Fixed NPCs still offering services (stores, submarine upgrades, etc) despite their faction being hostile to you, leading to weird situations where you could be trading with a merchant who's actively trying to run away from you.
+- Fixed Artie Dolittle continuing to follow you if you refuse to hire him.
+- Fixed "Miracle Worker" talent keeping husks from dying if you're friendly with husks (e.g. because you're wearing Zealot Robes).
+- Fixed alien turrets not working properly in mirrored ruins (they were using circuits with hard-coded turret rotation angles, which broke in mirrored ruins).
+- Fixed alien turrets set to auto-operate failing to fire inside hulls.
+- Fixed auto-operated turrets trying to fire at monsters inside ruins.
+- Fixed signal components being automatically placed inside circuit boxes in your inventory when you purchase them while there's no free slots in your inventory.
+- Fixed holes on overlapping walls multiplying flooding rates (a hole was created on all of the walls, and they'd act independently of each other).
+- Fixed lights being visible on contained items (e.g. handheld sonars in cabinets) in the sub editor.
+- Fixed crashing when attempting to give contextual orders to a defense bot (i.e. when middle-mouse-clicking a defense bot).
+- Reactors attempt to rapidly adjust to the load in the first 5 seconds of a round, during which time junction boxes don't take damage from overvoltage. Intended to address overvoltage in cases where the reactor is outputting a lot of power, and the load suddenly drops when a new round starts (e.g. due to the engines powering down).
+- Fixed alien devices (or more specifically, items with a static physics body) shifting from their original position when loaded for the first time if they're used in a normal sub.
+- Fixed "Crusty Seaman" talent giving characters medical skill as it heals the character's bleeding.
+- Fixed certain level resources (e.g. piezo crystals) facing the wrong way on level walls.
+- Fixed certain elements in the debugdraw view (submarine borders, damage texts on walls, gaps, water level indicators on hulls, lines pointing to walls enemies are targeting) "twitching" when the sub moves.
+- Fixed headsets purchased with immediate item delivery getting assigned to an incorrect team, preventing them from communicating with the headsets of the rest of the crew.
+- Fixed headsets whose fabrication was started on the previous round getting assigned to an incorrect team, preventing them from communicating with the headsets of the rest of the crew.
+- Fixed pets (including defense bots) spawned in an outpost being assigned to the "friendly NPC" team, which would e.g. mean that they wouldn't attack the enemy team in the PvP mode.
+- Fixed PvP outposts sometimes spawning as alien ruins.
+- Fixed multi-tools detaching detonators (the multi-tool is not intended to detach any items, because that would conflict with the repair functionality).
+- Fixed unopenable hatch at the top of ResidentialModule01_Colony (rarely caused any issues in the vanilla game, because other modules almost never attach on top of that module).
+- Fixed Terminal component's Readonly field not working when it's set in the editor (only if the item is by default set to readonly).
+- Fixed large hardpoints not having the "set_auto_operate" and "toggle_auto_operate" inputs.
+- Fixed components being attachable inside walls/floors in some subs.
+- Fixed broken junction boxes sometimes zapping players despite seemingly not being powered.
+- Improved thalamus brain spawning to prevent it from ending up in dry rooms, and dying if it does:
+    - Avoid spawning in rooms with doors, hatches or duct blocks.
+    - The brain no longer dies in dry rooms.
+- Fixed mudraptor beak from mudraptor genes showing through exosuits and other wearable items that should hide the character's head.
+- Fixed bandoliers not going in cabinets' "container slots".
+- Fixed "man and his raptor" mission failing if you don't speak to the man and spawn the mudraptor.
+- Fixed wrecked doors and hatches not being weldable.
+- Fixed the hover text saying that you can "open" or "force open" a door when it's already opened.
+- Waypoint fixes in Camel.
+- Fixed 'Traveling Tradesman' sell bonus not working.
+- Fixed chat-linked wifi components sometimes failing to receive messages from the chat (most often in circuit boxes?). Had to do with the order in which the headsets and wifi components are created.
+- Fixed conversation prompts not blocking conversations from other events if you've moved past the initial prompt (e.g. answered the first question and gotten a follow-up).
+- Fixed treatment suggestions not being shown on some afflictions (e.g opiate addiction). Happened because we used the same thresholds to determine if bots should treat the affliction and to determine if the suggestion should be shown.
+
+Modding:
+- Added AddScoreAction: can be used to make scripted events modify a team's score in the PvP mode, which should open up a lot of new possibilities for custom PvP mission types.
+- Added RangedAttackMultiplier stat type.
+- Beacon stations are no longer automatically damaged, but instead are only damaged through the DamageBeaconStationAction in ScriptedEvent. Recommended (and default) setting for beacon stations is to enable all three: Allow damaged walls, Allow damaged devices, Allow disconnected wires.
+- Fixed ragdolls failing to load when inheriting creatures whose ragdolls are not in the default path ("Ragdolls" folder inside the character's folder), but e.g. defined using a direct path to a ragdoll file in the character's or some other character's folder.
+- Added option to set the handle positions (Handle1 and Handle2) of a holdable item using status effects.
+- Fixed character variants failing to load the correct texture for limbs that use a different texture than the rest of the ragdoll (e.g. the alien bits on a variant of the Cyborgworm).
+- Fixed WaitForItemUsedAction not working if there's multiple instances of the same scripted event active at the same time.
+- Fixed characters' damage overlays not being affected by the ragdoll's texture scale.
+- Fixed stacking ability resistances past 100% making the resistance negative.
+- Fixed texts with color tags not working in some UI elements: fabricator, sub editor, store, speech bubbles.
+- Made the game load the vanilla human ragdoll (or in the case of monsters, crawler ragdoll) if loading a modded character's ragdoll fails. Should make it easier to diagnose and address issues in the character configuration.
+- Fixed hair and other "wearables" in character portraits (in the bottom-right corner and the health interface) getting misaligned if they use a different origin or sourcerect than the head sprite.
+- Fixed health multipliers defined in a HumanPrefab not working.
+- Fixed crashes when a PvP outpost contains shuttles or other moving parts.
+- If an item variant inherits a sprite without the full texture path from the base item, it uses the texture path of the base item instead of that of the variant. Fixes mods being unable to create variants of things like diving suits without reconfiguring all the sprite paths.
+- Fixed character variants overriding the targeting parameters of the parent character incorrectly: just overriding the parameters in the order they're defined in, as opposed to overriding a parameter with a matching tag.
+- Status effects can make a character say a line in the chat: used by adding a subelement called forcesay, with the attributes "message" and optionally "sayinradio".
+- Fixed OnUse sounds not playing when attaching an item to a wall in MP.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.6.19.1
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

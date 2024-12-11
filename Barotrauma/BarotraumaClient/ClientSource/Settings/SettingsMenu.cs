@@ -107,6 +107,11 @@ namespace Barotrauma
         
         public void SelectTab(Tab tab)
         {
+            if (tab == Tab.AudioAndVC && CurrentDeviceMismatchesDisplayed())
+            {
+                CreateAudioAndVCTab(refresh: true);
+            }
+            
             CurrentTab = tab;
             SwitchContent(tabContents[tab].Content);
             tabber.Children.ForEach(c =>
@@ -134,6 +139,11 @@ namespace Barotrauma
 
         private GUIFrame CreateNewContentFrame(Tab tab)
         {
+            if (tabContents.TryGetValue(tab, out (GUIButton Button, GUIFrame Content) tabContent))
+            {
+                return tabContent.Content;
+            }
+
             var content = new GUIFrame(new RectTransform(Vector2.One * 0.95f, contentFrame.RectTransform, Anchor.Center, Pivot.Center), style: null);
             AddButtonToTabber(tab, content);
             return content;
@@ -180,7 +190,7 @@ namespace Barotrauma
         
         private static GUIDropDown Dropdown<T>(GUILayoutGroup parent, Func<T, LocalizedString> textFunc, Func<T, LocalizedString>? tooltipFunc, IReadOnlyList<T> values, T currentValue, Action<T> setter)
         {
-            var dropdown = new GUIDropDown(NewItemRectT(parent));
+            var dropdown = new GUIDropDown(NewItemRectT(parent), elementCount: values.Count);
             values.ForEach(v => dropdown.AddItem(text: textFunc(v), userData: v, toolTip: tooltipFunc?.Invoke(v) ?? null));
             int childIndex = values.IndexOf(currentValue);
             dropdown.Select(childIndex);
@@ -269,6 +279,11 @@ namespace Barotrauma
             DropdownEnum(left, (m) => TextManager.Get($"{m}"), null, unsavedConfig.Graphics.DisplayMode, v => unsavedConfig.Graphics.DisplayMode = v);
             Spacer(left);
 
+            var displayLabel = Label(left, TextManager.Get("TargetDisplay"), GUIStyle.SubHeadingFont);
+            displayLabel.ToolTip = TextManager.Get("TargetDisplay.Tooltip");
+            Dropdown(left, m => TextManager.GetWithVariables(m == 0 ? "PrimaryDisplayFormat" : "SecondaryDisplayFormat", ("[num]", m.ToString()), ("[name]", Display.GetDisplayName(m))), null, Enumerable.Range(0, Display.GetNumberOfDisplays()).ToArray(), unsavedConfig.Graphics.Display, v => unsavedConfig.Graphics.Display = v);
+            Spacer(left);
+
             Tickbox(left, TextManager.Get("EnableVSync"), TextManager.Get("EnableVSyncTooltip"), unsavedConfig.Graphics.VSync, v => unsavedConfig.Graphics.VSync = v);
             Tickbox(left, TextManager.Get("EnableTextureCompression"), TextManager.Get("EnableTextureCompressionTooltip"), unsavedConfig.Graphics.CompressTextures, v => unsavedConfig.Graphics.CompressTextures = v);
             Spacer(right);  
@@ -347,17 +362,45 @@ namespace Barotrauma
                 current = list[0];
             }
         }
-
-        private void CreateAudioAndVCTab()
+        
+        private static bool IsCurrentDevice(string savedDeviceName, int deviceType)
+        {
+            try
+            {
+                string currentDevice = Alc.GetString(IntPtr.Zero, deviceType);
+                if (string.IsNullOrEmpty(savedDeviceName) || string.IsNullOrEmpty(currentDevice))
+                {
+                    return false;
+                }
+                return currentDevice.Equals(savedDeviceName, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking output device name: {ex.Message}");
+                return false;
+            }
+        }
+        
+        private static bool CurrentDeviceMismatchesDisplayed()
+        {
+            return !IsCurrentDevice(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, Alc.CaptureDefaultDeviceSpecifier) ||
+                   !IsCurrentDevice(GameSettings.CurrentConfig.Audio.AudioOutputDevice, Alc.DefaultDeviceSpecifier);
+        }
+        
+        public void CreateAudioAndVCTab(bool refresh = false)
         {
             if (GameMain.Client == null
-                && VoipCapture.Instance == null)
+                && (refresh || VoipCapture.Instance == null))
             {
                 string currDevice = unsavedConfig.Audio.VoiceCaptureDevice;
                 GetAudioDevices(Alc.CaptureDeviceSpecifier, Alc.CaptureDefaultDeviceSpecifier, out var deviceList, ref currDevice);
 
                 if (deviceList.Any())
                 {
+                    if (VoipCapture.Instance is VoipCapture currentCaptureInstance)
+                    {
+                        currentCaptureInstance.Dispose();
+                    }
                     VoipCapture.Create(unsavedConfig.Audio.VoiceCaptureDevice);
                 }
                 if (VoipCapture.Instance == null)
@@ -367,7 +410,10 @@ namespace Barotrauma
             }
             
             GUIFrame content = CreateNewContentFrame(Tab.AudioAndVC);
-            
+            if (refresh)
+            {
+                content.ClearChildren();
+            }
             var (audio, voiceChat) = CreateSidebars(content, split: true);
 
             static void audioDeviceElement(
@@ -401,6 +447,15 @@ namespace Barotrauma
             
             string currentOutputDevice = unsavedConfig.Audio.AudioOutputDevice;
             audioDeviceElement(audio, v => unsavedConfig.Audio.AudioOutputDevice = v, Alc.OutputDevicesSpecifier, Alc.DefaultDeviceSpecifier, ref currentOutputDevice);
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), audio.RectTransform), text: TextManager.Get("RefreshAudioDevices"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("RefreshAudioDevicesToolTip"),
+                OnClicked = (btn, obj) =>
+                {
+                    CreateAudioAndVCTab(refresh: true);
+                    return true;
+                }
+            };
             Spacer(audio);
 
             Label(audio, TextManager.Get("SoundVolume"), GUIStyle.SubHeadingFont);
@@ -443,6 +498,15 @@ namespace Barotrauma
 
             string currentInputDevice = unsavedConfig.Audio.VoiceCaptureDevice;
             audioDeviceElement(voiceChat, v => unsavedConfig.Audio.VoiceCaptureDevice = v, Alc.CaptureDeviceSpecifier, Alc.CaptureDefaultDeviceSpecifier, ref currentInputDevice);
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), voiceChat.RectTransform), text: TextManager.Get("RefreshAudioDevices"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("RefreshAudioDevicesToolTip"),
+                OnClicked = (btn, obj) =>
+                {
+                    CreateAudioAndVCTab(refresh: true);
+                    return true;
+                }
+            };
             Spacer(voiceChat);
             
             Label(voiceChat, TextManager.Get("VCInputMode"), GUIStyle.SubHeadingFont);

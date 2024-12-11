@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,19 +61,34 @@ namespace Barotrauma
 
         private bool IsBlockedByAnotherConversation(IEnumerable<Entity> targets, float duration)
         {
-            foreach (Entity e in targets)
+            if (targets == null || targets.None())
             {
-                if (e is not Character character || !character.IsRemotePlayer) { continue; }
-                Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
-                if (targetClient != null)
+                //if the action doesn't target anyone in specific, it's shown to every client
+                foreach (var client in GameMain.Server.ConnectedClients)
                 {
-                    if (lastActiveAction.ContainsKey(targetClient) && 
-                        lastActiveAction[targetClient].ParentEvent != ParentEvent && 
-                        Timing.TotalTime < lastActiveAction[targetClient].lastActiveTime + duration)
-                    {
-                        return true;
-                    }
+                    if (IsBlockedByAnotherConversation(client, duration)) { return true; }
                 }
+            }
+            else
+            {
+                foreach (Entity e in targets)
+                {
+                    if (e is not Character character || !character.IsRemotePlayer) { continue; }
+                    Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
+                    if (targetClient != null && IsBlockedByAnotherConversation(targetClient, duration)) { return true; }                    
+                }
+            }
+            return false;
+        }
+
+        private bool IsBlockedByAnotherConversation(Client targetClient, float duration)
+        {
+            if (lastActiveAction.ContainsKey(targetClient) &&
+                !lastActiveAction[targetClient].ParentEvent.IsFinished &&
+                lastActiveAction[targetClient].ParentEvent != ParentEvent &&
+                Timing.TotalTime < lastActiveAction[targetClient].lastActiveTime + duration)
+            {
+                return true;
             }
             return false;
         }
@@ -91,6 +107,7 @@ namespace Barotrauma
                     {
                         targetClients.Add(targetClient);
                         lastActiveAction[targetClient] = this;
+                        lastActiveTime = Timing.TotalTime;
                         ServerWrite(speaker, targetClient, interrupt); 
                     }
                 }
@@ -105,6 +122,7 @@ namespace Barotrauma
                         {
                             targetClients.Add(c);
                             lastActiveAction[c] = this;
+                            lastActiveTime = Timing.TotalTime;
                             ServerWrite(speaker, c, interrupt);
                         }
                     }

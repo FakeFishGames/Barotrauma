@@ -1978,25 +1978,6 @@ namespace Barotrauma.Items.Components
                 2, GUIStyle.SmallFont);
         }
 
-        protected override void RemoveComponentSpecific()
-        {
-            base.RemoveComponentSpecific();
-            sonarBlip?.Remove();
-            pingCircle?.Remove();
-            directionalPingCircle?.Remove();
-            screenOverlay?.Remove();
-            screenBackground?.Remove();
-            lineSprite?.Remove();
-
-            foreach (var t in targetIcons.Values)
-            {
-                t.Item1.Remove();
-            }
-            targetIcons.Clear();
-
-            MineralClusters = null;
-        }
-
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.WriteBoolean(currentMode == Mode.Active);

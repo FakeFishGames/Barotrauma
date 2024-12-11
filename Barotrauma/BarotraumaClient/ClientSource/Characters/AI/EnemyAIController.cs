@@ -42,7 +42,7 @@ namespace Barotrauma
                 if (wallTarget != null && !IsCoolDownRunning)
                 {
                     Vector2 wallTargetPos = wallTarget.Position;
-                    if (wallTarget.Structure.Submarine != null) { wallTargetPos += wallTarget.Structure.Submarine.Position; }
+                    if (wallTarget.Structure.Submarine != null) { wallTargetPos += wallTarget.Structure.Submarine.DrawPosition; }
                     wallTargetPos.Y = -wallTargetPos.Y;
                     GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Orange, false);
                     GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);

@@ -118,6 +118,7 @@ namespace Barotrauma
         }
 
         public float StoreMaxReputationModifier { get; } = 0.1f;
+        public float StoreMinReputationModifier { get; } = 1.0f;
         public float StoreSellPriceModifier { get; } = 0.3f;
         public float DailySpecialPriceModifier { get; } = 0.5f;
         public float RequestGoodPriceModifier { get; } = 2f;
@@ -264,6 +265,7 @@ namespace Barotrauma
                         break;
                     case "store":
                         StoreMaxReputationModifier = subElement.GetAttributeFloat("maxreputationmodifier", StoreMaxReputationModifier);
+                        StoreMinReputationModifier = subElement.GetAttributeFloat("minreputationmodifier", StoreMaxReputationModifier);
                         StoreSellPriceModifier = subElement.GetAttributeFloat("sellpricemodifier", StoreSellPriceModifier);
                         DailySpecialPriceModifier = subElement.GetAttributeFloat("dailyspecialpricemodifier", DailySpecialPriceModifier);
                         RequestGoodPriceModifier = subElement.GetAttributeFloat("requestgoodpricemodifier", RequestGoodPriceModifier);

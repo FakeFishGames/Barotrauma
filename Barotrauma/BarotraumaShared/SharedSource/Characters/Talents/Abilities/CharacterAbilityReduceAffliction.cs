@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 namespace Barotrauma.Abilities
 {
@@ -19,10 +19,30 @@ namespace Barotrauma.Abilities
             }
         }
 
+        protected override void ApplyEffect()
+        {
+            ApplyEffectToCharacter(Character);
+        }
+
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityObject is not IAbilityCharacter character) { return; }
-            character.Character.CharacterHealth.ReduceAfflictionOnAllLimbs(afflictionId, amount, attacker: Character);
+            if (abilityObject is IAbilityCharacter characterData) 
+            { 
+                ApplyEffectToCharacter(characterData.Character); 
+            }
+        }
+
+        private void ApplyEffectToCharacter(Character character)
+        {
+            character?.CharacterHealth.ReduceAfflictionOnAllLimbs(afflictionId, amount, attacker: Character);
+        }
+
+        protected override void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)
+        {
+            if (conditionsMatched)
+            {
+                ApplyEffect();
+            }
         }
     }
 }

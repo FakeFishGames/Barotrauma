@@ -220,6 +220,10 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private bool forceSelectNextFrame;
 
+        private float userCanInteractCheckTimer;
+
+        private const float UserCanInteractCheckInterval = 1.0f;
+
         public override void Update(float deltaTime, Camera cam) 
         {
             this.cam = cam;
@@ -238,13 +242,15 @@ namespace Barotrauma.Items.Components
             }
             forceSelectNextFrame = false;
 
+            userCanInteractCheckTimer -= deltaTime;
+
             if (user == null 
                 || user.Removed
                 || !user.IsAnySelectedItem(item)
                 || (item.ParentInventory != null && !IsAttachedUser(user))
-                || !user.CanInteractWith(item) 
                 || (UsableIn == UseEnvironment.Water && !user.AnimController.InWater)
-                || (UsableIn == UseEnvironment.Air && user.AnimController.InWater))
+                || (UsableIn == UseEnvironment.Air && user.AnimController.InWater)
+                || !CheckUserCanInteract())
             {
                 if (user != null)
                 {
@@ -366,6 +372,22 @@ namespace Barotrauma.Items.Components
                 limb.PullJointEnabled = true;
                 limb.PullJointWorldAnchorB = limb.SimPosition + ConvertUnits.ToSimUnits(diff);
             }
+        }
+
+        private bool CheckUserCanInteract()
+        {
+            //optimization: CanInteractWith is relatively heavy (can involve visibility checks for example), let's not do it every frame
+            if (user != null)
+            {
+                if (userCanInteractCheckTimer <= 0.0f)
+                {
+                    userCanInteractCheckTimer = UserCanInteractCheckInterval;
+                    return user.CanInteractWith(item);
+                }
+            }
+            //we only do the actual check every UserCanInteractCheckInterval seconds
+            //can mean the component can stay selected for <1s after the user no longer has access to it
+            return true;
         }
 
         private double lastUsed;

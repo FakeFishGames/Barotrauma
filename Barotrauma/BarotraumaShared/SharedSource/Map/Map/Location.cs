@@ -124,7 +124,16 @@ namespace Barotrauma
             /// </summary>
             public int PriceModifier { get; set; }
             public Location Location { get; }
+
+            /// <summary>
+            /// The maximum effect positive reputation can have on store prices (e.g. 0.5 = 50% discount with max reputation).
+            /// </summary>
             private float MaxReputationModifier => Location.StoreMaxReputationModifier;
+
+            /// <summary>
+            /// The maximum effect negative reputation can have on store prices (e.g. 0.5 = 50% price increase with minimum reputation).
+            /// </summary>
+            private float MinReputationModifier => Location.StoreMinReputationModifier;
 
             private StoreInfo(Location location)
             {
@@ -343,7 +352,7 @@ namespace Barotrauma
                 if (characters.Any())
                 {
                     price *= 1f + characters.Max(static c => c.GetStatValue(StatTypes.StoreSellMultiplier, includeSaved: false));
-                    price *= 1f + characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreSellMultiplier, tag)));
+                    price *= 1f + characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValueWithAll(StatTypes.StoreSellMultiplier, tag)));
                 }
 
                 // Price should never go below 1 mk
@@ -373,7 +382,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        return MathHelper.Lerp(1.0f, 1.0f + MaxReputationModifier, reputation.Value / reputation.MinReputation);
+                        return MathHelper.Lerp(1.0f, 1.0f + MinReputationModifier, reputation.Value / reputation.MinReputation);
                     }
                 }
                 else
@@ -384,7 +393,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        return MathHelper.Lerp(1.0f, 1.0f - MaxReputationModifier, reputation.Value / reputation.MinReputation);
+                        return MathHelper.Lerp(1.0f, 1.0f - MinReputationModifier, reputation.Value / reputation.MinReputation);
                     }
                 }
             }
@@ -398,6 +407,7 @@ namespace Barotrauma
         public Dictionary<Identifier, StoreInfo> Stores { get; set; }
 
         private float StoreMaxReputationModifier => Type.StoreMaxReputationModifier;
+        private float StoreMinReputationModifier => Type.StoreMinReputationModifier;
         private float StoreSellPriceModifier => Type.StoreSellPriceModifier;
         private float DailySpecialPriceModifier => Type.DailySpecialPriceModifier;
         private float RequestGoodPriceModifier => Type.RequestGoodPriceModifier;

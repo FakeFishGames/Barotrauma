@@ -35,6 +35,7 @@ namespace Barotrauma.Networking
 
     public enum RespawnMode
     {
+        None,
         MidRound,
         BetweenRounds,
         Permadeath,
@@ -415,6 +416,19 @@ namespace Barotrauma.Networking
             get { return tickRate; }
             set { tickRate = MathHelper.Clamp(value, 1, 60); }
         }
+
+        private int maxLagCompensation = 150;
+        [Serialize(150, IsPropertySaveable.Yes, description:
+            "Maximum amount of lag compensation for firing weapons, in milliseconds. " +
+            "E.g. when a client fires a gun, the server will be notified about it with some latency, and checks if it hit anything in the past (at the time the shot was taken), up to this limit. " +
+            "The largest allowed lag compensation is 500 milliseconds.")]
+        public int MaxLagCompensation
+        {
+            get { return maxLagCompensation; }
+            set { maxLagCompensation = MathHelper.Clamp(value, 0, 500); }
+        }
+
+        public float MaxLagCompensationSeconds => maxLagCompensation / 1000.0f;
 
         [Serialize(true, IsPropertySaveable.Yes, description: "Do clients need to be authenticated (e.g. based on Steam ID or an EGS ownership token). Can be disabled if you for example want to play the game in a local network without a connection to external services.")]
         public bool RequireAuthentication

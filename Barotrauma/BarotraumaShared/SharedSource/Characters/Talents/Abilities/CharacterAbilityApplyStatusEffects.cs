@@ -19,6 +19,13 @@ namespace Barotrauma.Abilities
 
         private bool effectBeingApplied;
 
+        /// <summary>
+        /// Should the character who has the ability be marked as the "user" of the status effect? 
+        /// Means that e.g. enemies will consider damage from the effect to be coming from the character with the ability, and that the character will gain skills if the effect e.g. heals someone.
+        /// </summary>
+
+        private readonly bool setUser;
+
         public CharacterAbilityApplyStatusEffects(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
@@ -27,6 +34,7 @@ namespace Barotrauma.Abilities
             nearbyCharactersAppliesToSelf = abilityElement.GetAttributeBool("nearbycharactersappliestoself", true);
             nearbyCharactersAppliesToAllies = abilityElement.GetAttributeBool("nearbycharactersappliestoallies", true);
             nearbyCharactersAppliesToEnemies = abilityElement.GetAttributeBool("nearbycharactersappliestoenemies", true);
+            setUser = abilityElement.GetAttributeBool("setuser", true);
         }
 
         protected void ApplyEffectSpecific(Character targetCharacter, Limb targetLimb = null)
@@ -44,7 +52,7 @@ namespace Barotrauma.Abilities
                     if (statusEffect.HasTargetType(StatusEffect.TargetType.UseTarget))
                     {
                         // currently used to spawn items on the targeted character
-                        statusEffect.SetUser(targetCharacter);
+                        if (setUser) { statusEffect.SetUser(targetCharacter); }
                         statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targetCharacter);
                     }
                     else if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
@@ -63,22 +71,22 @@ namespace Barotrauma.Abilities
                         {
                             targets.RemoveAll(c => c is Character otherCharacter && !HumanAIController.IsFriendly(otherCharacter, Character));
                         }
-                        statusEffect.SetUser(Character);
+                        if (setUser) { statusEffect.SetUser(Character); }
                         statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
                     }
                     else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb) && targetLimb != null)
                     {
-                        statusEffect.SetUser(Character);
+                        if (setUser) { statusEffect.SetUser(Character); }
                         statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetLimb);
                     }
                     else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                     {
-                        statusEffect.SetUser(Character);
+                        if (setUser) { statusEffect.SetUser(Character); }
                         statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetCharacter);
                     }
                     else
                     {
-                        statusEffect.SetUser(Character);
+                        if (setUser) { statusEffect.SetUser(Character); }
                         statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, Character);
                     }
                 }

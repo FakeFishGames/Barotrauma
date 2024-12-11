@@ -38,6 +38,7 @@
     <Compile Include="Clipboard.cs" />
     <Compile Include="FileDropEventArgs.cs" />
     <Compile Include="MessageBox.cs" />
+    <Compile Include="Display.cs" />
     <Compile Include="CurveContinuity.cs" />
     <Compile Include="Curve.cs" />
     <Compile Include="CurveKeyCollection.cs" />

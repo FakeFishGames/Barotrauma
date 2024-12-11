@@ -656,6 +656,16 @@ namespace Barotrauma
 
         private readonly List<ItemSpawnInfo> spawnItems;
 
+
+        /// <summary>
+        /// If set, the character targeted by this effect will send the corresponding localized text that has the specified identifier in the chat.
+        /// </summary>
+        private readonly Identifier forceSayIdentifier = Identifier.Empty;
+        /// <summary>
+        /// If set to true, the character targeted by this effect's "forcesay" command will send their message in the radio. 
+        /// </summary>
+        private readonly bool forceSayInRadio;
+
         /// <summary>
         /// If enabled, one of the items this effect is configured to spawn is selected randomly, as opposed to spawning all of them.
         /// </summary>
@@ -1183,6 +1193,10 @@ namespace Barotrauma
                         animationsToTrigger ??= new List<AnimLoadInfo>();
                         animationsToTrigger.Add(new AnimLoadInfo(animType, file, priority, expectedSpeciesNames.ToImmutableArray()));
                         
+                        break;
+                    case "forcesay":
+                        forceSayIdentifier = subElement.GetAttributeIdentifier("message", Identifier.Empty);
+                        forceSayInRadio = subElement.GetAttributeBool("sayinradio", false);
                         break;
                 }
             }
@@ -1948,6 +1962,27 @@ namespace Barotrauma
                 
                 TryTriggerAnimation(target, entity);
 
+                if (!forceSayIdentifier.IsEmpty) 
+                {
+                    LocalizedString messageToSay = TextManager.Get(forceSayIdentifier).Fallback(forceSayIdentifier.Value);
+
+                    if (!messageToSay.IsNullOrEmpty() && target is Character targetCharacter && targetCharacter.SpeechImpediment < 100.0f && !targetCharacter.IsDead)
+                    {
+                        ChatMessageType messageType = ChatMessageType.Default;
+                        bool canUseRadio = ChatMessage.CanUseRadio(targetCharacter, out WifiComponent radio);
+                        if (canUseRadio && forceSayInRadio)
+                        {
+                            messageType = ChatMessageType.Radio;
+                        }
+#if SERVER
+                        GameMain.Server?.SendChatMessage(messageToSay.Value, messageType, senderClient: null, targetCharacter);
+#elif CLIENT
+                        AIChatMessage message = new AIChatMessage(messageToSay.Value, messageType);
+                        targetCharacter.SendSinglePlayerMessage(message, canUseRadio, radio);
+#endif
+                    }
+                }
+
                 if (isNotClient)
                 {
                     // these effects do not need to be run clientside, as they are replicated from server to clients anyway
@@ -2079,20 +2114,37 @@ namespace Barotrauma
                     foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
                     {
                         var characters = new List<Character>();
+                        
+                        CharacterTeamType? inheritedTeam = null;
+                        if (characterSpawnInfo.InheritTeam)
+                        {
+                            bool isPvP = GameMain.GameSession?.GameMode?.Preset == GameModePreset.PvP;
+                            inheritedTeam = entity switch
+                            {
+                                Character c => c.TeamID,
+                                Item it => it.GetRootInventoryOwner() is Character owner ? owner.TeamID : GetTeamFromSubmarine(it),
+                                MapEntity e => GetTeamFromSubmarine(e),
+                                _ => null
+                                // Default to Team1, when we can't deduce the team (for example when spawning outside the sub AND character inventory).
+                            } ?? (isPvP ? CharacterTeamType.None : CharacterTeamType.Team1);
+                            
+                            CharacterTeamType? GetTeamFromSubmarine(MapEntity e)
+                            {
+                                if (e.Submarine == null) { return null; }
+                                // Don't allow team FriendlyNPC in outposts, because if you buy a spawner item (such as husk container) from the store and choose to get it immediately, it will be spawned in the outpost.
+                                return !isPvP && e.Submarine.Info.IsOutpost && e.Submarine.TeamID == CharacterTeamType.FriendlyNPC ? 
+                                    CharacterTeamType.Team1 : e.Submarine.TeamID;
+                            }
+                        }
+                        
                         for (int i = 0; i < characterSpawnInfo.Count; i++)
                         {
                             Entity.Spawner.AddCharacterToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Unsynced) + characterSpawnInfo.Offset,
                                 onSpawn: newCharacter =>
                                 {
-                                    if (characterSpawnInfo.InheritTeam)
+                                    if (inheritedTeam.HasValue)
                                     {
-                                        newCharacter.TeamID = entity switch
-                                        {
-                                            Character c => c.TeamID,
-                                            Item it => it.GetRootInventoryOwner() is Character owner ? owner.TeamID : it.Submarine?.TeamID ?? newCharacter.TeamID,
-                                            MapEntity e => e.Submarine?.TeamID ?? newCharacter.TeamID,
-                                            _ => newCharacter.TeamID
-                                        };
+                                        newCharacter.SetOriginalTeamAndChangeTeam(inheritedTeam.Value, processImmediately: true);
                                     }
                                     if (characterSpawnInfo.TotalMaxCount > 0)
                                     {
@@ -2429,16 +2481,14 @@ namespace Barotrauma
                                 {
                                     ignoredBodies = user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList();
                                 }
-
                                 float damageMultiplier = 1f;
-
-                                if (sourceEntity is Limb attackLimb)
+                                if (entity is Character character && sourceEntity is Limb { attack: Attack attack })
                                 {
-                                    damageMultiplier = attackLimb.attack?.DamageMultiplier ?? 1.0f;
+                                    attack.ResetDamageMultiplier();
+                                    attack.DamageMultiplier *= 1.0f + character.GetStatValue(StatTypes.NaturalRangedAttackMultiplier);
+                                    damageMultiplier = attack.DamageMultiplier;
                                 }
-                                
-                                projectile.Shoot(user, spawnPos, spawnPos, rotation,
-                                    ignoredBodies: ignoredBodies, createNetworkEvent: true, damageMultiplier: damageMultiplier);
+                                projectile.Shoot(user, spawnPos, spawnPos, rotation, ignoredBodies: ignoredBodies, createNetworkEvent: true, damageMultiplier: damageMultiplier);
                                 projectile.Item.Submarine = projectile.LaunchSub = sourceEntity?.Submarine;
                             }
                             else if (newItem.body != null)
@@ -2794,18 +2844,21 @@ namespace Barotrauma
             if (limb == null) { return; }
             foreach (Affliction limbAffliction in limb.character.CharacterHealth.GetAllAfflictions())
             {
-                if (result.Afflictions != null && result.Afflictions.Any(a => a.Prefab == limbAffliction.Prefab) &&
+                if (result.Afflictions != null && 
+                    /* "affliction" is the affliction directly defined in the status effect (e.g. "5 internal damage (per second / per frame / however the effect is defined to run)"), 
+                     * "result" is how much we actually applied of that affliction right now (taking into account the elapsed time, resistances and such) */
+                    result.Afflictions.FirstOrDefault(a => a.Prefab == limbAffliction.Prefab) is Affliction resultAffliction &&
                     (!affliction.Prefab.LimbSpecific || limb.character.CharacterHealth.GetAfflictionLimb(affliction) == limb))
                 {
                     if (type == ActionType.OnUse || type == ActionType.OnSuccess)
                     {
                         limbAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
-                        limb.character.TryAdjustHealerSkill(user, affliction: affliction);
+                        limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction);
                     }
                     else if (type == ActionType.OnFailure)
                     {
                         limbAffliction.AppliedAsFailedTreatmentTime = Timing.TotalTime;
-                        limb.character.TryAdjustHealerSkill(user, affliction: affliction);
+                        limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction);
                     }
                 }
             }

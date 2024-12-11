@@ -320,7 +320,7 @@ namespace Barotrauma.Items.Components
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepairableWall;
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepairableWall | Physics.CollisionItemBlocking;
             if (!IgnoreCharacters)
             {
                 collisionCategories |= Physics.CollisionCharacter;
@@ -654,8 +654,9 @@ namespace Barotrauma.Items.Components
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
                 return true;
             }
-            else if (targetBody.UserData is Item targetItem)
+            else if (targetBody.UserData is Barotrauma.Item or Holdable)
             {
+                Item targetItem = targetBody.UserData is Holdable holdable ? holdable.Item : (Item)targetBody.UserData;
                 if (!HitItems || !targetItem.IsInteractable(user)) { return false; }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();

@@ -7,20 +7,7 @@ namespace Barotrauma
 {
     partial class ScanMission : Mission
     {
-        public override IEnumerable<Entity> HudIconTargets
-        {
-            get
-            {
-                if (State == 0)
-                {
-                    return scanTargets.Where(kvp => !kvp.Value).Select(kvp => kvp.Key);
-                }
-                else
-                {
-                    return Enumerable.Empty<Entity>();
-                }
-            }
-        }
+        public override IEnumerable<Entity> HudIconTargets => scanTargets.Where(kvp => !kvp.Value).Select(kvp => kvp.Key);
 
         public override bool DisplayAsCompleted => false;
         public override bool DisplayAsFailed => false;
@@ -62,7 +49,7 @@ namespace Barotrauma
                 ushort id = msg.ReadUInt16();
                 bool scanned = msg.ReadBoolean();
                 Entity entity = Entity.FindEntityByID(id);
-                if (!(entity is WayPoint wayPoint))
+                if (entity is not WayPoint wayPoint)
                 {
                     string errorMsg = $"Failed to find a waypoint in ScanMission.ClientReadScanTargetStatus. Entity {id} was {(entity?.ToString() ?? null)}";
                     DebugConsole.ThrowError(errorMsg);

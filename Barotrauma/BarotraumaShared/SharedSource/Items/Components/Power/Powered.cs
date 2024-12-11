@@ -157,6 +157,13 @@ namespace Barotrauma.Items.Components
                 {
                     if (powerOut?.Grid != null) { return powerOut.Grid.Voltage; }
                 }
+                
+                if (this is PowerTransfer && item.Condition <= 0.0f)
+                {
+                    //if the junction box or other power transfer device is broken,
+                    //it cannot be supplying any power (voltage = 0)
+                    return 0.0f;
+                }
                 return PowerConsumption <= 0.0f ? 1.0f : voltage;
             }
             set

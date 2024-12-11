@@ -499,12 +499,13 @@ namespace Barotrauma.Items.Components
                     {
                         GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + fabricatedItem.TargetItem.Identifier);
                     }
+                    InvSlotType invSlot = fabricatedItem.MoveToSlot;
                     if (i < amountFittingContainer)
                     {
                         Entity.Spawner.AddItemToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition, quality,
                             onSpawned: (Item spawnedItem) =>
                             {
-                                onItemSpawned(spawnedItem, tempUser);
+                                onItemSpawned(spawnedItem, tempUser, invSlot);
                                 spawnedItem.Quality = quality;
                                 spawnedItem.StolenDuringRound = ingredientsStolen;
                                 spawnedItem.AllowStealing = ingredientsAllowStealing;
@@ -517,7 +518,7 @@ namespace Barotrauma.Items.Components
                         Entity.Spawner.AddItemToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * outCondition, quality,
                             onSpawned: (Item spawnedItem) =>
                             {
-                                onItemSpawned(spawnedItem, tempUser);
+                                onItemSpawned(spawnedItem, tempUser, invSlot);
                                 spawnedItem.Quality = quality;
                                 spawnedItem.StolenDuringRound = ingredientsStolen;
                                 spawnedItem.AllowStealing = ingredientsAllowStealing;
@@ -527,14 +528,27 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                void onItemSpawned(Item spawnedItem, Character user)
+                void onItemSpawned(Item spawnedItem, Character user, InvSlotType slot)
                 {
-                    if (user != null && user.TeamID != CharacterTeamType.None)
+                    CharacterTeamType teamID = CharacterTeamType.None;
+                    if (user != null)
+                    {
+                        teamID = user.TeamID;
+                    }
+                    else if (item.Submarine != null)
+                    {
+                        teamID = item.Submarine.TeamID;
+                    }
+                    if (teamID != CharacterTeamType.None)
                     {
                         foreach (WifiComponent wifiComponent in spawnedItem.GetComponents<WifiComponent>())
                         {
-                            wifiComponent.TeamID = user.TeamID;
+                            wifiComponent.TeamID = teamID;
                         }
+                    }
+                    if (slot != InvSlotType.None)
+                    {
+                        user?.Inventory.TryPutItem(spawnedItem, user, slot.ToEnumerable());
                     }
                     OnItemFabricated?.Invoke(spawnedItem, user);
                 }
@@ -562,7 +576,6 @@ namespace Barotrauma.Items.Components
                     StartFabricating(prevFabricatedItem, prevUser, addToServerLog: false);
                 }
             }
-
         }
 
         /// <summary>

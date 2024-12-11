@@ -172,7 +172,6 @@ namespace FarseerPhysics.Dynamics
             if (bodyB.ShouldCollide(bodyA) == false)
                 return;
 
-            //Check default filter
             if (ShouldCollide(fixtureA, fixtureB) == false)
                 return;
 

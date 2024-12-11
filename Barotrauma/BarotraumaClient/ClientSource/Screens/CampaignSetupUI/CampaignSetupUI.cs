@@ -145,6 +145,7 @@ namespace Barotrauma
             public SettingValue<float> OxygenMultiplier;
             public SettingValue<float> FuelMultiplier;
             public SettingValue<float> MissionRewardMultiplier;
+            public SettingValue<float> ExperienceRewardMultiplier;
             public SettingValue<float> ShopPriceMultiplier;
             public SettingValue<float> ShipyardPriceMultiplier;
             public SettingValue<float> RepairFailMultiplier;
@@ -167,6 +168,7 @@ namespace Barotrauma
                     OxygenMultiplier = OxygenMultiplier.GetValue(),
                     FuelMultiplier = FuelMultiplier.GetValue(),
                     MissionRewardMultiplier = MissionRewardMultiplier.GetValue(),
+                    ExperienceRewardMultiplier = ExperienceRewardMultiplier.GetValue(),
                     ShopPriceMultiplier = ShopPriceMultiplier.GetValue(),
                     ShipyardPriceMultiplier = ShipyardPriceMultiplier.GetValue(),
                     RepairFailMultiplier = RepairFailMultiplier.GetValue(),
@@ -344,6 +346,19 @@ namespace Barotrauma
                 verticalSize,
                 OnValuesChanged);
 
+            // Experience reward multiplier
+            CampaignSettings.MultiplierSettings experienceMultiplierSettings = CampaignSettings.GetMultiplierSettings("ExperienceRewardMultiplier");
+            SettingValue<float> experienceMultiplier = CreateGUIFloatInputCarousel(
+                settingsList.Content,
+                TextManager.Get("campaignoption.experiencerewardmultiplier"),
+                TextManager.Get("campaignoption.experiencerewardmultiplier.tooltip"),
+                prevSettings.ExperienceRewardMultiplier,
+                valueStep: experienceMultiplierSettings.Step,
+                minValue: experienceMultiplierSettings.Min,
+                maxValue: experienceMultiplierSettings.Max,
+                verticalSize,
+                OnValuesChanged);
+
             // Shop buying prices multiplier
             CampaignSettings.MultiplierSettings shopPriceMultiplierSettings = CampaignSettings.GetMultiplierSettings("ShopPriceMultiplier");
             SettingValue<float> shopPriceMultiplier = CreateGUIFloatInputCarousel(
@@ -501,6 +516,7 @@ namespace Barotrauma
                 oxygenMultiplier.SetValue(settings.OxygenMultiplier);
                 fuelMultiplier.SetValue(settings.FuelMultiplier);
                 rewardMultiplier.SetValue(settings.MissionRewardMultiplier);
+                experienceMultiplier.SetValue(settings.ExperienceRewardMultiplier);
                 shopPriceMultiplier.SetValue(settings.ShopPriceMultiplier);
                 shipyardPriceMultiplier.SetValue(settings.ShipyardPriceMultiplier);
                 repairFailMultiplier.SetValue(settings.RepairFailMultiplier);
@@ -530,6 +546,7 @@ namespace Barotrauma
                 OxygenMultiplier = oxygenMultiplier,
                 FuelMultiplier = fuelMultiplier,
                 MissionRewardMultiplier = rewardMultiplier,
+                ExperienceRewardMultiplier = experienceMultiplier,
                 ShopPriceMultiplier = shopPriceMultiplier,
                 ShipyardPriceMultiplier = shipyardPriceMultiplier,
                 RepairFailMultiplier = repairFailMultiplier,

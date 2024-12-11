@@ -188,6 +188,7 @@ namespace Barotrauma
                 {
                     GraphicsSettings gfxSettings = new GraphicsSettings
                     {
+                        Display = 0,
                         RadialDistortion = true,
                         InventoryScale = 1.0f,
                         LightMapScale = 1.0f,
@@ -218,6 +219,7 @@ namespace Barotrauma
                     return retVal;
                 }
 
+                public int Display;
                 public int Width;
                 public int Height;
                 public bool VSync;
@@ -308,6 +310,7 @@ namespace Barotrauma
                     new Dictionary<InputType, KeyOrMouse>()
                     {
                         { InputType.Run, Keys.LeftShift },
+                        { InputType.ToggleRun, Keys.None },
                         { InputType.Attack, Keys.R },
                         { InputType.Crouch, Keys.LeftControl },
                         { InputType.Grab, Keys.G },
@@ -566,7 +569,8 @@ namespace Barotrauma
             bool setGraphicsMode =
                 resolutionChanged ||
                 currentConfig.Graphics.VSync != newConfig.Graphics.VSync ||
-                currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode;
+                currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode ||
+                currentConfig.Graphics.Display != newConfig.Graphics.Display;
 
 #if CLIENT
             bool keybindsChanged = false;

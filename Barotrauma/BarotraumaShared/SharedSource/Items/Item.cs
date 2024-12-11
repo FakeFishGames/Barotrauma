@@ -23,41 +23,65 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, IIgnorable, ISerializableEntity, IServerPositionSync, IClientSerializable
     {
+        #region Lists
+
+        /// <summary>
+        /// A list of every item that exists somewhere in the world. Note that there can be a huge number of items in the list, 
+        /// and you probably shouldn't be enumerating it to find some that match some specific criteria (unless that's done very, very sparsely or during initialization).
+        /// </summary>
         public static readonly List<Item> ItemList = new List<Item>();
 
-        private static readonly HashSet<Item> dangerousItems = new HashSet<Item>();
+        private static readonly HashSet<Item> _dangerousItems = new HashSet<Item>();
 
-        public static IReadOnlyCollection<Item> DangerousItems { get { return dangerousItems; } }
+        public static IReadOnlyCollection<Item> DangerousItems => _dangerousItems;
 
-        private static readonly List<Item> repairableItems = new List<Item>();
+        private static readonly List<Item> _repairableItems = new List<Item>();
 
         /// <summary>
         /// Items that have one more more Repairable component
         /// </summary>
-        public static IReadOnlyCollection<Item> RepairableItems => repairableItems;
+        public static IReadOnlyCollection<Item> RepairableItems => _repairableItems;
 
-        private static readonly List<Item> cleanableItems = new List<Item>();
+        private static readonly List<Item> _cleanableItems = new List<Item>();
 
         /// <summary>
         /// Items that may potentially need to be cleaned up (pickable, not attached to a wall, and not inside a valid container)
         /// </summary>
-        public static IReadOnlyCollection<Item> CleanableItems => cleanableItems;
+        public static IReadOnlyCollection<Item> CleanableItems => _cleanableItems;
 
-        private static readonly HashSet<Item> deconstructItems = new HashSet<Item>();
+        private static readonly HashSet<Item> _deconstructItems = new HashSet<Item>();
 
         /// <summary>
         /// Items that have been marked for deconstruction
         /// </summary>
-        public static HashSet<Item> DeconstructItems => deconstructItems;
+        public static HashSet<Item> DeconstructItems => _deconstructItems;
 
-        private static readonly List<Item> sonarVisibleItems = new List<Item>();
+        private static readonly List<Item> _sonarVisibleItems = new List<Item>();
 
         /// <summary>
         /// Items whose <see cref="ItemPrefab.SonarSize"/> is larger than 0
         /// </summary>
-        public static IReadOnlyCollection<Item> SonarVisibleItems => sonarVisibleItems;
+        public static IReadOnlyCollection<Item> SonarVisibleItems => _sonarVisibleItems;
+
+        private static readonly List<Item> _turretTargetItems = new List<Item>();
+
+        /// <summary>
+        /// Items whose <see cref="ItemPrefab.IsAITurretTarget"/> is true.
+        /// </summary>
+        public static IReadOnlyCollection<Item> TurretTargetItems => _turretTargetItems;
+
+        private static readonly List<Item> _chairItems = new List<Item>();
+
+        /// <summary>
+        /// Items that have the tag <see cref="Tags.ChairItem"/>. Which is an oddly specific thing, but useful as an optimization for NPC AI.
+        /// </summary>
+        public static IReadOnlyCollection<Item> ChairItems => _chairItems;
+
+        #endregion
 
         public new ItemPrefab Prefab => base.Prefab as ItemPrefab;
+
+        public override ContentPackage ContentPackage => Prefab?.ContentPackage;
 
         public static bool ShowLinks = true;
 
@@ -103,8 +127,9 @@ namespace Barotrauma
 #endif
 
         //components that determine the functionality of the item
-        private readonly Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
+        private readonly Dictionary<Type, List<ItemComponent>> componentsByType = new Dictionary<Type, List<ItemComponent>>();
         private readonly List<ItemComponent> components;
+
         /// <summary>
         /// Components that are Active or need to be updated for some other reason (status effects, sounds)
         /// </summary>
@@ -494,6 +519,22 @@ namespace Barotrauma
                     int newHeight = ResizeVertical ? rect.Height : (int)(defaultRect.Height * relativeScale);
                     Rect = new Rectangle(rect.X, rect.Y, newWidth, newHeight);
                 }
+
+                //need to update to get the position of the physics body to match the new center of the item
+                if (body != null)
+                {
+                    if (FullyInitialized)
+                    {
+                        //fully intialized = scaling after the item has been created
+                        //if this happens in the editor, refresh the transform to get the rect to match the position of the physics body
+                        if (Screen.Selected is { IsEditor: true }) { UpdateTransform(); }                           
+                    }
+                    else
+                    {
+                        //scaling during loading -> move the body to the new center of the rect
+                        body.SetTransformIgnoreContacts(ConvertUnits.ToSimUnits(base.Position), body.Rotation);
+                    }
+                }               
 
                 if (components != null)
                 {
@@ -1302,9 +1343,11 @@ namespace Barotrauma
 
             InsertToList();
             ItemList.Add(this);
-            if (Prefab.IsDangerous) { dangerousItems.Add(this); }
-            if (Repairables.Any()) { repairableItems.Add(this); }
-            if (Prefab.SonarSize > 0.0f) { sonarVisibleItems.Add(this); }
+            if (Prefab.IsDangerous) { _dangerousItems.Add(this); }
+            if (Repairables.Any()) { _repairableItems.Add(this); }
+            if (Prefab.SonarSize > 0.0f) { _sonarVisibleItems.Add(this); }
+            if (Prefab.IsAITurretTarget) { _turretTargetItems.Add(this); }
+            if (Prefab.Tags.Contains(Barotrauma.Tags.ChairItem)) { _chairItems.Add(this); }
             CheckCleanable();
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
@@ -1484,17 +1527,24 @@ namespace Barotrauma
             };
 
             Type type = component.GetType();
-            if (!componentsByType.ContainsKey(type))
+            CacheComponent(type);
+            Type baseType = type.BaseType;
+            while (baseType != null)
             {
-                componentsByType.Add(type, component);
-                Type baseType = type.BaseType;
-                while (baseType != null && baseType != typeof(ItemComponent))
+                CacheComponent(baseType);
+                baseType = baseType.BaseType;
+            }
+            
+            void CacheComponent(Type t)
+            {
+                if (!componentsByType.TryGetValue(t, out List<ItemComponent> cachedComponents))
                 {
-                    if (!componentsByType.ContainsKey(baseType))
-                    {
-                        componentsByType.Add(baseType, component);
-                    }
-                    baseType = baseType.BaseType;
+                    cachedComponents = new List<ItemComponent>();
+                    componentsByType.Add(t, cachedComponents);
+                }
+                if (!cachedComponents.Contains(component))
+                {
+                    cachedComponents.Add(component);
                 }
             }
         }
@@ -1531,15 +1581,11 @@ namespace Barotrauma
 
         public T GetComponent<T>() where T : ItemComponent
         {
-            if (componentsByType.TryGetValue(typeof(T), out ItemComponent component))
+            if (componentsByType.TryGetValue(typeof(T), out List<ItemComponent> matchingComponents))
             {
-                return (T)component;
+                return (T)matchingComponents.First();
             }
-            if (typeof(T) == typeof(ItemComponent))
-            {
-                return (T)components.FirstOrDefault();
-            }            
-            return default;
+            return null;
         }
 
         public IEnumerable<T> GetComponents<T>()
@@ -1548,8 +1594,11 @@ namespace Barotrauma
             {
                 return components.Cast<T>();
             }
-            if (!componentsByType.ContainsKey(typeof(T))) { return Enumerable.Empty<T>(); }
-            return components.Where(c => c is T).Cast<T>();
+            if (componentsByType.TryGetValue(typeof(T), out List<ItemComponent> matchingComponents))
+            {
+                return matchingComponents.Cast<T>();
+            }
+            return Enumerable.Empty<T>();
         }
 
         public float GetQualityModifier(Quality.StatType statType)
@@ -1560,7 +1609,7 @@ namespace Barotrauma
         public void RemoveContained(Item contained)
         {
             ownInventory?.RemoveItem(contained);
-            contained.Container = null;            
+            contained.Container = null;
         }
 
         public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true, bool setPrevTransform = true)
@@ -1585,14 +1634,7 @@ namespace Barotrauma
                 try
                 {
 #endif
-                    if (!body.PhysEnabled || Submarine.Unloading)
-                    {
-                        body.SetTransformIgnoreContacts(simPosition, rotation, setPrevTransform);
-                    }
-                    else
-                    {
-                        body.SetTransform(simPosition, rotation, setPrevTransform);
-                    }
+                    body.SetTransformIgnoreContacts(simPosition, rotation, setPrevTransform);
 #if DEBUG
                 }
                 catch (Exception e)
@@ -1648,14 +1690,14 @@ namespace Barotrauma
                 Prefab.PreferredContainers.Any() &&
                 (container == null || container.HasTag(Barotrauma.Tags.AllowCleanup)))
             {
-                if (!cleanableItems.Contains(this))
+                if (!_cleanableItems.Contains(this))
                 {
-                    cleanableItems.Add(this);
+                    _cleanableItems.Add(this);
                 }
             }
             else
             {
-                cleanableItems.Remove(this);
+                _cleanableItems.Remove(this);
             }
         }
 
@@ -1844,9 +1886,9 @@ namespace Barotrauma
 
         public void SetContainedItemPositions()
         {
-            foreach (ItemComponent component in components)
+            foreach (var ownInventory in OwnInventories)
             {
-                (component as ItemContainer)?.SetContainedItemPositions();
+                ownInventory.Container.SetContainedItemPositions();
             }
         }
         
@@ -2505,15 +2547,15 @@ namespace Barotrauma
 
             if (Submarine == null && prevSub != null)
             {
-                body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+                body.SetTransformIgnoreContacts(body.SimPosition + prevSub.SimPosition, body.Rotation);
             }
             else if (Submarine != null && prevSub == null)
             {
-                body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+                body.SetTransformIgnoreContacts(body.SimPosition - Submarine.SimPosition, body.Rotation);
             }
             else if (Submarine != null && prevSub != null && Submarine != prevSub)
             {
-                body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
+                body.SetTransformIgnoreContacts(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
             }
 
             if (Submarine != prevSub)
@@ -3404,7 +3446,7 @@ namespace Barotrauma
                     }
                     else if (setTransform)
                     {
-                        body.SetTransform(dropper.SimPosition, 0.0f);
+                        body.SetTransformIgnoreContacts(dropper.SimPosition, 0.0f);
                     }
                 }
             }
@@ -4075,7 +4117,7 @@ namespace Barotrauma
                 }
             }
 
-            if (element.GetAttributeBool("markedfordeconstruction", false)) { deconstructItems.Add(item); }
+            if (element.GetAttributeBool("markedfordeconstruction", false)) { _deconstructItems.Add(item); }
 
             float prevRotation = item.Rotation;
             if (element.GetAttributeBool("flippedx", false)) { item.FlipX(false); }
@@ -4363,7 +4405,7 @@ namespace Barotrauma
                 new XAttribute("name", Prefab.OriginalName),
                 new XAttribute("identifier", Prefab.Identifier),
                 new XAttribute("ID", ID),
-                new XAttribute("markedfordeconstruction", deconstructItems.Contains(this)));
+                new XAttribute("markedfordeconstruction", _deconstructItems.Contains(this)));
 
             if (PendingItemSwap != null)
             {
@@ -4563,11 +4605,13 @@ namespace Barotrauma
         private void RemoveFromLists()
         {
             ItemList.Remove(this);
-            dangerousItems.Remove(this);
-            repairableItems.Remove(this);
-            sonarVisibleItems.Remove(this);
-            cleanableItems.Remove(this);
-            deconstructItems.Remove(this);
+            _dangerousItems.Remove(this);
+            _repairableItems.Remove(this);
+            _sonarVisibleItems.Remove(this);
+            _cleanableItems.Remove(this);
+            _deconstructItems.Remove(this);
+            _turretTargetItems.Remove(this);
+            _chairItems.Remove(this);
             RemoveFromDroppedStack(allowClientExecute: true);
         }
 

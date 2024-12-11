@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
                 Hull hull = Entity.FindEntityByID(hullID) as Hull;
                 item.Submarine = submarine;
                 item.CurrentHull = hull;
-                item.body.SetTransform(simPosition, item.body.Rotation);
+                item.body.SetTransformIgnoreContacts(simPosition, item.body.Rotation);
 
                 switch (targetType)
                 {

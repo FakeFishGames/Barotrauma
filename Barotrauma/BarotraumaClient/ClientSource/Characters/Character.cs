@@ -250,7 +250,7 @@ namespace Barotrauma
             public Vector2 Position;
             public Vector2 DrawPosition;
             public float MoveUpAmount;
-            public readonly string Text;
+            public readonly RichString Text;
             public readonly Character Character;
             public readonly Submarine Submarine;
             public readonly Vector2 TextSize;
@@ -260,7 +260,7 @@ namespace Barotrauma
 
             public SpeechBubble(Character character, float lifeTime, Color color, string text = "")
             {
-                Text = ToolBox.WrapText(text, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text));
+                Text = RichString.Rich(ToolBox.WrapText(text, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text)));
                 TextSize = GUIStyle.SmallFont.MeasureString(Text);
 
                 Character = character;
@@ -322,7 +322,6 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-
             if (DisableControls || GUI.InputBlockingMenuOpen)
             {
                 foreach (Key key in keys)
@@ -416,6 +415,11 @@ namespace Barotrauma
                 }
 
                 UpdateLocalCursor(cam);
+
+                if (IsKeyHit(InputType.ToggleRun))
+                {
+                    ToggleRun = !ToggleRun;
+                }
 
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 if (GUI.PauseMenuOpen)
@@ -1189,7 +1193,7 @@ namespace Barotrauma
                     Vector2 bubbleSize = bubble.TextSize + Vector2.One * GUI.IntScale(15);
                     speechBubbleIconSliced.Draw(spriteBatch, new RectangleF(iconPos - bubbleSize / 2, bubbleSize), bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha);
                 }
-                GUI.DrawString(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, font: GUIStyle.SmallFont);
+                GUI.DrawStringWithColors(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text.SanitizedValue, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, bubble.Text.RichTextData, font: GUIStyle.SmallFont);
             }
             spriteBatch.End();
         }
@@ -1435,7 +1439,10 @@ namespace Barotrauma
 
         partial void OnTalentGiven(TalentPrefab talentPrefab)
         {
-            AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier).Value, GUIStyle.Yellow, playSound: this == Controlled);
+            if (!talentPrefab.IsHiddenExtraTalent)
+            {
+                AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier).Value, GUIStyle.Yellow, playSound: this == Controlled);
+            }
         }
     }
 }

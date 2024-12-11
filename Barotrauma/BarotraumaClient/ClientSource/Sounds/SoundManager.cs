@@ -670,6 +670,7 @@ namespace Barotrauma.Sounds
                     DebugConsole.ThrowError("Playback device has been disconnected. You can select another available device in the settings.");
                     SetAudioOutputDevice("<disconnected>");
                     Disconnected = true;
+                    TryRefreshDevice();
                     return;
                 }
             }
@@ -883,6 +884,53 @@ namespace Barotrauma.Sounds
             if (!Alc.CloseDevice(alcDevice) && !GameMain.IsExiting)
             {
                 throw new Exception("Failed to close ALC device!");
+            }
+        }
+        
+        public static void TryRefreshDevice()
+        {
+            DebugConsole.NewMessage("Refreshing audio playback device");
+            
+            List<string> deviceList = Alc.GetStringList(IntPtr.Zero, Alc.OutputDevicesSpecifier).ToList();
+            int alcError = Alc.GetError(IntPtr.Zero);
+            if (alcError != Alc.NoError)
+            {
+                DebugConsole.ThrowError("Failed to list available audio playback devices: " + alcError.ToString());
+                return;
+            }
+            
+            if (deviceList.Any())
+            {
+                string device;
+                
+                if (deviceList.Find(n => n.Equals(GameSettings.CurrentConfig.Audio.AudioOutputDevice, StringComparison.OrdinalIgnoreCase))
+                    is string availablePreviousDevice)
+                {
+                    DebugConsole.NewMessage($" Previous device choice available: {availablePreviousDevice}");
+                    device = availablePreviousDevice;
+                }
+                else
+                {
+                    device = Alc.GetString(IntPtr.Zero, Alc.DefaultDeviceSpecifier);
+                    DebugConsole.NewMessage($" Reverting to default device: {device}");
+                }
+                
+                if (string.IsNullOrEmpty(device))
+                {
+                    device = deviceList[0];
+                    DebugConsole.NewMessage($" No default device found, resorting to first available device: {device}");
+                }
+                
+                // Save the new device choice and initialize it
+                var currentConfig = GameSettings.CurrentConfig;
+                currentConfig.Audio.AudioOutputDevice = device;
+                GameSettings.SetCurrentConfig(currentConfig);
+                GameMain.SoundManager.InitializeAlcDevice(device);
+            }
+            
+            if (GUI.SettingsMenuOpen)
+            {
+                SettingsMenu.Instance?.CreateAudioAndVCTab(true);
             }
         }
     }

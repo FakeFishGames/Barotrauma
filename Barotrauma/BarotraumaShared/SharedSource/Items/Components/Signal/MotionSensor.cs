@@ -15,6 +15,9 @@ namespace Barotrauma.Items.Components
         private Vector2 detectOffset;
 
         private float updateTimer;
+        
+        [Serialize(false, IsPropertySaveable.No, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
+        public bool MotionDetected { get; set; }
 
         [Flags]
         public enum TargetType
@@ -26,14 +29,25 @@ namespace Barotrauma.Items.Components
             Any = Human | Monster | Wall | Pet,
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
-        public bool MotionDetected { get; set; }
-
+        private bool triggerFromHumans = true;
+        private bool triggerFromPets = true;
+        private bool triggerFromMonsters = true;
+        private TargetType _target;
+        
         [InGameEditable, Serialize(TargetType.Any, IsPropertySaveable.Yes, description: "Which kind of targets can trigger the sensor?", alwaysUseInstanceValues: true)]
         public TargetType Target
         {
-            get;
-            set;
+            get => _target;
+            set
+            {
+                if (_target != value)
+                {
+                    _target = value;
+                    triggerFromHumans = Target.HasFlag(TargetType.Human);
+                    triggerFromPets = Target.HasFlag(TargetType.Pet);
+                    triggerFromMonsters = Target.HasFlag(TargetType.Monster);
+                }
+            }
         }
         
         [Editable, Serialize("", IsPropertySaveable.Yes, description: "Does the sensor react only to certain characters (species names, groups or tags)? Doesn't have an effect, if the Target Type is incorrect.", alwaysUseInstanceValues: true)]
@@ -263,10 +277,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            bool triggerFromHumans = Target.HasFlag(TargetType.Human);
-            bool triggerFromPets = Target.HasFlag(TargetType.Pet);
-            bool triggerFromMonsters = Target.HasFlag(TargetType.Monster);
+            
             bool hasTriggers = triggerFromHumans || triggerFromPets || triggerFromMonsters;
             if (!hasTriggers) { return; }
             foreach (Character character in Character.CharacterList)
@@ -299,9 +310,6 @@ namespace Barotrauma.Items.Components
         
         public bool TriggersOn(Character character)
         {
-            bool triggerFromHumans = Target.HasFlag(TargetType.Human);
-            bool triggerFromPets = Target.HasFlag(TargetType.Pet);
-            bool triggerFromMonsters = Target.HasFlag(TargetType.Monster);
             bool hasTriggers = triggerFromHumans || triggerFromPets || triggerFromMonsters;
             if (!hasTriggers) { return false; }
             return TriggersOn(character, triggerFromHumans, triggerFromPets, triggerFromMonsters);

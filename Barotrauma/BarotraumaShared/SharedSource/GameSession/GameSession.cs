@@ -482,6 +482,7 @@ namespace Barotrauma
                 {
                     Random rand = new MTRandom(ToolBox.StringToInt(levelSeed));
                     LocationType locationType = LocationType.Prefabs
+                        .OrderBy(lt => lt.UintIdentifier)
                         .Where(lt => missionPrefab.AllowedLocationTypes.Any(m => m == lt.Identifier))
                         .GetRandom(rand)!;
                     dummyLocations = CreateDummyLocations(levelSeed, locationType);
@@ -1563,12 +1564,14 @@ namespace Barotrauma
                 if (kvp.Key.TryUnwrap(out AccountId? accountId))
                 {
                     permadeathsElement.Add(
-                        new XElement("account"),
+                        new XElement("account",
                             new XAttribute("id", accountId.StringRepresentation),
-                            new XAttribute("permadeathcount", kvp.Value));
+                            new XAttribute("permadeathcount", kvp.Value)));
                 }
             }
             rootElement.Add(permadeathsElement);
+            
+            rootElement.Add(new XAttribute("respawnmode", GameMain.NetworkMember?.ServerSettings?.RespawnMode ?? RespawnMode.None));
             
             ((CampaignMode)GameMode).Save(doc.Root, isSavingOnLoading);
 

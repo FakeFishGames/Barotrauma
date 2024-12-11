@@ -251,6 +251,7 @@ namespace Barotrauma
                     textContent,
                     mission.Difficulty ?? 0,
                     mission.Prefab.Icon, mission.Prefab.IconColor,
+                    mission.GetDifficultyToolTipText(),
                     out GUIImage missionIcon);
 
                 if (selectedMissions.Contains(mission))
@@ -442,13 +443,14 @@ namespace Barotrauma
                 textContent,
                 difficultyIconCount: 0,
                 icon, GUIStyle.Red,
+                difficultyTooltipText: null,
                 out GUIImage missionIcon);
             UpdateMissionStateIcon(traitorResults.VotedCorrectTraitor, missionIcon, iconAnimDelay);
             return content;
         }
 
         public static GUIComponent CreateMissionEntry(GUIComponent parent, LocalizedString header, List<LocalizedString> textContent, int difficultyIconCount, 
-            Sprite icon, Color iconColor, out GUIImage missionIcon)
+            Sprite icon, Color iconColor, RichString difficultyTooltipText, out GUIImage missionIcon)
         {
             int spacing = GUI.IntScale(5);
 
@@ -499,7 +501,8 @@ namespace Barotrauma
             {
                 difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(new Point(missionTextGroup.Rect.Width, defaultLineHeight), parent: missionTextGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
                 {
-                    AbsoluteSpacing = 1
+                    AbsoluteSpacing = 1,
+                    CanBeFocused = true
                 };
                 difficultyIndicatorGroup.RectTransform.MinSize = new Point(0, defaultLineHeight);
                 var difficultyColor = Mission.GetDifficultyColor(difficultyIconCount);
@@ -507,8 +510,8 @@ namespace Barotrauma
                 {
                     new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest), "DifficultyIndicator", scaleToFit: true)
                     {
-                        CanBeFocused = false,
-                        Color = difficultyColor
+                        Color = difficultyColor,
+                        ToolTip = difficultyTooltipText
                     };
                 }
             }

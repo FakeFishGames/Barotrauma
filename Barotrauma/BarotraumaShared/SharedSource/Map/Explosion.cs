@@ -317,9 +317,9 @@ namespace Barotrauma
                 Color flashColor = Color.Lerp(Color.Transparent, screenColor, Math.Max((screenColorRange - cameraDist) / screenColorRange, 0.0f));
                 Screen.Selected.ColorFade(flashColor, Color.Transparent, screenColorDuration);
             }
-            foreach (Item item in Item.ItemList)
+            foreach (Sonar sonar in Sonar.SonarList)
             {
-                item.GetComponent<Sonar>()?.RegisterExplosion(this, worldPosition);
+                sonar.RegisterExplosion(this, worldPosition);
             }
 #endif
 

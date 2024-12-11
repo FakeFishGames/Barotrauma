@@ -282,7 +282,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (!target.CustomInteractHUDText.IsNullOrEmpty() && target.AllowCustomInteract)
+                if (target.ShouldShowCustomInteractText)
                 {
                     texts.Add(target.CustomInteractHUDText);
                     textColors.Add(GUIStyle.Green);

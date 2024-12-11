@@ -56,7 +56,8 @@ namespace Barotrauma
             WaterInHulls,
             LowOxygenOutputWarning,
             TooLargeForEndGame,
-            NotEnoughContainers
+            NotEnoughContainers,
+            NoSuitableBrainRooms
         }
 
         public static Vector2 MouseDragStart = Vector2.Zero;
@@ -1308,7 +1309,7 @@ namespace Barotrauma
             }
 
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
-                text: name, textAlignment: Alignment.Center, font: GUIStyle.SmallFont)
+                text: RichString.Rich(name), textAlignment: Alignment.Center, font: GUIStyle.SmallFont)
             {
                 CanBeFocused = false
             };
@@ -1320,7 +1321,7 @@ namespace Barotrauma
                 textBlock.Text = frame.ToolTip = ep.Identifier.Value;
                 textBlock.TextColor = GUIStyle.Red;
             }
-            textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
+            textBlock.Text = ToolBox.LimitString(textBlock.Text.SanitizedString, textBlock.Font, textBlock.Rect.Width);
 
             if (ep.Category == MapEntityCategory.ItemAssembly
                 && ep.ContentPackage?.Files.Length == 1
@@ -5792,7 +5793,7 @@ namespace Barotrauma
                     foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
                     {
                         lightComponent.Light.Color = 
-                            (item.body == null || item.body.Enabled || item.ParentInventory is ItemInventory { Container.HideItems: true }) &&
+                            (item.body == null || item.body.Enabled || item.ParentInventory is ItemInventory { Container.HideItems: false }) &&
                             /*the light is only visible when worn -> can't be visible in the editor*/
                             lightComponent.Parent is not Wearable ?
                                 lightComponent.LightColor :

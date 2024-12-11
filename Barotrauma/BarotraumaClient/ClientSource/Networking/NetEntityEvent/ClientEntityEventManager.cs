@@ -154,13 +154,25 @@ namespace Barotrauma.Networking
                 //16 = entity ID, 8 = msg length
                 if (msg.BitPosition + 16 + 8 > msg.LengthBits)
                 {
-                    string errorMsg = $"Error while reading a message from the server. Entity event data exceeds the size of the buffer (current position: {msg.BitPosition}, length: {msg.LengthBits}).";
+                    UInt16 potentialEntityId = Entity.NullEntityID;
+                    try
+                    {
+                        potentialEntityId = msg.ReadUInt16();
+                    }
+                    catch
+                    {
+                        //failed to read the ID, do nothing (we would've just used it for the error message)
+                    }
+                    Entity targetEntity = Entity.FindEntityByID(potentialEntityId);
+
+                    string errorMsg = $"Error while reading a message from the server (entity: {targetEntity?.ToString() ?? "unknown"}).";
+                    errorMsg += $" Entity event data exceeds the size of the buffer (current position: {msg.BitPosition}, length: {msg.LengthBits}).";
                     errorMsg += "\nPrevious entities:";
                     for (int j = tempEntityList.Count - 1; j >= 0; j--)
                     {
                         errorMsg += "\n" + (tempEntityList[j] == null ? "NULL" : tempEntityList[j].ToString());
                     }
-                    DebugConsole.ThrowError(errorMsg);
+                    DebugConsole.ThrowError(errorMsg, contentPackage: targetEntity?.ContentPackage);
                     return false;
                 }
 
@@ -172,7 +184,7 @@ namespace Barotrauma.Networking
                     if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("received msg " + thisEventID + " (null entity)",
-                            Microsoft.Xna.Framework.Color.Orange);
+                            Color.Orange);
                     }
                     tempEntityList.Add(null);
                     if (thisEventID == (UInt16)(lastReceivedID + 1)) { lastReceivedID++; }
@@ -187,7 +199,7 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)
                 {
-                    if (thisEventID != (UInt16) (lastReceivedID + 1))
+                    if (thisEventID != (UInt16)(lastReceivedID + 1))
                     {
                         if (GameSettings.CurrentConfig.VerboseLogging)
                         {
@@ -195,7 +207,7 @@ namespace Barotrauma.Networking
                                 "Received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
                                 NetIdUtils.IdMoreRecent(thisEventID, (UInt16)(lastReceivedID + 1))
                                     ? GUIStyle.Red
-                                    : Microsoft.Xna.Framework.Color.Yellow);
+                                    : Color.Yellow);
                         }
                     }
                     else if (entity == null)
@@ -215,12 +227,18 @@ namespace Barotrauma.Networking
                     if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("received msg " + thisEventID + " (" + entity.ToString() + ")",
-                            Microsoft.Xna.Framework.Color.Green);
+                            Color.Green);
                     }
                     lastReceivedID++;
-                    ReadEvent(msg, entity, sendingTime);
-                    msg.ReadPadBits();
-
+                    try
+                    {
+                        ReadEvent(msg, entity, sendingTime);
+                        msg.ReadPadBits();
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new EntityEventException("Failed to read event." , entity as Entity, exception);
+                    }
                     if (msg.BitPosition != msgPosition + msgLength * 8)
                     {
                         var prevEntity = tempEntityList.Count >= 2 ? tempEntityList[tempEntityList.Count - 2] : null;
@@ -231,7 +249,7 @@ namespace Barotrauma.Networking
 
                         GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:BitPosMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         
-                        throw new Exception(errorMsg);
+                        throw new EntityEventException(errorMsg, entity as Entity);
                     }
                 }
             }

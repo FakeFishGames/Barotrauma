@@ -339,11 +339,11 @@ namespace Barotrauma
                 InitProjSpecific(element);
             }
 
-            //use the maximum width of the sprite as the minimum surface width if no value is given
-            if (element != null && !element.Attributes("minsurfacewidth").Any())
+            //use (a bit less than) the maximum width of the sprite as the minimum surface width if no value is given
+            if (element != null && element.GetAttribute("minsurfacewidth") == null)
             {
-                if (Sprites.Any()) MinSurfaceWidth = Sprites[0].size.X * MaxSize;
-                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * MaxSize);
+                if (Sprites.Any()) { MinSurfaceWidth = Sprites[0].size.X * MaxSize * 0.8f; }
+                if (DeformableSprite != null) { MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * MaxSize * 0.8f); }
             }
         }
 

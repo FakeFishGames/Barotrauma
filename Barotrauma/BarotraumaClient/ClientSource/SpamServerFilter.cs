@@ -48,6 +48,8 @@ namespace Barotrauma
 
         private static bool IsFiltered(ServerInfo info, SpamServerFilterType type, string value)
         {
+            if (info == null) { return true; }
+
             string desc = info.ServerMessage,
                    name = info.ServerName;
 

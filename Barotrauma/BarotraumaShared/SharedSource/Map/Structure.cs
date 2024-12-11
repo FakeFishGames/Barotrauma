@@ -53,6 +53,8 @@ namespace Barotrauma
         const float LeakThreshold = 0.1f;
         const float BigGapThreshold = 0.7f;
 
+        public override ContentPackage ContentPackage => Prefab?.ContentPackage;
+
 #if CLIENT
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 #endif

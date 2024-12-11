@@ -31,7 +31,7 @@ namespace Barotrauma.Networking
         /// </summary>
         public OrderChatMessage(Order order, Character targetCharacter, Character sender, bool isNewOrder = true)
             : this(order,
-                   order?.GetChatMessage(targetCharacter?.Name, 
+                   order?.GetChatMessage(targetCharacter?.DisplayName, 
                        (order.TargetEntity as Hull ?? sender?.CurrentHull)?.DisplayName?.Value, 
                        givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
                    targetCharacter, sender, isNewOrder)
@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
             => entity switch
             {
                 null => null,
-                Character character => character.Name,
+                Character character => character.DisplayName,
                 Item it => it.Name,
                 _ => throw new ArgumentException("Entity is not a character or item", nameof(entity))
             };

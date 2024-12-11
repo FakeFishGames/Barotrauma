@@ -504,10 +504,8 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine != CanEnterSubmarine.True) 
-                { 
-                    continue; 
-                }
+                //character inside some sub, no need to displace
+                if (c.Submarine != null) { continue; }
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
@@ -525,13 +523,11 @@ namespace Barotrauma
                         continue;
                     }
 
-
                     //"+ translatedir" in order to move the character slightly away from the wall
                     c.AnimController.SetPosition(ConvertUnits.ToSimUnits(c.WorldPosition + (intersection - limb.WorldPosition)) + translateDir);
 
-                    return;
+                    break;
                 }
-
             }
         }
 

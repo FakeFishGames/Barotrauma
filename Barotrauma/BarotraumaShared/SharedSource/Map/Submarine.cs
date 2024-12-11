@@ -1522,7 +1522,14 @@ namespace Barotrauma
             if (entity.Submarine == null) { return false; }
             if (includingConnectedSubs)
             {
-                return GetConnectedSubs().Any(s => s == entity.Submarine && (allowDifferentTeam || entity.Submarine.TeamID == TeamID) && (allowDifferentType || entity.Submarine.Info.Type == Info.Type));
+                // Performance-sensitive code -> implemented without Linq.
+                foreach (Submarine s in connectedSubs)
+                {
+                    if (s == entity.Submarine && (allowDifferentTeam || entity.Submarine.TeamID == TeamID) && (allowDifferentType || entity.Submarine.Info.Type == Info.Type))
+                    {
+                        return true;
+                    }
+                }
             }
             return false;
         }
@@ -1938,8 +1945,8 @@ namespace Barotrauma
             {
                 bool hasThalamus = false;
 
-                var wreckAiEntities = WreckAIConfig.Prefabs.Select(p => p.Entity).ToImmutableHashSet();
-                var prefabsOnSub = GetItems(true).Select(i => i.Prefab).Distinct().ToImmutableHashSet();
+                var wreckAiEntities = WreckAIConfig.Prefabs.Select(p => p.Entity);
+                var prefabsOnSub = GetItems(true).Select(i => i.Prefab).Distinct();
 
                 foreach (ItemPrefab prefab in prefabsOnSub)
                 {
@@ -2077,7 +2084,6 @@ namespace Barotrauma
 #if CLIENT
                 RoundSound.RemoveAllRoundSounds();
                 GameMain.LightManager?.ClearLights();
-                depthSortedDamageable.Clear();
 #endif
                 var _loaded = new List<Submarine>(loaded);
                 foreach (Submarine sub in _loaded)

@@ -443,10 +443,10 @@ namespace Barotrauma.Lights
 
         public bool Intersects(Rectangle rect)
         {
-            if (!Enabled) return false;
+            if (!Enabled) { return false; }
 
             Rectangle transformedBounds = BoundingBox;
-            if (ParentEntity != null && ParentEntity.Submarine != null)
+            if (ParentEntity is { Submarine: not null })
             {
                 transformedBounds.X += (int)ParentEntity.Submarine.Position.X;
                 transformedBounds.Y += (int)ParentEntity.Submarine.Position.Y;

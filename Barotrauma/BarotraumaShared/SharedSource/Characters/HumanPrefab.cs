@@ -33,6 +33,12 @@ namespace Barotrauma
         [Serialize(0, IsPropertySaveable.No)]
         public int ExperiencePoints { get; private set; }
 
+        [Serialize(0, IsPropertySaveable.No)]
+        public int BaseSalary { get; private set; }
+
+        [Serialize(1f, IsPropertySaveable.No)]
+        public float SalaryMultiplier { get; private set; }
+
         private readonly HashSet<Identifier> tags = new HashSet<Identifier>();
 
         [Serialize("", IsPropertySaveable.Yes)]
@@ -247,8 +253,8 @@ namespace Barotrauma
                     float newSkill = skill.Level * SkillMultiplier;
                     skill.IncreaseSkill(newSkill - skill.Level, increasePastMax: false);
                 }
-                characterInfo.Salary = characterInfo.CalculateSalary();
             }
+            characterInfo.Salary = characterInfo.CalculateSalary(BaseSalary, SalaryMultiplier);
             characterInfo.HumanPrefabIds = (NpcSetIdentifier, Identifier);
             characterInfo.GiveExperience(ExperiencePoints);
             return characterInfo;

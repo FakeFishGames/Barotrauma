@@ -149,7 +149,7 @@ namespace Barotrauma
                                 if (HumanAIController.VisibleHulls.Contains(Target.CurrentHull) && Target.CurrentHull.DisplayName != null)
                                 {
                                     character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget",
-                                        ("[targetname]", Target.Name, FormatCapitals.No),
+                                        ("[targetname]", Target.DisplayName, FormatCapitals.No),
                                         ("[roomname]", Target.CurrentHull.DisplayName, FormatCapitals.Yes)).Value,
                                         null, 1.0f, $"foundunconscioustarget{Target.Name}".ToIdentifier(), 60.0f);
                                 }
@@ -239,7 +239,7 @@ namespace Barotrauma
                     if (Target.CurrentHull?.DisplayName != null)
                     {
                         character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget",
-                            ("[targetname]", Target.Name, FormatCapitals.No),
+                            ("[targetname]", Target.DisplayName, FormatCapitals.No),
                             ("[roomname]", Target.CurrentHull.DisplayName, FormatCapitals.Yes)).Value,
                             null, 1.0f, $"foundwoundedtarget{Target.Name}".ToIdentifier(), 60.0f);
                     }
@@ -287,6 +287,8 @@ namespace Barotrauma
                     currentTreatmentSuitabilities, 
                     limb: Target.CharacterHealth.GetAfflictionLimb(affliction), 
                     user: character,
+                    checkTreatmentThreshold: true,
+                    checkTreatmentSuggestionThreshold: false,
                     predictFutureDuration: 10.0f);
 
                 foreach (KeyValuePair<Identifier, float> treatmentSuitability in currentTreatmentSuitabilities)
@@ -330,7 +332,10 @@ namespace Barotrauma
             {
                 //get "overall" suitability for no specific limb at this point
                 Target.CharacterHealth.GetSuitableTreatments(
-                    currentTreatmentSuitabilities, user: character, predictFutureDuration: 10.0f);
+                    currentTreatmentSuitabilities, user: character,
+                    checkTreatmentThreshold: true,
+                    checkTreatmentSuggestionThreshold: false,
+                    predictFutureDuration: 10.0f);
                 //didn't have any suitable treatments available, try to find some medical items
                 if (currentTreatmentSuitabilities.Any(s => s.Value > cprSuitability))
                 {
@@ -387,7 +392,7 @@ namespace Barotrauma
                         if (Target != character && character.IsOnPlayerTeam)
                         {
                             character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments",
-                                ("[targetname]", Target.Name, FormatCapitals.No),
+                                ("[targetname]", Target.DisplayName, FormatCapitals.No),
                                 ("[treatmentlist]", itemListStr, FormatCapitals.Yes)).Value,
                                 null, 2.0f, $"listrequiredtreatments{Target.Name}".ToIdentifier(), 60.0f);
                         }
@@ -483,7 +488,7 @@ namespace Barotrauma
             if (IsCompleted && Target != character && character.IsOnPlayerTeam)
             {
                 string textTag = performedCpr ? "DialogTargetResuscitated" : "DialogTargetHealed";
-                string message = TextManager.GetWithVariable(textTag, "[targetname]", Target.Name)?.Value;
+                string message = TextManager.GetWithVariable(textTag, "[targetname]", Target.DisplayName)?.Value;
                 character.Speak(message, delay: 1.0f, identifier: $"targethealed{Target.Name}".ToIdentifier(), minDurationBetweenSimilar: 60.0f);
             }
             return IsCompleted;

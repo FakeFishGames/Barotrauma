@@ -112,8 +112,8 @@ namespace FarseerPhysics.Common
                         phase--;
                     }
 
-                    vertices.Add(posOffset + new Vector2(xRadius * (float)Math.Cos(stepSize * -(i + phase)),
-                                                         -yRadius * (float)Math.Sin(stepSize * -(i + phase))));
+                    vertices.Add(posOffset + new Vector2(xRadius * MathF.Cos(stepSize * -(i + phase)),
+                                                         -yRadius * MathF.Sin(stepSize * -(i + phase))));
                 }
             }
 
@@ -160,8 +160,8 @@ namespace FarseerPhysics.Common
 
             vertices.Add(new Vector2(xRadius, 0));
             for (int i = numberOfEdges - 1; i > 0; --i)
-                vertices.Add(new Vector2(xRadius * (float)Math.Cos(stepSize * i),
-                                         -yRadius * (float)Math.Sin(stepSize * i)));
+                vertices.Add(new Vector2(xRadius * MathF.Cos(stepSize * i),
+                                         -yRadius * MathF.Sin(stepSize * i)));
 
             return vertices;
         }
@@ -177,8 +177,8 @@ namespace FarseerPhysics.Common
             float stepSize = radians / sides;
             for (int i = sides - 1; i > 0; i--)
             {
-                vertices.Add(new Vector2(radius * (float)Math.Cos(stepSize * i),
-                                         radius * (float)Math.Sin(stepSize * i)));
+                vertices.Add(new Vector2(radius * MathF.Cos(stepSize * i),
+                                         radius * MathF.Sin(stepSize * i)));
             }
 
             return vertices;
@@ -252,8 +252,8 @@ namespace FarseerPhysics.Common
             float stepSize = MathHelper.Pi / topEdges;
             for (int i = 1; i < topEdges; i++)
             {
-                vertices.Add(new Vector2(topRadius * (float)Math.Cos(stepSize * i),
-                                         topRadius * (float)Math.Sin(stepSize * i) + newHeight));
+                vertices.Add(new Vector2(topRadius * MathF.Cos(stepSize * i),
+                                         topRadius * MathF.Sin(stepSize * i) + newHeight));
             }
 
             vertices.Add(new Vector2(-topRadius, newHeight));
@@ -264,8 +264,8 @@ namespace FarseerPhysics.Common
             stepSize = MathHelper.Pi / bottomEdges;
             for (int i = 1; i < bottomEdges; i++)
             {
-                vertices.Add(new Vector2(-bottomRadius * (float)Math.Cos(stepSize * i),
-                                         -bottomRadius * (float)Math.Sin(stepSize * i) - newHeight));
+                vertices.Add(new Vector2(-bottomRadius * MathF.Cos(stepSize * i),
+                                         -bottomRadius * MathF.Sin(stepSize * i) - newHeight));
             }
 
             vertices.Add(new Vector2(bottomRadius, -newHeight));
@@ -298,24 +298,24 @@ namespace FarseerPhysics.Common
                 {
                     vertices.Add(
                         new Vector2(radius *
-                                    (float)Math.Cos(stepSize * i + toothAngleStepSize * 2f + toothTipStepSize),
+                                    MathF.Cos(stepSize * i + toothAngleStepSize * 2f + toothTipStepSize),
                                     -radius *
-                                    (float)Math.Sin(stepSize * i + toothAngleStepSize * 2f + toothTipStepSize)));
+                                    MathF.Sin(stepSize * i + toothAngleStepSize * 2f + toothTipStepSize)));
 
                     vertices.Add(
                         new Vector2((radius + toothHeight) *
-                                    (float)Math.Cos(stepSize * i + toothAngleStepSize + toothTipStepSize),
+                                    MathF.Cos(stepSize * i + toothAngleStepSize + toothTipStepSize),
                                     -(radius + toothHeight) *
-                                    (float)Math.Sin(stepSize * i + toothAngleStepSize + toothTipStepSize)));
+                                    MathF.Sin(stepSize * i + toothAngleStepSize + toothTipStepSize)));
                 }
 
                 vertices.Add(new Vector2((radius + toothHeight) *
-                                         (float)Math.Cos(stepSize * i + toothAngleStepSize),
+                                         MathF.Cos(stepSize * i + toothAngleStepSize),
                                          -(radius + toothHeight) *
-                                         (float)Math.Sin(stepSize * i + toothAngleStepSize)));
+                                         MathF.Sin(stepSize * i + toothAngleStepSize)));
 
-                vertices.Add(new Vector2(radius * (float)Math.Cos(stepSize * i),
-                                         -radius * (float)Math.Sin(stepSize * i)));
+                vertices.Add(new Vector2(radius * MathF.Cos(stepSize * i),
+                                         -radius * MathF.Sin(stepSize * i)));
             }
 
             return vertices;

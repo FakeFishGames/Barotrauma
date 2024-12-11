@@ -34,6 +34,18 @@ namespace Barotrauma
 
         public readonly float GlowEffectT;
 
+        private readonly List<Gap> overlappingGaps = new List<Gap>();
+
+        /// <summary>
+        /// Do we need to recheck which gaps are overlapping with this one, and how much they should reduce this gap's flow?
+        /// </summary>
+        private bool overlappingGapsDirty;
+
+        /// <summary>
+        /// How much overlapping gaps reduce the flow rate of this one?
+        /// </summary>
+        private float overlappingGapFlowRateReduction;
+
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;
 
@@ -67,22 +79,29 @@ namespace Barotrauma
             set
             {
                 if (float.IsNaN(value)) { return; }
+                float prevValue = open;
                 if (value > open)
                 {
                     openedTimer = 1.0f;
                 }
-                if (connectedDoor == null && !IsHorizontal && linkedTo.Any(e => e is Hull))
+
+                open = MathHelper.Clamp(value, 0.0f, 1.0f);
+                if (!MathUtils.NearlyEqual(open, prevValue))
                 {
-                    if (value > open && value >= 1.0f)
+                    overlappingGapsDirty = true;
+                    FlagOverlappingGapsDirty();
+                    if (connectedDoor == null && !IsHorizontal && linkedTo.Any(e => e is Hull))
                     {
-                        InformWaypointsAboutGapState(this, open: true);
-                    }
-                    else if (value < open && open >= 1.0f)
-                    {
-                        InformWaypointsAboutGapState(this, open: false);
+                        if (open > prevValue && open >= 1.0f)
+                        {
+                            InformWaypointsAboutGapState(this, open: true);
+                        }
+                        else if (open < prevValue && prevValue >= 1.0f)
+                        {
+                            InformWaypointsAboutGapState(this, open: false);
+                        }
                     }
                 }
-                open = MathHelper.Clamp(value, 0.0f, 1.0f);
 
                 static void InformWaypointsAboutGapState(Gap gap, bool open)
                 {
@@ -205,7 +224,7 @@ namespace Barotrauma
                 Physics.CollisionWall, 
                 Physics.CollisionCharacter,
                 findNewContacts: false);
-            outsideCollisionBlocker.UserData = $"CollisionBlocker (Gap {ID})";
+            outsideCollisionBlocker.UserData = this;
             outsideCollisionBlocker.Enabled = false;
 #if CLIENT
             Resized += newRect => IsHorizontal = newRect.Width < newRect.Height;
@@ -338,7 +357,11 @@ namespace Barotrauma
             {
                 if (hulls[i] == null) { continue; }
                 linkedTo.Add(hulls[i]);
-                if (!hulls[i].ConnectedGaps.Contains(this)) hulls[i].ConnectedGaps.Add(this);
+                if (!hulls[i].ConnectedGaps.Contains(this)) { hulls[i].ConnectedGaps.Add(this); }
+                foreach (var gap in hulls[i].ConnectedGaps)
+                {
+                    gap.overlappingGapsDirty = true;
+                }
             }
         }
 
@@ -363,6 +386,12 @@ namespace Barotrauma
             if (updateCount < updateInterval) { return; }
             deltaTime *= updateCount;
             updateCount = 0;
+
+            if (overlappingGapsDirty)
+            {
+                RefreshOverlappingGaps();
+                overlappingGapsDirty = false;
+            }
 
             flowForce = Vector2.Zero;
             outsideColliderRaycastTimer -= deltaTime;
@@ -431,7 +460,7 @@ namespace Barotrauma
 
             //a variable affecting the water flow through the gap
             //the larger the gap is, the faster the water flows
-            float sizeModifier = Size / 100.0f * open;
+            float sizeModifier = Size / 100.0f * open * (1.0f - overlappingGapFlowRateReduction);
 
             //horizontal gap (such as a regular door)
             if (IsHorizontal)
@@ -597,7 +626,7 @@ namespace Barotrauma
         {
             //a variable affecting the water flow through the gap
             //the larger the gap is, the faster the water flows
-            float sizeModifier = Size * open * open;
+            float sizeModifier = Size * open * open * (1.0f - overlappingGapFlowRateReduction);
 
             float delta = 500.0f * sizeModifier * deltaTime;
 
@@ -788,6 +817,52 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        private void RefreshOverlappingGaps()
+        {
+            overlappingGapFlowRateReduction = 0.0f;
+            overlappingGaps.Clear();
+            foreach (var linked in linkedTo)
+            {
+                if (linked is not Hull hull) { continue; }
+                foreach (var connectedGap in hull.ConnectedGaps)
+                {
+                    if (connectedGap == this) { continue; }
+                    //let the "more open" gap reduce this gap's flow rate
+                    //or if they're both equally open, let the one that was created first handle it
+                    //(note that we can't use Entity.ID here because gaps on walls don't have IDs)
+                    if (connectedGap.open > open ||
+                        (connectedGap.open == open && connectedGap.CreationIndex < CreationIndex)) 
+                    {
+                        Rectangle intersection = Rectangle.Intersect(rect, connectedGap.rect);
+                        if (intersection.Width > 0 && intersection.Height > 0)
+                        {
+                            //reduce flow rate based on how much of this gap is covered by the connected one, and how open the connected one is
+                            float relativeOverlap = IsHorizontal ? 
+                                intersection.Height / (float)rect.Height : 
+                                intersection.Width / (float)rect.Width;
+                            overlappingGapFlowRateReduction += relativeOverlap * connectedGap.open;
+                        }
+                    }
+                    if (overlappingGapFlowRateReduction >= 1.0f)
+                    {
+                        overlappingGapFlowRateReduction = 1.0f;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mark all gaps that are currently known to overlap with this one as needing a refresh of overlapping gaps
+        /// </summary>
+        private void FlagOverlappingGapsDirty()
+        {
+            foreach (var overlappingGap in overlappingGaps)
+            {
+                overlappingGap.overlappingGapsDirty = true;
+            }
         }
 
         public override void ShallowRemove()

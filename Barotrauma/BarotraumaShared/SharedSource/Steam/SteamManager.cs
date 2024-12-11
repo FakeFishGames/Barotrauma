@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -227,6 +227,18 @@ namespace Barotrauma.Steam
                 return false; 
             }
             achievements = Steamworks.SteamUserStats.Achievements.Where(a => a.State).ToList();
+            return true;
+        }
+
+
+        public static bool TryGetAllAvailableAchievements(out List<Steamworks.Data.Achievement> achievements)
+        {
+            if (!IsInitialized || !Steamworks.SteamClient.IsValid) 
+            {
+                achievements = null;
+                return false; 
+            }
+            achievements = Steamworks.SteamUserStats.Achievements.ToList();
             return true;
         }
 

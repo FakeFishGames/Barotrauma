@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
         [Serialize(100, IsPropertySaveable.No, description: "How many items are placed in a row before starting a new row.")]
         public int ItemsPerRow { get; set; }
 
-        [Serialize(true, IsPropertySaveable.No, description: "Should the inventory of this item be visible when the item is selected.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the inventory of this item be visible when the item is selected. Note that this does not prevent dragging and dropping items to the item.")]
         public bool DrawInventory
         {
             get;
@@ -923,6 +923,8 @@ namespace Barotrauma.Items.Components
 #warning There's some code duplication here and in DrawContainedItems() method, but it's not straightforward to get rid of it, because of slightly different logic and the usage of draw positions vs. positions etc. Should probably be splitted into smaller methods.
         public void SetContainedItemPositions()
         {
+            if (containedItems.Count == 0) { return; }
+
             var rootBody = item.RootContainer?.body ?? item.body;
 
             Vector2 transformedItemPos = GetContainedPosition(
@@ -989,8 +991,7 @@ namespace Barotrauma.Items.Components
                             rotation += -item.RotationRad;
                         }
                         contained.Item.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, rotation);
-                        contained.Item.body.SetPrevTransform(contained.Item.body.SimPosition, contained.Item.body.Rotation);
-                        contained.Item.body.UpdateDrawPosition();
+                        contained.Item.body.UpdateDrawPosition(interpolate: false);
                     }
                     catch (Exception e)
                     {

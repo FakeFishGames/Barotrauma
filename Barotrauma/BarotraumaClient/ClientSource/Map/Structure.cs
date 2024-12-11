@@ -451,7 +451,7 @@ namespace Barotrauma
                         MathUtils.PositiveModulo(-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width * TextureScale.X * Scale),
                         MathUtils.PositiveModulo(-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height * TextureScale.Y * Scale));
 
-                    float rotationRad = rotationForSprite(this.rotationRad, Prefab.BackgroundSprite);
+                    float rotationRad = GetRotationForSprite(this.rotationRad, Prefab.BackgroundSprite);
 
                     Prefab.BackgroundSprite.DrawTiled(
                         spriteBatch,
@@ -492,7 +492,7 @@ namespace Barotrauma
                     advanceY = advanceY.FlipX();
                 }
 
-                float sectionSpriteRotationRad = rotationForSprite(this.rotationRad, Prefab.Sprite);
+                float sectionSpriteRotationRad = GetRotationForSprite(this.rotationRad, Prefab.Sprite);
 
                 for (int i = 0; i < Sections.Length; i++)
                 {
@@ -501,11 +501,17 @@ namespace Barotrauma
                     {
                         float newCutoff = MathHelper.Lerp(0.0f, 0.65f, Sections[i].damage / MaxHealth);
 
-                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
+                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.05f)
                         {
+                            spriteBatch.End();
+                            spriteBatch.Begin(SpriteSortMode.BackToFront,
+                                BlendState.NonPremultiplied, SamplerState.LinearWrap,
+                                null, null,
+                                damageEffect,
+                                Screen.Selected.Cam.Transform);
+
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
-                            damageEffect.Parameters["inColor"].SetValue(color.ToVector4());
 
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -570,9 +576,13 @@ namespace Barotrauma
                 }
             }
 
-            static float rotationForSprite(float rotationRad, Sprite sprite)
+            static float GetRotationForSprite(float rotationRad, Sprite sprite)
             {
-                if (sprite.effects.HasFlag(SpriteEffects.FlipHorizontally) != sprite.effects.HasFlag(SpriteEffects.FlipVertically))
+                // Use bitwise operations instead of HasFlag to avoid boxing, as this is performance-sensitive code.
+                bool flipHorizontally = (sprite.effects & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally;
+                bool flipVertically = (sprite.effects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically;
+                
+                if (flipHorizontally != flipVertically)
                 {
                     rotationRad = -rotationRad;
                 }
@@ -604,6 +614,10 @@ namespace Barotrauma
                         if (GetSection(i).damage > 0)
                         {
                             var textPos = SectionPosition(i, true);
+                            if (Submarine != null)
+                            { 
+                                textPos += (Submarine.DrawPosition - Submarine.Position);
+                            }
                             textPos.Y = -textPos.Y;
                             GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / MaxHealth) * 100f) + "%", Color.Yellow);
                         }

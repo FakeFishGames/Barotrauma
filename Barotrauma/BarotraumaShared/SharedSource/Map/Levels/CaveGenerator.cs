@@ -217,8 +217,13 @@ namespace Barotrauma
         /// Makes the cell rounder by subdividing the edges and offsetting them at the middle
         /// </summary>
         /// <param name="minEdgeLength">How small the individual subdivided edges can be (smaller values produce rounder shapes, but require more geometry)</param>
-        public static void RoundCell(VoronoiCell cell, float minEdgeLength = 500.0f, float roundingAmount = 0.5f, float irregularity = 0.1f)
+        /// <param name="minThickness">How "thin" irregularity is allowed to make parts of the cell. Very high irregularity values can lead to thin "spikes" or even parts where the "spike's" thickness becomes negative and wall segments intersect each other.</param>
+        public static void RoundCell(VoronoiCell cell, float minEdgeLength = 500.0f, float roundingAmount = 0.5f, float irregularity = 0.1f, float minThickness = 0.0f)
         {
+            //we need to make sure the vertices of the wall are still ordered counter-clockwise -
+            //if we deform some vertices so much the cell becomes concave, rendering the triangles will break (parts of the inside of the wall will render outside the edges)
+            var compareCCW = new CompareCCW(cell.Center);
+
             List<GraphEdge> tempEdges = new List<GraphEdge>();
             foreach (GraphEdge edge in cell.Edges)
             {
@@ -231,8 +236,10 @@ namespace Barotrauma
                 Vector2 edgeDiff = edge.Point2 - edge.Point1;
                 Vector2 edgeDir = Vector2.Normalize(edgeDiff);
 
+                float maxExtrusion = float.PositiveInfinity;
+                const float minPassageWidth = 200.0f;
                 //If the edge is next to an empty cell and there's another solid cell at the other side of the empty one,
-                //don't touch this edge. Otherwise we may end up closing off small passages between cells.
+                //we need to calculate how far we can extrude the edge so it doesn't end up closing off small passages between cells.
                 var adjacentEmptyCell = edge.AdjacentCell(cell);
                 if (adjacentEmptyCell?.CellType == CellType.Solid) { adjacentEmptyCell = null; }
                 if (adjacentEmptyCell != null)
@@ -252,8 +259,15 @@ namespace Barotrauma
                     }
                     if (adjacentEdge != null)
                     {
-                        tempEdges.Add(edge);
-                        continue;
+                        maxExtrusion =
+                            new[]
+                            {
+                                Vector2.Distance(edge.Point1, adjacentEdge.Point1),
+                                Vector2.Distance(edge.Point1, adjacentEdge.Point2),
+                                Vector2.Distance(edge.Point1, adjacentEdge.Point2),
+                                Vector2.Distance(edge.Point2, adjacentEdge.Point1),
+                            }.Min();
+                        maxExtrusion = Math.Max(0, maxExtrusion - minPassageWidth);
                     }
                 }
                 List<Vector2> edgePoints = new List<Vector2>();
@@ -274,12 +288,53 @@ namespace Barotrauma
                     else
                     {
 
+                        //value that's 0 at edges, 0.5 at center
                         float centerF = 0.5f - Math.Abs(0.5f - (i / (float)pointCount));
-                        float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.ServerAndClient);
-                        Vector2 extrudedPoint = 
+                        //make the value "curve" from 0 to 1 at the center, instead of going linearly from 0 to 1
+                        centerF = MathF.Sin(centerF * MathHelper.Pi);
+
+                        //magic number intended to make old rounding values behave roughly the same with the new formula
+                        //previously the extrusion increased linearly towards the center, forming a "spike" like "/\"
+                        //now it follows a sine curve, which makes lower values produce rounder results
+                        const float RoundingScale = 0.25f;
+
+                        //magic number intended to make old variance values behave roughly the same with the new formula
+                        //previously a value of 1 would allow a maximum extrusion of 50% of the edge's length at the center,
+                        //now we extrude by the variance at any point on the edge (not more in the center)
+                        const float RandomVarianceScale = 0.25f;
+                        float randomVariance = irregularity * Rand.Range(-0.5f, 0.5f, Rand.RandSync.ServerAndClient);
+
+                        float extrusionAmount = edgeLength * ((roundingAmount * RoundingScale * centerF) + randomVariance * RandomVarianceScale);
+                        extrusionAmount = Math.Min(extrusionAmount, maxExtrusion);
+
+                        Vector2 nonExtrudedPoint =
                             edge.Point1 +
-                            edgeDiff * (i / (float)pointCount) +
-                            edgeNormal * edgeLength * (roundingAmount + randomVariance) * centerF;
+                            edgeDiff * (i / (float)pointCount);
+
+                        Vector2 nextPoint =
+                            edge.Point1 +
+                            edgeDiff * ((i + 1) / (float)pointCount);
+
+                        //"extruding" inwards, need to make sure we don't make the edge poke through the cell from the other side
+                        if (extrusionAmount < 0 && minThickness > 0.0f)
+                        {
+                            foreach (GraphEdge otherEdge in cell.Edges)
+                            {
+                                if (otherEdge == edge) { continue; }
+                                float margin = minThickness * Math.Sign(extrusionAmount);
+                                if (MathUtils.GetLineIntersection(
+                                    nonExtrudedPoint, nonExtrudedPoint + edgeNormal * (extrusionAmount + margin),
+                                    otherEdge.Point1, otherEdge.Point2, areLinesInfinite: false, out Vector2 intersection))
+                                {
+                                    extrusionAmount = Math.Min(extrusionAmount, Vector2.Distance(edge.Point1, intersection)) - margin;
+                                    //make sure we don't "overshoot", fix the inwards extrusion by instead extruding too much outwards
+                                    //(can happen on small cells in caves for example)
+                                    extrusionAmount = Math.Min(extrusionAmount, edge.Length / 2);
+                                }
+                            }
+                        }
+
+                        Vector2 extrudedPoint = nonExtrudedPoint + edgeNormal * extrusionAmount;
 
                         var nearbyCells = Level.Loaded.GetCells(extrudedPoint, searchDepth: 2);
                         bool isInside = false;
@@ -306,13 +361,28 @@ namespace Barotrauma
                             }
                             if (isInside) { break; }
                         }
+                        if (isInside) { continue; }
 
-                        if (!isInside) 
-                        { 
-                            edgePoints.Add(extrudedPoint); 
-                        }                       
+                        //if adding the point would deform the edge so much that the normal of the new edge would point
+                        //in the opposite direction from the undeformed edge's normal, don't allow adding the point
+                        //(that would lead to the edge being "inside out", the wall texture and objects on the wall pointing inwards)
+                        bool isNormalInverted =
+                            Vector2.Dot(edgeNormal, GraphEdge.GetNormal(cell, edgePoints.Last(), extrudedPoint)) < 0 ||
+                            //check that the edge at the other side of the new point doesn't get inverted either
+                            Vector2.Dot(edgeNormal, GraphEdge.GetNormal(cell, extrudedPoint, edge.Point2)) < 0;                       
+                        if (isNormalInverted) { continue; }
+
+                        //make sure extruding the point doesn't change the vertex order
+                        //(they're assumed to be sorted counter-clockwise, and if they're not, the triangles will generate incorrectly)
+                        bool vertexOrderChanged = 
+                            compareCCW.Compare(edgePoints.Last(), nonExtrudedPoint) != compareCCW.Compare(edgePoints.Last(), extrudedPoint) ||
+                            compareCCW.Compare(nonExtrudedPoint, nextPoint) != compareCCW.Compare(extrudedPoint, nextPoint);
+                        if (vertexOrderChanged) { continue; }
+
+                        edgePoints.Add(extrudedPoint);                                  
                     }
                 }
+
 
                 for (int i = 0; i < edgePoints.Count - 1; i++)
                 {
@@ -376,19 +446,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                Vector2 minVert = tempVertices[0];
-                Vector2 maxVert = tempVertices[0];
-                foreach (var vert in tempVertices)
-                {
-                    minVert = new Vector2(
-                        Math.Min(minVert.X, vert.X),
-                        Math.Min(minVert.Y, vert.Y));
-                    maxVert = new Vector2(
-                        Math.Max(maxVert.X, vert.X),
-                        Math.Max(maxVert.Y, vert.Y));
-                }
-                Vector2 center = (minVert + maxVert) / 2;
-                renderTriangles.AddRange(MathUtils.TriangulateConvexHull(tempVertices, center));
+                renderTriangles.AddRange(MathUtils.TriangulateConvexHull(tempVertices, cell.Center));
 
                 if (bodyPoints.Count < 2) { continue; }
 
@@ -411,7 +469,7 @@ namespace Barotrauma
                 if (cell.CellType == CellType.Empty) { continue; }
 
                 cellBody.UserData = cell;
-                var triangles = MathUtils.TriangulateConvexHull(bodyPoints, ConvertUnits.ToSimUnits(center));
+                var triangles = MathUtils.TriangulateConvexHull(bodyPoints, ConvertUnits.ToSimUnits(cell.Center));
                 
                 for (int i = 0; i < triangles.Count; i++)
                 {

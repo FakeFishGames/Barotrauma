@@ -71,7 +71,7 @@ namespace FarseerPhysics.Controllers
                             f = Strength / r2 * worldBody.Mass * controllerBody.Mass * d;
                             break;
                         case GravityType.Linear:
-                            f = Strength / (float)Math.Sqrt(r2) * worldBody.Mass * controllerBody.Mass * d;
+                            f = Strength / MathF.Sqrt(r2) * worldBody.Mass * controllerBody.Mass * d;
                             break;
                     }
 
@@ -92,7 +92,7 @@ namespace FarseerPhysics.Controllers
                             f = Strength / r2 * worldBody.Mass * d;
                             break;
                         case GravityType.Linear:
-                            f = Strength / (float)Math.Sqrt(r2) * worldBody.Mass * d;
+                            f = Strength / MathF.Sqrt(r2) * worldBody.Mass * d;
                             break;
                     }
 

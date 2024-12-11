@@ -63,6 +63,12 @@ namespace Barotrauma
         private float prevZoom;
 
         public float Shake;
+
+        /// <summary>
+        /// Should the camera's transform matrices be automatically updated to match the screen resolution?
+        /// </summary>
+        public bool AutoUpdateToScreenResolution = true;
+
         public Vector2 ShakePosition { get; private set; }
         private float shakeTimer;
 
@@ -198,10 +204,13 @@ namespace Barotrauma
 
         public void UpdateTransform(bool interpolate = true, bool updateListener = true)
         {
-            if (GameMain.GraphicsWidth != Resolution.X ||
-                GameMain.GraphicsHeight != Resolution.Y)
+            if (AutoUpdateToScreenResolution)
             {
-                CreateMatrices();
+                if (GameMain.GraphicsWidth != Resolution.X ||
+                    GameMain.GraphicsHeight != Resolution.Y)
+                {
+                    CreateMatrices();
+                }
             }
 
             Vector2 interpolatedPosition = interpolate ? Timing.Interpolate(prevPosition, position) : position;

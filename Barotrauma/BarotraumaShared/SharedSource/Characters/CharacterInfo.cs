@@ -1282,7 +1282,7 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites();
         
-        public int CalculateSalary()
+        public int CalculateSalary(int baseSalary = 0, float salaryMultiplier = 1.0f)
         {
             if (Name == null || Job == null) { return 0; }
 
@@ -1292,7 +1292,7 @@ namespace Barotrauma
                 salary += (int)(skill.Level * skill.PriceMultiplier);
             }
 
-            return (int)(salary * Job.Prefab.PriceMultiplier);
+            return (int)(baseSalary + (salary * Job.Prefab.PriceMultiplier * salaryMultiplier));
         }
 
         /// <summary>
@@ -1485,11 +1485,9 @@ namespace Barotrauma
             //e.g. talents from endocrine booster or extra talents some special NPC has
             var talentsFromOutsideTree = GetUnlockedTalentsOutsideTree().ToList();
 
-            bool applyXpPenalty = talentResetCount > 0;
-
             UnlockedTalents.Clear();
             SavedStatValues.Clear();
-            Character?.ResetTalents(applyXpPenalty);
+            Character?.ResetTalents(talentPointReduction: talentResetCount);
             TalentRefundPoints--;
             talentResetCount++;
 

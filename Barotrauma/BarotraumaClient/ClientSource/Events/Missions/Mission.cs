@@ -61,6 +61,16 @@ namespace Barotrauma
             return RichString.Rich(TextManager.GetWithVariable("missionreward", "[reward]", "‖color:gui.orange‖" + rewardText + "‖end‖"));
         }
 
+        public RichString GetDifficultyToolTipText()
+        {
+            // 2 skulls give +10% XP, 3 skulls +20% XP and 4 skulls give +30% XP.
+            float xpBonusMultiplier = CalculateDifficultyXPMultiplier();
+            float xpBonusPercentage = (xpBonusMultiplier - 1f) * 100f;
+            int bonusRounded = (int)Math.Round(xpBonusPercentage);
+            LocalizedString tooltipText = TextManager.GetWithVariable(tag: "missiondifficultyxpbonustooltip", varName: "[bonus]", value: bonusRounded.ToString());
+            return RichString.Rich(tooltipText);
+        }
+
         public RichString GetReputationRewardText()
         {
             List<LocalizedString> reputationRewardTexts = new List<LocalizedString>();

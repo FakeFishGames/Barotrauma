@@ -199,6 +199,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            if (Width * wireSprite.size.Y * Screen.Selected.Cam.Zoom < 1.0f) { return; }
+
             Vector2 drawOffset = GetDrawOffset() + offset;
 
             float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;

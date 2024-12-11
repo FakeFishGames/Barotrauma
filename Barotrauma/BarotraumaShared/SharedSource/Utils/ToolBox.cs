@@ -54,6 +54,13 @@ namespace Barotrauma
 
     static partial class ToolBox
     {
+        /// <summary>
+        /// Returns the Barotrauma.dll assembly.
+        /// Used with <see cref="ReflectionUtils.GetTypeWithBackwardsCompatibility"/>
+        /// </summary>
+        public static Assembly BarotraumaAssembly
+            => Assembly.GetAssembly(typeof(GameMain));
+
         public static bool IsProperFilenameCase(string filename)
         {
             //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.

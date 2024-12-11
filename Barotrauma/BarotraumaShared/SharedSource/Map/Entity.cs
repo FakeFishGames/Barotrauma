@@ -86,7 +86,12 @@ namespace Barotrauma
         public readonly UInt64 CreationIndex;
         public string ErrorLine
             => $"-   {ID}: {this} ({Submarine?.Info?.Name ?? "[null]"} {Submarine?.ID ?? 0}) {CreationStackTrace}";
-        
+
+        /// <summary>
+        /// Which content package is this entity from (if it's something like an item or a character that's loaded from a package, otherwise we assume it's the vanilla package).
+        /// </summary>
+        public virtual ContentPackage ContentPackage => GameMain.VanillaContent;
+
         public Entity(Submarine submarine, ushort id)
         {
             this.Submarine = submarine;

@@ -420,7 +420,7 @@ namespace Barotrauma.Items.Components
             Limb targetLimb = target.UserData as Limb;
             Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
             Structure targetStructure = target.UserData as Structure ?? targetFixture.UserData as Structure;
-            Item targetItem = target.UserData as Item ?? targetFixture.UserData as Item;
+            Item targetItem = target.UserData is Holdable h ? h.Item : target.UserData as Item ?? targetFixture.UserData as Item;
             Entity targetEntity = targetCharacter ?? targetStructure ?? targetItem ?? target.UserData as Entity;
             if (Attack != null)
             {
@@ -460,10 +460,9 @@ namespace Barotrauma.Items.Components
                     }
 #endif
                 }
-                else if (target.UserData is Holdable holdable && holdable.CanPush)
+                else if (target.UserData is Holdable { CanPush: true } holdable)
                 {
                     if (holdable.Item.Removed) { return; }
-                    Attack.DoDamage(user, holdable.Item, item.WorldPosition, 1.0f);
                     RestoreCollision();
                     hitting = false;
                     User = null;

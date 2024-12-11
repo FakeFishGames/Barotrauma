@@ -134,7 +134,7 @@ namespace Barotrauma
                 foreach (Submarine sub in Loaded)
                 {
                     Rectangle worldBorders = sub.Borders;
-                    worldBorders.Location += sub.WorldPosition.ToPoint();
+                    worldBorders.Location += (sub.DrawPosition + sub.HiddenSubPosition).ToPoint();
                     worldBorders.Y = -worldBorders.Y;
 
                     GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
@@ -161,38 +161,38 @@ namespace Barotrauma
         public static float DamageEffectCutoff;
         public static Color DamageEffectColor;
 
-        private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
-
-            depthSortedDamageable.Clear();
-
-            //insertion sort according to draw depth
-            foreach (MapEntity e in entitiesToRender)
+            if (!editing && visibleEntities != null)
             {
-                if (e is Structure structure && structure.DrawDamageEffect)
+                foreach (MapEntity e in visibleEntities)
                 {
-                    if (predicate != null)
+                    if (e is Structure structure && structure.DrawDamageEffect)
                     {
-                        if (!predicate(e)) { continue; }
+                        if (predicate != null)
+                        {
+                            if (!predicate(structure)) { continue; }
+                        }
+                        structure.DrawDamage(spriteBatch, damageEffect, editing);
                     }
-                    float drawDepth = structure.GetDrawDepth();
-                    int i = 0;
-                    while (i < depthSortedDamageable.Count)
+                }
+            }
+            else
+            {
+                foreach (Structure structure in Structure.WallList)
+                {
+                    if (structure.DrawDamageEffect)
                     {
-                        float otherDrawDepth = depthSortedDamageable[i].GetDrawDepth();
-                        if (otherDrawDepth < drawDepth) { break; }
-                        i++;
+                        if (predicate != null)
+                        {
+                            if (!predicate(structure)) { continue; }
+                        }
+                        structure.DrawDamage(spriteBatch, damageEffect, editing);
                     }
-                    depthSortedDamageable.Insert(i, structure);
                 }
             }
 
-            foreach (Structure s in depthSortedDamageable)
-            {
-                s.DrawDamage(spriteBatch, damageEffect, editing);
-            }
+
             if (damageEffect != null)
             {
                 damageEffect.Parameters["aCutoff"].SetValue(0.0f);
@@ -505,6 +505,16 @@ namespace Barotrauma
                 errorMsgs.Add(TextManager.Get("WaterInHullsWarning").Value);
                 warnings.Add(SubEditorScreen.WarningType.WaterInHulls);
                 Hull.ShowHulls = true;
+            }
+            
+            if (Info.IsWreck)
+            {
+                Point vanillaBrainSize = new Point(204, 204);
+                if (WreckAI.GetPotentialBrainRooms(this, WreckAIConfig.GetRandom(), minSize: vanillaBrainSize).None())
+                {
+                    errorMsgs.Add(TextManager.Get("NoSuitableBrainRoomsWarning").Value);
+                    warnings.Add(SubEditorScreen.WarningType.NoSuitableBrainRooms);
+                }
             }
 
             if (!IsWarningSuppressed(SubEditorScreen.WarningType.NotEnoughContainers))

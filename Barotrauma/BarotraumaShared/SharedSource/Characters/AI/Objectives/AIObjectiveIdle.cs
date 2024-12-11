@@ -387,14 +387,14 @@ namespace Barotrauma
                     chairCheckTimer -= deltaTime;
                     if (chairCheckTimer <= 0.0f && character.SelectedSecondaryItem == null)
                     {
-                        foreach (Item item in Item.ItemList)
+                        foreach (Item chair in Item.ChairItems)
                         {
-                            if (item.CurrentHull != currentHull || !item.HasTag(Tags.ChairItem)) { continue; }
+                            if (chair.CurrentHull != currentHull) { continue; }
                             //not possible in vanilla game, but a mod might have holdable/attachable chairs
-                            if (item.ParentInventory != null || item.body is { Enabled: true }) { continue; } 
-                            var controller = item.GetComponent<Controller>();
+                            if (chair.ParentInventory != null || chair.body is { Enabled: true }) { continue; } 
+                            var controller = chair.GetComponent<Controller>();
                             if (controller == null || controller.User != null) { continue; }
-                            item.TryInteract(character, forceSelectKey: true);
+                            chair.TryInteract(character, forceSelectKey: true);
                         }
                         chairCheckTimer = chairCheckInterval;
                     }

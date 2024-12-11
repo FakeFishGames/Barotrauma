@@ -18,6 +18,7 @@ namespace Barotrauma
             string FilePath,
             Option<SerializableDateTime> SaveTime,
             string SubmarineName,
+            RespawnMode RespawnMode,
             ImmutableArray<string> EnabledContentPackageNames) : INetSerializableStruct;
 
         public const int MaxMoney = int.MaxValue / 2; //about 1 billion
@@ -32,6 +33,20 @@ namespace Barotrauma
         public int TotalPassedLevels;
 
         public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Upgrade, PurchaseSub, MedicalClinic, Cargo }
+
+        /// <summary>
+        /// Should the interaction be disabled if the character's faction is hostile towards the players?
+        /// </summary>
+        public static bool HostileFactionDisablesInteraction(InteractionType interactionType)
+        {
+            return 
+                interactionType != InteractionType.None && 
+                //allow interacting with stores, otherwise you could get softlocked
+                //(no way to get enough resources from a hostile outpost to make it to the next one?)
+                interactionType != InteractionType.Store &&
+                //examining is triggered by events, and there may be events that are intended to allow interaction with a hostile NPC.
+                interactionType != InteractionType.Examine;
+        }
 
         public static bool BlocksInteraction(InteractionType interactionType)
         {
@@ -1099,6 +1114,7 @@ namespace Barotrauma
         private void NPCInteract(Character npc, Character interactor)
         {
             if (!npc.AllowCustomInteract) { return; }
+            if (npc.AIController is HumanAIController humanAi && !humanAi.AllowCampaignInteraction()) { return; }
             NPCInteractProjSpecific(npc, interactor);
             string coroutineName = "DoCharacterWait." + (npc?.ID ?? Entity.NullEntityID);
             if (!CoroutineManager.IsCoroutineRunning(coroutineName))

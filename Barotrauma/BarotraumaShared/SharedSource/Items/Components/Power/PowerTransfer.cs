@@ -232,7 +232,7 @@ namespace Barotrauma.Items.Components
 
             float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
 
-            Overload = Voltage > maxOverVoltage;
+            Overload = Voltage > maxOverVoltage && GameMain.GameSession is not { RoundDuration: < 5 };
 
             if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {

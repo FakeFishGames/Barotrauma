@@ -1051,7 +1051,7 @@ namespace Barotrauma.Items.Components
             }
             if (TargetItems)
             {
-                foreach (Item targetItem in Item.ItemList)
+                foreach (Item targetItem in Item.TurretTargetItems)
                 {
                     if (!IsValidTarget(targetItem)) { continue; }
                     float priority = isSlowTurret ? targetItem.Prefab.AISlowTurretPriority : targetItem.Prefab.AITurretPriority;
@@ -1395,7 +1395,7 @@ namespace Barotrauma.Items.Components
                     closestDistance = dist / priority;
                     currentTarget = closestEnemy;
                 }
-                foreach (Item targetItem in Item.ItemList)
+                foreach (Item targetItem in Item.TurretTargetItems)
                 {
                     if (!IsValidTarget(targetItem)) { continue; }
                     float priority = isSlowTurret ? targetItem.Prefab.AISlowTurretPriority : targetItem.Prefab.AITurretPriority;
@@ -1767,8 +1767,15 @@ namespace Barotrauma.Items.Components
                     Submarine sub = e.Submarine ?? e as Submarine;
                     if (sub == null) { return true; }
                     if (sub == Item.Submarine) { return false; }
-                    if (sub.Info.IsOutpost || sub.Info.IsWreck || sub.Info.IsBeacon) { return false; }
-                    if (sub.TeamID == Item.Submarine.TeamID) { return false; }
+                    if (sub.Info.IsOutpost || sub.Info.IsWreck || sub.Info.IsBeacon || sub.Info.IsRuin) { return false; }
+                    if (item.Submarine == null)
+                    {
+                        if (sub.TeamID == FriendlyTeam) { return false; }
+                    }
+                    else
+                    {
+                        if (sub.TeamID == Item.Submarine.TeamID) { return false; }
+                    }
                 }
                 else if (targetBody.UserData is not Voronoi2.VoronoiCell { IsDestructible: true })
                 {
@@ -1786,6 +1793,8 @@ namespace Barotrauma.Items.Components
                customPredicate: (Fixture f) =>
                {
                    if (f.UserData is Item i && i.GetComponent<Turret>() != null) { return false; }
+                   if (f.CollidesWith == Physics.CollisionNone) { return false; }
+                   if (f.Body.UserData  == item) { return false; }
                    if (f.UserData is Hull) { return false; }
                    return !item.StaticFixtures.Contains(f);
                });

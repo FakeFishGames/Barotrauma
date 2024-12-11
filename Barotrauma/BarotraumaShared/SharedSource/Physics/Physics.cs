@@ -15,6 +15,7 @@ namespace Barotrauma
         public const Category CollisionProjectile   = Category.Cat7;
         public const Category CollisionLevel        = Category.Cat8;
         public const Category CollisionRepairableWall       = Category.Cat9;
+        public const Category CollisionLagCompensationBody  = Category.Cat10;
 
         public const Category DefaultItemCollidesWith = CollisionWall | CollisionLevel | CollisionPlatform | CollisionRepairableWall;
 

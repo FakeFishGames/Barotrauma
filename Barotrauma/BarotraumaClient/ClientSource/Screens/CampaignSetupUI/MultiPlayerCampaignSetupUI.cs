@@ -236,10 +236,36 @@ namespace Barotrauma
                 {
                     if (saveList.SelectedData is not CampaignMode.SaveInfo saveInfo) { return false; }
                     if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
-                    LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None);
-
-                    CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                    
+                    if (saveInfo.RespawnMode != RespawnMode.None && saveInfo.RespawnMode != GameMain.NetworkMember?.ServerSettings?.RespawnMode)
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("Warning"),
+                            TextManager.GetWithVariables("RespawnModeMismatch",
+                                    ("[currentrespawnmode]", TextManager.Get($"respawnmode.{GameMain.NetworkMember?.ServerSettings?.RespawnMode}")),
+                                    ("[savedrespawnmode]", TextManager.Get($"respawnmode.{saveInfo.RespawnMode}"))),
+                            new LocalizedString[] { TextManager.Get("RespawnModeMismatch.GoBack"), TextManager.Get("RespawnModeMismatch.LoadAnyway") });
+                        msgBox.Buttons[0].OnClicked = (button, obj) =>
+                        {
+                            msgBox.Close();
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked = (button, obj) =>
+                        {
+                            msgBox.Close();
+                            LoadSaveGame();
+                            return true;
+                        };
+                        return false;
+                    }
+                    
+                    LoadSaveGame();
                     return true;
+                    
+                    void LoadSaveGame()
+                    {
+                        LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None);
+                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                    }
                 },
                 Enabled = false
             };

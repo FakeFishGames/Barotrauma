@@ -684,7 +684,7 @@ namespace Barotrauma
                 if (args.Length > 1)
                 {
                     string forceThalamusArg = args[1];
-                    if (Enum.TryParse(forceThalamusArg, out LevelData.ThalamusSpawn result))
+                    if (Enum.TryParse(forceThalamusArg, ignoreCase: true, out LevelData.ThalamusSpawn result))
                     {
                         NewMessage($"Setting ThalamusSpawn to: {result}", color: Color.Yellow);
                         LevelData.ForceThalamus = result;
@@ -2530,6 +2530,18 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+
+            commands.Add(new Command("unlockachievement", "unlockachievement [identifier]: Unlocks the specified achievement.", (string[] args) =>
+            {
+                if (args.Length < 1) 
+                {
+                    ThrowError("Please specify the achievement to unlock.");
+                    return;
+                }
+                NewMessage($"Unlocked \"{args[0]}\".");
+                AchievementManager.UnlockAchievement(args[0].ToIdentifier());
+            }, isCheat: true));
+
             commands.Add(new Command("deathprompt", "Shows the death prompt for testing purposes.", (string[] args) =>
             {
                 DeathPrompt.Create(delay: 1.0f);

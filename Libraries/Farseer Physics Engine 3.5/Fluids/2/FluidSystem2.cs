@@ -284,7 +284,7 @@ namespace FarseerPhysics.Fluids
                     Vector2.DistanceSquared(ref particle.Position, ref tempParticle.Position, out q);
                     if ((q < InfluenceRadiusSquared) && (q != 0))
                     {
-                        q = (float)Math.Sqrt(q);
+                        q = MathF.Sqrt(q);
                         Vector2.Subtract(ref tempParticle.Position, ref particle.Position, out _rij);
                         Vector2.Divide(ref _rij, q, out _rij);
 
@@ -329,7 +329,7 @@ namespace FarseerPhysics.Fluids
                     Vector2.DistanceSquared(ref particle.Position, ref tempParticle.Position, out q);
                     if (q < InfluenceRadiusSquared && q != 0)
                     {
-                        q = (float)Math.Sqrt(q);
+                        q = MathF.Sqrt(q);
                         q /= InfluenceRadius;
                         float qq = ((1 - q) * (1 - q));
                         particle.Density += qq;
@@ -348,7 +348,7 @@ namespace FarseerPhysics.Fluids
                     Vector2.DistanceSquared(ref particle.Position, ref tempParticle.Position, out q);
                     if ((q < InfluenceRadiusSquared) && (q != 0))
                     {
-                        q = (float)Math.Sqrt(q);
+                        q = MathF.Sqrt(q);
                         Vector2.Subtract(ref tempParticle.Position, ref particle.Position, out _rij);
                         Vector2.Divide(ref _rij, q, out _rij);
                         q /= InfluenceRadius;

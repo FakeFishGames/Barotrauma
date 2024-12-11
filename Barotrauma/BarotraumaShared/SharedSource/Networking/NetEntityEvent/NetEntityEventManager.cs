@@ -1,9 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
+    class EntityEventException : Exception
+    {
+        public readonly Entity Entity;
+
+        public EntityEventException(string errorMessage, Entity causingEntity, Exception innerException = null) : base(errorMessage, innerException)
+        {
+            Entity = causingEntity;
+        }
+    }
+
     abstract class NetEntityEventManager
     {
         public const int MaxEventBufferLength = 1024;
@@ -29,7 +38,7 @@ namespace Barotrauma.Networking
                 }
                 catch (Exception exception)
                 {
-                    DebugConsole.ThrowError("Failed to write an event for the entity \"" + e.Entity + "\"", exception);
+                    DebugConsole.ThrowError($"Failed to write an event (ID: {e.ID}) for the entity \"{e.Entity}\"", exception, contentPackage: e.Entity?.ContentPackage);
                     GameAnalyticsManager.AddErrorEventOnce("NetEntityEventManager.Write:WriteFailed" + e.Entity.ToString(),
                         GameAnalyticsManager.ErrorSeverity.Error,
                         "Failed to write an event for the entity \"" + e.Entity + "\"\n" + exception.StackTrace.CleanupStackTrace());
@@ -37,7 +46,8 @@ namespace Barotrauma.Networking
                     //write an empty event to avoid messing up IDs
                     //(otherwise the clients might read the next event in the message and think its ID 
                     //is consecutive to the previous one, even though we skipped over this broken event)
-                    tempBuffer.WriteUInt16(Entity.NullEntityID);
+                    tempBuffer.WriteUInt16(Entity.NullEntityID);                   
+                    tempBuffer.WriteVariableUInt32(0); //size of the event
                     eventCount++;
                     continue;
                 }

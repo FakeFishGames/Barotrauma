@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics;
@@ -15,6 +16,84 @@ namespace Barotrauma
 
     static class AchievementManager
     {
+        private static readonly ImmutableHashSet<Identifier> SupportedAchievements = ImmutableHashSet.Create(
+            "killmoloch".ToIdentifier(),
+            "killhammerhead".ToIdentifier(),
+            "killendworm".ToIdentifier(),
+            "artifactmission".ToIdentifier(),
+            "combatmission1".ToIdentifier(),
+            "combatmission2".ToIdentifier(),
+            "healcrit".ToIdentifier(),
+            "repairdevice".ToIdentifier(),
+            "traitorwin".ToIdentifier(),
+            "killtraitor".ToIdentifier(),
+            "killclown".ToIdentifier(),
+            "healopiateaddiction".ToIdentifier(),
+            "survivecrushdepth".ToIdentifier(),
+            "survivereactormeltdown".ToIdentifier(),
+            "healhusk".ToIdentifier(),
+            "killpoison".ToIdentifier(),
+            "killnuke".ToIdentifier(),
+            "killtool".ToIdentifier(),
+            "clowncostume".ToIdentifier(),
+            "lastmanstanding".ToIdentifier(),
+            "lonesailor".ToIdentifier(),
+            "subhighvelocity".ToIdentifier(),
+            "nodamagerun".ToIdentifier(),
+            "subdeep".ToIdentifier(),
+            "maxintensity".ToIdentifier(),
+            "discovercoldcaverns".ToIdentifier(),
+            "discovereuropanridge".ToIdentifier(),
+            "discoverhydrothermalwastes".ToIdentifier(),
+            "discovertheaphoticplateau".ToIdentifier(),
+            "discoverthegreatsea".ToIdentifier(),
+            "travel10".ToIdentifier(),
+            "travel100".ToIdentifier(),
+            "xenocide".ToIdentifier(),
+            "genocide".ToIdentifier(),
+            "cargomission".ToIdentifier(),
+            "subeditor24h".ToIdentifier(),
+            "crewaway".ToIdentifier(),
+            "captainround".ToIdentifier(),
+            "securityofficerround".ToIdentifier(),
+            "engineerround".ToIdentifier(),
+            "mechanicround".ToIdentifier(),
+            "medicaldoctorround".ToIdentifier(),
+            "assistantround".ToIdentifier(),
+            "campaigncompleted".ToIdentifier(),
+            "salvagewreckmission".ToIdentifier(),
+            "escortmission".ToIdentifier(),
+            "killcharybdis".ToIdentifier(),
+            "killlatcher".ToIdentifier(),
+            "killspineling_giant".ToIdentifier(),
+            "killcrawlerbroodmother".ToIdentifier(),
+            "ascension".ToIdentifier(),
+            "campaignmetadata_pathofthebikehorn_7".ToIdentifier(),
+            "campaignmetadata_coalitionspecialhire1_hired_true".ToIdentifier(),
+            "campaignmetadata_coalitionspecialhire2_hired_true".ToIdentifier(),
+            "campaignmetadata_separatistspecialhire1_hired_true".ToIdentifier(),
+            "campaignmetadata_separatistspecialhire2_hired_true".ToIdentifier(),
+            "campaignmetadata_huskcultspecialhire1_hired_true".ToIdentifier(),
+            "campaignmetadata_clownspecialhire1_hired_true".ToIdentifier(),
+            "scanruin".ToIdentifier(),
+            "clearruin".ToIdentifier(),
+            "beaconmission".ToIdentifier(),
+            "abandonedoutpostrescue".ToIdentifier(),
+            "abandonedoutpostassassinate".ToIdentifier(),
+            "abandonedoutpostdestroyhumans".ToIdentifier(),
+            "abandonedoutpostdestroymonsters".ToIdentifier(),
+            "nestmission".ToIdentifier(),
+            "miningmission".ToIdentifier(),
+            "combatmissionseparatistsvscoalition".ToIdentifier(),
+            "combatmissioncoalitionvsseparatists".ToIdentifier(),
+            "getoutalive".ToIdentifier(),
+            "abyssbeckons".ToIdentifier(),
+            "europasfinest".ToIdentifier(),
+            "kingofthehull".ToIdentifier(),
+            "killmantis".ToIdentifier(),
+            "ancientnovelty".ToIdentifier(),
+            "whatsmirksbelow".ToIdentifier());
+
         private const float UpdateInterval = 1.0f;
 
         private static readonly HashSet<Identifier> unlockedAchievements = new HashSet<Identifier>();
@@ -41,6 +120,29 @@ namespace Barotrauma
         // Used for the Extravehicular Activity ("crewaway") achievement
         private static PathFinder pathFinder;
         private static readonly Dictionary<Character, CachedDistance> cachedDistances = new Dictionary<Character, CachedDistance>();
+
+        static AchievementManager()
+        {
+#if DEBUG
+            if (SteamManager.IsInitialized && SteamManager.TryGetAllAvailableAchievements(out var achievements) && achievements.Any())
+            {
+                foreach (var achievement in achievements)
+                {
+                    if (!SupportedAchievements.Contains(achievement.Identifier.ToIdentifier()))
+                    {
+                        DebugConsole.ThrowError($"Achievement \"{achievement.Identifier}\" is present on Steam's backend but not in achievements supported by {nameof(AchievementManager)}.");
+                    }
+                }
+                foreach (Identifier achievementId in SupportedAchievements)
+                {
+                    if (achievements.None(a => a.Identifier.ToIdentifier() == achievementId))
+                    {
+                        DebugConsole.ThrowError($"Could not find achievement \"{achievementId}\" on Steam's backend.");
+                    }
+                }
+            }
+#endif
+        }
 
         public static void OnStartRound(Biome biome = null)
         {
@@ -584,6 +686,7 @@ namespace Barotrauma
         {
             if (CheatsEnabled) { return; }
             if (Screen.Selected is { IsEditor: true }) { return; }
+            if (!SupportedAchievements.Contains(identifier)) { return; }
 #if CLIENT
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
 #endif

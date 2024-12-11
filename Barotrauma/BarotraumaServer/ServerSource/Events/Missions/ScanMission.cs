@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -12,9 +13,9 @@ namespace Barotrauma
             {
                 item.WriteSpawnData(msg,
                     item.ID,
-                    parentInventoryIDs.ContainsKey(item) ? parentInventoryIDs[item] : Entity.NullEntityID,
-                    parentItemContainerIndices.ContainsKey(item) ? parentItemContainerIndices[item] : (byte)0,
-                    inventorySlotIndices.ContainsKey(item) ? inventorySlotIndices[item] : -1);
+                    parentInventoryIDs.GetValueOrDefault(item, Entity.NullEntityID),
+                    parentItemContainerIndices.GetValueOrDefault(item, (byte)0),
+                    inventorySlotIndices.GetValueOrDefault(item, -1));
             }
             ServerWriteScanTargetStatus(msg);
         }
@@ -30,7 +31,7 @@ namespace Barotrauma
             msg.WriteByte((byte)scanTargets.Count);
             foreach (var kvp in scanTargets)
             {
-                msg.WriteUInt16(kvp.Key != null ? kvp.Key.ID : Entity.NullEntityID);
+                msg.WriteUInt16(kvp.Key?.ID ?? Entity.NullEntityID);
                 msg.WriteBoolean(kvp.Value);
             }
         }

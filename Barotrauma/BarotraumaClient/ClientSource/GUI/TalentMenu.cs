@@ -299,7 +299,7 @@ namespace Barotrauma
             }
 
             ImmutableHashSet<TalentPrefab?> talentsOutsideTree = info.GetUnlockedTalentsOutsideTree().Select(static e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e)).ToImmutableHashSet();
-            if (talentsOutsideTree.Any())
+            if (talentsOutsideTree.Any(static t => t != null && !t.IsHiddenExtraTalent))
             {
                 //spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), nameLayout.RectTransform), style: null);
@@ -324,6 +324,7 @@ namespace Barotrauma
                 foreach (var extraTalent in talentsOutsideTree)
                 {
                     if (extraTalent is null) { continue; }
+                    if (extraTalent.IsHiddenExtraTalent) { continue; }
                     GUIImage talentImg = new GUIImage(new RectTransform(Vector2.One, extraTalentList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), sprite: extraTalent.Icon, scaleToFit: true)
                     {
                         ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{extraTalent.DisplayName}‖color:end‖" + "\n\n" + ToolBox.ExtendColorToPercentageSigns(extraTalent.Description.Value)),
@@ -440,7 +441,12 @@ namespace Barotrauma
 
         private void CreateTalentResetPopup(GUIComponent parent)
         {
-            bool hasResetTalentsBefore = character?.Info.TalentResetCount > 0;
+            int talentResetCount = 0;
+            if (character?.Info != null)
+            {
+                talentResetCount = Math.Min(character.Info.TalentResetCount, character.Info.GetCurrentLevel());
+            }
+            bool hasResetTalentsBefore = talentResetCount > 0;
             var bgBlocker = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform, anchor: Anchor.Center), style: "GUIBackgroundBlocker")
             {
                 IgnoreLayoutGroups = true
@@ -455,7 +461,8 @@ namespace Barotrauma
 
             if (hasResetTalentsBefore)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), popupLayout.RectTransform), TextManager.Get("talentresetpromptwarning"), wrap: true)
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), popupLayout.RectTransform), 
+                    TextManager.GetWithVariable("talentresetpromptwarning", "[count]", talentResetCount.ToString()), wrap: true)
                 {
                     TextColor = GUIStyle.Red
                 };

@@ -70,7 +70,7 @@ namespace Barotrauma
             }
         }
 
-        public override int GetBaseReward(Submarine sub)
+        public override float GetBaseReward(Submarine sub)
         {
             return alternateReward;
         }

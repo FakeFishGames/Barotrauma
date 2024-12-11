@@ -1401,7 +1401,9 @@ namespace Barotrauma
             GetSuitableTreatments(treatmentSuitability,
                 user: Character.Controlled,
                 ignoreHiddenAfflictions: true,
-                limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex));
+                limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex),
+                checkTreatmentSuggestionThreshold: true,
+                checkTreatmentThreshold: false);
 
             foreach (Identifier treatment in treatmentSuitability.Keys.ToList())
             {

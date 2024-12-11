@@ -189,7 +189,7 @@ namespace Barotrauma
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
             if (prefab?.ConfigElement == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'");
+                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'", contentPackage: prefab?.ContentPackage);
                 return string.Empty;
             }
             return GetFolder(prefab.ConfigElement, prefab.FilePath.Value);
@@ -414,7 +414,7 @@ namespace Barotrauma
         {
             if (animationType == AnimationType.NotDefined)
             {
-                throw new Exception("Cannot create an animation file of type " + animationType.ToString());
+                throw new Exception("Cannot create an animation file of type " + animationType);
             }
             if (!allAnimations.TryGetValue(speciesName, out Dictionary<string, AnimationParams> anims))
             {
@@ -543,7 +543,7 @@ namespace Barotrauma
         {
             if (doc == null)
             {
-                DebugConsole.ThrowError("[AnimationParams] The source XML Document is null!");
+                DebugConsole.ThrowError("[AnimationParams] The source XML Document is null!", contentPackage: Path.ContentPackage);
                 return;
             }
             Serialize();

@@ -202,6 +202,7 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.ThrowError("Capture device has been disconnected. You can select another available device in the settings.");
                             Disconnected = true;
+                            TryRefreshDevice();
                             break;
                         }
                     }
@@ -400,6 +401,66 @@ namespace Barotrauma.Networking
             captureThread?.Join();
             captureThread = null;
             if (captureDevice != IntPtr.Zero) { Alc.CaptureCloseDevice(captureDevice); }
+        }
+        
+        public static void TryRefreshDevice()
+        {
+            DebugConsole.NewMessage("Refreshing audio capture device");
+            
+            List<string> deviceList = Alc.GetStringList(IntPtr.Zero, Alc.CaptureDeviceSpecifier).ToList();
+            int alcError = Alc.GetError(IntPtr.Zero);
+            if (alcError != Alc.NoError)
+            {
+                DebugConsole.ThrowError("Failed to list available audio input devices: " + alcError.ToString());
+                return;
+            }
+            
+            if (deviceList.Any())
+            {
+                string device;
+                
+                if (deviceList.Find(n => n.Equals(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, StringComparison.OrdinalIgnoreCase))
+                    is string availablePreviousDevice)
+                {
+                    DebugConsole.NewMessage($" Previous device choice available: {availablePreviousDevice}");
+                    device = availablePreviousDevice;
+                }
+                else
+                {
+                    device = Alc.GetString(IntPtr.Zero, Alc.CaptureDefaultDeviceSpecifier);
+                    DebugConsole.NewMessage($" Reverting to default device: {device}");
+                }
+                
+                if (string.IsNullOrEmpty(device))
+                {
+                    device = deviceList[0];
+                    DebugConsole.NewMessage($" No default device found, resorting to first available device: {device}");
+                }
+                
+                // Save the new device choice and generate a new voice capture instance with it
+                var currentConfig = GameSettings.CurrentConfig;
+                currentConfig.Audio.VoiceCaptureDevice = device;
+                GameSettings.SetCurrentConfig(currentConfig);
+                if (Instance is VoipCapture currentCaptureInstance)
+                {
+                    currentCaptureInstance.Dispose();
+                }
+                Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice);
+            }
+            
+            // Didn't end up with any capture device, so let's disable voice capture for now
+            if (Instance == null)
+            {
+                DebugConsole.NewMessage($" No devices found, disabling");
+                var currentConfig = GameSettings.CurrentConfig;
+                currentConfig.Audio.VoiceSetting = VoiceMode.Disabled;
+                GameSettings.SetCurrentConfig(currentConfig);
+            }
+            
+            if (GUI.SettingsMenuOpen)
+            {
+                SettingsMenu.Instance?.CreateAudioAndVCTab(true);
+            }
         }
     }
 }

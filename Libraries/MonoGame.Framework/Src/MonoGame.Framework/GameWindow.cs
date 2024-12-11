@@ -76,6 +76,8 @@ namespace Microsoft.Xna.Framework {
             }
         }
 
+        public virtual int TargetDisplay { get => 0; set => throw new NotImplementedException(); }
+
         internal MouseState MouseState;
 	    internal TouchPanelState TouchPanelState;
 

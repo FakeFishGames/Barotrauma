@@ -107,7 +107,7 @@ namespace FarseerPhysics.Fluids
 
                 if (u > 0.0f)
                 {
-                    q = 1.0f - (float)Math.Sqrt(q) / Definition.InfluenceRadius;
+                    q = 1.0f - MathF.Sqrt(q) / Definition.InfluenceRadius;
 
                     float impulseFactor = 0.5f * timeStep * q * (u * (Definition.ViscositySigma + Definition.ViscosityBeta * u));
 
@@ -152,7 +152,7 @@ namespace FarseerPhysics.Fluids
         //        _distanceCache[_j] = _q;
         //        if (_q < _influenceRadiusSquared && _q != 0)
         //        {
-        //            _q = (float)Math.Sqrt(_q);
+        //            _q = MathF.Sqrt(_q);
         //            _q /= Definition.InfluenceRadius;
         //            _qq = ((1 - _q) * (1 - _q));
         //            _density += _qq;
@@ -170,7 +170,7 @@ namespace FarseerPhysics.Fluids
         //        _q = _distanceCache[_j];
         //        if (_q < _influenceRadiusSquared && _q != 0)
         //        {
-        //            _q = (float)Math.Sqrt(_q);
+        //            _q = MathF.Sqrt(_q);
         //            _rij = p.Neighbours[_j].Position;
         //            _rij -= p.Position;
         //            _rij *= 1 / _q;
@@ -209,7 +209,7 @@ namespace FarseerPhysics.Fluids
                 if (q > _influenceRadiusSquared)
                     continue;
 
-                q = 1.0f - (float)Math.Sqrt(q) / Definition.InfluenceRadius;
+                q = 1.0f - MathF.Sqrt(q) / Definition.InfluenceRadius;
 
                 float densityDelta = q * q;
                 _density += densityDelta;
@@ -237,7 +237,7 @@ namespace FarseerPhysics.Fluids
                 if (q > _influenceRadiusSquared)
                     continue;
 
-                q = 1.0f - (float)Math.Sqrt(q) / Definition.InfluenceRadius;
+                q = 1.0f - MathF.Sqrt(q) / Definition.InfluenceRadius;
 
                 float dispFactor = deltaTime2 * (q * (_pressure + _pressureNear * q));
 
@@ -281,7 +281,7 @@ namespace FarseerPhysics.Fluids
                 if (!_springs.ContainsKey(hash))
                 {
                     //TODO: Use pool?
-                    Spring spring = new Spring(p, neighbour) { RestLength = (float)Math.Sqrt(q) };
+                    Spring spring = new Spring(p, neighbour) { RestLength = MathF.Sqrt(q) };
                     _springs.Add(hash, spring);
                 }
             }

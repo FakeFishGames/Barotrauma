@@ -296,25 +296,7 @@ namespace Barotrauma
                     fallingProneAnimTimer += deltaTime;
                     UpdateFallingProne(1.0f);
                 }
-                levitatingCollider = false;
-                Collider.FarseerBody.FixedRotation = false;
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
-                {
-                    if (Collider.Enabled)
-                    {
-                        //deactivating the collider -> make the main limb inherit the collider's velocity because it'll control the movement now
-                        MainLimb.body.LinearVelocity = Collider.LinearVelocity;
-                        Collider.Enabled = false;
-                    }
-                    Collider.LinearVelocity = MainLimb.LinearVelocity;
-                    Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
-                    //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
-                    //(except when dragging, then we need the pull joints)
-                    if (!Draggable || character.SelectedBy == null)
-                    {
-                        ResetPullJoints();
-                    }
-                }
+                UpdateRagdollControlsMovement();
                 return;
             }
             fallingProneAnimTimer = 0.0f;
@@ -324,7 +306,7 @@ namespace Barotrauma
             {
                 var lowestLimb = FindLowestLimb();
 
-                Collider.SetTransform(new Vector2(
+                Collider.SetTransformIgnoreContacts(new Vector2(
                     Collider.SimPosition.X,
                     Math.Max(lowestLimb.SimPosition.Y + (Collider.Radius + Collider.Height / 2), Collider.SimPosition.Y)),
                     Collider.Rotation);
@@ -356,7 +338,7 @@ namespace Barotrauma
                 float angleDiff = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f);
                 if (Math.Abs(angleDiff) > 0.001f)
                 {
-                    Collider.SetTransform(Collider.SimPosition, Collider.Rotation + angleDiff);
+                    Collider.SetTransformIgnoreContacts(Collider.SimPosition, Collider.Rotation + angleDiff);
                 }
             }
              
@@ -581,9 +563,7 @@ namespace Barotrauma
                 footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f)) * Dir;
             }
 
-            movement = overrideTargetMovement == Vector2.Zero ?
-                MathUtils.SmoothStep(movement, TargetMovement, movementLerp) :
-                overrideTargetMovement;
+            movement = overrideTargetMovement ?? MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
 
             if (Math.Abs(movement.X) < 0.005f)
             {

@@ -137,15 +137,14 @@ namespace Barotrauma
                 .Concat(Joints);
 
         public static string GetDefaultFileName(Identifier speciesName) => $"{speciesName.Value.CapitaliseFirstInvariant()}DefaultRagdoll";
-        public static string GetDefaultFile(Identifier speciesName, ContentPackage contentPackage = null)
-            => IO.Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
-
-        public static string GetFolder(Identifier speciesName, ContentPackage contentPackage = null)
+        public static string GetDefaultFile(Identifier speciesName) => IO.Path.Combine(GetFolder(speciesName), $"{GetDefaultFileName(speciesName)}.xml");
+        
+        public static string GetFolder(Identifier speciesName)
         {
-            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier == speciesName && (contentPackage == null || p.ContentFile.ContentPackage == contentPackage));
+            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
             if (prefab?.ConfigElement == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'", contentPackage: contentPackage);
+                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'");
                 return string.Empty;
             }
             return GetFolder(prefab.ConfigElement, prefab.ContentFile.Path.Value);
@@ -199,10 +198,10 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (!variantOf.IsEmpty && CharacterPrefab.FindBySpeciesName(variantOf) is CharacterPrefab prefab)
+            else if (!variantOf.IsEmpty && CharacterPrefab.FindBySpeciesName(variantOf) is CharacterPrefab parentPrefab)
             {
-                // Ragdoll element not defined -> use the ragdoll defined in the base definition file.
-                ragdollSpecies = prefab.GetBaseCharacterSpeciesName(variantOf);
+                //get the params from the parent prefab if this one doesn't re-define them
+                return GetDefaultRagdollParams<T>(variantOf, parentPrefab.ConfigElement, parentPrefab.ContentPackage);
             }
             // Using a null file definition means we use the default animations found in the Ragdolls folder.
             return GetRagdollParams<T>(speciesName, ragdollSpecies, file: null, contentPackage);
@@ -245,7 +244,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {ragdollInstance} from {contentPath.Value} for the character {speciesName}. Using the default ragdoll.", contentPackage: contentPackage);
+                    DebugConsole.ThrowError($"[RagdollParams] Failed to load a ragdoll {ragdollInstance} from {contentPath.Value} for the character {speciesName}. Using the default ragdoll.", contentPackage: contentPackage);
                 }
             }
             // Seek the default ragdoll from the character's ragdoll folder.
@@ -294,8 +293,30 @@ namespace Barotrauma
             }
             else
             {
-                // Failing to create a ragdoll causes so many issues that cannot be handled. Dummy ragdoll just seems to make things harder to debug. It's better to fail early.
-                throw new Exception($"[RagdollParams] Failed to load ragdoll {r.Name} from {selectedFile} for the character {speciesName}.");
+                string error = $"[RagdollParams] Failed to load ragdoll {r.Name} from {selectedFile} for the character {speciesName}.";
+                if (contentPackage == GameMain.VanillaContent)
+                {
+                    // Check if the base character content package is vanilla too.
+                    CharacterPrefab characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+                    if (characterPrefab?.ParentPrefab == null || characterPrefab.ParentPrefab.ContentPackage == GameMain.VanillaContent)
+                    {
+                        // If the error is in the vanilla content, it's just better to crash early.
+                        // If dodging with the solution below fails, we'll also get here.
+                        throw new Exception(error);
+                    }
+                }
+                // Try to dodge crashing on modded content.
+                DebugConsole.ThrowError(error, contentPackage: contentPackage);
+                if (typeof(T) == typeof(HumanRagdollParams))
+                {
+                    Identifier fallbackSpecies = CharacterPrefab.HumanSpeciesName;
+                    r = GetRagdollParams<T>(fallbackSpecies, fallbackSpecies, file: ContentPath.FromRaw(contentPackage, "Content/Characters/Human/Ragdolls/HumanDefaultRagdoll.xml"), contentPackage: GameMain.VanillaContent);
+                }
+                else
+                {
+                    Identifier fallbackSpecies = "crawler".ToIdentifier();
+                    r = GetRagdollParams<T>(fallbackSpecies, fallbackSpecies, file: ContentPath.FromRaw(contentPackage, "Content/Characters/Crawler/Ragdolls/CrawlerDefaultRagdoll.xml"), contentPackage: GameMain.VanillaContent);
+                } 
             }
             return r;
         }
@@ -868,6 +889,9 @@ namespace Barotrauma
 
             [Serialize(true, IsPropertySaveable.Yes, description: "Can the limb enter submarines? Only valid if the ragdoll's CanEnterSubmarine is set to Partial, otherwise the limb can enter if the ragdoll can."), Editable]
             public bool CanEnterSubmarine { get; private set; }
+
+            [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "When set to something else than None, this limb will be hidden if the limb of the specified type is hidden."), Editable]
+            public LimbType InheritHiding { get; set; }
 
             public LimbParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {

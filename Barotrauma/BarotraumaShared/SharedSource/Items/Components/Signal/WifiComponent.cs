@@ -229,14 +229,20 @@ namespace Barotrauma.Items.Components
 
         public void TransmitSignal(Signal signal, bool sentFromChat)
         {
-            if (sentFromChat)
-            {
-                item.LastSentSignalRecipients.Clear();
-            }
-
             bool chatMsgSent = false;
 
             var receivers = GetReceiversInRange();
+            if (sentFromChat)
+            {
+                //if sent from chat, we need to reset the "signal chain" at this point
+                //so we can correctly detect which components the signal has already passed through to avoid infinite loops
+                //only relevant for signals originating from the chat - normally this is handled in Item.SendSignal
+                item.LastSentSignalRecipients.Clear();
+                foreach (WifiComponent receiver in receivers)
+                {
+                    receiver.item.LastSentSignalRecipients.Clear();
+                }
+            }
             foreach (WifiComponent wifiComp in receivers)
             {
                 if (sentFromChat && !wifiComp.LinkToChat) { continue; }

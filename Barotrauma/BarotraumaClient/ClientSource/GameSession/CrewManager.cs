@@ -1345,6 +1345,7 @@ namespace Barotrauma
         {
             if (ConversationAction.IsDialogOpen) { return; }
             if (!AllowCharacterSwitch) { return; }
+            if (character == null || character.Removed) { return; }
             //make the previously selected character wait in place for some time
             //(so they don't immediately start idling and walking away from their station)
             var aiController = Character.Controlled?.AIController;
@@ -1373,7 +1374,7 @@ namespace Barotrauma
                 if (index > lastIndex) { index = 0; }
                 if (index < 0) { index = lastIndex; }
 
-                if ((crewList.Content.GetChild(index)?.UserData as Character)?.IsOnPlayerTeam ?? false)
+                if (crewList.Content.GetChild(index)?.UserData is Character { IsOnPlayerTeam: true, Removed: false })
                 {
                     return index;
                 }
@@ -1668,7 +1669,7 @@ namespace Barotrauma
             {
                 crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
 
-                var myTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID;
+                CharacterTeamType myTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID ?? CharacterTeamType.Team1;
                 if (GameMain.GameSession?.GameMode is PvPMode)
                 {
                     var team1Text = crewArea.GetChildByUserData(CharacterTeamType.Team1);
@@ -1690,7 +1691,7 @@ namespace Barotrauma
                             continue;
                         }
 
-                        characterComponent.Visible = Character.Controlled == null || myTeam == character.TeamID;
+                        characterComponent.Visible = myTeam == character.TeamID;
                         if (character.TeamID == CharacterTeamType.FriendlyNPC && Character.Controlled != null && 
                             (character.CurrentHull == Character.Controlled.CurrentHull || Vector2.DistanceSquared(Character.Controlled.WorldPosition, character.WorldPosition) < 500.0f * 500.0f))
                         {
@@ -2055,7 +2056,7 @@ namespace Barotrauma
             // Character context works differently to others as we still use the "basic" command interface,
             // but the order will be automatically assigned to this character
             isContextual = forceContextual;
-            if (entityContext is Character character)
+            if (entityContext is Character { Info: not null } character)
             {
                 characterContext = character;
                 itemContext = null;
@@ -2670,9 +2671,9 @@ namespace Barotrauma
             bool IsNonDuplicateOrder(Order order) => IsNonDuplicateOrderPrefab(order.Prefab, order.Option);
             bool IsNonDuplicateOrderPrefab(OrderPrefab orderPrefab, Identifier option = default)
             {
-                return characterContext == null || (option.IsEmpty ?
+                return characterContext == null || (characterContext.CurrentOrders != null && (option.IsEmpty ?
                     characterContext.CurrentOrders.None(oi => oi?.Identifier == orderPrefab?.Identifier) :
-                    characterContext.CurrentOrders.None(oi => oi?.Identifier == orderPrefab?.Identifier && oi.Option == option));
+                    characterContext.CurrentOrders.None(oi => oi?.Identifier == orderPrefab?.Identifier && oi?.Option == option)));
             }
             void AddOrderNodeWithIdentifier(string identifier)
             {
@@ -3045,7 +3046,7 @@ namespace Barotrauma
                 {
                     optionElement.OnSecondaryClicked = (button, _) => CreateAssignmentNodes(button);
                 }
-                var colorMultiplier = characters.Any(c => c.CurrentOrders.Any(o => o != null &&
+                var colorMultiplier = characters.Any(c => c.CurrentOrders != null && c.CurrentOrders.Any(o => o != null &&
                     o.Identifier == userData.Order.Identifier &&
                     o.TargetEntity == userData.Order.TargetEntity)) ? 0.5f : 1f;
                 CreateNodeIcon(Vector2.One, optionElement.RectTransform, item.Prefab.MinimapIcon ?? order.SymbolSprite, order.Color * colorMultiplier, tooltip: item.Name);

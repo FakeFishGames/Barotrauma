@@ -738,7 +738,14 @@ namespace Barotrauma
 
             commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name] [limb type] [use relative strength]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
-                if (args.Length < 2) { return; }
+                if (args.Length < 2)
+                {
+                    if (args.Length == 1)
+                    {
+                        ThrowError("Must give a strength value!"); 
+                    }
+                    return;
+                }
                 string affliction = args[0];
                 AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == affliction);
                 if (afflictionPrefab == null)
@@ -779,9 +786,9 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    AfflictionPrefab.Prefabs.Select(a => a.Name.Value).ToArray(),
+                    AfflictionPrefab.Prefabs.Select(a => a.Name.Value).ToArray().Concat(AfflictionPrefab.Prefabs.Select(a => a.Identifier.Value)).ToArray(),
                     new string[] { "1" },
-                    Character.CharacterList.Select(c => c.Name).ToArray(),
+                    ListCharacterNames(),
                     Enum.GetNames(typeof(LimbType)).ToArray()
                 };
             }, isCheat: true));
@@ -827,7 +834,9 @@ namespace Barotrauma
                 if (character != null)
                 {
                     Dictionary<Identifier, float> treatments = new Dictionary<Identifier, float>();
-                    character.CharacterHealth.GetSuitableTreatments(treatments, user: null);
+                        character.CharacterHealth.GetSuitableTreatments(treatments, user: null,
+                        checkTreatmentThreshold: true,
+                        checkTreatmentSuggestionThreshold: false);
                     foreach (var treatment in treatments.OrderByDescending(t => t.Value))
                     {
                         Color color = Color.White;
@@ -2782,6 +2791,7 @@ namespace Barotrauma
             if (targetCharacter != null)
             {
                 targetCharacter.TeleportTo(worldPosition);
+                targetCharacter.AnimController.BodyInRest = false;
             }
             else
             {

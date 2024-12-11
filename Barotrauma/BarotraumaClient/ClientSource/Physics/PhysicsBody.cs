@@ -64,12 +64,12 @@ namespace Barotrauma
             if (drawOffset != Vector2.Zero)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
-                if (Submarine != null) pos += Submarine.DrawPosition;
+                if (Submarine != null) { pos += Submarine.DrawPosition; }
 
                 GUI.DrawLine(spriteBatch,
                     new Vector2(pos.X, -pos.Y),
                     new Vector2(DrawPosition.X, -DrawPosition.Y),
-                    Color.Cyan, 0, 5);
+                    Color.Purple * 0.75f, 0, 5);
             }
             if (IsValidShape(Radius, Height, Width))
             {

@@ -14,6 +14,7 @@ namespace Barotrauma.Items.Components
 
         public override void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description)
         {
+            bool mergedMaterialTainted = false;
             if (!materialName.IsNullOrEmpty() && item.ContainedItems.Count() > 0)
             {
                 LocalizedString mergedMaterialName = materialName;
@@ -22,11 +23,15 @@ namespace Barotrauma.Items.Components
                     var containedMaterial = containedItem.GetComponent<GeneticMaterial>();
                     if (containedMaterial == null) { continue; }
                     mergedMaterialName += ", " + containedMaterial.materialName;
+                    if (containedMaterial.Tainted)
+                    {
+                        mergedMaterialTainted = true;
+                    }
                 }
                 name = name.Replace(materialName, mergedMaterialName);
             }
 
-            if (Tainted)
+            if (Tainted || mergedMaterialTainted)
             {
                 name = TextManager.GetWithVariable("entityname.taintedgeneticmaterial", "[geneticmaterialname]", name);
             }

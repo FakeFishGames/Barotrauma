@@ -427,20 +427,32 @@ namespace Barotrauma
             tempBuffer.WriteSingle(SimPosition.Y);
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             AnimController.Collider.LinearVelocity = new Vector2(
-                MathHelper.Clamp(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel),
-                MathHelper.Clamp(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel));
+                NetConfig.Quantize(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12),
+                NetConfig.Quantize(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12));
             tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12);
             tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12);
 
-            bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation || !AnimController.Collider.PhysEnabled;
+            AnimController.TargetMovement = new Vector2(
+                NetConfig.Quantize(AnimController.TargetMovement.X, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12),
+                NetConfig.Quantize(AnimController.TargetMovement.Y, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12));
+            tempBuffer.WriteRangedSingle(AnimController.TargetMovement.X, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12);
+            tempBuffer.WriteRangedSingle(AnimController.TargetMovement.Y, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12);
+
+            bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation;
             tempBuffer.WriteBoolean(fixedRotation);
             if (!fixedRotation)
             {
                 tempBuffer.WriteSingle(AnimController.Collider.Rotation);
                 float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
-                AnimController.Collider.AngularVelocity = NetConfig.Quantize(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
+                AnimController.Collider.AngularVelocity =
+                    AnimController.Collider.PhysEnabled ?
+                    0.0f :
+                    NetConfig.Quantize(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
                 tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
             }
+
+
+            tempBuffer.WriteBoolean(AnimController.IgnorePlatforms);
 
             bool writeStatus = healthUpdateTimer <= 0.0f;
             tempBuffer.WriteBoolean(writeStatus);
