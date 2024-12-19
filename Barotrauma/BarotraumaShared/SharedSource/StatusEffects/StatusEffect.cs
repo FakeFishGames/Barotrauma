@@ -1977,8 +1977,11 @@ namespace Barotrauma
 #if SERVER
                         GameMain.Server?.SendChatMessage(messageToSay.Value, messageType, senderClient: null, targetCharacter);
 #elif CLIENT
-                        AIChatMessage message = new AIChatMessage(messageToSay.Value, messageType);
-                        targetCharacter.SendSinglePlayerMessage(message, canUseRadio, radio);
+                        if (isNotClient)
+                        {
+                            AIChatMessage message = new AIChatMessage(messageToSay.Value, messageType);
+                            targetCharacter.SendSinglePlayerMessage(message, canUseRadio, radio);
+                        }
 #endif
                     }
                 }
