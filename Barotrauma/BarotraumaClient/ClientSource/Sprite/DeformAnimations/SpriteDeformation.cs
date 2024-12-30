@@ -195,12 +195,12 @@ namespace Barotrauma.SpriteDeformations
             Deformation = new Vector2[Params.Resolution.X, Params.Resolution.Y];
         }
 
-        protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse);
+        protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse, bool isFlipped = false);
 
         public abstract void Update(float deltaTime);
 
         private static readonly List<int> yValues = new List<int>();
-        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale, bool inverseY = false)
+        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale, bool inverseY = false, bool isFlipped = false)
         {
             foreach (SpriteDeformation animation in animations)
             {
@@ -231,7 +231,7 @@ namespace Barotrauma.SpriteDeformations
                 {
                     yValues.Reverse();
                 }
-                animation.GetDeformation(out Vector2[,] animDeformation, out float multiplier, inverseY);
+                animation.GetDeformation(out Vector2[,] animDeformation, out float multiplier, inverseY, isFlipped);
                 for (int x = 0; x < resolution.X; x++)
                 {
                     for (int y = 0; y < resolution.Y; y++)

@@ -109,9 +109,28 @@ namespace Barotrauma.SpriteDeformations
             }
         }
 
-        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse)
+        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse, bool isFlipped = false)
         {
-            deformation = Deformation;
+            if (isFlipped)
+            {
+                Vector2[,] flippedDeformation = new Vector2[Deformation.GetLength(0), Deformation.GetLength(1)];
+
+                int width = Deformation.GetLength(0);
+                int height = Deformation.GetLength(1);
+
+                for (int x = 0; x < width; x++)
+                {
+                    for (int y = 0; y < height; y++)
+                    {
+                        flippedDeformation[x, y] = Deformation[width - x - 1, y]; // read the rows from right to left
+                    }
+                }
+                deformation = flippedDeformation;
+            }
+            else
+            {
+                deformation = Deformation;
+            }
             multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
                 CustomDeformationParams.Amplitude : 
                 (float)Math.Sin(inverse ? -phase : phase) * CustomDeformationParams.Amplitude;

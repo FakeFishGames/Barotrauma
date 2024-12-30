@@ -824,11 +824,11 @@ namespace Barotrauma
                 {
                     if (ActiveDeformations.Any())
                     {
-                        var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size);
+                        var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, isFlipped: IsFlipped);
                         deformSprite.Deform(deformation);
                         if (LightSource != null && LightSource.DeformableLightSprite != null)
                         {
-                            deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, dir == Direction.Left);
+                            deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, dir == Direction.Left, isFlipped: IsFlipped);
                             LightSource.DeformableLightSprite.Deform(deformation);
                         }
                     }
@@ -879,7 +879,7 @@ namespace Barotrauma
                         var defSprite = conditionalSprite.DeformableSprite;
                         if (ActiveDeformations.Any())
                         {
-                            var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, defSprite.Size);
+                            var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, defSprite.Size, isFlipped: IsFlipped);
                             defSprite.Deform(deformation);
                         }
                         else
