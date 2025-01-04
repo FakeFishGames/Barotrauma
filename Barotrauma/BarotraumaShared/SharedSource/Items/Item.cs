@@ -3937,7 +3937,7 @@ namespace Barotrauma
                 }
                 logPropertyChangeCoroutine = CoroutineManager.Invoke(() =>
                 {
-                    GameServer.Log($"{sender.Character?.Name ?? sender.Name} set the value \"{property.Name}\" of the item \"{Name}\" to \"{logValue}\".", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log($"{GameServer.CharacterLogName(sender.Character)} set the value \"{property.Name}\" of the item \"{Name}\" to \"{logValue}\".", ServerLog.MessageType.ItemInteraction);
                 }, delay: 1.0f);
             }
 #endif
