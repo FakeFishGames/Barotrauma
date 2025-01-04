@@ -6466,7 +6466,7 @@ namespace Barotrauma
             if (TransformWidget.Enabled)
             {
                 TransformWidget.DrawPos = TransformWidget.IsSelected ? PlayerInput.MousePosition : Cam.WorldToScreen(SelectionCenter) + Vector2.UnitX * TransformToolWidgetOffset * GUI.Scale;
-                GUI.DrawLine(spriteBatch, Cam.WorldToScreen(SelectionCenter), TransformWidget.DrawPos, GUIStyle.Green, width: 3f);
+                GUI.DrawLine(spriteBatch, Cam.WorldToScreen(TransformWidget.IsSelected ? oldSelectionCenter : SelectionCenter), TransformWidget.DrawPos, GUIStyle.Green, width: 3f);
                 TransformWidget.Draw(spriteBatch, (float)deltaTime);
             }
 
