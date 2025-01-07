@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Afflictions>
+
+  <Affliction
+    identifier="foolhardy"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    duration="1"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1"
+            resistancefor="damage"
+            minresistance="0.2"
+            maxresistance="0.2"/>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="0,1" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="berserker"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    duration="1"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="MeleeAttackMultiplier" value="0.2"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="7,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="salvagecrew"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    duration="1"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1" 
+            resistancefor="damage"
+            minresistance="0.1"
+            maxresistance="0.1">
+      <StatValue stattype="SwimmingSpeed" value="0.5"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="7,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="pyromania"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="5"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="5"
+      strengthchange="-1"
+      resistancefor="damage"
+      minresistance="0.40"
+      maxresistance="0.40"/>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="5,6" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="tinkerexhaustion"
+    type="talentbuff"
+    isbuff="false"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="35"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="35"
+      strengthchange="-1"/>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="6,6" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    identifier="quickfixer"
+    type="talentbuff"
+    isbuff="false"
+    hideiconafterdelay="true"
+    limbspecific="false"
+    maxstrength="10"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="10" strengthchange="-1">
+      <StatValue stattype="MovementSpeed" value="0.20"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="1,1" sheetelementsize="128,128"/>
+  </Affliction>
+  
+</Afflictions>

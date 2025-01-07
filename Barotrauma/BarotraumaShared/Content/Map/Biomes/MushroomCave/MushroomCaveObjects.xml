@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--COLD CAVERNS-->
+<levelobjects>
+  <!-- a series of background chunks that spawn along walls -->
+  <BackgroundChunks identifier="mushroomcavebackgroundchunks" spawnpos="Wall" minsurfacewidth="0" minsize="1" maxsize="2" randomrotation="-180,180" commonness="0" depthrange="1200,3200" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000" randomoffset="100,500">
+    <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="4,533,375,391" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="380,544,376,379" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="761,550,259,354" origin="0.5,0.5"/>
+    <overridecommonness leveltype="mushroomcave" commonness="100"/>
+  </BackgroundChunks>
+  <EdgeChunks identifier="mushroomcaveedgechunks" spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="0.5" randomrotation="-5,5" randomoffset="0,-50" commonness="0" depthrange="5,5" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Sprite texture="Content/Map/Biomes/MushroomCave/WallEdgeChunks.png" sourcerect="0,0,512,371" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/WallEdgeChunks.png" sourcerect="512,0,512,371" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/WallEdgeChunks.png" sourcerect="0,371,512,389" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/WallEdgeChunks.png" sourcerect="512,371,512,389" origin="0.5,0.5"/>
+    <overridecommonness leveltype="mushroomcave" commonness="100"/>
+  </EdgeChunks>
+  <Mushroomobjects identifier="mushroomcaveobjects" spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1" randomrotation="-5,5" randomoffset="50,50" commonness="0" depthrange="5,5" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="342,0,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="684,0,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="0,342,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="342,342,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="684,342,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="0,684,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="342,684,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/LevelObjects.png" sourcerect="682,684,342,342" origin="0.5,0.5"/>
+    <overridecommonness leveltype="mushroomcave" commonness="100"/>
+  </Mushroomobjects>
+  <Bulbousplants1 identifier="mushroomcavebulb1" spawnpos="Wall, RuinWall" takelevelwalldamage="true" health="20" hidewhenbroken="true" minsurfacewidth="0" minsize="0.5" maxsize="0.8" randomrotation="0,0" randomoffset="70,90" commonness="0" depthrange="-1,-0.1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Trigger position="0,0" radius="300" triggeredby="Human" staytriggereddelay="10000000" triggeronce="true">
+      <OverrideProperties>
+        <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="0,256,256,256" origin="0.5,0.5"/>
+      </OverrideProperties>
+      <StatusEffect target="This">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <Explosion range="300" force="10" smoke="false" underwaterbubble="false" flash="false">
+          <Affliction identifier="acidburn" strength="2" probability="0.5" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="1.5"/>
+        </Explosion>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+      <StatusEffect target="This" type="OnBroken">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+    </Trigger>
+    <LightSource range="120" color="132,193,141,250" drawbehindsubs="true" pulseamount="0" pulsefrequency="0.2"/>
+    <DeformableSprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="0,0,256,256" origin="0.5,0.5" resolution="3,3">
+      <SpriteDeformation frequency="1.0" scale="3.0" sync="-1" typename="inflate" blendmode="Add" strength="0.3" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3" row0="1,1 1,1 1,1" row1="0.5,0.5 0.5,0.5 0.5,0.5" row2="0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="mushroomcave" commonness="10"/>
+  </Bulbousplants1>
+  <Bulbousplants2 identifier="mushroomcavebulb2" spawnpos="Wall, RuinWall" takelevelwalldamage="true" health="20" hidewhenbroken="true" minsurfacewidth="0" minsize="0.5" maxsize="0.8" randomrotation="0,0" randomoffset="70,90" commonness="0" depthrange="-1,-0.1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Trigger position="0,0" radius="300" triggeredby="Human" staytriggereddelay="10000000" triggeronce="true">
+      <OverrideProperties>
+        <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="256,256,256,256" origin="0.5,0.5"/>
+      </OverrideProperties>
+      <StatusEffect target="This">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <Explosion range="300" force="10" smoke="false" underwaterbubble="false" flash="false">
+          <Affliction identifier="acidburn" strength="2" probability="0.5" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="1.5"/>
+        </Explosion>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+      <StatusEffect target="This" type="OnBroken">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+    </Trigger>
+    <LightSource range="120" color="132,193,141,250" drawbehindsubs="true" pulseamount="0" pulsefrequency="0.2"/>
+    <DeformableSprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="256,0,256,256" origin="0.5,0.5" resolution="3,3">
+      <SpriteDeformation frequency="1.0" scale="3.0" sync="-1" typename="inflate" blendmode="Add" strength="0.3" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3" row0="1,1 1,1 1,1" row1="0.5,0.5 0.5,0.5 0.5,0.5" row2="0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="mushroomcave" commonness="10"/>
+  </Bulbousplants2>
+  <Bulbousplants3 identifier="mushroomcavebulb3" spawnpos="Wall, RuinWall" takelevelwalldamage="true" health="20" hidewhenbroken="true" minsurfacewidth="0" minsize="0.5" maxsize="0.8" randomrotation="0,0" randomoffset="70,90" commonness="0" depthrange="-1,-0.1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Trigger position="0,0" radius="300" triggeredby="Human" staytriggereddelay="10000000" triggeronce="true">
+      <OverrideProperties>
+        <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="512,256,256,256" origin="0.5,0.5"/>
+      </OverrideProperties>
+      <StatusEffect target="This">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <Explosion range="300" force="10" smoke="false" underwaterbubble="false" flash="false">
+          <Affliction identifier="acidburn" strength="2" probability="0.5" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="1.5"/>
+        </Explosion>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+      <StatusEffect target="This" type="OnBroken">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+    </Trigger>
+    <LightSource range="120" color="132,193,141,250" drawbehindsubs="true" pulseamount="0" pulsefrequency="0.2"/>
+    <DeformableSprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="512,0,256,256" origin="0.5,0.5" resolution="3,3">
+      <SpriteDeformation frequency="1.0" scale="3.0" sync="-1" typename="inflate" blendmode="Add" strength="0.3" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3" row0="1,1 1,1 1,1" row1="0.5,0.5 0.5,0.5 0.5,0.5" row2="0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="mushroomcave" commonness="10"/>
+  </Bulbousplants3>
+  <Bulbousplants4 identifier="mushroomcavebulb4" spawnpos="Wall, RuinWall" takelevelwalldamage="true" health="20" hidewhenbroken="true" minsurfacewidth="0" minsize="0.5" maxsize="0.8" randomrotation="0,0" randomoffset="70,90" commonness="0" depthrange="-1,-0.1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Trigger position="0,0" radius="300" triggeredby="Human" staytriggereddelay="10000000" triggeronce="true">
+      <OverrideProperties>
+        <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="768,256,256,256" origin="0.5,0.5"/>
+      </OverrideProperties>
+      <StatusEffect target="This">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <Explosion range="300" force="10" smoke="false" underwaterbubble="false" flash="false">
+          <Affliction identifier="acidburn" strength="2" probability="0.5" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="1.5"/>
+        </Explosion>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+      <StatusEffect target="This" type="OnBroken">
+        <sound file="Content/Sounds/Damage/ArmorBreak3.ogg"/>
+        <particleemitter particle="brownchunks" particleamount="50" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="toxins" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+      </StatusEffect>
+    </Trigger>
+    <LightSource range="120" color="132,193,141,250" drawbehindsubs="true" pulseamount="0" pulsefrequency="0.2"/>
+    <DeformableSprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="768,0,256,256" origin="0.5,0.5" resolution="3,3">
+      <SpriteDeformation frequency="1.0" scale="3.0" sync="-1" typename="inflate" blendmode="Add" strength="0.3" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3" row0="1,1 1,1 1,1" row1="0.5,0.5 0.5,0.5 0.5,0.5" row2="0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="mushroomcave" commonness="10"/>
+  </Bulbousplants4>
+  <AcidSpores identifier="acidspores" spawnpos="CaveWall" alignment="TopLeft, BottomRight" minsize="1" maxsize="1" randomrotation="0,360" randomoffset="0,1000" commonness="0" maxcount="100" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="0" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <Trigger position="0,0" radius="400" triggeredby="Human">
+      <StatusEffect target="Character">
+        <ParticleEmitter particle="spore" particlespersecond="6" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" scalemin="0.1" scalemax="0.2" distancemin="0" distancemax="10" colormultiplier="255,255,255,150"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="3" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" scalemin="0.8" scalemax="1.0" distancemin="0" distancemax="10"/>
+        <Affliction identifier="psychosis" strength="0.5"/>
+      </StatusEffect>
+    </Trigger>
+    <ParticleEmitter particle="spore" particlespersecond="15" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10" scalemin="0.3" scalemax="0.5" distancemin="0" distancemax="300" colormultiplier="255,255,255,150"/>
+    <overridecommonness leveltype="mushroomcave" commonness="0"/>
+  </AcidSpores>
+  <!--
+    <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="29,551,293,277" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="368,551,293,277" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/MushroomCave/CaveHazards.png" sourcerect="690,551,293,277" origin="0.5,0.5"/>
+    <overridecommonness leveltype="mushroomcave" commonness="50"/>
+    -->
+</levelobjects>

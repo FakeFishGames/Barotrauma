@@ -1,0 +1,505 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <!--NEON SIGNS START-->
+  
+  <Item name="" identifier="neonlighta" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="673,310,72,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="0,0" sheetelementsize="128,128" depth="0.969" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightb" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,573,65,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="1,0" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightc" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="746,447,67,87" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="2,0" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightd" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="945,518,59,87" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="3,0" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlighte" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="799,605,59,87" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="4,0" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightf" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,748,57,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="5,0" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightg" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,486,69,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="6,0" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlighth" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,661,62,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="7,0" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlighti" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="1001,1,22,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="0,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightj" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="574,762,57,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="1,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightk" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="882,518,61,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="2,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightl" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="717,635,59,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="3,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightm" aliases="neonlightim" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="749,271,83,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="4,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightn" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="582,587,62,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="5,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlighto" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,397,75,87" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="6,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightp" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="646,694,59,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="7,1" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightq" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="747,359,75,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="0,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightr" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="653,574,62,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="1,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlights" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="579,675,59,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="2,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightt" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="586,499,65,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="3,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightu" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="665,486,66,86" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="4,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightv" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="815,518,65,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="5,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightw" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="894,96,92,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="6,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightx" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,310,79,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="7,2" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlighty" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="592,412,71,85" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="0,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightz" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="673,397,71,87" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="1,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="960,183,63,84" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="2,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight1" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="968,607,36,82" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="3,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight2" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="571,922,52,83" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="4,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight3" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,922,54,84" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="5,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight4" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="839,260,52,84" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="6,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight5" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="860,605,52,83" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="7,3" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight6" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,836,56,84" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="0,4" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight7" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="860,690,51,83" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="1,4" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight8" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="914,607,52,83" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="2,4" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlight9" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="839,175,53,83" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="47,146,209,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="3,4" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightplanet" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="834,346,170,170" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="255,125,0,255" flicker="0.3" blinkfrequency="1" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sourcerect="0,640,256,256" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+    <LightComponent range="0" lightcolor="0,0,255,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sourcerect="512,640,256,256" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightkiss" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,153,232,155" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="200,0,50,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sourcerect="256,640,256,256" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightarrow" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="596,310,75,100" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="200,0,50,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="0,7" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightgarden" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="733,536,64,97" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="200,0,50,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="1,7" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightgear" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="749,175,88,94" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="200,0,50,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="2,7" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightsubmarine" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="904,1,95,73" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="200,0,50,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="3,7" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightfood" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="893,260,65,84" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <LightComponent range="0" lightcolor="200,0,50,255" flicker="0.3" powerconsumption="0" IsOn="true" castshadows="false" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Map/NeonSign_light.png" sheetindex="4,7" sheetelementsize="128,128" depth="0.1" origin="0.5,0.52" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="neonlightframe" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="894,76,94,18" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="neonlightwire1" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,36,237,115" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="neonlightwire2" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="754,125,137,48" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="neonlightwire3" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="515,1,387,33" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="neonlightwire4" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SignAssets.png" sourcerect="754,36,138,87" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Item>
+  <!--NEON SIGNS ENDS-->
+  
+  <Item name="" identifier="lamp" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="304,528,64,96" depth="0.8"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="784,528,64,96"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <!-- TODO: add names for fluorescent lights -->
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm01" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="0,528,80,112" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,528,80,112" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm02" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="80,528,80,112" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="560,528,80,112"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm03" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="160,528,64,112" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="640,528,64,112"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm04" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="224,528,80,112" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="704,528,80,112" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentl01" category="Electrical" Tags="largeitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="0,816,240,64" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,816,240,64"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentl02" category="Electrical" Tags="largeitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="0,896,288,48" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/light_fluorescent_L2.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,896,288,48"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenmm01" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="0,672,80,128" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,672,80,128" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenmm02" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="80,672,128,80" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="560,672,128,80" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenmm03" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="208,672,112,128" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="688,672,112,128"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenm04" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="320,672,128,96" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="800,672,128,96" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightleds01" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="352,784,80,80" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <!-- additive "top light" -->
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="842,794,59,59" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="emergencylight" category="Electrical" Tags="smallitem,light" scale="0.5">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <Sprite texture="signalcomp.png" sourcerect="0,960,96,16" depth="0.8"/>
+    <!-- base texture -->
+    <LightComponent lightcolor="255,0,0,25" range="250.0" IsOn="true" castshadows="false" alphablend="true">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,960,96,16"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+    </ConnectionPanel>
+  </Item>
+
+</Items>

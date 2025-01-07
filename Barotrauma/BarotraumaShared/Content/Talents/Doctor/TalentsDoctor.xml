@@ -1,0 +1,538 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Talents>
+  <Talent identifier="macrodosing">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="1,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.increaseappliedbuffduration">
+      <Replace tag="[amount]" value="25" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.poisonsincreased">
+      <Replace tag="[amount]" value="100" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.endocrinebooster" color="gui.orange"/>
+    </Description>
+    <Description tag="entitydescription.endocrinebooster"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="BuffItemApplyingMultiplier" value="0.25"/>
+        <CharacterAbilityGiveStat stattype="PoisonMultiplier" value="1.0"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="endocrinebooster"/>
+  </Talent>
+
+  <Talent identifier="labcontacts">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="7,7" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.chemicalsboughtcheaper">
+      <Replace tag="[amount]" value="30" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.constructmedicinefaster">
+      <Replace tag="[amount]" value="100" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="medical" stattype="FabricationSpeed" value="1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="chem" stattype="StoreBuyMultiplier" value="0.3" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="deliverysystem">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.advancedsyringegun" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="advancedsyringegun"/>
+  </Talent>
+  
+  <Talent identifier="blackmarketgenes">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="2,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.blackmarketgenes"/>
+    <Description tag="talentdescription.sellgeneticmaterialsmultiplier">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="unidentifiedgeneticmaterial" stattype="StoreSellMultiplier" value="0.5" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="geneticmaterial" stattype="StoreSellMultiplier" value="0.5" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedStoreItem itemtag="blackmarketgenes"/>
+  </Talent>
+  
+  <Talent identifier="miracleworker">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="7,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.miracleworker"/>
+    <Description tag="talentdescription.miracleworkerreminder"/>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies maxdistance="600" allowself="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="miracleworker" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveResistance resistanceid="miracleworker" multiplier="0"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="medicalassistance">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="2,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.medicalassistance">
+      <Replace tag="[amount]" value="30" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="false" jobs="assistant" insameroom="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="medicalassistance" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="emergencyresponse">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.assistantdragatfullspeed"/>
+    <Description tag="talentdescription.emergencyresponse">
+      <Replace tag="[movementspeed]" value="40" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionCrewMemberUnconscious/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="emergencyresponse_selfbuff" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="false" jobs="assistant">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="emergencyresponse" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="medicalexpertise">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="2,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.medicalexpertise">
+      <Replace tag="[skill]" value="skillname.medical" color="gui.orange"/>
+      <Replace tag="[amount]" value="30" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MedicalSkillBonus" value="30"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnApplyTreatment">
+      <Conditions>
+        <AbilityConditionItem identifiers="antibleeding1"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <!-- improve bandage effectiveness -->
+            <StatusEffect tags="medical" type="OnAbility" target="Limb" duration="6.0">
+              <ReduceAffliction type="bleeding" amount="1.5"/>
+              <ReduceAffliction type="burn" amount="1.5"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="genetampering">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="6,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.genetampering">
+      <Replace tag="[healthamount]" value="10" color="gui.green"/>
+      <Replace tag="[movementspeed]" value="5" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="genetampering" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="bloodybusiness">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="1,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.itemgiveslessaffliction">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.bloodybusiness">
+      <Replace tag="[item]" value="entityname.alienblood" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnApplyTreatment">
+      <Conditions>
+        <AbilityConditionItem identifiers="alienblood"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <!-- counter half of the psychosis applied by alien blood -->
+            <StatusEffect tags="medical" type="OnAbility" target="UseTarget" duration="15.0">
+              <ReduceAffliction identifier="psychosis" amount="1.5"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnLootCharacter">
+      <Conditions>
+        <AbilityConditionCharacter targettype="Monster">
+          <Conditional IsMachine="false"/>
+          <Conditional IsHusk="false"/>
+          <Conditional maxhealth="gt 300"/>
+        </AbilityConditionCharacter>
+        <AbilityConditionCharacterNotLooted identifier="bloodybusiness"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="UseTarget" spawnitemrandomly="true">
+              <SpawnItem identifiers="alienblood" spawnposition="ThisInventory"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+        <CharacterAbilityMarkAsLooted identifier="bloodybusiness"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="blooddonor">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.blooddonor"/>
+    <AbilityGroupEffect abilityeffecttype="OnAnyMissionCompleted">
+      <Abilities>
+        <CharacterAbilityPutItem itemidentifier="antibloodloss2" amount="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="stayinalive">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="6,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.slightlypowerfulcpr">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="stayinalive" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="selfcare">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="0,0" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.medicaleffectiveness">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MedicalItemEffectivenessMultiplier" value="0.2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="laresistance">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="7,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.additionalresistanceself">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+      <Replace tag="[affliction]" value="afflictionname.opiateaddiction" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.additionalresistanceself">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+      <Replace tag="[affliction]" value="afflictionname.chemaddiction" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveResistance resistanceid="opiateaddiction" multiplier="0.5"/>
+        <CharacterAbilityGiveResistance resistanceid="chemaddiction" multiplier="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="exampleofhealth">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="6,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.additionalstattypeself">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.maximumhealthmultiplier" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MaximumHealthMultiplier" value="0.2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="nobodyimportantdies">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="2,7" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.nobodyimportantdies">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+      <Replace tag="[penalty]" value="20" color="gui.red"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnReduceAffliction">
+      <Conditions>
+        <AbilityConditionCharacter targetabilitytarget="true">
+          <Conditional jobidentifier="assistant"/>
+        </AbilityConditionCharacter>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="0.8"/>
+      </Abilities>
+      <FallbackAbilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.1"/>
+      </FallbackAbilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="healthinsurance">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.healthinsurance">
+      <Replace tag="[amount]" value="30" color="gui.orange"/>
+      <Replace tag="[money]" value="100" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.medicalitemscostless">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="medical" stattype="StoreBuyMultiplier" value="0.1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupInterval interval="1">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="healthinsurance" min="1" invert="true"/>
+        <AbilityConditionAboveVitality invert="true" vitalitypercentage="0.3"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="healthinsurance" value="1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupEffect abilityeffecttype="OnAnyMissionCompleted">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="healthinsurance" min="1"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveMoney amount="100"/>
+        <CharacterAbilityResetPermanentStat statidentifier="healthinsurance"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="medicalcompanion">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="3,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.autoinjectorheadset" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="autoinjectorheadset"/>
+  </Talent>
+
+  <Talent identifier="firemanscarry">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="6,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.firemanscarry"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveFlag flagtype="MoveNormallyWhileDragging"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="supersoldiers">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="7,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.increaseappliedbuffduration">
+      <Replace tag="[amount]" value="25" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.combatstimulantsyringe" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="BuffItemApplyingMultiplier" value="0.25"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="combatstimulantsyringe"/>
+  </Talent>
+
+  <Talent identifier="whatastench">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.acidsdealmoredamage">
+      <Replace tag="[amount]" value="15" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.chemgrenade,entityname.40mmchemgrenade" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnAddDamageAffliction">
+      <Abilities>
+        <CharacterAbilityModifyAffliction afflictionidentifiers="acidburn" addedmultiplier="0.15"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="chemgrenade"/>
+    <AddedRecipe itemidentifier="40mmchemgrenade"/>
+  </Talent>
+
+  <Talent identifier="vitaminsupplements">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="4,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.vitaminsupplements">
+      <Replace tag="[healthboost]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnApplyTreatment">
+      <Conditions>
+        <AbilityConditionCharacter targettype="Ally,NotSelf"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveAffliction affliction="bedsidemanner" strength="600" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="dontdieonme">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="5,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.dontdieonme"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="CPRBoost" value="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="genesplicer">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="1,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.geneticmaterialrefineflatbonus">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="GeneticMaterialRefineBonus" value="10"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="drsubmarine">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="0,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.gainmedicalitemeffectiveness">
+      <Replace tag="[amount]" value="25" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MedicalItemApplyingMultiplier" value="0.25"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="nopressure">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="7,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.pressurestabilizer" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="pressurestabilizer"/>
+  </Talent>
+
+  <Talent identifier="geneticgenious">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="5,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.geneticmaterialtaintedprobabilityreductiononcombine">
+      <Replace tag="[amount]" value="99" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.advancedgenesplicer" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="GeneticMaterialTaintedProbabilityReductionOnCombine" value="0.99"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="advancedgenesplicer"/>
+  </Talent>
+
+  <Talent identifier="geneharvester">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="3,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.geneharvester">
+      <Replace tag="[probability]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnRoundEnd">
+      <Abilities>
+        <CharacterAbilityResetPermanentStat statidentifier="geneharvester_*" value="1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnLootCharacter">
+      <Conditions>
+        <AbilityConditionCharacter targettype="Monster">
+          <Conditional maxhealth="gt 25"/>
+          <Conditional ismachine="false"/>
+          <Conditional ispet="false"/>
+        </AbilityConditionCharacter>
+        <AbilityConditionCharacterNotLooted identifier="geneharvester"/>
+        <AbilityConditionServerRandom randomchance="0.2"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="UseTarget" spawnitemrandomly="true">
+              <SpawnItem identifiers="geneticmaterial_unresearched" spawnposition="ThisInventory"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnLootCharacter">
+      <Conditions>
+        <AbilityConditionCharacter targettype="Monster"/>
+        <AbilityConditionCharacterNotLooted identifier="geneharvester"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityMarkAsLooted identifier="geneharvester"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="plaguedoctor">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,3" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.additionalresistanceself">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+      <Replace tag="[affliction]" value="afflictionname.acidburn" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.europabrew,entityname.sulphuricacidsyringe" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="europabrew"/>
+    <AddedRecipe itemidentifier="sulphuricacidsyringe"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveResistance resistanceid="acidburn" multiplier="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+</Talents>

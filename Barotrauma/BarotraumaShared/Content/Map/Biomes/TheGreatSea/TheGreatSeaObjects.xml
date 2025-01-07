@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--COLD CAVERNS-->
+<levelobjects>
+  <!-- BG CHUNKS -->
+  <BackgroundChunks1 identifier="greatseabackgroundchunks1" MinSize="0.5" MaxSize="0.75" Alignment="TopLeft, BottomRight" SpawnPos="Wall, RuinWall, OutpostWall" MaxCount="10000" DepthRange="1000,2000" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="100,1000" AlignWithSurface="False" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="0" RandomRotation="-180,180" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="150,150,150,255">
+    <overridecommonness leveltype="thegreatsea" commonness="100"/>
+    <overridecommonness leveltype="greatseatransition" commonness="75"/>
+    <overridecommonness leveltype="ridgetransition" commonness="25"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="683,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="1365,0,683,1024" origin="0.5,0.5"/>
+  </BackgroundChunks1>
+  <BackgroundChunks2 identifier="greatseabackgroundchunks2" MinSize="1" MaxSize="1.5" Alignment="TopLeft, BottomRight" SpawnPos="Wall, RuinWall, OutpostWall" MaxCount="10000" DepthRange="1500,2500" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="100,1000" AlignWithSurface="False" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="0" RandomRotation="-180,180" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="150,150,150,255">
+    <overridecommonness leveltype="thegreatsea" commonness="95"/>
+    <overridecommonness leveltype="greatseatransition" commonness="70"/>
+    <overridecommonness leveltype="ridgetransition" commonness="20"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="683,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="1365,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" origin="0.5,0.5"/>
+  </BackgroundChunks2>
+  <BackgroundChunks3 identifier="greatseabackgroundchunks3" MinSize="1.5" MaxSize="2" Alignment="TopLeft, BottomRight" SpawnPos="Wall, RuinWall, OutpostWall" MaxCount="10000" DepthRange="2000,3000" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="100,1000" AlignWithSurface="False" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="0" RandomRotation="-180,180" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="150,150,150,255">
+    <overridecommonness leveltype="thegreatsea" commonness="90"/>
+    <overridecommonness leveltype="greatseatransition" commonness="70"/>
+    <overridecommonness leveltype="ridgetransition" commonness="20"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="1365,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="683,0,683,1024" origin="0.5,0.5"/>
+  </BackgroundChunks3>
+  <!-- EDGE CHUNKS -->
+  <EdgeChunks1 identifier="greatseaedgechunks1" MinSize="0.5" MaxSize="0.5" Alignment="TopLeft, BottomRight" SpawnPos="Wall, RuinWall" MaxCount="10000" DepthRange="-1,0" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="50,50" AlignWithSurface="True" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="500" RandomRotation="-5,5" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="255,255,255,255">
+    <overridecommonness leveltype="thegreatsea" commonness="45"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="828,0,388,420" origin="0.5,0.7"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="778,939,436,509" origin="0.6,0.7"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="790,1451,452,597" origin="0.5,0.7"/>
+  </EdgeChunks1>
+  <EdgeChunks2 identifier="greatseaedgechunks2" MinSize="0.5" MaxSize="0.5" Alignment="TopLeft, BottomRight" SpawnPos="Wall, RuinWall" MaxCount="10000" DepthRange="-1,0" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="50,50" AlignWithSurface="True" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="800" RandomRotation="-5,5" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="255,255,255,255">
+    <overridecommonness leveltype="thegreatsea" commonness="45"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="0,0,823,420" origin="0.5,0.6"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="0,420,1016,515" origin="0.5,0.6"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="1246,1435,798,609" origin="0.5,0.6"/>
+  </EdgeChunks2>
+  <EdgeChunks3 identifier="greatseaedgechunks3" MinSize="0.5" MaxSize="0.5" Alignment="TopLeft, BottomRight" SpawnPos="Wall, RuinWall" MaxCount="10000" DepthRange="-1,0" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="50,50" AlignWithSurface="True" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="800" RandomRotation="-5,5" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="255,255,255,255">
+    <overridecommonness leveltype="thegreatsea" commonness="45"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="1218,64,826,1364" origin="0.5,0.7"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="16,935,758,1113" origin="0.6,0.7"/>
+  </EdgeChunks3>
+  <EdgeChunks1 identifier="greatseaedgechunks1_top" MinSize="1.0" MaxSize="2.0" Alignment="Bottom" SpawnPos="Wall, RuinWall" MaxCount="10000" DepthRange="-1,0" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="50,50" AlignWithSurface="True" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="420" RandomRotation="-5,5" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="255,255,255,255">
+    <overridecommonness leveltype="thegreatsea" commonness="60"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="828,0,388,420" origin="0.5,0.7"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="778,939,436,509" origin="0.6,0.7"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="790,1451,452,597" origin="0.5,0.7"/>
+  </EdgeChunks1>
+  <EdgeChunks2 identifier="greatseaedgechunks2_top" MinSize="2.5" MaxSize="3" Alignment="Bottom" SpawnPos="Wall, RuinWall" MaxCount="10000" DepthRange="-1,0" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="50,50" AlignWithSurface="True" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="50" RandomRotation="-5,5" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="255,255,255,255">
+    <overridecommonness leveltype="thegreatsea" commonness="60"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="0,0,823,420" origin="0.5,0.6"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="0,420,1016,515" origin="0.5,0.6"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="1246,1435,798,609" origin="0.5,0.6"/>
+  </EdgeChunks2>
+  <EdgeChunks3 identifier="greatseaedgechunks3_top" MinSize="0.5" MaxSize="1.5" Alignment="Bottom" SpawnPos="Wall, RuinWall" MaxCount="10000" DepthRange="-1,0" ClusteringAmount="0" ClusteringGroup="0" RandomOffset="50,50" AlignWithSurface="True" AllowAtStart="True" AllowAtEnd="True" MinSurfaceWidth="700" RandomRotation="-5,5" SwingAmount="0" SwingFrequency="0" ScaleOscillation="0,0" ScaleOscillationFrequency="0" Commonness="0" SonarDisruption="0" TakeLevelWallDamage="False" HideWhenBroken="False" Health="100" SpriteColor="255,255,255,255">
+    <overridecommonness leveltype="thegreatsea" commonness="60"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="1218,64,826,1364" origin="0.5,0.7"/>
+    <Sprite texture="Content/Map/Biomes/TheGreatSea/WallEdgeChunks.png" sourcerect="16,935,758,1113" origin="0.6,0.7"/>
+  </EdgeChunks3>
+</levelobjects>

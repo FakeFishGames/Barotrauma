@@ -1,0 +1,638 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <!-- UNIFORMS START -->
+  <Item name="" identifier="commonerclothes1" nameidentifier="outpostoutfit1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="6,9" sheetelementsize="64,64"/>
+    <Sprite name="commoner 1" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="1,8,120,59" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Commoner's Clothes 1 Torso" texture="Commoner1.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Right Hand" texture="Commoner1.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Left Hand" texture="Commoner1.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Left Lower Arm" texture="Commoner1.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Right Lower Arm" texture="Commoner1.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Left Upper Arm" texture="Commoner1.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Right Upper Arm" texture="Commoner1.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Waist" texture="Commoner1.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Right Thigh" texture="Commoner1.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Left Thigh" texture="Commoner1.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Right Leg" texture="Commoner1.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Left Leg" texture="Commoner1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Right Shoe" texture="Commoner1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 1 Left Shoe" texture="Commoner1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95" deflectprojectiles="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="commonerclothes2" nameidentifier="outpostoutfit1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="4,9" sheetelementsize="64,64"/>
+    <Sprite name="commoner 2" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="0,72,119,69" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Commoner's Clothes 2 Torso" texture="Commoner2.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Right Hand" texture="Commoner2.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Left Hand" texture="Commoner2.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Left Lower Arm" texture="Commoner2.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Right Lower Arm" texture="Commoner2.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Left Upper Arm" texture="Commoner2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Right Upper Arm" texture="Commoner2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Waist" texture="Commoner2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Right Thigh" texture="Commoner2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Left Thigh" texture="Commoner2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Right Leg" texture="Commoner2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Left Leg" texture="Commoner2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Right Shoe" texture="Commoner2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 2 Left Shoe" texture="Commoner2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95" deflectprojectiles="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="commonerclothes3" nameidentifier="outpostoutfit1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <Sprite name="commoner 3" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="125,74,120,64" depth="0.6" origin="0.5,0.5"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="4,8" sheetelementsize="64,64"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Commoner's Clothes 3  Torso" texture="Commoner3.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3  Right Hand" texture="Commoner3.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Left Hand" texture="Commoner3.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Left Lower Arm" texture="Commoner3.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Right Lower Arm" texture="Commoner3.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Left Upper Arm" texture="Commoner3.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Right Upper Arm" texture="Commoner3.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Waist" texture="Commoner3.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Right Thigh" texture="Commoner3.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Left Thigh" texture="Commoner3.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Right Leg" texture="Commoner3.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Left Leg" texture="Commoner3.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Right Shoe" texture="Commoner3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 3 Left Shoe" texture="Commoner3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95" deflectprojectiles="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="commonerclothes4" nameidentifier="outpostoutfit1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <Sprite name="commoner 4" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="0,148,119,59" depth="0.6" origin="0.5,0.5"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="5,9" sheetelementsize="64,64"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Commoner's Clothes 4 Torso" texture="Commoner4.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Right Hand" texture="Commoner4.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Left Hand" texture="Commoner4.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Left Lower Arm" texture="Commoner4.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Right Lower Arm" texture="Commoner4.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Left Upper Arm" texture="Commoner4.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Right Upper Arm" texture="Commoner4.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Waist" texture="Commoner4.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Right Thigh" texture="Commoner4.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Left Thigh" texture="Commoner4.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Right Leg" texture="Commoner4.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Left Leg" texture="Commoner4.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Right Shoe" texture="Commoner4.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 4 Left Shoe" texture="Commoner4.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95" deflectprojectiles="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="commonerclothes5" nameidentifier="outpostoutfit1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <Sprite name="commoner 5" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="122,145,123,62" depth="0.6" origin="0.5,0.5"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="6,8" sheetelementsize="64,64"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Commoner's Clothes 5 Torso" texture="commoner_5.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Right Hand" texture="commoner_5.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Left Hand" texture="commoner_5.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Right Lower Arm" texture="commoner_5.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Left Lower Arm" texture="commoner_5.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Right Upper Arm" texture="commoner_5.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Left Upper Arm" texture="commoner_5.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Waist" texture="commoner_5.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Right Thigh" texture="commoner_5.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Left Thigh" texture="commoner_5.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Right Leg" texture="commoner_5.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Left Leg" texture="commoner_5.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Left Shoe" texture="commoner_5.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Commoner's Clothes 5 Right Shoe" texture="commoner_5.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95" deflectprojectiles="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="crewchiefclothes" nameidentifier="crewchiefoutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="1,8" sheetelementsize="64,64"/>
+    <Sprite name="crewchief" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="247,77,117,62" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Crew Chief Torso" texture="crewchief.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Right Hand" texture="crewchief.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Left Hand" texture="crewchief.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Right Lower Arm" texture="crewchief.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Left Lower Arm" texture="crewchief.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Right Upper Arm" texture="crewchief.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Left Upper Arm" texture="crewchief.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Waist" texture="crewchief.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Right Thigh" texture="crewchief.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Left Thigh" texture="crewchief.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Right Leg" texture="crewchief.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Left Leg" texture="crewchief.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Left Shoe" texture="crewchief.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Crew Chief Right Shoe" texture="crewchief.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="medicalofficerclothes" nameidentifier="medicalofficeroutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="7,8" sheetelementsize="64,64"/>
+    <Sprite name="medicalofficer" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="245,149,119,56" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="MedicalOfficer's Uniform Torso" texture="MedicalOfficer.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Right Hand" texture="MedicalOfficer.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Left Hand" texture="MedicalOfficer.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Left Lower Arm" texture="MedicalOfficer.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Right Lower Arm" texture="MedicalOfficer.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Left Upper Arm" texture="MedicalOfficer.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Right Upper Arm" texture="MedicalOfficer.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Waist" texture="MedicalOfficer.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Right Thigh" texture="MedicalOfficer.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Left Thigh" texture="MedicalOfficer.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Right Leg" texture="MedicalOfficer.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Left Leg" texture="MedicalOfficer.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Right Shoe" texture="MedicalOfficer.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="MedicalOfficer's Uniform Left Shoe" texture="MedicalOfficer.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <SkillModifier skillidentifier="medical" skillvalue="15"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="minerclothes" nameidentifier="mineroutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="0,9" sheetelementsize="64,64"/>
+    <Sprite name="miner" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="374,73,120,65" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Miner Torso" texture="miner.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Right Hand" texture="miner.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Left Hand" texture="miner.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Right Lower Arm" texture="miner.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Left Lower Arm" texture="miner.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Right Upper Arm" texture="miner.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Left Upper Arm" texture="miner.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Waist" texture="miner.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Right Thigh" texture="miner.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Left Thigh" texture="miner.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Right Leg" texture="miner.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Left Leg" texture="miner.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Left Shoe" texture="miner.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Miner Right Shoe" texture="miner.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.85"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="blunttrauma" damagemultiplier="0.8"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="quartermasterclothes" nameidentifier="quartermasteroutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="0,8" sheetelementsize="64,64"/>
+    <Sprite name="quartermaster" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="642,296,119,57" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Quartermaster Torso" texture="quartermaster.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Right Hand" texture="quartermaster.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Left Hand" texture="quartermaster.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Right Lower Arm" texture="quartermaster.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Left Lower Arm" texture="quartermaster.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Right Upper Arm" texture="quartermaster.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Left Upper Arm" texture="quartermaster.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Waist" texture="quartermaster.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Right Thigh" texture="quartermaster.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Left Thigh" texture="quartermaster.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Right Leg" texture="quartermaster.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Left Leg" texture="quartermaster.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Left Shoe" texture="quartermaster.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Quartermaster Right Shoe" texture="quartermaster.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="gunshotwound, bitewounds" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="researcherclothes" nameidentifier="researcheroutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="7,9" sheetelementsize="64,64"/>
+    <Sprite name="researcher" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="376,147,118,57" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Researcher Torso" texture="researcher.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Right Hand" texture="researcher.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Left Hand" texture="researcher.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Right Lower Arm" texture="researcher.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Left Lower Arm" texture="researcher.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Right Upper Arm" texture="researcher.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Left Upper Arm" texture="researcher.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Waist" texture="researcher.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Right Thigh" texture="researcher.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Left Thigh" texture="researcher.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Right Leg" texture="researcher.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Left Leg" texture="researcher.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Left Shoe" texture="researcher.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Researcher Right Shoe" texture="researcher.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <SkillModifier skillidentifier="electrical" skillvalue="5"/>
+      <SkillModifier skillidentifier="mechanical" skillvalue="5"/>
+      <SkillModifier skillidentifier="medical" skillvalue="5"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="securitypatrolclothes" nameidentifier="securitypatroloutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="2,8" sheetelementsize="64,64"/>
+    <Sprite name="securitypatrol" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="376,3,121,63" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Security Patrol Torso" texture="securitypatrol.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Right Hand" texture="securitypatrol.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Left Hand" texture="securitypatrol.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Right Lower Arm" texture="securitypatrol.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Left Lower Arm" texture="securitypatrol.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Right Upper Arm" texture="securitypatrol.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Left Upper Arm" texture="securitypatrol.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Waist" texture="securitypatrol.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Right Thigh" texture="securitypatrol.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Left Thigh" texture="securitypatrol.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Right Leg" texture="securitypatrol.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Left Leg" texture="securitypatrol.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Left Shoe" texture="securitypatrol.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Patrol Right Shoe" texture="securitypatrol.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="gunshotwound, bitewounds" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="administratorclothes" nameidentifier="stationadminoutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckcrewcab" spawnprobability="0.02"/>
+    <Price baseprice="75">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="3,8" sheetelementsize="64,64"/>
+    <Sprite name="administrator" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="905,160,119,57" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Administrator Suit Torso" texture="administrator.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Right Hand" texture="administrator.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Left Hand" texture="administrator.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Right Lower Arm" texture="administrator.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Left Lower Arm" texture="administrator.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Right Upper Arm" texture="administrator.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Left Upper Arm" texture="administrator.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Waist" texture="administrator.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Right Thigh" texture="administrator.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Left Thigh" texture="administrator.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Right Leg" texture="administrator.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Left Leg" texture="administrator.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Left Shoe" texture="administrator.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Administrator Suit Right Shoe" texture="administrator.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95" deflectprojectiles="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="banditclothes1" nameidentifier="banditoutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="abandonedcrewcab,piratecrewcab" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="75" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="3,10" sheetelementsize="64,64"/>
+    <Sprite name="bandit" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="510,224,120,63" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Bandit Uniform 1 Torso" texture="bandit_1.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Right Hand" texture="bandit_1.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Left Hand" texture="bandit_1.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Right Lower Arm" texture="bandit_1.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Left Lower Arm" texture="bandit_1.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Right Upper Arm" texture="bandit_1.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Left Upper Arm" texture="bandit_1.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Waist" texture="bandit_1.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Right Thigh" texture="bandit_1.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Left Thigh" texture="bandit_1.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Right Leg" texture="bandit_1.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Left Leg" texture="bandit_1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Left Shoe" texture="bandit_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 1 Right Shoe" texture="bandit_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="banditclothes2" nameidentifier="banditoutfit" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="abandonedcrewcab,piratecrewcab" amount="1" spawnprobability="0.2"/>
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="75" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="4,10" sheetelementsize="64,64"/>
+    <Sprite name="bandit" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="643,224,119,65" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Bandit Uniform 2 Torso" texture="bandit_2.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Right Hand" texture="bandit_2.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Left Hand" texture="bandit_2.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Right Lower Arm" texture="bandit_2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Left Lower Arm" texture="bandit_2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Right Upper Arm" texture="bandit_2.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Left Upper Arm" texture="bandit_2.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Waist" texture="bandit_2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Right Thigh" texture="bandit_2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Left Thigh" texture="bandit_2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Right Leg" texture="bandit_2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Left Leg" texture="bandit_2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Left Shoe" texture="bandit_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Bandit Uniform 2 Right Shoe" texture="bandit_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="vipclothes1" nameidentifier="vipoutfit" category="Equipment" tags="smallitem,clothing" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="1,9" sheetelementsize="64,64"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="769,3,118,64" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="VIP's Clothes 1 Torso" texture="VIP1.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Right Hand" texture="VIP1.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Left Hand" texture="VIP1.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Left Lower Arm" texture="VIP1.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Right Lower Arm" texture="VIP1.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Left Upper Arm" texture="VIP1.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Right Upper Arm" texture="VIP1.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Waist" texture="VIP1.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Right Thigh" texture="VIP1.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Left Thigh" texture="VIP1.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Right Leg" texture="VIP1.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Left Leg" texture="VIP1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Right Shoe" texture="VIP1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 1 Left Shoe" texture="VIP1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="vipclothes2" nameidentifier="vipoutfit" category="Equipment" tags="smallitem,clothing" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="2,9" sheetelementsize="64,64"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="896,7,125,63" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="VIP's Clothes 2 Torso" texture="VIP2.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Right Hand" texture="VIP2.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Left Hand" texture="VIP2.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Left Lower Arm" texture="VIP2.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Right Lower Arm" texture="VIP2.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Left Upper Arm" texture="VIP2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Right Upper Arm" texture="VIP2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Waist" texture="VIP2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Right Thigh" texture="VIP2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Left Thigh" texture="VIP2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Right Leg" texture="VIP2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Left Leg" texture="VIP2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Right Shoe" texture="VIP2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 2 Left Shoe" texture="VIP2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="vipclothes3" nameidentifier="vipoutfit" category="Equipment" tags="smallitem,clothing" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="3,9" sheetelementsize="64,64"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="906,78,117,69" depth="0.6" origin="0.5,0.5"/>
+    <Body width="180" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="VIP's Clothes 3 Torso" texture="VIP3.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Right Hand" texture="VIP3.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Left Hand" texture="VIP3.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Left Lower Arm" texture="VIP3.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Right Lower Arm" texture="VIP3.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Left Upper Arm" texture="VIP3.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Right Upper Arm" texture="VIP3.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Waist" texture="VIP3.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Right Thigh" texture="VIP3.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Left Thigh" texture="VIP3.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Right Leg" texture="VIP3.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Left Leg" texture="VIP3.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Right Shoe" texture="VIP3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="VIP's Clothes 3 Left Shoe" texture="VIP3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="prisonerclothes" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="75" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sheetindex="5,8" sheetelementsize="64,64"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="769,297,120,56" depth="0.6" origin="0.5,0.5"/>
+    <Body width="180" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Prisoner's Uniform Torso" texture="Prisoner.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Right Hand" texture="Prisoner.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Left Hand" texture="Prisoner.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Left Lower Arm" texture="Prisoner.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Right Lower Arm" texture="Prisoner.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Left Upper Arm" texture="Prisoner.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Right Upper Arm" texture="Prisoner.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Waist" texture="Prisoner.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Right Thigh" texture="Prisoner.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Left Thigh" texture="Prisoner.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Right Leg" texture="Prisoner.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Left Leg" texture="Prisoner.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Right Shoe" texture="Prisoner.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Prisoner's Uniform Left Shoe" texture="Prisoner.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations, bitewounds" damagemultiplier="0.95" deflectprojectiles="false"/>
+    </Wearable>
+  </Item>
+  <!-- UNIFORMS END -->
+</Items>

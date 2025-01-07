@@ -1,0 +1,2789 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RandomEvents>
+  <!-- Define flavor sprites that appear top left of the message box here, identifier is required -->
+  <EventSprites>
+    <Sprite identifier="MentalBreakdown" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="512,512,256,256"/>
+    <Sprite identifier="Duffelbag" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="768,512,256,256"/>
+    <Sprite identifier="Magazine" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="0,768,256,256"/>
+    <Sprite identifier="Note2" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="256,768,256,256"/>
+    <Sprite identifier="Silhouette" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="512,768,256,256"/>
+  </EventSprites>
+  
+  <!-- Traitor events come with the "traitor" and "nontraitor" tags set. -->
+  <EventPrefabs>
+    <!-- generic events -->
+    
+    <!-- Much higher commonness for events that have specific mission/level requirements. Otherwise they'd be very rare -->
+    <TraitorEvent identifier="bakingstation" dangerlevel="2" RequiredPreviousDangerLevel="1" RequirePreviousDangerLevelCompleted="false" commonness="10" StealPercentageOfExperience="25" WrongVotedAsTraitorMoneyPenalty="100">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontag="beacon"/>
+      <!-- these are the defaults for level type, mindifficulty and mindifficultyincampaign, just included here for reference -->
+      <LevelRequirement LevelType="LocationConnection" mindifficulty="0" mindifficultyincampaign="5">
+        <ItemConditional HasTag="reactor" InBeaconStation="true"/>
+      </LevelRequirement>
+      
+      <TagAction criteria="itemtag:reactor" tag="beaconreactor" SubmarineType="BeaconStation"/>
+      <ConversationAction targettag="traitor" text="EventText.bakingstation.c1" eventsprite="MentalBreakdown"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.bakingstation.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.bakingstation.meltdown"/>
+      <Label name="waitforexplosion"/>
+      <WaitAction time="5.0"/>
+      <CheckConditionalAction targettag="beaconreactor" targetitemcomponent="Reactor" MeltedDownThisRound="true">
+        <Failure>
+          <GoTo name="waitforexplosion"/>
+        </Failure>
+      </CheckConditionalAction>
+      <SetTraitorEventStateAction state="Completed"/>
+      <EventLogAction targettag="traitor" id="success" text="EventText.bakingstation.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.bakingstation.meltdown"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.bakingstation.objective1"/>
+        <CheckConditionalAction targettag="beaconreactor" targetitemcomponent="Reactor" MeltedDownThisRound="true">
+          <Success>
+            <GiveExpAction targettag="traitor" amount="500"/>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.bakingstation.objective2"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.bakingstation.objective3"/>
+          </Failure>
+        </CheckConditionalAction>
+        <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.bakingstation.meltdown"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="cargotheft" dangerlevel="2" commonness="5">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontype="cargo"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.cargotheft.c1" eventsprite="Silhouette"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.cargotheft.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.cargotheft.missingcargo"/>
+      <TagAction criteria="itemtag:cargomission" tag="targetitem" SubmarineType="Player"/>
+      <Label name="waitforitemsdisposed"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="targetitem" RequiredConditionalMatchPercentage="50" CompareToInitialAmount="true">
+        <Conditional InPlayerSubmarine="true"/>
+        <Success>
+          <!-- 50% items in player sub, not completed yet-->
+          <GoTo name="waitforitemsdisposed"/>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" text="EventText.cargotheft.c2" eventsprite="Silhouette"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.cargotheft.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.cargotheft.missingcargo"/>
+        </Failure>
+      </CheckItemAction>
+      <Label name="itemsstillgone"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="targetitem" RequiredConditionalMatchPercentage="50" CompareToInitialAmount="true">
+        <Conditional InPlayerSubmarine="true"/>
+        <Success>
+          <EventObjectiveAction targettag="traitor" type="Fail" id="traitorobjective.cargotheft.missingcargo"/>
+          <SetTraitorEventStateAction state="Failed"/>
+          <!-- 50% items in player sub, not completed yet-->
+          <GoTo name="waitforitemsdisposed"/>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Completed"/>
+          <GoTo name="itemsstillgone"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.cargotheft.objective1"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="traitor" id="success" text="EventText.cargotheft.objective3"/>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.cargotheft.objective4"/>
+            <SetTraitorEventStateAction state="Completed"/>
+            <MoneyAction targettag="traitor" amount="800"/>
+            <GiveExpAction targettag="traitor" amount="800"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="traitor" id="failure" text="EventText.cargotheft.objective5"/>
+            <EventLogAction targettag="nontraitor" id="failure" text="EventText.cargotheft.objective6"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+        <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.cargotheft.missingcargo"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="miningsabotage" dangerlevel="2" commonness="5" StealPercentageOfExperience="25">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontype="Mineral"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.miningsabotage.c1" eventsprite="vent"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.miningsabotage.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.miningsabotage.swapobjective"/>
+      <TagAction criteria="itemidentifier:plasmacutter" tag="targetitem" SubmarineType="Player"/>
+      <SetTraitorEventStateAction state="Failed"/>
+      <Label name="waitforcompletion"/>
+      <WaitAction time="1.0"/>
+      <!-- TODO: adjust. Do we want to require a fixed number of replaced tanks or some percentage? -->
+      <CheckItemAction targettag="targetitem" RequiredConditionalMatchPercentage="50">
+        <Conditional TargetContainedItem="true" HasTag="weldingtoolfuel"/>
+        <Success>
+          <ConversationAction targettag="traitor" text="EventText.miningsabotage.c2" eventsprite="Silhouette"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.miningsabotage.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.miningsabotage.swapobjective"/>
+          <SetTraitorEventStateAction state="Completed"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforcompletion"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.miningsabotage.objective1"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.miningsabotage.objective3"/>
+            <MoneyAction targettag="traitor" amount="1000"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.miningsabotage.objective4"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="naturevsnurture" tag="obtainmudraptoregg" dangerlevel="1" commonness="20" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontag="mudraptornest"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.naturevsnurture.c1" eventsprite="Magazine"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.naturevsnurture.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.naturevsnurture.findmudraptoregg"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.naturevsnurture.obtainmudraptoregg"/>
+      <TagAction criteria="itemtag:nestmission" tag="targetegg"/>
+      <TriggerAction Target1Tag="targetegg" Target2Tag="traitor" radius="150" waitforinteraction="true"/>
+      <ConversationAction targettag="traitor" text="EventText.naturevsnurture_beacon.c2" eventsprite="Infiltration2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.naturevsnurture.findmudraptoregg"/>
+      <Label name="waitforcompletion"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="targetegg" Amount="1">
+        <Conditional InPlayerSubmarine="true"/>
+        <Success>
+          <ConversationAction targettag="traitor" text="EventText.naturevsnurture_beacon.c3" eventsprite="Magazine"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.naturevsnurture_beacon.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.naturevsnurture.obtainmudraptoregg"/>
+          <SetTraitorEventStateAction state="Completed"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforcompletion"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.naturevsnurture.objective1"/>
+        <!-- check again at round end, in case the egg was lost or deconstructed -->
+        <CheckItemAction targettag="targetegg" Amount="1">
+          <Conditional InPlayerSubmarine="true"/>
+          <Success>
+            <EventLogAction targettag="traitor" id="status" text="EventText.naturevsnurture_beacon.objective3"/>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.naturevsnurture_beacon.objective4"/>
+            <SetTraitorEventStateAction state="Completed"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.naturevsnurture.obtainmudraptoregg"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.naturevsnurture_beacon.objective5"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckItemAction>
+        <RemoveItemAction targettag="targetegg" Amount="100"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="naturevsnurture_beacon" tag="obtainmudraptoregg" dangerlevel="1" commonness="5" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontag="beacon"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.naturevsnurture_beacon.c1" eventsprite="Magazine"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.naturevsnurture_beacon.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.naturevsnurture.findmudraptoregg"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.naturevsnurture.obtainmudraptoregg"/>
+      <SpawnAction itemidentifier="smallmudraptoregg" targettag="targetegg" ignorebyai="true" spawnpointtag="saferoom" spawnlocation="beaconstation" requirespawnpointtag="false"/>
+      <TriggerAction Target1Tag="targetegg" Target2Tag="traitor" radius="150" waitforinteraction="true"/>
+      <ConversationAction targettag="traitor" text="EventText.naturevsnurture_beacon.c2" eventsprite="Infiltration2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.naturevsnurture.findmudraptoregg"/>
+      <Label name="waitforcompletion"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="targetegg" Amount="1">
+        <Conditional InPlayerSubmarine="true"/>
+        <Success>
+          <ConversationAction targettag="traitor" text="EventText.naturevsnurture_beacon.c3" eventsprite="Magazine"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.naturevsnurture_beacon.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.naturevsnurture.obtainmudraptoregg"/>
+          <SetTraitorEventStateAction state="Completed"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforcompletion"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.naturevsnurture_beacon.objective1"/>
+        <!-- check again at round end, in case the egg was lost or deconstructed -->
+        <CheckItemAction targettag="targetegg" Amount="1">
+          <Conditional InPlayerSubmarine="true"/>
+          <Success>
+            <EventLogAction targettag="traitor" id="status" text="EventText.naturevsnurture_beacon.objective3"/>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.naturevsnurture_beacon.objective4"/>
+            <SetTraitorEventStateAction state="Completed"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.naturevsnurture.findmudraptoregg"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.naturevsnurture.obtainmudraptoregg"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.naturevsnurture_beacon.objective5"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckItemAction>
+        <RemoveItemAction targettag="targetegg" Amount="100"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="naturevsnurture2" dangerlevel="2" RequiredCompletedTags="obtainmudraptoregg" StealPercentageOfExperience="25">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15"/>
+      
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <ConversationAction targettag="traitor" text="EventText.naturevsnurture2.c1" eventsprite="NoteOpened"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.naturevsnurture2.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.naturevsnurture2.retrieveegg"/>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <SpawnAction itemidentifier="radiojammer" targettag="radiojammer" targetinventory="traitor"/>
+      <SpawnAction itemidentifier="batterycell" targetinventory="radiojammer"/>
+      <Label name="waitforitemsfound"/>
+      <CheckSelectedAction targettag="loosevent" charactertag="traitor">
+        <Success>
+          <SpawnAction itemidentifier="smallmudraptoregg" targetinventory="loosevent" targettag="targetegg" ignorebyai="true"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforitemsfound"/>
+        </Failure>
+      </CheckSelectedAction>
+      <Label name="waitforegg"/>
+      <WaitAction time="5"/>
+      <CheckItemAction targettag="traitor" itemtags="targetegg">
+        <Success>
+          <EventLogAction targettag="traitor" id="status">
+            <Text tag="EventText.naturevsnurture2.objective2">
+              <Replace tag="[catalystitem]" value="entityname.antibloodloss1" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.naturevsnurture2.retrieveegg"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.naturevsnurture2.hatchegg"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforegg"/>
+        </Failure>
+      </CheckItemAction>
+      <Label name="waitforlargeegg"/>
+      <WaitAction time="0.5"/>
+      <!-- the large egg inherits event tags from the original egg, so we can refer to it using "targetegg" -->
+      <CheckConditionalAction targettag="targetegg" hastag="largeitem">
+        <Failure>
+          <GoTo name="waitforlargeegg"/>
+        </Failure>
+      </CheckConditionalAction>
+      <CheckConditionalAction targettag="targetegg" scale="gt 0.45">
+        <Failure>
+          <GoTo name="waitforlargeegg"/>
+        </Failure>
+      </CheckConditionalAction>
+      <ConversationAction targettag="traitor" text="EventText.naturevsnurture2.c2" eventsprite="NoteOpened"/>
+      <!-- easterbunny_objectivesuccessmessage2 -->
+      <Label name="waitformudraptor"/>
+      <!-- the mudraptor inherits event tags from the original egg, so we can refer to it using "targetegg" -->
+      <CheckConditionalAction targettag="targetegg" speciesgroup="mudraptor">
+        <Failure>
+          <GoTo name="waitformudraptor"/>
+        </Failure>
+      </CheckConditionalAction>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.naturevsnurture2.hatchegg"/>
+      <ConversationAction targettag="traitor" eventsprite="NoteOpened">
+        <Text tag="EventText.naturevsnurture2.c3">
+          <Replace tag="[time]" value="2" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="traitor" id="status">
+        <Text tag="EventText.naturevsnurture2.objective3">
+          <Replace tag="[time]" value="2" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.naturevsnurture2.keepalive"/>
+      <WaitAction time="30"/>
+      <EventLogAction targettag="traitor" id="timepassed">
+        <Text tag="EventText.naturevsnurture2.objective4">
+          <Replace tag="[time]" value="30" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <WaitAction time="30"/>
+      <EventLogAction targettag="traitor" id="timepassed">
+        <Text tag="EventText.naturevsnurture2.objective4">
+          <Replace tag="[time]" value="60" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <WaitAction time="30"/>
+      <EventLogAction targettag="traitor" id="timepassed">
+        <Text tag="EventText.naturevsnurture2.objective4">
+          <Replace tag="[time]" value="90" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <WaitAction time="30"/>
+      <EventLogAction targettag="traitor" id="timepassed" text="EventText.naturevsnurture2.objective5"/>
+      <CheckConditionalAction targettag="targetegg" isdead="false">
+        <Failure>
+          <EventLogAction targettag="traitor" id="status" text="EventText.naturevsnurture2.objective6"/>
+          <SetTraitorEventStateAction state="Failed"/>
+          <ConversationAction targettag="traitor" text="EventText.naturevsnurture2.c4" eventsprite="Infiltration2"/>
+        </Failure>
+        <Success>
+          <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.naturevsnurture2.retrieveegg"/>
+          <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.naturevsnurture2.hatchegg"/>
+          <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.naturevsnurture2.keepalive"/>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" text="EventText.naturevsnurture2.c5" eventsprite="Infiltration2"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.naturevsnurture2.objective7"/>
+        </Success>
+      </CheckConditionalAction>
+      <OnRoundEndAction>
+        <RemoveItemAction targettag="radiojammer"/>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.naturevsnurture2.objective8"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.naturevsnurture2.objective9"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="nontraitor" id="failure" text="EventText.naturevsnurture2.objective10"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="adhominem" dangerlevel="1" StealPercentageOfExperience="10" MinPlayerCount="6" SecondaryTraitorPercentage="30" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      
+      <TagAction criteria="eventtag:nontraitorplayer" tag="victim" chooserandom="true"/>
+      <ConversationAction targettag="anytraitor" text="EventText.adhominem.c1" eventsprite="group"/>
+      <WaitAction time="15"/>
+      <ConversationAction targettag="traitor" eventsprite="group">
+        <Text tag="EventText.adhominem.c2">
+          <Replace tag="[victim]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="secondarytraitor" id="initialinfo" text="EventText.adhominem.objective1"/>
+      <EventLogAction targettag="traitor" id="victiminfo">
+        <Text tag="EventText.adhominem.objective2">
+          <Replace tag="[victim]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <!-- These EventObjectives cannot be tracked, but serve as a reminder -->
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.adhominem.accuse"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.adhominem.victimknown"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.adhominem.objective1"/>
+        <CheckTraitorVoteAction target="victim">
+          <Success>
+            <EventLogAction id="success" text="EventText.adhominem.objective3"/>
+            <SetTraitorEventStateAction state="Completed"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.adhominem.objective4"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckTraitorVoteAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="partypreparations" dangerlevel="1" StealPercentageOfExperience="10" MinPlayerCount="6" SecondaryTraitorPercentage="20" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      
+      <ConversationAction targettag="anytraitor" text="EventText.partypreparations.c1" eventsprite="group"/>
+      <ConversationAction targettag="traitor" text="EventText.partypreparations.c2" eventsprite="group"/>
+      <EventLogAction targettag="anytraitor" id="initialinfo" text="EventText.partypreparations.objective1"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <!-- Objective 1: Designate a party room using a new item -->
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.partypreparations.designateroom"/>
+      <EventLogAction targettag="traitor" id="objective_decorations" text="EventText.partypreparations.objective2"/>
+      <SpawnAction itemidentifier="partybanner" targettag="partybanner" targetinventory="traitor"/>
+      <WaitForItemUsedAction itemtag="partybanner" targetitemcomponent="Holdable" ApplyTagToLinkedHulls="partyroom"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.partypreparations.designateroom"/>
+      <ConversationAction targettag="anytraitor" text="EventText.partypreparations.c3" eventsprite="group"/>
+      <EventLogAction targettag="anytraitor" id="objective_booze" text="EventText.partypreparations.objective3"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.partypreparations.secretprepare"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.partypreparations.booze" ParentObjectiveId="traitorobjective.partypreparations.secretprepare"/>
+      <TagAction criteria="itemidentifier:ethanol" tag="ethanol" SubmarineType="Player"/>
+      <Label name="waitforbooze"/>
+      <WaitAction time="1"/>
+      <CountTargetsAction targettag="ethanol" hulltag="partyroom" CompareToTarget="anytraitor" MinPercentageRelativeToTarget="100">
+        <Failure>
+          <Goto name="waitforbooze"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.partypreparations.booze"/>
+      <EventLogAction targettag="anytraitor" id="objective_instrument" text="EventText.partypreparations.objective4"/>
+      <ConversationAction targettag="anytraitor" text="EventText.partypreparations.c4" eventsprite="group"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.partypreparations.instrument" ParentObjectiveId="traitorobjective.partypreparations.secretprepare"/>
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <RNGAction chance="0.5">
+        <Success>
+          <SpawnAction itemidentifier="accordion" targetinventory="loosevent"/>
+        </Success>
+        <Failure>
+          <SpawnAction itemidentifier="harmonica" targetinventory="loosevent"/>
+        </Failure>
+      </RNGAction>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="anytraitor" radius="200" waitforinteraction="false" SelectOnTrigger="true"/>
+      <TagAction criteria="itemtag:instrument" tag="instrument" SubmarineType="Player"/>
+      <Label name="waitforinstrument"/>
+      <WaitAction time="1"/>
+      <CountTargetsAction targettag="instrument" hulltag="partyroom" MinAmount="1">
+        <Failure>
+          <Goto name="waitforinstrument"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.partypreparations.instrument"/>
+      <EventLogAction targettag="anytraitor" id="objective_light" text="EventText.partypreparations.objective5"/>
+      <ConversationAction targettag="anytraitor" text="EventText.partypreparations.c5" eventsprite="group"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.partypreparations.lighting" ParentObjectiveId="traitorobjective.partypreparations.secretprepare"/>
+      <Label name="waitforlights"/>
+      <WaitAction time="1"/>
+      <TagAction criteria="itemtag:light" tag="light" SubmarineType="Player"/>
+      <CheckItemAction targettag="light" hulltag="partyroom" MinAmount="1">
+        <Conditional IsRed="true" targetitemcomponent="LightComponent"/>
+        <Failure>
+          <Goto name="waitforlights"/>
+        </Failure>
+      </CheckItemAction>
+      <WaitAction time="5"/>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.partypreparations.secretprepare"/>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.partypreparations.lighting"/>
+      <EventLogAction targettag="anytraitor" id="end" text="EventText.partypreparations.objective6"/>
+      <ConversationAction targettag="anytraitor" text="EventText.partypreparations.objective6" eventsprite="group"/>
+      <SetTraitorEventStateAction state="Completed"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.partypreparations.objective1"/>
+        <RemoveItemAction targettag="partybanner" Amount="100"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.partypreparations.objective7"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.partypreparations.objective8"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="goblinhorde" dangerlevel="1" StealPercentageOfExperience="10" MinPlayerCount="6" SecondaryTraitorPercentage="20" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" MinDifficultyInCampaign="15">
+        <ItemConditional HasTag="fabricator" InPlayerSubmarine="true"/>
+      </LevelRequirement>
+      
+      <ConversationAction targettag="anytraitor" text="EventText.goblinhorde.c1" eventsprite="group">
+        <Option text="EventText.goblinhorde.o1">
+          <ConversationAction targettag="anytraitor" text="EventText.goblinhorde.o1.c1"/>
+        </Option>
+      </ConversationAction>
+      <EventLogAction targettag="anytraitor" id="initialinfo" text="EventText.goblinhorde.objective1"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.goblinhorde.green"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.goblinhorde.occupation"/>
+      <TagAction criteria="hullname:ballast" tag="ballast" submarinetype="Player"/>
+      <Label name="waitforpainted"/>
+      <WaitAction time="3 "/>
+      <CountTargetsAction targettag="ballast" CompareToTarget="ballast" MinPercentageRelativeToTarget="90">
+        <!-- 90% of all ballast hulls need to be green -->
+        <Conditional IsGreen="true"/>
+        <Failure>
+          <Goto name="waitforpainted"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.goblinhorde.green"/>
+      <Label name="restart"/>
+      <EventObjectiveAction targettag="anytraitor" type="Remove" id="traitorobjective.goblinhorde.occupation_start" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="Remove" id="traitorobjective.goblinhorde.occupation_1min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="Remove" id="traitorobjective.goblinhorde.occupation_2min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="Remove" id="traitorobjective.goblinhorde.occupation_3min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="Remove" id="traitorobjective.goblinhorde.occupation_4min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <WaitAction time="2"/>
+      <EventObjectiveAction targettag="anytraitor" type="Add" id="traitorobjective.goblinhorde.occupation_start" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <Label name="waitforballastgoblins"/>
+      <WaitAction time="2"/>
+      <!-- 100% of traitors need to be in a ballast hull -->
+      <CountTargetsAction targettag="anytraitor" hulltag="ballast" CompareToTarget="anytraitor" MinPercentageRelativeToTarget="100">
+        <Failure>
+          <Goto name="waitforballastgoblins"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.goblinhorde.occupation_start"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.goblinhorde.occupation_1min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <WaitAction time="60"/>
+      <CountTargetsAction targettag="anytraitor" hulltag="ballast" CompareToTarget="anytraitor" MinPercentageRelativeToTarget="100">
+        <Failure>
+          <Goto name="restart"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.goblinhorde.occupation_1min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.goblinhorde.occupation_2min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <WaitAction time="60"/>
+      <CountTargetsAction targettag="anytraitor" hulltag="ballast" CompareToTarget="anytraitor" MinPercentageRelativeToTarget="100">
+        <Failure>
+          <Goto name="restart"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.goblinhorde.occupation_2min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.goblinhorde.occupation_3min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <WaitAction time="60"/>
+      <CountTargetsAction targettag="anytraitor" hulltag="ballast" CompareToTarget="anytraitor" MinPercentageRelativeToTarget="100">
+        <Failure>
+          <Goto name="restart"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.goblinhorde.occupation_3min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.goblinhorde.occupation_4min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <WaitAction time="60"/>
+      <CountTargetsAction targettag="anytraitor" hulltag="ballast" CompareToTarget="anytraitor" MinPercentageRelativeToTarget="100">
+        <Failure>
+          <Goto name="restart"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.goblinhorde.occupation_4min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.goblinhorde.occupation_5min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <WaitAction time="60"/>
+      <CountTargetsAction targettag="anytraitor" hulltag="ballast" CompareToTarget="anytraitor" MinPercentageRelativeToTarget="100">
+        <Failure>
+          <Goto name="restart"/>
+        </Failure>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="Remove" id="traitorobjective.goblinhorde.occupation_start" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.goblinhorde.occupation_1min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.goblinhorde.occupation_2min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.goblinhorde.occupation_3min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.goblinhorde.occupation_4min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.goblinhorde.occupation_5min" ParentObjectiveId="traitorobjective.goblinhorde.occupation"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.goblinhorde.occupation"/>
+      <SetTraitorEventStateAction state="Completed"/>
+      <ConversationAction targettag="anytraitor" text="EventText.goblinhorde.c2" eventsprite="group"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.goblinhorde.objective2"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.goblinhorde.objective3"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.goblinhorde.objective4"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="gnawingcold" dangerlevel="2" StealPercentageOfExperience="25" MinPlayerCount="6" SecondaryTraitorAmount="1" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="256,0,256,256" color="200,0,0,255"/>
+      <!-- Outline: Use codeword to cooperate
+      Start fires simultaneously, multiple times, in various places of the submarine. (need to figure out reasonable number and whether to count size of the fire, or just individual fires) TODO
+      -->
+      <!-- Instruct the player -->
+      <ConversationAction targettag="anytraitor" text="EventText.gnawingcold.c1" eventsprite="MentalBreakdown" ContinueAutomatically="true"/>
+      <EventLogAction targettag="anytraitor" id="initialinfo" text="EventText.gnawingcold.objective1"/>
+      <EventLogAction targettag="anytraitor" id="finditems" text="EventText.gnawingcold.objective2"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.gnawingcold.findflammable"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.gnawingcold.startfires"/>
+      <EventLogAction targettag="anytraitor" id="progress">
+        <Text tag="EventText.gnawingcold.objective3">
+          <Replace tag="[rooms]" value="3" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <HighlightAction targettag="loosevent" targetcharacter="anytraitor"/>
+      <TagAction criteria="hull" tag="anyhull" submarinetype="Player"/>
+      <TagAction criteria="itemidentifier:molotovcoctail" tag="molotovcoctail" submarinetype="Player" ContinueIfNoTargetsFound="true"/>
+      
+      <!-- wait for there to be no fires first (and after each successful fire) -->
+      <Label name="loopfirestarting_waitfornofires"/>
+      <CountTargetsAction targettag="anyhull" minamount="1">
+        <Conditional FireCount="gt 0"/>
+        <Success> <!-- Success means there's still fires, so need to loop back-->
+          <WaitAction time="1"/>
+          <EventObjectiveAction targettag="anytraitor" type="addifnotfound" id="traitorobjective.gnawingcold.waitfornofires"/>
+          <Goto name="loopfirestarting_waitfornofires"/>
+        </Success>
+      </CountTargetsAction>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.gnawingcold.waitfornofires"/>
+
+      <Label name="loopfirestarting"/>
+
+      <CheckItemAction targettag="anytraitor" itemidentifiers="molotovcoctail">
+        <Failure>
+          <!-- spawn more molotovs if there's less than 2 of them in the sub -->
+          <CountTargetsAction targettag="molotovcoctail" minamount="2">
+            <Failure>
+              <WaitAction time="1"/>
+              <SpawnAction itemidentifier="molotovcoctail" targettag="firestarter" targetinventory="loosevent" ignorebyai="true" amount="2"/>
+            </Failure>
+          </CountTargetsAction>
+        </Failure>
+        <Success>
+          <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.gnawingcold.findflammable"/>
+        </Success>
+      </CheckItemAction>
+      
+      <WaitAction time="5"/>
+      <!-- at least 3 hulls with fire in them -->
+      <CountTargetsAction targettag="anyhull" minamount="3">
+        <Conditional FireCount="gt 0"/>
+        <Success>
+          <EventObjectiveAction targettag="anytraitor" type="addifnotfound" id="2timesremaining" objectivetag="traitorobjective.2timesremaining" ParentObjectiveId="traitorobjective.gnawingcold.startfires"/>
+          
+          <EventLogAction targettag="anytraitor" id="progress">
+            <Text tag="EventText.gnawingcold.objective4">
+              <Replace tag="[rooms]" value="3" color="gui.orange"/>
+              <Replace tag="[amount]" value="2" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+          <Goto name="loopfirestarting_waitfornofires" maxtimes="1"/>
+          
+          <EventObjectiveAction targettag="anytraitor" type="complete" id="2timesremaining"/>
+          <EventObjectiveAction targettag="anytraitor" type="addifnotfound" id="1timesremaining" objectivetag="traitorobjective.1timesremaining" ParentObjectiveId="traitorobjective.gnawingcold.startfires"/>
+          <EventLogAction targettag="anytraitor" id="progress">
+            <Text tag="EventText.gnawingcold.objective4">
+              <Replace tag="[rooms]" value="3" color="gui.orange"/>
+              <Replace tag="[amount]" value="1" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+          <Goto name="loopfirestarting_waitfornofires" maxtimes="1"/>
+        </Success>
+        <Failure>
+          <Goto name="loopfirestarting"/>
+        </Failure>
+      </CountTargetsAction>
+
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.gnawingcold.startfires"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="2timesremaining"/>
+      <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="1timesremaining"/>
+      <ConversationAction targettag="anytraitor" text="EventText.gnawingcold.objective5" eventsprite="MentalBreakdown"/>
+      <EventLogAction targettag="anytraitor" id="progress" text="EventText.gnawingcold.objective5"/>
+      <SetTraitorEventStateAction state="Completed"/>
+      <HighlightAction targettag="loosevent" state="false"/>
+      
+      <OnRoundEndAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.gnawingcold.success"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="anytraitor" id="result" text="EventText.gnawingcold.failure"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.gnawingcold.failure"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+        <RemoveItemAction targettag="firestarter" amount="99"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="murdermystery" dangerlevel="3" StealPercentageOfExperience="50" MinPlayerCount="8" SecondaryTraitorAmount="2" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="35"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.murdermystery.c1" eventsprite="Silhouette"/>
+      <ConversationAction targettag="anytraitor" text="EventText.murdermystery.c2" eventsprite="Silhouette" ContinueAutomatically="true"/>
+      <TagAction criteria="eventtag:nontraitor" tag="victim" chooserandom="true"/>
+      <TagAction criteria="eventtag:secondarytraitor" tag="murderer" chooserandom="true"/>
+      <TagAction criteria="eventtag:secondarytraitor0" tag="knowsweapon"/>
+      <TagAction criteria="eventtag:secondarytraitor1" tag="knowsvictim"/>
+      <EventLogAction targettag="anytraitor" id="initialinfo" text="EventText.murdermystery.objective1"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.murdermystery.killtarget"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.murdermystery.correctweapon" ParentObjectiveId="traitorobjective.murdermystery.killtarget"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.murdermystery.correctmurderer" ParentObjectiveId="traitorobjective.murdermystery.killtarget"/>
+      <ConversationAction targettag="traitor" eventsprite="Silhouette" ContinueAutomatically="true">
+        <Text tag="EventText.murdermystery.c3">
+          <Replace tag="[murderer]" value="eventtag:murderer" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="traitor" id="knowledge">
+        <Text tag="EventText.murdermystery.c3">
+          <Replace tag="[murderer]" value="eventtag:murderer" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <ConversationAction targettag="knowsvictim" eventsprite="Silhouette" ContinueAutomatically="true">
+        <Text tag="EventText.murdermystery.c4">
+          <Replace tag="[victim]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="knowsvictim" id="knowledge">
+        <Text tag="EventText.murdermystery.c4">
+          <Replace tag="[victim]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <SpawnAction itemidentifier="radiojammer" targetinventory="traitor" targettag="radiojammer"/>
+      <SpawnAction itemidentifier="batterycell" targetinventory="radiojammer"/>
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <RNGAction chance="0.66">
+        <Success>
+          <RNGAction chance="0.5">
+            <Success>
+              <SpawnAction itemidentifier="divingknife_murdermystery" targettag="murderweapon" targetinventory="loosevent" ignorebyai="true"/>
+              <TagAction criteria="itemidentifier:divingknife" tag="murderweapon"/>
+              <ConversationAction targettag="knowsweapon" eventsprite="Silhouette" ContinueAutomatically="true">
+                <Text tag="EventText.murdermystery.c5">
+                  <Replace tag="[weapon]" value="entityname.divingknife" color="gui.orange"/>
+                </Text>
+              </ConversationAction>
+              <EventLogAction targettag="knowsweapon" id="knowledge">
+                <Text tag="EventText.murdermystery.c5">
+                  <Replace tag="[weapon]" value="entityname.divingknife" color="gui.orange"/>
+                </Text>
+              </EventLogAction>
+            </Success>
+            <Failure>
+              <SpawnAction itemidentifier="screwdriver_murdermystery" targettag="murderweapon" targetinventory="loosevent" ignorebyai="true"/>
+              <TagAction criteria="itemidentifier:screwdriver" tag="murderweapon"/>
+              <ConversationAction targettag="knowsweapon" eventsprite="Silhouette" ContinueAutomatically="true">
+                <Text tag="EventText.murdermystery.c5">
+                  <Replace tag="[weapon]" value="entityname.screwdriver" color="gui.orange"/>
+                </Text>
+              </ConversationAction>
+              <EventLogAction targettag="knowsweapon" id="knowledge">
+                <Text tag="EventText.murdermystery.c5">
+                  <Replace tag="[weapon]" value="entityname.screwdriver" color="gui.orange"/>
+                </Text>
+              </EventLogAction>
+            </Failure>
+          </RNGAction>
+        </Success>
+        <Failure>
+          <SpawnAction itemidentifier="wrench_murdermystery" targettag="murderweapon" targetinventory="loosevent" ignorebyai="true"/>
+          <ConversationAction targettag="knowsweapon" eventsprite="Silhouette" ContinueAutomatically="true">
+            <Text tag="EventText.murdermystery.c5">
+              <Replace tag="[weapon]" value="entityname.wrench" color="gui.orange"/>
+            </Text>
+          </ConversationAction>
+          <EventLogAction targettag="knowsweapon" id="knowledge">
+            <Text tag="EventText.murdermystery.c5">
+              <Replace tag="[weapon]" value="entityname.wrench" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+        </Failure>
+      </RNGAction>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="knowsweapon" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <ConversationAction targettag="knowsweapon" eventsprite="Silhouette" text="EventText.murdermystery.c6" ContinueAutomatically="true"/>
+      <Label name="waitformurder"/>
+      <CheckConditionalAction targettag="victim" IsDead="true">
+        <Success>
+          <CheckAfflictionAction identifier="mysteryaffliction" targettag="victim" sourcecharacter="murderer" minstrength="10">
+            <Success>
+              <EventLogAction targettag="anytraitor" id="status" text="EventText.murdermystery.objective2"/>
+              <ConversationAction targettag="knowsweapon" eventsprite="Silhouette" text="EventText.murdermystery.objective2" ContinueAutomatically="true"/>
+              <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.murdermystery.killtarget"/>
+              <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.murdermystery.correctweapon" ParentObjectiveId="traitorobjective.murdermystery.killtarget"/>
+              <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.murdermystery.correctmurderer" ParentObjectiveId="traitorobjective.murdermystery.killtarget"/>
+              <SetTraitorEventStateAction state="Completed"/>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="anytraitor" text="EventText.murdermystery.c7" eventsprite="Silhouette" ContinueAutomatically="true"/>
+              <EventLogAction targettag="anytraitor" id="status" text="EventText.murdermystery.c7"/>
+              <EventObjectiveAction targettag="anytraitor" type="fail" id="traitorobjective.murdermystery.killtarget"/>
+              <EventObjectiveAction targettag="anytraitor" type="fail" id="traitorobjective.murdermystery.correctweapon" ParentObjectiveId="traitorobjective.murdermystery.killtarget"/>
+              <EventObjectiveAction targettag="anytraitor" type="fail" id="traitorobjective.murdermystery.correctmurderer" ParentObjectiveId="traitorobjective.murdermystery.killtarget"/>
+              <SetTraitorEventStateAction state="Failed"/>
+            </Failure>
+          </CheckAfflictionAction>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Failed"/>
+          <GoTo name="waitformurder"/>
+        </Failure>
+      </CheckConditionalAction>
+      <OnRoundEndAction>
+        <RemoveItemAction targettag="murderweapon"/>
+        <RemoveItemAction targettag="radiojammer"/>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.murdermystery.objective3"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.murdermystery.objective4"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.murdermystery.objective5"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="exhibitionism" dangerlevel="1" StealPercentageOfExperience="10">
+      <!-- Outline: Go uncovered in clothes or suits for the entire mission.
+      Toolbelts, Safety Harnesses, etc. do not count as clothes and will not fail the objective.
+      There’s a ~1,5 minute grace period to take everything off after the mission was given.
+      -->
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+
+      <!-- Instruct the player -->
+      <ConversationAction targettag="traitor" text="EventText.exhibitionism.c1" eventsprite="dorm"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="eventtext.exhibitionism.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.exhibitionism.stripdown"/>
+
+      <Label name="waitforclothesoff"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="traitor" itemtags="clothing,deepdiving" RequireWorn="true">
+        <Success>
+          <!-- wait for up to 90 seconds for the traitor to take the clothes off, then continue 
+            (and let the objective fail if they're still not off)-->
+          <GoTo name="waitforclothesoff" maxtimes="90"/>
+
+          <!-- FAILURE -->
+          <SetTraitorEventStateAction state="Failed"/>
+          <EventLogAction targettag="traitor" id="failure" text="eventtext.exhibitionism.failure"/>
+          <EventObjectiveAction targettag="traitor" type="Fail" id="traitorobjective.exhibitionism.stripdown"/>
+          <GoTo name="eventend"/>
+        </Success>
+        <Failure>
+          <GoTo name="eventstart"/>
+        </Failure>
+      </CheckItemAction>
+
+      <Label name="eventstart"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.exhibitionism.stripdown"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.exhibitionism.exhibit"/>
+      <ConversationAction targettag="traitor" text="EventText.exhibitionism.c2" eventsprite="dorm"/>
+      <EventLogAction targettag="traitor" id="progress" text="eventtext.exhibitionism.objective2"/>
+
+      <Label name="eventloop"/>
+      <WaitAction time="5"/>
+      <CheckItemAction targettag="traitor" itemtags="clothing,deepdiving" RequireWorn="true">
+        <Success>
+          <!-- FAILURE -->
+          <SetTraitorEventStateAction state="Failed"/>
+          <EventLogAction targettag="traitor" id="failure" text="eventtext.exhibitionism.failure"/>
+          <EventObjectiveAction targettag="traitor" type="Fail" id="traitorobjective.exhibitionism.exhibit"/>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Completed"/>
+          <GoTo name="eventloop"/>
+        </Failure>
+      </CheckItemAction>
+      
+      <Label name="eventend"/>
+
+      <OnRoundEndAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="traitor" id="success" text="EventText.exhibitionism.success_self"/>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.exhibitionism.success"/>
+            <SetTraitorEventStateAction state="Completed"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="traitor" id="failure" text="EventText.exhibitionism.failure"/>
+            <EventLogAction targettag="nontraitor" id="failure" text="EventText.exhibitionism.failure"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="firingblanks" dangerlevel="1" StealPercentageOfExperience="10">
+      <!-- Outline: Traitor can pick up a coilgunammobox and replace it with coilgunammobox_blanks
+      If non-traitors have 'successfully' fired 20 blanks, the prank was completed
+      Avoid the traitor themselves shooting all the blanks! Disallow traitor using turrets until the event is complete
+      -->
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" MinDifficultyInCampaign="5">
+        <ItemConditional HasTag="coilgunammosource" InPlayerSubmarine="true"/>
+      </LevelRequirement>
+
+      <!-- Instruct the player -->
+      <ConversationAction targettag="traitor" text="EventText.firingblanks.c1" eventsprite="dorm"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.firingblanks.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.firingblanks.getammo"/>
+      
+      <!-- Acquire ammo box and replace it-->
+      <TagAction criteria="itemidentifier:coilgunammobox" tag="ammoboxes" submarinetype="Player"/>
+      
+      <Label name="waitforammo"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="traitor" itemtags="ammoboxes" ApplyTagToItem="targetbox">
+        <Success>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.firingblanks.getammo"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.firingblanks.replaceammo"/>
+          
+          <WaitAction time="3"/>
+          <RemoveItemAction targettag="targetbox"/>
+          <SpawnAction itemidentifier="coilgunammobox_blanks" targettag="blankammobox" targetinventory="traitor" ignorebyai="true"/>
+          
+          <ConversationAction targettag="traitor" text="EventText.firingblanks.c2" eventsprite="dorm"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.firingblanks.replaceammo"/>
+          <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.firingblanks.getammo"/>
+          <EventLogAction targettag="traitor" id="progress">
+            <Text tag="EventText.firingblanks.objective2">
+              <Replace tag="[shotsfired]" value="20" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+        </Success>
+        <Failure>
+          <GoTo name="waitforammo"/>
+        </Failure>
+      </CheckItemAction>
+
+      <WaitAction time="0.5"/>
+
+      <!-- Insert ammo box.-->
+      <TagAction criteria="itemtag:coilgunammosource" tag="coilgunloaders" submarinetype="Player"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.firingblanks.insertammo"/>
+      
+      <Label name="waitforloaded"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="coilgunloaders" itemtags="blankammobox" ApplyTagToTarget="targetloader">
+        <Success>
+          <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.firingblanks.replaceammo"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.firingblanks.insertammo"/>
+          <EventLogAction targettag="traitor" id="progress">
+            <Text tag="EventText.firingblanks.objective3">
+              <Replace tag="[shotsfired]" value="20" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+        </Success>
+        <Failure>
+          <GoTo name="waitforloaded"/>
+        </Failure>
+      </CheckItemAction>
+
+      <!-- Ammo box is inserted. Ensure the traitor cannot shoot the blanks themselves. Ensure 20 shots were fired (90% condition)-->
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.firingblanks.fireblanks"/>
+
+      <WaitForItemUsedAction ItemTag="blankammobox" usertag="NonTraitor" RequiredUseCount="20"/>
+      <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.firingblanks.insertammo"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.firingblanks.fireblanks"/>
+      <ConversationAction targettag="traitor" text="EventText.firingblanks.c3" eventsprite="dorm"/>
+
+      <EventLogAction targettag="traitor" id="result" text="EventText.firingblanks.success_self"/>
+      <SetTraitorEventStateAction state="Completed"/>
+
+      <OnRoundEndAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="traitor" id="result" text="EventText.firingblanks.success_self"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.firingblanks.success"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="traitor" id="result" text="EventText.firingblanks.failure"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.firingblanks.failure"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="clobberyrobbery" dangerlevel="2" StealPercentageOfExperience="25" MinPlayerCount="6" SecondaryTraitorAmount="1" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <!-- Outline: Two traitors are robbing a victim, one knows victim, one has two bandanas
+      Using a blunt weapon is modified for this event: bluntforcetrauma affliction causes a stun on the victim specifically
+      Robbing the victim actually transfers their wallet money to the robbers
+      -->
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <TagAction criteria="eventtag:nontraitorplayer" tag="victim" chooserandom="true"/>
+
+      <!-- Instruct the player -->
+      <ConversationAction targettag="traitor" eventsprite="gambler">
+        <Text tag="EventText.clobberyrobbery.c1">
+          <Replace tag="[victim]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <ConversationAction targettag="secondarytraitor" text="EventText.clobberyrobbery.c2" eventsprite="gambler" ContinueAutomatically="true"/>
+      <EventLogAction targettag="anytraitor" id="initialinfo" text="EventText.clobberyrobbery.objective1"/>
+      <EventLogAction targettag="traitor" id="roleinfo">
+        <Text tag="EventText.clobberyrobbery.objective2">
+          <Replace tag="[victim]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventLogAction targettag="secondarytraitor" id="roleinfo" text="EventText.clobberyrobbery.objective3"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.clobberyrobbery.wearbandana"/>
+
+      <!-- Give secondary traitor 2 bandanas -->
+      <SpawnAction itemidentifier="piratebandana" targettag="bandanas" targetinventory="secondarytraitor"/>
+      <SpawnAction itemidentifier="piratebandana" targettag="bandanas" targetinventory="secondarytraitor"/>
+
+      <Label name="waitforbandanas"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="traitor" itemidentifiers="piratebandana" RequireEquipped="true">
+        <Success>
+          <CheckItemAction targettag="secondarytraitor" itemidentifiers="piratebandana" RequireEquipped="true">
+            <Success>
+              <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.clobberyrobbery.wearbandana"/>
+              <EventLogAction targettag="anytraitor" id="progress" text="EventText.clobberyrobbery.objective4"/>
+            </Success>
+            <Failure>
+              <GoTo name="waitforbandanas"/>
+            </Failure>
+          </CheckItemAction>
+        </Success>
+        <Failure>
+          <GoTo name="waitforbandanas"/>
+        </Failure>
+      </CheckItemAction>
+
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.clobberyrobbery.bluntdamagevictim"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.clobberyrobbery.robvictim"/>
+
+      <Label name="waitforknockout"/>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.clobberyrobbery.bluntdamagevictim"/>
+      <WaitAction time="1"/>
+      <CheckAfflictionAction identifier="blunttrauma" targettag="victim" minstrength="2">
+        <Success>
+          <AfflictionAction targettag="victim" affliction="stun" strength="0.3" MultiplyByMaxVitality="true"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforknockout"/>
+        </Failure>
+      </CheckAfflictionAction>
+      
+      <Label name="waitforgrab"/>
+      <WaitAction time="1"/>
+      <!-- Rob victim by grabbing them. -->
+      <CheckSelectedAction targettag="victim" charactertag="anytraitor">
+        <Failure>
+          <GoTo name="waitforgrab"/>
+        </Failure>
+      </CheckSelectedAction>
+      
+      <SetTraitorEventStateAction state="Completed"/>
+      <MoneyAction targettag="anytraitor" amount="100"/>
+      <MoneyAction targettag="victim" amount="-200"/>
+
+      <ConversationAction targettag="anytraitor" text="EventText.clobberyrobbery.c4" eventsprite="gambler" ContinueAutomatically="true"/>
+      <EventLogAction targettag="anytraitor" id="progress" text="EventText.clobberyrobbery.objective5"/>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.clobberyrobbery.robvictim"/>
+      
+      <OnRoundEndAction>
+        <RemoveItemAction targettag="bandanas" amount="2"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="traitor" id="result" text="EventText.clobberyrobbery.success_self"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.clobberyrobbery.success"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="traitor" id="result" text="EventText.clobberyrobbery.failure"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.clobberyrobbery.failure"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    
+    <!-- coalition events -->
+    <TraitorEvent identifier="handcuffshortage" faction="coalition" dangerlevel="1" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15">
+        <ItemConditional HasTag="fabricator" InPlayerSubmarine="true"/>
+      </LevelRequirement>
+
+      <ConversationAction targettag="traitor" text="EventText.handcuffshortage.c1" eventsprite="vent"/>
+      <EventLogAction targettag="traitor" id="initialinfo">
+        <Text tag="EventText.handcuffshortage.objective1">
+          <Replace tag="[number]" value="8" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.handcuffshortage.create"/>
+      <WaitForItemFabricatedAction itemidentifier="handcuffs" amount="8" charactertag="traitor" ApplyTagToItem="fabricatedhandcuff"/>
+      <SetTraitorEventStateAction state="Completed"/>
+      <ConversationAction targettag="traitor" text="EventText.handcuffshortage.c2" eventsprite="Coalition"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.handcuffshortage.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.handcuffshortage.create"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo">
+          <Text tag="EventText.handcuffshortage.objective1">
+            <Replace tag="[number]" value="8" color="gui.orange"/>
+          </Text>
+        </EventLogAction>
+        <!-- check again at round end, in case the items were lost or deconstructed -->
+        <CheckItemAction targettag="fabricatedhandcuff" Amount="8">
+          <Conditional InPlayerSubmarine="true"/>
+          <Success>
+            <EventLogAction id="success" text="EventText.handcuffshortage.objective3"/>
+            <SetTraitorEventStateAction state="Completed"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.handcuffshortage.create"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.handcuffshortage.objective4"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckItemAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="compoundnowhere" faction="coalition" dangerlevel="1" commonness="10" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontag="cargoexplosiveseparatists"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.compoundnowhere.c1" eventsprite="Coalition"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.compoundnowhere.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.compoundnowhere.missingcargo"/>
+      <TagAction criteria="itemtag:cargoexplosiveseparatists" tag="targetitem" submarinetype="Player"/>
+      <Label name="waitforitemsdisposed"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="targetitem" Amount="1">
+        <Conditional InPlayerSubmarine="true"/>
+        <Success>
+          <!-- if there's at least one target item in the sub, the objective hasn't been completed yet -->
+          <GoTo name="waitforitemsdisposed"/>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" text="EventText.compoundnowhere.c2" eventsprite="Coalition"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.compoundnowhere.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.compoundnowhere.missingcargo"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.compoundnowhere.objective1"/>
+        <!-- check again at round end, in case the cargo was brought back to the sub -->
+        <CheckItemAction targettag="targetitem" Amount="1">
+          <Conditional InPlayerSubmarine="true"/>
+          <Success>
+            <EventLogAction id="failure" text="EventText.compoundnowhere.objective3"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="success" text="EventText.compoundnowhere.objective4"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.compoundnowhere.missingcargo"/>
+            <SetTraitorEventStateAction state="Completed"/>
+            <MoneyAction targettag="traitor" amount="800"/>
+            <GiveExpAction targettag="traitor" amount="800"/>
+          </Failure>
+        </CheckItemAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="vipbombing" faction="coalition" dangerlevel="2" commonness="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontag="escortVIPseparatists"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15"/>
+      
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <TagAction criteria="humanprefabidentifier:separatistcaptain" tag="targetnpc"/>
+      <ConversationAction targettag="traitor" text="EventText.vipbombing.c1" eventsprite="Coalition"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.vipbombing.objective1"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.vipbombing.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.vipbombing.find"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.vipbombing.detonate"/>
+      <!-- Find C-4 and detonator in loosevent -->
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <Label name="waitforitemsfound"/>
+      <CheckSelectedAction targettag="loosevent" charactertag="traitor">
+        <Success>
+          <SpawnAction itemidentifier="detonator" targetinventory="loosevent" targettag="missiondetonator" ignorebyai="true"/>
+          <SpawnAction itemidentifier="c4block_vipbombing" targetinventory="missiondetonator" targettag="missionc4" ignorebyai="true"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.vipbombing.objective3"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.vipbombing.find"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforitemsfound"/>
+        </Failure>
+      </CheckSelectedAction>
+      <!-- Wound or kill the VIP with explosives -->
+      <Label name="waitforexplosion"/>
+      <WaitAction time="1.0"/>
+      <CountTargetsAction targettag="missionc4" amount="1">
+        <Success>
+          <!-- wait until the bomb no longer exists (= has exploded)-->
+          <Goto name="waitforexplosion"/>
+        </Success>
+      </CountTargetsAction>
+      <WaitAction time="5.0"/>
+      <CountTargetsAction targettag="explodedcharacter" SecondRequiredTargetTag="targetnpc" minamount="1">
+        <Success>
+          <EventLogAction targettag="traitor" id="status" text="EventText.vipbombing.objective4"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.vipbombing.detonate"/>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" text="EventText.vipbombing.objective4" eventsprite="Coalition"/>
+        </Success>
+        <Failure>
+          <!-- Clause in case the C-4 detonated without hurting VIP -->
+          <EventLogAction targettag="traitor" id="status" text="EventText.vipbombing.objective5"/>
+          <EventObjectiveAction targettag="traitor" type="Fail" id="traitorobjective.vipbombing.detonate"/>
+          <SetTraitorEventStateAction state="Failed"/>
+          <ConversationAction targettag="traitor" text="EventText.vipbombing.objective5" eventsprite="Coalition"/>
+        </Failure>
+      </CountTargetsAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.vipbombing.objective6"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.vipbombing.objective7"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.vipbombing.find"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.vipbombing.detonate"/>
+            <MoneyAction targettag="traitor" amount="1000"/>
+            <GiveExpAction targettag="traitor" amount="1000"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.vipbombing.objective8"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="deadoralive" faction="coalition" dangerlevel="3" StealPercentageOfExperience="50">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="35"/>
+      
+      <!-- Ensure Sootman isn't actually on the crew -->
+      <CheckDataAction identifier="separatistspecialhire2_hired" condition="eq true">
+        <Failure>
+          <TagAction criteria="eventtag:nontraitor" tag="victim" chooserandom="true"/>
+          <StatusEffectAction targettag="victim">
+            <!-- don't allow the victim's body to despawn, it'd interfere with completing the objective -->
+            <StatusEffect target="This" EnableDespawn="false"/>
+          </StatusEffectAction>
+          <ConversationAction targettag="traitor" eventsprite="Coalition">
+            <Text tag="EventText.deadoralive.c1">
+              <Replace tag="[character]" value="eventtag:victim" color="gui.orange"/>
+            </Text>
+          </ConversationAction>
+          <EventLogAction targettag="traitor" id="initialinfo">
+            <Text tag="EventText.deadoralive.objective1">
+              <Replace tag="[character]" value="eventtag:victim" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.deadoralive.plantevidence"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.deadoralive.findbody"/>
+          <!-- Spawn sootman's ID card -->
+          <SpawnAction itemidentifier="idcardfakesootman" targettag="idcard_sootman" targetinventory="traitor"/>
+          <SpawnAction itemidentifier="piratebandana" targettag="piratebandana_sootman" targetinventory="traitor"/>
+          <SpawnAction itemidentifier="radiojammer" targettag="radiojammer" targetinventory="traitor"/>
+          <SpawnAction itemidentifier="batterycell" targetinventory="radiojammer"/>
+          <Label name="waitforevidenceplanted"/>
+          <WaitAction time="1.0"/>
+          <CheckItemAction targettag="victim" itemtags="idcard_sootman">
+            <Failure>
+              <GoTo name="waitforevidenceplanted"/>
+            </Failure>
+          </CheckItemAction>
+          <CheckItemAction targettag="victim" itemtags="piratebandana_sootman">
+            <Failure>
+              <GoTo name="waitforevidenceplanted"/>
+            </Failure>
+          </CheckItemAction>
+          <!-- check whether a non-traitor other than the victim sees the victim-->
+          <CheckVisibilityAction EntityTag="nontraitor" TargetTag="victim" MaxDistance="1000" AllowSameEntity="false">
+            <Success>
+              <SetTraitorEventStateAction state="Failed"/>
+              <ConversationAction targettag="traitor" text="EventText.deadoralive.c2" eventsprite="Coalition"/>
+              <EventLogAction targettag="traitor" id="failed" text="EventText.deadoralive.c2"/>
+              <EventObjectiveAction targettag="traitor" type="FailAndRemove" id="traitorobjective.deadoralive.plantevidence"/>
+              <EventObjectiveAction targettag="traitor" type="FailAndRemove" id="traitorobjective.deadoralive.findbody"/>
+              <GoTo name="end"/>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="traitor" text="EventText.deadoralive.c3" eventsprite="Coalition"/>
+              <EventLogAction targettag="traitor" id="status" text="EventText.deadoralive.objective2"/>
+              <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.deadoralive.plantevidence"/>
+            </Failure>
+          </CheckVisibilityAction>
+          <Label name="waitforevidencediscovered"/>
+          <WaitAction time="1.0"/>
+          <CheckConditionalAction targettag="victim" IsIncapacitated="true">
+            <Success>
+              <CheckSelectedAction targettag="victim" charactertag="nontraitor">
+                <Success>
+                  <SetTraitorEventStateAction state="Completed"/>
+                  <ConversationAction targettag="traitor" text="EventText.deadoralive.c4" eventsprite="Coalition"/>
+                  <EventLogAction targettag="traitor" id="status" text="EventText.deadoralive.objective3"/>
+                  <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.deadoralive.findbody"/>
+                </Success>
+                <Failure>
+                  <GoTo name="waitforevidencediscovered"/>
+                </Failure>
+              </CheckSelectedAction>
+            </Success>
+            <Failure>
+              <GoTo name="waitforevidencediscovered"/>
+            </Failure>
+          </CheckConditionalAction>
+          <Label name="checkvictimincapacitated"/>
+          <WaitAction time="1.0"/>
+          <CheckConditionalAction targettag="victim" IsIncapacitated="true">
+            <Failure>
+              <SetTraitorEventStateAction state="Failed"/>
+              <ConversationAction targettag="traitor" text="EventText.deadoralive.c5" eventsprite="Coalition"/>
+              <EventLogAction targettag="traitor" id="status" text="EventText.deadoralive.objective4"/>
+              <GoTo name="checkvictimincapacitated"/>
+            </Failure>
+          </CheckConditionalAction>
+        </Failure>
+      </CheckDataAction>
+      <Label name="end"/>
+      <OnRoundEndAction>
+        <RemoveItemAction targettag="radiojammer"/>
+        <EventLogAction targettag="nontraitor" id="initialinfo">
+          <Text tag="EventText.deadoralive.objective1">
+            <Replace tag="[character]" value="eventtag:victim" color="gui.orange"/>
+          </Text>
+        </EventLogAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.deadoralive.objective5"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.deadoralive.objective6"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <!-- separatist events -->
+    <TraitorEvent identifier="undercover" faction="separatists" dangerlevel="1" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      
+      <Label name="findidcard"/>
+      <WaitAction time="1.0"/>
+      <!-- tag an id card in some non-traitor's inventory -->
+      <CheckItemAction targettag="nontraitor" itemidentifiers="idcard" ApplyTagToTarget="target" ApplyTagToItem="targetidcard">
+        <Failure>
+          <GoTo name="findidcard"/>
+        </Failure>
+      </CheckItemAction>
+      <ConversationAction targettag="traitor" eventsprite="Separatists">
+        <Text tag="EventText.undercover.c1">
+          <Replace tag="[target]" value="eventtag:target" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="traitor" id="initialinfo">
+        <Text tag="EventText.undercover.objective1">
+          <Replace tag="[target]" value="eventtag:target" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.undercover.obtainid"/>
+      <Label name="waitforidcardstolen"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="traitor" itemtags="targetidcard">
+        <Failure>
+          <GoTo name="waitforidcardstolen"/>
+        </Failure>
+        <Success>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" text="EventText.undercover.c2" eventsprite="Separatists"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.undercover.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.undercover.obtainid"/>
+        </Success>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo">
+          <Text tag="EventText.undercover.objective1">
+            <Replace tag="[target]" value="eventtag:target" color="gui.orange"/>
+          </Text>
+        </EventLogAction>
+        <!-- check again at round end, in case the items were lost or deconstructed -->
+        <CheckItemAction targettag="traitor" itemtags="targetidcard">
+          <Success>
+            <EventLogAction id="status" text="EventText.undercover.objective3"/>
+            <SetTraitorEventStateAction state="Completed"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.undercover.obtainid"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="status" text="EventText.undercover.objective4"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckItemAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="armsinterception" faction="separatists" dangerlevel="1" commonness="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontag="cargoweaponscoalition"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.armsinterception.c1" eventsprite="Note2"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.armsinterception.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.armsinterception.missingcargo"/>
+      <TagAction criteria="itemtag:cargoweaponscoalition" tag="targetitem" submarinetype="Player"/>
+      <Label name="waitforitemsdisposed"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="targetitem">
+        <Conditional InPlayerSubmarine="true"/>
+        <Success>
+          <!-- if there's a target item in the sub, not completed yet -->
+          <GoTo name="waitforitemsdisposed"/>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" text="EventText.armsinterception.c2" eventsprite="Note2"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.armsinterception.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.armsinterception.missingcargo"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.armsinterception.objective1"/>
+        <!-- check again at round end, in case the cargo was brought back to the sub -->
+        <CheckItemAction targettag="targetitem">
+          <Conditional InPlayerSubmarine="true"/>
+          <Success>
+            <EventLogAction id="status" text="EventText.armsinterception.objective3"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="status" text="EventText.armsinterception.objective4"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.armsinterception.missingcargo"/>
+            <SetTraitorEventStateAction state="Completed"/>
+            <MoneyAction targettag="traitor" amount="800"/>
+            <GiveExpAction targettag="traitor" amount="800"/>
+          </Failure>
+        </CheckItemAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="vippoison" faction="separatists" dangerlevel="2" commonness="10" StealPercentageOfExperience="25">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <MissionRequirement missiontag="escortVIPcoalition"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15"/>
+      
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <TagAction criteria="humanprefabidentifier:vip" tag="targetnpc"/>
+      <ConversationAction targettag="traitor" text="EventText.vippoison.c1" eventsprite="Separatists"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.vippoison.objective1"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.vippoison.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.vippoison.findpoison"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.vippoison.injectpoison"/>
+      <!-- Find poison in loosevent -->
+      <SpawnAction itemidentifier="morbusine" targetinventory="loosevent" targettag="missionpoison" ignorebyai="true" amount="2"/>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.vippoison.objective3"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.vippoison.findpoison"/>
+      <!-- Wound or kill the VIP with poison -->
+      <Label name="waitforpoison"/>
+      <WaitAction time="1.0"/>
+      <CheckAfflictionAction identifier="morbusinepoisoning" targettag="targetnpc" minstrength="10">
+        <Success>
+          <EventLogAction targettag="traitor" id="status" text="EventText.vippoison.objective4"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.vippoison.injectpoison"/>
+          <SetTraitorEventStateAction state="Completed"/>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Failed"/>
+          <GoTo name="waitforpoison"/>
+        </Failure>
+      </CheckAfflictionAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.vippoison.objective1"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.vippoison.objective5"/>
+            <MoneyAction targettag="traitor" amount="1000"/>
+            <GiveExpAction targettag="traitor" amount="1000"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.vippoison.objective6"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="showofstrength" faction="separatists" dangerlevel="3" StealPercentageOfExperience="50">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="35"/>
+      <!-- Outline:
+        Try to find the weapon (explosives), first vent is a miss
+        Blow up the command room with at least one person/target? in it
+      -->
+      <!-- Fake stash first loosevent -->
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <TagAction criteria="itemtag:primarynavterminal" tag="navterminal" submarinetype="Player"/>
+      <ConversationAction targettag="traitor" text="EventText.showofstrength.c1" eventsprite="Separatists"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.showofstrength.objective1"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.showofstrength.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.showofstrength.findstash"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.showofstrength.blownavterminal"/>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <ConversationAction targettag="traitor" text="EventText.showofstrength.c2" eventsprite="Separatists"/>
+      <TagAction criteria="itemtag:hidden" tag="looseventreal" chooserandom="true" submarinetype="Player"/>
+      <SpawnAction itemidentifier="dirtybomb_showofstrength" targetinventory="looseventreal" targettag="missionexplosive" ignorebyai="true"/>
+      <TriggerAction Target1Tag="looseventreal" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <SpawnAction itemidentifier="radiojammer" targettag="radiojammer" targetinventory="traitor"/>
+      <SpawnAction itemidentifier="batterycell" targetinventory="radiojammer"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.showofstrength.findstash"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.showofstrength.objective3"/>
+      <ConversationAction targettag="traitor" text="EventText.showofstrength.objective3" eventsprite="Separatists"/>
+      <Label name="waitforexplosion"/>
+      <WaitAction time="1.0"/>
+      <CountTargetsAction targettag="missionexplosive" amount="1">
+        <Success>
+          <!-- wait until the bomb no longer exists (= has exploded)-->
+          <Goto name="waitforexplosion"/>
+        </Success>
+      </CountTargetsAction>
+      <WaitAction time="5.0"/>
+      <CountTargetsAction targettag="explodedcharacter" minamount="1">
+        <Success>
+          <CountTargetsAction targettag="explodednavterminal" minamount="1">
+            <Success>
+              <ConversationAction targettag="traitor" text="EventText.showofstrength.c3" eventsprite="Separatists"/>
+              <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.showofstrength.blownavterminal"/>
+              <EventLogAction targettag="traitor" id="success" text="EventText.showofstrength.c3"/>
+              <SetTraitorEventStateAction state="Completed"/>
+            </Success>
+          </CountTargetsAction>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="traitor" text="EventText.showofstrength.c4" eventsprite="Separatists"/>
+          <SetTraitorEventStateAction state="Failed"/>
+          <EventObjectiveAction targettag="traitor" type="fail" id="traitorobjective.showofstrength.blownavterminal"/>
+          <EventLogAction targettag="traitor" id="failure" text="EventText.showofstrength.c4"/>
+        </Failure>
+      </CountTargetsAction>
+      <OnRoundEndAction>
+        <RemoveItemAction targettag="radiojammer"/>
+        <RemoveItemAction targettag="missionexplosive"/>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.showofstrength.objective1"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="nontraitor" id="success" text="EventText.showofstrength.c3"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.showofstrength.objective4"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <!-- clown events -->
+    <TraitorEvent identifier="deepdiverducks" faction="clowns" dangerlevel="1" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="256,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15">
+        <ItemConditional HasTag="fabricator" InPlayerSubmarine="true"/>
+      </LevelRequirement>
+      
+      <ConversationAction targettag="traitor" text="EventText.deepdiverducks.c1" eventsprite="Note2"/>
+      <EventLogAction targettag="traitor" id="initialinfo">
+        <Text tag="EventText.deepdiverducks.objective1">
+          <Replace tag="[number]" value="4" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.deepdiverducks.create"/><!-- TODO should we use [number] variable here? -->
+      <WaitForItemFabricatedAction itemidentifier="deepdiverduck" amount="4" charactertag="traitor" ApplyTagToItem="fabricatedduck"/>
+      <SetTraitorEventStateAction state="Completed"/>
+      <ConversationAction targettag="traitor" eventsprite="Note2">
+        <Text tag="EventText.deepdiverducks.c2">
+          <Replace tag="[number]" value="4" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="traitor" id="status" text="EventText.deepdiverducks.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.deepdiverducks.create"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo">
+          <Text tag="EventText.deepdiverducks.objective1">
+            <Replace tag="[number]" value="4" color="gui.orange"/>
+          </Text>
+        </EventLogAction>
+        <!-- check that the ducks are still in the sub  -->
+        <CheckItemAction targettag="fabricatedduck" Amount="4">
+          <Conditional InPlayerSubmarine="true"/>
+          <Success>
+            <EventLogAction id="status" text="EventText.deepdiverducks.objective3"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.deepdiverducks.create"/>
+            <SetTraitorEventStateAction state="Completed"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="status" text="EventText.deepdiverducks.objective4"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckItemAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="theduffelbag" faction="clowns" dangerlevel="1" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      
+      <SpawnAction itemidentifier="traitorduffelbag" SpawnLocation="MainSub" targettag="duffelbag" AllowInPlayerView="false"/>
+      <!--StatusEffectAction targettag="duffelbag">
+        <StatusEffect tags="mobilecontainer,despawncontainer,name:TODO,jobid:TODO" [TODO randomise this using names.xml or give it the name and jobid of the traitor?]/>
+      </StatusEffectAction-->
+      <ConversationAction targettag="traitor" text="EventText.theduffelbag.c1" eventsprite="Duffelbag"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.theduffelbag.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.theduffelbag.findduffelbag"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.theduffelbag.dontlookduffelbag"/>
+      <TriggerAction Target1Tag="duffelbag" Target2Tag="traitor" radius="200" waitforinteraction="true"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbag.c2" eventsprite="Duffelbag"/>
+      <EventLogAction targettag="traitor" id="progress" text="EventText.theduffelbag.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.theduffelbag.findduffelbag"/>
+      <Label name="lookinsidecheck"/>
+      <WaitAction time="0.5"/>
+      <!-- Potential TODO picking up the duffelbag does not count as 'selected', so reverting CheckSelectedAction to use CheckItemAction for now instead -->
+      <CheckItemAction targettag="nontraitorplayer" itemtags="duffelbag">
+        <Success>
+          <SetTraitorEventStateAction state="Failed"/>
+          <ConversationAction targettag="traitor" text="EventText.theduffelbag.c3" eventsprite="Duffelbag"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbag.objective3"/>
+          <EventObjectiveAction targettag="traitor" type="FailAndRemove" id="traitorobjective.theduffelbag.dontlookduffelbag"/>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Completed"/>
+          <GoTo name="lookinsidecheck"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.theduffelbag.objective1"/>
+        <!-- check at round end, that the duffelbag wasnt simply tossed out -->
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <CheckItemAction targettag="duffelbag" RequiredConditionalMatchPercentage="100">
+              <Conditional InPlayerSubmarine="true"/>
+              <Success>
+                <EventLogAction id="status" text="EventText.theduffelbag.objective4"/>
+                <SetTraitorEventStateAction state="Completed"/>
+              </Success>
+              <Failure>
+                <EventLogAction id="status" text="EventText.theduffelbag.objective5"/>
+                <SetTraitorEventStateAction state="Failed"/>
+              </Failure>
+            </CheckItemAction>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.theduffelbag.objective6"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+        <RemoveItemAction targettag="duffelbag"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="ducksideofthemoon" faction="clowns" dangerlevel="1" StealPercentageOfExperience="10" MinPlayerCount="6" SecondaryTraitorPercentage="20" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="256,0,256,256" color="200,0,0,255"/>
+      <!-- Outline: Loose vent has a replenishing stash of deepdiver ducks.
+      Put 21 deepdiver ducks into ballast tanks.
+      Don't get caught and make sure there's still enough at mission end
+      -->
+
+      <!-- Instruct the players -->
+      <ConversationAction targettag="traitor" text="EventText.ducksideofthemoon.c1" eventsprite="clown"/>
+      <ConversationAction targettag="secondarytraitor" text="EventText.ducksideofthemoon.c2" eventsprite="clown" ContinueAutomatically="true"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.ducksideofthemoon.objective1"/>
+      <EventLogAction targettag="secondarytraitor" id="initialinfo" text="EventText.ducksideofthemoon.objective2"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.ducksideofthemoon.duckstash"/>
+
+      <!-- Find 'infinite' stash, spawn deepdiverducks -->
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" applytotarget2="triggerer_traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      
+      <SpawnAction itemidentifier="deepdiverduck" targettag="ducky" targetinventory="loosevent" ignorebyai="true"/>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.ducksideofthemoon.duckstash"/>
+      <ConversationAction targettag="triggerer_traitor" text="EventText.ducksideofthemoon.c3" eventsprite="vent" ContinueAutomatically="true"/>
+      <EventLogAction targettag="anytraitor" id="progress">
+        <Text tag="eventtext.ducksideofthemoon.objective3">
+          <Replace tag="[number]" value="21" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.ducksideofthemoon.fillballast"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.ducksideofthemoon.fillballast1" ParentObjectiveId="traitorobjective.ducksideofthemoon.fillballast"/>
+      <!-- Loop stash (if empty, spawn new), wait for ballast tanks to fill up -->
+      <TagAction criteria="hullname:ballast" tag="ballast" submarinetype="Player"/>
+      
+      <Label name="eventloop"/>
+      <WaitAction time="2"/>
+      <CheckItemAction targettag="loosevent" itemidentifiers="deepdiverduck">
+        <Failure>
+          <CheckItemAction targettag="anytraitor" itemidentifiers="deepdiverduck" amount="10">
+            <Failure>
+              <SpawnAction itemidentifier="deepdiverduck" targettag="ducky" targetinventory="loosevent" ignorebyai="true"/>
+            </Failure>
+          </CheckItemAction>
+        </Failure>
+      </CheckItemAction>
+
+      <CountTargetsAction targettag="ducky" hulltag="ballast" MinAmount="21">
+        <Conditional ParentInventory="null"/><!-- The ducks should be visible and thus not 'hidden' inside any inventories -->
+        <Success>
+          <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.ducksideofthemoon.fillballast3"/>
+          <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.ducksideofthemoon.fillballast"/>
+          <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.ducksideofthemoon.completemission"/>
+          <EventLogAction targettag="anytraitor" id="progress" text="EventText.ducksideofthemoon.objective4"/>
+        </Success>
+        <Failure>
+          <CountTargetsAction targettag="ducky" hulltag="ballast" MinAmount="10">
+            <Conditional ParentInventory="null"/>
+            <Success>
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.ducksideofthemoon.fillballast2"/>
+              <EventObjectiveAction targettag="anytraitor" type="addifnotfound" id="traitorobjective.ducksideofthemoon.fillballast3" ParentObjectiveId="traitorobjective.ducksideofthemoon.fillballast"/>
+              <GoTo name="eventloop"/>
+            </Success>
+          </CountTargetsAction>
+          <CountTargetsAction targettag="ducky" hulltag="ballast" MinAmount="1">
+            <Conditional ParentInventory="null"/>
+            <Success>
+              <EventLogAction targettag="anytraitor" id="progress">
+                <Text tag="eventtext.ducksideofthemoon.objective7">
+                  <Replace tag="[number]" value="21" color="gui.orange"/>
+                </Text>
+              </EventLogAction>
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.ducksideofthemoon.duckstash"/>
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.ducksideofthemoon.fillballast1"/>
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.codeword"/>
+              <EventObjectiveAction targettag="anytraitor" type="addifnotfound" id="traitorobjective.ducksideofthemoon.fillballast2" ParentObjectiveId="traitorobjective.ducksideofthemoon.fillballast"/>
+              <GoTo name="eventloop"/>
+            </Success>
+          </CountTargetsAction>
+          <GoTo name="eventloop"/>
+        </Failure>
+      </CountTargetsAction>
+
+      <Label name="stillokaycheck"/>
+      <WaitAction time="1"/>
+      <CountTargetsAction targettag="ducky" hulltag="ballast" MinAmount="21">
+        <Conditional ParentInventory="null"/>
+        <Success>
+          <EventLogAction targettag="anytraitor" id="status" text="EventText.ducksideofthemoon.objective5"/>
+          <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.ducksideofthemoon.completemission"/>
+          <SetTraitorEventStateAction state="Completed"/>
+          <GoTo name="stillokaycheck"/>
+        </Success>
+        <Failure>
+          <EventLogAction targettag="anytraitor" id="status" text="EventText.ducksideofthemoon.objective6"/>
+          <EventObjectiveAction targettag="anytraitor" type="fail" id="traitorobjective.ducksideofthemoon.completemission"/>
+          <SetTraitorEventStateAction state="Failed"/>
+          <GoTo name="stillokaycheck"/>
+        </Failure>
+      </CountTargetsAction>
+
+      <OnRoundEndAction>
+        <CountTargetsAction targettag="ducky" hulltag="ballast" MinAmount="21">
+          <Conditional ParentInventory="null"/>
+          <Success>
+            <EventLogAction targettag="anytraitor" id="result" text="EventText.ducksideofthemoon.success_self"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.ducksideofthemoon.success"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="anytraitor" id="result" text="EventText.ducksideofthemoon.failure"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.ducksideofthemoon.failure"/>
+          </Failure>
+        </CountTargetsAction>
+        <RemoveItemAction targettag="ducky" amount="99"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="theduffelbagbomb" RequiredCompletedTags="theduffelbag" faction="clowns" dangerlevel="2" StealPercentageOfExperience="20">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      
+      <TagAction criteria="player" tag="player"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb.c1" eventsprite="Duffelbag"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.theduffelbagbomb.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.theduffelbagbomb.find"/>
+      <SpawnAction itemidentifier="traitorduffelbag" SpawnLocation="MainSub" targettag="duffelbag" AllowInPlayerView="false"/>
+      <TriggerAction Target1Tag="duffelbag" Target2Tag="traitor" radius="200" waitforinteraction="true"/>
+      <SpawnAction itemidentifier="traitortimebomb" targetinventory="duffelbag" targettag="duffelbagbomb"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb.c2" eventsprite="Duffelbag"/>
+      <EventLogAction targettag="traitor" id="progress" text="EventText.theduffelbagbomb.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.theduffelbagbomb.find"/>
+      <Label name="lookinsidecheck"/>
+      <WaitAction time="0.5"/>
+      <CheckItemAction targettag="nontraitorplayer" itemtags="duffelbag">
+        <Success>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb.c3" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb.objective3"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <ConversationAction targettag="nontraitor" text="EventText.theduffelbagbomb2.c4" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+          <EventLogAction targettag="nontraitor" id="nontraitorstatus" text="EventText.theduffelbagbomb2.c4"/>
+          <EventObjectiveAction targettag="nontraitor" type="add" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <StatusEffectAction targettag="duffelbagbomb">
+            <!-- activate time bomb -->
+            <StatusEffect target="This" descriptiontag="traitortimebomb.stage1"/>
+            <StatusEffect target="This" TargetItemComponent="LightComponent" IsOn="true"/>
+          </StatusEffectAction>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Failed"/>
+          <GoTo name="lookinsidecheck"/>
+        </Failure>
+      </CheckItemAction>
+      <WaitAction time="5.0"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c5" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.c5"/>
+      <Label name="defusestage1"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="duffelbagbomb" RequiredConditionalMatchPercentage="100">
+        <!-- Bomb was tossed -->
+        <Conditional InPlayerSubmarine="false"/>
+        <Success>
+          <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb.c4" eventsprite="Duffelbag" continueautomatically="true"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb.c4"/>
+          <ConversationAction targettag="nontraitor" text="EventText.theduffelbagbomb.c5" eventsprite="Duffelbag" continueautomatically="true"/>
+          <EventLogAction targettag="nontraitor" id="status" text="EventText.theduffelbagbomb.c5"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <EventObjectiveAction targettag="nontraitor" type="complete" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <GoTo name="end"/>
+        </Success>
+      </CheckItemAction>
+      <ClearTagAction tag="disarmer"/>
+      <CheckItemAction targettag="player" itemtags="traitorbomb" applytagtotarget="disarmer" requireequipped="true">
+        <Success>
+          <CheckItemAction targettag="disarmer" itemtags="screwdriveritem" requireequipped="true">
+            <Success>
+              <StatusEffectAction targettag="duffelbagbomb">
+                <StatusEffect target="This" descriptiontag="traitortimebomb.stage2"/>
+              </StatusEffectAction>
+              <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c6" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+              <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.c6"/>
+            </Success>
+            <Failure>
+              <GoTo name="defusestage1"/>
+            </Failure>
+          </CheckItemAction>
+        </Success>
+        <Failure>
+          <GoTo name="defusestage1"/>
+        </Failure>
+      </CheckItemAction>
+      <ConversationAction targettag="disarmer" text="EventText.theduffelbagbomb2.c7" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c7" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.c7"/>
+      <EventLogAction targettag="nontraitor" id="status" text="EventText.theduffelbagbomb2.c7"/>
+      <Label name="defusestage2"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="duffelbagbomb" RequiredConditionalMatchPercentage="100">
+        <!-- Bomb was tossed -->
+        <Conditional InPlayerSubmarine="false"/>
+        <Success>
+          <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb.c4" eventsprite="Duffelbag" continueautomatically="true"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb.c4"/>
+          <ConversationAction targettag="nontraitor" text="EventText.theduffelbagbomb.c5" eventsprite="Duffelbag" continueautomatically="true"/>
+          <EventLogAction targettag="nontraitor" id="status" text="EventText.theduffelbagbomb.c5"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <EventObjectiveAction targettag="nontraitor" type="complete" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <GoTo name="end"/>
+        </Success>
+      </CheckItemAction>
+      <ClearTagAction tag="disarmer"/>
+      <CheckItemAction targettag="player" itemtags="traitorbomb" applytagtotarget="disarmer" requireequipped="true">
+        <Success>
+          <CheckItemAction targettag="disarmer" itemtags="sharptool" requireequipped="true">
+            <Success>
+              <SkillCheckAction requiredskill="weapons" requiredlevel="50" targettag="disarmer">
+                <Success>
+                  <StatusEffectAction targettag="duffelbagbomb">
+                    <StatusEffect target="This" descriptiontag="traitortimebomb.stage3"/>
+                    <StatusEffect target="This" TargetItemComponent="LightComponent" IsOn="false"/>
+                  </StatusEffectAction>
+                  <ConversationAction targettag="player" text="EventText.theduffelbagbomb2.c8" eventsprite="Duffelbag"/>
+                  <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.objective4"/>
+                  <EventLogAction targettag="nontraitor" id="nontraitorstatus" text="EventText.theduffelbagbomb2.c8"/>
+                  <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.theduffelbagbomb.ticktick"/>
+                  <EventObjectiveAction targettag="nontraitor" type="complete" id="traitorobjective.theduffelbagbomb.ticktick"/>
+                </Success>
+                <Failure>
+                  <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.objective5"/>
+                  <GoTo name="defusestage2"/>
+                </Failure>
+              </SkillCheckAction>
+            </Success>
+            <Failure>
+              <GoTo name="defusestage2"/>
+            </Failure>
+          </CheckItemAction>
+        </Success>
+        <Failure>
+          <GoTo name="defusestage2"/>
+        </Failure>
+      </CheckItemAction>
+      <Label name="end"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.theduffelbagbomb.objective1"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.theduffelbagbomb.objective4"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.theduffelbagbomb2.objective7"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+        <RemoveItemAction targettag="duffelbagbomb"/>
+        <RemoveItemAction targettag="duffelbag"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="theduffelbagbomb2" RequiredCompletedTags="theduffelbagbomb" faction="clowns" dangerlevel="3" StealPercentageOfExperience="30">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      
+      <SpawnAction itemidentifier="traitorduffelbag" SpawnLocation="MainSub" targettag="duffelbag" AllowInPlayerView="false"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c1" eventsprite="Duffelbag"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.theduffelbagbomb2.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.theduffelbagbomb.find"/>
+      <TriggerAction Target1Tag="duffelbag" Target2Tag="traitor" radius="200" waitforinteraction="true"/>
+      <SpawnAction itemidentifier="traitortimebomb3" targetinventory="duffelbag" targettag="duffelbagbomb"/>
+      <SpawnAction itemidentifier="batterycell" targetinventory="duffelbagbomb"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c2" eventsprite="Duffelbag"/>
+      <EventLogAction targettag="traitor" id="progress" text="EventText.theduffelbagbomb2.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.theduffelbagbomb.find"/>
+      <Label name="lookinsidecheck"/>
+      <WaitAction time="0.5"/>
+      <CheckItemAction targettag="nontraitorplayer" itemtags="duffelbag">
+        <Success>
+          <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c3" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.objective3"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <ConversationAction targettag="nontraitor" text="EventText.theduffelbagbomb2.c4" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+          <EventLogAction targettag="nontraitor" id="nontraitorstatus" text="EventText.theduffelbagbomb2.c4"/>
+          <EventObjectiveAction targettag="nontraitor" type="add" id="traitorobjective.theduffelbagbomb.ticktick"/>
+          <SetTraitorEventStateAction state="Completed"/>
+          <StatusEffectAction targettag="duffelbagbomb">
+            <StatusEffect target="This" descriptiontag="traitortimebomb.stage1"/>
+            <StatusEffect target="This" TargetItemComponent="LightComponent" IsOn="true"/>
+          </StatusEffectAction>
+        </Success>
+        <Failure>
+          <SetTraitorEventStateAction state="Failed"/>
+          <GoTo name="lookinsidecheck"/>
+        </Failure>
+      </CheckItemAction>
+      <WaitAction time="5.0"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c5" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.c5"/>
+      <TagAction criteria="player" tag="player"/>
+      <Label name="defusestage1"/>
+      <WaitAction time="1.0"/>
+      <ClearTagAction tag="disarmer"/>
+      <CheckItemAction targettag="player" itemtags="traitorbomb" applytagtotarget="disarmer" requireequipped="true">
+        <Success>
+          <CheckItemAction targettag="disarmer" itemtags="screwdriveritem" requireequipped="true">
+            <Success>
+              <StatusEffectAction targettag="duffelbagbomb">
+                <StatusEffect target="This" TargetItemComponent="ItemComponent" descriptiontag="traitortimebomb.stage2"/>
+              </StatusEffectAction>
+              <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c6" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+              <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.c6"/>
+            </Success>
+            <Failure>
+              <GoTo name="defusestage1"/>
+            </Failure>
+          </CheckItemAction>
+        </Success>
+        <Failure>
+          <GoTo name="defusestage1"/>
+        </Failure>
+      </CheckItemAction>
+      <ConversationAction targettag="disarmer" text="EventText.theduffelbagbomb2.c7" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+      <ConversationAction targettag="traitor" text="EventText.theduffelbagbomb2.c7" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.c7"/>
+      <EventLogAction targettag="nontraitor" id="status" text="EventText.theduffelbagbomb2.c7"/>
+      <Label name="defusestage2"/>
+      <WaitAction time="1.0"/>
+      <ClearTagAction tag="disarmer"/>
+      <CheckItemAction targettag="player" itemtags="traitorbomb" applytagtotarget="disarmer" requireequipped="true">
+        <Success>
+          <CheckItemAction targettag="disarmer" itemtags="sharptool" requireequipped="true">
+            <Success>
+              <SkillCheckAction requiredskill="weapons" requiredlevel="60" targettag="disarmer">
+                <Success>
+                  <StatusEffectAction targettag="duffelbagbomb">
+                    <StatusEffect target="This" descriptiontag="traitortimebomb.stage3"/>
+                    <StatusEffect target="This" TargetItemComponent="LightComponent" IsOn="false"/>
+                  </StatusEffectAction>
+                  <ConversationAction targettag="player" text="EventText.theduffelbagbomb2.c8" eventsprite="Duffelbag" ContinueAutomatically="true"/>
+                  <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.objective4"/>
+                  <EventLogAction targettag="nontraitor" id="nontraitorstatus" text="EventText.theduffelbagbomb2.c8"/>
+                </Success>
+                <Failure>
+                  <EventLogAction targettag="traitor" id="status" text="EventText.theduffelbagbomb2.objective5"/>
+                  <GoTo name="defusestage2"/>
+                </Failure>
+              </SkillCheckAction>
+            </Success>
+            <Failure>
+              <GoTo name="defusestage2"/>
+            </Failure>
+          </CheckItemAction>
+        </Success>
+        <Failure>
+          <GoTo name="defusestage2"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.theduffelbagbomb2.objective1"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.theduffelbagbomb2.objective6"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.theduffelbagbomb2.objective7"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+        <!-- Give some EXP to everyone regardless of the outcome -->
+        <GiveExpAction targettag="nontraitor" amount="1000"/>
+        <RemoveItemAction targettag="duffelbagbomb"/>
+        <RemoveItemAction targettag="duffelbag"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="harbingerofhonks" faction="clowns" dangerlevel="1" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <ConversationAction targettag="traitor" text="eventtext.harbingerofhonks.intro" eventsprite="Infiltration2"/>
+      <EventLogAction targettag="traitor" id="initialinfo">
+        <Text tag="eventtext.harbingerofhonks.objective">
+          <Replace tag="[halfHulls]" value="50%" color="gui.orange"/>
+          <!-- TODO use actual number instead of 50%. Count valid rooms -->
+          <Replace tag="[halfCabinets]" value="50%" color="gui.orange"/>
+          <!-- TODO use actual number instead of 50%. Count valid supplies cabinets -->
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.harbingerofhonks.honk"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.harbingerofhonks.hide"/>
+      <TagAction criteria="hull" tag="anyhull" submarinetype="Player"/>
+      <TagAction criteria="itemtag:suppliescontainer" tag="suppliescabinet" submarinetype="Player"/>
+      <SpawnAction itemidentifier="metalcrate" SpawnLocation="MainSub" targettag="honkcrate" ignorebyai="true"/>
+      <HighlightAction targettag="honkcrate" targetcharacter="traitor"/>
+      <Label name="spawnhalf"/>
+      <CountTargetsAction targettag="bikehorncounter" CompareToTarget="suppliescabinet" MinPercentageRelativeToTarget="50">
+        <Failure>
+          <SpawnAction itemidentifier="bikehorn" targettag="bikehorncounter" targetinventory="honkcrate" ignorebyai="true"/>
+          <Goto name="spawnhalf"/>
+          <!-- Repeat until enough.-->
+        </Failure>
+      </CountTargetsAction>
+      <TagAction criteria="itemtag:hornitem" tag="bikehorn" submarinetype="Player"/>
+      <Label name="waitforhonk"/>
+      <WaitAction time="1.0"/>
+      <WaitForItemUsedAction itemtag="bikehorn" targetitemcomponent="RangedWeapon" ApplyTagToLinkedHulls="honkedhull"/>
+      <CheckVisibilityAction EntityTag="nontraitor" TargetTag="traitor">
+        <Success>
+          <!-- someone saw the traitor, don't count the honk. TODO failing the traitor mission when caught too many times [twice is too many]. How todo a counter, DataAction only works in campaign? -->
+          <EventLogAction targettag="traitor" id="honkstatus" text="EventText.harbingerofhonks.objective1"/>
+          <ConversationAction targettag="traitor" text="eventtext.harbingerofhonks.stayhidden" eventsprite="Infiltration2"/>
+          <Goto name="waitforhonk"/>
+        </Success>
+      </CheckVisibilityAction>
+      <TagAction criteria="eventtag:honkedhull" tag="successfullyhonkedhull" submarinetype="Player"/>
+      <CountTargetsAction targettag="successfullyhonkedhull" CompareToTarget="anyhull" MinPercentageRelativeToTarget="10">
+        <Success>
+          <EventLogAction targettag="traitor" id="honkstatus" text="EventText.harbingerofhonks.objective2"/>
+        </Success>
+      </CountTargetsAction>
+      <CountTargetsAction targettag="successfullyhonkedhull" CompareToTarget="anyhull" MinPercentageRelativeToTarget="25">
+        <Success>
+          <EventLogAction targettag="traitor" id="honkstatus" text="EventText.harbingerofhonks.objective3"/>
+        </Success>
+      </CountTargetsAction>
+      <CountTargetsAction targettag="successfullyhonkedhull" CompareToTarget="anyhull" MinPercentageRelativeToTarget="40">
+        <Success>
+          <EventLogAction targettag="traitor" id="honkstatus" text="EventText.harbingerofhonks.objective4"/>
+        </Success>
+      </CountTargetsAction>
+      <CountTargetsAction targettag="successfullyhonkedhull" CompareToTarget="anyhull" MinPercentageRelativeToTarget="50">
+        <Success>
+          <ConversationAction targettag="traitor" text="EventText.harbingerofhonks.c1" eventsprite="Infiltration2"/>
+          <EventLogAction targettag="traitor" id="honkstatus">
+            <Text tag="EventText.harbingerofhonks.objective5">
+              <Replace tag="[halfCabinets]" value="50%" color="gui.orange"/>
+            </Text>
+          </EventLogAction>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.harbingerofhonks.honk"/>
+        </Success>
+        <Failure>
+          <Goto name="waitforhonk"/>
+        </Failure>
+      </CountTargetsAction>
+      <Label name="waitforbikehorns"/>
+      <WaitAction time="1.0"/>
+      <CheckItemAction targettag="suppliescabinet" RequiredConditionalMatchPercentage="25">
+        <Conditional hastag="hornitem" TargetContainedItem="true"/>
+        <EventLogAction targettag="traitor" id="bikehornstatus" text="EventText.harbingerofhonks.objective6"/>
+      </CheckItemAction>
+      <CheckItemAction targettag="suppliescabinet" RequiredConditionalMatchPercentage="50">
+        <Conditional hastag="hornitem" TargetContainedItem="true"/>
+        <Success>
+          <SetTraitorEventStateAction state="Completed"/>
+          <HighlightAction state="false" targettag="honkcrate"/>
+          <ConversationAction targettag="traitor" text="EventText.harbingerofhonks.c2" eventsprite="Infiltration2"/>
+          <EventLogAction targettag="traitor" id="honkstatus" text="EventText.harbingerofhonks.objective7"/>
+          <EventLogAction targettag="traitor" id="bikehornstatus" text="EventText.harbingerofhonks.objective8"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.harbingerofhonks.hide"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforbikehorns"/>
+        </Failure>
+      </CheckItemAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo">
+          <Text tag="eventtext.harbingerofhonks.objective">
+            <Replace tag="[halfHulls]" value="50%" color="gui.orange"/>
+            <!-- TODO use actual number instead of 50%. Count valid rooms -->
+            <Replace tag="[halfCabinets]" value="50%" color="gui.orange"/>
+            <!-- TODO use actual number instead of 50%. Count valid supplies cabinets -->
+          </Text>
+        </EventLogAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.harbingerofhonks.objective9"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.harbingerofhonks.objective10"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="originalhonkero" faction="clown" dangerlevel="1" StealPercentageOfExperience="10">
+      <!-- Outline: Torment [victim] with your Bike Horn. 
+      No other crew members should see you when honking, victim excluded.
+      Honk at least 5 times (30s cooldown period between honk).
+      -->
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <!-- Assign the random elements: vent and the victim) -->
+      <TagAction criteria="eventtag:nontraitorplayer" tag="victim" chooserandom="true"/>
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <SpawnAction itemidentifier="bikehorn" targettag="bikehornmission" targetinventory="loosevent" ignorebyai="true"/>
+
+      <!-- Instruct the player -->
+      <ConversationAction targettag="traitor" text="EventText.originalhonkero.c1" eventsprite="clown"/>
+      <EventLogAction targettag="traitor" id="initialinfo">
+        <Text tag="eventtext.originalhonkero.objective1">
+          <Replace tag="[victim]" value="eventtag:victim" color="gui.orange"/>
+          <Replace tag="[honks]" value="5" color="gui.orange"/>
+          <Replace tag="[cooldown]" value="30" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.originalhonkero.bikehorn"/>
+      
+      <!-- Check for bikehorn -->
+      <HighlightAction targettag="loosevent" targetcharacter="traitor"/>
+      <Label name="waitforitemsfound"/>
+      <!-- tag all horns (the traitor isn't required to use the one in the vent)-->
+      <TagAction criteria="itemtag:hornitem" tag="bikehorn"/>
+      <CheckItemAction targettag="traitor" itemidentifiers="bikehorn">
+        <Success>
+          <EventLogAction targettag="traitor" id="progress" text="EventText.originalhonkero.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.originalhonkero.bikehorn"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.originalhonkero.torment"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="5timesremaining" objectivetag="traitorobjective.5timesremaining" ParentObjectiveId="traitorobjective.originalhonkero.torment"/>
+          <ConversationAction targettag="traitor" eventsprite="clown">
+            <Text tag="EventText.originalhonkero.c2">
+              <Replace tag="[character]" value="eventtag:victim" color="gui.orange"/>
+            </Text>
+          </ConversationAction>
+          <HighlightAction state="false" targettag="loosevent"/>
+        </Success>
+        <Failure>
+          <WaitAction time="1"/>
+          <GoTo name="waitforitemsfound"/>
+        </Failure>
+      </CheckItemAction>
+      
+      <!-- Check for honks, 30s intervals -->
+      <Label name="waitforhonk"/>
+      
+      <WaitForItemUsedAction itemtag="bikehorn" targetitemcomponent="RangedWeapon"/>
+      <CheckVisibilityAction EntityTag="nontraitor" ExcludedEntityTag="victim" TargetTag="traitor" maxdistance="750">
+        <Success>
+          <EventLogAction targettag="traitor" id="honkstatus" text="EventText.harbingerofhonks.objective1"/><!--Reused-->
+          <ConversationAction targettag="traitor" text="eventtext.harbingerofhonks.stayhidden" eventsprite="Infiltration2"/><!--Reused-->
+          <Goto name="waitforhonk"/>
+        </Success>
+      </CheckVisibilityAction>
+
+      <CheckVisibilityAction EntityTag="victim" TargetTag="traitor" maxdistance="750">
+        <Failure>
+          <Goto name="waitforhonk"/>
+        </Failure>
+      </CheckVisibilityAction>
+      
+      <EventObjectiveAction targettag="traitor" type="complete" id="5timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="4timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="3timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="2timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="1timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.originalhonkero.waitforcooldown" ParentObjectiveId="traitorobjective.originalhonkero.torment"/>
+      <WaitAction time="30"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.originalhonkero.waitforcooldown"/>
+      
+      <EventObjectiveAction targettag="traitor" type="addifnotfound" id="4timesremaining" objectivetag="traitorobjective.4timesremaining" ParentObjectiveId="traitorobjective.originalhonkero.torment"/>
+      <GoTo name="waitforhonk" maxtimes="1"/>
+      <EventObjectiveAction targettag="traitor" type="addifnotfound" id="3timesremaining" objectivetag="traitorobjective.3timesremaining" ParentObjectiveId="traitorobjective.originalhonkero.torment"/>
+      <GoTo name="waitforhonk" maxtimes="1"/>
+      <EventObjectiveAction targettag="traitor" type="addifnotfound" id="2timesremaining" objectivetag="traitorobjective.2timesremaining" ParentObjectiveId="traitorobjective.originalhonkero.torment"/>
+      <GoTo name="waitforhonk" maxtimes="1"/>
+      <EventObjectiveAction targettag="traitor" type="addifnotfound" id="1timesremaining" objectivetag="traitorobjective.1timesremaining" ParentObjectiveId="traitorobjective.originalhonkero.torment"/>
+
+      <Label name="waitforfinalhonk"/>
+      <WaitForItemUsedAction itemtag="bikehorn" targetitemcomponent="RangedWeapon"/>
+      <CheckVisibilityAction EntityTag="nontraitor" ExcludedEntityTag="victim" TargetTag="traitor" maxdistance="750">
+        <Success>
+          <EventLogAction targettag="traitor" id="honkstatus" text="EventText.harbingerofhonks.objective1"/>
+          <ConversationAction targettag="traitor" text="eventtext.harbingerofhonks.stayhidden" eventsprite="Infiltration2"/>
+          <Goto name="waitforfinalhonk"/>
+        </Success>
+      </CheckVisibilityAction>
+
+      <CheckVisibilityAction EntityTag="victim" TargetTag="traitor" maxdistance="750">
+        <Failure>
+          <Goto name="waitforfinalhonk"/>
+        </Failure>
+      </CheckVisibilityAction>
+
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="5timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="4timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="3timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="2timesremaining"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="1timesremaining"/>
+      
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.originalhonkero.torment"/>
+      
+      <SetTraitorEventStateAction state="Completed"/>
+      
+      <OnRoundEndAction>
+        <!-- Could keep track of honks using the objective completion maybe? TODO -->
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="traitor" id="result" text="EventText.originalhonkero.success_self"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.originalhonkero.success"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="traitor" id="result" text="EventText.originalhonkero.failure"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.originalhonkero.failure"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <!-- Husk cultists events-->
+    <TraitorEvent identifier="divinelabor" faction="huskcult" dangerlevel="1" StealPercentageOfExperience="10">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15">
+        <ItemConditional HasTag="fabricator" InPlayerSubmarine="true"/>
+      </LevelRequirement>
+      <ConversationAction targettag="traitor" text="EventText.divinelabor.c1" eventsprite="Magazine"/>
+      <EventLogAction targettag="traitor" id="initialinfo">
+        <Text tag="EventText.divinelabor.objective1">
+          <Replace tag="[number]" value="6" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.divinelabor.create"/>
+      <WaitForItemFabricatedAction itemidentifier="huskfigurine" amount="6" charactertag="traitor" ApplyTagToItem="fabricatedhuskfigurine"/>
+      <ConversationAction targettag="traitor" eventsprite="Magazine">
+        <Text tag="EventText.divinelabor.c2">
+          <Replace tag="[number]" value="6" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="traitor" id="status" text="EventText.divinelabor.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.divinelabor.create"/><!-- TODO use [number] variable-->
+      <SetTraitorEventStateAction state="Completed"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo">
+          <Text tag="EventText.divinelabor.objective1">
+            <Replace tag="[number]" value="6" color="gui.orange"/>
+          </Text>
+        </EventLogAction>
+        <!-- check again at round end, in case the items were lost or deconstructed -->
+        <CheckItemAction targettag="fabricatedhuskfigurine" Amount="6">
+          <Conditional InPlayerSubmarine="true"/>
+          <Success>
+            <EventLogAction id="status" text="EventText.divinelabor.objective3"/>
+            <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.divinelabor.create"/>
+            <SetTraitorEventStateAction state="Completed"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="status" text="EventText.divinelabor.objective4"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Failure>
+        </CheckItemAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="poweredbyfaith" faction="huskcult" dangerlevel="1" StealPercentageOfExperience="10" MinPlayerCount="6" SecondaryTraitorPercentage="20" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="256,0,256,256" color="200,0,0,255"/>
+      <!-- Outline: Get husk figurines stash (replenishing loose vent?)
+      Part 1: Attach Husk Figurines in 50%(?) of the submarine’s hulls
+      Part 2: Replace the Fuel Rod in the reactor with a Husk Figurine
+      -->
+      <!-- Instruct the players -->
+      <ConversationAction targettag="traitor" text="EventText.poweredbyfaith.c1" eventsprite="MentalBreakdown"/>
+      <ConversationAction targettag="secondarytraitor" text="EventText.poweredbyfaith.c2" eventsprite="huskinvite" ContinueAutomatically="true"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.poweredbyfaith.objective1"/>
+      <EventLogAction targettag="secondarytraitor" id="initialinfo" text="EventText.poweredbyfaith.objective2"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.poweredbyfaith.findfigurines"/>
+      
+      <!-- Find 'infinite' stash, spawn huskfigurine -->
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+
+      <!-- TODO: why do we require interacting with the vent? If the player already has figurines or crafts them, that doesn't do?-->
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" applytotarget2="triggerer_traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+
+      <SpawnAction itemidentifier="huskfigurine" targettag="eventfigurine" targetinventory="loosevent" ignorebyai="true" amount="2"/>
+      <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.poweredbyfaith.findfigurines"/>
+      <ConversationAction targettag="triggerer_traitor" text="EventText.poweredbyfaith.c3" eventsprite="vent" ContinueAutomatically="true"/>
+      <EventLogAction targettag="anytraitor" id="progress">
+        <Text tag="eventtext.poweredbyfaith.objective3">
+          <Replace tag="[percentage]" value="50" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.poweredbyfaith.placefigurines"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.poweredbyfaith.placefigurines1" ParentObjectiveId="traitorobjective.poweredbyfaith.placefigurines"/>
+      <TagAction criteria="hull" tag="anyhull" submarinetype="Player"/>
+      <!-- Loop stash resupplies, wait for rooms to be 'sanctified'-->
+      <Label name="eventloop"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="loosevent" itemidentifiers="huskfigurine">
+        <Failure>
+          <SpawnAction itemidentifier="huskfigurine" targettag="eventfigurine" targetinventory="loosevent" ignorebyai="true" amount="2"/>
+        </Failure>
+      </CheckItemAction>
+
+      <WaitForItemUsedAction itemtag="eventfigurine" targetitemcomponent="Holdable"/>
+      <!-- reset tag and reapply to make sure we don't count figurines that have been deattached since they were first attached -->
+      <ClearTagAction tag="decoratedhull"/>
+      <CheckConditionalAction targettag="eventfigurine" ApplyTagToLinkedHulls="decoratedhull" logicaloperator="And">
+        <Conditional Attached="true" targetitemcomponent="Holdable"/>
+        <Conditional InPlayerSubmarine="true"/>
+      </CheckConditionalAction>
+      
+      <CountTargetsAction targettag="decoratedhull" CompareToTarget="anyhull" MinPercentageRelativeToTarget="50">
+        <Success>
+          <EventObjectiveAction targettag="anytraitor" type="remove" id="traitorobjective.poweredbyfaith.findfigurines"/>
+          <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.poweredbyfaith.placefigurines"/>
+          <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.poweredbyfaith.placefigurines2"/>
+
+          <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.poweredbyfaith.fuel"/>
+          <EventLogAction targettag="anytraitor" id="progress" text="EventText.poweredbyfaith.objective4"/>
+        </Success>
+        <Failure>
+          <CountTargetsAction targettag="decoratedhull" CompareToTarget="anyhull" MinPercentageRelativeToTarget="25">
+            <Success>
+              <!-- Add again in case MinPercentageRelativeToTarget="1" doesn't trigger (too small sub?) -->
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.poweredbyfaith.placefigurines1"/>
+              <EventObjectiveAction targettag="anytraitor" type="addifnotfound" id="traitorobjective.poweredbyfaith.placefigurines2" ParentObjectiveId="traitorobjective.poweredbyfaith.placefigurines"/>
+              <EventLogAction targettag="anytraitor" id="progress" text="EventText.poweredbyfaith.objective6"/>
+              <GoTo name="eventloop"/>
+            </Success>
+          </CountTargetsAction>
+          <CountTargetsAction targettag="decoratedhull" CompareToTarget="anyhull" MinPercentageRelativeToTarget="1">
+            <Success>
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.poweredbyfaith.placefigurines1"/>
+              <EventObjectiveAction targettag="anytraitor" type="addifnotfound" id="traitorobjective.poweredbyfaith.placefigurines2" ParentObjectiveId="traitorobjective.poweredbyfaith.placefigurines"/>
+              <GoTo name="eventloop"/>
+            </Success>
+          </CountTargetsAction>
+          <GoTo name="eventloop"/>
+        </Failure>
+      </CountTargetsAction>
+      
+      <ConversationAction targettag="anytraitor" text="EventText.poweredbyfaith.c4" eventsprite="huskinvite" ContinueAutomatically="true"/>
+
+      <!-- Last refill, no more need to loop. Replace Fuel Rod in nuclear reactor aboard player submarine with huskfigurine, then complete the event -->
+      <CheckItemAction targettag="loosevent" itemidentifiers="huskfigurine">
+        <Failure>
+          <SpawnAction itemidentifier="huskfigurine" targettag="eventfigurine" targetinventory="loosevent" ignorebyai="true" amount="2"/>
+        </Failure>
+      </CheckItemAction>
+
+      <TagAction criteria="itemtag:reactor" tag="reactor" SubmarineType="Player"/>
+      
+      <Label name="eventloop2"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="reactor" itemtags="reactorfuel">
+        <Success>
+          <GoTo name="eventloop2"/>
+        </Success>
+        <Failure>
+          <CheckItemAction targettag="reactor" itemidentifiers="huskfigurine">
+            <Success>
+              <EventObjectiveAction targettag="anytraitor" type="remove" id="traitorobjective.poweredbyfaith.placefigurines"/>
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.poweredbyfaith.fuel"/>
+              <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.codeword"/>
+              <EventLogAction targettag="anytraitor" id="progress" text="EventText.poweredbyfaith.objective5"/>
+              <SetTraitorEventStateAction state="Completed"/>
+            <ConversationAction targettag="anytraitor" text="EventText.poweredbyfaith.c5" eventsprite="huskinvite" ContinueAutomatically="true"/>
+            </Success>
+            <Failure>
+              <GoTo name="eventloop2"/>
+            </Failure>
+          </CheckItemAction>
+        </Failure>
+      </CheckItemAction>
+      
+      <OnRoundEndAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="anytraitor" id="result" text="EventText.poweredbyfaith.success_self"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.poweredbyfaith.success"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="anytraitor" id="result" text="EventText.poweredbyfaith.failure"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.poweredbyfaith.failure"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+        <RemoveItemAction targettag="eventfigurine" amount="99"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+
+    <TraitorEvent identifier="huskroulette" faction="huskcult" dangerlevel="2" StealPercentageOfExperience="25" MinPlayerCount="6" SecondaryTraitorAmount="2" AllowAccusingSecondaryTraitor="true" IsChainable="false">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="256,0,256,256" color="200,0,0,255"/>
+      <!-- Outline: Main traitor gets 3 syringes, of which 1 is insta 50% husk infection, while the others are placebo (do nothing). Small chance ALL 3 syringes are equally bad. 
+      Solve the husk infection ‘crisis’ while avoiding getting accused of being a traitor. (Note: See how husk infection resistance affects this missions intentions)
+      -->
+      
+      <!-- Instruct the player -->
+      <ConversationAction targettag="traitor" text="EventText.huskroulette.c1" eventsprite="huskinvite"/>
+      <ConversationAction targettag="secondarytraitor" text="EventText.huskroulette.c2" eventsprite="huskinvite"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.huskroulette.objective1"/>
+      <EventLogAction targettag="secondarytraitor" id="initialinfo" text="EventText.huskroulette.objective2"/>
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.codeword"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.huskroulette.distribute"/>
+      <EventObjectiveAction targettag="secondarytraitor" type="add" id="traitorobjective.huskroulette.receivesyringe"/>
+      
+      <!-- Spawn syringes - Randomised -->
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemidentifier="huskeggs_huskroulette_infect" targettag="badsyringe" targetinventory="traitor" ignorebyai="true"/>
+          <SpawnAction itemidentifier="huskeggs_huskroulette_harmless" targettag="goodsyringe" targetinventory="traitor" ignorebyai="true"/>
+          <SpawnAction itemidentifier="huskeggs_huskroulette_harmless" targettag="goodsyringe" targetinventory="traitor" ignorebyai="true"/>
+        </Success>
+        <Failure>
+          <RNGAction chance="0.3">
+            <Success>
+              <SpawnAction itemidentifier="huskeggs_huskroulette_harmless" targettag="goodsyringe" targetinventory="traitor" ignorebyai="true"/>
+              <SpawnAction itemidentifier="huskeggs_huskroulette_infect" targettag="badsyringe" targetinventory="traitor" ignorebyai="true"/>
+              <SpawnAction itemidentifier="huskeggs_huskroulette_harmless" targettag="goodsyringe" targetinventory="traitor" ignorebyai="true"/>
+            </Success>
+            <Failure>
+              <RNGAction chance="0.3">
+                <Success>
+                  <SpawnAction itemidentifier="huskeggs_huskroulette_harmless" targettag="goodsyringe" targetinventory="traitor" ignorebyai="true"/>
+                  <SpawnAction itemidentifier="huskeggs_huskroulette_harmless" targettag="goodsyringe" targetinventory="traitor" ignorebyai="true"/>
+                  <SpawnAction itemidentifier="huskeggs_huskroulette_infect" targettag="badsyringe" targetinventory="traitor" ignorebyai="true"/>
+                </Success>
+                <!-- Small chance (10%) they're all bad-->
+                <Failure>
+                  <SpawnAction itemidentifier="huskeggs_huskroulette_infect" targettag="badsyringe" targetinventory="traitor" ignorebyai="true"/>
+                  <SpawnAction itemidentifier="huskeggs_huskroulette_infect" targettag="badsyringe" targetinventory="traitor" ignorebyai="true"/>
+                  <SpawnAction itemidentifier="huskeggs_huskroulette_infect" targettag="badsyringe" targetinventory="traitor" ignorebyai="true"/>
+                </Failure>
+              </RNGAction>
+            </Failure>
+          </RNGAction>
+        </Failure>
+      </RNGAction>
+      
+      <!-- Distribute syringes -->
+      <Label name="waitforitems"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="secondarytraitor0" itemtags="huskroulette">
+        <Success>
+          <CheckItemAction targettag="secondarytraitor1" itemtags="huskroulette">
+            <Success>
+              <CheckItemAction targettag="traitor" itemtags="huskroulette">
+                <Success>
+                  <EventObjectiveAction targettag="anytraitor" type="completeandremove" id="traitorobjective.codeword"/>
+                  <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.huskroulette.distribute"/>
+                  <EventObjectiveAction targettag="secondarytraitor" type="complete" id="traitorobjective.huskroulette.receivesyringe"/>
+                  <EventLogAction targettag="anytraitor" id="progress" text="EventText.huskroulette.objective3"/>
+                  <ConversationAction targettag="anytraitor" text="EventText.huskroulette.c3" eventsprite="huskinvite"/>
+                </Success>
+                <Failure>
+                  <GoTo name="waitforitems"/>
+                </Failure>
+              </CheckItemAction>
+            </Success>
+            <Failure>
+              <GoTo name="waitforitems"/>
+            </Failure>
+          </CheckItemAction>
+        </Success>
+        <Failure>
+          <GoTo name="waitforitems"/>
+        </Failure>
+      </CheckItemAction>
+
+      <!-- Inject the syringes -->
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.huskroulette.inject"/>
+      
+      <Label name="waitforinject"/>
+      <WaitAction time="1"/>
+      <CheckAfflictionAction identifier="huskroulette" targettag="traitor" minstrength="1">
+        <Success>
+          <CheckAfflictionAction identifier="huskroulette" targettag="secondarytraitor0" minstrength="1">
+            <Success>
+              <CheckAfflictionAction identifier="huskroulette" targettag="secondarytraitor1" minstrength="1">
+                <Success>
+                  <EventObjectiveAction targettag="traitor" type="remove" id="traitorobjective.huskroulette.distribute"/>
+                  <EventObjectiveAction targettag="secondarytraitor" type="remove" id="traitorobjective.huskroulette.receivesyringe"/>
+                  <EventObjectiveAction targettag="anytraitor" type="complete" id="traitorobjective.huskroulette.inject"/>
+                  <EventLogAction targettag="anytraitor" id="progress" text="EventText.huskroulette.objective4"/>
+                </Success>
+                <Failure>
+                  <GoTo name="waitforinject"/>
+                </Failure>
+              </CheckAfflictionAction>
+            </Success>
+            <Failure>
+              <GoTo name="waitforinject"/>
+            </Failure>
+          </CheckAfflictionAction>
+        </Success>
+        <Failure>
+          <GoTo name="waitforinject"/>
+        </Failure>
+      </CheckAfflictionAction>
+
+      <EventObjectiveAction targettag="anytraitor" type="add" id="traitorobjective.huskroulette.survive"/>
+      <SetTraitorEventStateAction state="Completed"/>
+      
+      <OnRoundEndAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction targettag="anytraitor" id="result" text="EventText.huskroulette.success_self"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.huskroulette.success"/>
+          </Success>
+          <Failure>
+            <EventLogAction targettag="anytraitor" id="result" text="EventText.huskroulette.failure"/>
+            <EventLogAction targettag="nontraitor" id="result" text="EventText.huskroulette.failure"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+        <RemoveItemAction targettag="goodsyringe" amount="2"/>
+        <RemoveItemAction targettag="badsyringe" amount="3"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="faultyrobes" faction="huskcult" dangerlevel="2" StealPercentageOfExperience="25">
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <LevelRequirement LevelType="LocationConnection" mindifficultyincampaign="15"/>
+      
+      <ConversationAction targettag="traitor" text="EventText.faultyrobes.c1" eventsprite="cultist"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.faultyrobes.objective1"/>
+      <EventLogAction targettag="traitor" id="status" text="EventText.faultyrobes.objective2"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.faultyrobes.find"/>
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <SpawnAction itemidentifier="toolbelt" targetinventory="loosevent" targettag="robebelt" ignorebyai="true"/>
+      <!-- Randomised spawning of Cultist Robes. Leaning more towards functional (good) robes than faulty robes. -->
+      <RNGAction chance="0.34">
+        <Success>
+          <SpawnAction itemidentifier="faultycultistrobes" targettag="faultyrobes" targetinventory="robebelt" ignorebyai="true"/>
+          <SpawnAction itemidentifier="cultistrobes" targettag="goodrobes" targetinventory="robebelt" ignorebyai="true"/>
+          <SpawnAction itemidentifier="cultistrobes" targettag="goodrobes" targetinventory="robebelt" ignorebyai="true"/>
+        </Success>
+        <Failure>
+          <RNGAction chance="0.33">
+            <Success>
+              <SpawnAction itemidentifier="cultistrobes" targettag="goodrobes" targetinventory="robebelt" ignorebyai="true"/>
+              <SpawnAction itemidentifier="faultycultistrobes" targettag="faultyrobes" targetinventory="robebelt" ignorebyai="true"/>
+              <SpawnAction itemidentifier="cultistrobes" targettag="goodrobes" targetinventory="robebelt" ignorebyai="true"/>
+            </Success>
+            <Failure>
+              <SpawnAction itemidentifier="cultistrobes" targettag="goodrobes" targetinventory="robebelt" ignorebyai="true"/>
+              <SpawnAction itemidentifier="cultistrobes" targettag="goodrobes" targetinventory="robebelt" ignorebyai="true"/>
+              <SpawnAction itemidentifier="faultycultistrobes" targettag="faultyrobes" targetinventory="robebelt" ignorebyai="true"/>
+            </Failure>
+          </RNGAction>
+        </Failure>
+      </RNGAction>
+      <SpawnAction itemidentifier="huskcaller" targettag="huskcaller" targetinventory="robebelt" ignorebyai="true"/>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <Label name="waitforitemsfound"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="traitor" itemidentifiers="huskcaller">
+        <Success>
+          <EventLogAction targettag="traitor" id="progress" text="EventText.faultyrobes.objective3"/>
+          <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.faultyrobes.find"/>
+          <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.faultyrobes.huskcall"/>
+          <ConversationAction targettag="traitor" text="EventText.faultyrobes.c2" eventsprite="cultist"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforitemsfound"/>
+        </Failure>
+      </CheckItemAction>
+      <WaitForItemUsedAction itemtag="huskcaller" targetitemcomponent="RangedWeapon"/>
+      <EventLogAction targettag="traitor" id="progress" text="EventText.faultyrobes.objective4"/>
+      <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.faultyrobes.huskcall"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.faultyrobes.sorting"/>
+      <SpawnAction SpeciesName="Husk" SpawnLocation="NearMainSub" amount="10"/>
+      <TriggerEventAction identifier="callhusks"/>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.faultyrobes.objective1"/>
+        <!-- check again at round end, in case the robes were lost -->
+        <CheckItemAction targettag="faultyrobes">
+          <Conditional InPlayerSubmarine="true"/>
+          <!-- There should be no faulty robes in the sub -->
+          <Failure>
+            <CheckItemAction targettag="goodrobes" RequiredConditionalMatchPercentage="100">
+              <!-- All good robes should still be there-->
+              <Conditional InPlayerSubmarine="true"/>
+              <Success>
+                <EventLogAction id="status" text="EventText.faultyrobes.objective5"/>
+                <EventObjectiveAction targettag="traitor" type="completeandremove" id="traitorobjective.faultyrobes.sorting"/>
+                <SetTraitorEventStateAction state="Completed"/>
+              </Success>
+              <Failure>
+                <EventLogAction id="status" text="EventText.faultyrobes.objective6"/>
+                <SetTraitorEventStateAction state="Failed"/>
+              </Failure>
+            </CheckItemAction>
+          </Failure>
+          <Success>
+            <EventLogAction id="status" text="EventText.faultyrobes.objective7"/>
+            <SetTraitorEventStateAction state="Failed"/>
+          </Success>
+        </CheckItemAction>
+        <RemoveItemAction targettag="faultyrobes" amount="10"/>
+        <RemoveItemAction targettag="goodrobes" amount="10"/>
+        <RemoveItemAction targettag="robebelt"/>
+        <RemoveItemAction targettag="huskcaller"/>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    <ScriptedEvent identifier="callhusks">
+      <!-- normal scripted events don't tag traitors automatically, do it manually here -->
+      <TagAction criteria="traitor" tag="traitor"/>
+      <TagAction criteria="itemidentifier:huskcaller" tag="huskcaller"/>
+      <WaitAction time="120"/>
+      <ConversationAction targettag="traitor" text="EventText.callhusks.c1" eventsprite="cultist"/>
+      <WaitForItemUsedAction itemtag="huskcaller" targetitemcomponent="RangedWeapon"/>
+      <RNGAction chance="0.1">
+        <Success>
+          <SpawnAction SpeciesName="Crawlerhusk" SpawnLocation="NearMainSub" amount="5"/>
+        </Success>
+        <Failure>
+          <SpawnAction SpeciesName="Husk" SpawnLocation="NearMainSub" amount="8"/>
+        </Failure>
+      </RNGAction>
+      <WaitAction time="300"/>
+      <ConversationAction targettag="traitor" text="EventText.callhusks.c2" eventsprite="cultist"/>
+      <WaitForItemUsedAction itemtag="huskcaller" targetitemcomponent="RangedWeapon"/>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction SpeciesName="Crawlerhusk" SpawnLocation="NearMainSub" amount="5"/>
+        </Success>
+        <Failure>
+          <SpawnAction SpeciesName="Husk" SpawnLocation="NearMainSub" amount="8"/>
+        </Failure>
+      </RNGAction>
+    </ScriptedEvent>
+    
+    <TraitorEvent identifier="bloodsamples" faction="huskcult" dangerlevel="1" StealPercentageOfExperience="10">
+      <!-- Outline: Collect blood samples from each crewmember, allow different ways to prevent getting caught too easily. -->
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <ConversationAction targettag="traitor" text="EventText.bloodsamples.c1" eventsprite="cultist"/>
+      <EventLogAction targettag="traitor" id="initialinfo" text="EventText.bloodsamples.objective1"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.bloodsamples.find"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.bloodsamples.samples"/>
+      <SpawnAction itemidentifier="bloodsamplevial" targetinventory="loosevent" targettag="vial" ignorebyai="true" amount="3"/>
+      <StatusEffectAction targettag="vial">
+        <StatusEffect target="This" Condition="0" setvalue="true"/>
+      </StatusEffectAction>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <Label name="waitforvials"/>
+      <WaitAction time="1"/>
+      <CheckItemAction targettag="traitor" itemtags="vial">
+        <Success>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.bloodsamples.find"/>
+          <ConversationAction targettag="traitor" text="EventText.bloodsamples.c2" eventsprite="cultist"/>
+          <EventLogAction targettag="traitor" id="instructions" text="EventText.bloodsamples.c2"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforvials"/>
+        </Failure>
+      </CheckItemAction>
+      <Label name="waitforsamples"/>
+      <WaitAction time="5.0"/>
+      <!-- there must be at least one non-traitor (otherwise having everyone in the crew die would count as a sample being taken from "everyone") -->
+      <CountTargetsAction targettag="nontraitor" MinAmount="1">
+        <Success>
+          <!-- the "sampletaken" tag is applied on the targets by the vial item -->
+          <CountTargetsAction targettag="sampletaken" CompareToTarget="nontraitor" MinPercentageRelativeToTarget="50">
+            <Success>
+              <SetTraitorEventStateAction state="Completed"/>
+              <ConversationAction targettag="traitor" text="EventText.bloodsamples.c3" eventsprite="cultist"/>
+              <EventLogAction targettag="traitor" id="success" text="EventText.bloodsamples.c3"/>
+              <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.bloodsamples.samples"/>
+            </Success>
+            <Failure>
+              <Goto name="waitforsamples"/>
+            </Failure>
+          </CountTargetsAction>
+        </Success>
+        <Failure>
+          <Goto name="waitforsamples"/>
+        </Failure>
+      </CountTargetsAction>
+      <OnRoundEndAction>
+        <EventLogAction targettag="nontraitor" id="initialinfo" text="EventText.bloodsamples.objective1"/>
+        <RemoveItemAction targettag="vial" amount="3"/>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.bloodsamples.objective2"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.bloodsamples.objective3"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+    
+    <TraitorEvent identifier="bloodsamples2" RequiredCompletedTags="bloodsamples" faction="huskcult" dangerlevel="3" StealPercentageOfExperience="50">
+      <!-- Outline: Random victim to be injected with calyx eggs, random chance for symbiosis (never fully taken over by husk but still removed ability to talk)  -->
+      <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+      <TagAction criteria="eventtag:nontraitor" tag="victim" chooserandom="true"/>
+      <TagAction criteria="itemtag:hidden" tag="loosevent" chooserandom="true" submarinetype="Player"/>
+      <SpawnAction itemidentifier="huskeggs" targetinventory="loosevent" targettag="targetextract" ignorebyai="true"/>
+      <SpawnAction itemidentifier="huskeggs" targetinventory="loosevent" targettag="targetextract" ignorebyai="true"/>
+      <SpawnAction itemidentifier="radiojammer" targettag="radiojammer" targetinventory="traitor"/>
+      <SpawnAction itemidentifier="batterycell" targetinventory="radiojammer"/>
+      <ConversationAction targettag="traitor" eventsprite="cultist">
+        <Text tag="EventText.bloodsamples2.c1">
+          <Replace tag="[character]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </ConversationAction>
+      <EventLogAction targettag="traitor" id="initialinfo">
+        <Text tag="EventText.bloodsamples2.objective1">
+          <Replace tag="[character]" value="eventtag:victim" color="gui.orange"/>
+        </Text>
+      </EventLogAction>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.bloodsamples2.inject"/>
+      <EventObjectiveAction targettag="traitor" type="add" id="traitorobjective.bloodsamples2.observe"/>
+      <TriggerAction Target1Tag="loosevent" Target2Tag="traitor" radius="200" waitforinteraction="true" SelectOnTrigger="true"/>
+      <Label name="waitforinfection"/>
+      <WaitAction time="1.0"/>
+      <CheckAfflictionAction identifier="huskinfection" targettag="victim" minstrength="1">
+        <Success>
+          <EventLogAction targettag="traitor" id="status" text="EventText.bloodsamples2.objective2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.bloodsamples2.inject"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitforinfection"/>
+        </Failure>
+      </CheckAfflictionAction>
+      <!-- Get to the active stage 50 - 74 is transition, 75 - 99 is active. Symbiosis blocks huskinfection going above 90 -->
+      <Label name="waitfortransition"/>
+      <WaitAction time="1.0"/>
+      <CheckAfflictionAction identifier="huskinfection" targettag="victim" minstrength="85">
+        <Success>
+          <SetTraitorEventStateAction state="Completed"/>
+          <ConversationAction targettag="traitor" eventsprite="cultist" text="EventText.bloodsamples2.c2"/>
+          <EventLogAction targettag="traitor" id="status" text="EventText.bloodsamples2.c2"/>
+          <EventObjectiveAction targettag="traitor" type="complete" id="traitorobjective.bloodsamples2.observe"/>
+        </Success>
+        <Failure>
+          <GoTo name="waitfortransition"/>
+        </Failure>
+      </CheckAfflictionAction>
+      <RNGAction chance="0.20">
+        <Success>
+          <!-- Low-ish chance for symbiosis, using husktransformimmunity -->
+          <AfflictionAction affliction="husktransformimmunity" strength="100" targettag="victim"/>
+        </Success>
+      </RNGAction>
+      <OnRoundEndAction>
+        <RemoveItemAction targettag="radiojammer"/>
+        <EventLogAction targettag="nontraitor" id="initialinfo">
+          <Text tag="EventText.bloodsamples2.objective1">
+            <Replace tag="[character]" value="eventtag:victim" color="gui.orange"/>
+          </Text>
+        </EventLogAction>
+        <CheckTraitorEventStateAction state="Completed">
+          <Success>
+            <EventLogAction id="success" text="EventText.bloodsamples2.objective3"/>
+          </Success>
+          <Failure>
+            <EventLogAction id="failure" text="EventText.bloodsamples2.objective4"/>
+          </Failure>
+        </CheckTraitorEventStateAction>
+      </OnRoundEndAction>
+    </TraitorEvent>
+  </EventPrefabs>
+</RandomEvents>

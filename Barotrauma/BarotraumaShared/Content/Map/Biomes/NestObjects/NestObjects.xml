@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--COLD CAVERNS-->
+<levelobjects>
+  <!-- a series of objects that spawn locally around nests in caves -->
+  <Nestobjects identifier="nestobjects" spawnpos="NestWall" commonness="100" minsurfacewidth="200" minsize="0.5" maxsize="1" randomrotation="-5,5" randomoffset="-20,20" depthrange="-0.1,0" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="100">
+    <Sprite texture="Content/Map/Biomes/NestObjects/NestObjects.png" sourcerect="0,0,256,256" origin="0.5,0.7"/>
+    <Sprite texture="Content/Map/Biomes/NestObjects/NestObjects.png" sourcerect="256,0,256,256" origin="0.45,0.8"/>
+    <Sprite texture="Content/Map/Biomes/NestObjects/NestObjects.png" sourcerect="0,256,512,256" origin="0.5,0.74"/>
+    <Sprite texture="Content/Map/Biomes/NestObjects/NestObjects.png" sourcerect="512,0,512,512" origin="0.5,0.95"/>
+    <LightSource range="100" color="130,200,80,100" drawbehindsubs="true" pulseamount="0.3" pulsefrequency="0.1"/>
+  </Nestobjects>
+</levelobjects>

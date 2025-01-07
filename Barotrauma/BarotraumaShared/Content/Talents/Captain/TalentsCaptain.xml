@@ -1,0 +1,705 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Talents>
+  <Talent identifier="family">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="4,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.family"/>
+    <Description tag="talentdescription.family2"/>
+    <Description tag="talentdescription.assistantsdontcount"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="family" min="1" invert="true"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveTalentPointsToAllies amount="1"/>
+        <CharacterAbilityGivePermanentStat statidentifier="family" value="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="steadytune">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="1,3" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.steadytune">
+      <Replace tag="[duration]" value="10" color="gui.green"/>
+      <Replace tag="[buffamount]" value="100" color="gui.green"/>
+      <Replace tag="[buffname]" value="afflictionname.psychosisresistance" color="gui.orange"/>
+      <Replace tag="[buffduration]" value="60" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnUseRangedWeapon">
+      <Conditions>
+        <AbilityConditionItem identifiers="harmonica"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character">
+              <Affliction identifier="steadytune_charging" amount="2"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnUseRangedWeapon">
+      <Conditions>
+        <AbilityConditionItem identifiers="harmonica"/>
+        <AbilityConditionHasAffliction afflictionidentifier="steadytune_charging" minimumpercentage="0.9"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies range="600">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" interval="1" disabledeltatime="true">
+              <Affliction identifier="psychosisimmunity" amount="60"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="inspiringpresence">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.inspiringpresence">
+      <Replace tag="[amount]" value="3" color="gui.green"/>
+      <Replace tag="[movespeed]" value="5" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies insameroom="true" allowself="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="inspiringpresence" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="true" requiresalive="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="inspiringpresence_walkspeed" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="trickledown">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.trickledown">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnGainSkillPoint">
+      <Abilities>
+        <CharacterAbilityGainSimultaneousSkill skillidentifier="inherit" targetallies="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="true" requiresalive="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="trickledown" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="helmsman">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="7,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.helmsman">
+      <Replace tag="[amount]" value="30" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.increaseeffectiveness">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.doesnotstack"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="HelmSkillBonus" value="30"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupInterval interval="60">
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="pump" stattype="PumpSpeed" stackable="false" value="1.2"/>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineSpeed" stackable="false" value="1.2"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="pump" stattype="PumpSpeed" stackable="false" value="1.2"/>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineSpeed" stackable="false" value="1.2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="leadingbyexample">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="1,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.leadingbyexample"/>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.repairspeed" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.repairtoolstructurerepairmultiplier" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="5" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.movementspeed" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <!-- check if anyone in the crew has the family talent, 
+            otherwise we might interfere with another character's talent by removing the "excellent morale" talent -->
+        <AbilityConditionAllyHasTalent identifier="family"/>
+        <AbilityConditionNoCrewDied/>
+      </Conditions>
+      <Abilities>
+        <!-- give "excellent morale" if the character has the "family" talent too -->
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="true" requiresalive="true" allowclientsimulation="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="excellentmorale" amount="10.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+      <FallbackAbilities>
+        <!-- give "high morale" if the character doesn't have the "family" talent -->
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="true" requiresalive="true" allowclientsimulation="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="highmorale" amount="10.0"/>
+              <ReduceAffliction identifier="excellentmorale" strength="10.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </FallbackAbilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="campaigning">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="5,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.campaigning">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="campaigning" stattype="ShipyardBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="networking">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="3,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.networking">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+    </Description>
+    <Migrations>
+      <UpdateStatIdentifier version="1.0.10.0" old="networking" new="all~networking"/>
+    </Migrations>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="all~networking" stattype="StoreBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="coalition" stattype="StoreBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="clowns" stattype="StoreBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="huskcult" stattype="StoreBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="separatists" stattype="StoreBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="figurehead">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="4,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.figurehead">
+      <Replace tag="[selfxpgain]" value="550" color="gui.green"/>
+      <Replace tag="[level]" value="5" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.factiondiscount">
+      <Replace tag="[discount]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnAttack">
+      <Conditions>
+        <AbilityConditionAttackData itemidentifier="coalitionmedal"/>
+      </Conditions>
+      <Abilities>
+        <!-- -550 XP to negate the default bonus given by the medal -->
+        <CharacterAbilityGiveExperience level="5" amount="-550"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <Migrations>
+      <UpdateStatIdentifier version="1.0.10.0" old="figurehead" new="all~figurehead"/>
+    </Migrations>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="all~figurehead" stattype="StoreBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="all~figurehead" stattype="ShipyardBuyMultiplierAffiliated" value="0.1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="affiliation" abilityeffectsstackwithsametalent="false">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="1,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.affiliationreputation">
+      <Replace tag="[reputationincrease]" value="50" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.affiliationbenefit">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.doesnotstack"/>
+    <Description linebreak="true"/>
+    <Description tag="talentdescription.affiliationfactionreminder"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="ReputationGainMultiplier" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionMoney">
+      <Conditions>
+        <AbilityConditionMission isaffiliated="true"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyValue="1.1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="yourreputation">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="4,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.yourreputation">
+      <Replace tag="[amount]" value="200" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.extramission"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="ExtraMissionCount" value="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnLocationDiscovered">
+      <Conditions>
+        <AbilityConditionLocation hasoutpost="true" ispositivereputation="true"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveMoney amount="200"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnLocationDiscovered">
+      <Conditions>
+        <AbilityConditionLocation hasoutpost="true" ispositivereputation="true" locationtype="City"/>
+      </Conditions>
+      <Abilities>
+        <!-- Additional 200, on top of the 200 given above -->
+        <CharacterAbilityGiveMoney amount="200"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="bigguns">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="2,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.bigguns">
+      <Replace tag="[amount]" value="30" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.reducedualwieldpenalty">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.handcannon, entityname.handcannonround" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="handcannon"/>
+    <AddedRecipe itemidentifier="handcannonround"/>
+    <AbilityGroupEffect abilityeffecttype="OnAttack">
+      <Conditions>
+        <AbilityConditionCharacter targettypes="Enemy,Monster"/>
+        <AbilityConditionAttackData tags="pistolammoitem"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyAttackData addeddamagemultiplier="0.3"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="DualWieldingPenaltyReduction" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="lonewolf">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="1,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.lonewolf"/>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.physicalresistance" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.stunresistance" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.meleedamagebonus" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionAllyNearby distance="2000" truthywhen="NoCharacterMatches"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="lonewolf" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="deputy">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="0,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.deputy">
+      <Replace tag="[skillbonus1]" value="20" color="gui.green"/>
+      <Replace tag="[skillbonus2]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies maxdistance="600" jobs="assistant" allowself="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="deputy" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="gunsmith">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="5,3" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.revolver,entityname.revolverround" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="revolver"/>
+    <AddedRecipe itemidentifier="revolverround"/>
+  </Talent>
+
+  <Talent identifier="logisticsexpert">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="0,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.logisticsexpert">
+      <Replace tag="[xpbonus]" value="20" color="gui.green"/>
+      <Replace tag="[moneybonus]" value="20" color="gui.green"/>
+      <Replace tag="[missiontype1]" value="missiontype.cargo" color="gui.orange"/>
+      <Replace tag="[missiontype2]" value="missiontype.personneltransport" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionMoney">
+      <Conditions>
+        <AbilityConditionMission missiontype="Cargo,Escort"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionExperience">
+      <Conditions>
+        <AbilityConditionMission missiontype="Cargo,Escort"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="prodigy">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="2,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.skillgainspeed" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval>
+      <Abilities>
+        <!-- 1 = +100% -->
+        <CharacterAbilityModifyStat stattype="SkillGainSpeed" value="0.5"/>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="inspirationalleader">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="3,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.appliestoallcrew"/>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="25" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.skillgainspeed" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="inspirationalleader" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="veteran">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="2,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.veteran">
+      <Replace tag="[helmbonus]" value="20" color="gui.green"/>
+      <Replace tag="[otherbonus]" value="5" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.repairspeed" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="HelmSkillBonus" value="20"/>
+        <CharacterAbilityGiveStat stattype="ElectricalSkillBonus" value="5"/>
+        <CharacterAbilityGiveStat stattype="MechanicalSkillBonus" value="5"/>
+        <CharacterAbilityGiveStat stattype="MedicalSkillBonus" value="5"/>
+        <CharacterAbilityGiveStat stattype="WeaponsSkillBonus" value="5"/>
+        <CharacterAbilityGiveStat stattype="RepairSpeed" value="0.1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="quickdraw">
+    <Description tag="talentdescription.quickdraw">
+      <Replace tag="[seconds]" value="8" color="gui.green"/>
+      <Replace tag="[damage]" value="25" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.reducedualwieldpenalty">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="1,0" sheetelementsize="128,128"/>
+    <AbilityGroupInterval interval="1">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" multiplyafflictionsbymaxvitality="true" disabledeltatime="true">
+              <Affliction identifier="quickdrawing" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupEffect abilityeffecttype="OnAttack">
+      <Conditions>
+        <AbilityConditionHasAffliction afflictionidentifier="quickdrawing" minimumpercentage="1.0"/>
+        <AbilityConditionAttackData tags="pistolammoitem"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyAttackData addeddamagemultiplier="0.25"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnUseRangedWeapon">
+      <Conditions>
+        <AbilityConditionItem tags="pistolitem"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <!-- small delay so we don't remove the affliction before the attack is applied -->
+            <StatusEffect type="OnAbility" target="This" delay="0.05" stackable="false" disabledeltatime="true">
+              <ReduceAffliction identifier="quickdrawing" strength="8"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="DualWieldingPenaltyReduction" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="sailorwithnoname">
+    <Description tag="talentdescription.skillbonus">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[skillname]" value="skillname.medical" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.cigar" color="gui.orange"/>
+    </Description>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="6,1" sheetelementsize="128,128"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MedicalSkillBonus" value="20"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="cigar"/>
+  </Talent>
+
+
+  <Talent identifier="drunkensailor">
+    <Description tag="talentdescription.drunkensailor">
+      <Replace tag="[stunresistance]" value="75" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.rum" color="gui.orange"/>
+    </Description>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="3,0" sheetelementsize="128,128"/>
+    <AbilityGroupInterval interval="1.0">
+      <Conditions>
+        <AbilityConditionHasAffliction afflictionidentifier="drunknodebuffs"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyResistance resistanceid="stun" multiplier="0.25"/>
+        <CharacterAbilityModifyResistance resistanceid="nausea" multiplier="0"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="1.0">
+      <Abilities>
+        <CharacterAbilityReplaceAffliction affliction="drunk" newaffliction="drunknodebuffs"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AddedRecipe itemidentifier="rum"/>
+  </Talent>
+
+  <Talent identifier="bountyhunter">
+    <Description tag="talentdescription.logisticsexpert">
+      <Replace tag="[xpbonus]" value="15" color="gui.green"/>
+      <Replace tag="[moneybonus]" value="15" color="gui.green"/>
+      <Replace tag="[missiontype1]" value="missiontype.monster" color="gui.orange"/>
+      <Replace tag="[missiontype2]" value="missiontype.nest" color="gui.orange"/>
+    </Description>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="4,0" sheetelementsize="128,128"/>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionMoney">
+      <Conditions>
+        <AbilityConditionMission missiontype="Monster,Nest"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.15"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionExperience">
+      <Conditions>
+        <AbilityConditionMission missiontype="Monster,Nest"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.15"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="travelingtradesman">
+    <Description tag="talentdescription.appliestoallcrew">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.specialsaleitemincrease">
+      <Replace tag="[itemcount]" value="3" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.storesellmultiplier" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.doesnotstack"/>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="7,0" sheetelementsize="128,128"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="ExtraSpecialSalesCount" value="3"/>
+        <CharacterAbilityGivePermanentStat statidentifier="all" stattype="StoreSellMultiplier" value="0.2" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="emergencymaneuvers">
+    <Description tag="talentdescription.emergencymaneuvers">
+      <Replace tag="[seconds]" value="5" color="gui.green"/>
+    </Description>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="5,0" sheetelementsize="128,128"/>
+    <AbilityGroupEffect abilityeffecttype="AfterSubmarineAttacked">
+      <Conditions>
+        <AbilityConditionEvasiveManeuvers/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="This" multiplyafflictionsbymaxvitality="true" disabledeltatime="true">
+              <Affliction identifier="evasivemaneuvers" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="downwiththeship">
+    <Description tag="talentdescription.downwiththeship">
+      <Replace tag="[flooded]" value="50" color="gui.green"/>
+      <Replace tag="[swimmingboost]" value="50" color="gui.green"/>
+      <Replace tag="[repairspeed]" value="50" color="gui.green"/>
+      <Replace tag="[duration]" value="60" color="gui.green"/>
+    </Description>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="0,1" sheetelementsize="128,128"/>
+    <AbilityGroupInterval interval="1">
+      <Conditions>
+        <AbilityConditionShipFlooded floodpercentage="0.5"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="downwiththeship" amount="60.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="commendations">
+    <Description tag="talentdescription.commendations">
+      <Replace tag="[selfxpgain]" value="275" color="gui.green"/>
+    </Description>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="1,1" sheetelementsize="128,128"/>
+    <AbilityGroupEffect abilityeffecttype="OnAnyMissionCompleted">
+      <Conditions>
+        <AbilityConditionHasTalent identifier="figurehead"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityPutItem itemidentifier="coalitionmedal"/>
+      </Abilities>
+      <FallbackAbilities>
+        <CharacterAbilityPutItem itemidentifier="coalitioncommendation"/>
+      </FallbackAbilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="camaraderie">
+    <Description tag="talentdescription.camaraderienew">
+      <Replace tag="[extraexperience]" value="10" color="gui.green"/>
+      <Replace tag="[resistanceamount]" value="5" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.assistantsdontcount"/>
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="5,1" sheetelementsize="128,128"/>
+    <AbilityGroupEffect abilityeffecttype="OnAllyGainMissionExperience">
+      <Conditions>
+        <AbilityConditionNoCrewDied/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionNoCrewDied/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies allowself="true" requiresalive="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="camaraderie" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+</Talents>

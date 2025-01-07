@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Railgun" nameidentifier="railgun" aliases="railgun" Tags="turret" category="Legacy" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
+    <Sprite texture="Content/Items/Legacy/legacyrailgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
+    <StaticBody width="80" radius="80"/>
+    <Turret launchimpulse="80.0" canbeselected="false" characterusable="false" linkable="true" barrelpos="128, 128" rotationlimits="180,360" powerconsumption="20000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="100" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Items/Weapons/Railgun1.ogg" range="10000" type="OnUse"/>
+        <sound file="Content/Items/Weapons/Railgun2.ogg" range="10000" type="OnUse"/>
+        <sound file="Content/Items/Weapons/Railgun3.ogg" range="10000" type="OnUse"/>
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false"/>
+      </StatusEffect>
+      <BarrelSprite texture="Content/Items/Legacy/legacyrailgunbarrel.png" origin="0.5, 0.85"/>
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,0,256,256"/>
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,0,256,256"/>
+      <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg"/>
+      <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg"/>
+      <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg"/>
+      <RequiredSkill identifier="weapons" level="50"/>
+    </Turret>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Railgun Controller" nameidentifier="periscope" aliases="Railgun Controller" tags="periscope" category="Legacy" type="Controller" isshootable="true" disableitemusagewhenselected="true">
+    <SwappableItem canbebought="false" origin="28,0"/>
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="452,194,60,96" origin="0.5,0.5"/>
+    <Controller UserPos="-35.0, -50.0" direction="Right" canbeselected="true">
+      <limbposition limb="Head" position="-5,-62"/>
+      <limbposition limb="Torso" position="-5,-108"/>
+      <limbposition limb="LeftHand" position="43,-85"/>
+      <limbposition limb="RightHand" position="43,-85"/>
+    </Controller>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim"/>
+      <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot"/>
+    </ConnectionPanel>
+    <!-- Controller output was made editable in v1.1.4.0, disallow it on periscopes -->
+    <Upgrade gameversion="1.1.4.0" allowingameediting="false"/>
+  </Item>
+  <Item name="Rear Railgun Controller" nameidentifier="periscope" aliases="Railgun Controller" tags="periscope" category="Legacy" type="Controller" isshootable="true" disableitemusagewhenselected="true">
+    <SwappableItem canbebought="false" origin="28,0"/>
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="395,194,57,96" origin="0.5,0.5"/>
+    <Controller UserPos="35, -50.0" direction="Left" canbeselected="true">
+      <limbposition limb="Head" position="62,-62"/>
+      <limbposition limb="Torso" position="62,-108"/>
+      <limbposition limb="LeftHand" position="20,-85"/>
+      <limbposition limb="RightHand" position="20,-85"/>
+    </Controller>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim"/>
+      <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot"/>
+    </ConnectionPanel>
+    <!-- Controller output was made editable in v1.1.4.0, disallow it on periscopes -->
+    <Upgrade gameversion="1.1.4.0" allowingameediting="false"/>
+  </Item>
+
+  <Item name="" identifier="railgunloader" tags="railgunequipment,railgunammosource,turretammosource" category="Legacy" linkable="true" allowedlinks="railgun" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
+    <SwappableItem canbebought="false" origin="149,276"/>
+    <Sprite texture="Content/Items/Weapons/LegacyLoaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="6" itempos="53,-140" iteminterval="48,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.79">
+      <GuiFrame relativesize="0.3,0.2" anchor="Center" style="ItemUI"/>
+      <Containable items="railgunammo"/>
+    </ItemContainer>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <StatusEffect type="InWater" target="This" condition="-0.25"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="Equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="2.5" scalemax="5.0" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+
+  <Item name="" identifier="railgunloadersinglevertical" tags="railgunequipment,railgunammosource,turretammosource" category="Legacy" linkable="true" allowedlinks="railgun" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
+    <SwappableItem canbebought="false" origin="42,236"/>
+    <Sprite texture="Content/Items/Weapons/LegacyLoaders.png" depth="0.8" sourcerect="0,276,84,236" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="42,-112" iteminterval="0,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.79">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="railgunammo"/>
+    </ItemContainer>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <StatusEffect type="InWater" target="This" condition="-0.25"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="Equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="2.5" scalemax="5.0" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+
+  <Item name="" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource,turretammosource" category="Legacy" linkable="true" allowedlinks="railgun" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
+    <SwappableItem canbebought="false" origin="120,86"/>
+    <Sprite texture="Content/Items/Weapons/LegacyLoaders.png" depth="0.8" sourcerect="86,278,241,86" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="112,-42" iteminterval="0,0" itemrotation="180" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.79">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="railgunammo"/>
+    </ItemContainer>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <StatusEffect type="InWater" target="This" condition="-0.25"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="Equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="2.5" scalemax="5.0" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+  
+  <Item name="Forward Railgun Loader" nameidentifier="railgunloadersinglehorizontal" aliases="Forward Railgun Loader" tags="railgunequipment,railgunammosource" hideinmenus="true" category="Legacy" linkable="true" allowedlinks="railgun">
+    <SwappableItem canbebought="false" origin="64,46"/>
+    <Sprite texture="Content/Items/Weapons/LegacyLoaders.png" depth="0.8" sourcerect="87,367,128,46" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable identifiers="railgunammo"/>
+    </ItemContainer>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <StatusEffect type="InWater" target="This" condition="-0.25"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="Equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="2.5" scalemax="5.0" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+  <Item name="Rear Railgun Loader" nameidentifier="railgunloadersinglehorizontal" aliases="Rear Railgun Loader" tags="railgunequipment,railgunammosource" hideinmenus="true" category="Legacy" linkable="true" allowedlinks="railgun">
+    <SwappableItem canbebought="false" origin="64,46"/>
+    <Sprite texture="Content/Items/Weapons/LegacyLoaders.png" depth="0.8" sourcerect="87,415,128,46" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected="true" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable identifiers="railgunammo"/>
+    </ItemContainer>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <StatusEffect type="InWater" target="This" condition="-0.25"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="Equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="2.5" scalemax="5.0" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+</Items>

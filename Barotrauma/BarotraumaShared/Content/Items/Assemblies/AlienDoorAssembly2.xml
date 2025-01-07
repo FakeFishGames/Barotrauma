@@ -1,0 +1,393 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="AlienDoorAssembly2" description="" hideinmenus="true">
+  <Item name="Alien Door" identifier="aliendoor" ID="7" rect="16,112,48,208" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="False" msg="itemmsgforceopencrowbar">
+      <requireditem identifiers="crowbar" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Door>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <input name="toggle">
+        <link w="57"/>
+        <link w="82"/>
+      </input>
+      <input name="set_state"/>
+      <output name="state_out">
+        <link w="83"/>
+        <link w="84"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Door" identifier="aliendoor" ID="6" rect="-80,112,48,208" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="False" msg="itemmsgforceopencrowbar">
+      <requireditem identifiers="crowbar" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Door>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <input name="toggle">
+        <link w="53"/>
+        <link w="54"/>
+      </input>
+      <input name="set_state"/>
+      <output name="state_out">
+        <link w="55"/>
+        <link w="56"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Door" identifier="aliendoor" ID="5" rect="-32,112,48,208" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Door isopen="True" pickingtime="30" canbepicked="True" allowingameediting="False" msg="itemmsgforceopencrowbar">
+      <requireditem identifiers="crowbar" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Door>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <input name="toggle">
+        <link w="48"/>
+        <link w="49"/>
+      </input>
+      <input name="set_state"/>
+      <output name="state_out">
+        <link w="50"/>
+        <link w="52"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="27" rect="92,28,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="97"/>
+        <link w="98"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="12" rect="-164,28,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="95"/>
+        <link w="96"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="11" rect="-292,28,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="93"/>
+        <link w="94"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="10" rect="-228,28,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="90"/>
+        <link w="91"/>
+        <link w="92"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="9" rect="220,28,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="88"/>
+        <link w="89"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="8" rect="156,28,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="85"/>
+        <link w="86"/>
+        <link w="87"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="98" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="124;-4;188;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="97" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="124;-4;124;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="96" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-132;-4;-132;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="95" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-132;-4;-196;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="94" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-260;-4;-196;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="93" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-260;-4;-260;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="92" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-196;-4;-132;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="91" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-196;-4;-196;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="90" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-196;-4;-260;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="89" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="252;-4;252;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="88" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="252;-4;188;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="87" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="188;-4;252;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="86" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="188;-4;188;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="85" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="188;-4;124;61"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="84" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="40;8;40;120;184;120;247;40"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="83" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="40;8;40;120;-136;120;-136;40"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="82" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-136;64;-136;120;40;120;40;96"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="57" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="248;64;184;120;40;120;40;96"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="56" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-56;8;-56;120;-200;120;-264;40"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="55" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-56;8;-56;120;120;120;120;40"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="54" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-264;64;-200;120;-56;120;-56;96"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="53" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="120;64;120;120;-56;120;-56;96"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="52" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-8;8;-8;120;-168;120;-200;40"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="50" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-8;8;-8;120;152;120;183;40"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="49" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-200;64;-168;120;-8;120;-8;96"/>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="48" rect="2488,-102,48,20" hiddeningame="False" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="184;64;152;120;-8;120;-8;96"/>
+  </Item>
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" ID="33" rect="-268,69,16,16" hiddeningame="True" spritecolor="0,0,0,0" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <SignalCheckComponent output="1" falseoutput="0" targetsignal="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg=""/>
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="signal_in">
+        <link w="90"/>
+        <link w="93"/>
+      </input>
+      <input name="set_output"/>
+      <input name="set_targetsignal"/>
+      <output name="signal_out">
+        <link w="54"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" ID="32" rect="-204,69,16,16" hiddeningame="True" spritecolor="0,0,0,0" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <SignalCheckComponent output="1" falseoutput="0" targetsignal="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg=""/>
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="signal_in">
+        <link w="91"/>
+        <link w="94"/>
+        <link w="95"/>
+      </input>
+      <input name="set_output"/>
+      <input name="set_targetsignal"/>
+      <output name="signal_out">
+        <link w="49"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" ID="31" rect="-140,69,16,16" hiddeningame="True" spritecolor="0,0,0,0" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <SignalCheckComponent output="1" falseoutput="0" targetsignal="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg=""/>
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="signal_in">
+        <link w="92"/>
+        <link w="96"/>
+      </input>
+      <input name="set_output"/>
+      <input name="set_targetsignal"/>
+      <output name="signal_out">
+        <link w="82"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" ID="30" rect="244,69,16,16" hiddeningame="True" spritecolor="0,0,0,0" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <SignalCheckComponent output="1" falseoutput="0" targetsignal="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg=""/>
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="signal_in">
+        <link w="87"/>
+        <link w="89"/>
+      </input>
+      <input name="set_output"/>
+      <input name="set_targetsignal"/>
+      <output name="signal_out">
+        <link w="57"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" ID="29" rect="180,69,16,16" hiddeningame="True" spritecolor="0,0,0,0" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <SignalCheckComponent output="1" falseoutput="0" targetsignal="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg=""/>
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="signal_in">
+        <link w="86"/>
+        <link w="88"/>
+        <link w="98"/>
+      </input>
+      <input name="set_output"/>
+      <input name="set_targetsignal"/>
+      <output name="signal_out">
+        <link w="48"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" ID="28" rect="116,69,16,16" hiddeningame="True" spritecolor="0,0,0,0" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <SignalCheckComponent output="1" falseoutput="0" targetsignal="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg=""/>
+    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="ItemMsgDetachWrench">
+      <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Holdable>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="signal_in">
+        <link w="85"/>
+        <link w="97"/>
+      </input>
+      <input name="set_output"/>
+      <input name="set_targetsignal"/>
+      <output name="signal_out">
+        <link w="53"/>
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Light Component" identifier="alienlightcomponent" ID="43" rect="175,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="toggle"/>
+      <input name="set_state">
+        <link w="50"/>
+      </input>
+      <input name="set_color"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Light Component" identifier="alienlightcomponent" ID="42" rect="239,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="toggle"/>
+      <input name="set_state">
+        <link w="84"/>
+      </input>
+      <input name="set_color"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Light Component" identifier="alienlightcomponent" ID="41" rect="-272,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="toggle"/>
+      <input name="set_state">
+        <link w="56"/>
+      </input>
+      <input name="set_color"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Light Component" identifier="alienlightcomponent" ID="39" rect="-208,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="toggle"/>
+      <input name="set_state">
+        <link w="52"/>
+      </input>
+      <input name="set_color"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Light Component" identifier="alienlightcomponent" ID="38" rect="-144,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="toggle"/>
+      <input name="set_state">
+        <link w="83"/>
+      </input>
+      <input name="set_color"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Light Component" identifier="alienlightcomponent" ID="37" rect="112,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <input name="toggle"/>
+      <input name="set_state">
+        <link w="55"/>
+      </input>
+      <input name="set_color"/>
+    </ConnectionPanel>
+  </Item>
+</ItemAssembly>

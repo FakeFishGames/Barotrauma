@@ -1,0 +1,532 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="clownmask" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clownmask,clowns" description="" scale="0.5">
+    <Price baseprice="40" canbespecial="false">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" sold="false"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false"/>
+      <Price storeidentifier="merchantclown" minavailable="3" maxavailable="5">
+        <Reputation faction="clowns" min="30"/>
+      </Price>
+    </Price>
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.02"/>
+    <PreferredContainer primary="crewcab"/>
+    <Sprite name="Clown Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="414,318,89,71" origin="0.5,0.5" scale="0.5"/>
+    <Body width="40" radius="30" density="15"/>
+    <Deconstruct time="10">
+      <Item identifier="bikehorn"/>
+    </Deconstruct>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Clown Mask Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.75" sourcerect="414,318,89,71" origin="0.5,0.6"/>
+      <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing,clowngear,clowns" description="" impactsoundtag="impact_soft" scale="0.5">
+    <Price baseprice="40" canbespecial="false">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" sold="false"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false"/>
+      <Price storeidentifier="merchantclown" minavailable="3" maxavailable="5">
+        <Reputation faction="clowns" min="30"/>
+      </Price>
+    </Price>
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.02"/>
+    <PreferredContainer primary="crewcab"/>
+    <InventoryIcon name="Clown Costume Icon" texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,448,64,64" origin="0.5,0.5"/>
+    <Sprite name="Clown Costume" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="247,14,117,55" depth="0.6" origin="0.5,0.5"/>
+    <Body width="180" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Deconstruct time="40">
+      <Item identifier="bikehorn"/>
+      <Item identifier="bikehorn"/>
+      <Item identifier="bikehorn"/>
+    </Deconstruct>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Clown's Costume Torso" texture="clown.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Right Hand" texture="clown.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Left Hand" texture="clown.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Right Lower Arm" texture="clown.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Left Lower Arm" texture="clown.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Right Upper Arm" texture="clown.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Left Upper Arm" texture="clown.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Waist" texture="clown.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Right Thigh" texture="clown.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Left Thigh" texture="clown.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Right Leg" texture="clown.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Left Leg" texture="clown.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown's Costume Left Shoe" texture="clown.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sound="footstep_clown"/>
+      <sprite name="Clown's Costume Right Shoe" texture="clown.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sound="footstep_clown"/>
+      <!-- HENK -->
+      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown"/>
+      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="explosiondamage" damagemultiplier="0.9" damagesound="" deflectprojectiles="true"/>
+      <StatusEffect tags="clown" type="OnWearing" target="Character" duration="0.1" stackable="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="clownmaskunique" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clownmask,clowns" description="" hideinmenus="true" scale="0.5">
+    <Price baseprice="100" canbespecial="false" sold="false">
+      <Price storeidentifier="merchantclown" minavailable="0" maxavailable="1" sold="true">
+        <Reputation faction="clowns" min="90"/>
+      </Price>
+    </Price>
+    <PreferredContainer primary="wreckstoragecab" spawnprobability="0.01"/>
+    <PreferredContainer primary="crewcab"/>
+    <Sprite name="Clown Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="414,417,89,71" origin="0.5,0.5" scale="0.5"/>
+    <Body width="40" radius="30" density="15"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="384,384,64,64"/>
+    <Deconstruct time="10">
+      <Item identifier="bikehorn"/>
+    </Deconstruct>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Clown Mask Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.65" sourcerect="414,417,89,71" origin="0.5,0.6"/>
+      <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="clownsuitunique" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing,clowngear,clowns" description="" impactsoundtag="impact_soft" hideinmenus="true" scale="0.5">
+    <Price baseprice="40" sold="false" canbespecial="false"/>
+    <PreferredContainer primary="wreckstoragecab" spawnprobability="0.01"/>
+    <PreferredContainer primary="crewcab"/>
+    <InventoryIcon name="Clown Costume Icon" texture="Content/Items/InventoryIconAtlas2.png" sourcerect="320,384,64,64" origin="0.5,0.5"/>
+    <Sprite name="Clown Costume" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="769,74,118,72" depth="0.6" origin="0.5,0.5"/>
+    <Body width="180" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Deconstruct time="40">
+      <Item identifier="bikehorn"/>
+      <Item identifier="bikehorn"/>
+      <Item identifier="bikehorn"/>
+    </Deconstruct>
+    <Price baseprice="500" canbespecial="false" sold="false">
+      <Price storeidentifier="merchantclown" minavailable="0" maxavailable="1" sold="true">
+        <Reputation faction="clowns" min="90"/>
+      </Price>
+    </Price>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Legendary Clown's Costume Torso" texture="clown_rare.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Right Hand" texture="clown_rare.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Left Hand" texture="clown_rare.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Right Lower Arm" texture="clown_rare.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Left Lower Arm" texture="clown_rare.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Right Upper Arm" texture="clown_rare.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Left Upper Arm" texture="clown_rare.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Waist" texture="clown_rare.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Right Thigh" texture="clown_rare.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Left Thigh" texture="clown_rare.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Right Leg" texture="clown_rare.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Left Leg" texture="clown_rare.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Left Shoe" texture="clown_rare.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Legendary Clown's Costume Right Shoe" texture="clown_rare.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <!-- HöNK -->
+      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown"/>
+      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="explosiondamage" damagemultiplier="0.8" damagesound="" deflectprojectiles="true"/>
+    </Wearable>
+  </Item>
+  
+  <Item name="" identifier="cymbals" category="Misc" tags="smallitem,clowns,provocativetohumanai" scale="0.5" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="crewcab" spawnprobability="0.01" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0.01"/>
+    <PreferredContainer secondary="locker"/>
+    <Price baseprice="100" canbespecial="false" sold="false">
+      <Price storeidentifier="merchantclown" minavailable="1" sold="true">
+        <Reputation faction="clowns" min="70"/>
+      </Price>
+    </Price>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="334,106,57,55" depth="0.55" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="2,232,89,89" depth="0.55" origin="0.5,0.5"/>
+    <Body radius="40" density="15"/>
+    <Holdable slots="Any,RightHand+LeftHand" holdpos="80,-20" aimpos="100,0" handle1="0,0" controlpose="true" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <RangedWeapon reload="10">
+      <sound type="OnUse" file="Content/Items/Jobgear/Clown/ITEM_cymbalMono.ogg" range="3000" volume="10" SoundSelectionMode="All"/>
+      <sound type="OnUse" file="Content/Items/Jobgear/Clown/ITEM_cymbalStereo.ogg" range="1500" volume="1"/>
+      <StatusEffect type="OnUse" target="This" condition="-10" disabledeltatime="true">
+        <Explosion range="500.0" force="5.0" shockwave="true" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" duration="10" target="NearbyCharacters" range="500" camerashake="5" setvalue="true">
+        <Affliction identifier="hallucinatingshortduration" strength="25"/>
+      </StatusEffect>
+    </RangedWeapon>
+    <aitarget soundrange="3000" fadeouttime="5"/>
+  </Item>
+
+  <Item name="" identifier="bananapeel" category="Misc" maxstacksize="8" cargocontaineridentifier="metalcrate" tags="smallitem,clowns" Scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" spawnprobability="0.01" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0.01"/>
+    <PreferredContainer secondary="locker"/>
+    <Price baseprice="30" canbespecial="false" sold="false">
+      <Price storeidentifier="merchantclown" minavailable="1" maxavailable="2" sold="true">
+        <Reputation faction="clowns" min="30"/>
+      </Price>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="potassium"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="340,2,65,48" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="2,110,53,30" depth="0.55" origin="0.5,0.5"/>
+    <Body width="50" height="20" density="12"/>
+    <MotionSensor range="5" target="Human,Monster" minimumvelocity="1" detectownmotion="false" canbeselected="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" conditionalcomparison="And">
+        <Conditional Speed="lt 0.1"/>
+        <Conditional IsContained="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1" scalemax="1" colormultiplier="255,150,0"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="3" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.5" colormultiplier="200,255,0"/>
+        <Explosion range="20" force="-10.0" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false">
+          <StatusEffect type="OnUse" target="Character" disabledeltatime="true" conditionalcomparison="And">
+            <Conditional HasStatusTag="!equals clown"/>
+            <Conditional mass="lt 200"/>
+            <Conditional stun="lte 0"/>
+            <Conditional TeamID="FriendlyNPC"/>
+            <Conditional speciesname="human"/>
+            <TriggerEvent identifier="clownhaven_progress"/>
+          </StatusEffect>
+          <StatusEffect type="OnUse" target="Character" Condition="-100.0" disabledeltatime="true" conditionalcomparison="And">
+            <sound file="Content/Items/Jobgear/Clown/ITEM_bananaSlip1.ogg"/>
+            <sound file="Content/Items/Jobgear/Clown/ITEM_bananaSlip2.ogg"/>
+            <sound file="Content/Items/Jobgear/Clown/ITEM_bananaSlip3.ogg"/>
+            <sound file="Content/Items/Jobgear/Clown/ITEM_bananaSlip4.ogg"/>
+            <Conditional HasStatusTag="!equals clown"/>
+            <Conditional mass="lt 200"/>
+            <Conditional stun="lte 0"/>
+            <Affliction identifier="stun" strength="4"/>
+          </StatusEffect>
+        </Explosion>
+        <RemoveItem/>
+      </StatusEffect>
+    </MotionSensor>
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="bananapeelprojectile" nameidentifier="bananapeel" variantof="bananapeel" hideinmenus="true">
+    <Price>
+      <Price storeidentifier="merchantclown" sold="false"/>
+    </Price>
+    <!-- clear the deconstruct element (can't deconstruct these) -->
+    <Deconstruct/>
+    <Projectile characterusable="false" launchimpulse="5.0" impulsespread="0.5">
+      <!-- disappears in 10 seconds -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="10">
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1" scalemax="1" colormultiplier="255,150,0"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="3" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.5" colormultiplier="200,255,0"/>
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
+  <Item name="" identifier="clowncrate" tags="crate,allowcleanup,clowns" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy" DisableItemUsageWhenSelected="true" waterproof="true">
+    <Price baseprice="170" sold="false" canbespecial="false"/>
+    <Deconstruct time="5"/>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20" requiresrecipe="true">
+      <RequiredItem identifier="metalcrate"/>
+      <RequiredItem identifier="redpaint"/>
+      <RequiredItem identifier="rubber"/>
+    </Fabricate>
+    <sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="5,0,158,83" depth="0.54" origin="0.5,0.5"/>
+    <Body width="150" height="76" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer capacity="12" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
+      <Containable items="smallitem" excludeditems="toolbox,cargoscooter"/>
+    </ItemContainer>
+    <Controller UserPos="0,-20" direction="Right" canbeselected="true" AllowSelectingWhenSelectedByOther="false" selectkey="Use" drawuserbehind="true" forceusertostayattached="true" msg="itemmsggoinside">
+      <limbposition limb="Head" position="74,-40"/>
+      <limbposition limb="Torso" position="74,-40"/>
+      <limbposition limb="Waist" position="74,-40"/>
+      <limbposition limb="LeftHand" position="74,-40"/>
+      <limbposition limb="RightHand" position="74,-40"/>
+      <limbposition limb="RightLeg" position="74,-40"/>
+      <limbposition limb="LeftLeg" position="74,-40"/>
+      <limbposition limb="RightFoot" position="74,-40"/>
+      <limbposition limb="LeftFoot" position="74,-40"/>
+      <StatusEffect type="OnActive" targettype="Character" delay="0.25" stackable="true" indetectable="true" DisableFocusingOnEntities="true" invisibletimer="0.1" IgnoreMeleeWeapons="true" PressureProtection="6500.0" setvalue="true"/>
+    </Controller>
+  </Item>
+
+  <Item name="" identifier="bikehorn" category="Misc" tags="smallitem,hornitem,clowns,provocativetohumanai" scale="0.5" cargocontaineridentifier="metalcrate" description="HONK">
+    <PreferredContainer primary="crewcab" spawnprobability="0.05" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0.05"/>
+    <Price baseprice="5" canbespecial="false">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" sold="false"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false"/>
+      <Price storeidentifier="merchantclown" minavailable="3" maxavailable="5">
+        <Reputation faction="clowns" min="30"/>
+      </Price>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="769,385,64,64" depth="0.55" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Misc/Misc.png" sourcerect="101,45,53,22" depth="0.55"/>
+    <Body width="50" height="20" density="20"/>
+    <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-15,-3" msg="ItemMsgPickUpSelect"/>
+    <RangedWeapon reload="2">
+      <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse" range="1000"/>
+    </RangedWeapon>
+    <aitarget soundrange="1000" fadeouttime="5"/>
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+  </Item>
+  
+  <Item name="" identifier="toyhammer" category="Weapon" Tags="smallitem,mountableweapon,clowns" Scale="0.5" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" RequireAimToUse="True">
+    <PreferredContainer primary="crewcab" secondary="armcab"/>
+    <PreferredContainer secondary="wreckarmcab,abandonedarmcab,piratearmcab" spawnprobability="0.06"/>
+    <Price baseprice="80" sold="false" canbespecial="false">
+      <Price storeidentifier="merchantoutpost" sold="true" minavailable="1"/>
+      <Price storeidentifier="merchantcity" sold="true" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.25"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" multiplier="1.25"/>
+      <Price storeidentifier="merchantclown" minavailable="1" maxavailable="2" sold="true">
+        <Reputation faction="clowns" min="50"/>
+      </Price>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="bikehorn"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredItem identifier="bikehorn"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,960,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,311,121,55" depth="0.55" origin="0.5,0.5"/>
+    <Body width="120" height="48" density="20"/>
+    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,0" handle2="-10,5" holdangle="60" reload="1" range="100" combatpriority="1" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnUse" target="UseTarget" delay="1" comparison="Or">
+        <Conditional speciesname="latcher"/>
+        <Conditional speciesname="endworm"/>
+        <Conditional speciesname="charybdis"/>
+        <Conditional speciesgroup="abyss"/>
+        <TriggerEvent identifier="toyhammeronabyssmonster"/>
+      </StatusEffect>
+      <Attack targetimpulse="2">
+        <Affliction identifier="stun" strength="0.2"/>
+      </Attack>
+      <StatusEffect type="OnUse" target="This" forceplaysounds="true">
+        <Sound type="OnUse" file="Content/Items/Weapons/ToyHammerHit1.ogg" range="800" selectionmode="Random"/>
+        <Sound type="OnUse" file="Content/Items/Weapons/ToyHammerHit2.ogg" range="800"/>
+        <Sound type="OnUse" file="Content/Items/Weapons/ToyHammerHit3.ogg" range="800"/>
+        <Sound type="OnUse" file="Content/Items/Weapons/ToyHammerHit4.ogg" range="800"/>
+        <Sound type="OnUse" file="Content/Items/Weapons/ToyHammerHit5.ogg" range="800"/>
+        <Sound type="OnUse" file="Content/Items/Weapons/ToyHammerHit6.ogg" range="800"/>
+      </StatusEffect>
+    </MeleeWeapon>
+    <aitarget sightrange="500" soundrange="1000" fadeouttime="3"/>
+  </Item>
+  <Item name="" identifier="honkmotherianscriptures1" category="Misc" hideinmenus="true" Tags="smallitem,clowns" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <Price baseprice="20" canbespecial="false" sold="false">
+      <Price storeidentifier="merchantclown" minavailable="2" maxavailable="3" sold="true">
+        <Reputation faction="clowns" min="30"/>
+      </Price>
+    </Price>
+    <PreferredContainer primary="crewcab" secondary="locker"/>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="218,195,37,55" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="367,194,12,44"  origin="0.5,0.5" depth="0.8"/>
+    <Body width="35" height="40" density="8"/>
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnContained" target="Character" disabledeltatime="true" duration="1.0" tags="pillarsoffun1"/>
+    </Holdable>
+    <Terminal canbeselected="true" msg="ItemMsgInteractSelect" AllowInGameEditing="false" AutoHideScrollbar="true" readonly="true" autoscrolltobottom="false" linestartsymbol="" marginmultiplier="1.5" drawhudwhenequipped="true" welcomemessage="pillarsoffun1" textcolor="50,50,50,255">
+      <GuiFrame relativesize="0.3,0.5" anchor="Center" style="Parchment" hidedragicons="true"/>
+    </Terminal>
+  </Item>
+  <Item name="" identifier="honkmotherianscriptures2" variantof="honkmotherianscriptures1">
+    <Price baseprice="20" canbespecial="false" sold="false">
+      <Price storeidentifier="merchantclown" minavailable="1" maxavailable="2" sold="true">
+        <Reputation faction="clowns" min="40"/>
+      </Price>
+    </Price>
+    <Holdable>
+      <StatusEffect tags="pillarsoffun2"/>
+    </Holdable>
+    <Terminal welcomemessage="pillarsoffun2"/>
+  </Item>
+  <Item name="" identifier="honkmotherianscriptures3" variantof="honkmotherianscriptures1">
+    <Price baseprice="20" canbespecial="false" sold="false">
+      <Price storeidentifier="merchantclown" minavailable="1" maxavailable="2" sold="true">
+        <Reputation faction="clowns" min="50"/>
+      </Price>
+    </Price>
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnContained" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true" duration="0" tags="" interval="0.9" comparison="And">
+        <Conditional HasStatusTag="pillarsoffun1"/>
+        <Conditional HasStatusTag="pillarsoffun2"/>
+        <Affliction identifier="clownpower" amount="1.0"/>
+      </StatusEffect>
+    </Holdable>
+    <Terminal welcomemessage="pillarsoffun3"/>
+  </Item>
+  
+  <Item name="" identifier="clownexosuit" category="Diving,Equipment" tags="clowngear,diving,deepdiving,deepdivinglarge,clowns,human" scale="0.5" fireproof="true" description="" isshootable="true" allowdroppingonswapwith="diving" impactsoundtag="impact_metal_heavy" botpriority="0.5" cargocontaineridentifier="">
+    <Price baseprice="1500" canbespecial="false" sold="false"/>
+    <Deconstruct time="30">
+      <Item identifier="titaniumaluminiumalloy"/>
+      <Item identifier="titaniumaluminiumalloy"/>
+      <Item identifier="titaniumaluminiumalloy"/>
+      <Item identifier="rubber"/>
+      <Item identifier="rubber"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="45" requiresrecipe="true">
+      <RequiredSkill identifier="mechanical" level="60"/>
+      <RequiredItem identifier="clownsuitunique"/>
+      <RequiredItem identifier="titaniumaluminiumalloy" amount="10"/>
+      <RequiredItem identifier="banana" amount="16"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="382,895,128,128" origin="0.5,0.5"/>
+    <Sprite name="Clown Exosuit Item" texture="Content/Items/JobGear/Clown/ClownExosuit.png" sourcerect="2,277,287,235" depth="0.55" origin="0.5,0.5"/>
+    <Body width="150" height="230" density="15"/>
+    <Wearable slots="OuterClothes+RightHand" msg="ItemMsgEquipSelect" displaycontainedstatus="true" canbeselected="false" canbepicked="true" pickkey="Select" allowusewhenworn="true">
+      <sprite name="Clown Exosuit Helmet Wearable" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="Head" hidelimb="true" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.65" hideotherwearables="true" hidewearablesoftype="" sourcerect="0,0,1,1" origin="0.5,0.5"/>
+      <sprite name="Clown Exosuit Torso" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="Torso" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.5,0.7" inheritlimbdepth="false" depth="0.061" inheritsourcerect="false" sourcerect="167,1,203,193">
+        <LightComponent range="100" lightcolor="250,224,165,100" castshadows="false" depth="0.6" powerconsumption="10" IsOn="true" allowingameediting="false">
+          <Sprite texture="Content/Items/JobGear/Clown/ClownExosuit.png" origin="0.5,0.7" sourcerect="304,271,203,193" alpha="1.0"/>
+        </LightComponent>
+      </sprite>
+      <sprite name="Clown Exosuit Right Hand" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="RightHand" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" inheritlimbdepth="false" depth="0.02" SourceRect="383,160,64,48"/>
+      <sprite name="Clown Exosuit Left Hand" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" SourceRect="447,160,64,48"/>
+      <sprite name="Clown Exosuit Right Upper Arm" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="RightArm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" inheritlimbdepth="false" depth="0.05" SourceRect="383,0,64,96"/>
+      <sprite name="Clown Exosuit Left Upper Arm" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" SourceRect="447,0,64,96"/>
+      <sprite name="Clown Exosuit Right Forearm" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" inheritlimbdepth="false" depth="0.049" SourceRect="383,96,64,64"/>
+      <sprite name="Clown Exosuit Left Forearm" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" SourceRect="447,96,64,64"/>
+      <sprite name="Clown Exosuit Waist" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="Waist" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.5,0.5" inheritsourcerect="false" inheritlimbdepth="false" depth="0.06" sourcerect="182,196,178,53"/>
+      <sprite name="Clown Exosuit Right Thigh" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.5,0.5" inheritsourcerect="false" inheritlimbdepth="false" depth="0.058" sourcerect="0,0,96,112"/>
+      <sprite name="Clown Exosuit Left Thigh" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.5,0.5" inheritsourcerect="false" sourcerect="0,0,96,112"/>
+      <sprite name="Clown Exosuit Right Leg" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritlimbdepth="false" depth="0.059" inheritsourcerect="true"/>
+      <sprite name="Clown Exosuit Left Leg" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Clown Exosuit Left Shoe" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="LeftFoot" sound="footstep_clown" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.2,0.5" inheritsourcerect="false" sourcerect="371,211,133,37"/>
+      <sprite name="Clown Exosuit Right Shoe" texture="Content/Items/JobGear/Clown/ClownExosuit.png" limb="RightFoot" sound="footstep_clown" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.2,0.5" inheritsourcerect="false" sourcerect="371,211,133,37"/>
+      <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0" UseHullOxygen="false"/>
+      <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false"/>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVisionAmount="0.5" PressureProtection="7000.0" setvalue="true" disabledeltatime="true">
+        <Sound file="Content/Items/Diving/DivingSuitLoop1.ogg" range="500" loop="true"/>
+        <Sound file="Content/Items/Diving/DivingSuitLoop2.ogg" range="500" loop="true"/>
+        <TriggerAnimation Type="Walk" FileName="HumanWalkExosuit" priority="1" ExpectedSpecies="Human"/>
+        <!-- high prio for run animation so e.g. affliction-based run animations won't make the character run faster -->
+        <TriggerAnimation Type="Run" FileName="HumanRunExosuit" priority="10" ExpectedSpecies="Human"/>
+      </StatusEffect>
+      <!-- 0 movement speed when out of fuel-->
+      <StatusEffect type="OnWearing" target="This,Character" SpeedMultiplier="-10.0" setvalue="true" disabledeltatime="true">
+        <Conditional Voltage="lte 0.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnWearing" target="Contained,Character" Condition="-0.2" targetslot="1" comparison="Or">
+        <Conditional IsDead="false"/>
+        <RequiredItem items="reactorfuel" type="Contained"/>
+      </StatusEffect>
+      <sound file="Content/Items/Weapons/WEAPONS_chargeUp.ogg" type="OnWearing" range="500.0" volumeproperty="Speed" volume="0.2" loop="true" frequencymultiplier="0.5"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="blunttrauma,gunshotwound,lacerations,explosiondamage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, bleeding" damagemultiplier="0.25" probabilitymultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="stun" damagemultiplier="0.5" probabilitymultiplier="0.25" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.5" damagesound="" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="radiationsickness" damagemultiplier="0.75" damagesound="LimbArmor"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="huskinfection" probabilitymultiplier="0.1" damagesound="LimbArmor"/>
+      <StatValue stattype="FlowResistance" value="0.9"/>
+      <StatValue stattype="PropulsionSpeed" value="-0.5"/>
+    </Wearable>
+    <Holdable slots="OuterClothes+RightHand" controlpose="true" aimpos="70,5" handle1="-25,-7"/>
+    <RangedWeapon barrelpos="29,11" spread="5" unskilledspread="5" combatPriority="70" drawhudwhenequipped="true" crosshairscale="0.2" reload="0.1" suitableprojectiles="bananapeelprojectile">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,256,256"/>
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,256,256,256"/>
+      <Sound file="Content/Items/Weapons/GrenadeLauncherShot1.ogg" type="OnUse" selectionmode="All"/>
+      <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse" selectionmode="All"/>
+      <ParticleEmitter particle="explosionsmoke" particleamount="5" velocitymin="0" velocitymax="0"/>
+      <StatusEffect type="OnUse" target="This">
+        <SpawnItem identifier="bananapeelprojectile" spawnposition="ThisInventory" count="1"/>
+        <Explosion range="500.0" force="2" shockwave="false" smoke="false" flames="false" flash="true" sparks="false" underwaterbubble="false" applyfireeffects="false" camerashake="6.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" reload="5.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnUse" target="This" reload="0.1" setvalue="true" delay="5.0"/>
+      <RequiredItems items="bananapeelprojectile" type="Contained"/>
+    </RangedWeapon>
+    <ItemContainer capacity="0" maxstacksize="0" hideitems="true" containedstateindicatorstyle="tank" containedstateindicatorslot="0">
+      <Containable items="none"/>
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5"/>
+      <StatusEffect type="OnWearing" target="Contained" playsoundonrequireditemfailure="true">
+        <RequiredItem items="oxygensource" type="Contained" matchonempty="true"/>
+        <Conditional condition="lte 0.0"/>
+        <Sound file="Content/Items/WarningBeep.ogg" range="500" loop="true"/>
+      </StatusEffect>
+      <SubContainer capacity="1" maxstacksize="1">
+        <Containable items="oxygensource,weldingtoolfuel"/>
+        <Containable items="oxygensource">
+          <StatusEffect type="OnWearing" target="Character" OxygenAvailable="1000.0"/>
+          <StatusEffect type="OnWearing" target="Contained" Condition="-0.2" comparison="And">
+            <Conditional TargetContainer="true" TargetGrandparent="true" IsDead="false"/>
+            <Conditional TargetContainer="true" TargetGrandparent="true" DecreasedOxygenConsumption="lt 99"/>
+            <Conditional TargetContainer="true" TargetGrandparent="true" NeedsAir="true"/>
+          </StatusEffect>
+          <StatusEffect type="OnWearing" target="Contained">
+            <Conditional condition="lt 5.0"/>
+            <Sound file="Content/Items/WarningBeepSlow.ogg" range="250" loop="true"/>
+          </StatusEffect>
+        </Containable>
+        <Containable items="oxygenitetank">
+          <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="1.2" setvalue="true" targetslot="0" comparison="And">
+            <Conditional IsDead="false"/>
+            <Conditional DecreasedOxygenConsumption="lt 99"/>
+            <Conditional NeedsAir="true"/>
+          </StatusEffect>
+        </Containable>
+        <Containable items="weldingfueltank" blameequipperfordeath="true">
+          <StatusEffect type="OnWearing" target="Contained" Condition="-0.5" comparison="And">
+            <Conditional TargetContainer="true" TargetGrandparent="true" IsDead="false"/>
+            <Conditional TargetContainer="true" TargetGrandparent="true" DecreasedOxygenConsumption="lt 99"/>
+            <Conditional TargetContainer="true" TargetGrandparent="true" NeedsAir="true"/>
+          </StatusEffect>
+          <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0" Oxygen="-5.0" comparison="And">
+            <Conditional IsDead="false"/>
+            <Conditional DecreasedOxygenConsumption="lt 99"/>
+            <Conditional NeedsAir="true"/>
+          </StatusEffect>
+        </Containable>
+        <Containable items="incendiumfueltank" blameequipperfordeath="true">
+          <StatusEffect type="OnWearing" target="Contained" Condition="-0.5" comparison="And">
+            <Conditional TargetContainer="true" TargetGrandparent="true" IsDead="false"/>
+            <Conditional TargetContainer="true" TargetGrandparent="true" DecreasedOxygenConsumption="lt 99"/>
+            <Conditional TargetContainer="true" TargetGrandparent="true" NeedsAir="true"/>
+          </StatusEffect>
+          <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0" comparison="And" targetlimb="Torso">
+            <Affliction identifier="burn" amount="20.0"/>
+            <Conditional IsDead="false"/>
+            <Conditional DecreasedOxygenConsumption="lt 99"/>
+            <Conditional NeedsAir="true"/>
+          </StatusEffect>
+        </Containable>
+      </SubContainer>
+      <SubContainer capacity="1" maxstacksize="1">
+        <Containable items="divingsuitfuel">
+          <StatusEffect type="OnContaining" target="This,Character" Voltage="1.0" setvalue="true">
+            <Conditional IsDead="false"/>
+          </StatusEffect>
+        </Containable>
+      </SubContainer>
+    </ItemContainer>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" spawnwithid="bananapeelprojectile">
+      <Containable items="bananapeelprojectile"/>
+    </ItemContainer>
+    <CustomInterface canbeselected="false" drawhudwhenequipped="true" allowuioverlap="true">
+      <GuiFrame relativesize="0.15,0.1" anchor="BottomCenter" pivot="BottomCenter" relativeoffset="0,0.1" style="ItemUI"/>
+      <Button text="clownexosuitweapon" connection="signal_out1">
+        <StatusEffect type="OnUse" duration="5" target="NearbyCharacters" range="500" camerashake="5" setvalue="true" stackable="false">
+          <RequiredItem items="divingsuitfuel" type="Contained"/>
+          <Affliction identifier="hallucinatingshortduration" strength="3"/>
+          <sound file="Content/Items/JobGear/Clown/ClownExosuitHorn.ogg" type="OnUse" range="5000.0" loop="true"/>
+        </StatusEffect>
+        <StatusEffect type="OnUse" duration="5" target="NearbyCharacters" targetidentifiers="human" range="500" setvalue="true" stackable="false" conditionalcomparison="And" CheckConditionalAlways="true">
+          <RequiredItem items="divingsuitfuel" type="Contained"/>
+          <Conditional HasStatusTag="!equals clown"/>
+          <Conditional TeamID="FriendlyNPC"/>
+          <TriggerEvent identifier="clownhaven_progress"/>
+        </StatusEffect>
+        <StatusEffect type="OnUse" duration="5" target="Limb,This" targetlimbs="Torso" range="500" camerashake="5" setvalue="true" stackable="false" CheckConditionalAlways="true">
+          <RequiredItem items="divingsuitfuel" type="Contained"/>
+          <Conditional ParentInventory="! null"/>
+          <ParticleEmitter particle="steamspray" copytargetangle="true" particlespersecond="30" velocitymin="500" velocitymax="1000" anglemin="140" anglemax="140" distancemin="50" distancemax="55"/>
+        </StatusEffect>
+        <StatusEffect type="OnUse" target="Contained" Condition="-0.2" duration="5" targetslot="1" stackable="false">
+          <RequiredItem items="divingsuitfuel" type="Contained"/>
+        </StatusEffect>
+      </Button>
+    </CustomInterface>
+    <aitarget maxsightrange="1500"/>
+  </Item>
+</Items>

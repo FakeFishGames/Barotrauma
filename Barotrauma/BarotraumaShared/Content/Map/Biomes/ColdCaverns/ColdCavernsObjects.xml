@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--COLD CAVERNS-->
+<levelobjects>
+  <!-- a series of background chunks that spawn along walls -->
+  <BackgroundChunks1 identifier="coldcavernsbackgroundchunks1" spawnpos="Wall, RuinWall, OutpostWall" minsurfacewidth="0" minsize="0.5" maxsize="0.5" randomrotation="-180,180" commonness="0" depthrange="1000,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="100,100">
+    <overridecommonness leveltype="coldcaverns" commonness="100"/>
+    <overridecommonness leveltype="coldcavernstransition" commonness="75"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="683,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="1365,0,683,1024" origin="0.5,0.5"/>
+  </BackgroundChunks1>
+  <BackgroundChunks2 identifier="coldcavernsbackgroundchunks2" spawnpos="Wall, RuinWall, OutpostWall" minsurfacewidth="0" minsize="0.5" maxsize="1" randomrotation="-180,180" commonness="0" depthrange="2000,3000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="100,100">
+    <overridecommonness leveltype="coldcaverns" commonness="95"/>
+    <overridecommonness leveltype="coldcavernstransition" commonness="70"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="683,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="1365,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" origin="0.5,0.5"/>
+  </BackgroundChunks2>
+  <BackgroundChunks3 identifier="coldcavernsbackgroundchunks3" spawnpos="Wall, RuinWall, OutpostWall" minsurfacewidth="0" minsize="1" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="3000,4000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="100,100">
+    <overridecommonness leveltype="coldcaverns" commonness="90"/>
+    <overridecommonness leveltype="coldcavernstransition" commonness="70"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="1365,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="683,0,683,1024" origin="0.5,0.5"/>
+  </BackgroundChunks3>
+  <EdgeChunks identifier="coldcavernsedgechunks" spawnpos="Wall, RuinWall, OutpostWall" minsurfacewidth="0" minsize="0.5" maxsize="0.5" randomrotation="-5,5" randomoffset="0,-30" commonness="0" depthrange="-1,0" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <overridecommonness leveltype="coldcaverns" commonness="85"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="0,0,762,426" origin="0.5107802,0.92986774"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="768,0,763,405" origin="0.4875584,0.90984476"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="1536,0,513,412" origin="0.5030638,0.89997613"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="11,428,758,334" origin="0.4928871,0.91817725"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="783,398,757,371" origin="0.49537665,0.94346344"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="1538,399,510,371" origin="0.50537133,0.92784345"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="4,760,756,362" origin="0.50338674,0.9213719"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="774,761,754,352" origin="0.49551395,0.93187386"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="1538,770,511,351" origin="0.5009992,0.9660793"/>
+    <overridecommonness leveltype="icecave" commonness="1"/>
+  </EdgeChunks>
+  <!-- Plants -->
+  <icyhair identifier="icyhair" spawnpos="Wall, RuinWall, OutpostWall" minsurfacewidth="300" minsize="0.5" maxsize="0.5" randomrotation="-5,5" randomoffset="0,0" commonness="0" depthrange="0,1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="1" swingfrequency="1" scaleoscillation="0,0.1" scaleoscillationfrequency="0.5" sonardisruption="0" maxcount="10000">
+    <overridecommonness leveltype="coldcaverns" commonness="80"/>
+    <overridecommonness leveltype="coldcavernstransition" commonness="60"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="5,1114,508,494" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="517,1114,508,478" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="1025,1108,514,500" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="1538,1112,512,512" origin="0.5,0.9"/>
+  </icyhair>
+  <icebuckthorn identifier="icebuckthorn" spawnpos="Wall, RuinWall, OutpostWall" minsurfacewidth="300" minsize="0.5" maxsize="0.5" randomrotation="-5,5" randomoffset="0,0" commonness="0" depthrange="0,1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="1" swingfrequency="1" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <overridecommonness leveltype="coldcaverns" commonness="75"/>
+    <overridecommonness leveltype="coldcavernstransition" commonness="60"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="7,1610,516,440" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="517,1592,508,456" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="1034,1605,502,444" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/WallEdgeChunks.png" sourcerect="1539,1616,509,428" origin="0.5,0.9"/>
+  </icebuckthorn>
+</levelobjects>

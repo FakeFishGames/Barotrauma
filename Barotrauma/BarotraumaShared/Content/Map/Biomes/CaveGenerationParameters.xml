@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CaveGenerationParameters>
+  <Cave
+    identifier="fallbackcave"
+    minwidth="8000"
+    maxwidth="10000"
+    minheight="8000"
+    maxheight="10000"
+    commonness="0"
+    minbranchcount="2"
+    maxbranchcount="4"
+    levelobjectamount="200"
+    destructiblewallratio="0.1">
+    <WallEdge
+      texture="Content/Map/Biomes/IceCave/LevelWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestructibleWall.png"
+      premultiplyalpha="false"/>
+    <Wall
+      texture="Content/Map/Biomes/IceCave/LevelWall.png"
+      premultiplyalpha="false"/>
+  </Cave>
+  <Cave
+    identifier="icecave"
+    minwidth="5000"
+    maxwidth="7000"
+    minheight="5000"
+    maxheight="7000"
+    commonness="0"
+    minbranchcount="2"
+    maxbranchcount="4"
+    levelobjectamount="200"
+    destructiblewallratio="0.1">
+    <Wall
+      texture="Content/Map/Biomes/IceCave/LevelWall.png"
+      premultiplyalpha="false"/>
+    <WallEdge
+      texture="Content/Map/Biomes/IceCave/LevelWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestructibleWall.png"
+      premultiplyalpha="false"/>
+    <overridecommonness leveltype="coldcavernsbasic" commonness="0.2"/>
+    <overridecommonness leveltype="coldcaverns" commonness="0.6"/>
+    <overridecommonness leveltype="abyss" commonness="1"/>
+  </Cave>
+  <Cave
+    identifier="crystalcave"
+    minwidth="8000"
+    maxwidth="10000"
+    minheight="8000"
+    maxheight="10000"
+    commonness="0"
+    minbranchcount="2"
+    maxbranchcount="4"
+    levelobjectamount="200"
+    destructiblewallratio="0.1">
+    <Wall
+      texture="Content/Map/Biomes/CrystalCave/LevelWall.png"
+      premultiplyalpha="false"/>
+    <WallEdge
+      texture="Content/Map/Biomes/CrystalCave/LevelWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestructibleWall.png"
+      premultiplyalpha="false"/>
+    <overridecommonness leveltype="coldcaverns" commonness="0.1"/>
+    <overridecommonness leveltype="coldcavernsadvanced" commonness="0.2"/>
+    <overridecommonness leveltype="greatseabasic" commonness="0.5"/>
+    <overridecommonness leveltype="abyss" commonness="1"/>
+  </Cave>
+  <Cave
+    identifier="rockcave"
+    minwidth="7000"
+    maxwidth="9000"
+    minheight="7000"
+    maxheight="9000"
+    commonness="1"
+    minbranchcount="2"
+    maxbranchcount="4"
+    levelobjectamount="200"
+    destructiblewallratio="0.1">
+    <Wall
+      texture="Content/Map/Biomes/RockCave/LevelWall.png"
+      premultiplyalpha="false"/>
+    <WallEdge
+      texture="Content/Map/Biomes/RockCave/LevelWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestructibleWall.png"
+      premultiplyalpha="false"/>
+    <overridecommonness leveltype="coldcaverns" commonness="0.2"/>
+    <overridecommonness leveltype="europanridge" commonness="0.5"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0"/>
+    <overridecommonness leveltype="thegreatsea" commonness="0"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="0.5"/>
+    <overridecommonness leveltype="abyss" commonness="1"/>
+  </Cave>
+  <Cave
+    identifier="mushroomcave"
+    minwidth="7000"
+    maxwidth="9000"
+    minheight="7000"
+    maxheight="9000"
+    commonness="0"
+    minbranchcount="2"
+    maxbranchcount="4"
+    levelobjectamount="400"
+    destructiblewallratio="0.1">
+    <Wall
+      texture="Content/Map/Biomes/MushroomCave/LevelWall.png"
+      premultiplyalpha="false"/>
+    <WallEdge
+      texture="Content/Map/Biomes/MushroomCave/LevelWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestructibleWall.png"
+      premultiplyalpha="false"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0.5"/>
+  </Cave>
+  <Cave
+    identifier="forestcave"
+    minwidth="6000"
+    maxwidth="8000"
+    minheight="6000"
+    maxheight="8000"
+    commonness="0"
+    minbranchcount="2"
+    maxbranchcount="4"
+    levelobjectamount="400"
+    destructiblewallratio="0.1">
+    <Wall
+      texture="Content/Map/Biomes/ForestCave/LevelWall.png"
+      premultiplyalpha="false"/>
+    <WallEdge
+      texture="Content/Map/Biomes/ForestCave/LevelWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestructibleWall.png"
+      premultiplyalpha="false"/>
+    <overridecommonness leveltype="europanridge" commonness="0.5"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0.5"/>
+  </Cave>
+  <Cave
+    identifier="bioluminescentcave"
+    minwidth="10000"
+    maxwidth="10000"
+    minheight="10000"
+    maxheight="10000"
+    commonness="0"
+    minbranchcount="2"
+    maxbranchcount="4"
+    levelobjectamount="500"
+    destructiblewallratio="0.1">
+    <Wall
+      texture="Content/Map/Biomes/BioluminescentCave/LevelWall.png"
+      premultiplyalpha="false"/>
+    <WallEdge
+      texture="Content/Map/Biomes/BioluminescentCave/LevelWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestructibleWall.png"
+      premultiplyalpha="false"/>
+    <overridecommonness leveltype="thegreatsea" commonness="0.5"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="0.5"/>
+  </Cave>
+</CaveGenerationParameters>

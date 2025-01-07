@@ -1,0 +1,569 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  
+  <Item name="" 
+        description=""
+        identifier="coilgun" Tags="turret" category="Machine,Weapon" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="750" linkable="true" allowedlinks="coilgunequipment">
+    <Sprite texture="Turrets.png" depth="0.01" sourcerect="772,8,248,248" canflipy="false"/>
+    <MinimapIcon name="Command_Weapons_Coilgun" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,0,128,128"/>
+    <SwappableItem price="5000" replacementonuninstall="turrethardpoint" origin="128,215" swapidentifier="basicturret">
+      <SchematicSprite texture="Content/UI/WeaponUI.png" sourcerect="256,0,256,389"/>
+      <SwapConnectedItem tag="periscope" swapto="periscope"/>
+      <SwapConnectedItem tag="turretammosource" swapto="coilgunloader"/>
+    </SwappableItem>
+    <UpgradePreviewSprite scale="2.5" texture="Content/UI/WeaponUI.png" sourcerect="7,810,109,65" origin="0.5,0.5"/>
+    <StaticBody width="80" radius="80"/>
+    <Turret launchimpulse="80.0" canbeselected="false" characterusable="false" linkable="true" barrelpos="126,82" firingoffset="0,-190"  rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8" MaxAngleOffset="10" AICurrentTargetPriorityMultiplier="1.1">
+      <sound file="Content/Items/Weapons/Coilgun1.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/Coilgun2.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/Coilgun3.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/Coilgun4.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/Coilgun5.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/Coilgun6.ogg" range="10000" type="OnUse"/>
+      <WeaponIndicator texture="Content/UI/WeaponUI.png" sourcerect="425,913,66,36" origin="0.24, 0.472"/>
+      <RailSprite texture="Content/Items/Weapons/Turrets.png" depth="0.011" sourcerect="901,256,120,287" origin="0.64, 0.7"/>
+      <BarrelSprite texture="Content/Items/Weapons/Turrets.png" depth="0.012" sourcerect="776,256,125,333" origin="0.6, 0.8"/>
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,0,256,256"/>
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,0,256,256"/>
+      <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg"/>
+      <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg"/>
+      <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg"/>
+      <RequiredSkill identifier="weapons" level="50"/>
+      <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" directional="true" IsOn="true" drawbehindsubs="true" ignorecontinuoustoggle="true" InheritParentIsActive="false">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0,0.5" size="1.0,1.0"/>
+      </LightComponent>
+      <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100"/>
+      <StatusEffect type="OnUse" target="This">
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="5.0" flames="false" smoke="false" sparks="false" underwaterbubble="false"/>
+      </StatusEffect>
+    </Turret>
+    <aitarget maxsightrange="3000" maxsoundrange="8000" fadeouttime="5"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
+      <input name="toggle_light" displayname="connection.togglelight"/>
+      <input name="set_light" displayname="connection.setlight"/>
+      <input name="set_auto_operate" displayname="connection.setautooperate"/>
+      <input name="toggle_auto_operate" displayname="connection.toggleautooperate"/>
+    </ConnectionPanel>
+    <SkillRequirementHint identifier="weapons" level="50"/>
+  </Item>
+
+  <Item name=""
+      description=""
+      identifier="doublecoilgun" Tags="turret" category="Machine,Weapon" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="800" linkable="true" allowedlinks="coilgunequipment">
+    <Sprite texture="Turrets.png" depth="0.01" sourcerect="4,4,504,504" canflipy="false"/>
+    <MinimapIcon name="Command_Weapons_FlakCannon" texture="Content/UI/CommandUIBackground.png" sourcerect="384,768,128,128"/>
+    <SwappableItem price="7500" replacementonuninstall="largeturrethardpoint" origin="256,438" swapidentifier="largeturret">
+      <SchematicSprite texture="Content/UI/WeaponUI.png" sourcerect="512,389,256,389"/>
+      <SwapConnectedItem tag="periscope" swapto="periscope"/>
+      <SwapConnectedItem tag="turretammosource" swapto="coilgunloader"/>
+    </SwappableItem>
+    <UpgradePreviewSprite scale="3.5" texture="Content/UI/WeaponUI.png" sourcerect="512,804,102,70" origin="0.5,0.5"/>
+    <StaticBody width="80" radius="80"/>
+    <Turret projectilecount="1" alternatingfiringoffset="true" firingoffset="-40,-340" launchimpulse="90.0" damagemultiplier="1.0" canbeselected="false" characterusable="false" linkable="true" barrelpos="250,180" rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" recoiltime="0.1" reload="0.1" shotsperburst="2" delaybetweenbursts="0.175" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8" MaxAngleOffset="20" AICurrentTargetPriorityMultiplier="1.1">
+      <sound file="Content/Items/Weapons/DoubleCoilgun1.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/DoubleCoilgun2.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/DoubleCoilgun3.ogg" range="10000" type="OnUse"/>
+      <WeaponIndicator texture="Content/UI/WeaponUI.png" sourcerect="744,910,66,38" origin="0.24, 0.472"/>
+      <RailSprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.011" sourcerect="317,657,280,336" origin="0.51, 0.78"/>
+      <BarrelSprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.012" sourcerect="760,541,166,484" origin="0.5, 0.9"/>
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,0,256,256"/>
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,0,256,256"/>
+      <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg"/>
+      <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg"/>
+      <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg"/>
+      <RequiredSkill identifier="weapons" level="50"/>
+      <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" directional="true" IsOn="true" drawbehindsubs="true" ignorecontinuoustoggle="true" InheritParentIsActive="false">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0,0.5" size="1.0,1.0"/>
+      </LightComponent>
+      <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100"/>
+      <StatusEffect type="OnUse" target="This">
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="5.0" flames="false" smoke="false" sparks="false" underwaterbubble="false"/>
+      </StatusEffect>
+    </Turret>
+    <aitarget maxsightrange="3000" maxsoundrange="8000" fadeouttime="5"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
+      <input name="toggle_light" displayname="connection.togglelight"/>
+      <input name="set_light" displayname="connection.setlight"/>
+      <input name="set_auto_operate" displayname="connection.setautooperate"/>
+      <input name="toggle_auto_operate" displayname="connection.toggleautooperate"/>
+    </ConnectionPanel>
+    <SkillRequirementHint identifier="weapons" level="50"/>
+  </Item>
+  
+  <Item name="" identifier="coilgunloader" tags="coilgunequipment,coilgunammosource,turretammosource,coilgunammoloader" category="Machine,Weapon" linkable="true" allowedlinks="coilgun" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
+    <Upgrade gameversion="0.14.7.0" rectwidth="82" rectheight="176" itempos="82,-270"/>
+    <SwappableItem canbebought="false" origin="82,352" spawnwithid="coilgunammobox"/>
+    <UpgradePreviewSprite texture="Content/UI/WeaponUI.png" sourcerect="208,968,32,46" origin="0.5,0.5"/>
+    <Sprite name="Coilgun Loader Front" texture="Loaders.png" depth="0.78" sourcerect="855,10,165,352" origin="0.5,0.5"/>
+    <BrokenSprite texture="Content/Items/Weapons/Loaders.png"  sourcerect="163,563,153,351" origin="0.5,0.5" offset="6,3" depth="0.77" fadein="true" maxcondition="99"/>
+    <DecorativeSprite name="Coilgun Loader Frame Front" texture="Loaders.png" depth="0.8" sourcerect="31,569,117,200" origin="0.5,0.5" offset="0,-68"/>
+    <DecorativeSprite name="Ammobelt" texture="Content/Items/Containers/containers.png" depth="0.79" sourcerect="499,663,52,142" origin="0.5,0.5"
+                offset="0,12">
+      <IsActiveConditional targetcontaineditem="true" condition="gt 0.0"/>
+      <IsActiveConditional targetcontaineditem="true" hastag="! noammobelt"/>
+    </DecorativeSprite>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="10" mindeteriorationdelay="60" maxdeteriorationdelay="300" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <StatusEffect type="InWater" target="This" condition="-0.25"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="Equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="60" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" maxstacksize="1" slotsperrow="6" itempos="82,-270" iteminterval="0,0" itemrotation="0" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.79">
+      <GuiFrame relativesize="0.18,0.23" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="coilgunammo"/>
+      <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
+      <StatusEffect type="OnUse" target="Contained">
+        <RequiredItem items="coilgunammo" type="Contained"/>
+        <Use/>
+      </StatusEffect>
+    </ItemContainer>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <output name="condition_out" displayname="connection.conditionout"/>
+      <output name="contained_conditions" displayname="connection.ammunitionout"/>
+    </ConnectionPanel>
+    
+    <LightComponent lightcolor="219,0,36,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="1.685,-4.79" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 0"/>
+    </LightComponent>
+    <LightComponent lightcolor="255,170,1,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="1.135,-4.79" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 20"/>
+    </LightComponent>
+    <LightComponent lightcolor="246,210,2,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="0.585,-4.79" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 40"/>
+    </LightComponent>
+    <LightComponent lightcolor="252,230,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="0.035,-4.79" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 60"/>
+    </LightComponent>
+    <LightComponent lightcolor="185,214,0,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="-0.515,-4.79" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 80"/>
+    </LightComponent>
+    <LightComponent lightcolor="79,184,0,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="-1.065,-4.79" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gte 100"/>
+    </LightComponent>
+  </Item>
+  
+  <Item name="" identifier="coilgunbolt" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55"/>
+    <Body width="170" height="10" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Projectile characterusable="false" launchimpulse="0" damagedoors="true">
+      <Attack structuredamage="20" itemdamage="10" severlimbsprobability="0.25" penetration="0.1">
+        <Affliction identifier="lacerations" strength="15"/>
+        <Affliction identifier="bleeding" strength="1.0"/>
+        <Affliction identifier="stun" strength="0.025"/>
+      </Attack>
+      <StatusEffect type="OnActive" target="This" lifetime="2">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <!-- a 3 second lifetime after being fired -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="3">
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This">
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="10" velocitymin="100" velocitymax="2000" scalemin="0.25" scalemax="0.5"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+  </Item>
+  
+  <Item name="" identifier="physicoriumbolt" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="weapons_new.png" sourcerect="143,425,113,9" depth="0.55"/>
+    <Body width="160" height="10" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Projectile characterusable="false" launchimpulse="0" damagedoors="true">
+      <Attack structuredamage="30" itemdamage="15" severlimbsprobability="0.5" penetration="0.2" targetforce="50">
+        <Affliction identifier="lacerations" strength="28"/>
+        <Affliction identifier="bleeding" strength="1.0"/>
+        <Affliction identifier="stun" strength="0.05"/>
+      </Attack>
+      <StatusEffect type="OnActive" target="This" lifetime="2">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <!-- a 3 second lifetime after being fired -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="3">
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This">
+        <ParticleEmitter particle="impactfirearm" copyentityangle="true" particleamount="1" velocitymin="0" velocitymax="0" scalemin="4.0" scalemax="5.0" colormultiplier="255,150,255" lifetimemultiplier="5"/>
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="10" velocitymin="100" velocitymax="2000" scalemin="0.25" scalemax="0.5"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+  </Item>
+
+  <Item name="" identifier="coilgunboltexplosive" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="weapons_new.png" sourcerect="144,436,112,9" depth="0.55"/>
+    <Body width="160" height="10" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Projectile characterusable="false" launchimpulse="0" damagedoors="true">
+      <Attack structuredamage="10" itemdamage="10" severlimbsprobability="0.25" penetration="0.1">
+        <Affliction identifier="explosiondamage" strength="10"/>
+        <Affliction identifier="bleeding" strength="1.0"/>
+        <Affliction identifier="stun" strength="0.025"/>
+      </Attack>
+      <StatusEffect type="OnActive" target="This" lifetime="2">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <!-- a 3 second lifetime after being fired -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="3">
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This">
+        <Explosion range="300.0" structuredamage="5" force="10.0" itemdamage="250" severlimbsprobability="0.25" decal="explosion" decalsize="0.3">
+          <Affliction identifier="explosiondamage" strength="30"/>
+        </Explosion>
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="10" velocitymin="100" velocitymax="2000" scalemin="0.25" scalemax="0.5"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+  </Item>
+
+  <Item name="" identifier="coilgunboltpiercing" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="weapons_new.png" sourcerect="144,447,112,12" depth="0.55"/>
+    <Body width="160" height="10" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Projectile characterusable="false" launchimpulse="0" maxtargetstohit="2" damagedoors="true">
+      <Attack structuredamage="35" itemdamage="10" severlimbsprobability="0.1" penetration="0.5">
+        <Affliction identifier="lacerations" strength="9"/>
+        <Affliction identifier="bleeding" strength="2"/>
+        <Affliction identifier="stun" strength="0.0125"/>
+      </Attack>
+      <StatusEffect type="OnActive" target="This" lifetime="2">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <!-- a 3 second lifetime after being fired -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="3">
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" condition="-50"/>
+      <StatusEffect type="OnBroken" target="This">
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="10" velocitymin="100" velocitymax="2000" scalemin="0.5" scalemax="0.75"/>
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+  </Item>
+
+  <Item name="" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment,coilgunammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
+    <PreferredContainer primary="coilgunammoloader" amount="2" mincondition="1"/>
+    <PreferredContainer primary="ammoboxcontainer" amount="2" mincondition="1"/>
+    <!--Ensure that Thalamus always has at least one coilgun ammo box to use-->
+    <PreferredContainer secondary="wreckcoilgunloader" amount="1"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.5"/>
+    <Price baseprice="120" displaynonempty="true">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="6" sold="false"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.3" minavailable="3"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="15"/>
+      <Price storeidentifier="merchantmine" multiplier="1.2" minavailable="3"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="15"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="25"/>
+      <RequiredItem tag="munition_core" amount="2" description="fabricationdescription.munition_core"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
+      <RequiredSkill identifier="weapons" level="20"/>
+      <RequiredItem tag="munition_core" amount="2" description="fabricationdescription.munition_core"/>
+      <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="coilgunammobox"/>
+    </Fabricate>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="800,788,95,78" origin="0.5,0.5"/>
+    <Body width="90" height="72" density="30"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatValue stattype="MovementSpeed" value="-0.2"/>
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="2" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
+      <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
+      but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
+      of the item, and when the condition is 0, the box is considered empty. -->
+      <!--  -0.5 per usage = 200 shots per box -->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="coilgunbolt" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <RequiredItem items="coilgunbolt" type="Contained"/>
+      </StatusEffect>
+      <Containable items="coilgunbolt"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment,coilgunammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
+    <PreferredContainer primary="coilgunammoloader,ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer secondary="wreckcoilgunloader" amount="1" spawnprobability="0.05"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1"/>
+    <Price baseprice="330" sold="false" displaynonempty="true">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.3"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" multiplier="1.2"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="40"/>
+      <RequiredItem identifier="physicorium"/>
+      <RequiredItem tag="advmunition_core" amount="2" description="fabricationdescription.advmunition_core"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
+      <RequiredSkill identifier="weapons" level="30"/>
+      <RequiredItem identifier="physicorium"/>
+      <RequiredItem tag="advmunition_core" amount="2" description="fabricationdescription.advmunition_core"/>
+      <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="physicoriumammobox"/>
+    </Fabricate>
+    <Deconstruct time="10">
+      <Item identifier="physicorium" mincondition="0.95"/>
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="918,788,95,78" origin="0.5,0.5"/>
+    <Body width="90" height="72" density="30"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatValue stattype="MovementSpeed" value="-0.2"/>
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="2" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
+      <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
+      but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
+      of the item, and when the condition is 0, the box is considered empty. -->
+      <!--  -0.5 per usage = 200 shots per box -->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="physicoriumbolt" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <RequiredItem items="physicoriumbolt" type="Contained"/>
+      </StatusEffect>
+      <Containable items="physicoriumbolt"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="coilgunammoboxexplosive" scale="0.5" tags="coilgunequipment,coilgunammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
+    <PreferredContainer primary="coilgunammoloader,ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer secondary="wreckcoilgunloader" amount="1" spawnprobability="0.05"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1"/>
+    <Price baseprice="350" sold="false" displaynonempty="true" minleveldifficulty="15">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.3"/>
+      <Price storeidentifier="merchantmilitary" sold="true" multiplier="0.9" maxavailable="2" minleveldifficulty="5"/>
+      <Price storeidentifier="merchantmine" multiplier="1.2"/>
+      <Price storeidentifier="merchantarmory" sold="true" multiplier="0.9" maxavailable="2" minleveldifficulty="5"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="sodium" mincondition="0.95"/>
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="50"/>
+      <RequiredItem identifier="c4block"/>
+      <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
+      <RequiredSkill identifier="weapons" level="40"/>
+      <RequiredItem identifier="c4block"/>
+      <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket"/>
+      <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="coilgunammoboxexplosive"/>
+    </Fabricate>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="560,788,95,78" origin="0.5,0.5"/>
+    <Body width="90" height="72" density="25"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatValue stattype="MovementSpeed" value="-0.2"/>
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="2" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
+      <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
+      but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
+      of the item, and when the condition is 0, the box is considered empty. -->
+      <!--  -0.67 per usage = about 150 shots per box -->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="coilgunboltexplosive" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-1.0" disabledeltatime="true">
+        <RequiredItem items="coilgunboltexplosive" type="Contained"/>
+      </StatusEffect>
+      <Containable items="coilgunboltexplosive"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="coilgunammoboxpiercing" scale="0.5" tags="coilgunequipment,coilgunammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
+    <PreferredContainer primary="coilgunammoloader,ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer secondary="wreckcoilgunloader" amount="1" spawnprobability="0.05"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1"/>
+    <Price baseprice="260" displaynonempty="true" minleveldifficulty="15">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1" sold="false"/>
+      <Price storeidentifier="merchantresearch" sold="false" multiplier="1.3"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="8" minleveldifficulty="5"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="8" minleveldifficulty="5"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="30"/>
+      <RequiredItem tag="advmunition_tip" description="fabricationdescription.advmunition_tip"/>
+      <RequiredItem tag="advmunition_core" amount="2" description="fabricationdescription.advmunition_core"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
+      <RequiredSkill identifier="weapons" level="25"/>
+      <RequiredItem tag="advmunition_tip" description="fabricationdescription.advmunition_tip"/>
+      <RequiredItem tag="advmunition_core" amount="2" description="fabricationdescription.advmunition_core"/>
+      <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="coilgunammoboxpiercing"/>
+    </Fabricate>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="680,788,95,78" origin="0.5,0.5"/>
+    <Body width="90" height="72" density="25"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatValue stattype="MovementSpeed" value="-0.2"/>
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="2" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
+      <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
+      but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
+      of the item, and when the condition is 0, the box is considered empty. -->
+      <!--  -0.67 per usage = about 150 shots per box -->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="coilgunboltpiercing" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.67" disabledeltatime="true">
+        <RequiredItem items="coilgunboltpiercing" type="Contained"/>
+      </StatusEffect>
+      <Containable items="coilgunboltpiercing"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item name="" identifier="coilgunharpoonbox" scale="0.5" tags="coilgunequipment,coilgunammo,ammobox,noammobelt" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
+    <PreferredContainer primary="coilgunammoloader,ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer secondary="wreckcoilgunloader" amount="1" spawnprobability="0.05"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1"/>
+    <Price baseprice="120" displaynonempty="true">
+      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1" sold="false"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.3" minavailable="2"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="3"/>
+      <Price storeidentifier="merchantmine" multiplier="1.2" minavailable="2"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="3"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="25"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="organicfiber"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
+      <RequiredSkill identifier="weapons" level="25"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="organicfiber"/>
+      <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="coilgunammobox"/>
+    </Fabricate>
+    <Deconstruct time="10">
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="Content/Items/Containers/containers2.png" depth="0.54" sourcerect="2,192,95,78" origin="0.5,0.5"/>
+    <Body width="95" height="78" density="30"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatValue stattype="MovementSpeed" value="-0.2"/>
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="2" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
+      <!--  -35 per usage = 3 shots per box -->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="coilgunharpoon" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-35" disabledeltatime="true">
+        <RequiredItem items="coilgunharpoon" type="Contained"/>
+      </StatusEffect>
+      <Containable items="coilgunharpoon"/>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="coilgunharpoon" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="weapons_new.png" sourcerect="144,447,112,12" depth="0.55"/>
+    <Body width="160" height="10" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Rope targetpullforce="20000" IncreaseForceForEscapingTargets="false" sourcepullforce="20000" projectilepullforce="5" maxlength="8000" lerpforces="true" snaponcollision="true" spritewidth="8" BarrelLengthMultiplier="0.85" origin="0.05,0.5" tile="true" SnapWhenWeaponFiredAgain="false">
+      <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="428,242,81,24" depth="0.57" origin="0.5,0.5"/>
+      <SnapSound file="Content/Items/Weapons/HarpoonGun1.ogg" range="500" frequencymultiplier="3.0,4.0"/>
+      <ReelSound file="Content/Items/Weapons/WEAPON_harpoonGunReelLoop.ogg" range="5000" ReelSoundPitchSlide="0.7,1.0"/>
+      <!-- Automatically snap after 20 seconds -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="20"/>
+      <!-- Remove 1 second after snapping -->
+      <StatusEffect type="Always" target="This" delay="1" checkconditionalalways="true" conditionalcomparison="And">
+        <Conditional Snapped="true" TargetItemComponent="Rope"/>
+        <Conditional IsActive="true" TargetItemComponent="Projectile"/>
+        <Remove/>
+      </StatusEffect>
+      <!-- Snap after 5 seconds if not stuck to anything -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="5" checkconditionalalways="true">
+        <Conditional targetitemcomponent="Projectile" IsStuckToTarget="false"/>
+      </StatusEffect>
+    </Rope>
+    <Projectile characterusable="false" launchimpulse="0" JointBreakPoint="20000" 
+                sticktostructures="true" sticktocharacters="true" sticktodeflective="true" sticktodoors="true"
+                StickToLightTargets="false" GoThroughLightTargets="true" LightTargetMassThreshold="0.15" 
+                maxtargetstohit="1">
+      <Attack structuredamage="35" itemdamage="10" severlimbsprobability="0.1" penetration="0.5">
+        <Affliction identifier="lacerations" strength="9"/>
+        <Affliction identifier="bleeding" strength="2"/>
+        <Affliction identifier="stun" strength="0.0125"/>
+      </Attack>
+      <StatusEffect type="OnActive" target="UseTarget,This" checkconditionalalways="true" comparison="And" disabledeltatime="true">
+        <Conditional Snapped="false"/>
+        <Conditional mass="lt 200"/>
+        <Affliction identifier="drag" strength="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnActive" target="This" lifetime="2">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonHit1.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonHit2.ogg" range="1000"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="10" velocitymin="100" velocitymax="2000" scalemin="0.5" scalemax="0.75"/>
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
+</Items>

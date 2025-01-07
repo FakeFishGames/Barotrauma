@@ -1,0 +1,646 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="alienblood" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.5" RequireAimToUse="True">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <PreferredContainer primary="medfabcab" secondary="medcontainer"/>
+    <PreferredContainer secondary="storageorgan" minamount="1" maxamount="2" spawnprobability="1"/>
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85"/>
+      <Price storeidentifier="merchantcity" multiplier="0.85"/>
+      <Price storeidentifier="merchantresearch" sold="true" multiplier="1.2" minavailable="2"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" multiplier="0.85"/>
+    </Price>
+    <SuitableTreatment type="bloodloss" suitability="10"/>
+    <SuitableTreatment type="psychosis" suitability="-45"/>
+    <SuitableTreatment type="damage" suitability="-10"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,771,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="1,128,30,58" depth="0.6" origin="0.5,0.5"/>
+    <Body width="30" height="55" density="11"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" holdangle="10" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <RequiredSkill identifier="medical" level="35"/>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnSuccess" target="UseTarget, This" duration="15">
+        <ReduceAffliction identifier="bloodloss" amount="6"/>
+        <Affliction identifier="psychosis" amount="3"/>
+        <Affliction identifier="organdamage" amount="0.65"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnFailure" target="UseTarget, This" duration="15">
+        <ReduceAffliction identifier="bloodloss" amount="3"/>
+        <Affliction identifier="psychosis" amount="3"/>
+        <Affliction identifier="organdamage" amount="0.65"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <SkillRequirementHint identifier="medical" level="35"/>
+  </Item>
+  <Item name="" identifier="huskeggsbasic" category="Material" maxstacksize="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="" useinhealthinterface="true" scale="0.3" RequireAimToUse="True">
+    <PreferredContainer primary="toxcontainer" spawnprobability="0.5" notcampaign="true" notpvp="true"/>
+    <PreferredContainer primary="wrecktoxcontainer" spawnprobability="0.2"/>
+    <PreferredContainer secondary="medfabcab"/>
+    <Price baseprice="310">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantcity" multiplier="1.3"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="1.3"/>
+    </Price>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" holdpos="0,-80" aimpos="40,5" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-25.0"/>
+      <StatusEffect type="OnSecondaryUse" target="This,Character" disabledeltatime="true">
+        <Conditional Condition="lte 1"/>
+        <Use/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" setvalue="true"/>
+      <StatusEffect type="OnUse" target="UseTarget" duration="60.0">
+        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
+        <Conditional huskinfection="lt 0.01"/>
+        <Affliction identifier="huskinfection" amount="0.01"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="UseTarget">
+        <Conditional entitytype="eq Character"/>
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="523,86,160,50" depth="0.6" origin="0.5,0.5"/>
+    <Body width="140" height="45" density="10.5"/>
+  </Item>
+  <Item name="" identifier="huskeggs" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.5" RequireAimToUse="True" HitOnlyCharacters="true">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <PreferredContainer primary="toxcontainer" spawnprobability="0.5" notcampaign="true" notpvp="true"/>
+    <PreferredContainer primary="wrecktoxcontainer" spawnprobability="0.2"/>
+    <PreferredContainer secondary="medfabcab"/>
+    <Price baseprice="400">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantcity" multiplier="1.3"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="1.3"/>
+      <Price storeidentifier="merchanthusk" minavailable="2" maxavailable="6">
+        <Reputation faction="huskcult" min="30"/>
+      </Price>
+    </Price>
+    <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
+      <RequiredSkill identifier="medical" level="30"/>
+      <RequiredItem identifier="huskeggsbasic"/>
+      <RequiredItem identifier="calcium"/>
+    </Fabricate>
+    <Deconstruct time="5">
+      <Item identifier="calcium"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="0,186,38,70" depth="0.6" origin="0.5,0.5"/>
+    <Body width="35" height="70" density="20"/>
+    <MeleeWeapon canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="0,0" holdangle="220" reload="1.0" msg="ItemMsgPickUpSelect">
+      <!--Can't fail, but can't use OnUse for projectiles-->
+      <StatusEffect type="OnSuccess" target="This" Condition="-100.0" setvalue="true"/>
+      <StatusEffect type="OnSuccess" target="UseTarget" duration="60.0">
+        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
+        <Conditional huskinfection="lt 0.01"/>
+        <Affliction identifier="huskinfection" amount="0.01"/>
+      </StatusEffect>
+      <StatusEffect type="OnSuccess" target="UseTarget">
+        <Conditional entitytype="eq Character"/>
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget" multiplyafflictionsbymaxvitality="true" AllowWhenBroken="true">
+        <Affliction identifier="stun" amount="0.1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="-90" inheritstatuseffectsfrom="MeleeWeapon"/>
+  </Item>
+  <Item name="" identifier="swimbladder" description="" Tags="smallitem,chem,medical" cargocontaineridentifier="chemicalcrate" maxstacksize="8" category="Material" scale="0.5" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <Price baseprice="250">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="0.9"/>
+      <Price storeidentifier="merchantcity" minavailable="2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1" minavailable="3"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.9"/>
+    </Price>
+    <PreferredContainer primary="medfabcab" secondary="medcontainer"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.7" sourcerect="64,0,44,52" origin="0.5,0.5"/>
+    <Deconstruct time="10">
+      <Item identifier="stabilozine"/>
+      <Item identifier="stabilozine"/>
+      <Item identifier="antibloodloss1"/>
+      <Item identifier="antibloodloss1"/>
+      <Item identifier="antibloodloss1"/>
+    </Deconstruct>
+    <Body width="40" height="45" density="9.9"/>
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10"/>
+  </Item>
+  <Item name="" identifier="adrenalinegland" Tags="smallitem,chem,medical" maxstacksize="8" cargocontaineridentifier="chemicalcrate" description="" category="Material" scale="0.5" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <Price baseprice="240">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="0.9"/>
+      <Price storeidentifier="merchantcity" multiplier="1.1" minavailable="2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.2" minavailable="3"/>
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.85"/>
+    </Price>
+    <PreferredContainer primary="medfabcab" secondary="medcontainer"/>
+    <PreferredContainer primary="storageorgan" minamount="1" maxamount="2" spawnprobability="1"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.7" sourcerect="108,1,45,51" origin="0.5,0.5"/>
+    <Deconstruct time="10">
+      <Item identifier="adrenaline"/>
+      <Item identifier="adrenaline"/>
+    </Deconstruct>
+    <Body width="40" height="45" density="11"/>
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10"/>
+  </Item>
+  
+  <Item name="" identifier="crawlermask" category="Equipment" tags="smallitem" scale="0.5" cargocontaineridentifier="metalcrate" allowasextracargo="true">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <Price baseprice="1" sold="false" canbespecial="false"/>
+    <PreferredContainer primary="locker"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" depth="0.6" sourcerect="962,450,59,61" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.6" sourcerect="248,0,113,122" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="20"/>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" limb="Head" inheritlimbdepth="true" hidelimb="false" inherittexturescale="true" hideotherwearables="false" sourcerect="248,0,113,122" origin="0.5,0.55"/>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" setvalue="true" disabledeltatime="true"/>
+      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" checkconditionalalways="true">
+        <conditional isDead="eq false"/>
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random"/>
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" type="OnUse" range="300"/>
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" type="OnUse" range="300"/>
+      </StatusEffect>
+    </Wearable>
+  </Item>
+  
+  <Item name="" identifier="huskstinger" category="Weapon" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.5" allowasextracargo="true" RequireAimToUse="True">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <Price baseprice="1" sold="false" canbespecial="false"/>
+    <Price baseprice="500" sold="false">
+      <Price storeidentifier="merchanthusk" minavailable="1" maxavailable="2" sold="true">
+        <Reputation faction="huskcult" min="70"/>
+      </Price>
+    </Price>
+    <PreferredContainer primary="armcab"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,576,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="425,232,86,23" depth="0.55" origin="0.44,0.6"/>
+    <Body radius="10" width="60" density="20"/>
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="30,5" handle1="-20,0" holdangle="65" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
+      <Attack targetimpulse="2" severlimbsprobability="0.1" itemdamage="2" structuredamage="2" structuresoundtype="StructureSlash">
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="bleeding" strength="10"/>
+        <Affliction identifier="stun" strength="0.2"/>
+        <StatusEffect type="OnUse" target="UseTarget">
+          <Conditional entitytype="eq Character"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" selectionmode="random" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash2.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash3.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash4.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash5.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash6.ogg" range="500"/>
+        </StatusEffect>
+      </Attack>
+    </MeleeWeapon>
+  </Item>
+  
+  <Item name="" identifier="shellshield" category="Equipment" tags="mediumitem" health="180" cargocontaineridentifier="metalcrate" damagedbyprojectiles="true" impactsoundtag="impact_soft" scale="0.5" allowasextracargo="true">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <Price baseprice="1" sold="false" canbespecial="false"/>
+    <PreferredContainer primary="locker"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="962,322,61,61" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="464,1,48,229" origin="0.5,0.5" depth="0.55"/>
+    <Body radius="20" height="150" density="15"/>
+    <Holdable slots="RightHand+LeftHand" aimpos="60,-30" holdpos="45,-30" handle1="-15,-10" handle2="-15,10" controlpose="true" blocksplayers="true" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true"/>
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="brownchunks" drawontop="true" particleamount="50" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360" distancemin="0" distancemax="30" scalemin="0.1" scalemax="0.35"/>
+        <Sound file="Content/Sounds/Damage/HitArmor1.ogg" range="800"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="brownchunks" drawontop="true" particleamount="5" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360" distancemin="0" distancemax="20" scalemin="0.1" scalemax="0.35"/>
+        <Sound file="Content/Sounds/Damage/HitArmor1.ogg" range="800"/>
+        <!-- an invisible explosion to make the user "flinch" -->
+        <Explosion range="150.0" force="1.5" showeffects="false" camerashake="2.0"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  
+  <Item name="" identifier="mudraptorshell" category="Equipment" tags="smallitem,clothing" impactsoundtag="impact_metal_light" scale="0.5" allowasextracargo="true">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <Price baseprice="1" sold="false" canbespecial="false"/>
+    <PreferredContainer primary="locker"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,384,64,64"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="363,0,100,165" depth="0.6"/>
+    <Body radius="40" height="60" density="20"/>
+    <Wearable slots="Any,OuterClothes" msg="ItemMsgPickUpSelect">
+      <damagemodifier afflictiontypes="burn" armorsector="0.0,360.0" damagemultiplier="0.9"/>
+      <damagemodifier afflictiontypes="stun" armorsector="0.0,360.0" damagemultiplier="0.6"/>
+      <damagemodifier afflictionidentifiers="blunttrauma,gunshotwound,lacerations" armorsector="0.0,360.0" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier afflictionidentifiers="bitewounds" armorsector="0.0,360.0" damagemultiplier="0.1" damagesound="LimbArmor"/>
+      <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <sprite name="shellshield" texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="363,0,100,165" limb="Torso" depthlimb="head" hidelimb="false" inherittexturescale="true" inheritorigin="false" inheritsourcerect="false" origin="0.5,0.65"/>
+      <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="0.7" setvalue="true" disabledeltatime="true"/>
+    </Wearable>
+  </Item>
+
+  <Item name="" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem,ignorebyai,mudraptoregg" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" scale="0.5" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <Price baseprice="300" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch" sold="true" multiplier="1.5" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" multiplier="0.85"/>
+    </Price>
+    <PreferredContainer primary="toxcontainer" spawnprobability="0.01" notcampaign="true" notpvp="true"/>
+    <PreferredContainer secondary="locker" spawnprobability="0.01" notcampaign="true" notpvp="true"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="164,3,42,49" origin="0.5,0.5"/>
+    <Deconstruct time="10">
+      <Item identifier="alienblood"/>
+    </Deconstruct>
+    <Body width="40" height="45" friction="1.0" restitution="0.01" angulardamping="0.8" density="10.5"/>
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+	    <StatusEffect type="OnDamaged" target="This">
+	      <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+	    </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+    </Holdable>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" showcontainedstateindicator="false">
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.005"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-1"/>
+        <!-- remove and spawn a medium egg when scale is greater than or equal to 0.95 -->
+        <StatusEffect type="OnContaining" target="This">
+          <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+          <particleemitter particle="brownchunks" particleamount="10" emitinterval="1000" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3"/>
+          <Conditional Scale="gte 0.95"/>
+          <SpawnItem identifier="mediummudraptoregg" spawnposition="SameInventory" inheriteventtags="true" SpawnIfInventoryFull="true" SpawnIfNotInInventory="true"/>
+          <Remove/>
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
+    <LightComponent range="5" lightcolor="127,196,196,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulsefrequency="1" pulseamount="0.30">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="164,3,42,49" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="20" lightcolor="255,199,0,58" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="164,3,42,49" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  
+  <Item name="" identifier="mediummudraptoregg" nameidentifier="mudraptoregg" Tags="mediumitem,ignorebyai,mudraptoregg" hideinmenus="true" health="40" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" scale="0.4" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.20.15.0" scale="0.4"/>
+    <Price baseprice="800" sold="false"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="235,156,67,82" origin="0.5,0.5"/>
+    <Deconstruct time="10">
+      <Item identifier="alienblood"/>
+      <Item identifier="adrenalinegland"/>
+    </Deconstruct>
+    <!-- rectangular body to prevent the egg from rolling -->
+    <Body width="65" height="75" friction="1.0" restitution="0.01" angulardamping="1.0" density="11"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="40,-80" handle1="-18,-12" handle2="18,-12" aimable="false">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+    </Holdable>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" showcontainedstateindicator="false" canbeselected="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+	    <StatusEffect type="OnDamaged" target="This">
+	      <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+	    </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.005"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-1"/>
+        <StatusEffect type="OnContaining" target="This">
+          <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+          <particleemitter particle="brownchunks" particleamount="10" emitinterval="1000" velocitymin="0" velocitymax="500" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+          <Conditional Scale="gte 0.75"/>
+          <SpawnItem identifier="largemudraptoregg" spawnposition="SameInventory" inheriteventtags="true" SpawnIfInventoryFull="true" SpawnIfNotInInventory="true"/>
+          <Remove/>
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
+    <LightComponent range="5" lightcolor="127,196,196,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulsefrequency="1" pulseamount="0.30">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="235,156,67,82" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="30" lightcolor="255,199,0,58" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="235,156,67,82" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  
+  <Item name="" identifier="largemudraptoregg" nameidentifier="mudraptoregg" Tags="largeitem,ignorebyai,mudraptoregg" hideinmenus="true" health="60" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" scale="0.4" impactsoundtag="impact_soft">
+    <Upgrade gameversion="0.20.15.0" scale="0.4"/>
+    <Price baseprice="1000" sold="false"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="80,105,124,147" origin="0.5,0.5"/>
+    <Deconstruct time="10">
+      <Item identifier="alienblood" amount="2"/>
+      <Item identifier="adrenalinegland" amount="2"/>
+    </Deconstruct>
+    <!-- rectangular body to prevent the egg from rolling -->
+    <Body width="120" height="120" friction="1.0" restitution="0.01" angulardamping="1.0" density="12"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+    </Holdable>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" showcontainedstateindicator="false" canbeselected="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <Sound file="Content/Sounds/Damage/Gore7.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+	    <StatusEffect type="OnDamaged" target="This">
+	      <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+	    </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <StatusEffect type="Always" target="This" Condition="0" setvalue="true">
+        <Conditional Scale="gte 0.5"/>
+        <Remove/>
+        <SpawnCharacter speciesname="Mudraptor_hatchling" inheriteventtags="true"/>
+      </StatusEffect>
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.002"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-1"/>
+      </Containable>
+    </ItemContainer>
+    <LightComponent range="5" lightcolor="127,196,196,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulsefrequency="1" pulseamount="0.30">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="300,291,98,113" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="40" lightcolor="255,199,0,58" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="410,301,88,95" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  
+  <Item name="" identifier="tigerthresheregg" hideinmenus="true" health="60" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" spritecolor="185,230,240,255" scale="0.5" impactsoundtag="impact_soft">
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="165,280,114,145" origin="0.5,0.5"/>
+    <Price baseprice="370" sold="false"/>
+    <Deconstruct time="10">
+      <Item identifier="adrenalinegland"/>
+      <Item identifier="alienblood"/>
+    </Deconstruct>
+    <!-- rectangular body to prevent the egg from rolling -->
+    <Body width="110" height="120" friction="1.0" restitution="0.01" angulardamping="1.0" density="12"/>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" showcontainedstateindicator="false" canbeselected="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <Sound file="Content/Sounds/Damage/Gore4.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <!-- spawn a thresher and remove the item if scale is above 0.95 -->
+      <StatusEffect type="Always" target="This" Condition="0" setvalue="true">
+        <Conditional Scale="gte 0.95"/>
+        <SpawnCharacter speciesname="Tigerthresher_hatchling"/>
+        <Remove/>
+      </StatusEffect>
+      <Containable items="antibloodloss1,alienblood">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.005"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-1"/>
+      </Containable>
+    </ItemContainer>
+    <LightComponent range="5" lightcolor="217,157,0,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulsefrequency="1" pulseamount="0.30">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="300,291,98,113" origin="0.5,0.6" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="40" lightcolor="255,199,0,58" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="410,301,88,95" origin="0.5,0.6" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  
+  <Item name="" identifier="crawleregg" hideinmenus="true" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" spritecolor="199,253,172,255" scale="0.5" impactsoundtag="impact_soft">
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="8,280,118,145" origin="0.5,0.5"/>
+    <Price baseprice="200" sold="false"/>
+    <Deconstruct time="10">
+      <Item identifier="alienblood"/>
+      <Item identifier="sulphuricacid"/>
+    </Deconstruct>
+    <!-- rectangular body to prevent the egg from rolling -->
+    <Body width="110" height="120" friction="1.0" restitution="0.01" angulardamping="1.0" density="12"/>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" showcontainedstateindicator="false" canbeselected="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <Sound file="Content/Sounds/Damage/Gore5.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <!-- spawn a crawler and remove the item if scale is above 0.75 -->
+      <StatusEffect type="Always" target="This" Condition="0" setvalue="true">
+        <Conditional Scale="gte 0.75"/>
+        <SpawnCharacter speciesname="Crawler_hatchling"/>
+        <Remove/>
+      </StatusEffect>
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.005"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-1"/>
+      </Containable>
+    </ItemContainer>
+    <LightComponent range="5" lightcolor="255,0,0,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulsefrequency="1" pulseamount="0.30">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="300,291,98,113" origin="0.5,0.6" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="40" lightcolor="255,199,0,58" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="410,301,88,95" origin="0.5,0.6" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="molochbone" sonarsize="4" tags="mediumitem" category="Misc" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <PreferredContainer primary="storagecab" secondary="mineralcab"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="4,450,262,62" origin="0.5,0.5"/>
+    <Price baseprice="1000" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1"/>
+      <Price storeidentifier="merchantcity" multiplier="2"/>
+      <Price storeidentifier="merchantresearch" multiplier="0.75"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.75"/>
+      <Price storeidentifier="merchantmine" multiplier="0.5"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="carbon" amount="2"/>
+      <Item identifier="calcium" amount="4"/>
+    </Deconstruct>
+    <Body width="262" height="62" density="15" friction="1.0" restitution="0.01" angulardamping="1.0"/>
+    <Holdable slots="Any,RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="aliencircuitry" category="Misc" Tags="smallitem,signal" maxstacksize="4" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab" spawnprobability="0"/>
+    <PreferredContainer secondary="mineralcab" spawnprobability="0"/>
+    <PreferredContainer secondary="circuitrycontainer" minamount="1" maxamount="2" spawnprobability="0.3"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="3" maxamount="4" spawnprobability="0.3"/>
+    <Price baseprice="80" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity"/>
+      <Price storeidentifier="merchantresearch" multiplier="2"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+      <Price storeidentifier="merchantengineering" multiplier="1.5"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="copper" amount="2"/>
+      <Item identifier="tin"/>
+    </Deconstruct>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.8" sourcerect="59,57,93,47" origin="0.5,0.5"/>
+    <Body width="50" height="36" density="12"/>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="diversremains" sonarsize="2" tags="mediumitem,monsterfood" category="Misc" canbepicked="true" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="storagecab" secondary="mineralcab"/>
+    <Price baseprice="50" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1"/>
+      <Price storeidentifier="merchantcity" multiplier="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="2"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1"/>
+      <Price storeidentifier="merchantmine" multiplier="1"/>
+    </Price>
+    <Deconstruct time="10" chooserandom="true" amount="2">
+      <Item identifier="rubber" commonness="0.5"/>
+      <Item identifier="iron" commonness="0.2"/>
+      <Item identifier="steel" commonness="0.1"/>
+      <Item identifier="aluminium" commonness="0.5"/>
+      <Item identifier="carbon" commonness="0.5"/>
+    </Deconstruct>
+    <AiTarget sightrange="1000" static="true"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="289,450,190,62" origin="0.5,0.5"/>
+    <Body width="180" height="56" density="20" friction="1.0" restitution="0.01" angulardamping="1.0"/>
+    <Holdable slots="Any,RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="hammerheadribs" sonarsize="2" tags="mediumitem" category="Misc" canbepicked="true" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="storagecab" secondary="mineralcab"/>
+    <Price baseprice="200" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1"/>
+      <Price storeidentifier="merchantcity" multiplier="2"/>
+      <Price storeidentifier="merchantresearch" multiplier="0.75"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.75"/>
+      <Price storeidentifier="merchantmine" multiplier="0.5"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="carbon"/>
+      <Item identifier="phosphorus" amount="2"/>
+    </Deconstruct>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="493,354,274,158" origin="0.5,0.5"/>
+    <Body width="274" height="148" density="15" friction="1.0" restitution="0.01" angulardamping="1.0"/>
+    <Holdable slots="Any,RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="endwormshell" sonarsize="4" category="Misc" tags="mediumitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_soft" scale="0.5" allowasextracargo="true">
+    <Price baseprice="1400" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1"/>
+      <Price storeidentifier="merchantcity" multiplier="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.75"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.5"/>
+      <Price storeidentifier="merchantmine" multiplier="1"/>
+    </Price>
+    <Deconstruct time="20">
+      <Item identifier="carbon" amount="4"/>
+      <Item identifier="physicorium" amount="6"/>
+    </Deconstruct>
+    <PreferredContainer primary="storagecab" secondary="mineralcab"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="516,0,134,84" origin="0.5,0.5" depth="0.55"/>
+    <Body radius="38" width="80" density="15"/>
+    <Holdable slots="Any,RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="watchershell" sonarsize="4" category="Misc" tags="mediumitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_soft" scale="0.5" allowasextracargo="true">
+    <Price baseprice="500" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1"/>
+      <Price storeidentifier="merchantcity" multiplier="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.5"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1"/>
+      <Price storeidentifier="merchantmine" multiplier="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="carbon"/>
+      <Item identifier="dementonite" amount="2"/>
+    </Deconstruct>
+    <PreferredContainer primary="storagecab" secondary="mineralcab"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" sourcerect="654,0,88,71" origin="0.5,0.5" depth="0.55"/>
+    <Body radius="32" density="15"/>
+    <Holdable slots="Any,RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="spinelingspikeloot" category="Weapon" tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.5" allowasextracargo="true" RequireAimToUse="True" nameidentifier="spinelingspike" translationidentifier="spinelingspike">
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1"/>
+      <Price storeidentifier="merchantcity" multiplier="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.5"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1"/>
+      <Price storeidentifier="merchantmine" multiplier="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="carbon"/>
+      <Item identifier="zinc"/>
+    </Deconstruct>
+    <PreferredContainer primary="armcab"/>
+    <Sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="0,215,180,18" depth="0.55"/>
+    <Body width="160" height="10" density="15"/>
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="30,5" handle1="-20,0" holdangle="65" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
+      <Attack targetimpulse="2" severlimbsprobability="0.1" itemdamage="2" structuredamage="2" structuresoundtype="StructureSlash">
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="bleeding" strength="10"/>
+        <Affliction identifier="stun" strength="0.2"/>
+        <StatusEffect type="OnUse" target="UseTarget">
+          <Conditional entitytype="eq Character"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" selectionmode="random" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash2.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash3.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash4.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash5.ogg" range="500"/>
+          <Sound file="Content/Sounds/Damage/LimbSlash6.ogg" range="500"/>
+        </StatusEffect>
+      </Attack>
+    </MeleeWeapon>
+    <LightComponent range="200" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="200,200,255,20" isactive="True" minvoltage="0" powerconsumption="0" vulnerabletoemp="False" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <Sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="0,230,180,23" origin="0.5,0.6" alpha="0.5"/>
+    </LightComponent>
+  </Item>
+</Items>

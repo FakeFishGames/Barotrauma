@@ -1,0 +1,359 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Afflictions>
+  <Affliction
+    identifier="tastytarget"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    hideiconafterdelay="true"
+    duration="1"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1"
+            resistancefor="damage"
+            minresistance="0.15"
+            maxresistance="0.15"
+            tag="provocative">
+      <StatValue stattype="SoundRangeMultiplier" value="1.0"/>
+      <StatValue stattype="SightRangeMultiplier" value="1.0"/>
+    </Effect>
+    <!-- FIXME TALENT ICON tastytarget -->
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="3,0" sheetelementsize="128,128" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="disloyalscum"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    hideiconafterdelay="true"
+    duration="1"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="SkillGainSpeed" value="0.2"/>
+      <StatValue stattype="RepairSpeed" value="0.2"/>
+      <StatValue stattype="RepairToolStructureRepairMultiplier" value="0.2"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="3,0" sheetelementsize="128,128" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="loyalassistant"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    hideiconafterdelay="true"
+    duration="1"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="IncreaseFabricationQuality" value="1"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="2,0" sheetelementsize="128,128" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    identifier="journeyman"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    duration="1"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <!-- Super hacky -->
+    <Effect minstrength="0" maxstrength="1">
+      <StatusEffect target="Character">
+        <Conditional jobidentifier="captain"/>
+        <Affliction identifier="journeyman_captain" amount="1"/>
+      </StatusEffect>
+      <StatusEffect target="Character">
+        <Conditional jobidentifier="securityofficer"/>
+        <Affliction identifier="journeyman_securityofficer" amount="1"/>
+      </StatusEffect>
+      <StatusEffect target="Character">
+        <Conditional jobidentifier="medicaldoctor"/>
+        <Affliction identifier="journeyman_medicaldoctor" amount="1"/>
+      </StatusEffect>
+      <StatusEffect target="Character">
+        <Conditional jobidentifier="mechanic"/>
+        <Affliction identifier="journeyman_mechanic" amount="1"/>
+      </StatusEffect>
+      <StatusEffect target="Character">
+        <Conditional jobidentifier="engineer"/>
+        <Affliction identifier="journeyman_engineer" amount="1"/>
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="1,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    identifier="journeyman_captain"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    showiconthreshold="1000"
+    treatmentthreshold="1000"
+    showicontoothersthreshold="1000"
+    showinhealthscannerthreshold="1000"
+    duration="1">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="HelmSkillBonus" value="10"/>
+      <StatValue stattype="HelmSkillGainSpeed" value="0.5"/>
+    </Effect>
+  </Affliction>
+
+  <Affliction
+    identifier="journeyman_securityofficer"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    showiconthreshold="1000"
+    treatmentthreshold="1000"
+    showicontoothersthreshold="1000"
+    showinhealthscannerthreshold="1000"
+    duration="1">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="WeaponsSkillBonus" value="10"/>
+      <StatValue stattype="WeaponsSkillGainSpeed" value="0.5"/>
+    </Effect>
+  </Affliction>
+
+  <Affliction
+    identifier="journeyman_medicaldoctor"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    showiconthreshold="1000"
+    treatmentthreshold="1000"
+    showicontoothersthreshold="1000"
+    showinhealthscannerthreshold="1000"
+    duration="1">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="MedicalSkillBonus" value="10"/>
+      <StatValue stattype="MedicalSkillGainSpeed" value="0.5"/>
+    </Effect>
+  </Affliction>
+
+  <Affliction
+    identifier="journeyman_mechanic"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    showiconthreshold="1000"
+    treatmentthreshold="1000"
+    showicontoothersthreshold="1000"
+    showinhealthscannerthreshold="1000"
+    duration="1">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="MechanicalSkillBonus" value="10"/>
+      <StatValue stattype="MechanicalSkillGainSpeed" value="0.5"/>
+    </Effect>
+  </Affliction>
+
+  <Affliction
+    identifier="journeyman_engineer"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    showiconthreshold="1000"
+    treatmentthreshold="1000"
+    showicontoothersthreshold="1000"
+    showinhealthscannerthreshold="1000"
+    duration="1">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="ElectricalSkillBonus" value="10"/>
+      <StatValue stattype="ElectricalSkillGainSpeed" value="0.5"/>
+    </Effect>
+  </Affliction>
+
+  <Affliction
+    identifier="skedaddle"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    duration="5"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1"
+      minspeedmultiplier="1.3" 
+      maxspeedmultiplier="1.3"/>
+    <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="128,896,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="pickinguptheslack"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    duration="5"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="ElectricalSkillBonus" value="10"/>
+      <StatValue stattype="HelmSkillBonus" value="10"/>
+      <StatValue stattype="MechanicalSkillBonus" value="10"/>
+      <StatValue stattype="MedicalSkillBonus" value="10"/>
+      <StatValue stattype="WeaponsSkillBonus" value="10"/>
+      <StatValue stattype="RepairSpeed" value="0.25"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="7,4" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="stillkicking"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    duration="1"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1">
+      <StatusEffect target="Character">
+        <ReduceAffliction type="damage" strength="50"/>
+        <ReduceAffliction type="burn" strength="50"/>
+        <ReduceAffliction identifier="bloodloss" strength="50"/>
+        <ReduceAffliction identifier="bleeding" strength="50"/>
+        <ReduceAffliction identifier="oxygenlow" strength="50"/>
+        <ReduceAffliction identifier="stun" strength="5"/>
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,6" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="clownpower"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="1"
+    duration="1"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1" 
+            resistancefor="damage"
+            minresistance="0.05"
+            maxresistance="0.05">
+      <StatValue stattype="MovementSpeed" value="0.1"/>
+      <StatusEffect target="Character">
+        <TriggerAnimation Type="Walk" filename="JollyWalk" priority="3" ExpectedSpecies="Human"/>
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="2,7" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    identifier="revengesquad"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="120"
+    duration="120"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="120" strengthchange="-1" 
+            resistancefor="damage" 
+            minresistance="0.3" 
+            maxresistance="0.3">
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="0,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  <!--<Effect minstrength="0" maxstrength="50"
+          minscreendistort="0"
+          maxscreendistort="0.4"
+          minscreenblur="0"
+          maxscreenblur="0.4"
+          minradialdistort="0"
+          maxradialdistort="0"
+          minchromaticaberration="0"
+          maxchromaticaberration="0"
+          strengthchange="-4">
+    <StatusEffect target="Character" targetlimb="Head" SpeedMultiplier="1.1" HealthMultiplier="1.5" setvalue="true">
+      <Conditional speciesname="crawler"/>
+      <Conditional speciesname="mudraptor"/>
+      <Conditional speciesname="mudraptor_unarmored"/>
+      <Conditional speciesname="mudraptor_veteran"/>
+      <Conditional speciesname="tigerthresher"/>
+      <Conditional speciesname="bonethresher"/>
+      <ParticleEmitter particle="gazerage" particlespersecond="20" scalemin="0.3" scalemax="0.4" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" copyentityangle="false"/>
+    </StatusEffect>
+  </Effect>-->
+  <Affliction
+    identifier="soothingsounds"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="1"
+    duration="20"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1">
+      <StatusEffect target="Character" setvalue="true">
+        <ReduceAffliction type="damage" strength="0.015"/>
+        <ReduceAffliction type="burn" strength="0.015"/>
+        <ReduceAffliction identifier="bloodloss" strength="0.015"/>
+        <ReduceAffliction identifier="bleeding" strength="0.015"/>
+        <TriggerAnimation Type="Walk" filename="JollyWalk" priority="3" ExpectedSpecies="Human"/>
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,7" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="inspiringtunes"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="10"
+    duration="10"
+    hideiconafterdelay="true"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="10">
+      <StatValue stattype="ElectricalSkillBonus" value="15"/>
+      <StatValue stattype="HelmSkillBonus" value="15"/>
+      <StatValue stattype="MechanicalSkillBonus" value="15"/>
+      <StatValue stattype="MedicalSkillBonus" value="15"/>
+      <StatValue stattype="WeaponsSkillBonus" value="15"/>
+      <StatusEffect target="Character">
+        <TriggerAnimation Type="Walk" filename="JollyWalk" priority="3" ExpectedSpecies="Human"/>
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,7" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="skillfulmelodies"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="1"
+    duration="20"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1">
+      <StatValue stattype="SkillGainSpeed" value="0.3"/>
+      <StatusEffect target="Character">
+        <TriggerAnimation Type="Walk" filename="JollyWalk" priority="3" ExpectedSpecies="Human"/>
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,7" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+</Afflictions>

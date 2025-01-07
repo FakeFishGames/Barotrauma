@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="reactor1" tags="reactor" type="Reactor" scale="0.5" linkable="true" category="Machine" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
+    <Upgrade gameversion="0.10.0.0" scale="*0.5"/>
+    <trigger/>
+    <Sprite texture="reactor.png" sourcerect="0,0,528,336" origin="0.5,0.45" depth="0.8"/>
+    <UpgradePreviewSprite scale="3.0" texture="Content/UI/WeaponUI.png" sourcerect="0,960,64,64" origin="0.5,0.45"/>
+    <BrokenSprite texture="reactor.png" sourcerect="0,338,528,336" depth="0.8" origin="0.5,0.45" maxcondition="40"/>
+    <BrokenSprite texture="reactor.png" sourcerect="0,676,528,336" depth="0.8" origin="0.5,0.45" maxcondition="0"/>
+    <aitarget sightrange="500" soundrange="4000"/>
+    <Reactor canbeselected="true" firedelay="20" meltdowndelay="120" maxpoweroutput="5000" fuelconsumptionrate="0.2" vulnerabletoemp="false" msg="ItemMsgInteractSelect">
+      <StatusEffect type="InWater" target="This" condition="-0.5">
+        <Conditional condition="gt 10"/>
+      </StatusEffect>
+      <TemperatureBoostSoundUp file="Content/Items/Reactor/ReactorTemperatureBoostUp.ogg" range="500.0"/>
+      <TemperatureBoostSoundDown file="Content/Items/Reactor/ReactorTemperatureBoostDown.ogg" range="500.0"/>
+      <GuiFrame relativesize="0.5,0.45" minsize="700,350" maxsize="2688,1166" anchor="Center" relativeoffset="0.1,0" style="ItemUI"/>
+      <GraphLine texture="Content/Items/Reactor/graphLine.png">
+        <Sprite name="ReactorGraphLine" texture="Content/Items/Reactor/graphLine.png" sourcerect="0,0,32,32"/>
+      </GraphLine>
+      <FissionRateMeter>
+        <Sprite name="FissionRateMeter" texture="Content/Items/Reactor/reactor.png" sourcerect="544,770,441,240" origin="0.5,1"/>
+      </FissionRateMeter>
+      <TurbineOutputMeter>
+        <Sprite name="TurbineOutputMeter" texture="Content/Items/Reactor/reactor.png" sourcerect="544,770,441,240" origin="0.5,1"/>
+      </TurbineOutputMeter>
+      <MeterPointer>
+        <Sprite name="MeterPointer" texture="Content/UI/UIAtlasDevices.png" sourcerect="938,846,31,167 " origin="0.5,0.9"/>
+      </MeterPointer>
+      <SectorSprite>
+        <Sprite name="SectorSprite" texture="Content/UI/UIAtlasDevices.png" sourcerect="769,326,238,455" origin="0.95,0.5"/>
+      </SectorSprite>
+      <TempMeterFrame>
+        <Sprite name="TempMeterFrame" texture="Content/UI/UIAtlasDevices.png" sourcerect="92,517,59,265" origin="0,0" size="0.5,1"/>
+      </TempMeterFrame>
+      <TempMeterBar>
+        <Sprite name="TempMeterBar" texture="Content/UI/UIAtlasDevices.png" sourcerect="270,414,106,47" origin="0.5,0"/>
+      </TempMeterBar>
+      <TempRangeIndicator>
+        <Sprite name="TempRangeIndicator" texture="Content/UI/UIAtlasDevices.png" sourcerect="31,614,52,25" origin="0.5,0.5" size="0.6,0.6"/>
+      </TempRangeIndicator>
+      <RequiredSkill identifier="electrical" level="50"/>
+      <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
+      <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
+        <Conditional AvailableFuel="gt 1"/>
+        <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" range="50000"/>
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="50000"/>
+        <Explosion range="750" ballastfloradamage="1000" structuredamage="300" itemdamage="500" force="25.0" camerashake="0" flashrange="10000" flashduration="5.0" debris="true" screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0" decal="explosion" decalsize="1">
+          <Affliction identifier="explosiondamage" strength="500"/>
+          <Affliction identifier="burn" strength="500"/>
+          <Affliction identifier="stun" strength="15"/>
+        </Explosion>
+        <Explosion range="2000" force="0.0" camerashake="200" camerashakerange="50000" showEffects="false" empstrength="1.25" applyfireeffects="false" ignorecover="true">
+          <Affliction identifier="radiationsickness" strength="75"/>
+          <Affliction identifier="emp" strength="50" multiplybymaxvitality="true"/>
+        </Explosion>
+        <ParticleEmitter particle="underwaterexplosion" anglemin="0" anglemax="360" particleamount="3" velocitymin="0" velocitymax="0" scalemin="15" scalemax="15"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionDebris4.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="5000"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="Contained" Condition="0.0" setvalue="true"/>
+      <SkillRequirementHint identifier="electrical" level="50"/>
+    </Reactor>
+    <LightComponent range="10.0" lightcolor="255,255,255,0" powerconsumption="0" IsOn="false" castshadows="false" alphablend="false" allowingameediting="false">
+      <Upgrade gameversion="0.9.600.0" lightcolor="255,255,255,0"/>
+      <IsActive targetitemcomponent="Reactor" temperature="gt 2"/>
+      <sprite texture="Content/Items/Reactor/reactor.png" depth="0.025" sourcerect="523,0,482,336" origin="0.5,0.45" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="10.0" lightcolor="255,255,255,0" powerconsumption="0" IsOn="false" castshadows="false" alphablend="false" allowingameediting="false" blinkfrequency="1">
+      <Upgrade gameversion="0.9.600.0" lightcolor="255,255,255,0"/>
+      <IsActive targetitemcomponent="Reactor" temperaturecritical="eq true"/>
+      <sprite texture="Content/Items/Reactor/reactor.png" depth="0.025" sourcerect="523,337,482,336" origin="0.5,0.45" alpha="1.0"/>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="40.0"/>
+        <ParticleEmitter particle="DarkSmoke" particlespersecond="20" scalemin="2.5" scalemax="3.5" anglemin="50" anglemax="130" velocitymin="10" velocitymax="50" mincondition="0.0" maxcondition="60.0"/>
+        <ParticleEmitter particle="DarkSmoke" particlespersecond="40" scalemin="2.5" scalemax="3.5" distancemin="-15" distancemax="15" anglemin="50" anglemax="130" velocitymin="10" velocitymax="100" mincondition="0.0" maxcondition="20.0"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="3" scalemin="1" scalemax="2" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10"/>
+        <sound file="Content/Items/Reactor/ReactorOverheatAlarm.ogg" type="OnUse" range="10000.0" loop="true" volume="1.0"/>
+      </StatusEffect>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.3,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="55"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <output name="power_out" displayname="connection.powerout" maxwires="1"/>
+      <output name="temperature_out" displayname="connection.temperatureout"/>
+      <input name="shutdown" displayname="connection.shutdown"/>
+      <output name="meltdown_warning" displayname="connection.meltdownwarning"/>
+      <input name="set_fissionrate" displayname="connection.setfissionrate"/>
+      <input name="set_turbineoutput" displayname="connection.setturbineoutput"/>
+      <output name="power_value_out" displayname="connection.powervalueout"/>
+      <output name="load_value_out" displayname="connection.loadvalueout"/>
+      <output name="fuel_out" displayname="connection.availablefuelout"/>
+      <output name="condition_out" displayname="connection.conditionout"/>
+      <output name="fuel_percentage_left" displayname="connection.fuelpercentageout"/>
+    </ConnectionPanel>
+    <ItemContainer capacity="4" maxstacksize="1" canbeselected="true" hudpos="0.5,0.15" slotsperrow="1" uilabel="FuelRods">
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="3" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5"/>
+      <Containable items="fuelrod">
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
+      </Containable>
+      <Containable items="fulguriumfuelrod">
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true"/>
+      </Containable>
+      <Containable items="thoriumfuelrod">
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
+      </Containable>
+      <Containable items="fulguriumfuelrodvolatile">
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true"/>
+      </Containable>
+      <Containable items="huskfigurine">
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="0" disabledeltatime="true"/>
+      </Containable>
+    </ItemContainer>
+    <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" minsabotagecondition="10" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="55"/>
+      <RequiredItem items="screwdriver" type="equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="DarkSmoke" particlespersecond="8" scalemin="1.8" scalemax="2.5" anglemax="360" distancemax="60" velocitymin="-50" velocitymax="50" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="60" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+    </Repairable>
+    <Upgrade gameversion="0.1500.6.0">
+      <Repairable header="electricalrepairsheader" msg="ItemMsgRepairScrewdriver">
+        <RequiredItem items="screwdriver" type="equipped"/>
+      </Repairable>
+    </Upgrade>
+  </Item>
+</Items>

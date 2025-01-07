@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<prefabs prefabtype="thalamus">
+  <structure name="" identifier="thalamus_wall_vertical_decorative_1" tags="thalamus,thalamuswall_vertical_decorative" width="96" height="50" resizevertical="true" body="false" castshadow="true" category="Thalamus" damagesound="LimbSlash">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" depth="0.6" sourcerect="992,64,96,512" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="thalamus_wall_horizontal_decorative_1" tags="thalamus,thalamuswall_horizontal_decorative" width="50" height="96" resizehorizontal="true" body="false" castshadow="true" category="Thalamus" damagesound="LimbSlash">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" depth="0.6" sourcerect="96,288,512,96" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="thalamus_wall_vertical_1" tags="thalamus,thalamuswall_vertical" width="96" height="50" bodywidth="62" resizevertical="true" body="true" castshadow="true" health="50" category="Thalamus" damagesound="LimbSlash">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" depth="0.1" sourcerect="992,64,96,512" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="992,64,96,512" color="80,80,80,255" depth="0.6" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="thalamus_wall_horizontal_1" tags="thalamus,thalamuswall_horizontal" width="50" height="89" bodyheight="62" resizehorizontal="true" body="true" castshadow="true" health="50" category="Thalamus" damagesound="LimbSlash">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" depth="0.1" sourcerect="96,289,512,89" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/Thalamus/thalamus.png" color="80,80,80,255" depth="0.6" sourcerect="96,289,512,89" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="thalamus_background_1" tags="thalamus" allowattachitems="true" category="Thalamus" resizehorizontal="true" resizevertical="true" width="100" height="100">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="1633,1,414,830" depth="0.895" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="thalamus_background_2" tags="thalamus,brainroombackground" allowattachitems="true" category="Thalamus" resizehorizontal="true" resizevertical="true" width="100" height="100">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="1377,1,254,254" depth="0.894" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="thalamus_background_3" tags="thalamus" allowattachitems="true" category="Thalamus" resizehorizontal="true" resizevertical="true" width="100" height="100">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="1377,257,254,254" depth="0.895" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="thalamus_background_4" tags="thalamus,brainroombackground" allowattachitems="true" category="Thalamus" resizehorizontal="true" resizevertical="true" width="100" height="100">
+    <sprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="1377,513,254,254" depth="0.894" origin="0.5,0.5"/>
+  </structure>
+</prefabs>

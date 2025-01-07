@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BallastFloraBehavior name="Ballast Flora" 
+                      identifier="ballastflora" 
+                      branchatlas="Content/Items/Gardening/ballastflorabranches.png"
+                      decayatlas="Content/Items/Gardening/ballastflorabranches_burned.png" 
+                      baseleafscale="0.5" 
+                      basebranchscale="0.5" 
+                      baseflowerscale="0.5" 
+                      sight="500" 
+                      branchhealth="50" 
+                      roothealth="200"
+                      rootcolor="255,150,150,255"
+                      maxanger="5" 
+                      maxpowercapacity="10000"
+                      explosionresistance="0.8"
+                      submergedwaterresistance="0.5"
+                      firevulnerability="10.0"
+                      attackitemprefab="ballastfloratoxins"
+                      powerconsumptionmax="750"
+                      powerconsumptionmin="100"
+                      powerconsumptionduration="10"
+                      powerrequirement="500"
+                      burstsound="ArmorBreak"
+                      branchdepth="0.8">
+  <DamageParticle particle="whitegoosplash" particlespersecond="2" minrotation="0" maxrotation="360" distancemax="20" minvelocity="0" maxvelocity="100" scalemin="0.2" scalemax="0.5"/>
+  <DamageParticle particle="mudrapeggbrownchunks" particlespersecond="5" velocitymin="0" velocitymax="100" distancemax="20" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+  <DeathParticle particle="whitegoosplash" particleamount="3" minrotation="0" maxrotation="360" minvelocity="0" maxvelocity="100"/>
+  <DeathParticle particle="mudrapeggbrownchunks" particleamount="10" velocitymin="0" velocitymax="500" distancemax="50" anglemin="0" anglemax="360" scalemin="0.3" scalemax="0.5"/>
+  <LeafSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="0,0,256,256"/>
+  <LeafSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="256,0,256,256"/>
+  <DamagedLeafSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="512,0,256,256"/>
+  <DamagedLeafSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="768,0,256,256"/>
+  <FlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="768,384,128,128"/>
+  <FlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="384,256,128,128"/>
+  <FlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="512,256,128,128"/>
+  <DamagedFlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="640,256,128,128"/>
+  <DamagedFlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="763,256,128,128"/>
+  <DamagedFlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="896,256,128,128"/>
+  <HiddenFlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="384,384,128,128"/>
+  <HiddenFlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="512,384,128,128"/>
+  <HiddenFlowerSprite texture="Content/Items/Gardening/ballastflora.png" sourcerect="640,384,128,128"/>
+  <BranchSprite type="Stem" sourcerect="0,0,1,1"/>
+  <BranchSprite type="CrossJunction" sourcerect="256,64,64,64"/>
+  <BranchSprite type="HorizontalLine" sourcerect="256,0,64,64"/>
+  <BranchSprite type="VerticalLine" sourcerect="320,0,64,64"/>
+  <BranchSprite type="TurnTopRight" sourcerect="0,0,64,64"/>
+  <BranchSprite type="TurnTopLeft" sourcerect="192,0,64,64"/>
+  <BranchSprite type="TurnBottomLeft" sourcerect="128,0,64,64"/>
+  <BranchSprite type="TurnBottomRight" sourcerect="64,0,64,64"/>
+  <BranchSprite type="TSectionTop" sourcerect="64,64,64,64"/>
+  <BranchSprite type="TSectionLeft" sourcerect="128,64,64,64"/>
+  <BranchSprite type="TSectionBottom" sourcerect="192,64,64,64"/>
+  <BranchSprite type="TSectionRight" sourcerect="0,64,64,64"/>
+  <BranchSprite type="StumpTop" sourcerect="384,0,64,64"/>
+  <BranchSprite type="StumpLeft" sourcerect="448,0,64,64"/>
+  <BranchSprite type="StumpBottom" sourcerect="384,64,64,64"/>
+  <BranchSprite type="StumpRight" sourcerect="448,64,64,64"/>
+  <Targets>
+    <Target tags="junctionbox" priority="100"/>
+    <Target tags="battery" priority="90"/>
+    <Target tags="pump" priority="60"/>
+    <Target tags="door" priority="50"/>
+  </Targets>
+</BallastFloraBehavior>

@@ -1,0 +1,996 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Randomevents>
+  <!-- Outpost events with multiple stages. Takes part in multiple 'levels', f.e. first an Outpost level and then a LevelConnection, or on multiple Outposts -->
+  <EventPrefabs>
+    <!--"Mike the Idiot 1"-->
+    <ScriptedEvent identifier="miketheidiot1" commonness="25">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:chair" tag="chair" RequiredModuleTag="CrewModule"/>
+      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="miketheidiot" targettag="mike" TargetModuleTags="CrewModule"/>
+      <NPCOperateItemAction npctag="mike" targettag="chair" Operate="true"/>
+      <TriggerAction target1tag="player" target2tag="mike" applytotarget1="triggerer_player" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot1.c1" eventsprite="dorm">
+        <Option text="EventText.miketheidiot1.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot1.o1.c1">
+            <Option text="EventText.miketheidiot1.o1.o1">
+              <CheckMoneyAction Amount="5">
+                <Success>
+                  <MoneyAction amount="-5"/>
+                  <SetDataAction identifier="timesmikefound" value="1"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot1.o1.o1.c1">
+                    <Option text="EventText.miketheidiot1.o1.o1.o1">
+                      <ConversationAction text="EventText.miketheidiot1.o1.o1.o1.c1">
+                        <Option text="EventText.miketheidiot1.o1.o1.o1.o1" endconversation="true"/>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.miketheidiot1.o1.o1.o2">
+                      <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot1.o1.o1.o2.c1">
+                        <Option text="EventText.miketheidiot1.o1.o1.o2.o1" endconversation="true"/>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.miketheidiot1.o1.o1.o3">
+                      <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot1.o1.o1.o3.c1">
+                        <Option text="EventText.miketheidiot1.o1.o1.o3.o1" endconversation="true"/>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="eventtext.miketheidiot.nomoney"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.miketheidiot1.o1.o2" endconversation="true"/>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.miketheidiot1.o2" endconversation="true"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Mike the Idiot 2"-->
+    <ScriptedEvent identifier="miketheidiot2" commonness="25">
+      <CheckDataAction identifier="timesmikefound" condition="eq 1">
+        <Success>
+          <TagAction criteria="player" tag="player"/>
+          <TagAction criteria="itemtag:chair" tag="chair" RequiredModuleTag="CrewModule"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="miketheidiot" targettag="mike" TargetModuleTags="CrewModule"/>
+          <NPCOperateItemAction npctag="mike" targettag="chair" Operate="true"/>
+          <TriggerAction target1tag="player" target2tag="mike" applytotarget1="triggerer_player" waitforinteraction="true"/>
+          <NPCWaitAction npctag="mike" wait="true"/>
+          <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot2.c1" eventsprite="cleaner">
+            <Option text="EventText.miketheidiot2.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot2.o1.c1">
+                <Option text="EventText.miketheidiot2.o1.o1">
+                  <CheckMoneyAction Amount="5">
+                    <Success>
+                      <MoneyAction amount="-5"/>
+                      <SetDataAction identifier="timesmikefound" value="2"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot2.o1.o1.c1">
+                        <Option text="EventText.miketheidiot2.o1.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot2.o1.o1.o1.c1">
+                            <Option text="EventText.miketheidiot2.o1.o1.o1.o1" endconversation="true"/>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.miketheidiot2.o1.o1.o2">
+                          <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot2.o1.o1.o2.c1">
+                            <Option text="EventText.miketheidiot2.o1.o1.o2.o1" endconversation="true"/>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.miketheidiot2.o1.o1.o3">
+                          <ConversationAction targettag="triggerer_player" text="EventText.miketheidiot2.o1.o1.o3.c1">
+                            <Option text="EventText.miketheidiot2.o1.o1.o3.o1" endconversation="true"/>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                    <Failure>
+                      <ConversationAction targettag="triggerer_player" text="eventtext.miketheidiot.nomoney"/>
+                    </Failure>
+                  </CheckMoneyAction>
+                </Option>
+                <Option text="EventText.miketheidiot2.o1.o2" endconversation="true"/>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.miketheidiot2.o2" endconversation="true"/>
+          </ConversationAction>
+          <NPCWaitAction npctag="mike" wait="false"/>
+        </Success>
+        <Failure>
+          <!--Do nothing-->
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--Shock jock-->
+    <ScriptedEvent identifier="shockjock" commonness="50">
+      <!-- shockjock_broadcast states: 0 = not encountered, 1 = heard broadcast, 2 = shockjock combat-->
+      <CheckDataAction identifier="shockjock_broadcast" condition="eq 0">
+        <Success>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="passerby" spawnlocation="outpost"/>
+          <TriggerAction target1tag="player" target2tag="passerby" applytotarget1="triggerer_player" radius="150" waitforinteraction="false"/>
+          <ConversationAction text="EventText.shockjock.c1" targettag="triggerer_player" dialogtype="Regular" eventsprite="ShockJock">
+            <Option text="EventText.shockjock.o1">
+              <RNGAction chance="0.66">
+                <Success>
+                  <RNGAction chance="0.5">
+                    <Success>
+                      <ConversationAction text="EventText.shockjock.o1.c1" targettag="triggerer_player" dialogtype="Regular">
+                        <Option text="EventText.generic.continue">
+                          <ConversationAction text="EventText.shockjock.o1.o1.c1" targettag="triggerer_player" dialogtype="Regular">
+                            <Option text="EventText.generic.continue">
+                              <ConversationAction text="EventText.shockjock.signoff" targettag="triggerer_player" dialogtype="Regular"/>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                    <Failure>
+                      <ConversationAction text="EventText.shockjock.o1.c2" targettag="triggerer_player" dialogtype="Regular">
+                        <Option text="EventText.generic.continue">
+                          <ConversationAction text="EventText.shockjock.o1.o2.c1" targettag="triggerer_player" dialogtype="Regular">
+                            <Option text="EventText.generic.continue">
+                              <ConversationAction text="EventText.shockjock.signoff" targettag="triggerer_player" dialogtype="Regular"/>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Failure>
+                  </RNGAction>
+                </Success>
+                <Failure>
+                  <ConversationAction text="EventText.shockjock.o1.c3" targettag="triggerer_player" dialogtype="Regular">
+                    <Option text="EventText.generic.continue">
+                      <ConversationAction text="EventText.shockjock.o1.o3.c1" targettag="triggerer_player" dialogtype="Regular">
+                        <Option text="EventText.generic.continue">
+                          <ConversationAction text="EventText.shockjock.signoff" targettag="triggerer_player" dialogtype="Regular"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+              </RNGAction>
+              <ConversationAction text="EventText.shockjock.o1.c4" targettag="triggerer_player" dialogtype="Regular">
+                <Option text="EventText.shockjock.o1.o4">
+                  <ConversationAction text="EventText.shockjock.o1.o4.c1" targettag="triggerer_player" dialogtype="Regular"/>
+                  <SetDataAction identifier="shockjock_broadcast" value="1"/>
+                </Option>
+                <Option text="EventText.generic.walkaway" endconversation="true">
+                  <!--END-->
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.generic.ignore" endconversation="true">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+        </Success>
+        <Failure>
+          <!--Don't repeat this event if already encountered (state=1), or if already completed (state=2) -->
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--Shock jock continuation-->
+    <ScriptedEvent identifier="shockjock2" commonness="50">
+      <TagAction criteria="player" tag="player"/>
+      <CheckDataAction identifier="shockjock_broadcast" condition="eq 1">
+        <Success>
+          <TagAction criteria="submarine:BeaconStation" tag="beaconstation"/>
+          <!-- Wait with spawning until a player is close enough to the beacon station-->
+          <TriggerAction target1tag="player" target2tag="beaconstation" radius="4000"/>
+          <SetDataAction identifier="shockjock_broadcast" value="2"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="shockjock" targettag="okelly" spawnpointtag="saferoom" spawnlocation="beaconstation" requirespawnpointtag="true"/>
+          <SpawnAction speciesname="orangeboy" spawnpointtag="saferoom" targettag="maurice" spawnlocation="beaconstation" requirespawnpointtag="true"/>
+          <SpawnAction itemidentifier="petnametag" targetinventory="maurice" targettag="mauricenametag"/>
+          <StatusEffectAction targettag="mauricenametag">
+            <StatusEffect target="This" writtenname="Maurice"/>
+          </StatusEffectAction>
+          <TriggerAction target1tag="player" target2tag="okelly" applytotarget1="triggerer_player" radius="200"/>
+          <CombatAction combatmode="Offensive" npctag="okelly" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--Assassination of Jacov Subra-->
+    <!--PART 1-->
+    <ScriptedEvent identifier="assassinationofjacovsubra1" commonness="50">
+      <CheckDataAction identifier="waytoascension" condition="gt 3">
+        <Success>
+          <!-- Don't give the assassination mission after joining the Church of Husk -->
+        </Success>
+        <Failure>
+          <CheckDataAction identifier="subraevent_state" condition="gt 0">
+            <Success>
+              <!--Don't repeat event-->
+            </Success>
+            <Failure>
+              <TagAction criteria="player" tag="player"/>
+              <TagAction criteria="itemidentifier:steelcabinet" tag="potentialcabinet" submarinetype="outpost"/>
+              <TagAction criteria="itemidentifier:mediumwindowedsteelcabinet" tag="potentialcabinet" submarinetype="outpost"/>
+              <TagAction criteria="itemidentifier:mediumsteelcabinet" tag="potentialcabinet" submarinetype="outpost"/>
+              <SpawnAction itemidentifier="idcard" spawnlocation="outpost" targettag="subraid" targetinventory="potentialcabinet" ignorebyai="true"/>
+              <!--<TriggerAction target1tag="potentialcabinet" target2tag="player" applytotarget1="selectedcabinet" applytotarget2="triggerer_player" radius="50"/>-->
+              <TriggerAction target1tag="subraid" target2tag="player" applytotarget1="selectedcabinet" applytotarget2="triggerer_player" radius="50" waitforinteraction="true"/>
+              <SetDataAction identifier="subraevent_state" value="1"/>
+              <ConversationAction text="EventText.assassinationofjacovsubra1.c1" dialogtype="Regular" targettag="triggerer_player" eventsprite="JacovSubra1">
+                <Option text="EventText.assassinationofjacovsubra1.o1">
+                  <ConversationAction text="EventText.assassinationofjacovsubra1.o1.c1" targettag="triggerer_player"/>
+                </Option>
+                <Option text="EventText.assassinationofjacovsubra1.o2">
+                  <!--Do nothing for now-->
+                </Option>
+              </ConversationAction>
+            </Failure>
+          </CheckDataAction>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--PART 2-->
+    <ScriptedEvent identifier="assassinationofjacovsubra2" commonness="0">
+      <CheckDataAction identifier="subraevent_state" condition="eq 1">
+        <Success>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="workeronbreak" spawnpointtype="Path" spawnlocation="Outpost" targetmoduletags="airlock,cityairlock"/>
+          <TriggerAction target1tag="workeronbreak" target2tag="player" applytotarget2="triggerer_player" radius="500" waitforinteraction="true"/>
+          <NPCWaitAction npctag="workeronbreak" wait="true"/>
+          <ConversationAction text="EventText.assassinationofjacovsubra2.c1" targettag="triggerer_player">
+            <Option text="EventText.assassinationofjacovsubra2.o1">
+              <ConversationAction text="EventText.assassinationofjacovsubra2.o1.c1" targettag="triggerer_player" eventsprite="JacovSubra2">
+                <Option text="EventText.generic.continue">
+                  <ConversationAction text="EventText.assassinationofjacovsubra2.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.assassinationofjacovsubra2.o1.o1.o1">
+                      <ConversationAction text="EventText.assassinationofjacovsubra2.o1.o1.o1.c1" targettag="triggerer_player"/>
+                      <SetDataAction identifier="subraevent_state" value="2"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.assassinationofjacovsubra2.o2">
+              <ConversationAction text="EventText.assassinationofjacovsubra2.o1.o1.c1" targettag="triggerer_player" eventsprite="JacovSubra2">
+                <Option text="EventText.assassinationofjacovsubra2.o1.o1.o1">
+                  <ConversationAction text="EventText.assassinationofjacovsubra2.o1.o1.o1.c1" targettag="triggerer_player"/>
+                  <SetDataAction identifier="subraevent_state" value="2"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.assassinationofjacovsubra2.o3" EndConversation="true">
+              <!--Rude, but set data anyway.-->
+              <SetDataAction identifier="subraevent_state" value="2"/>
+            </Option>
+          </ConversationAction>
+          <NPCWaitAction npctag="workeronbreak" wait="false"/>
+        </Success>
+        <Failure>
+          <!--Do nothing before the ID card is found-->
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--PART 3-->
+    <!--TODO:
+    -trigger interact-->
+    <ScriptedEvent identifier="assassinationofjacovsubra3" commonness="0">
+      <CheckDataAction identifier="waytoascension" condition="gt 3">
+        <Success>
+          <!-- Don't progress the assassination mission after joining the Church of Husk -->
+        </Success>
+        <Failure>
+          <CheckDataAction identifier="subraevent_state" condition="eq 2">
+            <Success>
+              <TagAction criteria="player" tag="player"/>
+              <TagAction criteria="itemidentifier:opdeco_hrflyers" tag="potentialflyers" submarinetype="outpost"/>
+              <TriggerAction target1tag="potentialflyers" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
+              <ConversationAction text="EventText.assassinationofjacovsubra3.c1" targettag="triggerer_player" eventsprite="JacovSubra3">
+                <Option text="EventText.assassinationofjacovsubra3.o1" endconversation="true">
+                  <MissionAction missionidentifier="gotosubra" locationtype="Abandoned" unlockfurtheronmap="true"/>
+                </Option>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <!--Do nothing-->
+            </Failure>
+          </CheckDataAction>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--PART 4-->
+    <ScriptedEvent identifier="assassinationofjacovsubra4" commonness="0">
+      <CheckDataAction identifier="waytoascension" condition="gt 3">
+        <Success>
+          <!-- Don't progress the assassination mission after joining the Church of Husk -->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jacovsubra" targettag="jacovsubra" spawnlocation="Outpost"/>
+          <TriggerAction target1tag="player" target2tag="jacovsubra" applytotarget1="triggerer_player" waitforinteraction="true"/>
+          <NPCWaitAction npctag="jacovsubra" wait="true"/>
+          <ConversationAction text="EventText.assassinationofjacovsubra4.c1" targettag="triggerer_player" eventsprite="JacovSubra4">
+            <Option text="EventText.assassinationofjacovsubra4.o1">
+              <ConversationAction text="EventText.assassinationofjacovsubra4.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.assassinationofjacovsubra4.o1.o1">
+                  <ConversationAction text="EventText.assassinationofjacovsubra4.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.assassinationofjacovsubra4.o1.o1.o1">
+                      <ConversationAction text="EventText.assassinationofjacovsubra4.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.assassinationofjacovsubra4.deal">
+                          <ConversationAction text="EventText.assassinationofjacovsubra4.neversaw" targettag="triggerer_player"/>
+                          <MoneyAction amount="3000"/>
+                        </Option>
+                        <Option text="EventText.assassinationofjacovsubra4.nodeal">
+                          <ConversationAction text="EventText.assassinationofjacovsubra4.run" targettag="triggerer_player"/>
+                          <CombatAction combatmode="retreat" npctag="jacovsubra" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+                          <SetDataAction identifier="subraevent_state" value="3"/>
+                          <!--END-->
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.assassinationofjacovsubra4.o1.o1.o2">
+                      <ConversationAction text="EventText.assassinationofjacovsubra4.o1.o1.o2.c1" targettag="triggerer_player">
+                        <Option text="EventText.assassinationofjacovsubra4.o1.o1.o2.o1" endconversation="true">
+                          <CombatAction combatmode="retreat" npctag="jacovsubra" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+                          <SetDataAction identifier="subraevent_state" value="3"/>
+                          <!--END-->
+                        </Option>
+                        <Option text="EventText.assassinationofjacovsubra4.o1.o1.o2.o2">
+                          <ConversationAction text="EventText.assassinationofjacovsubra4.o1.o1.o2.o2.c1" targettag="triggerer_player"/>
+                          <MissionAction missionidentifier="subraescort"/>
+                          <NPCFollowAction npctag="jacovsubra" targettag="triggerer_player" follow="true"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.assassinationofjacovsubra4.o1.o2">
+                  <ConversationAction text="EventText.assassinationofjacovsubra4.o1.o2.c1" targettag="triggerer_player">
+                    <Option text="EventText.assassinationofjacovsubra4.deal">
+                      <ConversationAction text="EventText.assassinationofjacovsubra4.neversaw" targettag="triggerer_player"/>
+                      <MoneyAction amount="3000"/>
+                    </Option>
+                    <Option text="EventText.assassinationofjacovsubra4.nodeal">
+                      <ConversationAction text="EventText.assassinationofjacovsubra4.run" targettag="triggerer_player"/>
+                      <CombatAction combatmode="retreat" npctag="jacovsubra" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+                      <SetDataAction identifier="subraevent_state" value="3"/>
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.assassinationofjacovsubra4.o2" endconversation="true">
+              <CombatAction combatmode="retreat" npctag="jacovsubra" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+              <SetDataAction identifier="subraevent_state" value="3"/>
+              <!--END-->
+            </Option>
+          </ConversationAction>
+          <NPCWaitAction npctag="jacovsubra" wait="false"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--Bad vibrations-->
+    <!--PART 1-->
+    <ScriptedEvent identifier="badvibrations1" commonness="50">
+      <CheckDataAction identifier="badvibrations_missionreceived" condition="eq true">
+        <Success>
+          <!--Don't repeat-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="artifactvictim" targettag="victim" spawnlocation="Outpost"/>
+          <NPCWaitAction npctag="artifactvictim" wait="true"/>
+          <TriggerAction target1tag="player" target2tag="victim" applytotarget1="triggerer_player" waitforinteraction="true"/>
+          <ConversationAction text="EventText.badvibrations1.c1" targettag="triggerer_player" eventsprite="BadVibration1">
+            <Option text="EventText.badvibrations1.o1">
+              <ConversationAction text="EventText.badvibrations1.o1.c1" targettag="triggerer_player" eventsprite="BadVibration2">
+                <Option text="EventText.badvibrations1.o1.o1">
+                  <ConversationAction text="EventText.badvibrations1.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.badvibrations1.o1.o1.o1">
+                      <ConversationAction text="EventText.badvibrations1.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.badvibrations1.stepback">
+                          <ConversationAction text="EventText.badvibrations1.raving" targettag="triggerer_player"/>
+                          <MissionAction missionidentifier="badvibrationsartifactruins"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.badvibrations1.stepback">
+                      <ConversationAction text="EventText.badvibrations1.raving" targettag="triggerer_player"/>
+                      <MissionAction missionidentifier="badvibrationsartifactruins"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.badvibrations1.notmyproblem">
+                  <!--END-->
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.badvibrations1.notmyproblem">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="badvibrations_missionreceived" value="true"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--PART 2-->
+    <ScriptedEvent identifier="badvibrations2" commonness="0">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemidentifier:psychosisartifact_event" tag="artifact"/>
+      <TriggerAction target1tag="player" target2tag="artifact" applytotarget1="triggerer_player" waitforinteraction="true"/>
+      <AfflictionAction affliction="psychosis" strength="10" targettag="triggerer_player"/>
+      <ConversationAction text="EventText.badvibrations2.c1" targettag="triggerer_player">
+        <Option text="EventText.badvibrations2.o1">
+          <AfflictionAction affliction="psychosis" strength="20" targettag="triggerer_player"/>
+          <ConversationAction text="EventText.badvibrations2.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.badvibrations2.o1.o1">
+              <AfflictionAction affliction="psychosis" strength="30" targettag="triggerer_player"/>
+              <ConversationAction text="EventText.badvibrations2.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.badvibrations2.o1.o1.o1">
+                  <ConversationAction text="EventText.badvibrations2.o1.o1.o1.c1" targettag="triggerer_player" fadetoblack="true"/>
+                  <AfflictionAction affliction="paralysis" strength="1000" targettag="triggerer_player"/>
+                  <!--END-->
+                </Option>
+                <Option text="EventText.badvibrations2.inspect">
+                  <AfflictionAction affliction="psychosis" strength="-100" targettag="triggerer_player"/>
+                  <SetDataAction identifier="badvibrations_state" value="1"/>
+                  <ConversationAction text="EventText.badvibrations2.protrusion" targettag="triggerer_player"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.badvibrations2.inspect">
+              <AfflictionAction affliction="psychosis" strength="-100" targettag="triggerer_player"/>
+              <SetDataAction identifier="badvibrations_state" value="1"/>
+              <ConversationAction text="EventText.badvibrations2.protrusion" targettag="triggerer_player"/>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.badvibrations2.inspect">
+          <AfflictionAction affliction="psychosis" strength="-100" targettag="triggerer_player"/>
+          <SetDataAction identifier="badvibrations_state" value="1"/>
+          <ConversationAction text="EventText.badvibrations2.protrusion" targettag="triggerer_player"/>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--PART 3-->
+    <ScriptedEvent identifier="badvibrations3" commonness="0">
+      <CheckDataAction identifier="badvibrations_state" condition="eq 1">
+        <Success>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="artifactvictim" targettag="artifactvictim" spawnlocation="Outpost"/>
+          <NPCWaitAction npctag="artifactvictim" wait="true"/>
+          <TriggerAction target1tag="player" target2tag="artifactvictim" applytotarget1="triggerer_player" waitforinteraction="true"/>
+          <ConversationAction text="EventText.badvibrations3.c1" targettag="triggerer_player">
+            <Option text="EventText.badvibrations3.o1">
+              <ConversationAction text="EventText.badvibrations3.gotbetter" targettag="triggerer_player">
+                <Option text="EventText.badvibrations3.welcome">
+                  <ConversationAction text="EventText.badvibrations3.anotherthing" targettag="triggerer_player">
+                    <Option text="EventText.badvibrations3.merrier">
+                      <ConversationAction text="EventText.badvibrations3.seeyouonboard" targettag="triggerer_player"/>
+                      <NPCChangeTeamAction npctag="artifactvictim" teamid="Team1" addtocrew="true"/>
+                      <SetDataAction identifier="badvibrations_state" value="2"/>
+                      <!--END-->
+                    </Option>
+                    <Option text="EventText.badvibrations3.full">
+                      <ConversationAction text="EventText.badvibrations3.hangout" targettag="triggerer_player"/>
+                      <SetDataAction identifier="badvibrations_state" value="2"/>
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.badvibrations3.reward">
+                  <ConversationAction text="EventText.badvibrations3.scrounge" targettag="triggerer_player"/>
+                  <MoneyAction amount="350"/>
+                  <SetDataAction identifier="badvibrations_state" value="2"/>
+                  <!--END-->
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.badvibrations3.o2">
+              <ConversationAction text="EventText.badvibrations3.o2.c1" targettag="triggerer_player">
+                <Option text="EventText.badvibrations3.o2.o1">
+                  <ConversationAction text="EventText.badvibrations3.gotbetter" targettag="triggerer_player">
+                    <Option text="EventText.badvibrations3.welcome">
+                      <ConversationAction text="EventText.badvibrations3.anotherthing" targettag="triggerer_player">
+                        <Option text="EventText.badvibrations3.merrier">
+                          <ConversationAction text="EventText.badvibrations3.seeyouonboard" targettag="triggerer_player"/>
+                          <NPCChangeTeamAction npctag="artifactvictim" teamid="Team1" addtocrew="true"/>
+                          <SetDataAction identifier="badvibrations_state" value="2"/>
+                          <!--END-->
+                        </Option>
+                        <Option text="EventText.badvibrations3.full">
+                          <ConversationAction text="EventText.badvibrations3.hangout" targettag="triggerer_player"/>
+                          <SetDataAction identifier="badvibrations_state" value="2"/>
+                          <!--END-->
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.badvibrations3.reward">
+                      <ConversationAction text="EventText.badvibrations3.scrounge" targettag="triggerer_player"/>
+                      <MoneyAction amount="350"/>
+                      <SetDataAction identifier="badvibrations_state" value="2"/>
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Success>
+        <Failure>
+          <!--Do nothing-->
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--A man and his raptor-->
+    <!--PART 1-->
+    <ScriptedEvent identifier="manandhisraptor1" commonness="50">
+      <CheckDataAction identifier="manandhisraptor_missionreceived" condition="eq true">
+        <Success>
+          <!--Don't repeat-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="raptorowner" targettag="raptorowner" spawnlocation="Outpost"/>
+          <NPCWaitAction npctag="raptorowner" wait="true"/>
+          <TriggerAction target1tag="player" target2tag="raptorowner" applytotarget1="triggerer_player" waitforinteraction="true"/>
+          <ConversationAction text="EventText.manandhisraptor1.c1" targettag="triggerer_player" eventsprite="ManAndHisRaptor">
+            <Option text="EventText.manandhisraptor1.o1">
+              <ConversationAction text="EventText.manandhisraptor1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.manandhisraptor1.o1.o1">
+                  <ConversationAction text="EventText.manandhisraptor1.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.manandhisraptor1.takeonboard">
+                      <MissionAction missionidentifier="raptorescort"/>
+                      <MoneyAction amount="1000"/>
+                      <ConversationAction text="EventText.manandhisraptor1.great" targettag="triggerer_player"/>
+                    </Option>
+                    <Option text="EventText.generic.refuse" endconversation="true">
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.manandhisraptor1.takeonboard">
+                  <MissionAction missionidentifier="raptorescort"/>
+                  <ConversationAction text="EventText.manandhisraptor1.great" targettag="triggerer_player"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.manandhisraptor1.o2">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="manandhisraptor_missionreceived" value="true"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--PART 2-->
+    <ScriptedEvent identifier="manandhisraptor2" commonness="0">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="humanprefabidentifier:raptorowner" tag="raptorowner"/>
+      <!-- set the value to ensure we don't consider the mudraptor dead if the mission has been attempted previously (shouldn't be possible without console commands in the vanilla game) -->
+      <SetDataAction identifier="manandhisraptor_rexdied" operation="set" value="false"/>
+      <TriggerAction target1tag="player" target2tag="raptorowner" applytotarget1="triggerer_player" waitforinteraction="true"/>
+      <ConversationAction text="EventText.manandhisraptor2.c1" targettag="triggerer_player">
+        <Option text="EventText.manandhisraptor2.o1">
+          <SpawnAction speciesname="mudraptor_passive" spawnpointtag="raptorowner" targettag="rex"/>
+          <SpawnAction itemidentifier="petnametag" targetinventory="rex" targettag="rexnametag"/>
+          <StatusEffectAction targettag="rexnametag">
+            <StatusEffect target="This" writtenname="Rex"/>
+          </StatusEffectAction>
+          <ConversationAction text="EventText.manandhisraptor2.o1.c1" targettag="triggerer_player"/>
+        </Option>
+      </ConversationAction>
+      <ConversationAction text="EventText.manandhisraptor2.c1.c1" speakertag="rex" endeventifinterrupted="false" dialogtype="Small"/>
+      <OnRoundEndAction>
+        <!-- check that Rex is still alive if it spawned -->
+        <CountTargetsAction targettag="rex" MinAmount="1">
+          <Success>
+            <CheckConditionalAction targettag="rex" logicaloperator="And">
+              <Conditional IsDead="False"/>
+              <Conditional InPlayerSubmarine="true"/>
+              <Failure>
+                <SetDataAction identifier="manandhisraptor_rexdied" operation="set" value="true"/>
+              </Failure>
+            </CheckConditionalAction>
+          </Success>
+        </CountTargetsAction>
+      </OnRoundEndAction>
+    </ScriptedEvent>
+    <!--Heart of gold-->
+    <ScriptedEvent identifier="heartofgold" commonness="50">
+      <CheckDataAction identifier="heartofgold_complete" condition="eq true">
+        <Success>
+          <!--Don't repeat-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="drugdealer" targettag="drugdealer" spawnlocation="outpost"/>
+          <NPCWaitAction npctag="drugdealer" wait="true"/>
+          <TriggerAction target1tag="player" target2tag="drugdealer" applytotarget1="triggerer_player" waitforinteraction="true"/>
+          <ConversationAction text="EventText.heartofgold.c1" targettag="triggerer_player" eventsprite="HeartOfGold">
+            <Option text="EventText.heartofgold.o1">
+              <ConversationAction text="EventText.heartofgold.o1.c1" targettag="triggerer_player"/>
+              <CombatAction combatmode="Offensive" npctag="drugdealer" enemytag="triggerer_player" isinstigator="false" guardreaction="none" witnessreaction="retreat"/>
+              <!--END-->
+            </Option>
+            <Option text="EventText.heartofgold.o2">
+              <ConversationAction text="EventText.heartofgold.o2.c1" targettag="triggerer_player">
+                <Option text="EventText.heartofgold.goodluck">
+                  <ConversationAction text="EventText.heartofgold.wait" targettag="triggerer_player">
+                    <Option text="EventText.heartofgold.okay">
+                      <ConversationAction text="EventText.heartofgold.signingbonus" targettag="triggerer_player"/>
+                      <NPCChangeTeamAction npctag="drugdealer" teamid="Team1" addtocrew="true"/>
+                      <!--END-->
+                    </Option>
+                    <Option text="EventText.generic.refuse">
+                      <ConversationAction text="EventText.heartofgold.whatamigonnado" targettag="triggerer_player">
+                        <Option text="EventText.heartofgold.onyourown" endconversation="true">
+                          <!--END-->
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.heartofgold.o2.o2">
+                  <ConversationAction text="EventText.heartofgold.o2.o2.c1" targettag="triggerer_player">
+                    <Option text="EventText.heartofgold.o2.o2.o1">
+                      <ConversationAction text="EventText.heartofgold.o2.o2.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.heartofgold.goodluck">
+                          <ConversationAction text="EventText.heartofgold.wait" targettag="triggerer_player">
+                            <Option text="EventText.heartofgold.okay">
+                              <ConversationAction text="EventText.heartofgold.signingbonus" targettag="triggerer_player"/>
+                              <NPCChangeTeamAction npctag="drugdealer" teamid="Team1" addtocrew="true"/>
+                              <!--END-->
+                            </Option>
+                            <Option text="EventText.generic.refuse">
+                              <ConversationAction text="EventText.heartofgold.whatamigonnado" targettag="triggerer_player">
+                                <Option text="EventText.heartofgold.onyourown" endconversation="true">
+                                  <!--END-->
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="heartofgold_complete" value="true"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+
+    <!--Hognose-->
+    <ScriptedEvent identifier="hognose" commonness="50">
+      <CheckDataAction identifier="hognose_accepted" condition="eq true">
+        <Success>
+          <!--Do nothing-->
+        </Success>
+        <Failure>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="hognose" targettag="hognose" spawnlocation="Outpost" spawnpointtype="Path"/>
+          <NPCWaitAction npctag="hognose" wait="true"/>
+          <TagAction criteria="player" tag="player"/>
+          <TriggerAction target1tag="hognose" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
+          <ConversationAction text="EventText.hognose.c1" targettag="triggerer_player" eventsprite="Stowaway2">
+            <Option text="EventText.hognose.o1">
+              <ConversationAction text="EventText.hognose.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.hognose.o1.o1">
+                  <ConversationAction text="EventText.hognose.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.hognose.o1.o1.o1">
+                      <ConversationAction text="EventText.hognose.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.hognose.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.hognose.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                            <Option text="EventText.hognose.o1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.hognose.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                <Option text="EventText.generic.continue">
+                                  <ConversationAction text="EventText.hognose.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                    <Option text="EventText.hognose.o1.o1.o1.o1.o1.o1.o1">
+                                      <ConversationAction text="EventText.hognose.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                                      <MissionAction missionidentifier="killmopingjack"/>
+                                      <SetDataAction identifier="hognose_accepted" value="true"/>
+                                    </Option>
+                                    <Option text="EventText.hognose.o1.o1.o1.o1.o1.o1.o2">
+                                      <!--END-->
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.hognose.o1.o1.o2"/>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.hognose.o1.o2">
+                  <!--END-->
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.hognose.o2">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="hognose2" commonness="50">
+      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="hognose" targettag="hognose" spawnlocation="MainSub" spawnpointtype="Path" allowduplicates="false"/>
+      <NPCChangeTeamAction npctag="hognose" teamid="Team1" addtocrew="true"/>
+    </ScriptedEvent>
+
+    <!--Explore Alien Ruins-->
+    <!--PART 1-->
+    <ScriptedEvent identifier="explorealienruins1" commonness="100">
+      <CheckDataAction identifier="ruin_missions_completed" condition="gt 1">
+        <Success>
+          <CheckDataAction identifier="explorealienruins_state" condition="gt 0">
+            <Success>
+              <!--Don't repeat-->
+            </Success>
+            <Failure>
+              <LayerAction layer="exploreruinspart1" enabled="true"/>
+              <TagAction criteria="player" tag="player"/>
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="ruinresearcher" targettag="researcher" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="research"/>
+              <Label name="beginning"/>
+              <TriggerAction target1tag="player" target2tag="researcher" applytotarget1="triggerer_player" waitforinteraction="true"/>
+              <NPCWaitAction npctag="ruinresearcher" wait="true"/>
+              <ConversationAction text="EventText.explorealienruins1.c1" targettag="triggerer_player" eventsprite="Researcher">
+                <Option text="EventText.explorealienruins1.o1">
+                  <ConversationAction text="EventText.explorealienruins1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.explorealienruins1.o1.o1">
+                      <ConversationAction text="EventText.explorealienruins1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="eventtext.generic.continue">
+                          <ConversationAction text="EventText.explorealienruins1.o1.o1.o1.c1" targettag="triggerer_player">
+                            <Option text="EventText.explorealienruins1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.explorealienruins1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                <Option text="EventText.explorealienruins1.o1.o1.o1.o1.o1">
+                                  <GoTo name="continue1" endconversation="false"/>
+                                </Option>
+                                <Option text="EventText.explorealienruins1.o1.o1.o1.o1.o2">
+                                  <GoTo name="continue1" endconversation="false"/>
+                                </Option>
+                              </ConversationAction>
+                              <Label name="continue1"/>
+                              <NPCWaitAction npctag="ruinresearcher" wait="true"/>
+                              <ConversationAction text="EventText.explorealienruins1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" eventsprite="Researcher">
+                                <Option text="eventtext.generic.continue">
+                                  <ConversationAction text="EventText.explorealienruins1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                    <Option text="EventText.explorealienruins1.o1.o1.o1.o1.o1.o1.o1">
+                                      <ConversationAction text="EventText.explorealienruins1.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                        <Option text="EventText.explorealienruins1.o1.o1.o1.o1.o1.o1.o1.o1">
+                                          <ConversationAction text="EventText.explorealienruins1.o1.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player"/>
+                                          <ReputationAction targettype="Location" increase="2"/>
+                                          <SetDataAction identifier="explorealienruins_state" value="1"/>
+                                        </Option>
+                                      </ConversationAction>
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <!-- "not interested" -->
+                    <Option text="eventtext.atwitsend.o1.o2">
+                      <GoTo name="beginning"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Failure>
+          </CheckDataAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--PART 2-->
+    <ScriptedEvent identifier="explorealienruins2" commonness="100">
+      <CheckDataAction identifier="ruin_missions_completed" condition="gt 4">
+        <Success>
+          <CheckDataAction identifier="explorealienruins_state" condition="1">
+            <Success>
+              <LayerAction layer="exploreruinspart2" enabled="true"/>
+              <TagAction criteria="player" tag="player"/>
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="ruinresearcher" targettag="researcher" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="research"/>
+              <Label name="beginning"/>
+              <NPCWaitAction npctag="ruinresearcher" wait="true"/>
+              <TriggerAction target1tag="player" target2tag="researcher" applytotarget1="triggerer_player" waitforinteraction="true"/>
+              <ConversationAction text="EventText.explorealienruins2.c1" targettag="triggerer_player" eventsprite="Researcher">
+                <Option text="EventText.explorealienruins2.o1">
+                  <GoTo name="continue1" endconversation="false"/>
+                </Option>
+                <Option text="EventText.explorealienruins2.o2">
+                  <ConversationAction text="EventText.explorealienruins2.o2.c1" targettag="triggerer_player">
+                    <Option text="EventText.explorealienruins2.o2.o1">
+                      <GoTo name="continue1" endconversation="false"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+              <Label name="continue1"/>
+              <NPCWaitAction npctag="ruinresearcher" wait="true"/>
+              <ConversationAction text="EventText.explorealienruins2.c2" eventsprite="Researcher" targettag="triggerer_player">
+                <Option text="eventtext.generic.continue">
+                  <CheckDataAction identifier="alien_writings_deciphered" condition="eq true">
+                    <Success>
+                      <ConversationAction text="EventText.explorealienruins2.o3.c1" eventsprite="Researcher" targettag="triggerer_player">
+                        <Option text="EventText.explorealienruins2.o3.o1">
+                          <ConversationAction text="EventText.explorealienruins2.o3.o1.c1" targettag="triggerer_player">
+                            <Option text="EventText.explorealienruins2.o3.o1.o1">
+                              <GoTo name="continue2" endconversation="false"/>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                    <Failure>
+                      <ConversationAction text="EventText.explorealienruins2.o3.c2" eventsprite="Researcher" targettag="triggerer_player">
+                        <Option text="EventText.explorealienruins2.o3.o2">
+                          <CheckItemAction targettag="triggerer_player" itemidentifiers="alientranslator">
+                            <Success>
+                              <ConversationAction text="EventText.explorealienruins2.o3.o2.c1" targettag="triggerer_player">
+                                <Option text="EventText.explorealienruins2.o3.o2.o1">
+                                  <GoTo name="continue2" endconversation="false"/>
+                                </Option>
+                              </ConversationAction>
+                            </Success>
+                            <Failure>
+                              <ConversationAction text="EventText.explorealienruins2.o3.o2.c2" targettag="triggerer_player">
+                                <Option text="EventText.explorealienruins2.o3.o2.o2">
+                                  <GoTo name="continue2" endconversation="false"/>
+                                </Option>
+                              </ConversationAction>
+                            </Failure>
+                          </CheckItemAction>
+                        </Option>
+                      </ConversationAction>
+                    </Failure>
+                  </CheckDataAction>
+                </Option>
+                <!-- "not interested" -->
+                <Option text="eventtext.atwitsend.o1.o2">
+                  <GoTo name="beginning"/>
+                </Option>
+              </ConversationAction>
+              <Label name="continue2"/>
+              <NPCWaitAction npctag="ruinresearcher" wait="true"/>
+              <CheckDataAction identifier="alien_writings_yohwey_deciphered" condition="eq true">
+                <Success>
+                  <ConversationAction text="EventText.explorealienruins2.c3" eventsprite="Researcher" targettag="triggerer_player">
+                    <Option text="EventText.explorealienruins2.o3">
+                      <ConversationAction text="EventText.explorealienruins2.o3.c3" targettag="triggerer_player" eventsprite="Researcher"/>
+                      <GoTo name="continue3" endconversation="false"/>
+                    </Option>
+                  </ConversationAction>
+                 </Success>
+                 <Failure>
+                   <ConversationAction text="EventText.explorealienruins2.c3" eventsprite="Researcher" targettag="triggerer_player">
+                     <Option text="EventText.explorealienruins2.o4">
+                       <GoTo name="continue3" endconversation="false"/>
+                     </Option>
+                   </ConversationAction>
+                  </Failure>
+                </CheckDataAction>
+              <Label name="continue3"/>
+              <NPCWaitAction npctag="ruinresearcher" wait="true"/>
+              <ConversationAction text="EventText.explorealienruins2.c4" eventsprite="Researcher" targettag="triggerer_player">
+                <Option text="EventText.explorealienruins2.o5">
+                  <ConversationAction text="EventText.explorealienruins2.o5.c1" targettag="triggerer_player" eventsprite="Researcher"/>
+                  <ReputationAction targettype="Location" increase="3"/>
+                  <SetDataAction identifier="explorealienruins_state" value="2"/>
+                </Option>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <!-- Do nothing before explorealienruins1 has been completed and don't repeat this event -->
+            </Failure>
+          </CheckDataAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--PART 3-->
+    <ScriptedEvent identifier="explorealienruins3" commonness="100" requiredlayer="portaldevice">
+      <CheckDataAction identifier="ruin_missions_completed" condition="gt 7">
+        <Success>
+          <CheckDataAction identifier="explorealienruins_state" condition="2">
+            <Success>
+              <LayerAction layer="portaldevice" enabled="true"/>
+              <TagAction criteria="itemtag:portaldevice" tag="portaldevice"/>
+              <ConversationAction text="EventText.explorealienruins3.announcement" dialogtype="Small" eventsprite="officeinside" continueautomatically="true"/>
+              <TagAction criteria="player" tag="player"/>
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="ruinresearcher" targettag="researcher" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="research"/>
+              <NPCFollowAction npctag="ruinresearcher" targettag="portaldevice" follow="true"/>
+              <SpawnAction itemidentifier="ancientweapon" targetinventory="ruinresearcher" targettag="researcherancientweapon"/>
+              <SpawnAction itemidentifier="alienpowercell" targetinventory="researcherancientweapon"/>
+              <TriggerAction target1tag="player" target2tag="researcher" applytotarget1="triggerer_player" waitforinteraction="true"/>
+              <ConversationAction text="EventText.explorealienruins3.c1" targettag="triggerer_player" eventsprite="Researcher">
+                <Option text="EventText.explorealienruins3.o1">
+                  <ConversationAction text="EventText.explorealienruins3.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.explorealienruins3.o1.o1">
+                      <ConversationAction text="EventText.explorealienruins3.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.explorealienruins3.o1.o1.o1">
+                          <ConversationAction text="EventText.explorealienruins3.o1.o1.o1.c1" targettag="triggerer_player">
+                            <Option text="eventtext.generic.continue">
+                              <ConversationAction text="EventText.explorealienruins3.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                <Option text="eventtext.generic.continue">
+                                  <ConversationAction text="EventText.explorealienruins3.o1.o1.o1.o1.o1.c1" targettag="triggerer_player"/>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+
+              <Label name="areyouready"/>
+              <NPCWaitAction npctag="ruinresearcher" wait="true"/>
+
+              <TriggerAction target1tag="player" target2tag="researcher" applytotarget1="triggerer_player" waitforinteraction="true"/>
+              <ConversationAction text="EventText.explorealienruins3.areyouready" targettag="triggerer_player" eventsprite="Researcher">
+                <Option text="EventText.explorealienruins3.ready" endconversation="true">
+                  <NPCFollowAction npctag="researchernpc" targettag="portaldevice" follow="true"/>
+                </Option>
+                <Option text="EventText.explorealienruins3.notready">
+                  <GoTo name="areyouready"/>
+                </Option>
+              </ConversationAction>
+              <WaitAction time="3"/>
+              <ConversationAction text="EventText.explorealienruins3.c2" ContinueAutomatically="true" eventsprite="Researcher"/>
+              <WaitAction time="5"/>
+              <StatusEffectAction targettag="portaldevice">
+                <StatusEffect target="This" targetitemcomomponent="lightcomponent" IsOn="true">
+                </StatusEffect>
+              </StatusEffectAction>
+              <WaitAction time="5"/>
+              <ConversationAction text="EventText.explorealienruins3.c3" ContinueAutomatically="true" eventsprite="Researcher"/>
+              <WaitAction time="3"/>
+              <ConversationAction text="EventText.explorealienruins3.c4" ContinueAutomatically="true" eventsprite="Researcher"/>
+              <WaitAction time="3"/>
+              <StatusEffectAction targettag="portaldevice">
+                <StatusEffect target="This">
+                  <Explosion range="5000.0" structuredamage="0" itemdamage="0" force="5" severlimbsprobability="1" flames="false" debris="true" decal="explosion" decalsize="2.0"/>
+                  <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" range="10000" volume="1"/>
+                  <sound file="Content/Items/Weapons/Emp.ogg" range="10000" volume="1"/>
+                </StatusEffect>
+              </StatusEffectAction>
+              <WaitAction time="0.2"/>
+              <LayerAction layer="portaldeviceactive" enabled="true"/>
+              <ConversationAction text="EventText.explorealienruins3.c5" ContinueAutomatically="true" eventsprite="Ancient1"/>
+              <WaitAction time="10"/>
+              <ConversationAction text="EventText.explorealienruins3.c6" ContinueAutomatically="true" eventsprite="Ancient1"/>
+              <WaitAction time="7"/>
+              <ConversationAction text="EventText.explorealienruins3.c7" ContinueAutomatically="true" eventsprite="Ancient1"/>
+              <WaitAction time="7"/>
+              <ConversationAction text="EventText.explorealienruins3.c8" ContinueAutomatically="true" eventsprite="Ancient1"/>
+              <WaitAction time="7"/>
+              <ConversationAction text="EventText.explorealienruins3.c9" ContinueAutomatically="true" eventsprite="Ancient1"/>
+              <WaitAction time="7"/>
+              <LayerAction layer="portaldevice" enabled="false"/>
+              <LayerAction layer="portaldeviceactive" enabled="false"/>
+              <LayerAction layer="portaldevicedestroyed" enabled="true"/>
+              <StatusEffectAction targettag="portaldevice">
+                <StatusEffect target="This">
+                  <Explosion range="3000.0" structuredamage="50" itemdamage="20" force="5" severlimbsprobability="1" debris="true" decal="explosion" decalsize="2.0">
+                    <Affliction identifier="explosiondamage" strength="5"/>
+                    <Affliction identifier="radiationsickness" strength="10"/>
+                    <Affliction identifier="stun" strength="5"/>
+                  </Explosion>
+                  <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="10000" volume="1"/>
+                </StatusEffect>
+              </StatusEffectAction>
+              <!-- kill the researchers, so the players are the only ones who know what happened and can't reason about it with the researchers -->
+              <AfflictionAction affliction="explosiondamage" strength="500" targettag="ruinresearcher"/>
+              <AfflictionAction affliction="explosiondamage" strength="500" targettag="researchernpc"/>
+              <SetDataAction identifier="explorealienruins_state" value="3"/>
+            </Success>
+          </CheckDataAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+
+  </EventPrefabs>
+  
+</Randomevents>

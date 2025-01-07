@@ -1,0 +1,434 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<npcsets>
+
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  <!--                     Combat Mission Separatist NPCs                        -->
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+  <npcset identifier="combatmissionseparatistnpcs">
+    <npc identifier="separatistcaptain" job="captain" moduleflags="none" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" showpreview="false"/>
+        <Item identifier="captainsseparatistcap2" equip="true"/>
+        <Item identifier="captainseparatistsuniform3" equip="true" outfit="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="revolver" equip="false">
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+        </Item>
+        <Item identifier="captainspipe" equip="false"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistcaptainlord" job="captain" moduleflags="none" behavior="Patrol" healthmultiplier="1.2" aimspeed="0.8" aimaccuracy="0.7">
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" showpreview="false"/>
+        <Item identifier="captainsseparatistcap1" equip="true"/>
+        <Item identifier="captainseparatistsuniform2" equip="true" outfit="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="shotgununique">
+          <Item identifier="shotgunshell"/>
+          <Item identifier="shotgunshell"/>
+        </Item>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="captainspipe" equip="false"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistsecurityrecruit" job="securityofficer" spawnpointtags="security" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet commonness="1">
+        <Item identifier="securityseparatistsuniform1" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="0.5">
+        <Item identifier="securityseparatistsuniform2" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="harpoongun">
+          <Item identifier="spear"/>
+          <Item identifier="spear"/>
+        </Item>
+        <Item identifier="divingknife"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistsecuritygunner" job="securityofficer" spawnpointtags="security" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.6">
+      <ItemSet>
+        <Item identifier="securityseparatistsuniform3" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="revolver">
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+        </Item>
+        <Item identifier="divingknife"/>
+        <Item identifier="ballistichelmet2" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistsecuritybrute" job="securityofficer" spawnpointtags="security" behavior="Patrol" healthmultiplier="1.1" aimspeed="0.5" aimaccuracy="0.1">
+      <ItemSet commonness="1">
+        <Item identifier="securityseparatistsuniform1" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="piratebodyarmor" equip="true"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="0.5">
+        <Item identifier="securityseparatistsuniform2" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="shotgun">
+          <Item identifier="shotgunshell"/>
+          <Item identifier="shotgunshell"/>
+          <Item identifier="shotgunshell"/>
+        </Item>
+        <Item identifier="divingknife"/>
+        <Item identifier="piratebodyarmor" equip="true"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistsecurityelite" job="securityofficer" spawnpointtags="security" behavior="Patrol" healthmultiplier="1.1" aimspeed="1.0" aimaccuracy="0.8">
+      <ItemSet commonness="1">
+        <Item identifier="securityseparatistsuniform3" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="smg">
+          <Item identifier="smgmagazine"/>
+        </Item>
+        <Item identifier="smgmagazine"/>
+        <Item identifier="smgmagazine"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="piratebodyarmor" equip="true"/>
+        <Item identifier="piratehelmet" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="0.3">
+        <Item identifier="securityseparatistsuniform2" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="grenadelauncher">
+          <Item identifier="40mmgrenade"/>
+        </Item>
+        <Item identifier="40mmgrenade"/>
+        <Item identifier="40mmgrenade"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="piratebodyarmor" equip="true"/>
+        <Item identifier="piratehelmet" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistengineerrecruit" job="engineer" commonness="1" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="engineerseparatistsuniform1" equip="true"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="crowbar" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistengineerveteran" job="engineer" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="engineerseparatistsuniform2" equip="true"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="crowbar" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistmechanicrecruit" job="mechanic" aimspeed="0.6" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="mechanicseparatistsuniform1" equip="true"/>
+        <Item identifier="baseballcap" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="separatistmechanicveteran" job="mechanic" aimspeed="0.6" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="mechanicseparatistsuniform2" equip="true"/>
+        <Item identifier="baseballcap" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+  </npcset>
+
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  <!--                     Combat Mission Coalition  NPCs                        -->
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+  <npcset identifier="combatmissioncoalitionnpcs">
+    <npc identifier="coalitioncaptain" job="captain" moduleflags="none" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" showpreview="false"/>
+        <Item identifier="captainscap1" equip="true"/>
+        <Item identifier="captainsuniform1" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="revolver" equip="false">
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+        </Item>
+        <Item identifier="captainspipe" equip="false"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitioncaptainlord" job="captain" moduleflags="none" behavior="Patrol" healthmultiplier="1.2" aimspeed="0.8" aimaccuracy="0.7">
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" showpreview="false"/>
+        <Item identifier="captainscap3" equip="true"/>
+        <Item identifier="captainsuniform3" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="shotgununique">
+          <Item identifier="shotgunshell"/>
+          <Item identifier="shotgunshell"/>
+        </Item>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="captainspipe" equip="false"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionsecurityrecruit" job="securityofficer" spawnpointtags="security" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet commonness="1">
+        <Item identifier="securitypatrolclothes" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="ballistichelmet1" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="0.5">
+        <Item identifier="securitypatrolclothes" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="harpoongun">
+          <Item identifier="spear"/>
+          <Item identifier="spear"/>
+        </Item>
+        <Item identifier="divingknife"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionsecuritygunner" job="securityofficer" spawnpointtags="security" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.6">
+      <ItemSet>
+        <Item identifier="securityuniform3" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="revolver">
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+        </Item>
+        <Item identifier="divingknife"/>
+        <Item identifier="ballistichelmet2" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionsecuritybrute" job="securityofficer" spawnpointtags="security" behavior="Patrol" healthmultiplier="1.1" aimspeed="0.5" aimaccuracy="0.1">
+      <ItemSet commonness="1">
+        <Item identifier="securityuniform1" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="bodyarmor" equip="true"/>
+        <Item identifier="ballistichelmet3" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="0.5">
+        <Item identifier="securityuniform3" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="shotgun">
+          <Item identifier="shotgunshell"/>
+          <Item identifier="shotgunshell"/>
+          <Item identifier="shotgunshell"/>
+        </Item>
+        <Item identifier="divingknife"/>
+        <Item identifier="bodyarmor" equip="true"/>
+        <Item identifier="ballistichelmet1" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionsecurityelite" job="securityofficer" spawnpointtags="security" behavior="Patrol" healthmultiplier="1.1" aimspeed="1.0" aimaccuracy="0.8">
+      <ItemSet commonness="1">
+        <Item identifier="securityuniform1" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="smg">
+          <Item identifier="smgmagazine"/>
+        </Item>
+        <Item identifier="smgmagazine"/>
+        <Item identifier="smgmagazine"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="bodyarmor" equip="true"/>
+        <Item identifier="ballistichelmet1" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="0.3">
+        <Item identifier="securityuniform1" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="grenadelauncher">
+          <Item identifier="40mmgrenade"/>
+        </Item>
+        <Item identifier="40mmgrenade"/>
+        <Item identifier="40mmgrenade"/>
+        <Item identifier="divingknife"/>
+        <Item identifier="bodyarmor" equip="true"/>
+        <Item identifier="ballistichelmet3" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionengineerrecruit" job="engineer" commonness="1" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="orangejumpsuit1" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="crowbar" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionengineerveteran" job="engineer" behavior="Patrol" aimspeed="0.8" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="orangejumpsuit2" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="crowbar" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionmechanicrecruit" job="mechanic" aimspeed="0.6" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="bluejumpsuit2" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="baseballcap" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="coalitionmechanicveteran" job="mechanic" aimspeed="0.6" aimaccuracy="0.3">
+      <ItemSet>
+        <Item identifier="bluejumpsuit1" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="baseballcap" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+  </npcset>
+  
+</npcsets>

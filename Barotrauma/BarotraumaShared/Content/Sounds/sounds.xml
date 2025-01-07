@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<sounds>
+  <!--<startupsound file="Content/Sounds/StartDrone.ogg"/>-->
+
+  <!--
+  <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
+  <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
+  -->
+
+  <music file="Content/Sounds/Music/Main Menu Music.ogg" type="menu" continuefromprevioustime="true"/>
+
+  <music file="Content/Sounds/Music/Subaquatic Symphony for Hammer And Metal.ogg" type="editor" continuefromprevioustime="true"/>
+  
+  <music file="Content/Sounds/Music/Layer 3 - Leaving Start Location.ogg" type="start"/>
+
+  <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>
+  <music file="Content/Sounds/Music/Road to Hell.ogg" type="crewdead"/>
+
+  <music file="Content/Sounds/Music/Water Of The SSN Rusty Clown.ogg" type="default" intensityrange="0,25"/>
+  <music file="Content/Sounds/Music/Wondrous Places.ogg" type="default" intensityrange="0,25"/>
+  <music file="Content/Sounds/Music/Overclocked Weakness.ogg" type="default" intensityrange="0,25"/>
+  <music file="Content/Sounds/Music/Engine room whales.ogg" type="default" intensityrange="0,25"/>
+  <music file="Content/Sounds/Music/Somethings outside.ogg" type="default" intensityrange="0,25"/>
+
+  <music file="Content/Sounds/Music/Fragile Waves.ogg" type="default" intensityrange="10,30"/>
+  <music file="Content/Sounds/Music/Marching Upstream Part 1.ogg" type="default" intensityrange="10,30"/>
+  <music file="Content/Sounds/Music/Seafloor Cries.ogg" type="default" intensityrange="10,30"/>
+  <music file="Content/Sounds/Music/Desperation.ogg" type="default" intensityrange="10,30"/>
+  <music file="Content/Sounds/Music/Explore the Abyss.ogg" type="default" intensityrange="10,30"/>
+  
+  <music file="Content/Sounds/Music/Moribund In An Underwater Coffin.ogg" type="default" intensityrange="30,65"/>
+  <music file="Content/Sounds/Music/Alien Syndicate.ogg" type="default" intensityrange="30,65"/>
+  <music file="Content/Sounds/Music/Extraterrestrial Broadcast.ogg" type="default" intensityrange="30,65"/>
+  <music file="Content/Sounds/Music/Zack The Rabid Ripper.ogg" type="default" intensityrange="30,70"/>
+  <music file="Content/Sounds/Music/All But Systematic Chaos.ogg" type="default" intensityrange="50,70"/>
+
+  <music file="Content/Sounds/Music/Layer 0 - Basic.ogg" type="intensity" duckvolume="true" intensityrange="0,100"/>
+  <music file="Content/Sounds/Music/Intensity Layer 1.ogg" type="intensity" intensityrange="50,65"/>
+  <music file="Content/Sounds/Music/Intensity Layer 2.ogg" type="intensity" intensityrange="65,80"/>
+  <music file="Content/Sounds/Music/Intensity Layer 3.ogg" type="intensity" intensityrange="80,90"/>
+  <music file="Content/Sounds/Music/Intensity Layer 4.ogg" type="intensity" intensityrange="90,100"/>
+
+  <music file="Content/Sounds/Music/Layer 1 - Monsters Nearby.ogg" type="monster" intensityrange="50,100" StartFromRandomTime="true"/>
+  <music file="Content/Sounds/Music/Monster Nearby - Extended.ogg" type="monsterambience" intensityrange="25,75" StartFromRandomTime="true"/>
+
+  <music file="Content/Sounds/Music/Wartrauma.ogg" type="military"/>
+  <music file="Content/Sounds/Music/The Eerie And The Unknown.ogg" type="research"/>
+  <music file="Content/Sounds/Music/Barotraumatropolis.ogg" type="city"/>
+  <music file="Content/Sounds/Music/Space Miner's Song.ogg" type="mine"/>
+  <music file="Content/Sounds/Music/Layer 2 - In The Ruins.ogg" type="ruins"/>
+  <music file="Content/Sounds/Music/Layer 5 - Submarine Flooded.ogg" type="flooded" intensityrange="50,100" StartFromRandomTime="true"/>
+  <music file="Content/Sounds/Music/Submarine Flooded - Extended.ogg" type="floodedambience" intensityrange="25,75" StartFromRandomTime="true"/>
+  <music file="Content/Sounds/Music/Layer 11 - Crush Depth.ogg" type="deep"/>
+  <music file="Content/Sounds/Music/Layer 12 - Objective Complete.ogg" type="levelend"/>
+  <music file="Content/Sounds/Music/Look Behind The Watery Shadows.ogg" type="wreck"/>
+  <music file="Content/Sounds/Music/Marching Upstream Part 2.ogg" type="endbossfight" ForceIntensityTrack="15.0" volume="1.5"/>
+  <music file="Content/Sounds/Music/Ballad For Whales.ogg" type="ending"/>
+  <music file="Content/Sounds/Music/Moribund In An Underwater Coffin.ogg" type="abandoned"/>
+
+  <music file="Content/Sounds/Music/Alien Ruins Loop.ogg" type="ruinsambience"/>
+
+  <music file="Content/Sounds/Music/Seafloor Cries Sub-Night Remix.ogg" type="pvp" intensityrange="0,100"/>
+  <music file="Content/Sounds/Music/Alien Syndicate Remix.ogg" type="pvp" intensityrange="0,100"/>
+  <music file="Content/Sounds/Music/Zack The Rabid Ripper Remix.ogg" type="pvp" intensityrange="0,100"/>
+
+  <music file="Content/Sounds/Music/Layer 2 - In The Ruins.ogg" type="endlevel"/>
+  <endcollapse file="Content/Characters/Jove/JOVE_collapse.ogg" volume="2.0"/>
+  
+  <music file="Content/Sounds/Music/Biome Noise Loop - Cold Caverns.ogg"        type="coldcaverns" volume="0.25"/>
+  <music file="Content/Sounds/Music/Biome Noise Loop - Europan Ridge.ogg"       type="europanridge" volume="0.25"/>
+  <music file="Content/Sounds/Music/Biome Noise Loop - The Aphotic Plateau.ogg" type="theaphoticplateau" volume="0.25"/>
+  <music file="Content/Sounds/Music/Biome Noise Loop - The Great Sea.ogg"       type="thegreatsea" volume="0.25"/>
+  <music file="Content/Sounds/Music/Biome Noise Loop - Hydrothermal Wastes.ogg" type="hydrothermalwastes" volume="0.25"/>
+  <music file="Content/Sounds/Music/Waves of Jupiter.ogg"                       type="endzone" volume="5.0"/>
+  
+  <damagesound file="Content/Sounds/Damage/StructureBlunt1.ogg" damagerange="3.0,30.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt2.ogg" damagerange="10.0,50.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt3.ogg" damagerange="25.0,70.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt4.ogg" damagerange="25.0,70.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt5.ogg" damagerange="40.0,80.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt6.ogg" damagerange="40.0,100.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt7.ogg" damagerange="60.0,1000.0" damagesoundtype="StructureBlunt"/>
+
+  <damagesound file="Content/Sounds/Damage/DAMAGE_alienRuinsWall1.ogg" damagerange="0.0,20.0" damagesoundtype="StructureAlien"/>
+  <damagesound file="Content/Sounds/Damage/DAMAGE_alienRuinsWall2.ogg" damagerange="10.0,30.0" damagesoundtype="StructureAlien"/>
+  <damagesound file="Content/Sounds/Damage/DAMAGE_alienRuinsWall3.ogg" damagerange="25.0,50.0" damagesoundtype="StructureAlien"/>
+  <damagesound file="Content/Sounds/Damage/DAMAGE_alienRuinsWall4.ogg" damagerange="25.0,50.0" damagesoundtype="StructureAlien"/>
+  <damagesound file="Content/Sounds/Damage/DAMAGE_alienRuinsWall6.ogg" damagerange="40.0,100.0" damagesoundtype="StructureAlien"/>
+  <damagesound file="Content/Sounds/Damage/DAMAGE_alienRuinsWall5.ogg" damagerange="50.0,1000.0" damagesoundtype="StructureAlien"/>
+
+  <damagesound file="Content/Sounds/Damage/GlassImpact1.ogg" damagerange="0.0,10.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact2.ogg" damagerange="5.0,15.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact3.ogg" damagerange="10.0,50.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact4.ogg" damagerange="10.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+
+  <damagesound file="Content/Sounds/Damage/GlassImpact1.ogg" damagesoundtype="GlassImpact"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact2.ogg" damagesoundtype="GlassImpact"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact3.ogg" damagesoundtype="GlassImpact"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact4.ogg" damagesoundtype="GlassImpact"/>
+
+  <damagesound file="Content/Sounds/Impact/MetalImpactHeavy1.ogg" damagesoundtype="MetalImpact"/>
+  <damagesound file="Content/Sounds/Impact/MetalImpactHeavy2.ogg" damagesoundtype="MetalImpact"/>
+  <damagesound file="Content/Sounds/Impact/MetalImpactHeavy3.ogg" damagesoundtype="MetalImpact"/>
+  <damagesound file="Content/Sounds/Impact/MetalImpactHeavy4.ogg" damagesoundtype="MetalImpact"/>
+  
+  <damagesound file="Content/Sounds/Damage/GlassBreak1.ogg" damagerange="20.0,50.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassBreak2.ogg" damagerange="25.0,80.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassBreak3.ogg" damagerange="50.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassBreak4.ogg" damagerange="50.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+
+  <damagesound file="Content/Sounds/Damage/StructureCrunch1.ogg" damagerange="0.0,40.0" damagesoundtype="StructureSlash"/>
+  <damagesound file="Content/Sounds/Damage/StructureCrunch2.ogg" damagerange="5.0,70.0" damagesoundtype="StructureSlash"/>
+  <damagesound file="Content/Sounds/Damage/StructureCrunch3.ogg" damagerange="5.0,70.0" damagesoundtype="StructureSlash"/>
+  <damagesound file="Content/Sounds/Damage/StructureCrunch4.ogg" damagerange="25.0,100.0" damagesoundtype="StructureSlash"/>
+  <damagesound file="Content/Sounds/Damage/StructureCrunch5.ogg" damagerange="25.0,100.0" damagesoundtype="StructureSlash"/>
+
+  <damagesound file="Content/Sounds/Damage/LimbBlunt1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt" volume="0.5"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt2.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt" volume="0.6"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt3.ogg" damagerange="25.0,100.0" damagesoundtype="LimbBlunt" volume="0.7"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt4.ogg" damagerange="25.0,100.0" damagesoundtype="LimbBlunt" volume="0.8"/>
+
+  <damagesound file="Content/Sounds/Damage/LimbSlash1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbSlash"/>
+  <damagesound file="Content/Sounds/Damage/LimbSlash2.ogg" damagerange="0.0,80.0" damagesoundtype="LimbSlash"/>
+  <damagesound file="Content/Sounds/Damage/LimbSlash3.ogg" damagerange="20.0,80.0" damagesoundtype="LimbSlash"/>
+  <damagesound file="Content/Sounds/Damage/LimbSlash4.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
+  <damagesound file="Content/Sounds/Damage/LimbSlash5.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
+  <damagesound file="Content/Sounds/Damage/LimbSlash6.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
+
+  <damagesound file="Content/Sounds/Damage/Gore1.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore2.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore3.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore4.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore5.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore6.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore7.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore8.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore9.ogg"  damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore10.ogg" damagesoundtype="Gore"/>
+  
+  <damagesound file="Content/Sounds/Damage/HitArmor1.ogg" damagesoundtype="LimbArmor"/>
+  <damagesound file="Content/Sounds/Damage/HitArmor2.ogg" damagesoundtype="LimbArmor"/>
+  <damagesound file="Content/Sounds/Damage/HitArmor3.ogg" damagesoundtype="LimbArmor"/>
+  <damagesound file="Content/Sounds/Damage/HitArmor4.ogg" damagesoundtype="LimbArmor"/>
+
+  <damagesound file="Content/Sounds/Damage/HitMetal1.ogg" damagesoundtype="HitMetal"/>
+  <damagesound file="Content/Sounds/Damage/HitMetal2.ogg" damagesoundtype="HitMetal"/>
+  <damagesound file="Content/Sounds/Damage/HitMetal3.ogg" damagesoundtype="HitMetal"/>
+  <damagesound file="Content/Sounds/Damage/HitMetal4.ogg" damagesoundtype="HitMetal"/>
+  <damagesound file="Content/Sounds/Damage/HitMetal5.ogg" damagesoundtype="HitMetal"/>
+  <damagesound file="Content/Sounds/Damage/HitMetal6.ogg" damagesoundtype="HitMetal"/>
+
+  <damagesound file="Content/Sounds/Damage/HitClown1.ogg" damagerange="0.0,75.0" damagesoundtype="LimbClown"/>
+  <damagesound file="Content/Sounds/Damage/HitClown2.ogg" damagerange="25.0,100.0" damagesoundtype="LimbClown"/>
+
+  <damagesound file="Content/Sounds/Hull/Hull1.ogg" damagerange="0.0,80.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+  <damagesound file="Content/Sounds/Hull/Hull2.ogg" damagerange="0.0,80.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+  <damagesound file="Content/Sounds/Hull/Hull3.ogg" damagerange="0.0,80.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+  <damagesound file="Content/Sounds/Hull/Hull4.ogg" damagerange="0.0,80.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+  <damagesound file="Content/Sounds/Hull/Hull5.ogg" damagerange="0.0,80.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+  <damagesound file="Content/Sounds/Hull/Hull6.ogg" damagerange="0.0,80.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+  <damagesound file="Content/Sounds/Hull/HullLong1.ogg" damagerange="60.0,100.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+  <damagesound file="Content/Sounds/Hull/HullLong2.ogg" damagerange="60.0,100.0" damagesoundtype="Pressure" ignoremuffling="true" volume="2.0"/>
+
+  <damagesound file="Content/Sounds/Damage/ArmorBreak1.ogg" damagesoundtype="ArmorBreak"/>
+  <damagesound file="Content/Sounds/Damage/ArmorBreak2.ogg" damagesoundtype="ArmorBreak"/>
+  <damagesound file="Content/Sounds/Damage/ArmorBreak3.ogg" damagesoundtype="ArmorBreak"/>
+  <damagesound file="Content/Sounds/Damage/ArmorBreak4.ogg" damagesoundtype="ArmorBreak"/>
+
+  <tinnitus file="Content/Sounds/Tinnitus1.ogg"/>
+  <tinnitus file="Content/Sounds/Tinnitus2.ogg"/>
+
+  <heartbeatdiastole file="Content/Sounds/HeartbeatDiastole1.ogg"/>
+  <heartbeatdiastole file="Content/Sounds/HeartbeatDiastole2.ogg"/>
+  <heartbeatdiastole file="Content/Sounds/HeartbeatDiastole3.ogg"/>
+  <heartbeatsystole file="Content/Sounds/HeartbeatSystole1.ogg"/>
+  <heartbeatsystole file="Content/Sounds/HeartbeatSystole2.ogg"/>
+  <heartbeatsystole file="Content/Sounds/HeartbeatSystole3.ogg"/>
+
+  <implode file="Content/Sounds/Damage/Implode.ogg" range="800"/>
+  <drownmale file="Content/Sounds/Water/DrownMale1.ogg"/>
+  <drownmale file="Content/Sounds/Water/DrownMale2.ogg"/>
+  <drownmale file="Content/Sounds/Water/DrownMale3.ogg"/>
+  <drownmale file="Content/Sounds/Water/DrownMale4.ogg"/>
+  <drownmale file="Content/Sounds/Water/DrownMale5.ogg"/>
+  <drownfemale file="Content/Sounds/Water/DrownFemale1.ogg"/>
+  <drownfemale file="Content/Sounds/Water/DrownFemale2.ogg"/>
+  <drownfemale file="Content/Sounds/Water/DrownFemale3.ogg"/>
+
+  <splash file="Content/Sounds/Water/Splash0.ogg"/>
+  <splash file="Content/Sounds/Water/Splash1.ogg"/>
+  <splash file="Content/Sounds/Water/Splash2.ogg"/>
+  <splash file="Content/Sounds/Water/Splash3.ogg"/>
+  <splash file="Content/Sounds/Water/Splash4.ogg"/>
+  <splash file="Content/Sounds/Water/Splash5.ogg"/>
+  <splash file="Content/Sounds/Water/Splash6.ogg"/>
+  <splash file="Content/Sounds/Water/Splash7.ogg"/>
+  <splash file="Content/Sounds/Water/Splash8.ogg"/>
+  <splash file="Content/Sounds/Water/Splash9.ogg"/>
+
+  <zap file="Content/Items/Electricity/Zap1.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap2.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap3.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap4.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap5.ogg" volume="1.0" range="500"/>
+
+  <Ricochet file="Content/Sounds/Damage/Ricochet1.ogg" volume="1.0" range="500"/>
+  <Ricochet file="Content/Sounds/Damage/Ricochet2.ogg" volume="1.0" range="500"/>
+  <Ricochet file="Content/Sounds/Damage/Ricochet3.ogg" volume="1.0" range="500"/>
+  <Ricochet file="Content/Sounds/Damage/Ricochet4.ogg" volume="1.0" range="500"/>
+  
+  <rewire file="Content/Sounds/RewiringLoop.ogg" volume="1.0" range="1000"/>
+  <repair file="Content/Sounds/RepairLoop.ogg" volume="1.0" range="1000"/>
+  
+  <flow file="Content/Sounds/Water/FlowSmall.ogg" volume="0.6"/>
+  <flow file="Content/Sounds/Water/FlowMedium.ogg"/>
+  <flow file="Content/Sounds/Water/FlowLarge.ogg"/>
+
+  <fire file="Content/Sounds/FireSmall.ogg"/>
+  <firemedium file="Content/Sounds/FireMedium.ogg"/>
+  <firelarge file="Content/Sounds/FireLarge.ogg"/>
+
+  <waterambiencein file="Content/Sounds/Water/WaterAmbienceIn.ogg" volume="0.4"/>
+  <waterambienceout file="Content/Sounds/Water/WaterAmbienceOut.ogg" volume="0.6"/>
+  <waterambiencemoving file="Content/Sounds/Water/WaterAmbienceMoving.ogg" volume="0.4"/>
+
+  <impact_soft file="Content/Sounds/Impact/SoftImpact1.ogg" range="500"/>
+  <impact_soft file="Content/Sounds/Impact/SoftImpact2.ogg" range="600"/>
+  <impact_soft file="Content/Sounds/Impact/SoftImpact3.ogg" range="700"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight1.ogg" range="500"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight2.ogg" range="500"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight3.ogg" range="500"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight4.ogg" range="600"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight5.ogg" range="600"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy1.ogg" range="700"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy2.ogg" range="700"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy3.ogg" range="800"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy4.ogg" range="800"/>
+
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal1.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal2.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal3.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal4.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal5.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal6.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal7.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal8.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal9.ogg"  volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal10.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal11.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal12.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal13.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal14.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal15.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal16.ogg" volume="0.5" range="500"/>
+
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor1.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor2.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor3.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor4.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor5.ogg" range="500"/>
+
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy1.ogg" range="800"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy2.ogg" range="800"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy3.ogg" range="800"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy4.ogg" range="800"/>
+
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown1.ogg" range="500"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown2.ogg" range="500"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown3.ogg" range="500"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown4.ogg" range="500"/>
+
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler1.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler2.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler3.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler4.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler5.ogg" range="500"/>
+
+  <footstep_husk file="Content/Sounds/Footsteps/Monsters/FootstepHusk1.ogg" range="500"/>
+  <footstep_husk file="Content/Sounds/Footsteps/Monsters/FootstepHusk2.ogg" range="500"/>
+  <footstep_husk file="Content/Sounds/Footsteps/Monsters/FootstepHusk3.ogg" range="500"/>
+  <footstep_husk file="Content/Sounds/Footsteps/Monsters/FootstepHusk4.ogg" range="500"/>
+  <footstep_husk file="Content/Sounds/Footsteps/Monsters/FootstepHusk5.ogg" range="500"/>
+  
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor1.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor2.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor3.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor4.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor5.ogg" range="800"/>
+
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater1.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater2.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater3.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater4.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater5.ogg" range="500"/>
+  
+  <ambient file="Content/Sounds/Ambient/Ambient1.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient2.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient3.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient4.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient5.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient6.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient7.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient8.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient9.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient10.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient11.ogg"/>
+  <ambient file="Content/Sounds/Ambient/DistantPod1.ogg"/>
+  <ambient file="Content/Sounds/Ambient/DistantPod2.ogg"/>
+  <ambient file="Content/Sounds/Ambient/DistantPod3.ogg"/>
+  <ambient file="Content/Sounds/Ambient/GlacialMovement.ogg"/>
+
+  <icebreak file="Content/Sounds/Damage/IceCreak1.ogg" range="10000"/>
+  <icebreak file="Content/Sounds/Damage/IceCreak2.ogg" range="10000"/>
+
+  <hull file="Content/Sounds/Damage/Creak1.ogg"/>
+  <hull file="Content/Sounds/Damage/Creak2.ogg"/>
+  <hull file="Content/Sounds/Damage/Creak3.ogg"/>
+  <hull file="Content/Sounds/Damage/Creak4.ogg"/>
+  <hull file="Content/Sounds/Damage/Creak5.ogg"/>
+
+  <radiostatic file="Content/Sounds/RadioStatic.ogg" sourcepool="Voice"/>
+  
+  <guisound file="Content/Sounds/UI/UImsg.ogg"              guisoundtype="UIMessage"/>
+  <guisound file="Content/Sounds/UI/ChatMsg.ogg"            guisoundtype="ChatMessage"/>
+  <guisound file="Content/Sounds/UI/RadioMsg.ogg"           guisoundtype="RadioMessage"/>
+  <guisound file="Content/Sounds/UI/DeadMsg.ogg"            guisoundtype="DeadMessage"/>
+  <guisound file="Content/Sounds/UI/UI_labelSelect.ogg"     guisoundtype="Select"/>
+  <guisound file="Content/Sounds/UI/PopupMenu.ogg"          guisoundtype="PopupMenu"/>
+  <guisound file="Content/Sounds/UI/UI_labelCountMinus.ogg" guisoundtype="Decrease"/>
+  <guisound file="Content/Sounds/UI/UI_labelCountPlus.ogg"  guisoundtype="Increase"/>
+  <guisound file="Content/Sounds/UI/UIswitch1.ogg"          guisoundtype="UISwitch"/>
+  <guisound file="Content/Sounds/UI/UIswitch2.ogg"          guisoundtype="UISwitch"/>
+  <guisound file="Content/Sounds/UI/UIswitch3.ogg"          guisoundtype="UISwitch"/>
+  <guisound file="Content/Sounds/PickItem.ogg"              guisoundtype="PickItem"/>
+  <guisound file="Content/Sounds/PickItemFail.ogg"          guisoundtype="PickItemFail"/>
+  <guisound file="Content/Sounds/DropItem.ogg"              guisoundtype="DropItem"/>
+  <guisound file="Content/Sounds/UI/UI_labelCheckBox.ogg"   guisoundtype="TickBox"/>
+  <guisound file="Content/Sounds/UI/UI_labelMarkka.ogg"     guisoundtype="ConfirmTransaction"/>
+  <guisound file="Content/Sounds/UI/UI_labelCart.ogg"       guisoundtype="Cart"/>
+
+</sounds>

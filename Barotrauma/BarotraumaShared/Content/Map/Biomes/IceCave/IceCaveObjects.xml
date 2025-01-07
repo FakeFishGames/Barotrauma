@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--COLD CAVERNS-->
+<levelobjects>
+  <!-- a series of background chunks that spawn along walls -->
+  <BackgroundChunks identifier="icecavebackgroundchunks" spawnpos="Wall" minsurfacewidth="0" minsize="1" maxsize="2" randomrotation="-180,180" commonness="0" depthrange="1200,3200" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000" randomoffset="100,500">
+    <Sprite texture="Content/Map/Biomes/IceCave/BackgroundChunks.png" sourcerect="4,4,333,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/IceCave/BackgroundChunks.png" sourcerect="345,4,333,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/IceCave/BackgroundChunks.png" sourcerect="687,4,333,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/IceCave/BackgroundChunks.png" sourcerect="4,516,504,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/IceCave/BackgroundChunks.png" sourcerect="516,516,504,504" origin="0.5,0.5"/>
+    <overridecommonness leveltype="icecave" commonness="100"/>
+  </BackgroundChunks>
+  <EdgeChunks identifier="icecaveedgechunks" spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="0.5" randomrotation="-5,5" randomoffset="50,50" commonness="0" depthrange="-1,0" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Sprite texture="Content/Map/Biomes/IceCave/WallEdgeChunks.png" sourcerect="0,0,512,512" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/IceCave/WallEdgeChunks.png" sourcerect="512,0,512,512" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/IceCave/WallEdgeChunks.png" sourcerect="0,512,512,512" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/IceCave/WallEdgeChunks.png" sourcerect="512,512,512,512" origin="0.5,0.5"/>
+    <overridecommonness leveltype="icecave" commonness="20"/>
+  </EdgeChunks>
+  <IceStalactites identifier="icecavehazards1" spritecolor="200,229,243,255" spawnpos="Wall, RuinWall" minsurfacewidth="300" minsize="0.5" maxsize="0.8" randomrotation="0,0" randomoffset="10,10" commonness="0" depthrange="1,2" alignment="Bottom" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="284,540,214,440" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="496,537,294,487" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="789,536,232,485" origin="0.5,0.5"/>
+    <overridecommonness leveltype="icecave" commonness="50"/>
+  </IceStalactites>
+  <spikyice identifier="icecaveshards" spritecolor="200,229,243,255" spawnpos="Wall, RuinWall" takelevelwalldamage="true" health="20" hidewhenbroken="true" minsurfacewidth="100" minsize="0.5" maxsize="1" randomrotation="0,0" randomoffset="0,10" commonness="0" depthrange="-1,-0.1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="688,6,266,268" origin="0.5,0.8"/>
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="685,286,335,237" origin="0.5,0.8"/>
+    <overridecommonness leveltype="icecave" commonness="50"/>
+    <Trigger position="0,0" radius="120" sensor="false" triggeredby="Human" staytriggereddelay="10000000" triggeronce="true">
+      <OverrideProperties>
+        <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="0,0,1,1" origin="0.5,0.5"/>
+      </OverrideProperties>
+      <StatusEffect target="This">
+        <Conditional currentspeed="gt 0.1"/>
+        <Sound file="Content/Sounds/Damage/GlassBreak1.ogg" range="1000" dontmuffle="true" volume="0.5"/>
+        <Sound file="Content/Sounds/Damage/GlassBreak2.ogg" range="1000" dontmuffle="true" volume="0.5"/>
+        <Sound file="Content/Sounds/Damage/GlassBreak3.ogg" range="1000" dontmuffle="true" volume="0.5"/>
+        <Sound file="Content/Sounds/Damage/GlassBreak4.ogg" range="1000" dontmuffle="true" volume="0.5"/>
+        <Explosion range="300" force="10" smoke="false" underwaterbubble="false" flash="false" flames="false" sparks="false" shockwave="false" playtinnitus="false">
+          <Affliction identifier="lacerations" strength="100" probability="0.25"/>
+          <Affliction identifier="bleeding" strength="100" probability="0.25"/>
+          <Affliction identifier="stun" strength="0.75"/>
+        </Explosion>
+        <particleemitter particle="iceshards" particleamount="50" velocitymin="0" velocitymax="1000" distancemin="0" distancemax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5"/>
+      </StatusEffect>
+      <StatusEffect target="This" type="OnBroken">
+        <Sound file="Content/Sounds/Damage/GlassBreak1.ogg" range="2000" dontmuffle="true" volume="0.5"/>
+        <Sound file="Content/Sounds/Damage/GlassBreak2.ogg" range="2000" dontmuffle="true" volume="0.5"/>
+        <Sound file="Content/Sounds/Damage/GlassBreak3.ogg" range="2000" dontmuffle="true" volume="0.5"/>
+        <Sound file="Content/Sounds/Damage/GlassBreak4.ogg" range="2000" dontmuffle="true" volume="0.5"/>
+        <particleemitter particle="iceshards" particleamount="50" velocitymin="0" velocitymax="1000" distancemin="0" distancemax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5"/>
+      </StatusEffect>
+    </Trigger>
+  </spikyice>
+</levelobjects>

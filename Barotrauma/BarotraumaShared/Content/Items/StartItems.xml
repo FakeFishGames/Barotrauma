@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<StartItems>
+  <!--Diving masks handled via preferred containers, because we want to spawn 1 in each supplycab and 2 in divingcab.-->
+  <!--Similarly all diving suit lockers and oxygen tank shelves come fully loaded.-->
+  <!--Also 6 revolver rounds always spawned in the secarmcab via preferred container definition.-->
+  <!--Each turret loader comes with full ammunition, and all subs should start with 1 box of ammunition for each turret plus 6 railgun shells, if railgun is installed.-->
+  <!--We could spawn extra turret ammunition with the easy item set, but the issue is we don't know which turrets the subs have. However, all the vanilla subs come at least with one coilgun.-->
+  <ItemSet identifier="easy" order="2">
+    <Item identifier="safeandsoundsecurity101" amount="1" MultiPlayerOnly="true"/>
+    <Item identifier="weldingtool" amount="3"/>
+    <Item identifier="weldingfueltank" amount="3"/>
+    <Item identifier="wrench"/>
+    <Item identifier="crowbar"/>
+    <Item identifier="screwdriver" amount="2"/>
+    <Item identifier="fuelrod" amount="8"/>
+    <Item identifier="thoriumfuelrod" amount="1"/>
+    <!--Bandage-->
+    <Item identifier="antibleeding1" amount="16"/>
+    <!--Morphine-->
+    <Item identifier="antidama1" amount="16"/>
+    <!--Saline-->
+    <Item identifier="antibloodloss1" amount="16"/>
+    <Item identifier="calyxanide" amount="3"/>
+    <Item identifier="antipsychosis" amount="2"/>
+    <Item identifier="antinarc"/>
+    <Item identifier="antirad"/>
+    <Item identifier="antiparalysis"/>
+    <Item identifier="plasmacutter" amount="2"/>
+    <Item identifier="harpoongun" amount="2"/>
+    <Item identifier="stunbaton"/>
+    <Item identifier="divingknife"/>
+    <Item identifier="revolver" amount="2"/>
+    <Item identifier="sulphuricacid"/>
+    <Item identifier="stabilozine" amount="8"/>
+    <Item identifier="ethanol" amount="2"/>
+    <Item identifier="opium" amount="2"/>
+    <Item identifier="antibiotics" amount="2"/>
+    <Item identifier="handheldsonar"/>
+    <Item identifier="underwaterscooter"/>
+    <Item identifier="flashlight"/>
+    <Item identifier="coilgunammobox"/>
+    <Item identifier="revolverround" amount="12"/>
+  </ItemSet>
+  
+  <ItemSet identifier="normal" order="1">
+    <Item identifier="safeandsoundsecurity101" amount="1" MultiPlayerOnly="true"/>
+    <Item identifier="weldingtool" amount="2"/>
+    <Item identifier="weldingfueltank" amount="1"/>
+    <Item identifier="wrench"/>
+    <Item identifier="crowbar"/>
+    <Item identifier="screwdriver"/>
+    <Item identifier="fuelrod" amount="6"/>
+    <Item identifier="antibleeding1" amount="8"/>
+    <Item identifier="antidama1" amount="8"/>
+    <Item identifier="antibloodloss1" amount="8"/>
+    <Item identifier="calyxanide"/>
+    <Item identifier="antipsychosis"/>
+    <Item identifier="antinarc"/>
+    <Item identifier="antirad"/>
+    <Item identifier="antiparalysis"/>
+    <Item identifier="plasmacutter"/>
+    <Item identifier="harpoongun"/>
+    <Item identifier="stunbaton"/>
+    <Item identifier="divingknife"/>
+    <Item identifier="revolver"/>
+    <Item identifier="sulphuricacid"/>
+    <Item identifier="stabilozine" amount="5"/>
+    <Item identifier="ethanol" amount="2"/>
+    <Item identifier="opium" amount="2"/>
+    <Item identifier="antibiotics" amount="2"/>
+    <Item identifier="handheldsonar"/>
+    <Item identifier="flashlight"/>
+  </ItemSet>
+
+  <ItemSet identifier="hard" order="0">
+    <Item identifier="safeandsoundsecurity101" amount="1" MultiPlayerOnly="true"/>
+    <Item identifier="fuelrod" amount="3"/>
+    <Item identifier="wrench"/>
+    <Item identifier="crowbar"/>
+    <Item identifier="screwdriver"/>
+    <Item identifier="weldingtool"/>
+    <Item identifier="weldingfueltank" amount="1"/>
+    <Item identifier="uranium" amount="1"/>
+    <Item identifier="lead" amount="2"/>
+    <Item identifier="steel" amount="2"/>
+    <Item identifier="divingknife"/>
+    <Item identifier="antibleeding1" amount="3"/>
+    <Item identifier="antidama1" amount="3"/>
+    <Item identifier="antibloodloss1" amount="3"/>
+  </ItemSet>
+  
+</StartItems>

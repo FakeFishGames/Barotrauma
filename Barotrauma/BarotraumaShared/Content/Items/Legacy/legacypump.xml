@@ -1,0 +1,103 @@
+﻿<Items>
+  <Item
+    name="Pump"
+    nameidentifier="pump"
+    aliases="Pump"
+    category="Legacy"
+    tags="pump"
+    linkable="true"
+    allowedupgrades="pumps">
+
+    <Sprite texture="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
+    <UpgradePreviewSprite scale="2.0" texture="Content/UI/WeaponUI.png" sourcerect="448,960,64,64" origin="0.5,0.45"/>
+
+    <Pump canbeselected="true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
+      <GuiFrame relativesize="0.25,0.2" minsize="420,220" anchor="Center" style="ItemUI"/>
+      <sound file="Content/Items/Pump/Pump.ogg" type="OnActive" range="800.0" volumeproperty="CurrFlow" volume="0.01" loop="true"/>
+      <sound file="Content/Items/Pump/PumpBroken.ogg" type="Always" range="800.0" volumeproperty="CurrentBrokenVolume" volume="0.008" loop="true"/>
+    </Pump>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="70"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_active" displayname="connection.setstate"/>
+      <input name="set_speed" displayname="connection.setpumpingspeed"/>
+      <input name="set_targetlevel" displayname="connection.settargetwaterlevel"/>
+    </ConnectionPanel>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.20" mindeteriorationdelay="60" maxdeteriorationdelay="240" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="equipped"/>
+      <ParticleEmitter particle="smoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+  
+  <Item
+    name="Small Pump"
+    nameidentifier="smallpump"
+    aliases="Small Pump"
+    category="Legacy"
+    tags="pump"
+    allowedupgrades="pumps"
+    linkable="true">
+
+    <Sprite texture="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
+    <UpgradePreviewSprite texture="Content/UI/WeaponUI.png" sourcerect="448,960,64,64" origin="0.5,0.45"/>
+
+    <Pump canbeselected = "true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3">
+      <GuiFrame relativesize="0.25,0.2" minsize="420,220" anchor="Center" style="ItemUI"/>
+      <sound file="Content/Items/Pump/Pump.ogg" type="OnActive" range="500.0" volumeproperty="CurrFlow" volume="0.005" loop="true"/>
+      <sound file="Content/Items/Pump/PumpBroken.ogg" type="Always" range="500.0" volumeproperty="CurrentBrokenVolume" volume="0.004" loop="true"/>
+    </Pump>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="70"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_active" displayname="connection.setstate"/>
+      <input name="set_speed" displayname="connection.setpumpingspeed"/>
+      <input name="set_targetlevel" displayname="connection.settargetwaterlevel"/>
+    </ConnectionPanel>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.20" mindeteriorationdelay="60" maxdeteriorationdelay="240" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="equipped"/>
+      <ParticleEmitter particle="smoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+</Items>

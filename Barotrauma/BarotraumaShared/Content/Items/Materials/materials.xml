@@ -1,0 +1,881 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <!-- Elements ************************************************************************************************ -->
+  <Item name="" identifier="carbon" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="10" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="20"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="5,55,46,38" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="iron" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,munition_jacket,petfood3,scrapcannonammo" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="8" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="20"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="5,92,46,38" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <!-- for scrap cannon -->
+    <Projectile characterusable="false" hitscan="true" hitscancount="16" removeonhit="true" spread="25">
+      <ParticleEmitter particle="tracerfirearm" particleamount="1" velocitymin="0" velocitymax="0" colormultiplier="255,255,115,100" scalemultiplier="1,0.5"/>
+      <Attack structuredamage="1" targetforce="4" itemdamage="1" severlimbsprobability="0.1" penetration="0.2">
+        <Affliction identifier="lacerations" strength="6"/>
+        <Affliction identifier="bleeding" strength="6"/>
+        <Affliction identifier="stun" strength="0.15"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="impactfirearm" particleamount="1" velocitymin="0" velocitymax="0"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+    </Projectile>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="tin" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,petfood3" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="11" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="20"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="150,92,47,38" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="lead" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,petfood3,munition_core,scrapcannonammo" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="18" sold="true" minavailable="3">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="6"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1" minavailable="10"/>
+      <Price storeidentifier="merchantmine" multiplier="0.8" minavailable="20"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="101,92,47,38" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="40"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <AiTarget sightrange="1000" static="true"/>
+    <!-- for scrap cannon -->
+    <Projectile characterusable="false" hitscan="true" hitscancount="16" removeonhit="true" spread="25">
+      <ParticleEmitter particle="tracerfirearm" particleamount="1" velocitymin="0" velocitymax="0" colormultiplier="255,255,115,100" scalemultiplier="1,0.5"/>
+      <Attack structuredamage="2" targetforce="4" itemdamage="2" severlimbsprobability="0.1" penetration="0.2">
+        <Affliction identifier="lacerations" strength="7"/>
+        <Affliction identifier="bleeding" strength="6"/>
+        <Affliction identifier="stun" strength="0.2"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="impactfirearm" particleamount="1" velocitymin="0" velocitymax="0"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" identifier="phosphorus" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,munition_propulsion" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="25" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="10"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="153,6,23,44" depth="0.55" origin="0.5,0.5"/>
+    <Body width="22" height="42" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="copper" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,petfood3,munition_core,munition_jacket,advmunition_jacket" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="22" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="10"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="53,92,48,38" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="zinc" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,munition_jacket,advmunition_jacket" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="26" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="10"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="102,55,46,37" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="15"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="sodium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,explodesinwater" canbepicked="true" description="" cargocontaineridentifier="chemicalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="medfabcab"/>
+    <PreferredContainer secondary="abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="33" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="10"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="29,7,23,44" depth="0.55" origin="0.5,0.5"/>
+    <Body width="22" height="42" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
+    <LightComponent LightColor="255,127,39,255" Flicker="1.0" range="100" IsOn="false">
+      <StatusEffect type="OnActive" target="This" IsOn="false">
+        <Conditional target="This" InWater="false"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" IsOn="true">
+        <ParticleEmitter particle="weldspark" particlespersecond="5" anglemin="0" anglemax="360" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="2" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="0.7" anglemin="0" anglemax="360" velocitymin="-10" velocitymax="10"/>
+        <sound file="Content/Items/Tools/FlareLoop.ogg" type="OnActive" range="500.0" loop="true"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" delay="3.0" setvalue="true" condition="0" stackable="false" checkconditionalalways="true">
+        <!-- check the item is still in water after the delay has run out-->
+        <Conditional InWater="true"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="2000"/>
+        <Explosion range="150.0" ballastfloradamage="20" force="3" applyfireeffects="false" flames="false">
+          <Affliction identifier="burn" strength="25"/>
+          <Affliction identifier="stun" strength="5"/>
+        </Explosion>
+        <Remove/>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="silicon" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="17" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="10"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="196,54,46,38" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="15"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="calcium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab" secondary="medfabcab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="31" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="10"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="129,6,23,44" depth="0.55" origin="0.5,0.5"/>
+    <Body width="22" height="42" density="15"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="aluminium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,petfood3" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="42" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="10"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="53,53,47,39" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="uranium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,advmunition_core,scrapcannonammo" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <PreferredContainer primary="storagecab"/>
+    <Price baseprice="50" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="5"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="898,192,61,63" origin="0.5,0.5"/>
+    <Sprite texture="minerals.png" sourcerect="4,130,49,41" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="32" density="40"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <!-- for scrap cannon -->
+    <Projectile characterusable="false" hitscan="true" hitscancount="16" removeonhit="true" spread="25">
+      <ParticleEmitter particle="tracerfirearm" particleamount="1" velocitymin="0" velocitymax="0" colormultiplier="255,255,115,100" scalemultiplier="1,0.5"/>
+      <Attack structuredamage="1" targetforce="4" itemdamage="1" severlimbsprobability="0.15" penetration="0.2">
+        <Affliction identifier="lacerations" strength="8"/>
+        <Affliction identifier="bleeding" strength="6"/>
+        <Affliction identifier="stun" strength="0.3"/>
+        <Affliction identifier="radiationsickness" strength="5"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="impactfirearm" particleamount="1" velocitymin="0" velocitymax="0"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" identifier="potassium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,explodesinwater" canbepicked="true" description="" cargocontaineridentifier="chemicalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <Price baseprice="10" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="20"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="77,6,23,44" depth="0.55" origin="0.5,0.5"/>
+    <Body width="22" height="42" density="15"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
+    <LightComponent LightColor="255,127,39,255" Flicker="1.0" range="100" IsOn="false">
+      <StatusEffect type="OnActive" target="This" IsOn="false">
+        <Conditional target="This" InWater="false"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" IsOn="true">
+        <ParticleEmitter particle="weldspark" particlespersecond="5" anglemin="0" anglemax="360" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="2" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="0.7" anglemin="0" anglemax="360" velocitymin="-10" velocitymax="10"/>
+        <sound file="Content/Items/Tools/FlareLoop.ogg" type="OnActive" range="500.0" loop="true"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" delay="3.0" setvalue="true" condition="0" stackable="false" checkconditionalalways="true">
+        <!-- check the item is still in water after the delay has run out-->
+        <Conditional InWater="true"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="2000"/>
+        <Explosion range="150.0" ballastfloradamage="20" force="3" applyfireeffects="false" flames="false">
+          <Affliction identifier="burn" strength="25"/>
+          <Affliction identifier="stun" strength="5"/>
+        </Explosion>
+        <Remove/>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="titanium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,petfood3,advmunition_core,advmunition_tip" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.02"/>
+    <Price baseprice="65" sold="false" minleveldifficulty="15">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="3"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="150,55,46,37" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="magnesium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,munition_propulsion" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="65">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="2"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="4"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1" minavailable="4"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1" minavailable="4"/>
+      <Price storeidentifier="merchantmine" multiplier="0.8" minavailable="6"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="102,6,23,44" depth="0.55" origin="0.5,0.5"/>
+    <Body width="22" height="42" density="15"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used (not used by the vanilla game) -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="lithium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,explodesinwater" canbepicked="true" description="" cargocontaineridentifier="chemicalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="88" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="5"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="3,7,24,44" depth="0.55" origin="0.5,0.5"/>
+    <Body width="27" height="47" density="15"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
+    <LightComponent LightColor="255,0,0,255" Flicker="1.0" range="100" IsOn="false">
+      <StatusEffect type="OnActive" target="This" IsOn="false">
+        <Conditional target="This" InWater="false"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" IsOn="true">
+        <ParticleEmitter particle="weldspark" particlespersecond="5" anglemin="0" anglemax="360" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="2" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="0.7" anglemin="0" anglemax="360" velocitymin="-10" velocitymax="10"/>
+        <sound file="Content/Items/Tools/FlareLoop.ogg" type="OnActive" range="500.0" loop="true"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" delay="3.0" setvalue="true" condition="0" stackable="false" checkconditionalalways="true">
+        <!-- check the item is still in water after the delay has run out-->
+        <Conditional InWater="true"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="2000"/>
+        <Explosion range="150.0" ballastfloradamage="20" force="3" applyfireeffects="false" flames="false">
+          <Affliction identifier="burn" strength="25"/>
+          <Affliction identifier="stun" strength="5"/>
+        </Explosion>
+        <Remove/>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="chlorine" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="11" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="20"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="55,7,22,44" depth="0.6" origin="0.5,0.5"/>
+    <Body width="22" height="42" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="thorium" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.02"/>
+    <Price baseprice="125" sold="false" minleveldifficulty="15">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.8" minavailable="5"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="54,131,46,39" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="30" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <!-- Compounds ************************************************************************************************ -->
+  <Item name="" identifier="steel" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,petfood3,munition_core,advmunition_core,advmunition_tip,scrapcannonammo" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="28">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="7"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="10"/>
+      <Price storeidentifier="merchantresearch" minavailable="6"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="15"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9" minavailable="20"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <RequiredItem identifier="carbon"/>
+      <RequiredItem identifier="iron" amount="2"/>
+    </Fabricate>
+    <Deconstruct time="5">
+      <Item identifier="carbon" copycondition="true"/>
+      <Item identifier="iron" copycondition="true"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="4,171,54,27" depth="0.55" origin="0.5,0.5"/>
+    <Body width="50" height="25" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <!-- for scrap cannon -->
+    <Projectile characterusable="false" hitscan="true" hitscancount="16" removeonhit="true" spread="25">
+      <ParticleEmitter particle="tracerfirearm" particleamount="1" velocitymin="0" velocitymax="0" colormultiplier="255,255,115,100" scalemultiplier="1,0.5"/>
+      <Attack structuredamage="2" targetforce="4" itemdamage="2" severlimbsprobability="0.15" penetration="0.3">
+        <Affliction identifier="lacerations" strength="7.5"/>
+        <Affliction identifier="bleeding" strength="7.5"/>
+        <Affliction identifier="stun" strength="0.3"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="impactfirearm" particleamount="1" velocitymin="0" velocitymax="0"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+    </Projectile>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="titaniumaluminiumalloy" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,petfood3" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.02"/>
+    <Price baseprice="150" minleveldifficulty="15">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="2"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9" minavailable="3"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredSkill identifier="mechanical" level="30"/>
+      <RequiredItem identifier="titanium"/>
+      <RequiredItem identifier="aluminium" amount="2"/>
+    </Fabricate>
+    <Deconstruct time="5">
+      <Item identifier="aluminium" copycondition="true"/>
+      <Item identifier="titanium" copycondition="true"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="62,203,55,27" depth="0.55" origin="0.5,0.5"/>
+    <Body width="50" height="25" density="30"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="plastic" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="45">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="7"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="10"/>
+      <Price storeidentifier="merchantresearch" minavailable="12"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="9"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9" minavailable="15"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <RequiredItem identifier="silicon" amount="2"/>
+      <RequiredItem identifier="carbon"/>
+    </Fabricate>
+    <Deconstruct time="5">
+      <Item identifier="silicon" copycondition="true"/>
+      <Item identifier="carbon" copycondition="true"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="202,100,43,30" depth="0.55" origin="0.5,0.5"/>
+    <Body width="40" height="27" density="12"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="ballisticfiber" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" amount="1" spawnprobability="0.05"/>
+    <Price baseprice="160" minleveldifficulty="15">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="4"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9" minavailable="2"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="titanium"/>
+      <RequiredItem identifier="plastic" amount="2"/>
+    </Fabricate>
+    <Deconstruct time="5">
+      <Item identifier="titanium" copycondition="true"/>
+      <Item identifier="plastic" copycondition="true"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="706,770,62,61" origin="0.5,0.5"/>
+    <Sprite texture="minerals.png" sourcerect="221,0,35,53" depth="0.55" origin="0.5,0.5"/>
+    <Body width="35" height="55" density="12"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="organicfiber" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <PreferredContainer primary="medfabcab"/>
+    <Price baseprice="30">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="4"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="8"/>
+      <Price storeidentifier="merchantresearch" minavailable="7"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="3"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9" minavailable="2"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="178,8,42,45" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="45" density="12"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="rubber" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.1"/>
+    <Price baseprice="20">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="9"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="13"/>
+      <Price storeidentifier="merchantresearch" minavailable="7"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="8"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9" minavailable="6"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="133,221,35,32" depth="0.55" origin="0.5,0.5"/>
+    <Body width="5" radius="15" density="9"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="flashpowder" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" impacttolerance="8" useinhealthinterface="true" scale="0.4" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <Price baseprice="90">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="4"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1" minavailable="6"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="7"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.9"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator,medicalfabricator" requiredtime="5">
+      <RequiredItem identifier="magnesium"/>
+      <RequiredItem identifier="potassium" amount="2"/>
+    </Fabricate>
+    <Deconstruct time="5">
+      <Item identifier="magnesium" copycondition="true"/>
+      <Item identifier="potassium" copycondition="true"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64"/>
+    <Sprite texture="minerals.png" depth="0.55" sourcerect="127,134,23,42" origin="0.5,0.5"/>
+    <Body width="23" height="43" density="15"/>
+    <Throwable characterusable="false" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnUse" target="This" Condition="0.0" setvalue="true"/>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="3000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="3000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="3000"/>
+        <Explosion range="250.0" ballastfloradamage="20" force="3">
+          <Affliction identifier="burn" strength="50"/>
+          <Affliction identifier="stun" strength="5"/>
+        </Explosion>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  <Item name="" identifier="scrap" sonarsize="2" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,scrapcannonammo" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" aliases="scrap1,scrap2,scrap3,scrap4,scrap5,scrap6,scrap7,scrap8">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,wreckreactorcab,abandonedstoragecab,piratestoragecab" minamount="1" maxamount="2" spawnprobability="0.5"/>
+    <Price baseprice="5" sold="false"/>
+    <Deconstruct time="10" chooserandom="true" amount="2">
+      <Item identifier="iron" commonness="0.8"/>
+      <Item identifier="thorium" commonness="0.2"/>
+      <Item identifier="steel" commonness="0.6"/>
+      <Item identifier="aluminium" commonness="0.6"/>
+      <Item identifier="titaniumaluminiumalloy" commonness="0.3"/>
+      <Item identifier="copper" commonness="0.8"/>
+      <Item identifier="rubber" commonness="0.5"/>
+      <Item identifier="carbon" commonness="0.6"/>
+      <Item identifier="lead" commonness="0.7"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="448,384,64,64"/>
+    <Sprite texture="minerals.png" sourcerect="175,220,50,33" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="20" density="25"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <!-- for scrap cannon -->
+    <Projectile characterusable="false" hitscan="true" hitscancount="16" removeonhit="true" spread="25">
+      <ParticleEmitter particle="tracerfirearm" particleamount="1" velocitymin="0" velocitymax="0" colormultiplier="255,255,115,100" scalemultiplier="1,0.5"/>
+      <Attack structuredamage="2" targetforce="4" itemdamage="2" severlimbsprobability="0.15" penetration="0.3">
+        <Affliction identifier="lacerations" strength="7.5"/>
+        <Affliction identifier="bleeding" strength="7.5"/>
+        <Affliction identifier="stun" strength="0.3"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="impactfirearm" particleamount="1" velocitymin="0" velocitymax="0"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <!-- ALIEN MATERIALS -->
+  <Item name="" identifier="incendium" category="Material,Alien" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab" amount="1" spawnprobability="0.02"/>
+    <PreferredContainer secondary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.1"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.2"/>
+    <PreferredContainer secondary="ruintreasure" minamount="1" maxamount="3" spawnprobability="0.4"/>
+    <Price baseprice="200" sold="false" minleveldifficulty="35">
+      <Price storeidentifier="merchantoutpost" multiplier="1.25"/>
+      <Price storeidentifier="merchantcity" multiplier="1.15"/>
+      <Price storeidentifier="merchantresearch" sold="true"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.9"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,53,61" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="105,439,52,61" depth="0.55" origin="0.5,0.5"/>
+    <Body radius="20" height="10" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false" msg="ItemMsgPickUpSelect" attachable="true" reattachable="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" setvalue="true">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="3000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="3000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="3000"/>
+        <Explosion range="250.0" ballastfloradamage="50" force="5">
+          <Affliction identifier="burn" strength="50"/>
+          <Affliction identifier="burn" strength="5" probability="0.2" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="5"/>
+        </Explosion>
+        <Remove/>
+        <Fire size="10.0"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <ContainedSprite texture="Content/Items/Alien/AlienMaterials.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="33,182,193,76" origin="0.5,0.5"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="20">
+      <Commonness commonness="0" abysscommonness="0"/>
+      <Commonness commonness="0" cavecommonness="0" abysscommonness="0" leveltype="europanridge"/>
+      <Commonness commonness="0" cavecommonness="0.05" abysscommonness="30" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0" cavecommonness="0.5" abysscommonness="100" leveltype="thegreatsea"/>
+      <Commonness commonness="0" cavecommonness="1" abysscommonness="100" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+  </Item>
+  <Item name="" identifier="fulgurium" category="Material,Alien" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab" amount="1" spawnprobability="0.02"/>
+    <PreferredContainer secondary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.1"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.2"/>
+    <PreferredContainer secondary="ruintreasure" minamount="1" maxamount="3" spawnprobability="0.4"/>
+    <Price baseprice="200" minleveldifficulty="35">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" sold="false" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9" minavailable="1"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="328,833,51,63" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="186,351,59,67" depth="0.55" origin="0.5,0.5"/>
+    <Body radius="25" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <ContainedSprite texture="Content/Items/Alien/AlienMaterials.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="27,84,200,88" origin="0.5,0.5"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="20">
+      <Commonness commonness="0" abysscommonness="0"/>
+      <Commonness commonness="0" cavecommonness="0" abysscommonness="0" leveltype="europanridge"/>
+      <Commonness commonness="0" cavecommonness="0.05" abysscommonness="50" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0" cavecommonness="0.5" abysscommonness="125" leveltype="thegreatsea"/>
+      <Commonness commonness="0" cavecommonness="1" abysscommonness="125" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+  </Item>
+  <Item name="" identifier="physicorium" category="Material,Alien" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab" amount="1" spawnprobability="0.02"/>
+    <PreferredContainer secondary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.1"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.2"/>
+    <PreferredContainer secondary="ruintreasure" minamount="1" maxamount="3" spawnprobability="0.4"/>
+    <Price baseprice="200" sold="false" minleveldifficulty="35">
+      <Price storeidentifier="merchantoutpost" multiplier="1.25"/>
+      <Price storeidentifier="merchantcity" multiplier="1.15"/>
+      <Price storeidentifier="merchantresearch" sold="true"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.9"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,52,59" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="97,349,58,71" depth="0.55" origin="0.5,0.5"/>
+    <Body radius="25" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <ContainedSprite texture="Content/Items/Alien/AlienMaterials.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="283,0,197,87" origin="0.5,0.5"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="20">
+      <Commonness commonness="0" abysscommonness="0"/>
+      <Commonness commonness="0" cavecommonness="0" abysscommonness="0" leveltype="europanridge"/>
+      <Commonness commonness="0" cavecommonness="0.05" abysscommonness="50" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0" cavecommonness="0.5" abysscommonness="125" leveltype="thegreatsea"/>
+      <Commonness commonness="0" cavecommonness="1" abysscommonness="125" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+  </Item>
+  <Item name="" identifier="dementonite" category="Material,Alien" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab" amount="1" spawnprobability="0.02"/>
+    <PreferredContainer secondary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.1"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.2"/>
+    <PreferredContainer secondary="ruintreasure" minamount="1" maxamount="3" spawnprobability="0.4"/>
+    <Price baseprice="200" sold="false" minleveldifficulty="35">
+      <Price storeidentifier="merchantoutpost" multiplier="1.25"/>
+      <Price storeidentifier="merchantcity" multiplier="1.15"/>
+      <Price storeidentifier="merchantresearch" sold="true"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.1"/>
+      <Price storeidentifier="merchantmine" sold="true" multiplier="0.9"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64"/>
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="15,356,60,54" depth="0.55" origin="0.5,0.5"/>
+    <Body radius="25" density="20"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <ContainedSprite texture="Content/Items/Alien/AlienMaterials.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="15,0,222,85" origin="0.5,0.5"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="20">
+      <Commonness commonness="0" abysscommonness="0"/>
+      <Commonness commonness="0" cavecommonness="0" abysscommonness="0" leveltype="europanridge"/>
+      <Commonness commonness="0" cavecommonness="0.05" abysscommonness="30" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0" cavecommonness="0.5" abysscommonness="100" leveltype="thegreatsea"/>
+      <Commonness commonness="0" cavecommonness="1" abysscommonness="100" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+  </Item>
+</Items>

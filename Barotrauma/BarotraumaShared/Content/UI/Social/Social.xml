@@ -1,0 +1,60 @@
+<Style>
+  <FriendInvitedYou
+    color="#82c428"
+    hovercolor="#82c428"
+    selectedcolor="#82c428"
+    pressedcolor="#82c428"
+    outlinecolor="Transparent"/>
+  <FriendPlayingBarotrauma
+    color="#2d7d46"
+    hovercolor="#2d7d46"
+    selectedcolor="#2d7d46"
+    pressedcolor="#2d7d46"
+    outlinecolor="Transparent"/>
+  <FriendPlayingAnotherGame
+    color="#4070aa"
+    hovercolor="#4070aa"
+    selectedcolor="#4070aa"
+    pressedcolor="#4070aa"
+    outlinecolor="Transparent"/>
+  <FriendNotPlaying
+    color="#4070aa"
+    hovercolor="#4070aa"
+    selectedcolor="#4070aa"
+    pressedcolor="#4070aa"
+    outlinecolor="Transparent"/>
+  <FriendOffline
+    color="#3c3c3c"
+    hovercolor="#3c3c3c"
+    selectedcolor="#3c3c3c"
+    pressedcolor="#3c3c3c"
+    outlinecolor="Transparent"/>
+  <SocialOverlayBackground
+    color="#000000cc"/>
+  <SocialOverlayFriendsList
+    color="#000000dd"/>
+  <SocialOverlayPopup
+    color="#151616"
+    hovercolor="#303033"
+    selectedcolor="#151616"
+    disabledcolor="#0a0a0a"
+    pressedcolor="#50505a"
+    outlinecolor="#64696a"/>
+  <FriendsButton color="#73bb9f" hovercolor="#51c099" selectedcolor="#73bb9f" disabledcolor="#363636" pressedcolor="#48846e" textcolor="#050507">
+    <Sprite name="SocialOverlayButton" texture="Content/UI/UIAtlasDevices.png" sourcerect="284,414,78,47" slice="288,418,358,457" origin="0.5,0.5"/>
+    <GUITextBlock textcolor="#050507" padding="10.0, 0.0, 10.0, 0.0" font="font"/>
+  </FriendsButton>
+  <FriendsButtonIcon color="#bbbbbb" hovercolor="#cecece" selectedcolor="#bbbbbb" disabledcolor="#777777" pressedcolor="#888888">
+    <Sprite name="FriendsButtonIcon" texture="Content/UI/Social/SocialUiIcons.png" sourcerect="0,0,128,128" tile="false" maintainaspectratio="true"/>
+  </FriendsButtonIcon>
+  <SocialOverlayCloseButton color="#bbbbbb" hovercolor="#cecece" selectedcolor="#bbbbbb" disabledcolor="#777777" pressedcolor="#888888">
+    <Sprite name="FriendsButtonIcon" texture="Content/UI/Social/SocialUiIcons.png" sourcerect="128,0,40,40" tile="false" maintainaspectratio="true"/>
+  </SocialOverlayCloseButton>
+  <SocialOverlayButton color="#646464" hovercolor="#808080" selectedcolor="#646464" disabledcolor="#363636" pressedcolor="#aaaaaa">
+    <Sprite name="SocialOverlayButton" texture="Content/UI/UIAtlasDevices.png" sourcerect="284,414,78,47" slice="288,418,358,457" origin="0.5,0.5"/>
+    <GUITextBlock textcolor="#dedede" padding="10.0, 0.0, 10.0, 0.0" font="subheading"/>
+  </SocialOverlayButton>
+  <InviteNotification color="#82c428">
+    <Sprite name="InviteNotification" texture="Content/UI/UIAtlasGeneral.png" tile="false" sourcerect="536,563,36,36" origin="0.5,0.5" maintainaspectratio="true"/>
+  </InviteNotification>
+</Style>

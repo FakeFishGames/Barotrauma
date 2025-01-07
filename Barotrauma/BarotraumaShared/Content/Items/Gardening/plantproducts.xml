@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="creepingorange" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,plantitem,petfood1,petfood2,petfood3,distillable" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft" impacttolerance="8" allowasextracargo="true">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" depth="0.2" sourcerect="971,649,43,55" origin="0.5,0.5"/>
+    <Body radius="30" density="9"/>
+    <Price baseprice="20" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.8"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Fabricate suitablefabricators="vendingmachine" requiredtime="1" requiredmoney="30" fabricationlimitmin="3" fabricationlimitmax="5"/>
+    <Deconstruct time="35">
+      <Item identifier="carbon" mincondition="0.5"/>
+      <Item identifier="creepingorangevineseed" mincondition="0.5"/>
+    </Deconstruct>
+    <Throwable characterusable="true" canBeCombined="false" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
+        <Explosion range="0.0" structuredamage="0" itemdamage="0" force="0.0" severlimbsprobability="0.0" decal="fruitsplatter1" decalsize="1.0"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1.5" scalemax="2"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.8"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+    <AiTarget sightrange="1000" static="true"/>
+    <PreferredContainer primary="plantcontainer"/>
+    <PreferredContainer secondary="medfabcab,storagecab"/>
+  </Item>
+  
+  <Item name="" identifier="tobaccobud" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,plantitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft" impacttolerance="8" allowasextracargo="true">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" depth="0.2" sourcerect="904,646,56,61" origin="0.5,0.5"/>
+    <Body radius="30" density="9" waterdragcoefficient="20"/>
+    <Price baseprice="40" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.8"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="35">
+      <Item identifier="carbon" mincondition="0.5"/>
+      <Item identifier="tobaccovineseed" mincondition="0.5"/>
+    </Deconstruct>
+    <Throwable characterusable="true" canBeCombined="false" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
+        <Explosion range="0.0" structuredamage="0" itemdamage="0" force="0.0" severlimbsprobability="0.0" decal="fruitsplatter1" decalsize="1.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1.5" scalemax="2"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.8"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+    <PreferredContainer primary="plantcontainer"/>
+    <PreferredContainer secondary="medfabcab,storagecab"/>
+  </Item>
+
+  <Item name="" identifier="badraptorbane" descriptionidentifier="raptorbane" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,plantitem,petfood1,petfood2,petfood3" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft" impacttolerance="8" allowasextracargo="true">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" depth="0.2" sourcerect="907,838,44,50" origin="0.5,0.5"/>
+    <Body radius="30" density="9"/>
+    <Deconstruct time="35">
+      <Item identifier="carbon" mincondition="0.5"/>
+      <Item identifier="raptorbaneseed" mincondition="0.5"/>
+    </Deconstruct>
+    <Throwable characterusable="true" canBeCombined="false" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnNotContained" target="This" Scale="0.05">
+        <sound file="Content/Sounds/Damage/Gore1.ogg" selectionmode="Random" range="500" volume="0.5"/>
+        <sound file="Content/Sounds/Damage/Gore2.ogg" selectionmode="Random" range="500" volume="0.5"/>
+        <sound file="Content/Sounds/Damage/Gore3.ogg" selectionmode="Random" range="500" volume="0.5"/>
+        <sound file="Content/Sounds/Damage/Gore4.ogg" selectionmode="Random" range="500" volume="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="Always" target="This" Condition="0.0" setvalue="true">
+        <Conditional Scale="gte 0.75"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <Explosion range="150.0" structuredamage="0" itemdamage="0" force="3.0" severlimbsprobability="0.0" decal="blood" decalSize="3.0">
+          <Affliction identifier="nausea" strength="50"/>
+        </Explosion>
+        <sound file="Content/Sounds/Damage/Limbslash2.ogg" range="750" volume="0.75"/>
+        <ParticleEmitter particle="bloodsplash" anglemin="0" anglemax="360" particleamount="20" velocitymin="0" velocitymax="0" scalemin="0.75" scalemax="1.75"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.8"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+    <AiTarget sightrange="1000" static="true"/>
+    <PreferredContainer primary="plantcontainer"/>
+    <PreferredContainer secondary="storagecab"/>
+  </Item>
+  
+  <Item name="" identifier="saltbulb" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,plantitem,explodesinwater" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft" impacttolerance="8" allowasextracargo="true">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" depth="0.2" sourcerect="968,712,49,55" origin="0.5,0.5"/>
+    <Body radius="30" density="9"/>
+    <Price baseprice="65" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.8"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="35">
+      <Item identifier="sodium"/>
+      <Item identifier="saltvineseed"/>
+    </Deconstruct>
+    <Throwable characterusable="true" canBeCombined="false" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="2000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="2000"/>
+        <Explosion range="50.0" force="5.0" flames="false" underwaterBubble="false" sparks="false" smoke="false" shockwave="true">
+          <Affliction identifier="burn" strength="20"/>
+          <Affliction identifier="stun" strength="5"/>
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
+        <Explosion range="0.0" structuredamage="0" itemdamage="0" force="0.0" severlimbsprobability="0.0" decal="fruitsplatter1" decalsize="1.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1.5" scalemax="2"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.8"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+    <PreferredContainer primary="plantcontainer"/>
+    <PreferredContainer secondary="storagecab"/>
+  </Item>
+
+  <Item name="" identifier="raptorbane" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,plantitem,petfood1,petfood2,petfood3,distillable" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft" impacttolerance="8" allowasextracargo="true">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" depth="0.2" sourcerect="971,777,44,50" origin="0.5,0.5"/>
+    <Body radius="30" density="9" waterdragcoefficient="10"/>
+    <Price baseprice="40" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.8"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="35">
+      <Item identifier="carbon" mincondition="0.5"/>
+      <Item identifier="raptorbaneseed" mincondition="0.5"/>
+    </Deconstruct>
+    <Throwable characterusable="true" canBeCombined="false" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
+        <Explosion range="0.0" structuredamage="0" itemdamage="0" force="0.0" severlimbsprobability="0.0" decal="fruitsplatter1" decalsize="1.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1.5" scalemax="2"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.8"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+    <AiTarget sightrange="1000" static="true"/>
+    <PreferredContainer primary="plantcontainer"/>
+    <PreferredContainer secondary="storagecab"/>
+  </Item>
+
+  <Item name="" identifier="badcreepingorange" descriptionidentifier="creepingorange" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,plantitem,petfood1,petfood2,petfood3" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft" impacttolerance="5.5" allowasextracargo="true">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" depth="0.2" sourcerect="971,835,43,55" origin="0.5,0.5"/>
+    <Body radius="30" density="9"/>
+    <Deconstruct time="35">
+      <Item identifier="carbon" mincondition="0.5"/>
+      <Item identifier="creepingorangevineseed" mincondition="0.5"/>
+    </Deconstruct>
+    <Throwable characterusable="true" canBeCombined="false" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnNotContained" target="This" Scale="0.05">
+        <sound file="Content/Sounds/Damage/Gore1.ogg" selectionmode="Random" range="500" volume="0.5"/>
+        <sound file="Content/Sounds/Damage/Gore2.ogg" selectionmode="Random" range="500" volume="0.5"/>
+        <sound file="Content/Sounds/Damage/Gore3.ogg" selectionmode="Random" range="500" volume="0.5"/>
+        <sound file="Content/Sounds/Damage/Gore4.ogg" selectionmode="Random" range="500" volume="0.5"/>
+        <ParticleEmitter particle="spark" particlespersecond="5" anglemin="0" anglemax="360" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <StatusEffect type="Always" target="This" Condition="0.0" setvalue="true">
+        <Conditional Scale="gte 0.75"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <sound file="Content/Sounds/Damage/Limbslash2.ogg" range="750" volume="0.75"/>
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1.5" scalemax="2"/>
+        <ParticleEmitter particle="fruitchunks" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.4" scalemax="0.8"/>
+        <Explosion range="50.0" force="3.0">
+          <Affliction identifier="burn" strength="50"/>
+        </Explosion>
+        <Fire size="1.0"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+    <AiTarget sightrange="1000" static="true"/>
+    <PreferredContainer primary="plantcontainer"/>
+    <PreferredContainer secondary="storagecab"/>
+  </Item>
+</Items>

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--COLD CAVERNS-->
+<levelobjects>
+  <!-- a series of background chunks that spawn along walls -->
+  <BackgroundChunks identifier="bioluminescentcavebackgroundchunks" spawnpos="Wall" minsurfacewidth="0" minsize="1.5" maxsize="3" randomrotation="-180,180" commonness="0" depthrange="1200,3200" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="100,500">
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="4,4,335,321" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="345,4,328,333" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="687,4,339,332" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="14,335,450,341" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="493,343,500,334" origin="0.5,0.5"/>
+    <LightSource range="200" color="25,25,80,250" drawbehindsubs="true" pulseamount="0.3" pulsefrequency="0.1"/>
+    <overridecommonness leveltype="bioluminescentcave" commonness="100"/>
+  </BackgroundChunks>
+  <EdgeChunks identifier="bioluminescentcaveedgechunks" spawnpos="Wall, RuinWall" minsurfacewidth="200" minsize="0.5" maxsize="0.7" randomrotation="-5,5" randomoffset="0,-70" commonness="0" depthrange="5,5" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="8,412,498,326" origin="0.48817495,0.91070217"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="536,402,477,324" origin="0.50920105,0.91632384"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="15,736,481,287" origin="0.5051975,0.9442509"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="524,736,482,287" origin="0.53573084,0.93147516"/>
+    <LightSource range="400" color="25,25,80,250" drawbehindsubs="true" pulseamount="0.3" pulsefrequency="0.1"/>
+    <overridecommonness leveltype="bioluminescentcave" commonness="50"/>
+  </EdgeChunks>
+  <bioluminescentobjects identifier="bioluminescentcaveobjects" spawnpos="Wall, RuinWall" minsurfacewidth="200" minsize="0.5" maxsize="1" randomrotation="-5,5" randomoffset="0,-10" commonness="0" depthrange="5,5" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="344,30,326,191" origin="0.49079755,0.93193716"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="684,0,336,217" origin="0.5072752,0.94214034"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="9,14,323,199" origin="0.498452,0.9447236"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="347,221,333,184" origin="0.52952963,0.89432377"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/LevelObjects.png" sourcerect="685,215,331,183" origin="0.49391207,0.86741745"/>
+    <LightSource range="400" color="25,25,80,250" drawbehindsubs="true" pulseamount="0.3" pulsefrequency="0.1"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="0,684,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="342,684,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/BioluminescentCave/BackgroundChunks.png" sourcerect="682,684,342,342" origin="0.5,0.5"/>
+    <overridecommonness leveltype="bioluminescentcave" commonness="100"/>
+  </bioluminescentobjects>
+  <HallucinationEmitter identifier="hallucinationemitter" spawnpos="Wall" minsurfacewidth="0" minsize="1" maxsize="1" randomrotation="0,0" randomoffset="-500,500" commonness="0" depthrange="-0.5,0" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="4">
+    <Trigger position="0,0" radius="4000" triggeredby="Human">
+      <Attack onlyhumans="true" damagerange="5000">
+        <Affliction identifier="hallucinating" strength="1.005"/>
+      </Attack>
+    </Trigger>
+    <overridecommonness leveltype="bioluminescentcave" commonness="10"/>
+  </HallucinationEmitter>
+</levelobjects>

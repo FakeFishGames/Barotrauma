@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="Pet Spawner Vent" description="Ruin Vent that spawns pets" hideinmenus="false">
+  <Item name="" identifier="ruinvent" ID="4" rect="-32,56,64,96" noninteractable="False" nonplayerteaminteractable="False" allowswapping="True" rotation="0" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" invulnerabletodamage="False" tags="" displaysidebysidewhenlinked="False" disallowedupgrades="" spritedepth="0.9" hiddeningame="False">
+    <EntitySpawnerComponent itemidentifier="" speciesname="orangeboy,psilotoad,peanut" onlyspawnwhencrewinrange="True" crewareashape="Circle" crewareabounds="500,500" crewarearadius="500" crewareaoffset="0,0" spawnareashape="Circle" spawnareabounds="500,500" spawnarearadius="250" spawnareaoffset="0,0" spawntimerrange="10,40" spawnamountrange="1,3" maximumamount="8" maximumamountrangepadding="500" allowingameediting="True" msg=""/>
+  </Item>
+</ItemAssembly>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Afflictions>
+
+  <Affliction
+    identifier="dashing"
+    type="talentbuff"
+    isbuff="true"
+    hideiconafterdelay="true"
+    limbspecific="false"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1"
+      strengthchange="-2"/>
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="7,6" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <!-- temporary affliction used to fix beat cop without breaking the game, not shown to player -->
+  <Affliction
+    identifier="beatcop"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="2"
+    treatmentthreshold="1000"
+    showiconthreshold="3"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="2"
+      strengthchange="-1"/>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    identifier="regeneration"
+    type="talentbuff"
+    isbuff="true"
+    hideiconafterdelay="true"
+    limbspecific="false"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1" strengthchange="-2">
+      <StatusEffect target="Character" setvalue="true">
+        <ReduceAffliction type="damage" strength="0.0625"/>
+        <ReduceAffliction type="burn" strength="0.0625"/>
+        <ReduceAffliction identifier="bloodloss" strength="0.0625"/>
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,1" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="stonewall"
+    type="talentbuff"
+    isbuff="true"
+    hideiconafterdelay="true"
+    limbspecific="false"
+    maxstrength="4"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="4"
+      strengthchange="-1"
+      resistancefor="damage,stun"
+      minresistance="0.25"
+      maxresistance="0.25"/>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="1,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="implacable"
+    type="talentbuff"
+    isbuff="true"
+    hideiconafterdelay="true"
+    limbspecific="false"
+    maxstrength="15"
+    treatmentthreshold="1000"
+    duration="15"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="15">
+      <StatValue stattype="AttackMultiplier" value="0.25"/>
+      <AbilityFlag flagtype="AlwaysStayConscious"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="tandemfire"
+    type="talentbuff"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="2"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="2"
+      strengthchange="-1">
+      <StatValue stattype="AttackMultiplier" value="0.20"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="2,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="powerattack"
+    type="talentbuff"
+    isbuff="true"
+    hideiconafterdelay="true"
+    limbspecific="false"
+    maxstrength="1.5"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1.5"
+      strengthchange="-1">
+      <StatValue stattype="MeleeAttackMultiplier" minvalue="0" maxvalue="1"/>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    identifier="commando"
+    type="talentbuff"
+    nameidentifier="talentname.commando"
+    isbuff="true"
+    hideiconafterdelay="true"
+    limbspecific="false"
+    maxstrength="1"
+    treatmentthreshold="1000"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Effect minstrength="0" maxstrength="1"
+      strengthchange="-1"/>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="7,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+</Afflictions>

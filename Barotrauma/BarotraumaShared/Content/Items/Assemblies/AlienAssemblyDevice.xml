@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="Alien Assembly Device" description="" hideinmenus="false">
+  <Item name="Alien Assembly Device" identifier="alienassemblydevice" ID="100" rect="-185,165,370,331" hiddeningame="False" hiddeninmenus="false" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5"/>
+  
+  <Item name="Assembly Device Container" identifier="alienassemblydevice_bubble" category="Alien" ID="101" rect="-155,135,75,75" Tags="alien" scale="0.5" hideinmenus="false" health="30" spritedepth="0.79" rotation="-60"/>
+  <Item name="Assembly Device Container" identifier="alienassemblydevice_bubble" category="Alien" ID="102" rect="70,140,75,75" Tags="alien" scale="0.5" hideinmenus="false" health="30" spritedepth="0.79" rotation="-25"/>
+  <Item name="Assembly Device Container" identifier="alienassemblydevice_bubble" category="Alien" ID="103" rect="60,-50,75,75" Tags="alien" scale="0.5" hideinmenus="false" health="30" spritedepth="0.79" rotation="45"/>
+  <Item name="Assembly Device Container" identifier="alienassemblydevice_bubble" category="Alien" ID="104" rect="-130,-60,75,75" Tags="alien" scale="0.5" hideinmenus="false" health="30" spritedepth="0.79" rotation="5"/>
+</ItemAssembly>

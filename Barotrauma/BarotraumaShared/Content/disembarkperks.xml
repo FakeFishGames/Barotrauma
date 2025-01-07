@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DisembarkPerks>
+  <!-- Talents -->
+  <DisembarkPerk identifier="talentpoints" cost="1" sortcategory="Talents" sortkey="0">
+    <GiveTalentPointPerk amount="3"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="talentpointsadvanced" cost="2"  prerequisite="talentpoints" sortcategory="Talents" sortkey="1">
+    <GiveTalentPointPerk amount="2"/>
+  </DisembarkPerk>
+  
+  <DisembarkPerk identifier="talentpointselite" cost="4"  prerequisite="talentpointsadvanced" sortcategory="Talents" sortkey="2">
+    <GiveTalentPointPerk amount="3"/>
+  </DisembarkPerk>
+
+  <!-- Diving gear -->
+  <DisembarkPerk identifier="airlockbasic" cost="0" sortcategory="Diving">
+    <SpawnItemPerk identifier="underwaterscooter" MinAmount="1"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="1" PriorityContainerTag="underwaterscooter"/>
+    <SpawnItemPerk identifier="plasmacutter" MinAmount="2" perplayer="0.2"/>
+    <SpawnItemPerk identifier="oxygentank" MinAmount="2" perplayer="0.2" PriorityContainerTag="plasmacutter"/>
+    <SpawnItemPerk identifier="flashlight" MinAmount="2" perplayer="0.2"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="2" perplayer="0.2" PriorityContainerTag="flashlight"/>
+    <SpawnItemPerk identifier="handheldsonar" MinAmount="1"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="1" PriorityContainerTag="handheldsonar"/>
+    <SpawnItemPerk identifier="sonarbeacon" MinAmount="1"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="1" PriorityContainerTag="sonarbeacon"/>
+    <SpawnItemPerk identifier="crowbar" MinAmount="1"/>
+  </DisembarkPerk>
+  
+  <DisembarkPerk identifier="mobilitypack" cost="2" sortcategory="Diving">
+    <SpawnItemPerk identifier="underwaterscooter" MinAmount="1" perplayer="1"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="1" perplayer="1" PriorityContainerTag="underwaterscooter"/>
+    <SpawnItemPerk identifier="combatdivingsuit" MinAmount="1" perplayer="1"/>
+    <SpawnItemPerk identifier="oxygentank" MinAmount="1" perplayer="1" PriorityContainerTag="combatdivingsuit"/>
+    <SpawnItemPerk identifier="harpoongun" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="spear" MinAmount="6" perplayer="3" PriorityContainerTag="harpoongun"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="boardingkits" cost="3" sortcategory="Diving">
+    <SpawnItemPerk identifier="crowbar" MinAmount="1" perplayer="1"/>
+    <SpawnItemPerk identifier="slipsuit" MinAmount="1" perplayer="1"/>
+    <SpawnItemPerk identifier="oxygentank" MinAmount="1" perplayer="1" PriorityContainerTag="slipsuit"/>
+    <SpawnItemPerk identifier="harpooncoilrifle" MinAmount="1" perplayer="1"/>
+    <SpawnItemPerk identifier="spear" MinAmount="6" perplayer="6" PriorityContainerTag="harpooncoilrifle"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="1" perplayer="1" PriorityContainerTag="harpooncoilrifle"/>
+    <SpawnItemPerk identifier="boardingpod" MinAmount="2" perplayer="0.1"/>
+  </DisembarkPerk>
+
+  <!-- Armory -->
+  <DisembarkPerk identifier="armorysmall" cost="0" sortcategory="Armory">
+    <SpawnItemPerk identifier="revolver" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="revolverround" MinAmount="12" perplayer="6" PriorityContainerTag="revolver"/>
+    <SpawnItemPerk identifier="machinepistol" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="smgmagazine" MinAmount="2" perplayer="0.5" PriorityContainerTag="machinepistol"/>
+    <SpawnItemPerk identifier="divingknife" MinAmount="1" perplayer="1"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="armoryclosequarters" cost="2" sortcategory="Armory">
+    <SpawnItemPerk identifier="shotgun" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="shotgunshell" MinAmount="12" perplayer="6" PriorityContainerTag="shotgun"/>
+    <SpawnItemPerk identifier="machinepistol" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="smgmagazine" MinAmount="1" perplayer="0.5" PriorityContainerTag="machinepistol"/>
+    <SpawnItemPerk identifier="smg" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="smgmagazine" MinAmount="1" perplayer="0.5" PriorityContainerTag="smg"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="armorylongrange" cost="3" sortcategory="Armory">
+    <SpawnItemPerk identifier="rifle" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="riflebullet" MinAmount="12" perplayer="6" PriorityContainerTag="rifle"/>
+    <SpawnItemPerk identifier="assaultrifle" MinAmount="2" perplayer="0.5"/>
+    <SpawnItemPerk identifier="assaultriflemagazine" MinAmount="4" perplayer="1" PriorityContainerTag="assaultrifle"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="armorypeacekeeping" cost="2" sortcategory="Armory">
+    <SpawnItemPerk identifier="stunbaton" MinAmount="2" perplayer="0.5"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="2" perplayer="0.5" PriorityContainerTag="stunbaton"/>
+    <SpawnItemPerk identifier="stungun" MinAmount="2" perplayer="0.5"/>
+    <SpawnItemPerk identifier="stungundart" MinAmount="6" perplayer="2" PriorityContainerTag="stungun"/>
+    <SpawnItemPerk identifier="stungrenade" MinAmount="4" perplayer="2"/>
+  </DisembarkPerk>
+
+  <!-- Medbay -->
+  <DisembarkPerk identifier="medbayfirstaid" cost="0" sortcategory="Medbay">
+    <SpawnItemPerk identifier="antibleeding1" MinAmount="8" perplayer="4"/>
+    <SpawnItemPerk identifier="antibloodloss1" MinAmount="8" perplayer="4"/>
+    <SpawnItemPerk identifier="opium" MinAmount="8" perplayer="4"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="medbaylifesavers" cost="2" sortcategory="Medbay">
+    <SpawnItemPerk identifier="antidama1" MinAmount="8" perplayer="4"/>
+    <SpawnItemPerk identifier="antibloodloss2" MinAmount="8" perplayer="4"/>
+    <SpawnItemPerk identifier="antinarc" MinAmount="8" perplayer="4"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="medbaycombatdrugs" cost="2" sortcategory="Medbay">
+    <SpawnItemPerk identifier="meth" MinAmount="2" perplayer="1"/>
+    <SpawnItemPerk identifier="steroids" MinAmount="2" perplayer="1"/>
+    <SpawnItemPerk identifier="hyperzine" MinAmount="2" perplayer="1"/>
+  </DisembarkPerk>
+
+  <!-- Engineering -->
+  <DisembarkPerk identifier="engineeringshiprepair" cost="0" sortcategory="Engineering">
+    <SpawnItemPerk identifier="weldingtool" MinAmount="2" perplayer="1"/>
+    <SpawnItemPerk identifier="weldingfueltank" MinAmount="2" perplayer="2" PriorityContainerTag="weldingtool"/>
+    <SpawnItemPerk identifier="wrench" MinAmount="2" perplayer="1"/>
+    <SpawnItemPerk identifier="screwdriver" MinAmount="2" perplayer="1"/>
+    <SpawnItemPerk identifier="fixfoamgrenade" MinAmount="2" perplayer="2"/>
+    <SpawnItemPerk identifier="batterycell" MinAmount="2"/>
+    <SpawnItemPerk identifier="redwire" MinAmount="8"/>
+    <SpawnItemPerk identifier="blackwire" MinAmount="8"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="engineeringrawmaterials" cost="4" sortcategory="Engineering">
+    <SpawnItemPerk identifier="carbon" MinAmount="8"/>
+    <SpawnItemPerk identifier="iron" MinAmount="8"/>
+    <SpawnItemPerk identifier="tin" MinAmount="8"/>
+    <SpawnItemPerk identifier="lead" MinAmount="8"/>
+    <SpawnItemPerk identifier="phosphorus" MinAmount="8"/>
+    <SpawnItemPerk identifier="copper" MinAmount="8"/>
+    <SpawnItemPerk identifier="zinc" MinAmount="8"/>
+    <SpawnItemPerk identifier="sodium" MinAmount="8"/>
+    <SpawnItemPerk identifier="silicon" MinAmount="8"/>
+    <SpawnItemPerk identifier="calcium" MinAmount="8"/>
+    <SpawnItemPerk identifier="aluminium" MinAmount="8"/>
+    <SpawnItemPerk identifier="uranium" MinAmount="8"/>
+    <SpawnItemPerk identifier="potassium" MinAmount="8"/>
+    <SpawnItemPerk identifier="titanium" MinAmount="4"/>
+    <SpawnItemPerk identifier="magnesium" MinAmount="8"/>
+    <SpawnItemPerk identifier="lithium" MinAmount="8"/>
+    <SpawnItemPerk identifier="chlorine" MinAmount="8"/>
+    <SpawnItemPerk identifier="thorium" MinAmount="8"/>
+    <SpawnItemPerk identifier="steel" MinAmount="8"/>
+    <SpawnItemPerk identifier="titaniumaluminiumalloy" MinAmount="4"/>
+    <SpawnItemPerk identifier="plastic" MinAmount="8"/>
+    <SpawnItemPerk identifier="ballisticfiber" MinAmount="4"/>
+    <SpawnItemPerk identifier="organicfiber" MinAmount="8"/>
+    <SpawnItemPerk identifier="rubber" MinAmount="8"/>
+    <SpawnItemPerk identifier="flashpowder" MinAmount="8"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="engineeringsabotage" cost="2" sortcategory="Engineering">
+    <SpawnItemPerk identifier="timeddetonator" MinAmount="2" perplayer="2"/>
+    <SpawnItemPerk identifier="uex" MinAmount="2" perplayer="2" PriorityContainerTag="timeddetonator"/>
+    <SpawnItemPerk identifier="redwire" MinAmount="8"/>
+    <SpawnItemPerk identifier="greenwire" MinAmount="8"/>
+    <SpawnItemPerk identifier="blackwire" MinAmount="8"/>
+    <SpawnItemPerk identifier="bluewire" MinAmount="8"/>
+    <SpawnItemPerk identifier="orangewire" MinAmount="8"/>
+    <SpawnItemPerk identifier="screwdriver" MinAmount="4"/>
+    <SpawnItemPerk identifier="motiondetector" MinAmount="8"/>
+    <SpawnItemPerk identifier="button" MinAmount="8"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="engineeringincendiumpack" cost="2" sortcategory="Engineering">
+    <SpawnItemPerk identifier="flamer" MinAmount="1" perplayer="0.5"/>
+    <SpawnItemPerk identifier="incendiumfueltank" MinAmount="3" perplayer="1.5" PriorityContainerTag="flamer"/>
+    <SpawnItemPerk identifier="incendiumgrenade" MinAmount="3" perplayer="1.5"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="engineeringexosuit" cost="2" sortcategory="Engineering">
+    <SpawnItemPerk identifier="exosuit" MinAmount="1"/>
+    <SpawnItemPerk identifier="thoriumfuelrod" MinAmount="2" PriorityContainerTag="exosuit"/>
+    <SpawnItemPerk identifier="oxygenitetank" MinAmount="2" PriorityContainerTag="exosuit"/>
+  </DisembarkPerk>
+
+  <!-- Hull upgrades -->
+  <DisembarkPerk identifier="hullupgradesteel" cost="0" sortcategory="HullUpgrades" sortkey="0">
+    <UpgradeSubmarinePerk upgradeidentifier="increasewallhealth" categoryidentifier="walls" level="2"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="hullupgradetaalloy" cost="4" sortcategory="HullUpgrades" prerequisite="hullupgradesteel" sortkey="1">
+    <UpgradeSubmarinePerk upgradeidentifier="increasewallhealth" categoryidentifier="walls" level="4"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="hullupgradephysicorium" cost="3" sortcategory="HullUpgrades" prerequisite="hullupgradetaalloy" sortkey="2">
+    <UpgradeSubmarinePerk upgradeidentifier="increasewallhealth" categoryidentifier="walls" level="5"/>
+  </DisembarkPerk>
+
+  <!-- Turrets -->
+  <DisembarkPerk identifier="slotcoilgunturret" cost="1" sortcategory="Turrets" mutuallyexclusiveperks="slotchaingunturret,slotpulselaser">
+    <SubItemSwapPerk targetitem="turrethardpoint" replacementitem="coilgun"/>
+    <SpawnItemPerk identifier="coilgunammobox" MinAmount="3" PriorityContainerTag="coilgunammosource"/>
+    <SpawnItemPerk identifier="coilgunharpoonbox" MinAmount="2"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="slotchaingunturret" cost="2" sortcategory="Turrets" mutuallyexclusiveperks="slotcoilgunturret,slotpulselaser">
+    <SubItemSwapPerk targetitem="turrethardpoint" replacementitem="chaingun"/>
+    <SpawnItemPerk identifier="chaingunammobox" MinAmount="3" PriorityContainerTag="chaingunammosource"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="slotpulselaser" cost="2" sortcategory="Turrets" mutuallyexclusiveperks="slotcoilgunturret,slotchaingunturret">
+    <SubItemSwapPerk targetitem="turrethardpoint" replacementitem="pulselaser"/>
+    <SpawnItemPerk identifier="pulselaserammobox" MinAmount="3" PriorityContainerTag="pulselaserammosource"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="largeslotflakcannon" cost="3" sortcategory="Turrets" mutuallyexclusiveperks="largeslotdoublecoilgun,largeslotrailgun">
+    <SubItemSwapPerk targetitem="largeturrethardpoint" replacementitem="flakcannon"/>
+    <SpawnItemPerk identifier="flakcannonammobox" MinAmount="3" PriorityContainerTag="flakcannonammosource"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="largeslotdoublecoilgun" cost="3" sortcategory="Turrets" mutuallyexclusiveperks="largeslotflakcannon,largeslotrailgun">
+    <SubItemSwapPerk targetitem="largeturrethardpoint" replacementitem="doublecoilgun"/>
+    <SpawnItemPerk identifier="coilgunammobox" MinAmount="4" PriorityContainerTag="coilgunammosource"/>
+    <SpawnItemPerk identifier="coilgunharpoonbox" MinAmount="2"/>
+  </DisembarkPerk>
+
+  <DisembarkPerk identifier="largeslotrailgun" cost="3" sortcategory="Turrets" mutuallyexclusiveperks="largeslotflakcannon,largeslotdoublecoilgun">
+    <SubItemSwapPerk targetitem="largeturrethardpoint" replacementitem="railgun"/>
+    <SpawnItemPerk identifier="railgunshell" MinAmount="12" PriorityContainerTag="railgunammosource"/>
+    <SpawnItemPerk identifier="railgunharpoon" MinAmount="2"/>
+  </DisembarkPerk>
+</DisembarkPerks>

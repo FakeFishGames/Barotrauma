@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="headset" scale="0.5" category="Equipment" tags="smallitem,mobileradio" description="" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="crewcab" secondary="divingcab"/>
+    <Price baseprice="40">
+      <Price storeidentifier="merchantoutpost" minavailable="3"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="10"/>
+      <Price storeidentifier="merchantresearch" minavailable="4"/>
+      <Price storeidentifier="merchantmilitary" minavailable="6"/>
+      <Price storeidentifier="merchantmine" minavailable="6"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" origin="0.5,0.5"/>
+    <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="28,321,49,62" origin="0.5,0.5"/>
+    <Body radius="20" height="20" density="15"/>
+    <Deconstruct time="5">
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="silicon"/>
+      <RequiredItem identifier="copper"/>
+    </Fabricate>
+    <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
+      <StatusEffect type="OnActive" targettype="This">
+        <Conditional JamTimer="gt 0" targetitemcomponent="WifiComponent"/>
+        <sound file="Content/Sounds/RadioStatic.ogg" range="500.0" frequencymultiplier="0.7" loop="true" volume="0.5"/>
+      </StatusEffect>
+    </WifiComponent>
+    <Upgrade gameversion="0.18.0.0">
+      <WifiComponent>
+        <RequiredItems items=""/>
+      </WifiComponent>
+    </Upgrade>
+    <Wearable limbtype="Head" slots="Any,Headset" msg="ItemMsgPickUpSelect" displaycontainedstatus="true">
+      <sprite name="Headset Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" depth="0.1" hidelimb="false" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.7" hideotherwearables="false" sourcerect="26,317,51,64" origin="0.5,0.6"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="duffelbag" category="Equipment" tags="mobilecontainer,despawncontainer" fireproof="true" description="" impactsoundtag="impact_soft" scale="0.4">
+    <Deconstruct time="5"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="612,398,206,114" origin="0.5,0.56" depth="0.56"/>
+    <BrokenSprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="818,398,206,114" origin="0.5,0.56" depth="0.56" maxcondition="80" fadein="true"/>
+    <Body width="120" radius="45" density="20" friction="1.0" restitution="0.01"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="0,50" handle2="0,50" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.5"/>
+      <StatusEffect type="OnBroken" target="This">
+        <DropContainedItems/>
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+    <ItemContainer capacity="20" keepopenwhenequipped="false" movableframe="true">
+      <Containable items="smallitem,toolbelt,toolbox,bandolier" excludeditems="largemobilecontainer"/>
+    </ItemContainer>
+  </Item>
+</Items>

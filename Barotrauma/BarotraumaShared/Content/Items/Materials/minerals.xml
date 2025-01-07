@@ -1,0 +1,1099 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="titanite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.3"/>
+    <PreferredContainer secondary="ruintreasure" minamount="1" maxamount="3" spawnprobability="0.5"/>
+    <Price baseprice="250" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="titanium"/>
+      <Item identifier="titanium"/>
+      <Item identifier="titanium"/>
+      <Item identifier="iron"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="113,204,164,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="512,730,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="396,635,118,123" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="595,730,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="513,730,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="597,730,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="683,728,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="511,730,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="682,731,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.0" abysscommonness="0"/>
+      <Commonness commonness="0.10" cavecommonness="0.15" abysscommonness="100" leveltype="europanridge"/>
+      <Commonness commonness="0.50" cavecommonness="0.6" abysscommonness="50" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.75" cavecommonness="0.8" abysscommonness="10" leveltype="thegreatsea"/>
+      <Commonness commonness="0.65" cavecommonness="0.8" abysscommonness="10" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="brockite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.3"/>
+    <PreferredContainer secondary="ruintreasure" minamount="1" maxamount="3" spawnprobability="0.5"/>
+    <Price baseprice="150" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="phosphorus"/>
+      <Item identifier="thorium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="178,108,109,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="0,731,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="521,767,109,117" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="85,731,85,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="172,731,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="85,731,85,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="172,731,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="85,731,85,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="172,731,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0"/>
+      <Commonness commonness="0.4" cavecommonness="0" abysscommonness="5" leveltype="europanridge"/>
+      <Commonness commonness="0.6" cavecommonness="0" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.4" cavecommonness="0" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.2" cavecommonness="0" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="thorianite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="300" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="thorium"/>
+      <Item identifier="thorium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="160,175,187,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="85,877,88,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="13,894,111,114" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="0,877,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="172,877,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="0,877,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="172,877,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="0,877,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="172,877,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0"/>
+      <Commonness commonness="0.30" cavecommonness="0" abysscommonness="50" leveltype="europanridge"/>
+      <Commonness commonness="0.50" cavecommonness="0.5" abysscommonness="25" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.75" cavecommonness="0.6" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.50" cavecommonness="0.5" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="amblygonite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <PreferredContainer secondary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.3"/>
+    <PreferredContainer secondary="ruintreasure" minamount="1" maxamount="3" spawnprobability="0.5"/>
+    <Price baseprice="200" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="lithium"/>
+      <Item identifier="aluminium"/>
+      <Item identifier="sodium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="211,189,89,120" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.5" sourcerect="0,5,84,144" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.45" sourcerect="11,514,119,122" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="84,3,84,144" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="170,3,84,144" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="84,3,84,144" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="170,3,84,144" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="84,3,84,144" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="170,3,84,144" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="-50">
+      <Commonness commonness="0"/>
+      <Commonness commonness="0.80" cavecommonness="0.1" abysscommonness="10" leveltype="europanridge"/>
+      <Commonness commonness="0.90" cavecommonness="0.1" abysscommonness="10" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.90" cavecommonness="0.1" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.60" cavecommonness="0" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="sphalerite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="zinc"/>
+      <Item identifier="zinc"/>
+      <Item identifier="zinc"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="196,196,196,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="172,585,84,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="12,761,121,126" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="85,585,88,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="0,585,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="85,585,88,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="0,585,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="85,585,88,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="0,585,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.20" abysscommonness="0"/>
+      <Commonness commonness="0.15" cavecommonness="0.1" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.10" cavecommonness="0" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.05" cavecommonness="0" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="pyromorphite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="30" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="chlorine"/>
+      <Item identifier="chlorine"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="115,154,127,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="853,292,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="775,768,119,123" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="768,292,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="938,292,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="768,292,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="938,292,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="768,292,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="938,292,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.20" abysscommonness="5.00"/>
+      <Commonness commonness="0.30" abysscommonness="3.33" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="2.00" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.30" abysscommonness="0" leveltype="thegreatsea"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="quartz" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="silicon"/>
+      <Item identifier="silicon"/>
+    </Deconstruct>
+    <LightComponent lightcolor="160,175,187,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="512,585,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="255,760,128,128" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="597,585,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="681,585,87,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="597,585,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="681,585,87,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="597,585,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="681,585,87,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.70" abysscommonness="1"/>
+      <Commonness commonness="0.60" abysscommonness="1" leveltype="europanridge"/>
+      <Commonness commonness="0.40" abysscommonness="1" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.30" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.10" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="diamond" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="50" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="10"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="carbon"/>
+      <Item identifier="carbon"/>
+      <Item identifier="carbon"/>
+    </Deconstruct>
+    <LightComponent lightcolor="160,175,187,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="938,0,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="389,510,123,122" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="768,0,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="853,0,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="768,0,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="853,0,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="768,0,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="853,0,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.60" abysscommonness="50"/>
+      <Commonness commonness="0.60" abysscommonness="2" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="2" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.40" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.30" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="hydroxyapatite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="calcium"/>
+      <Item identifier="phosphorus"/>
+      <Item identifier="phosphorus"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="179,173,154,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="426,292,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="141,635,106,119" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="341,292,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="256,293,86,146" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="341,292,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="256,293,86,146" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="341,292,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="256,293,86,146" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.45" abysscommonness="25"/>
+      <Commonness commonness="0.55" abysscommonness="10" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.40" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.30" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="uraniumore" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="200" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="uranium"/>
+      <Item identifier="uranium"/>
+      <Item identifier="uranium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="83,160,100,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="768,731,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="911,773,107,116" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="853,731,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="938,731,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="853,731,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="938,731,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="853,731,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="938,731,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.45" cavecommonness="0.1" abysscommonness="25"/>
+      <Commonness commonness="0.5" cavecommonness="0.1" abysscommonness="10" leveltype="europanridge"/>
+      <Commonness commonness="0.30" cavecommonness="0.1" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.25" cavecommonness="0.1" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.2" cavecommonness="0.1" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="ilmenite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="titanium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="117,143,123,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="597,292,84,147" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="512,292,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="681,292,87,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="512,292,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="681,292,87,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="512,292,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="681,292,87,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="273,634,113,121" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0"/>
+      <Commonness commonness="0.4" cavecommonness="0.7" abysscommonness="50" leveltype="europanridge"/>
+      <Commonness commonness="0.6" cavecommonness="0.6" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.3" cavecommonness="0.2" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.1" cavecommonness="0.1" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="stannite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="50" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="copper"/>
+      <Item identifier="iron"/>
+      <Item identifier="tin"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="160,175,187,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="766,883,88,133" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="399,896,103,115" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="853,877,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="938,877,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="853,877,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="938,877,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="853,877,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="938,877,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.75" abysscommonness="20"/>
+      <Commonness commonness="0.65" abysscommonness="0" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.45" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.25" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="chalcopyrite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="60" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="copper"/>
+      <Item identifier="copper"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="162,135,83,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="512,438,86,148" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="785,639,101,113" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="681,438,87,148" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="597,438,84,148" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="681,438,87,148" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="597,438,84,148" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="681,438,87,148" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="597,438,84,148" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.25" cavecommonness="0.2" abysscommonness="20"/>
+      <Commonness commonness="0.30" abysscommonness="10" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.30" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.35" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="esperite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="zinc"/>
+      <Item identifier="zinc"/>
+      <Item identifier="lead"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="256,585,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="136,765,112,119" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="341,585,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="426,585,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="341,585,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="426,585,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="341,585,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="426,585,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.4" abysscommonness="0"/>
+      <Commonness commonness="0.2" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="galena" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab"/>
+    <Price baseprice="70" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="lead"/>
+      <Item identifier="lead"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="117,139,162,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="341,877,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="135,889,114,123" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="256,877,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="426,877,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="256,877,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="426,877,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="256,877,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="426,877,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.9" cavecommonness="0.9" abysscommonness="0"/>
+      <Commonness commonness="0.85" cavecommonness="0.9" abysscommonness="50" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.85" cavecommonness="0.8" abysscommonness="50" leveltype="thegreatsea"/>
+      <Commonness commonness="0.8" cavecommonness="0.7" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="triphylite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="100" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="lithium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="127,174,170,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="256,0,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="123,505,120,127" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="341,0,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="426,0,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="341,0,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="426,0,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="341,0,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="426,0,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.10" abysscommonness="10"/>
+      <Commonness commonness="0.40" abysscommonness="50" leveltype="europanridge"/>
+      <Commonness commonness="0.30" abysscommonness="10" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.3" abysscommonness="10" leveltype="thegreatsea"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="langbeinite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="200" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="potassium"/>
+      <Item identifier="magnesium"/>
+      <Item identifier="magnesium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="150,125,105,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="512,146,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="786,503,115,119" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="597,146,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="681,146,87,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="597,146,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="681,146,87,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="597,146,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="681,146,87,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.15" abysscommonness="100"/>
+      <Commonness commonness="0.30" abysscommonness="50" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="25" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.65" abysscommonness="5" leveltype="thegreatsea"/>
+      <Commonness commonness="0.50" abysscommonness="5" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="chamosite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="130" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+      <Item identifier="aluminium"/>
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="69,158,142,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="341,438,86,148" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="652,642,120,121" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="256,441,86,145" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="426,438,86,148" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="256,441,86,145" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="426,438,86,148" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="256,441,86,145" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="426,438,86,148" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.40" abysscommonness="50"/>
+      <Commonness commonness="0.50" abysscommonness="25" leveltype="europanridge"/>
+      <Commonness commonness="0.40" abysscommonness="5" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.30" abysscommonness="5" leveltype="thegreatsea"/>
+      <Commonness commonness="0.35" abysscommonness="5" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="ironore" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="25" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+      <Item identifier="iron"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="160,175,187,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="0,438,86,148" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="520,637,128,120" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="84,438,88,148" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="172,440,84,146" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="84,438,88,148" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="172,440,84,146" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="84,438,88,148" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="172,440,84,146" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.65" abysscommonness="10"/>
+      <Commonness commonness="0.50" abysscommonness="5" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.40" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.30" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="polyhalite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="50" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="potassium"/>
+      <Item identifier="calcium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="134,99,88" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="768,146,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="909,507,105,120" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="938,146,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="853,146,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="938,146,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="853,146,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="938,146,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="853,146,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.20" abysscommonness="25"/>
+      <Commonness commonness="0.40" abysscommonness="25" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="15" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.40" abysscommonness="10" leveltype="thegreatsea"/>
+      <Commonness commonness="0.30" abysscommonness="5" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="graphite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="25" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="carbon"/>
+      <Item identifier="carbon"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="160,175,187,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="512,0,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="258,509,126,121" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="597,0,84,145" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="681,0,87,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="597,0,84,145" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="681,0,87,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="597,0,84,145" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="681,0,87,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.30" abysscommonness="0"/>
+      <Commonness commonness="0.40" abysscommonness="5" leveltype="europanridge"/>
+      <Commonness commonness="0.60" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.60" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.40" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="sylvite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="70" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="sodium"/>
+      <Item identifier="potassium"/>
+      <Item identifier="potassium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="160,89,67,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="256,146,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="644,511,120,119" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="342,146,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="426,146,87,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="342,145,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="425,147,87,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="343,144,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="426,146,87,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.10" abysscommonness="30"/>
+      <Commonness commonness="0.25" abysscommonness="20" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="10" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.70" abysscommonness="5" leveltype="thegreatsea"/>
+      <Commonness commonness="0.75" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="lazulite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="25" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="phosphorus"/>
+      <Item identifier="iron"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="88,121,142,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="341,731,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="647,769,119,123" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="256,731,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="426,731,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="256,731,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="426,731,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="256,731,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="426,731,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.50" abysscommonness="15"/>
+      <Commonness commonness="0.45" abysscommonness="10" leveltype="europanridge"/>
+      <Commonness commonness="0.30" abysscommonness="5" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.15" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.10" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="bornite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="60" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="copper"/>
+      <Item identifier="copper"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="119,82,124,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="853,438,86,148" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="906,637,108,115" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="768,438,86,148" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="938,438,86,148" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="768,438,86,148" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="938,438,86,148" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="768,438,86,148" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="938,438,86,148" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.80" abysscommonness="10"/>
+      <Commonness commonness="0.70" abysscommonness="5" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.20" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.15" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="cassiterite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="40" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="tin"/>
+      <Item identifier="tin"/>
+      <Item identifier="tin"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="153,82,66,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="597,877,84,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="265,890,116,121" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="512,877,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="681,877,87,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="512,877,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="681,877,87,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="512,877,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="681,877,87,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.30" abysscommonness="10"/>
+      <Commonness commonness="0.50" abysscommonness="5" leveltype="europanridge"/>
+      <Commonness commonness="0.65" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.50" abysscommonness="0" leveltype="thegreatsea"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="cryolite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="80" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="sodium"/>
+      <Item identifier="sodium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="160,175,187,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="0,144,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="517,513,120,119" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="85,146,88,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="172,146,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="85,146,88,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="172,146,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="85,146,88,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="172,146,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.10" cavecommonness="0.40" abysscommonness="30"/>
+      <Commonness commonness="0.30" cavecommonness="0.50" abysscommonness="20" leveltype="europanridge"/>
+      <Commonness commonness="0.50" abysscommonness="10" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.65" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.60" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="aragonite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="80" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="calcium"/>
+      <Item identifier="calcium"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="187,157,67,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="0,292,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="6,638,125,120" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="85,292,88,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="172,292,84,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="85,292,88,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="172,292,84,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="85,292,88,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="172,292,84,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.15" cavecommonness="0.10" abysscommonness="0"/>
+      <Commonness commonness="0.1" cavecommonness="0.10" abysscommonness="0" leveltype="europanridge"/>
+      <Commonness commonness="0.05" cavecommonness="0" abysscommonness="0" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.05" cavecommonness="0" abysscommonness="0" leveltype="thegreatsea"/>
+      <Commonness commonness="0.05" cavecommonness="0" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="chrysoprase" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="mineralcab" secondary="storagecab"/>
+    <Price baseprice="40" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.75"/>
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="silicon" amount="2"/>
+    </Deconstruct>
+    <!-- TODO: sprite and inventory icon -->
+    <LightComponent lightcolor="115,148,82,225" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ContainedSprite texture="Content/Items/Materials/MineralEnvironment.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="853,585,86,147" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.3" sourcerect="390,769,120,120" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.49" sourcerect="938,585,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.48" sourcerect="768,585,86,147" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.51" sourcerect="938,585,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.52" sourcerect="768,585,86,147" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.491" sourcerect="938,585,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.53" sourcerect="768,585,86,147" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3"/>
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5"/>
+    <Body radius="40" width="20" density="25"/>
+    <LevelResource deattachduration="4" randomoffsetfromwall="80">
+      <Commonness commonness="0.65" abysscommonness="5"/>
+      <Commonness commonness="0.50" abysscommonness="5" leveltype="europanridge"/>
+      <Commonness commonness="0.40" abysscommonness="5" leveltype="theaphoticplateau"/>
+      <Commonness commonness="0.20" abysscommonness="5" leveltype="thegreatsea"/>
+      <Commonness commonness="0.10" abysscommonness="0" leveltype="hydrothermalwastes"/>
+      <RequiredItem items="cuttingequipment" type="Equipped"/>
+    </LevelResource>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false"/>
+  </Item>
+  <Item name="" identifier="piezocrystal" category="Material" Tags="" canbepicked="false" description="" scale="0.5" sonarsize="30" health="60" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true">
+    <Sprite texture="Content/Items/Materials/Crystal.png" depth="1.0" sourcerect="0,4,1024,1020" origin="0.5,0.6"/>
+    <Body width="500" height="500" density="25" bodytype="Static"/>
+    <LightComponent lightcolor="178,196,207,255" range="4000.0" powerconsumption="0" flicker="0.2" flickerspeed="0.5" pulsefrequency="0.2" pulseamount="0.8" ison="true" drawbehindsubs="true">
+      <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
+        <particleemitter particle="iceshards" particleamount="200" velocitymin="100" velocitymax="3000" anglemin="0" anglemax="360" scalemin="0.5" scalemax="3.0"/>
+        <Explosion range="1000.0" ballastfloradamage="1000" structuredamage="600" itemdamage="1000" force="50.0" severlimbsprobability="1.5" decal="explosion" decalsize="1.0" camerashake="500" camerashakerange="50000" flashrange="10000" flashduration="5.0" screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
+          <Affliction identifier="explosiondamage" strength="600"/>
+          <Affliction identifier="burn" strength="450"/>
+          <Affliction identifier="stun" strength="30"/>
+        </Explosion>
+        <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" range="10000" selectionmode="Random"/>
+        <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" range="10000"/>
+        <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="10000"/>
+        <RemoveItem/>
+      </StatusEffect>
+    </LightComponent>
+    <LightComponent lightcolor="178,196,207,255" range="4000.0" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="1.0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5"/>
+    </LightComponent>
+    <ElectricalDischarger duration="0.2" outdoorsonly="true" powerconsumption="0" range="3500" rangemultiplierinwalls="1">
+      <Attack targetimpulse="20">
+        <Affliction identifier="stun" strength="1"/>
+        <Affliction identifier="electricshock" strength="30"/>
+        <Affliction identifier="burn" strength="10"/>
+      </Attack>
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Items/Weapons/WEAPONS_electricalDischarge1.ogg" range="6000" selectionmode="random"/>
+        <sound file="Content/Items/Weapons/WEAPONS_electricalDischarge2.ogg" range="6000"/>
+        <Explosion range="7000.0" camerashake="3" stun="0" force="0.0" flames="false" shockwave="false" sparks="false" underwaterbubble="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" range="10000" selectionmode="Random"/>
+        <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" range="10000"/>
+        <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="10000"/>
+      </StatusEffect>
+    </ElectricalDischarger>
+    <ItemComponent>
+      <!-- when the component activates, apply extra load to nearby items and deactive the component -->
+      <StatusEffect type="OnActive" target="NearbyItems" targettags="junctionbox" range="3000.0" setvalue="true" stackable="false" delay="0.95" extraload="500"/>
+      <StatusEffect type="OnActive" target="This" IsActive="false"/>
+      <!-- reactivate after one second -->
+      <StatusEffect type="Always" target="This" interval="1" IsActive="true"/>
+      <StatusEffect type="Always" target="This" interval="10">
+        <Use/>
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <ParticleEmitter particle="ElectricShock" distancemin="100" distancemax="120" particlespersecond="5.0" particleamount="5" emitinterval="2.1" anglemin="0" anglemax="360" scalemin="1.0" scalemax="1.2"/>
+      </StatusEffect>
+    </ItemComponent>
+    <LevelResource deattachduration="Infinity">
+      <Commonness fixedquantity="true" clusterquantity="23" clustersize="1" allowatstart="false" leveltype="thegreatsea" isislandspecific="true"/>
+      <RequiredItem items="nonexistentitem" type="Equipped"/>
+    </LevelResource>
+  </Item>
+</Items>

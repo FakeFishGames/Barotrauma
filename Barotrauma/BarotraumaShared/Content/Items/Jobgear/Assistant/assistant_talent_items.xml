@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="skillbooksailorsguide" category="Misc" cargocontaineridentifier="metalcrate" allowasextracargo="true" Tags="smallitem,skillbook" maxstacksize="8" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="350" buyingpricemodifier="2.5" minleveldifficulty="40">
+      <Price storeidentifier="merchantoutpost" maxavailable="1"/>
+      <Price storeidentifier="merchantcity" maxavailable="1"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="20">
+      <Item identifier="carbon"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/JobGear/TalentGear.png" sourcerect="123,368,38,56" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="107,74,32,38" depth="0.6" origin="0.5,0.5"/>
+    <Body width="28" height="36" density="20"/>
+    <Holdable slots="Any,RightHand+LeftHand" aimable="false" aimpos="40,-20" handle1="5,0" aimangle="260" swingamount="0,3" swingspeed="0.5" swingwhenaiming="true" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-10.0"/>
+      <StatusEffect type="OnSecondaryUse" target="This,Character" disabledeltatime="true">
+        <Conditional Condition="lte 0"/>
+        <GiveSkill skillidentifier="electrical" amount="4" triggertalents="false"/>
+        <GiveSkill skillidentifier="helm" amount="4" triggertalents="false"/>
+        <GiveSkill skillidentifier="mechanical" amount="4" triggertalents="false"/>
+        <GiveSkill skillidentifier="medical" amount="4" triggertalents="false"/>
+        <GiveSkill skillidentifier="weapons" amount="4" triggertalents="false"/>
+        <TalentTrigger effectidentifier="standanddeliver"/>
+        <RemoveItem/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="clowndivingmask" variantof="divingmask" tags="smallitem,clownmask,diving,lightdiving">
+    <Price baseprice="150" sold="false" canbespecial="false"/>
+    <PreferredContainer primary="divingcab,supplycab" amount="0"/>
+    <PreferredContainer amount="0"/>
+    <PreferredContainer amount="0"/>
+    <PreferredContainer amount="0"/>
+    <PreferredContainer amount="0"/>
+    <Sprite name="Clown Mask" texture="Content/Items/JobGear/TalentGear.png" sourcerect="328,304,51,51" origin="0.5,0.5" scale="0.5"/>
+    <!-- clear inventory icon, we want to reuse the normal sprite -->
+    <InventoryIcon/>
+    <Body width="5" radius="25"/>
+    <!-- clear old fabrication and deconstruction elements, replace with new ones -->
+    <Fabricate/>
+    <Deconstruct/>
+    <Deconstruct time="10">
+      <Item identifier="divingmask"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10" requiresrecipe="true">
+      <RequiredItem identifier="clownmask"/>
+      <RequiredItem identifier="divingmask"/>
+    </Fabricate>
+    <Wearable>
+      <sprite name="Clown Diving Mask Wearable" texture="Content/Items/JobGear/TalentGear.png" limb="Head" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.65" sourcerect="378,301,80,70" origin="0.45,0.4"/>
+      <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="handhelditemfinder" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="storagecab"/>
+    <Price baseprice="140" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.25"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.25"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="15">
+      <Item identifier="copper"/>
+      <Item identifier="plastic" amount="2"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20" requiresrecipe="true">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <RequiredSkill identifier="electrical" level="20"/>
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
+    <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="445,228,34,28" depth="0.55" origin="0.5,0.5"/>
+    <Body width="34" height="28" density="15"/>
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect"/>
+    <MiniMap enableitemfinder="true" enablehullcondition="false" EnableElectricalView="false" EnableHullStatus="false" drawhudwhenequipped="true" displaybordersize="-0.1" characterusable="false" allowuioverlap="true">
+      <GuiFrame relativesize="0.4,0.4" anchor="CenterLeft" relativeoffset="0.006,-0.01" style="ItemUI"/>
+    </MiniMap>
+  </Item>
+
+  <Item name="" identifier="makeshiftshelf" tags="container,cargocontainer" linkable="true" canflipx="false" pickdistance="150" scale="0.5" isshootable="true">
+    <Price baseprice="140" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.25"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.25"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="15">
+      <Item identifier="steel" amount="3"/>
+      <Item identifier="iron" amount="4"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20" requiresrecipe="true">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <RequiredSkill identifier="electrical" level="20"/>
+      <RequiredItem identifier="steel" amount="4"/>
+      <RequiredItem identifier="iron" amount="6"/>
+    </Fabricate>
+    <Sprite texture="Content/Items/Containers/UnitLoadDevice.png" depth="0.84" sourcerect="567,433,185,187" origin="0.5,0.5"/>
+    <Body width="185" height="187" density="25"/>
+    <Holdable selectkey="Select" pickkey="Use" slots="RightHand+LeftHand" msg="ItemMsgDetach" PickingTime="20.0" aimpos="85,-10" handle1="0,0" attachable="true" attachedbydefault="true" limitedattachable="true" aimable="true">
+      <StatusEffect target="This" type="Always">
+        <Conditional attached="false" targetitemcomponentname="Holdable"/>
+        <DropContainedItems/>
+      </StatusEffect>
+    </Holdable>
+    <ItemContainer capacity="2" maxstacksize="1" canbeselected="true" hideitems="false" itempos="92,-48" iteminterval="0,-92" AllowAccessWhenDropped="false" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <Containable items="crate"/>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="ceremonialsword" category="Weapon" Tags="smallitem,weapon,gunsmith,mountableweapon,sharptool" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
+    <PreferredContainer primary="secarmcab" secondary="armcab"/>
+    <Price baseprice="340" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.5"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.25"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" multiplier="1.25"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="titaniumaluminiumalloy"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiresrecipe="true" requiredtime="30">
+      <RequiredSkill identifier="weapons" level="40"/>
+      <RequiredItem identifier="titaniumaluminiumalloy" amount="2"/>
+    </Fabricate>
+    <Sprite texture="Content/Items/Jobgear/TalentGear.png" sourcerect="0,484,153,18" depth="0.55" origin="0.5,0.5"/>
+    <Body width="153" height="14" density="30"/>
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="35,10" handle1="-28,0" holdangle="30" aimangle="20" reload="0.75" range="75" combatPriority="30" msg="ItemMsgPickUpSelect">
+      <Attack targetimpulse="2" severlimbsprobability="0.55" itemdamage="6" structuredamage="1" structuresoundtype="StructureSlash">
+        <Affliction identifier="lacerations" strength="19"/>
+        <Affliction identifier="bleeding" strength="14"/>
+        <Affliction identifier="stun" strength="0.25"/>
+      </Attack>
+      <StatusEffect type="OnUse" target="UseTarget">
+        <Conditional entitytype="eq Character"/>
+        <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" selectionmode="random" range="500"/>
+        <Sound file="Content/Sounds/Damage/LimbSlash2.ogg" range="500"/>
+        <Sound file="Content/Sounds/Damage/LimbSlash3.ogg" range="500"/>
+        <Sound file="Content/Sounds/Damage/LimbSlash4.ogg" range="500"/>
+        <Sound file="Content/Sounds/Damage/LimbSlash5.ogg" range="500"/>
+        <Sound file="Content/Sounds/Damage/LimbSlash6.ogg" range="500"/>
+      </StatusEffect>
+      <StatusEffect type="OnSuccess" target="This" reload="0.4" setvalue="true">
+        <Conditional reload="gt 0.4"/>
+      </StatusEffect>
+      <StatusEffect type="OnFailure" target="This" reload="1.5" setvalue="true"/>
+      <RequiredSkill identifier="weapons" level="50"/>
+      <RequiredSkill identifier="helm" level="50"/>
+      <RequiredSkill identifier="electrical" level="50"/>
+      <RequiredSkill identifier="mechanical" level="50"/>
+      <RequiredSkill identifier="medical" level="50"/>
+      <!--Reset the reload speed-->
+      <StatusEffect type="OnUse" target="This" reload="0.75" setvalue="true" delay="1"/>
+    </MeleeWeapon>
+    <aitarget sightrange="500" soundrange="250" fadeouttime="1"/>
+    <Quality>
+      <QualityStat stattype="StrikingPowerMultiplier" value="0.15"/>
+    </Quality>
+    <SkillRequirementHint identifier="weapons" level="50"/>
+    <SkillRequirementHint identifier="helm" level="50"/>
+    <SkillRequirementHint identifier="electrical" level="50"/>
+    <SkillRequirementHint identifier="mechanical" level="50"/>
+    <SkillRequirementHint identifier="medical" level="50"/>
+  </Item>
+
+  <Item name="" identifier="petraptoregg" hideinmenus="true" health="100" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" scale="0.4" impactsoundtag="impact_soft" spritecolor="200,200,255,255">
+    <Upgrade gameversion="0.20.15.0" scale="0.4"/>
+    <Price baseprice="550" sold="false"/>
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="80,105,124,147" origin="0.5,0.5"/>
+    <Fabricate suitablefabricators="medicalfabricator" requiredtime="10" requiresrecipe="true">
+      <Item tag="mudraptoregg"/>
+      <Item identifier="dementonite"/>
+    </Fabricate>
+    <Deconstruct time="10">
+      <Item identifier="alienblood"/>
+      <Item identifier="adrenalinegland"/>
+    </Deconstruct>
+    <!-- rectangular body to prevent the egg from rolling -->
+    <Body width="120" height="120" friction="1.0" restitution="0.01" angulardamping="1.0" density="12"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="800"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+    </Holdable>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" showcontainedstateindicator="false" canbeselected="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="100" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.4" scalemax="0.6"/>
+        <particleemitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1.0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False"/>
+        <Sound file="Content/Sounds/Damage/Gore7.ogg" range="800"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="8" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <StatusEffect type="Always" target="This" Condition="0" setvalue="true">
+        <Conditional Scale="gte 0.5"/>
+        <SpawnCharacter speciesname="Mudraptor_pet" totalmaxcount="2" inheritteam="true"/>
+        <Remove/>
+      </StatusEffect>
+      <Containable items="antibloodloss1">
+        <!-- increase scale -->
+        <StatusEffect type="OnContaining" target="This" Scale="0.002"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-1"/>
+      </Containable>
+    </ItemContainer>
+    <LightComponent range="5" lightcolor="255,255,255,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulsefrequency="1" pulseamount="0.30">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="300,291,98,113" origin="0.5,0.6" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="40" lightcolor="255,255,255,70" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="410,301,88,95" origin="0.5,0.6" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  
+</Items>

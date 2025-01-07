@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item
+    name=""
+    identifier="label"
+    interactdistance="0"
+    resizehorizontal="true"
+    resizevertical="true"
+    minscale="1"
+    scale="1"
+    Size="32,16">
+    <sprite texture="Content/Items/Labels/labels.png" sourcerect="1,99,126,126"  depth="0.025" origin="0.5,0.5" alpha="1.0"/>
+    <ItemLabel/>
+  </Item>
+  <Item name="" identifier="textdisplay" category="Electrical" scale="0.5" Tags="mediumitem,logic" impactsoundtag="impact_metal_light" cargocontaineridentifier="metalcrate" isshootable="true" AllowRotatingInEditor="false">
+    <Upgrade gameversion="0.12.0.0" scale="0.5"/>
+    <Sprite texture="labels.png" depth="0.85" sourcerect="0,0,126,48"/>
+    <Price baseprice="200">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.25"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+      <Price storeidentifier="merchantengineering" multiplier="0.9"/>
+    </Price>
+    <PreferredContainer primary="reactorcab,engcab"/>
+    <Deconstruct time="10">
+      <Item identifier="copper"/>
+      <Item identifier="tin"/>
+      <Item identifier="silicon"/>
+      <Item identifier="plastic"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="30">
+      <RequiredSkill identifier="electrical" level="50"/>
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+      <RequiredItem identifier="silicon"/>
+    </Fabricate>
+    <Body width="120" height="40" density="20"/>
+    <ItemLabel scrollable="true" padding="10,5,10,12" textcolor="1,1,1,1">
+      <Upgrade gameversion="0.12.0.0" padding="10,5,10,12"/>
+    </ItemLabel>
+    <LightComponent range="0.0" lightcolor="255,255,255,0" IsOn="true" castshadows="false" alphablend="false">
+      <Upgrade gameversion="0.17.15.0" range="0"/>
+      <sprite texture="Content/Items/Labels/labels.png" sourcerect="0,48,126,48"  depth="0.025" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" attachedbydefault="true">
+      <RequiredItem items="wrench,deattachtool" excludeditems="multitool" type="Equipped"/>
+    </Holdable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <requireditem items="screwdriver" type="Equipped"/>
+      <input name="set_text" displayname="connection.set_text" fallbackdisplayname="connection.setoutput"/>
+      <input name="set_color" displayname="connection.setcolor"/>
+      <input name="set_text_color" displayname="connection.settextcolor"/>
+    </ConnectionPanel>
+  </Item>
+</Items>

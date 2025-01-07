@@ -1,0 +1,770 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Talents>
+  <Talent identifier="disloyalscum">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.disloyalscum">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToApprenticeship invert="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="disloyalscum" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToApprenticeship>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="loyalassistant">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,3" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.loyalassistant">
+      <Replace tag="[amount]" value="1" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToApprenticeship>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="loyalassistant" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToApprenticeship>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="journeyman">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="2,3" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.journeyman">
+      <Replace tag="[skillamount]" value="10" color="gui.green"/>
+      <Replace tag="[skillspeedboost]" value="50" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToApprenticeship>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="journeyman" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToApprenticeship>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Conditions>
+        <AbilityConditionHasTalent identifier="apprenticeship_captain"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="HelmSkillBonus" value="10"/>
+        <CharacterAbilityGiveStat stattype="HelmSkillGainSpeed" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Conditions>
+        <AbilityConditionHasTalent identifier="apprenticeship_doctor"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MedicalSkillBonus" value="10"/>
+        <CharacterAbilityGiveStat stattype="MedicalSkillGainSpeed" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Conditions>
+        <AbilityConditionHasTalent identifier="apprenticeship_security"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="WeaponsSkillBonus" value="10"/>
+        <CharacterAbilityGiveStat stattype="WeaponsSkillGainSpeed" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Conditions>
+        <AbilityConditionHasTalent identifier="apprenticeship_engineer"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="ElectricalSkillBonus" value="10"/>
+        <CharacterAbilityGiveStat stattype="ElectricalSkillGainSpeed" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Conditions>
+        <AbilityConditionHasTalent identifier="apprenticeship_mechanic"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MechanicalSkillBonus" value="10"/>
+        <CharacterAbilityGiveStat stattype="MechanicalSkillGainSpeed" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="apprenticeship">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="3,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.apprenticeshipbase"/>
+  </Talent>
+
+  <Talent identifier="apprenticeship_captain" nameidentifier="jobname.captain" coloroverride="0.65,0.73,0.8">
+    <Icon texture="Content/UI/MainIconsAtlas.png" sourcerect="384,256,128,128" origin="0.5,0.5"/>
+    <Description tag="talentdescription.apprenticeshipjob">
+      <Replace tag="[job]" value="jobname.captain" color="0.65,0.73,0.84"/>
+    </Description>
+    <Description tag="talentdescription.additionalskill">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.helmskillbonus" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="Apprenticeship" statidentifier="captain" value="1"/>
+        <CharacterAbilityGiveStat stattype="HelmSkillBonus" value="20"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="apprenticeship_doctor" nameidentifier="jobname.medicaldoctor" coloroverride="0.81,0.31,0.19">
+    <Icon texture="Content/UI/MainIconsAtlas.png" sourcerect="512,256,128,128" origin="0.5,0.5"/>
+    <Description tag="talentdescription.apprenticeshipjob">
+      <Replace tag="[job]" value="jobname.medicaldoctor" color="0.81,0.31,0.19"/>
+    </Description>
+    <Description tag="talentdescription.additionalskill">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.medicalskillbonus" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="Apprenticeship" statidentifier="medicaldoctor" value="1"/>
+        <CharacterAbilityGiveStat stattype="MedicalSkillBonus" value="20"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="apprenticeship_security" nameidentifier="jobname.securityofficer" coloroverride="0.57,0.48,0.43">
+    <Icon texture="Content/UI/MainIconsAtlas.png" sourcerect="256,256,128,128" origin="0.5,0.5"/>
+    <Description tag="talentdescription.apprenticeshipjob">
+      <Replace tag="[job]" value="jobname.securityofficer" color="0.57,0.48,0.43"/>
+    </Description>
+    <Description tag="talentdescription.additionalskill">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.weaponsskillbonus" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="Apprenticeship" statidentifier="securityofficer" value="1"/>
+        <CharacterAbilityGiveStat stattype="WeaponsSkillBonus" value="20"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="apprenticeship_mechanic" nameidentifier="jobname.mechanic" coloroverride="0.5,0.86,0.9">
+    <Icon texture="Content/UI/MainIconsAtlas.png" sourcerect="896,256,128,128" origin="0.5,0.5"/>
+    <Description tag="talentdescription.apprenticeshipjob">
+      <Replace tag="[job]" value="jobname.mechanic" color="0.5,0.86,0.9"/>
+    </Description>
+    <Description tag="talentdescription.additionalskill">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.mechanicalskillbonus" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="Apprenticeship" statidentifier="mechanic" value="1"/>
+        <CharacterAbilityGiveStat stattype="MechanicalSkillBonus" value="20"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="apprenticeship_engineer" nameidentifier="jobname.engineer" coloroverride="0.88,0.72,0.43">
+    <Icon texture="Content/UI/MainIconsAtlas.png" sourcerect="768,256,128,128" origin="0.5,0.5"/>
+    <Description tag="talentdescription.apprenticeshipjob">
+      <Replace tag="[job]" value="jobname.engineer" color="0.88,0.72,0.43"/>
+    </Description>
+    <Description tag="talentdescription.additionalskill">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.electricalskillbonus" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="Apprenticeship" statidentifier="engineer" value="1"/>
+        <CharacterAbilityGiveStat stattype="ElectricalSkillBonus" value="20"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="logisticssystems">
+    <Icon texture="Content/UI/TalentsIcons1.png" sheetindex="0,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.handhelditemfinder,entityname.makeshiftshelf" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.letitdrainreminder">
+      <Replace tag="[itemcount]" value="3" color="gui.green"/>
+    </Description>
+    <Migrations>
+      <AddStat version="1.0.10.0" statidentifier="makeshiftshelf" stattype="MaxAttachableCount" value="3"/>
+    </Migrations>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="makeshiftshelf" stattype="MaxAttachableCount" value="3"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="makeshiftshelf"/>
+    <AddedRecipe itemidentifier="handhelditemfinder"/>
+  </Talent>
+
+  <Talent identifier="thefriendswemade">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="2,0" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.thefriendswemade"/>
+    <Description tag="talentdescription.thefriendswemadereminder">
+      <Replace tag="[amount]" value="2" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.petraptoregg" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="petraptoregg"/>
+  </Talent>
+  
+  <Talent identifier="revengesquad">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,7" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.revengesquad">
+      <Replace tag="[amount]" value="30" color="gui.green"/>
+      <Replace tag="[duration]" value="120" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnDieToCharacter">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies requiresalive="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character">
+              <Affliction identifier="revengesquad" amount="120"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="bagitup">
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="0,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.backpack" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="backpack"/>
+  </Talent>
+  
+  <Talent identifier="peerlearning">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="0,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.peerlearning">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <!-- give XP to the character itself -->
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionExperience">
+      <Conditions>
+        <AbilityConditionLowestLevel/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <!-- allies too -->
+    <AbilityGroupEffect abilityeffecttype="OnAllyGainMissionExperience">
+      <Conditions>
+        <AbilityConditionLowestLevel/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <!--<Talent identifier="thearrival">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="6,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.thearrival">
+      <Replace tag="[amount]" value="1" color="gui.green"/>
+      <Replace tag="[faction]" value="faction.clowns" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnUseRangedWeapon">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="thearrival_[placeholder]" placeholder="LocationIndex" min="1" invert="true"/>
+        <AbilityConditionItem tags="hornitem"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="thearrival_[placeholder]" placeholder="LocationIndex" value="1" setvalue="true"/>
+        <CharacterAbilityGiveReputation identifier="clowns" amount="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>-->
+  
+  <Talent identifier="mailman">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="0,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.mailman">
+      <Replace tag="[xpbonus]" value="25" color="gui.green"/>
+      <Replace tag="[moneybonus]" value="250" color="gui.green"/>
+      <Replace tag="[missiontype]" value="missiontype.cargo" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionExperience">
+      <Conditions>
+        <AbilityConditionMission missiontype="Cargo"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.25"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionMoney">
+      <Conditions>
+        <AbilityConditionMission missiontype="Cargo"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveMoney amount="250"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="thewaitinglist">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="1,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.thewaitinglist">
+      <Replace tag="[amount]" value="75" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval>
+      <Conditions>
+        <AbilityConditionAboveVitality invert="true" vitalitypercentage="0"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyResistance resistanceid="oxygenlow" multiplier="0.25"/>
+        <CharacterAbilityModifyResistance resistanceid="bleeding" multiplier="0.25"/>
+        <CharacterAbilityModifyResistance resistanceid="bloodloss" multiplier="0.25"/>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="anappleaday">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="3,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.anappleaday">
+      <Replace tag="[amount]" value="100" color="gui.green"/>
+      <Replace tag="[amount2]" value="75" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveResistance resistanceid="skilllossdeath" multiplier="0"/>
+        <CharacterAbilityGiveResistance resistanceid="skilllossrespawn" multiplier="0.25"/>
+        <CharacterAbilityGiveResistance resistanceid="reaperstax" multiplier="0"/> <!-- Legacy -->
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="skedaddle">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="5,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.skedaddle">
+      <Replace tag="[value]" value="10" color="gui.green"/>
+      <Replace tag="[attackedvalue]" value="30" color="gui.green"/>
+      <Replace tag="[seconds]" value="5" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MovementSpeed" value="0.1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnAttacked">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="skedaddle" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="insurancepolicy">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="0,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.insurancepolicy">
+      <Replace tag="[amount]" value="200" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnDieToCharacter">
+      <Conditions>
+        <AbilityConditionCharacter invert="true" targettypes="Ally"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityInsurancePolicy moneypermission="200" requiresalive="false"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="nonthreatening">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="6,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.feigndeath">
+      <Replace tag="[seconds]" value="2" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval effectdelay="2">
+      <Conditions>
+        <AbilityConditionRagdolled/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyFlag flagtype="IgnoredByEnemyAI"/>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="tastytarget">
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="1,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.tastytarget"/>
+    <Description tag="talentdescription.damagereduction">
+      <Replace tag="[amount]" value="15" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="tastytarget" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="starterquest">
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="5,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.starterquest"/>
+
+    <Description tag="talentdescription.starterquest.killcrawler">
+      <Replace tag="[xpbonus]" value="400" color="gui.green"/>
+      <Replace tag="[skillbonus]" value="10" color="gui.green"/>
+      <Replace tag="[skill]" value="stattypenames.weaponsskillbonus" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.starterquest.repairjunctionbox">
+      <Replace tag="[xpbonus]" value="300" color="gui.green"/>
+      <Replace tag="[skillbonus]" value="10" color="gui.green"/>
+      <Replace tag="[skill]" value="stattypenames.electricalskillbonus" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.starterquest.weldleak">
+      <Replace tag="[xpbonus]" value="200" color="gui.green"/>
+      <Replace tag="[skillbonus]" value="10" color="gui.green"/>
+      <Replace tag="[skill]" value="stattypenames.mechanicalskillbonus" color="gui.orange"/>
+    </Description>
+
+    <!-- Give the player stats that tracks if the rewards should be given -->
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="starterquest_killcrawler" value="1" maxvalue="1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="starterquest_repairjunctionbox" value="1" maxvalue="1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="starterquest_weldleak" value="1" maxvalue="1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+    <!-- Give the player the rewards when the crawler is killed -->
+    <AbilityGroupEffect abilityeffecttype="OnKillCharacter">
+      <Conditions>
+        <AbilityConditionCharacter>
+          <Conditional group="eq crawler"/>
+        </AbilityConditionCharacter>
+        <AbilityConditionHasPermanentStat statidentifier="starterquest_killcrawler" min="1"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveExperience amount="400"/>
+        <CharacterAbilityGivePermanentStat stattype="WeaponsSkillBonus" statidentifier="starterquest" value="10" setvalue="true" removeondeath="false"/>
+        <CharacterAbilityResetPermanentStat statidentifier="starterquest_killcrawler"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+    <!-- Give the player the rewards when repairing a junction box -->
+    <AbilityGroupEffect abilityeffecttype="OnRepairComplete">
+      <Conditions>
+        <AbilityConditionItem tags="junctionbox"/>
+        <AbilityConditionHasPermanentStat statidentifier="starterquest_repairjunctionbox" min="1"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveExperience amount="300"/>
+        <CharacterAbilityGivePermanentStat stattype="ElectricalSkillBonus" statidentifier="starterquest" value="10" setvalue="true" removeondeath="false"/>
+        <CharacterAbilityResetPermanentStat statidentifier="starterquest_repairjunctionbox"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+    <!-- Give the player the rewards when welding a leak -->
+    <AbilityGroupEffect abilityeffecttype="OnRepairedOutsideLeak">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="starterquest_weldleak" min="1"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveExperience amount="200"/>
+        <CharacterAbilityGivePermanentStat stattype="MechanicalSkillBonus" statidentifier="starterquest" value="10" setvalue="true" removeondeath="false"/>
+        <CharacterAbilityResetPermanentStat statidentifier="starterquest_weldleak"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="indenturedservitude">
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="4,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.assistanthiringprice">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.otherassistantxpbonus">
+      <Replace tag="[bonus]" value="10" color="gui.green"/>
+      <Replace tag="[max]" value="50" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="HireCostMultiplier" statidentifier="assistant" value="-0.2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnRoundEnd">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="indenturedservitude" targetallies="true" value="0" setvalue="true" maxvalue="5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnAllyGainMissionExperience">
+      <Conditions>
+        <AbilityConditionCharacter targetAbilityTarget="true">
+          <Conditional jobidentifier="assistant"/>
+        </AbilityConditionCharacter>
+        <AbilityConditionHasPermanentStat statidentifier="indenturedservitude" targetAbilityTarget="true" min="5" invert="true"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.1"/>
+        <CharacterAbilityGivePermanentStat statidentifier="indenturedservitude" targetAbilityTarget="true" value="1" maxvalue="5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="jengamaster">
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="2,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.jengamaster">
+      <Replace tag="[amount]" value="4" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.doesnotstack"/>
+    <AbilityGroupEffect abilityeffecttype="OnItemSelected">
+      <Conditions>
+        <AbilityConditionItem tags="container"/>
+        <AbilityConditionItemIsStatic/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStat stattype="ExtraStackSize" value="4" stackable="false" save="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="mule">
+    <Icon texture="Content/UI/TalentsIcons4.png" sheetindex="3,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.mule">
+      <Replace tag="[amount]" value="2" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="InventoryExtraStackSize" statidentifier="Material" value="2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="crewlayabout">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="7,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.reductiontostattypeself">
+      <Replace tag="[stattype]" value="stattypenames.repairspeed" color="gui.orange"/>
+      <Replace tag="[amount]" value="40" color="gui.red"/>
+    </Description>
+    <Description tag="talentdescription.reductiontoallskills">
+      <Replace tag="[amount]" value="15" color="gui.red"/>
+    </Description>
+    <Description tag="talentdescription.crewlayabout">
+      <Replace tag="[repairspeed]" value="25" color="gui.green"/>
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="1">
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies maxdistance="600" allowself="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="pickinguptheslack" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="ElectricalSkillBonus" value="-15"/>
+        <CharacterAbilityGiveStat stattype="HelmSkillBonus" value="-15"/>
+        <CharacterAbilityGiveStat stattype="MechanicalSkillBonus" value="-15"/>
+        <CharacterAbilityGiveStat stattype="MedicalSkillBonus" value="-15"/>
+        <CharacterAbilityGiveStat stattype="WeaponsSkillBonus" value="-15"/>
+        <CharacterAbilityGiveStat stattype="RepairSpeed" value="-0.4"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="graduationceremony">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="2,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockapprenticeshiptalents"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.ceremonialsword" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="ceremonialsword"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="graduationceremony" min="1" invert="true"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityUnlockApprenticeshipTalentTree/>
+        <CharacterAbilityGivePermanentStat statidentifier="graduationceremony" value="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="playingcatchup">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,4" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.playingcatchup">
+      <Replace tag="[levelvalue]" value="2" color="gui.green"/>
+      <Replace tag="[experiencevalue]" value="100" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionExperience">
+      <Conditions>
+        <AbilityConditionLevelsBehindHighest levelsbehind="2"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="enrollintoclowncollege">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.enrollintoclowncollege">
+      <Replace tag="[afflictionname]" value="afflictionname.clownpower" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.clownpowerbenefits"/>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.movementspeed" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="5" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.physicalresistance" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.clowncrate" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="clowncrate"/>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionHasItem tags="clowngear,clownmask" requireall="true"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="clownpower" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="waterprankster">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="5,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.clowndivingmask" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.clownpowerbenefits"/>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.swimmingspeed" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval>
+      <Conditions>
+        <AbilityConditionHasAffliction afflictionidentifier="clownpower"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyStat stattype="SwimmingSpeed" value="0.5"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AddedRecipe itemidentifier="clowndivingmask"/>
+  </Talent>
+
+  <Talent identifier="psychoclown">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="7,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.psychoclown">
+      <Replace tag="[afflictionname]" value="afflictionname.clownpower" color="gui.orange"/>
+      <Replace tag="[maxattackspeed]" value="150" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval>
+      <Conditions>
+        <AbilityConditionHasAffliction afflictionidentifier="clownpower"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityPsychoClown stattype="MeleeAttackSpeed" maxvalue="1.5" afflictionidentifier="psychosis"/>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="inspiringtunes">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,3" sheetelementsize="128,128"/>
+    <!-- TODO mention it works on all instruments -->
+    <Description tag="talentdescription.inspiringtunes">
+      <Replace tag="[skillamount]" value="15" color="gui.green"/>
+      <Replace tag="[duration]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnUseRangedWeapon">
+      <Conditions>
+        <AbilityConditionItem tags="hornitem,instrument"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffectsToAllies maxdistance="600" allowself="false">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="inspiringtunes" strength="10.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectsToAllies>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="chonkyhonks">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="6,7" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.chonkyhonks">
+      <Replace tag="[chance]" value="50" color="gui.green"/>
+      <Replace tag="[duration]" value="1" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnUseRangedWeapon">
+      <Conditions>
+        <AbilityConditionItem tags="hornitem"/>
+        <AbilityConditionHasAffliction afflictionidentifier="clownpower"/>
+        <AbilityConditionServerRandom randomchance="0.5"/>
+      </Conditions>
+      <Abilities>
+        <!-- TODO loud sound? -->
+        <CharacterAbilityApplyStatusEffectToNonHumans maxdistance="600">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="stun" strength="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffectToNonHumans>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="truepotential">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="1,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.truepotentialtemporary">
+      <Replace tag="[affliction]" value="afflictionname.combatstimulant" color="gui.orange"/>
+      <Replace tag="[duration]" value="15" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.clownexosuit" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnAttack">
+      <Conditions>
+        <AbilityConditionCharacterUnconcious/>
+        <AbilityConditionHasAffliction afflictionidentifier="clownpower"/>
+        <AbilityConditionAttackData itemidentifier="toyhammer"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveAffliction affliction="combatstimulant" strength="15" setvalue="true"/>
+        <CharacterAbilityReduceAffliction affliction="oxygenlow" amount="200"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="clownexosuit"/>
+  </Talent>
+
+</Talents>

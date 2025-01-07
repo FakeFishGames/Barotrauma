@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item
+    name="Searchlight"
+    nameidentifier="searchlight"
+    Aliases="Searchlight"
+    category="Legacy"
+    tags="searchlight,light"
+    focusonselected="true"
+    offsetonselected="515"
+    showinstatusmonitor="false"
+    linkable="false">
+
+    <Sprite texture="Content/Items/Legacy/SearchLightBase_legacy.png" depth="0.01" sourcerect="0,0,128,128"/>
+
+    <Turret canbeselected="true" linkable="false" barrelpos="64,64" reload="999999999"
+      rotationlimits="180,360"
+      powerconsumption="10000.0"
+      showchargeindicator="false"
+      showprojectileindicator="false"
+      springstiffnesslowskill="25" springstiffnesshighskill="25"
+      springdampinglowskill="5" springdampinghighskill="5"
+      rotationspeedlowskill="0.5" rotationspeedhighskill="0.5">
+      <BarrelSprite texture="Content/Items/Legacy/SearchLight_legacy.png" origin="0.5, 0.55"/>
+      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true" powerconsumption="50" drawbehindsubs="true" InheritParentIsActive="false">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0"/>
+      </LightComponent>
+    </Turret>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+    </ConnectionPanel>
+  </Item>
+</Items>

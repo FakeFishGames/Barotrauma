@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="smallplanter" category="Misc" Tags="planter,mediumitem,dontsellitems" scale="0.5" isshootable="true">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="896,384,128,128" depth="0.75" premultiplyalpha="false" origin="0.5,0.5"/>
+    <Body width="95" height="106" density="25"/>
+    <Price baseprice="120" minleveldifficulty="1">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="2"/>
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.75"/>
+    </Price>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" amount="1" spawnprobability="0.1"/>
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetach" PickingTime="5.0" aimpos="85,-10" handle1="0,0" attachable="true" aimable="true"/>
+    <Fabricate suitablefabricators="fabricator" requiredtime="45">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
+    <Deconstruct time="30">
+      <Item identifier="steel" mincondition="0.5"/>
+      <Item identifier="plastic" mincondition="1"/>
+    </Deconstruct>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" drawinventory="false" uilabel="" allowuioverlap="true" allowdraganddrop="false" showcontainedstateindicator="false">
+      <Containable items="seed"/>
+    </ItemContainer>
+    <LightComponent range="10.0" lightcolor="255,255,255,0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" depth="0.025" sourcerect="896,512,128,128" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+    <Planter selectkey="Select" canbepicked="true" pickingtime="5.0" msg="ItemMsgPlantSeed">
+      <PlantSlot slot="0" offset="0,32" size="0.25"/>
+      <SuitableFertilizer items="fertilizer"/>
+      <SuitableSeed items="seed"/>
+    </Planter>
+  </Item>
+  
+  <Item name="" identifier="wateringcan" category="Misc" Tags="smallitem,tool" cargocontaineridentifier="metalcrate" description="" Scale="0.5" impactsoundtag="impact_metal_light">
+    <InventoryIcon texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="896,0,128,128" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="896,0,128,128" depth="0.55" origin="0.5,0.5"/>
+    <Price baseprice="80" minleveldifficulty="1">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="2"/>
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.75"/>
+      <Price storeidentifier="merchantclown" minavailable="0" maxavailable="2"/>
+    </Price>
+    <PreferredContainer primary="crewcab" amount="1" spawnprobability="0.5" notcampaign="true" notpvp="true"/>
+    <PreferredContainer primary="wreckstoragecab,abandonedstoragecab,piratestoragecab,wreckcrewcab,abandonedcrewcab,piratecrewcab,outpostcrewcabinet" amount="1" spawnprobability="0.1"/>
+    <Body width="121" height="96" density="15"/>
+    <Fabricate suitablefabricators="fabricator" requiredtime="35">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <RequiredItem identifier="steel" amount="2"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="steel"/>
+      <Item identifier="plastic"/>
+    </Deconstruct>
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="60,0" holdangle="45" handle1="-50,20" handle2="-30,52" msg="ItemMsgPickUpSelect"/>
+    <RepairTool wateramount="100.0" range="0" barrelpos="28,11" targetstructures="false" hititems="false">
+      <ParticleEmitter particle="waterdrop" velocitymin="10.0" velocitymax="50.0" particlespersecond="50"/>
+    </RepairTool>
+  </Item>
+  
+  <Item name="" identifier="fertilizer" tags="fertilizer,smallitem" maxstacksize="8" category="Misc" scale="0.5" health="800">
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="910,128,87,125" depth="0.55" origin="0.5,0.5"/>
+    <Price baseprice="140" minleveldifficulty="1">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" multiplier="0.9"/>
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.75"/>
+      <Price storeidentifier="merchantclown" minavailable="0" maxavailable="2"/>
+    </Price>
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckstoragecab,abandonedstoragecab,piratestoragecab,wreckcrewcab,abandonedcrewcab,piratecrewcab,outpostcrewcabinet" amount="1" spawnprobability="0.1"/>
+    <Fabricate suitablefabricators="fabricator" requiredtime="45">
+      <RequiredSkill identifier="electrical" level="20"/>
+      <RequiredItem identifier="uranium"/>
+      <RequiredItem identifier="carbon"/>
+      <RequiredItem identifier="saltvineseed"/>
+    </Fabricate>
+    <Deconstruct time="30">
+      <Item identifier="uranium" mincondition="0.9"/>
+      <Item identifier="carbon" mincondition="0.9"/>
+    </Deconstruct>
+    <Body width="85" height="122" density="25"/>
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" holdangle="95" handle1="-20,55" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  
+  <Item name="" identifier="seedbag" category="Misc" Tags="smallitem" scale="0.5">
+    <PreferredContainer primary="crewcab"/>
+    <PreferredContainer primary="wreckstoragecab,abandonedstoragecab,piratestoragecab,wreckcrewcab,abandonedcrewcab,piratecrewcab,outpostcrewcabinet" amount="1" spawnprobability="0.1"/>
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="841,704,49,65" depth="0.55" origin="0.5,0.5"/>
+    <Body width="45" height="60" density="12"/>
+    <Price baseprice="60" minleveldifficulty="1">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="2"/>
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.75"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" requiredtime="25">
+      <RequiredSkill identifier="electrical" level="15"/>
+      <RequiredItem identifier="organicfiber" amount="2"/>
+    </Fabricate>
+    <Deconstruct time="15">
+      <RequiredItem identifier="organicfiber"/>
+    </Deconstruct>
+    <Holdable slots="RightHand+LeftHand,Any" msg="ItemMsgPickUpSelect" holdangle="40" handle1="0,10"/>
+    <ItemContainer capacity="12" keepopenwhenequipped="true" movableframe="true">
+      <Containable items="seed"/>
+    </ItemContainer>
+  </Item>
+</Items>

@@ -1,0 +1,277 @@
+﻿<Items>
+
+  <Item name=""
+        description=""
+        identifier="pulselaser" Tags="turret" category="Machine,Weapon" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="750" linkable="true" allowedlinks="pulselaserequipment">
+    <Sprite texture="Loaders.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false"/>
+    <MinimapIcon name="Command_Weapons_Pulselaser" texture="Content/UI/CommandUIAtlas.png" sourcerect="384,768,128,128"/>
+    <SwappableItem price="6000" replacementonuninstall="turrethardpoint" origin="128,215" swapidentifier="basicturret">
+      <SchematicSprite texture="Content/UI/WeaponUI.png" sourcerect="768,0,256,389"/>
+      <SwapConnectedItem tag="periscope" swapto="periscope"/>
+      <SwapConnectedItem tag="turretammosource" swapto="pulselaserloader"/>
+    </SwappableItem>
+    <UpgradePreviewSprite scale="2.5" texture="Content/UI/WeaponUI.png" sourcerect="265,810,96,65" origin="0.5,0.5"/>
+    <StaticBody width="80" radius="80"/>
+    <Turret singlechargedshot="true" maxchargetime="1.0" canbeselected="false" characterusable="false" usefiringoffsetformuzzleflash="true" linkable="true" barrelpos="128,88" firingoffset="-10,-220" rotationlimits="180,360" powerconsumption="7500.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.5" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8" MaxAngleOffset="10" AICurrentTargetPriorityMultiplier="1">
+      <sound file="Content/Items/Weapons/WEAPONS_laserGunShot1.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/WEAPONS_laserGunShot2.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/WEAPONS_laserGunShot3.ogg" range="10000" type="OnUse"/>
+      <sound file="Content/Items/Weapons/WEAPONS_laserGunShot4.ogg" range="10000" type="OnUse"/>
+      <WeaponIndicator texture="Content/UI/WeaponUI.png" sourcerect="500,913,66,32" origin="0.227, 0.5"/>
+      <RailSprite texture="Content/Items/Weapons/Turrets.png" depth="0.011" sourcerect="904,592,120,287" origin="0.5, 0.71"/>
+      <BarrelSprite texture="Content/Items/Weapons/Turrets.png" depth="0.012" sourcerect="779,592,125,333" origin="0.5, 0.8"/>
+      <ChargeSprite chargetarget="25, 15" texture="Content/Items/Weapons/Turrets.png" depth="0.01"  sourcerect="570,692,59,150" origin="1, 1.6"/>
+      <ChargeSprite chargetarget="-25, 15" texture="Content/Items/Weapons/Turrets.png" depth="0.01"  sourcerect="642,692,59,150" origin="0, 1.6"/>
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,0,256,256"/>
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,0,256,256"/>
+      <ChargeSound file="Content/Items/Weapons/WEAPONS_chargeUp.ogg" range="10000"/>
+      <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg"/>
+      <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg"/>
+      <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg"/>
+      <RequiredSkill identifier="weapons" level="50"/>
+      <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" directional="true" IsOn="true" drawbehindsubs="true" ignorecontinuoustoggle="true" InheritParentIsActive="false">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0"/>
+      </LightComponent>
+      <!--<ParticleEmitter particle="FlareBubbles" scalemin="0.5" scalemax="0.5" particleamount="20" distancemin="0" distancemax="500" velocitymin="0" velocitymax="5"/>-->
+	    <ParticleEmitter particle="FlareBubbles" scalemin="1.4" scalemax="1.8" particleamount="14" anglemin="0" anglemax="360" velocitymin="0" velocitymax="50"/>
+      <ParticleEmitter particle="pulselasermist" particleamount="30" anglemin="-10" anglemax="10" scalemin="1" scalemax="1" distancemin="0" distancemax="250" velocitymin="0" velocitymax="100"/>
+	    <ParticleEmitter particle="GlowDot" scalemin="4.0" scalemax="4.0" particleamount="20" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" colormultiplier="255,0,0,255"/>
+	    <!--<ParticleEmitter particle="chargepulselaser" particleamount="30" scalemin="2.0" scalemax="2.0"/>-->
+      <ParticleEmitterCharge particle="chargepulselaser" particlespersecond="60" scalemin="1.0" scalemax="1.0" anglemax="360"/>
+      <StatusEffect type="OnUse" target="This">
+        <Explosion range="5000.0" structuredamage="0" force="0.0" camerashake="15.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" flashcolor="255,0,0,255"/>
+      </StatusEffect>
+      <Upgrade gameversion="0.15.12.0" powerconsumption="1400.0"/>
+    </Turret>
+    <aitarget maxsightrange="3000" maxsoundrange="8000" fadeouttime="5"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
+      <input name="toggle_light" displayname="connection.togglelight"/>
+      <input name="set_light" displayname="connection.setlight"/>
+      <input name="set_auto_operate" displayname="connection.setautooperate"/>
+      <input name="toggle_auto_operate" displayname="connection.toggleautooperate"/>
+    </ConnectionPanel>
+    <SkillRequirementHint identifier="weapons" level="50"/>
+  </Item>
+
+  <Item name="" identifier="pulselaserloader" tags="pulselaserequipment,pulselaserammosource,turretammosource" category="Machine,Weapon" linkable="true" allowedlinks="pulselaser" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
+    <SwappableItem canbebought="false" origin="82,358" spawnwithid="pulselaserammobox"/>
+    <Sprite name="Pulse Laser Loader Front" texture="Content/Items/Weapons/Loaders.png" depth="0.78" sourcerect="529,5,165,358" origin="0.5,0.5"/>
+    <BrokenSprite texture="Content/Items/Weapons/Loaders.png"  sourcerect="163,563,153,351" origin="0.5,0.5" offset="5,6" depth="0.77" fadein="true" maxcondition="99"/>
+    <UpgradePreviewSprite texture="Content/UI/WeaponUI.png" sourcerect="208,968,32,46" origin="0.5,0.5"/>
+    <DecorativeSprite name="Pulse Laser Loader Frame Back" texture="Content/Items/Weapons/Loaders.png" depth="0.8" sourcerect="31,569,117,200" origin="0.5,0.5" offset="0,-68"/>
+    <LightComponent range="150.0" lightcolor="255,100,100,255" pulsefrequency="12" pulseamount="0.8" powerconsumption="0" IsOn="false" castshadows="true" allowingameediting="false" characterusable="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="0,791,165,358" depth="0.1" origin="0.5,0.5" alpha="1.0"/>
+      <StatusEffect type="OnActive" target="This" stackable="false" delay="0.25" IsOn="false"/>
+    </LightComponent>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="10" mindeteriorationdelay="60" maxdeteriorationdelay="300" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <StatusEffect type="InWater" target="This" condition="-0.25"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="Equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2.5" anglemax="360" velocitymin="-50" velocitymax="50" mincondition="15.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="60" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" maxstacksize="1" slotsperrow="6" itempos="83,-260" iteminterval="0,0" itemrotation="0" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.75">
+      <GuiFrame relativesize="0.18,0.23" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="pulselaserammo"/>
+      <!-- when the laser is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
+      <StatusEffect type="OnUse" target="Contained">
+        <RequiredItem items="pulselaserammo" type="Contained"/>
+        <Use/>
+      </StatusEffect>
+      <!-- trigger the flashing light component -->
+      <StatusEffect type="OnUse" target="This,Contained" IsOn="True">
+        <Conditional condition="gt 0.0" TargetContainedItem="true"/>
+      </StatusEffect>
+    </ItemContainer>	  
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <output name="condition_out" displayname="connection.conditionout"/>
+      <output name="contained_conditions" displayname="connection.ammunitionout"/>
+    </ConnectionPanel>
+    <LightComponent lightcolor="219,0,36,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="1.685,-4.88" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 0"/>
+    </LightComponent>
+    <LightComponent lightcolor="255,170,1,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="1.135,-4.88" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 20"/>
+    </LightComponent>
+    <LightComponent lightcolor="246,210,2,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="0.585,-4.88" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 40"/>
+    </LightComponent>
+    <LightComponent lightcolor="252,230,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="0.035,-4.88" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 60"/>
+    </LightComponent>
+    <LightComponent lightcolor="185,214,0,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="-0.515,-4.88" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gt 80"/>
+    </LightComponent>
+    <LightComponent lightcolor="79,184,0,150" castshadows="false" range="0.0" IsOn="true" powerconsumption="0" alphablend="true" allowingameediting="false">
+      <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="348,921,25,27" origin="-1.065,-4.88" alpha="1.0"/>
+      <IsActiveConditional targetcontaineditem="true" conditionpercentage="gte 100"/>
+    </LightComponent>
+  </Item>
+
+  <Item name="" identifier="pulselaserbolt" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55"/>
+    <Body width="170" height="10" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Projectile characterusable="false" hitscan="true" removeonhit="true" damagedoors="true" penetration="0.5">
+      <ParticleEmitter particle="tracerpulselaser" particleamount="1" velocitymin="0" velocitymax="0"/>
+      <ParticleEmitter particle="FlareBubbles" emitacrossrayinterval="50"/>
+      <Attack structuredamage="5" targetforce="100" itemdamage="25" severlimbsprobability="1.0" penetration="0.5">
+        <Affliction identifier="explosiondamage" strength="40"/>
+        <Affliction identifier="stun" strength="0.5"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="muzzleflashpulselaser" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" scalemin="0.5" scalemax="0.8"/>
+        <ParticleEmitter particle="weldspark" particleamount="5" anglemin="0" anglemax="360" velocitymin="300" velocitymax="350" scalemin="1.5" scalemax="1.9" drawontop="true" colormultiplier="255,200,225,180"/>
+        <ParticleEmitter particle="FlareBubbles" particleamount="3" anglemin="0" anglemax="360" velocitymin="0" velocitymax="50"/>
+        <Explosion range="150.0" ballastfloradamage="50" structuredamage="10" itemdamage="250" force="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" flashcolor="255,0,0,255">
+          <Affliction identifier="burn" strength="100"/>
+          <Affliction identifier="stun" strength="3"/>
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnNotContained" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
+  <Item name="" identifier="pulselaserbolttrilaser" nameidentifier="pulselaserbolt" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55"/>
+    <Body width="170" height="10" density="20"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="10" staticspread="true" hitscancount="3" damagedoors="true" penetration="0.5">
+      <ParticleEmitter particle="tracerpulselaser" particleamount="1" velocitymin="0" velocitymax="0"/>
+      <Attack structuredamage="5" targetforce="70" itemdamage="17" severlimbsprobability="1.0" penetration="0.4">
+        <Affliction identifier="explosiondamage" strength="30"/>
+        <Affliction identifier="stun" strength="0.3"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="muzzleflashpulselaser" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" scalemin="0.5" scalemax="0.8"/>
+        <ParticleEmitter particle="weldspark" particleamount="5" anglemin="0" anglemax="360" velocitymin="300" velocitymax="350" scalemin="1.5" scalemax="1.9" drawontop="true" colormultiplier="255,200,225,180"/>
+        <ParticleEmitter particle="FlareBubbles" particleamount="3" anglemin="0" anglemax="360" velocitymin="0" velocitymax="50"/>
+        <Explosion range="100.0" ballastfloradamage="35" structuredamage="5" itemdamage="200" force="7.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" flashcolor="255,0,0,255">
+          <Affliction identifier="burn" strength="70"/>
+          <Affliction identifier="stun" strength="2"/>
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnNotContained" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
+  <Item name="" identifier="pulselaserammobox" scale="0.5" tags="pulselaserequipment,pulselaserammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
+    <PreferredContainer primary="pulselaserammosource" amount="1" mincondition="1"/>
+    <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
+    <Price baseprice="250" minavailable="1" displaynonempty="true">
+      <Price storeidentifier="merchantoutpost" multiplier="1.6"/>
+      <Price storeidentifier="merchantcity" multiplier="1.4" sold="false"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.3"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" sold="false" multiplier="1.2"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="lithium" mincondition="0.95"/>
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="50"/>
+      <RequiredItem identifier="lithium"/>
+      <RequiredItem identifier="alienblood"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
+      <RequiredSkill identifier="weapons" level="45"/>
+      <RequiredItem identifier="lithium"/>
+      <RequiredItem identifier="alienblood"/>
+      <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="pulselaserammobox"/>
+    </Fabricate>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="560,687,95,78" origin="0.5,0.5"/>
+    <Body width="90" height="72" density="30"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatValue stattype="MovementSpeed" value="-0.2"/>
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="pulselaserbolt" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-2.25" disabledeltatime="true">
+        <RequiredItem items="pulselaserbolt" type="Contained"/>
+      </StatusEffect>
+      <Containable items="pulselaserbolt"/>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="pulselaserammoboxtrilaser" fallbacknameidentifier="pulselaserammobox" scale="0.5" tags="pulselaserequipment,pulselaserammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
+    <PreferredContainer primary="pulselaserammosource,ammoboxcontainer" mincondition="1"/>
+    <Price baseprice="435" sold="false" displaynonempty="true"  minleveldifficulty="15">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantresearch" sold="true" multiplier="1.3" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" multiplier="1.2"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="fulgurium" mincondition="0.95"/>
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="65"/>
+      <RequiredItem identifier="fulgurium"/>
+      <RequiredItem identifier="alienblood"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
+    <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
+      <RequiredSkill identifier="weapons" level="60"/>
+      <RequiredItem identifier="fulgurium"/>
+      <RequiredItem identifier="alienblood"/>
+      <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="pulselaserammoboxtrilaser"/>
+    </Fabricate>
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="918,687,95,78" origin="0.5,0.5"/>
+    <Body width="90" height="72" density="30"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatValue stattype="MovementSpeed" value="-0.2"/>
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="pulselaserbolttrilaser" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-3.5" disabledeltatime="true">
+        <RequiredItem items="pulselaserbolttrilaser" type="Contained"/>
+      </StatusEffect>
+      <Containable items="pulselaserbolttrilaser"/>
+    </ItemContainer>
+  </Item>
+
+</Items>

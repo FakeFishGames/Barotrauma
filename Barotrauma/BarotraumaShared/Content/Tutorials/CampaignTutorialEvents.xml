@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Randomevents>
+  
+  <!-- CAMPAIGN INTEGRATED TUTORIAL  -->
+
+  <!-- This event set will be selected based on the location type -->
+  <EventSet identifier="firstoutpostevents" leveltype="outpost" locationtype="tutorialoutpost" allowatstart="true" minleveldifficulty="0" maxleveldifficulty="100" chooserandom="false" ignorecooldown="true" campaign="true" eventcount="1" onceperlevel="true" CampaignTutorialOnly="true">
+    <ScriptedEvent identifier="campaign_tutorial_start"/>
+  </EventSet>
+
+  <!-- This event set will be force selected with ForceAtConnectionNr -->
+  <EventSet identifier="firstconnectionevents" leveltype="locationconnection" allowatstart="true" minleveldifficulty="0" maxleveldifficulty="100" chooserandom="false" ignorecooldown="true" campaign="true" eventcount="1" ForceAtDiscoveredNr="0" onceperlevel="true" CampaignTutorialOnly="true">
+    <ScriptedEvent identifier="campaign_tutorial_onmission"/>
+  </EventSet>
+
+  <!-- This event set will be force selected with ForceAtOutpostNr -->
+  <EventSet identifier="secondoutpostevents" leveltype="outpost" allowatstart="true" minleveldifficulty="0" maxleveldifficulty="100" chooserandom="false" ignorecooldown="true" campaign="true" eventcount="1" onceperoutpost="true" ForceAtVisitedNr="1" onceperlevel="true" CampaignTutorialOnly="true">
+    <ScriptedEvent identifier="campaign_tutorial_finalchecklist"/>
+  </EventSet>
+  
+  <EventPrefabs>
+    
+    <!-- Part 1 - Starting outpost -->
+    
+    <ScriptedEvent identifier="campaign_tutorial_start">
+
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_missions"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_supplies"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_leave" canbecompleted="false"/>
+      
+      <WaitAction time="0.5"/>
+      
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="jobidentifier:engineer" tag="engineer"/>
+      <NPCFollowAction npctag="engineer" targettag="player" follow="true"/>
+
+      <CheckDataAction identifier="campaign_tutorial_start_conversation" condition="eq true">
+        
+        <Success>
+          <TriggerEventAction identifier="campaign_tutorial_start_objectives"/>
+        </Success>
+
+        <Failure>
+          <ConversationAction targettag="player" speakertag="engineer" WaitForInteraction="false" IgnoreInterruptDistance="true" text="tutorial.campaign.introduction.conversation_start" eventsprite="engineer">
+            <Option text="tutorial.campaign.introduction.conversation_start_reply">
+              <ConversationAction targettag="player" speakertag="engineer" WaitForInteraction="false" IgnoreInterruptDistance="true" text="tutorial.campaign.introduction.conversation_2" eventsprite="engineer">
+                <Option text="tutorial.campaign.introduction.conversation_2_reply">
+                  <ConversationAction targettag="player" speakertag="engineer" WaitForInteraction="false" IgnoreInterruptDistance="true" text="tutorial.campaign.introduction.conversation_3" eventsprite="engineer">
+                    <Option text="tutorial.campaign.introduction.conversation_3_reply">
+                      <ConversationAction targettag="player" speakertag="engineer" WaitForInteraction="false" IgnoreInterruptDistance="true" text="tutorial.campaign.introduction.conversation_4" eventsprite="engineer">
+                        <Option text="tutorial.campaign.introduction.conversation_4_reply" endconversation="true">
+                          <MoneyAction amount="300"/>
+                          <TriggerEventAction identifier="campaign_tutorial_start_objectives"/>
+                          <SetDataAction identifier="campaign_tutorial_start_conversation" value="true"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Failure>
+
+      </CheckDataAction>
+
+      <NPCFollowAction npctag="engineer" targettag="player" follow="false"/>
+
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_start_objectives">
+      
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_supplies_fuelrods" ParentObjectiveId="tutorial.campaign.objective_supplies"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_supplies_weldingfuel" ParentObjectiveId="tutorial.campaign.objective_supplies"/>
+      
+      <CheckDataAction identifier="tutorial.campaign.objective_missions" condition="eq true">
+        <Failure>
+          <TriggerEventAction identifier="missionevent_cargo_campaignstart"/>
+        </Failure>
+      </CheckDataAction>
+      
+      <TriggerEventAction identifier="campaign_tutorial_checkmissions"/>
+      <TriggerEventAction identifier="campaign_tutorial_checksupplies"/>
+      <TriggerEventAction identifier="campaign_tutorial_checkfuelrods"/>
+      <TriggerEventAction identifier="campaign_tutorial_checkweldingfuel"/>
+      
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="missionevent_cargo_campaignstart">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="eventtext.missionevent_cargo_campaignstart.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargocampaignstart"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_checkmissions">
+      <Label name="beforecheck"/>
+      <CheckMissionAction type="available" missioncount="1">
+        <Success>
+          <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_missions"/>
+          <SetDataAction identifier="tutorial.campaign.objective_missions" value="true"/>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckMissionAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_checksupplies">
+      <Label name="beforefirstcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_supplies_fuelrods">
+        <Success>
+          <Label name="beforesecondcheck"/>
+          <CheckObjectiveAction identifier="tutorial.campaign.objective_supplies_weldingfuel">
+            <Success>
+              <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_supplies"/>
+            </Success>
+            <Failure>
+              <WaitAction time="0.5"/>
+              <GoTo name="beforesecondcheck"/>
+            </Failure>
+          </CheckObjectiveAction>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforefirstcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_checkfuelrods">
+      <Label name="beforecheck"/>
+      <CheckPurchasedItemsAction itemtag="reactorfuel" mincount="1">
+        <Success>
+          <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_supplies_fuelrods"/>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckPurchasedItemsAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_checkweldingfuel">
+      <Label name="beforecheck"/>
+      <CheckPurchasedItemsAction itemtag="weldingtoolfuel" mincount="1">
+        <Success>
+          <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_supplies_weldingfuel"/>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckPurchasedItemsAction>
+    </ScriptedEvent>
+
+    <!-- Part 2 - Undocked, mission started -->
+    <ScriptedEvent identifier="campaign_tutorial_onmission">
+      <TriggerEventAction identifier="campaign_tutorial_tasks"/>
+      <TriggerEventAction identifier="campaign_tutorial_tasks_reactor"/>
+      <TriggerEventAction identifier="campaign_tutorial_tasks_fixleaks"/>
+      <TriggerEventAction identifier="campaign_tutorial_tasks_repairelectrical"/>
+      <TriggerEventAction identifier="campaign_tutorial_tasks_repairmechanical"/>
+      <TriggerEventAction identifier="campaign_tutorial_tasks_operateturret"/>
+      <TriggerEventAction identifier="campaign_tutorial_tasks_move"/>
+      <TriggerEventAction identifier="campaign_tutorial_tasks_activatesonar"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_reachtarget" canbecompleted="false"/>
+    </ScriptedEvent>
+
+    <!-- Crew orders -->
+    <ScriptedEvent identifier="campaign_tutorial_tasks">
+      
+      <MessageBoxAction identifier="tutorial.campaign.objective_tasks" objectivetag="tutorial.campaign.objective_tasks" text="tutorial.campaign.message_tasks" iconstyle="GUINotificationButton" closeoninput="Command" tag="closeoncommand"/>
+      
+      <Label name="beforereactorcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_tasks_reactor">
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforereactorcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+
+      <Label name="beforeleakcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_tasks_fixleaks">
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforeleakcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+
+      <Label name="beforeelectricalcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_tasks_repairelectrical">
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforeelectricalcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+
+      <Label name="beforemechanicalcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_tasks_repairmechanical">
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforemechanicalcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+
+      <EventObjectiveAction type="complete" id="tutorial.campaign.objective_tasks"/>
+
+      <Label name="beforeobjectivecheck"/>
+      <CheckObjectiveAction>
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforeobjectivecheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+      
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_tasks_reactor">
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_tasks_reactor" ParentObjectiveId="tutorial.campaign.objective_tasks"/>
+      <TagAction criteria="crew" tag="crew"/>
+
+      <Label name="beforecheck"/>
+      <UIHighlightAction ordercategory="Operate" orderidentifier="operatereactor" orderoption="powerup"/>
+      <CheckOrderAction targettag="crew" orderidentifier="operatereactor" orderoption="powerup">
+        <Success>
+          <EventObjectiveAction type="complete" id="tutorial.campaign.objective_tasks_reactor"/>
+        </Success>
+        <Failure>
+          <WaitAction time="1"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckOrderAction>
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_tasks_fixleaks">
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_tasks_fixleaks" ParentObjectiveId="tutorial.campaign.objective_tasks"/>
+      <TagAction criteria="crew" tag="crew"/>
+
+      <Label name="beforecheck"/>
+      <UIHighlightAction ordercategory="Maintenance" orderidentifier="fixleaks"/>
+      <CheckOrderAction targettag="crew" orderidentifier="fixleaks">
+        <Success>
+          <EventObjectiveAction type="complete" id="tutorial.campaign.objective_tasks_fixleaks"/>
+        </Success>
+        <Failure>
+          <WaitAction time="1"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckOrderAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_tasks_repairelectrical">
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_tasks_repairelectrical" ParentObjectiveId="tutorial.campaign.objective_tasks"/>
+      <TagAction criteria="crew" tag="crew"/>
+
+      <Label name="beforecheck"/>
+      <UIHighlightAction ordercategory="Maintenance" orderidentifier="repairelectrical"/>
+      <CheckOrderAction targettag="crew" orderidentifier="repairelectrical">
+        <Success>
+          <EventObjectiveAction type="complete" id="tutorial.campaign.objective_tasks_repairelectrical"/>
+        </Success>
+        <Failure>
+          <WaitAction time="1"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckOrderAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_tasks_repairmechanical">
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_tasks_repairmechanical" ParentObjectiveId="tutorial.campaign.objective_tasks"/>
+      <TagAction criteria="crew" tag="crew"/>
+
+      <Label name="beforecheck"/>
+      <UIHighlightAction ordercategory="Maintenance" orderidentifier="repairmechanical"/>
+      <CheckOrderAction targettag="crew" orderidentifier="repairmechanical">
+        <Success>
+          <EventObjectiveAction type="complete" id="tutorial.campaign.objective_tasks_repairmechanical"/>
+        </Success>
+        <Failure>
+          <WaitAction time="1"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckOrderAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_tasks_operateturret">
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_tasks_operateturret" ParentObjectiveId="tutorial.campaign.objective_tasks"/>
+      <TagAction criteria="crew" tag="crew"/>
+
+      <Label name="beforecheck"/>
+      <UIHighlightAction ordercategory="Operate" orderidentifier="operateweapons"/>
+      <UIHighlightAction ordercategory="Operate" orderidentifier="operateweapons" ordertargettag="turret" highlightmultiple="true"/>
+      <CheckOrderAction targettag="crew" orderidentifier="operateweapons">
+        <Success>
+          <EventObjectiveAction type="complete" id="tutorial.campaign.objective_tasks_operateturret"/>
+        </Success>
+        <Failure>
+          <WaitAction time="1"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckOrderAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_tasks_move">
+      
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_move"/>
+      <TagAction criteria="submarine" tag="player" submarinetype="Player"/>
+      <TagAction criteria="submarine" tag="outpost" submarinetype="Outpost"/>
+      <TriggerAction type="outside" target1tag="player" target2tag="outpost" radius="4000" checkalltargets="true"/>
+      <EventObjectiveAction type="complete" id="tutorial.campaign.objective_move"/>
+      
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_tasks_activatesonar">
+      
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_activatesonar"/>
+      <TagAction criteria="itemtag:primarynavterminal" tag="sonar"/>
+      
+      <Label name="beforecheck"/>
+      <CheckConditionalAction targettag="sonar" targetitemcomponent="Sonar" CurrentMode="Active">
+        <Success>
+          <EventObjectiveAction type="complete" id="tutorial.campaign.objective_activatesonar"/>
+        </Success>
+        <Failure>
+          <UIHighlightAction id="SonarModeSwitch"/>
+          <WaitAction time="1"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckConditionalAction>
+      
+    </ScriptedEvent>
+
+    <!-- Part 3 - Regular station -->
+    <ScriptedEvent identifier="campaign_tutorial_finalchecklist">
+
+      <CheckMissionAction type="available" missiontag="cargo">
+        <Failure>
+          <TriggerEventAction identifier="missionevent_cargoany"/>
+        </Failure>
+      </CheckMissionAction>
+
+      <CheckMissionAction type="available" missiontag="killmonster_set1">
+        <Failure>
+          <TriggerEventAction identifier="missionevent_killmonster_set1"/>
+        </Failure>
+      </CheckMissionAction>
+
+      <CheckMissionAction type="available" missiontag="escortcommoners">
+        <Failure>
+          <TriggerEventAction identifier="missionevent_escort1coalition"/>
+        </Failure>
+      </CheckMissionAction>
+
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_restock"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_restock_fuel" ParentObjectiveId="tutorial.campaign.objective_restock"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_restock_coilgunammo" ParentObjectiveId="tutorial.campaign.objective_restock"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_restock_handheldammo" ParentObjectiveId="tutorial.campaign.objective_restock"/>
+      <EventObjectiveAction type="add" identifier="tutorial.campaign.objective_3missions"/>
+      <TriggerEventAction identifier="campaign_tutorial_restock"/>
+      <TriggerEventAction identifier="campaign_tutorial_3missions"/>
+      <TriggerEventAction identifier="campaign_tutorial_outro"/>
+      
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_restock">
+      
+      <TriggerEventAction identifier="campaign_tutorial_restock_fuel"/>
+      <TriggerEventAction identifier="campaign_tutorial_restock_coilgunammo"/>
+      <TriggerEventAction identifier="campaign_tutorial_restock_handheldammo"/>
+      
+      <Label name="beforefuelcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_restock_fuel">
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforefuelcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+      
+      <Label name="beforecoilguncheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_restock_coilgunammo">
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforecoilguncheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+      
+      <Label name="beforehandheldcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_restock_handheldammo">
+        <Failure>
+          <WaitAction time="0.25"/>
+          <GoTo name="beforehandheldcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+      
+      <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_restock"/>
+      
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_restock_fuel">
+      
+      <Label name="beforecheck"/>
+      <CheckPurchasedItemsAction itemtag="reactorfuel" mincount="1">
+        <Success>
+          <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_restock_fuel"/>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckPurchasedItemsAction>
+      
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_restock_coilgunammo">
+      
+      <Label name="beforecheck"/>
+      <CheckPurchasedItemsAction itemtag="coilgunammo" mincount="1">
+        <Success>
+          <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_restock_coilgunammo"/>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckPurchasedItemsAction>
+      
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_restock_handheldammo">
+      
+      <Label name="beforecheck"/>
+      <CheckPurchasedItemsAction itemtag="revolverammo" mincount="1">
+        <Success>
+          <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_restock_handheldammo"/>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckPurchasedItemsAction>
+      
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_3missions">
+      
+      <Label name="beforecheck"/>
+      <CheckMissionAction type="available" missioncount="3">
+        <Success>
+          <EventObjectiveAction type="complete" identifier="tutorial.campaign.objective_3missions"/>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckMissionAction>
+      
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="campaign_tutorial_outro">
+      <Label name="beforefirstcheck"/>
+      <CheckObjectiveAction identifier="tutorial.campaign.objective_3missions">
+        <Success>
+          <Label name="beforesecondcheck"/>
+          <CheckObjectiveAction identifier="tutorial.campaign.objective_restock">
+            <Success>
+              <TriggerEventAction identifier="campaign_tutorial_outro_convo"/>
+            </Success>
+            <Failure>
+              <WaitAction time="0.5"/>
+              <GoTo name="beforesecondcheck"/>
+            </Failure>
+          </CheckObjectiveAction>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforefirstcheck"/>
+        </Failure>
+      </CheckObjectiveAction>
+    </ScriptedEvent>
+    
+    <ScriptedEvent identifier="campaign_tutorial_outro_convo">
+      <TagAction criteria="player" tag="player"/>
+
+      <Label name="beforecheck"/>
+      <CheckConditionalAction IsCaptain="true"  targettag="player">
+        <Success>
+          <TagAction criteria="jobidentifier:engineer" tag="engineer"/>
+          <NPCWaitAction npctag="engineer" wait="true"/>
+          <ConversationAction targettag="player" speakertag="engineer" WaitForInteraction="false" IgnoreInterruptDistance="true" text="tutorial.campaign.outro.conversation_start" eventsprite="engineer">
+            <Option text="tutorial.campaign.outro.conversation_start_reply">
+              <ConversationAction targettag="player" speakertag="engineer" WaitForInteraction="false" IgnoreInterruptDistance="true" text="tutorial.campaign.outro.conversation_2" eventsprite="engineer">
+                <Option text="tutorial.campaign.outro.conversation_2_reply">
+                  <ConversationAction targettag="player" speakertag="engineer" WaitForInteraction="false" IgnoreInterruptDistance="true" text="tutorial.campaign.outro.conversation_3" eventsprite="engineer">
+                    <Option text="tutorial.campaign.outro.conversation_3_reply" endconversation="true">
+
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Success>
+        <Failure>
+          <WaitAction time="0.5"/>
+          <GoTo name="beforecheck"/>
+        </Failure>
+      </CheckConditionalAction>
+    </ScriptedEvent>
+    
+  </EventPrefabs>
+</Randomevents>

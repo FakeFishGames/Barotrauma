@@ -1,0 +1,817 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<npcsets>
+  <npcset identifier="customnpcs1">
+    <npc identifier="artiedolittle" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" headspriteid="3" hairindex="2" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="255,255,255,255" haircolor="255,255,255,255" facialhaircolor="255,255,255,255" personality="Fearful">
+        <job name="Assistant" identifier="assistant">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="5"/>
+          <skill identifier="weapons" level="5"/>
+          <skill identifier="medical" level="5"/>
+          <skill identifier="helm" level="5"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="commonerclothes3" equip="true"/>
+        <Item identifier="ethanol" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="stowaway" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" headspriteid="1" hairindex="3" beardindex="0" moustacheindex="0" faceattachmentindex="0" personality="Fearful">
+        <job name="Assistant" identifier="assistant">
+          <skill identifier="electrical" level="7"/>
+          <skill identifier="mechanical" level="8"/>
+          <skill identifier="weapons" level="4"/>
+          <skill identifier="medical" level="3"/>
+          <skill identifier="helm" level="12"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="commonerclothes2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="clownmessenger" faction="clowns" commonness="0" moduleflags="none" behavior="Passive" preferredoutpostmoduletypes="crewmodule">
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="clownmaskunique" equip="true"/>
+        <Item identifier="clownsuitunique" equip="true"/>
+        <Item identifier="bikehorn" equip="false"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="jacovsubra" faction="huskcult" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" experiencepoints="6000" additionaltalentpoints="0" headspriteid="7" hairindex="10" beardindex="12" facecolor="255,255,255,255" faceattachmentindex="0" personality="laid-back">
+        <job identifier="engineer">
+          <skill identifier="weapons" level="100"/>
+          <skill identifier="medical" level="100"/>
+          <skill identifier="helm" level="50"/>
+          <skill identifier="electrical" level="50"/>
+          <skill identifier="mechanical" level="50"/>
+        </job>
+        <talents>
+          <talent identifier="geneharvester"/>
+          <talent identifier="genesplicer"/>
+          <talent identifier="bloodybusiness"/>
+          <talent identifier="blackmarketgenes"/>
+          <talent identifier="genetampering"/>
+          <talent identifier="geneticgenious"/>
+          <talent identifier="plaguedoctor"/>
+          <talent identifier="labcontacts"/>
+          <talent identifier="supersoldiers"/>
+          <talent identifier="macrodosing"/>
+        </talents>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="zealotrobes" equip="true"/>
+        <Item identifier="ethanol" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="coalitionspy" faction="coalition" job="securityofficer" spawnpointtags="security" behavior="Patrol" healthmultiplier="1.1" aimspeed="1.0" aimaccuracy="0.8">
+      <Character speciesname="human" tags="head11,male" hairindex="1" beardindex="10" moustacheindex="0" faceattachmentindex="1" skincolor="200,165,131,255" haircolor="199,125,82,255" facialhaircolor="58,58,60,255" personality="rude">
+        <job name="Captain" identifier="captain">
+          <skill identifier="weapons" level="80"/>
+          <skill identifier="helm" level="50"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="electrical" level="10"/>
+          <skill identifier="medical" level="10"/>
+        </job>
+        <savedstatvalues/>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="securityuniform1" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="handcannon" equip="false">
+          <Item identifier="handcannonround" amount="6"/>
+        </Item>
+        <Item identifier="divingknife"/>
+        <Item identifier="bodyarmor" equip="true"/>
+        <Item identifier="ballistichelmet1" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="artifactvictim" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="female" salary="1000" headspriteid="2" hairindex="2" beardindex="0" moustacheindex="0" faceattachmentindex="0" personality="Fearful">
+        <job name="Assistant" identifier="assistant">
+          <skill identifier="electrical" level="57"/>
+          <skill identifier="mechanical" level="62"/>
+          <skill identifier="weapons" level="23"/>
+          <skill identifier="medical" level="16"/>
+          <skill identifier="helm" level="11"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="commonerclothes3" equip="true"/>
+        <Item identifier="ethanol" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="raptorowner" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" salary="1000" headspriteid="2" hairindex="6" beardindex="4" moustacheindex="0" faceattachmentindex="0" skincolor="165,124,83,255" haircolor="52,48,48,255" facialhaircolor="52,48,48,255" personality="Fearful">
+        <job name="Assistant" identifier="assistant">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="5"/>
+          <skill identifier="weapons" level="5"/>
+          <skill identifier="medical" level="5"/>
+          <skill identifier="helm" level="5"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="commonerclothes3" equip="true"/>
+        <Item identifier="ethanol" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="raptorvictim" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" salary="1000" headspriteid="2" hairindex="2" beardindex="0" moustacheindex="0" faceattachmentindex="0" personality="Fearful">
+        <job name="Assistant" identifier="assistant">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="5"/>
+          <skill identifier="weapons" level="5"/>
+          <skill identifier="medical" level="5"/>
+          <skill identifier="helm" level="5"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="minerclothes" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="hognose" job="captain" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" experiencepoints="6000" skincolor="74,50,25,255" haircolor="222,215,204,255" salary="0" headspriteid="2" hairindex="6" beardindex="4" moustacheindex="0" faceattachmentindex="15" personality="Tough">
+        <job name="Captain" identifier="captain">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="75"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="85"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="captainsuniform2" equip="true"/>
+        <Item identifier="captainscap2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="oldwoman" job="captain" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="female" haircolor="222,215,204,255" salary="0" hairindex="1" beardindex="0" moustacheindex="0" faceattachmentindex="0" personality="Tough">
+        <job name="Captain" identifier="captain">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="5"/>
+          <skill identifier="weapons" level="5"/>
+          <skill identifier="medical" level="5"/>
+          <skill identifier="helm" level="5"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="commonerclothes4" equip="true"/>
+      </ItemSet>
+    </npc>
+    
+    <npc identifier="drugdealer" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" salary="1000" headspriteid="3" hairindex="1" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="83,45,18,255" haircolor="73,78,85,255" facialhaircolor="222,215,204,255" personality="Joker">
+        <job name="Medicaldoctor" identifier="medicaldoctor">
+          <skill identifier="electrical" level="21"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="32"/>
+          <skill identifier="medical" level="59"/>
+          <skill identifier="helm" level="11"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true"/>
+        <Item identifier="banditclothes1" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="divingknife" equip="false"/>
+        <Item identifier="toolbelt" equip="true"/>
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true"/>
+        <Item identifier="banditclothes2" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="baseballcap" equip="true"/>
+        <Item identifier="divingknife" equip="false"/>
+        <Item identifier="wrench" equip="false"/>
+        <Item identifier="revolver">
+          <Item identifier="revolverround" amount="6"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true"/>
+        <Item identifier="banditclothes1" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="crowbar" equip="true"/>
+        <Item identifier="divingknife" equip="false"/>
+        <Item identifier="toolbelt" equip="true"/>
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true"/>
+        <Item identifier="banditclothes2" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="crowbar" equip="true"/>
+        <Item identifier="divingknife" equip="false"/>
+        <Item identifier="wrench" equip="false"/>
+        <Item identifier="toolbelt" equip="true"/>
+        <Item identifier="revolver">
+          <Item identifier="revolverround" amount="6"/>
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true"/>
+        <Item identifier="banditclothes1" equip="true"/>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+        <Item identifier="divingknife" equip="false"/>
+        <Item identifier="crowbar" equip="false"/>
+        <Item identifier="toolbelt" equip="true"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="miketheidiot" job="assistant" moduleflags="none" behavior="Passive">
+      <Character name="" speciesname="human" tags="male,head3" salary="4584000" experiencepoints="0" additionaltalentpoints="0" hairindex="8" beardindex="5" moustacheindex="0" faceattachmentindex="12" skincolor="165,124,83,255" haircolor="89,67,73,255" facialhaircolor="89,67,73,255" startitemsgiven="false" ragdoll="" personality="rude" missionscompletedsincedeath="0">
+        <job name="Assistant" identifier="captain">
+          <skill identifier="medical" level="50"/>
+          <skill identifier="weapons" level="5"/>
+          <skill identifier="mechanical" level="5"/>
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="helm" level="0"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="turban" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="rum" equip="true"/>
+        <Item identifier="commonerclothes2" equip="true"/>
+        <Item identifier="antidama1"/>
+        <Item identifier="idcard"/>
+        <Item identifier="ethanol"/>
+        <Item identifier="ethanol"/>
+        <Item identifier="ethanol"/>
+        <Item identifier="ethanol"/>
+        <Item identifier="divingknifeunique"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="shockjock" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" gender="male" headspriteid="11" hairindex="5" beardindex="1" moustacheindex="1" faceattachmentindex="0" skincolor="200,165,131,255" haircolor="210,163,111,255" facialhaircolor="205,151,90,255" personality="Crazy">
+        <job name="Assistant" identifier="assistant">
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="banditclothes2" equip="true"/>
+        <Item identifier="crowbar" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="ignatiusmay" faction="coalition" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="head4,male" experiencepoints="6000" additionaltalentpoints="0" hairindex="3" beardindex="12" moustacheindex="0" faceattachmentindex="0" skincolor="244,190,152,255" haircolor="210,163,111,255" facialhaircolor="210,163,111,255" startitemsgiven="false" ragdoll="" personality="professional" missionscompletedsincedeath="0">
+        <job identifier="securityofficer">
+          <skill identifier="weapons" level="100"/>
+          <skill identifier="mechanical" level="100"/>
+          <skill identifier="electrical" level="75"/>
+          <skill identifier="medical" level="50"/>
+          <skill identifier="helm" level="10"/>
+        </job>
+        <talents>
+          <talent identifier="commendations"/>
+          <talent identifier="affiliation"/>
+          <talent identifier="yourreputation"/>
+          <talent identifier="campaigning"/>
+          <talent identifier="figurehead"/>
+          <talent identifier="leadingbyexample"/>
+          <talent identifier="inspiringpresence"/>
+        </talents>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="captainscap3" equip="true"/>
+        <Item identifier="vipclothes2" equip="true"/>
+        <Item identifier="bodyarmor" equip="true"/>
+        <Item identifier="cigar" equip="true"/>
+        <Item identifier="coalitionmedal" equip="true" amount="8"/>
+        <Item identifier="handcannon" equip="false">
+          <Item identifier="handcannonround" amount="6"/>
+        </Item>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="auntdoris" faction="coalition" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="female,head13" experiencepoints="6000" additionaltalentpoints="0" hairindex="12" beardindex="0" moustacheindex="0" faceattachmentindex="9" skincolor="243,198,150,255" haircolor="222,215,204,255" facialhaircolor="187,169,129,255" startitemsgiven="false" ragdoll="" personality="fearful" missionscompletedsincedeath="0">
+        <job identifier="medicaldoctor">
+          <skill identifier="medical" level="100"/>
+          <skill identifier="helm" level="50"/>
+          <skill identifier="weapons" level="50"/>
+          <skill identifier="mechanical" level="50"/>
+          <skill identifier="electrical" level="50"/>
+        </job>
+        <talents>
+          <talent identifier="slayer"/>
+          <talent identifier="buff"/>
+          <talent identifier="firstaidtraining"/>
+          <talent identifier="mudraptorwrestler"/>
+          <talent identifier="heavylifting"/>
+          <talent identifier="nonthreatening"/>
+          <talent identifier="inspiringpresence"/>
+        </talents>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="commonerclothes1" equip="true"/>
+        <Item identifier="divingknifeunique" equip="true"/>
+        <Item identifier="banana" equip="true"/>
+        <Item identifier="antibleeding1" amount="4"/>
+        <Item identifier="pomegrenadeextract" amount="6"/>
+        <Item identifier="endocrinebooster"/>
+        <Item identifier="seedbag">
+          <Item identifier="creepingorangevineseed" amount="5"/>
+          <Item identifier="raptorbaneseed" amount="5"/>
+          <Item identifier="tobaccovineseed" amount="5"/>
+        </Item>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="victoriapetran" faction="separatists" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="female,head14" salary="4076" experiencepoints="5000" additionaltalentpoints="0" hairindex="7" beardindex="0" moustacheindex="0" faceattachmentindex="10" skincolor="200,165,131,255" haircolor="71,54,55,255" facialhaircolor="106,59,55,255" startitemsgiven="false" ragdoll="" personality="tough" missionscompletedsincedeath="0">
+        <job identifier="securityofficer">
+          <skill identifier="weapons" level="100"/>
+          <skill identifier="mechanical" level="100"/>
+          <skill identifier="electrical" level="75"/>
+          <skill identifier="medical" level="50"/>
+          <skill identifier="helm" level="10"/>
+        </job>
+        <talents>
+          <talent identifier="commendations"/>
+          <talent identifier="yourreputation"/>
+          <talent identifier="inspiringpresence"/>
+          <talent identifier="campaigning"/>
+          <talent identifier="figurehead"/>
+          <talent identifier="quickdraw"/>
+          <talent identifier="bigguns"/>
+        </talents>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="separatistcommoner1" equip="true"/>
+        <Item identifier="piratebodyarmor" equip="true"/>
+        <Item identifier="captainscap2" equip="true"/>
+        <Item identifier="handcannon" equip="false">
+          <Item identifier="handcannonround" amount="6"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="sootman" faction="separatists" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="male,head3" experiencepoints="7500" additionaltalentpoints="0" hairindex="2" beardindex="1" moustacheindex="0" faceattachmentindex="4" skincolor="38,25,14,255" haircolor="52,48,48,255" facialhaircolor="52,48,48,255" ragdoll="" personality="rude">
+        <job identifier="mechanic">
+          <skill identifier="weapons" level="100"/>
+          <skill identifier="mechanical" level="100"/>
+          <skill identifier="electrical" level="75"/>
+          <skill identifier="medical" level="50"/>
+          <skill identifier="helm" level="10"/>
+        </job>
+        <talents>
+          <talent identifier="pyromaniac"/>
+          <talent identifier="extrapowder"/>
+          <talent identifier="inspiringpresence"/>
+          <talent identifier="lonewolf"/>
+          <talent identifier="militaryapplications"/>
+          <talent identifier="armsrace"/>
+          <talent identifier="nuclearoption"/>
+        </talents>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="separatistcommoner3" equip="true"/>
+        <Item identifier="piratebandana" equip="true"/>
+        <Item identifier="bandolier" equip="true">
+          <Item identifier="ic4block" equip="false" amount="4"/>
+        </Item>
+        <Item identifier="flamer" equip="false">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+    
+    <npc identifier="jestmaster" faction="clowns" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="head6,male" experiencepoints="10000" additionaltalentpoints="0" beardindex="13" hairindex="15" moustacheindex="0" faceattachmentindex="0" skincolor="165,124,83,255" haircolor="70,140,92,255" facialhaircolor="216,186,133,255" startitemsgiven="false" ragdoll="" personality="joker" missionscompletedsincedeath="0">
+        <job identifier="medicaldoctor">
+          <skill identifier="medical" level="100"/>
+          <skill identifier="mechanical" level="100"/>
+          <skill identifier="electrical" level="100"/>
+          <skill identifier="helm" level="50"/>
+          <skill identifier="weapons" level="50"/>
+        </job>
+        <talents>
+          <talent identifier="enrollintoclowncollege"/>
+          <talent identifier="waterprankster"/>
+          <talent identifier="chonkyhonks"/>
+          <talent identifier="psychoclown"/>
+          <talent identifier="truepotential"/>
+          <talent identifier="inspirationalleader"/>
+          <talent identifier="inspiringpresence"/>
+          <talent identifier="steadytune"/>
+        </talents>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="clownmaskunique" equip="true"/>
+        <Item identifier="clownsuitunique" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="banana" equip="false" amount="3"/>
+        <Item identifier="deusizine" equip="false"/>
+        <Item identifier="cymbals" equip="false"/>
+      </ItemSet>
+    </npc>
+    
+    <npc identifier="blotchestheclown" faction="clowns" job="assistant" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" experiencepoints="0" unlockedtalents="" additionaltalentpoints="0" hairindex="15" beardindex="13" moustacheindex="0" faceattachmentindex="0" skincolor="252,225,198,255" haircolor="172,73,52,255" facialhaircolor="172,73,52,255" startitemsgiven="false" ragdoll="" personality="fearful" missionscompletedsincedeath="0">
+        <job identifier="assistant">
+          <skill identifier="weapons" level="100"/>
+          <skill identifier="medical" level="100"/>
+          <skill identifier="mechanical" level="60"/>
+          <skill identifier="electrical" level="60"/>
+          <skill identifier="helm" level="10"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="banditclothes2" equip="true"/>
+        <Item identifier="crowbar" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="radiationescapee" commonness="0" moduleflags="none" job="mechanic" behavior="Passive" healthmultiplier="0.75" preferredoutpostmoduletypes="crewmodule,seccrewmodule">
+      <Character name="Mihail Astor" speciesname="human" gender="male" skincolor="216,97,56,255" haircolor="190,190,190,255" headspriteid="13" hairindex="7" beardindex="1" faceattachmentindex="2" personality="Crazy">
+        <job name="Assistant" identifier="assistant">
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="commonerclothes3" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="eyeresearcher" commonness="0" moduleflags="none" job="medicaldoctor" behavior="Passive" healthmultiplier="0.75" preferredoutpostmoduletypes="crewmodule,seccrewmodule">
+      <Character name="Dr. Buglem" speciesname="human" gender="female" skincolor="193,175,172,255" haircolor="68,44,40,255" headspriteid="15" hairindex="10" faceattachmentindex="0" personality="Professional">
+        <job identifier="medicaldoctor">
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="researcherclothes" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="prophetofsierpinsk" commonness="0" moduleflags="none" job="medicaldoctor" behavior="Passive" healthmultiplier="0.75" preferredoutpostmoduletypes="crewmodule,seccrewmodule">
+      <Character speciesname="human" tags="head16,male" salary="3984" experiencepoints="0" unlockedtalents="" additionaltalentpoints="0" hairindex="15" beardindex="15" moustacheindex="0" faceattachmentindex="13" skincolor="252,225,198,255" haircolor="222,215,204,255" facialhaircolor="222,215,204,255" startitemsgiven="false" ragdoll="" personality="laid-back" missionscompletedsincedeath="0">
+        <job identifier="medicaldoctor"/>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="researcherclothes" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="ruinresearcher" commonness="0" moduleflags="none" job="medicaldoctor" behavior="Passive" healthmultiplier="0.75" preferredoutpostmoduletypes="crewmodule,seccrewmodule">
+      <Character name="" speciesname="human" gender="male" tags="head3,male" salary="1993" experiencepoints="0" unlockedtalents="" additionaltalentpoints="0" hairindex="10" beardindex="3" moustacheindex="0" faceattachmentindex="0" skincolor="154,79,48,255" haircolor="155,117,114,255" facialhaircolor="155,117,114,255" startitemsgiven="false" ragdoll="" personality="professional" missionscompletedsincedeath="0">
+        <job identifier="medicaldoctor"/>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="researcherclothes" equip="true"/>
+        <Item identifier="screwdriver"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="haraldthecurious" job="assistant" moduleflags="none" behavior="Passive">
+      <Character name="" speciesname="human" tags="male,head3" salary="123" experiencepoints="0" additionaltalentpoints="0" hairindex="8" beardindex="5" moustacheindex="0" faceattachmentindex="12" skincolor="165,124,83,255" haircolor="89,67,73,255" facialhaircolor="89,67,73,255" startitemsgiven="false" ragdoll="" personality="rude" missionscompletedsincedeath="0">
+        <job name="Assistant" identifier="assistant">
+          <skill identifier="medical" level="5"/>
+          <skill identifier="weapons" level="5"/>
+          <skill identifier="mechanical" level="5"/>
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="helm" level="50"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="commonerclothes2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="associate1" commonness="0" moduleflags="none" job="assistant" behavior="Passive">
+      <Character name="" speciesname="human" gender="male" tags="head7,male" experiencepoints="0" unlockedtalents="" additionaltalentpoints="0" hairindex="13" beardindex="4" faceattachmentindex="13" skincolor="214,154,112,255" haircolor="67,48,46,255" facialhaircolor="59,49,49,255" startitemsgiven="false" ragdoll="" personality="professional" missionscompletedsincedeath="0">
+        <job identifier="assistant"/>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="commonerclothes3" equip="true"/>
+        <Item identifier="screwdriver"/>
+      </ItemSet>
+    </npc>
+  
+  </npcset>
+  
+  <npcset identifier="tutorialnpcs">
+    <npc identifier="receptiondude" job="assistant" moduleflags="none" behavior="Passive">
+      <Character name="Todd Burdock" speciesname="human" tags="male,head6" hairindex="1" beardindex="1" moustacheindex="0" faceattachmentindex="12" skincolor="74,50,25,255" haircolor="52,48,48,255" facialhaircolor="52,48,48,255">
+        <job name="Commoner" identifier="commoner">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="75"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="85"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="administratorclothes" equip="true"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="captaininstructor" job="captain" moduleflags="none" behavior="Passive">
+      <Character name="Captain Sterner" speciesname="human" tags="head11,male" hairindex="6" beardindex="3" moustacheindex="0" faceattachmentindex="0" skincolor="74,50,25,255" haircolor="58,58,60,255" facialhaircolor="58,58,60,255">
+        <job name="Captain" identifier="captain">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="75"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="85"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="captainsuniform3" equip="true"/>
+        <Item identifier="captainscap3" equip="true"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="engineerinstructor" job="engineer" moduleflags="none" behavior="Passive">
+      <Character name="Kayleigh Friar" speciesname="human" tags="head12,female" hairindex="9" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="214,154,112,255" haircolor="161,88,55,255" facialhaircolor="139,126,108,255">
+        <job name="Engineer" identifier="engineer">
+          <skill identifier="electrical" level="75"/>
+          <skill identifier="mechanical" level="45"/>
+          <skill identifier="weapons" level="25"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="orangejumpsuit2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="mechanicinstructor" job="mechanic" moduleflags="none" behavior="Passive">
+      <Character name="Amos Arbor" speciesname="human" tags="head11,male" hairindex="5" beardindex="11" moustacheindex="0" faceattachmentindex="2" skincolor="165,124,83,255" haircolor="58,58,60,255" facialhaircolor="58,58,60,255">
+        <job name="Mechanic" identifier="mechanic">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="75"/>
+          <skill identifier="weapons" level="35"/>
+          <skill identifier="medical" level="15"/>
+          <skill identifier="helm" level="25"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="bluejumpsuit2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="securityinstructor" job="securityofficer" moduleflags="none" behavior="Passive">
+      <Character name="Ofc. Pérez" speciesname="human" tags="female,head8" hairindex="2" beardindex="0" moustacheindex="0" faceattachmentindex="5" skincolor="165,124,83,255" haircolor="58,58,60,255" facialhaircolor="58,58,60,255">
+        <job name="Securityofficer" identifier="securityofficer">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="35"/>
+          <skill identifier="weapons" level="75"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="securityuniform1" equip="true"/>
+        <Item identifier="bodyarmor" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="medicalinstructor" job="medicaldoctor" moduleflags="none" behavior="Passive" AllowDraggingIndefinitely="true">
+      <Character name="Dr. Beem" speciesname="human" tags="male,head16" hairindex="3" beardindex="0" moustacheindex="0" faceattachmentindex="12" skincolor="165,124,83,255" haircolor="210,163,111,255" facialhaircolor="58,58,60,255">
+        <job name="Medicaldoctor" identifier="medicaldoctor">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="25"/>
+          <skill identifier="weapons" level="15"/>
+          <skill identifier="medical" level="65"/>
+          <skill identifier="helm" level="25"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="medicalofficerclothes" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="captaintrainee" job="captain" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="female,head4" hairindex="13" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="252,225,198,255" haircolor="106,59,55,255" facialhaircolor="139,126,108,255">
+        <job name="Captain" identifier="captain">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="30"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="51"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="captainsuniform2" equip="true"/>
+        <Item identifier="captainscap2" equip="true"/>
+      </ItemSet>
+    </npc>
+    <npc identifier="engineertrainee" job="engineer" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="head8,male" hairindex="11" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="165,124,83,255" haircolor="210,163,111,255" facialhaircolor="123,132,120,255">
+        <job name="Engineer" identifier="engineer">
+          <skill identifier="electrical" level="51"/>
+          <skill identifier="mechanical" level="30"/>
+          <skill identifier="weapons" level="25"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="orangejumpsuit2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="mechanictrainee" job="mechanic" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="female,head3" hairindex="4" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="119,73,41,255" haircolor="89,67,73,255" facialhaircolor="210,163,111,255">
+        <job name="Mechanic" identifier="mechanic">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="51"/>
+          <skill identifier="weapons" level="35"/>
+          <skill identifier="medical" level="15"/>
+          <skill identifier="helm" level="25"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="bluejumpsuit1" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="securitytrainee" job="securityofficer" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="male,head16" hairindex="6" beardindex="2" moustacheindex="0" faceattachmentindex="0" skincolor="214,154,112,255" haircolor="89,67,73,255" facialhaircolor="58,58,60,255">
+        <job name="Securityofficer" identifier="securityofficer">
+          <skill identifier="electrical" level="5"/>
+          <skill identifier="mechanical" level="35"/>
+          <skill identifier="weapons" level="51"/>
+          <skill identifier="medical" level="25"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="securityuniform2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="medictrainee" job="medicaldoctor" moduleflags="none" behavior="Passive">
+      <Character speciesname="human" tags="male,head11" hairindex="13" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="149,121,102,255" haircolor="123,132,120,255" facialhaircolor="106,59,55,255">
+        <job name="Medicaldoctor" identifier="medicaldoctor">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="25"/>
+          <skill identifier="weapons" level="15"/>
+          <skill identifier="medical" level="51"/>
+          <skill identifier="helm" level="25"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <!--Item identifier="idcard" equip="true"/-->
+        <Item identifier="headset" equip="true" showpreview="false"/>
+        <Item identifier="doctorsuniform1" equip="true"/>
+      </ItemSet>
+    </npc>
+    
+    <npc identifier="patient1" job="prisoner" moduleflags="none" behavior="Passive" AllowDraggingIndefinitely="true">
+      <Character speciesname="human" tags="head15,female" hairindex="3" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="74,50,25,255" haircolor="210,163,111,255" facialhaircolor="172,73,52,255">
+        <job name="Medicaldoctor" identifier="medicaldoctor">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="15"/>
+          <skill identifier="medical" level="15"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="commonerclothes1" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="patient2" job="prisoner" moduleflags="none" behavior="Passive" AllowDraggingIndefinitely="true">
+      <Character speciesname="human" tags="head11,male" hairindex="1" beardindex="15" moustacheindex="0" faceattachmentindex="0" skincolor="214,154,112,255" haircolor="58,58,60,255" facialhaircolor="199,125,82,255">
+        <job name="Medicaldoctor" identifier="medicaldoctor">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="15"/>
+          <skill identifier="medical" level="15"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="commonerclothes2" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="patient3" job="prisoner" moduleflags="none" behavior="Passive" AllowDraggingIndefinitely="true">
+      <Character speciesname="human" tags="male,head16" hairindex="4" beardindex="12" moustacheindex="0" faceattachmentindex="0" skincolor="149,121,102,255" haircolor="89,67,73,255" facialhaircolor="199,125,82,255">
+        <job name="Medicaldoctor" identifier="medicaldoctor">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="15"/>
+          <skill identifier="medical" level="15"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="commonerclothes3" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="patient4" job="prisoner" moduleflags="none" behavior="Passive" AllowDraggingIndefinitely="true">
+      <Character speciesname="human" tags="female,head4" hairindex="12" beardindex="0" moustacheindex="0" faceattachmentindex="0" skincolor="74,50,25,255" haircolor="71,54,55,255" facialhaircolor="205,151,90,255">
+        <job name="Medicaldoctor" identifier="medicaldoctor">
+          <skill identifier="electrical" level="15"/>
+          <skill identifier="mechanical" level="15"/>
+          <skill identifier="weapons" level="15"/>
+          <skill identifier="medical" level="15"/>
+          <skill identifier="helm" level="15"/>
+        </job>
+      </Character>
+      <ItemSet commonness="1">
+        <Item identifier="prisonerclothes" equip="true"/>
+      </ItemSet>
+    </npc>
+
+    <npc identifier="merchanttutorial" job="watchman" spawnpointtags="shop" healthmultiplier="3" campaigninteractiontype="Store" behavior="StayInHull">
+      <ItemSet commonness="1">
+        <Item identifier="baseballcap" equip="true"/>
+        <Item identifier="crewchiefclothes" equip="true"/>
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="wrench" equip="true"/>
+        <Item identifier="screwdriver" equip="true"/>
+        <Item identifier="revolver">
+          <Item identifier="revolverround" amount="6"/>
+        </Item>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank"/>
+        </Item>
+      </ItemSet>
+    </npc>
+  </npcset>
+</npcsets>

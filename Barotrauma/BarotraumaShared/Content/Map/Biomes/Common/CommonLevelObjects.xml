@@ -1,0 +1,301 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--COMMON-->
+<levelobjects>
+  <!--Webs-->
+  <web1 identifier="web1" spawnpos="MainPathWall,SidePathWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1.5" maxsize="2" commonness="0" depthrange="-0.01,-0.01" alignwithsurface="False" minsurfacewidth="400" randomrotation="0,0" swingamount="5" swingfrequency="0.25" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Trigger position="0,-400" radius="150" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/Webs.png" sourcerect="309,13,307,870" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation frequency="1" amplitude="1" changespeed="0.1" sync="-1" typename="noise" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="1.0" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5" row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="europanridge" commonness="1"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="2"/>
+  </web1>
+  <web2 identifier="web2" spawnpos="MainPathWall,SidePathWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1.5" maxsize="2" commonness="0" depthrange="-0.01,-0.01" alignwithsurface="False" minsurfacewidth="400" randomrotation="0,0" swingamount="5" swingfrequency="0.25" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Trigger position="0,-800" radius="150" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/Webs.png" sourcerect="627,42,314,1222" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation frequency="1" amplitude="1" changespeed="0.1" sync="-1" typename="noise" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="1.0" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5" row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="europanridge" commonness="1"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="2"/>
+  </web2>
+  <web3 identifier="web3" spawnpos="MainPathWall,SidePathWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1.5" maxsize="2" commonness="0" depthrange="-0.01,-0.01" alignwithsurface="False" minsurfacewidth="400" randomrotation="0,0" swingamount="5" swingfrequency="0.25" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Trigger position="0,-800" radius="200" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/Webs.png" sourcerect="954,66,317,1400" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation frequency="1" amplitude="1" changespeed="0.1" sync="-1" typename="noise" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="1.0" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5" row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="europanridge" commonness="1"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="2"/>
+  </web3>
+  <web4 identifier="web4" spawnpos="MainPathWall,SidePathWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1.5" maxsize="2" commonness="0" depthrange="-0.01,-0.01" alignwithsurface="False" minsurfacewidth="400" randomrotation="0,0" swingamount="5" swingfrequency="0.25" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Trigger position="0,-200" radius="150" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/Webs.png" sourcerect="69,948,353,496" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation frequency="1" amplitude="1" changespeed="0.1" sync="-1" typename="noise" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="1.0" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5" row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="europanridge" commonness="1"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="2"/>
+  </web4>
+  <web5 identifier="web5" spawnpos="MainPathWall,SidePathWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1.5" maxsize="2" commonness="0" depthrange="-0.01,-0.01" alignwithsurface="False" minsurfacewidth="700" randomrotation="0,0" swingamount="5" swingfrequency="0.25" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Trigger position="0,-800" radius="300" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/Webs.png" sourcerect="1273,0,779,1638" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation frequency="1" amplitude="1" changespeed="0.1" sync="-1" typename="noise" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="1.0" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5" row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="europanridge" commonness="1"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="2"/>
+  </web5>
+  <web6 identifier="web6" spawnpos="MainPathWall,SidePathWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1.5" maxsize="2" commonness="0" depthrange="-0.01,-0.01" alignwithsurface="False" minsurfacewidth="500" randomrotation="0,0" swingamount="5" swingfrequency="0.25" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Trigger position="0,-200" radius="220" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/Webs.png" sourcerect="28,1475,443,555" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation frequency="1" amplitude="1" changespeed="0.1" sync="-1" typename="noise" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="1.0" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5" row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="europanridge" commonness="1"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="2"/>
+  </web6>
+  <web7 identifier="web7" spawnpos="MainPathWall,SidePathWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1.5" maxsize="2" commonness="0" depthrange="-0.01,-0.01" alignwithsurface="False" minsurfacewidth="400" randomrotation="0,0" swingamount="5" swingfrequency="0.25" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Trigger position="0,-600" radius="150" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/Webs.png" sourcerect="0,0,307,946" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation frequency="1" amplitude="1" changespeed="0.1" sync="-1" typename="noise" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="1.0" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5" row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"/>
+    </DeformableSprite>
+    <overridecommonness leveltype="europanridge" commonness="1"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="2"/>
+  </web7>
+  <!--Sonar Flora-->
+  <sonarflora2 identifier="sonarflora2" spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.2" scaleoscillationfrequency="0.3" randomrotation="180,180" commonness="0" depthrange="-1.5,-1.0" alignment="TopLeft, BottomRight" minsurfacewidth="500" swingamount="0" swingfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" subdivisions="4,4" sourcerect="1,2,465,219" origin="0.5,0.1">
+      <SpriteDeformation frequency="0.5" scale="1" sync="-1" typename="inflate" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="4,4"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="4,4" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5"/>
+    </DeformableSprite>
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    </Trigger>
+    <LightSource color="255,216,204,127" range="1500" pulseamount="0.2" pulsefrequency="0.5"/>
+    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3" mincount="1" maxcount="3"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0.2"/>
+    <overridecommonness leveltype="europanridge" commonness="0.3"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="5"/>
+    <ParticleEmitter particle="SonarFloraWave" distancemin="100" distancemax="150" particlespersecond="0.6" particleamount="1" emitinterval="2.1" anglemin="0" anglemax="320" scalemin="1.0" scalemax="1.5"/>
+  </sonarflora2>
+  <sonarflora3 identifier="sonarflora3" spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="0" depthrange="-1.5,-1.0" alignment="TopLeft, BottomRight" minsurfacewidth="300" swingamount="0" swingfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" subdivisions="4,3" sourcerect="467,3,281,264" origin="0.5,0.15">
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="inflate" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="4,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="4,3" row0="0,0 0,0 0,0" row1="1,0.1 1,0.1 1,0.1"/>
+    </DeformableSprite>
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    </Trigger>
+    <LightSource color="255,216,204,102" range="1200" pulseamount="0.2" pulsefrequency="0.5"/>
+    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3" mincount="1" maxcount="3"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0.2"/>
+    <overridecommonness leveltype="europanridge" commonness="0.3"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="5"/>
+    <ParticleEmitter particle="SonarFloraWave" distancemin="100" distancemax="150" particlespersecond="0.6" particleamount="1" emitinterval="2.1" anglemin="0" anglemax="320" scalemin="1.0" scalemax="1.5"/>
+  </sonarflora3>
+  <sonarflora4 identifier="sonarflora4" spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="0" depthrange="-1.5,-1.0" alignment="TopLeft, BottomRight" minsurfacewidth="300" swingamount="0" swingfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" subdivisions="3,3" sourcerect="440,283,298,220" origin="0.6,0.2">
+      <SpriteDeformation frequency="0.5" scale="1" sync="-1" typename="inflate" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5"/>
+    </DeformableSprite>
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    </Trigger>
+    <LightSource color="255,216,204,102" range="1000" pulseamount="0.2" pulsefrequency="0.5"/>
+    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3" mincount="1" maxcount="3"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0.2"/>
+    <overridecommonness leveltype="europanridge" commonness="0.3"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="5"/>
+    <ParticleEmitter particle="SonarFloraWave" distancemin="100" distancemax="150" particlespersecond="0.6" particleamount="1" emitinterval="2.1" anglemin="0" anglemax="320" scalemin="1.0" scalemax="1.5"/>
+  </sonarflora4>
+  <sonarflora5 identifier="sonarflora5" spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="0" depthrange="-1.5,-1.0" alignment="TopLeft, BottomRight" minsurfacewidth="400" swingamount="0" swingfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" subdivisions="3,3" sourcerect="1,220,436,264" origin="0.5,0.2">
+      <SpriteDeformation frequency="0.5" scale="1" sync="-1" typename="inflate" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3" row0="0,0 0,0 0,0" row1="0.5,0.1 1,0.2 0.5,0.1"/>
+    </DeformableSprite>
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    </Trigger>
+    <LightSource color="255,216,204,102" range="1000" pulseamount="0.2" pulsefrequency="0.5"/>
+    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3" mincount="1" maxcount="3"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0.2"/>
+    <overridecommonness leveltype="europanridge" commonness="0.3"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="5"/>
+    <ParticleEmitter particle="SonarFloraWave" distancemin="100" distancemax="150" particlespersecond="0.6" particleamount="1" emitinterval="2.1" anglemin="0" anglemax="320" scalemin="1.0" scalemax="1.5"/>
+  </sonarflora5>
+  <sonarflora6 identifier="sonarflora6" spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="0" depthrange="-1.5,-1.0" alignment="TopLeft, BottomRight" minsurfacewidth="300" swingamount="0" swingfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <DeformableSprite texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" subdivisions="3,3" sourcerect="7,483,302,255" origin="0.5,0.2">
+      <SpriteDeformation frequency="0.5" scale="1" sync="-1" typename="inflate" blendmode="Add" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="3,3" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5"/>
+    </DeformableSprite>
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    </Trigger>
+    <LightSource color="255,216,204,102" range="1000" pulseamount="0.2" pulsefrequency="0.5"/>
+    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3" mincount="1" maxcount="3"/>
+    <overridecommonness leveltype="theaphoticplateau" commonness="0.2"/>
+    <overridecommonness leveltype="europanridge" commonness="0.3"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="5"/>
+    <ParticleEmitter particle="SonarFloraWave" distancemin="100" distancemax="150" particlespersecond="0.6" particleamount="1" emitinterval="2.1" anglemin="0" anglemax="320" scalemin="1.0" scalemax="1.5"/>
+  </sonarflora6>
+  <sonarflorabranch1 identifier="sonarflorabranch1" spawnpos="None" minsize="0.5" maxsize="1" randomrotation="-5,5" swingamount="8" swingfrequency="0.1" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-2.0,-1.5" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="50" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Sprite name="sonarflorabranch1" texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" sourcerect="579,618,417,401" origin="0.5,0.1"/>
+  </sonarflorabranch1>
+  <sonarflorabranch2 identifier="sonarflorabranch2" spawnpos="None" minsize="0.5" maxsize="1" randomrotation="-5,5" swingamount="8" swingfrequency="0.1" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-2.0,-1.5" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="50" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Sprite name="sonarflorabranch2" texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" sourcerect="810,195,203,425" origin="0.5,0.1"/>
+  </sonarflorabranch2>
+  <sonarflorabranch3 identifier="sonarflorabranch3" spawnpos="None" minsize="0.5" maxsize="1" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-2.0,-1.5" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="50" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <Sprite name="sonarflorabranch3" texture="Content/Map/Biomes/Common/old/SonarFloraBodies.png" sourcerect="2,741,550,283" origin="0.8,0.1"/>
+  </sonarflorabranch3>
+  <!--Vents-->
+  <lavavent identifier="lavavent" spawnpos="SeaFloor" alignment="Top" minsize="0.5" maxsize="1" randomrotation="0,0" sonardisruption="0.5" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="528" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" commonness="1" maxcount="10000" randomoffset="0,0">
+    <Sprite texture="Content/Map/Biomes/Common/old/seafloor.png" sourcerect="1030,1247,440,803" origin="0.5,0.9"/>
+    <Trigger randomtriggerinterval="10" randomtriggerprobability="0.5" staytriggereddelay="5" networksyncing="true">
+      <LightSource range="4000" color="255,0,0,255" flicker="0.5" pulseamount="0.3" pulsefrequency="0.5">
+        <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.6"/>
+      </LightSource>
+      <Trigger position="0,1500" radius="500" height="1600" camerashake="3" triggeredby="Submarine, Character" force="0,5.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200">
+        <Attack structuredamage="10" damagerange="500" emitstructuredamageparticles="false">
+          <Affliction identifier="burn" strength="20"/>
+        </Attack>
+      </Trigger>
+      <Sound file="Content/Sounds/Ambient/Thunder1.ogg" range="20000" position="0,700"/>
+      <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,700"/>
+      <ParticleEmitter particle="volcanosmokefast" particlespersecond="10" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600"/>
+      <ParticleEmitter particle="lavasplash" particlespersecond="50" position="-50,700" anglemin="70" anglemax="110" velocitymin="0" velocitymax="8000"/>
+      <ParticleEmitter particle="lavachunk" particlespersecond="80" position="-50,700" anglemin="80" anglemax="100" velocitymin="1000" velocitymax="6000"/>
+      <ParticleEmitter particle="volcanofire" particlespersecond="5" emitinterval="2" particleamount="10" position="-50,700" anglemin="50" anglemax="130" velocitymin="100" velocitymax="1000"/>
+    </Trigger>
+    <ParticleEmitter particle="volcanosmoke" particlespersecond="5" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600"/>
+    <LightSource color="50,0,0,255" range="2048" flicker="0.2" flickerspeed="0.1" pulseamount="0.5" pulsefrequency="0.3"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="5"/>
+    <overridecommonness commonness="0" leveltype="outpostlevel"/>
+    <overridecommonness commonness="0" leveltype="endzone"/>
+  </lavavent>
+  <lavavent2 identifier="lavavent2" spawnpos="SeaFloor" alignment="Top" minsize="0.5" maxsize="1" randomrotation="0,0" sonardisruption="0.5" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="528" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" commonness="1" maxcount="10000" randomoffset="0,0">
+    <Sprite texture="Content/Map/Biomes/Common/old/seafloor.png" sourcerect="503,375,475,801" origin="0.5,0.9"/>
+    <Trigger randomtriggerinterval="10" randomtriggerprobability="0.5" staytriggereddelay="5" networksyncing="true">
+      <LightSource range="4000" color="255,0,0,255" flicker="0.5" pulseamount="0.3" pulsefrequency="0.5">
+        <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.6"/>
+      </LightSource>
+      <Trigger position="0,1500" radius="500" height="1600" camerashake="3" triggeredby="Submarine, Character" force="0,5.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200">
+        <Attack structuredamage="10" damagerange="500" emitstructuredamageparticles="false">
+          <Affliction identifier="burn" strength="20"/>
+        </Attack>
+      </Trigger>
+      <Sound file="Content/Sounds/Ambient/Thunder1.ogg" range="20000" position="0,700"/>
+      <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,700"/>
+      <ParticleEmitter particle="volcanosmokefast" particlespersecond="10" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600"/>
+      <ParticleEmitter particle="lavasplash" particlespersecond="50" position="-50,700" anglemin="70" anglemax="110" velocitymin="0" velocitymax="8000"/>
+      <ParticleEmitter particle="lavachunk" particlespersecond="80" position="-50,700" anglemin="80" anglemax="100" velocitymin="1000" velocitymax="6000"/>
+      <ParticleEmitter particle="volcanofire" particlespersecond="5" emitinterval="2" particleamount="10" position="-50,700" anglemin="50" anglemax="130" velocitymin="100" velocitymax="1000"/>
+    </Trigger>
+    <ParticleEmitter particle="volcanosmoke" particlespersecond="5" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600"/>
+    <LightSource color="50,0,0,255" range="2048" flicker="0.2" flickerspeed="0.1" pulseamount="0.5" pulsefrequency="0.3"/>
+    <overridecommonness leveltype="hydrothermalwastes" commonness="5"/>
+    <overridecommonness commonness="0" leveltype="outpostlevel"/>
+    <overridecommonness commonness="0" leveltype="endzone"/>
+  </lavavent2>
+  <blacksmoker1 identifier="blacksmoker1" spawnpos="SeaFloor" alignment="Top" minsize="0.5" maxsize="1" randomrotation="0,0" commonness="0" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="546" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="1" leveltype="hydrothermalwastes"/>
+    <overridecommonness commonness="3" leveltype="europanridge"/>
+    <Sprite texture="Content/Map/Biomes/Common/old/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="2" triggeredby="Submarine" force="0,0.2" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" networksyncing="true" forcefluctuationstrength="1.0" forcefluctuationinterval="10"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
+      <Attack onlyhumans="true">
+        <Affliction identifier="burn" strength="1"/>
+      </Attack>
+    </Trigger>
+    <ParticleEmitter particle="hydrosmoke" particlespersecond="5" position="0,1400" anglemin="80" anglemax="100" velocitymin="500" velocitymax="2000"/>
+    <ParticleEmitter particle="hydrosmokesmall" particlespersecond="5" position="0,1400" anglemin="90" anglemax="90" velocitymin="100" velocitymax="500"/>
+  </blacksmoker1>
+  <blacksmoker2 identifier="blacksmoker2" spawnpos="SeaFloor" alignment="Top" minsize="0.5" maxsize="1" randomrotation="0,0" commonness="0" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="630" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="1" leveltype="hydrothermalwastes"/>
+    <Sprite texture="Content/Map/Biomes/Common/old/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="2" triggeredby="Submarine" force="0,0.2" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" networksyncing="true" forcefluctuationstrength="1.0" forcefluctuationinterval="10"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
+      <Attack onlyhumans="true">
+        <Affliction identifier="burn" strength="1"/>
+      </Attack>
+    </Trigger>
+    <ParticleEmitter particle="hydrosmoke" particlespersecond="5" position="-20,570" anglemin="80" anglemax="100" velocitymin="500" velocitymax="2000"/>
+    <ParticleEmitter particle="hydrosmokesmall" particlespersecond="5" position="-20,570" anglemin="90" anglemax="90" velocitymin="100" velocitymax="500"/>
+  </blacksmoker2>
+  <blacksmoker3 identifier="blacksmoker3" spawnpos="SeaFloor" alignment="Top" minsize="0.5" maxsize="1" randomrotation="0,0" commonness="0" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="528" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="1" leveltype="hydrothermalwastes"/>
+    <Sprite texture="Content/Map/Biomes/Common/old/seafloor.png" sourcerect="1530,1263,463,785" origin="0.5,0.9"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="2" triggeredby="Submarine" force="0,0.2" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" networksyncing="true" forcefluctuationstrength="1.0" forcefluctuationinterval="10"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
+      <Attack onlyhumans="true">
+        <Affliction identifier="burn" strength="1"/>
+      </Attack>
+    </Trigger>
+    <ParticleEmitter particle="hydrosmoke" particlespersecond="5" position="-50,700" anglemin="80" anglemax="100" velocitymin="500" velocitymax="2000"/>
+    <ParticleEmitter particle="hydrosmokesmall" particlespersecond="5" position="-50,700" anglemin="90" anglemax="90" velocitymin="100" velocitymax="500"/>
+  </blacksmoker3>
+  <watercurrent1 identifier="watercurrent1" spawnpos="MainPath" alignment="TopLeft, BottomRight" allowatstart="false" allowatend="false" minsize="0.5" maxsize="2" randomrotation="0,360" commonness="0" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="0" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <overridecommonness commonness="0.5" leveltype="hydrothermalwastes"/>
+    <overridecommonness commonness="0.5" leveltype="europanridge"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,0"/>
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Submarine" networksyncing="true" force="0,1.5" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" forcefluctuationstrength="2.0" forcefluctuationinterval="20" globalforcedecreaseinterval="60"/>
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Character" networksyncing="true" force="0,25" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="2.0" forcefluctuationinterval="20" globalforcedecreaseinterval="60"/>
+  </watercurrent1>
+  <watercurrentvertical identifier="watercurrentvertical" spawnpos="MainPath" alignment="TopLeft, BottomRight" allowatstart="false" allowatend="false" minsize="0.5" maxsize="2" randomrotation="0,0" commonness="0" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="0" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="0,0">
+    <overridecommonness commonness="0.5" leveltype="hydrothermalwastes"/>
+    <overridecommonness commonness="1.0" leveltype="europanridge"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,0"/>
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Submarine" networksyncing="true" force="0,1.5" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="400" forcefluctuationstrength="1.0" forcefluctuationinterval="20" globalforcedecreaseinterval="80"/>
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Character" networksyncing="true" force="0,25" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="1.0" forcefluctuationinterval="20" globalforcedecreaseinterval="80"/>
+  </watercurrentvertical>
+  <watercurrentcave identifier="watercurrentcave" spawnpos="CaveWall" alignment="TopLeft, BottomRight" minsize="0.5" maxsize="2" randomrotation="0,360" commonness="0" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="0" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10" randomoffset="0,0">
+    <overridecommonness leveltype="icecave" commonness="10"/>
+    <overridecommonness leveltype="rockcave" commonness="10"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="800" position="0,0"/>
+    <Trigger position="0,0" radius="500" camerashake="0.5" triggeredby="Character" networksyncing="true" force="0,50" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="1.0" forcefluctuationinterval="10"/>
+  </watercurrentcave>
+  <ballastfloraspores identifier="ballastfloraspores" spawnpos="MainPath" alignment="TopLeft, BottomRight" minsize="1" maxsize="2" randomrotation="0,360" commonness="0.5" maxcount="3" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="0" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="0" leveltype="coldcaverns"/>
+    <overridecommonness commonness="0" leveltype="outpostlevel"/>
+    <overridecommonness commonness="0" leveltype="endzone"/>
+    <overridecommonness commonness="0" leveltype="plateaugarden"/>
+    <Trigger position="0,0" radius="1500" triggeredby="Submarine" infectidentifier="ballastflora" infectionchance="0.05"/>
+    <!--InnerSpores, Inner and Outer are separate because X amount of particles in a big radius tend to clamp up in center. Having Inner and Outer spreads them more evenly.-->
+    <ParticleEmitter particle="spore" particlespersecond="10" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10" scalemin="1" scalemax="1.5" distancemin="100" distancemax="600"/>
+    <ParticleEmitter particle="toxinmistlargefade" particlespersecond="5" position="0,0" anglemin="0" anglemax="360" scalemin="4.0" scalemax="5.0" distancemin="100" distancemax="600" velocitymin="0" velocitymax="10"/>
+    <!--OuterSpores-->
+    <ParticleEmitter particle="spore" particlespersecond="50" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10" scalemin="1" scalemax="1.5" distancemin="615" distancemax="1600"/>
+    <ParticleEmitter particle="toxinmistlargefade" particlespersecond="30" position="0,0" anglemin="0" anglemax="360" scalemin="4.0" scalemax="5.0" distancemin="615" distancemax="1600" velocitymin="0" velocitymax="10"/>
+  </ballastfloraspores>
+  <!-- TODO variantof does not work on level objects -->
+  <ballastfloraspores identifier="ballastfloraspores_aphoticplateau" variantof="ballastflora" commonness="0" maxcount="20" spawnpos="MainPath" alignment="TopLeft, BottomRight" minsize="1" maxsize="2" randomrotation="0,360" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="0" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <!-- TODO Would like to improve on the overridecommonness by adding 'maxcount' here (keep is ~8 for most level, but up it specifically for plateaugarden) -->
+    <overridecommonness commonness="0.8" leveltype="theaphoticplateau"/>
+    <overridecommonness commonness="5" leveltype="plateaugarden"/>
+    <!-- TODO remove below when variantof works-->
+    <Trigger position="0,0" radius="1500" triggeredby="Submarine" infectidentifier="ballastflora" infectionchance="0.05"/>
+    <!--InnerSpores, Inner and Outer are separate because X amount of particles in a big radius tend to clamp up in center. Having Inner and Outer spreads them more evenly.-->
+    <ParticleEmitter particle="spore" particlespersecond="10" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10" scalemin="1" scalemax="1.5" distancemin="100" distancemax="600"/>
+    <ParticleEmitter particle="toxinmistlargefade" particlespersecond="5" position="0,0" anglemin="0" anglemax="360" scalemin="4.0" scalemax="5.0" distancemin="100" distancemax="600" velocitymin="0" velocitymax="10"/>
+    <!--OuterSpores-->
+    <ParticleEmitter particle="spore" particlespersecond="50" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10" scalemin="1" scalemax="1.5" distancemin="615" distancemax="1600"/>
+    <ParticleEmitter particle="toxinmistlargefade" particlespersecond="30" position="0,0" anglemin="0" anglemax="360" scalemin="4.0" scalemax="5.0" distancemin="615" distancemax="1600" velocitymin="0" velocitymax="10"/>
+  </ballastfloraspores>
+</levelobjects>

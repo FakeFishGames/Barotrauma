@@ -1,0 +1,301 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <!-- HATS START -->
+  <Item name="" identifier="captainscap1" aliases="captainscap" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" amount="1" spawnprobability="0.1" notcampaign="true"/>
+    <Price baseprice="75" requiredfaction="coalition">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10"/>
+    <Sprite name="Captain's Cap 1" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="12,130,89,50" origin="0.5,0.5"/>
+    <Body width="59" height="40" density="15"/>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Cap 1 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.7" hidelimb="false" sourcerect="12,130,89,50" origin="0.5,1.0"/>
+      <SkillModifier skillidentifier="helm" skillvalue="10"/>
+      <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainscap2" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" amount="1" spawnprobability="0.1" notcampaign="true"/>
+    <Price baseprice="75" requiredfaction="coalition">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10"/>
+    <Sprite name="Captain's Cap 2" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="114,129,83,48" origin="0.5,0.5"/>
+    <Body width="75" height="40" density="15"/>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Cap 2 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.7" hidelimb="false" sourcerect="114,129,83,48" origin="0.55,1.1"/>
+      <SkillModifier skillidentifier="helm" skillvalue="10"/>
+      <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainscap3" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" amount="1" spawnprobability="0.1" notcampaign="true"/>
+    <Price baseprice="75" requiredfaction="coalition">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10"/>
+    <Sprite name="Captain's Cap 3" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="212,119,90,53" origin="0.5,0.5"/>
+    <Body width="70" height="45" density="15"/>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Cap 3 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.7" hidelimb="false" sourcerect="212,119,90,53" origin="0.55,1.1"/>
+      <SkillModifier skillidentifier="helm" skillvalue="10"/>
+      <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainsseparatistcap1" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" amount="1" spawnprobability="0.1" notcampaign="true"/>
+    <Price baseprice="75" requiredfaction="separatists">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10"/>
+    <Sprite name="Captain's Cap 1" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="314,115,89,59" origin="0.5,0.5"/>
+    <Body width="75" height="55" density="15"/>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Cap 1 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.7" hidelimb="false" sourcerect="314,115,89,59" origin="0.5,1.0"/>
+      <SkillModifier skillidentifier="helm" skillvalue="10"/>
+      <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainsseparatistcap2" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" amount="1" spawnprobability="0.1" notcampaign="true"/>
+    <Price baseprice="75" requiredfaction="separatists">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10"/>
+    <Sprite name="Captain's Cap 2" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="424,125,79,38" origin="0.5,0.5"/>
+    <Body width="75" height="35" density="15"/>
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Cap 2 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.7" hidelimb="false" sourcerect="424,125,79,38" origin="0.55,1.1"/>
+      <SkillModifier skillidentifier="helm" skillvalue="10"/>
+      <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <!-- HATS END -->
+  <!-- UNIFORMS START -->
+  <Item name="" identifier="captainsuniform1" aliases="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" requiredfaction="coalition">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon name="Captain's Uniform 1 Icon" texture="Content/Items/Jobgear/OutfitIcons.png" sourcerect="0,27,128,101" origin="0.5,0.5"/>
+    <Sprite name="Captain's Uniform 1" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="247,209,125,77" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Uniform 1 Torso" texture="captain_1.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Right Hand" texture="captain_1.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Left Hand" texture="captain_1.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Right Lower Arm" texture="captain_1.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Left Lower Arm" texture="captain_1.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Right Upper Arm" texture="captain_1.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Left Upper Arm" texture="captain_1.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Waist" texture="captain_1.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Right Thigh" texture="captain_1.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Left Thigh" texture="captain_1.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Right Leg" texture="captain_1.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Left Leg" texture="captain_1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Left Shoe" texture="captain_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 1 Right Shoe" texture="captain_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainsuniform2" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" requiredfaction="coalition">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon name="Captain's Uniform 2 Icon" texture="Content/Items/Jobgear/OutfitIcons.png" sourcerect="128,27,128,101" origin="0.5,0.5"/>
+    <Sprite name="Captain's Uniform 2" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="375,225,124,61" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Uniform 2 Torso" texture="captain_2.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Right Hand" texture="captain_2.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Left Hand" texture="captain_2.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Right Lower Arm" texture="captain_2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Left Lower Arm" texture="captain_2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Right Upper Arm" texture="captain_2.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Left Upper Arm" texture="captain_2.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Waist" texture="captain_2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Right Thigh" texture="captain_2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Left Thigh" texture="captain_2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Right Leg" texture="captain_2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Left Leg" texture="captain_2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Left Shoe" texture="captain_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 2 Right Shoe" texture="captain_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainsuniform3" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" requiredfaction="coalition">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon name="Captain's Uniform 3 Icon" texture="Content/Items/Jobgear/OutfitIcons.png" sourcerect="255,27,128,101" origin="0.5,0.5"/>
+    <Sprite name="Captain's Uniform 3" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="244,292,126,64" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain's Uniform 3 Torso" texture="captain_3.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Right Hand" texture="captain_3.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Left Hand" texture="captain_3.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Right Lower Arm" texture="captain_3.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Left Lower Arm" texture="captain_3.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Right Upper Arm" texture="captain_3.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Left Upper Arm" texture="captain_3.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Waist" texture="captain_3.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Right Thigh" texture="captain_3.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Left Thigh" texture="captain_3.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Right Leg" texture="captain_3.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Left Leg" texture="captain_3.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Left Shoe" texture="captain_3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain's Uniform 3 Right Shoe" texture="captain_3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainseparatistsuniform1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" requiredfaction="separatists">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon name="Captain Separatist's Uniform 1 Icon" texture="Content/Items/Jobgear/OutfitIcons.png" sourcerect="128,392,128,120" origin="0.5,0.5"/>
+    <Sprite name="Captain Separatist's Uniform 1" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="124,284,119,70" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain Separatist's Uniform 1 Torso" texture="captain_separatist_1.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Right Hand" texture="captain_separatist_1.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Left Hand" texture="captain_separatist_1.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Right Lower Arm" texture="captain_separatist_1.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Left Lower Arm" texture="captain_separatist_1.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Right Upper Arm" texture="captain_separatist_1.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Left Upper Arm" texture="captain_separatist_1.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Waist" texture="captain_separatist_1.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Right Thigh" texture="captain_separatist_1.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Left Thigh" texture="captain_separatist_1.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Right Leg" texture="captain_separatist_1.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Left Leg" texture="captain_separatist_1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Left Shoe" texture="captain_separatist_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 1 Right Shoe" texture="captain_separatist_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainseparatistsuniform2" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" requiredfaction="separatists">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon name="Captain Separatist's Uniform 2 Icon" texture="Content/Items/Jobgear/OutfitIcons.png" sourcerect="256,392,128,120" origin="0.5,0.5"/>
+    <Sprite name="Captain Separatist's Uniform 2" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="0,298,118,56" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain Separatist's Uniform 2 Torso" texture="captain_separatist_2.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Right Hand" texture="captain_separatist_2.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Left Hand" texture="captain_separatist_2.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Right Lower Arm" texture="captain_separatist_2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Left Lower Arm" texture="captain_separatist_2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Right Upper Arm" texture="captain_separatist_2.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Left Upper Arm" texture="captain_separatist_2.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Waist" texture="captain_separatist_2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Right Thigh" texture="captain_separatist_2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Left Thigh" texture="captain_separatist_2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Right Leg" texture="captain_separatist_2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Left Leg" texture="captain_separatist_2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Left Shoe" texture="captain_separatist_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 2 Right Shoe" texture="captain_separatist_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="captainseparatistsuniform3" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" requiredfaction="separatists">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon name="Captain Separatist's Uniform 3 Icon" texture="Content/Items/Jobgear/OutfitIcons.png" sourcerect="384,392,128,120" origin="0.5,0.5"/>
+    <Sprite name="Captain Separatist's Uniform 3" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="124,358,117,72" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Captain Separatist's Uniform 3 Torso" texture="captain_separatist_3.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Right Hand" texture="captain_separatist_3.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Left Hand" texture="captain_separatist_3.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Right Lower Arm" texture="captain_separatist_3.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Left Lower Arm" texture="captain_separatist_3.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Right Upper Arm" texture="captain_separatist_3.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Left Upper Arm" texture="captain_separatist_3.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Waist" texture="captain_separatist_3.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Right Thigh" texture="captain_separatist_3.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Left Thigh" texture="captain_separatist_3.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Right Leg" texture="captain_separatist_3.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Left Leg" texture="captain_separatist_3.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Left Shoe" texture="captain_separatist_3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Captain Separatist's Uniform 3 Right Shoe" texture="captain_separatist_3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations" damagemultiplier="0.95"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, blunttrauma" damagemultiplier="0.9"/>
+    </Wearable>
+  </Item>
+  <!-- UNIFORMS END -->
+</Items>

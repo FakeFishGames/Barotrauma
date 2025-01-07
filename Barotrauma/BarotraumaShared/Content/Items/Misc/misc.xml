@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="guitar" category="Misc" Tags="bigitem,instrument" scale="0.5" description="" price="300" isshootable="true">
+    <Upgrade gameversion="0.9.2.0" scale="0.5"/>
+    <Price baseprice="50">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" sold="false"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,256,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Misc.png" sourcerect="0,0,97,254" depth="0.6" origin="0.5,0.5"/>
+    <Body radius="40" height="160" density="12"/>
+    <RangedWeapon reload="1"/>
+    <Holdable slots="RightHand+LeftHand" controlpose="true" aimpos="30,-20" handle1="-2,-40" handle2="5,50" swingamount="10,20" swingspeed="1" swingwhenusing="true" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnUse" target="Character">
+        <Conditional HasStatusTag="!equals clown"/>
+        <sound file="Content/Items/Misc/Guitar1.ogg" type="OnUse" selectionmode="CharacterSpecific" range="600" loop="true"/>
+        <sound file="Content/Items/Misc/Guitar2.ogg" type="OnUse" selectionmode="CharacterSpecific" range="600" loop="true"/>
+        <sound file="Content/Items/Misc/Guitar3.ogg" type="OnUse" selectionmode="CharacterSpecific" range="600" loop="true"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="Character">
+        <Conditional HasStatusTag="clown"/>
+        <sound file="Content/Items/Misc/GuitarClown.ogg" type="OnUse" range="600" loop="true"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="harmonica" category="Misc" Tags="smallitem,instrument" cargocontaineridentifier="metalcrate" scale="0.5" description="" price="300" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer primary="crewcab" spawnprobability="0.05" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0.1"/>
+    <Price baseprice="50">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" sold="false"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false"/>
+    </Price>
+    <Upgrade gameversion="0.9.2.0" scale="0.5"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,256,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Misc.png" sourcerect="102,16,58,21" depth="0.6" origin="0.5,0.5"/>
+    <Body width="58" height="20" density="15"/>
+    <RangedWeapon reload="1"/>
+    <Holdable slots="RightHand+LeftHand,Any" aimable="false" aimpos="25,15" handle1="-10,0" handle2="0,0" swingamount="20,0" swingspeed="0.5" swingwhenusing="true" msg="ItemMsgPickUpSelect">
+      <sound file="Content/Items/Misc/Harmonica1.ogg" type="OnUse" selectionmode="CharacterSpecific" range="600" loop="true"/>
+      <sound file="Content/Items/Misc/Harmonica2.ogg" type="OnUse" range="600" loop="true"/>
+      <StatusEffect tags="playingharmonica" type="OnUse" target="Character" duration="0.1" stackable="false"/>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="accordion" category="Misc" Tags="smallitem,instrument" scale="0.5" description="" price="300" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer primary="crewcab" spawnprobability="0.05" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0.1"/>
+    <Price baseprice="50">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" sold="false"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false"/>
+    </Price>
+    <RangedWeapon reload="1"/>
+    <Upgrade gameversion="0.9.2.0" scale="0.5"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,956,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Misc.png" sourcerect="164,5,92,110" depth="0.55" origin="0.5,0.5"/>
+    <Body width="92" height="110" density="20"/>
+    <Holdable slots="RightHand+LeftHand,Any" controlpose="true" aimable="false" aimpos="50,-20" handle1="-20,0" handle2="-10,0" swingamount="50,0" swingspeed="0.5" swingwhenusing="true" msg="ItemMsgPickUpSelect">
+      <sound file="Content/Items/Misc/AccordionLoop.ogg" type="OnUse" range="600" loop="true"/>
+    </Holdable>
+  </Item>
+  
+  <Item name="" identifier="captainspipe" category="Misc" Tags="smallitem" scale="0.5" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" isshootable="true" requireaimtouse="true">
+    <PreferredContainer primary="crewcab" spawnprobability="0.05" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0.1"/>
+    <Price baseprice="50">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="511,957,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Misc.png" sourcerect="105,73,50,30" depth="0.55" origin="0.5,0.5"/>
+    <Body width="58" height="20" density="15"/>
+    <Holdable slots="Any,RightHand,LeftHand" aimable="false" aimpos="28,10" handle1="10,-5" swingamount="0,0" swingspeed="0.5" swingwhenusing="true" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnSecondaryUse" target="This">
+        <Conditional InWater="false"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="1" scalemin="1" scalemax="2" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10"/>
+        <RequiredItem items="pipetobacco" type="Contained"/>
+      </StatusEffect>
+      <StatusEffect type="OnSecondaryUse" target="This">
+        <Conditional InWater="true"/>
+        <ParticleEmitter particle="bubbles" particlespersecond="3" scalemin="0.3" scalemax="0.5" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10"/>
+        <RequiredItem items="pipetobacco" type="Contained"/>
+      </StatusEffect>
+      <StatusEffect type="OnSecondaryUse" target="Contained" Condition="-4.0" disabledeltatime="false">
+        <RequiredItem items="pipetobacco" type="Contained"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnSecondaryUse" target="Character">
+        <Affliction identifier="psychosisresistance" amount="15"/>
+        <ReduceAffliction identifier="psychosis" amount="5"/>
+        <ReduceAffliction identifier="hallucinating" amount="10"/>
+        <RequiredItem items="pipetobacco" type="Contained"/>
+      </StatusEffect>
+    </Holdable>
+    <ItemContainer hideitems="true" drawinventory="true" capacity="1" maxstacksize="1" slotsperrow="6" itempos="74,-281" iteminterval="0,0" itemrotation="0" canbeselected="false" containedspritedepth="0.79">
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="0,384,64,64" origin="0.5,0.5"/>
+      <Containable items="pipetobacco"/>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="pipetobacco" category="Misc" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,pipetobacco" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer primary="captainspipe" spawnprobability="1"/>
+    <PreferredContainer primary="crewcab" spawnprobability="0.05" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0.1"/>
+    <Price baseprice="120">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9"  minavailable="2"/>
+      <Price storeidentifier="merchantresearch" sold="false"/>
+      <Price storeidentifier="merchantmilitary" sold="false"/>
+      <Price storeidentifier="merchantmine" sold="false"/>
+    </Price>
+    <Fabricate suitablefabricators="vendingmachine" requiredtime="1" requiredmoney="190" fabricationlimitmin="0" fabricationlimitmax="10"/>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="helm" level="30"/>
+      <Item identifier="tobaccobud"/>
+      <Item identifier="tobaccobud"/>
+      <Item identifier="tobaccobud"/>
+    </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="tobaccobud"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="192,320,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="848,774,44,58" depth="0.55" origin="0.5,0.5"/>
+    <Body width="40" height="50" density="10.5"/>
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="bunk" width="173" height="129" category="Decorative">
+    <sprite texture="Content/Map/MiscStructures.png" sourcerect="1416,1163,173,129" depth="0.85" origin="0.5,0.5"/>
+    <Controller UserPos="0,-150" direction="Right" hidehud="false" issecondaryitem="true" canbeselected="true" drawuserbehind="true" noninteractablewhenflippedy="true">
+      <limbposition limb="Head" position="-13,-85"/>
+      <limbposition limb="Torso" position="42,-70"/>
+      <limbposition limb="Waist" position="112,-80"/>
+      <limbposition limb="RightFoot" position="222,-80"/>
+      <limbposition limb="LeftFoot" position="222,-80"/>
+      <limbposition limb="RightHand" position="112,-80" allowusinglimb="false"/>
+      <limbposition limb="LeftHand" position="112,-80" allowusinglimb="false"/>
+      <StatusEffect type="OnActive" target="Character">
+        <reduceaffliction type="damage" strength="0.05"/>
+        <reduceaffliction identifier="concussion" strength="0.04"/>
+        <reduceaffliction identifier="infection" strength="0.02"/>
+        <reduceaffliction identifier="bloodloss" strength="0.05"/>
+        <reduceaffliction identifier="bleeding" strength="0.05"/>
+        <reduceaffliction identifier="nausea" strength="0.5"/>
+        <reduceaffliction identifier="drunk" strength="0.5"/>
+        <reduceaffliction identifier="opiatewithdrawal" strength="0.06"/>
+        <reduceaffliction identifier="opiateaddiction" strength="0.06"/>
+        <reduceaffliction identifier="chemwithdrawal" strength="0.06"/>
+        <reduceaffliction identifier="chemaddiction" strength="0.06"/>
+      </StatusEffect>
+    </Controller>
+  </Item>
+
+  <Item name="" identifier="researcherscribble1" nameidentifier="alientranslator" descriptionidentifier=" " allowstealingalways="true" spritecolor="20,39,162,255" category="Misc" hideinmenus="true" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" secondary="locker"/>
+    <PreferredContainer secondary="researchcontainer" spawnprobability="0.05"/>
+    <InventoryIcon texture="Content/Items/Misc/scribble1.png" sourcerect="0,0,768,1024" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="367,194,12,44"  origin="0.5,0.5" depth="0.8"/>
+    <Body width="35" height="40" density="8"/>
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect"/>
+    <Terminal canbeselected="true" msg="ItemMsgInteractSelect" AllowInGameEditing="false" AutoHideScrollbar="true" readonly="true" autoscrolltobottom="false" linestartsymbol="" marginmultiplier="1.5" drawhudwhenequipped="true">
+      <GuiFrame relativesize="0.5,0.75" anchor="Center" style="Scribble1" hidedragicons="true"/>
+    </Terminal>
+  </Item>
+  <Item name="" identifier="researcherscribble2" variantof="researcherscribble1">
+    <InventoryIcon texture="Content/Items/Misc/scribble2.png" sourcerect="0,0,768,1024" origin="0.5,0.5"/>
+    <Terminal>
+      <GuiFrame style="Scribble2"/>
+    </Terminal>
+  </Item>
+</Items>

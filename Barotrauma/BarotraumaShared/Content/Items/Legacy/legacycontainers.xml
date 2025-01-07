@@ -1,0 +1,56 @@
+﻿<Items>
+  <Item
+    name="Steel Cabinet"
+    nameidentifier="steelcabinet"
+    Aliases="Steel Cabinet"
+    category="Legacy"
+    tags="locker,container"
+    linkable="true"
+    pickdistance="150"
+    waterproof="true">
+
+    <Sprite texture="locker.png" depth="0.84" sourcerect="0,0,128,128"/>
+
+    <ItemContainer capacity="30" slotsperrow="6" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI"/>
+      <Containable identifiers="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Medicine Cabinet"
+    nameidentifier="medcabinet"
+    Aliases="Medicine Cabinet"
+    category="Legacy"
+    tags="container,medcontainer"
+    linkable="true"
+    pickdistance="150"
+    waterproof="true">
+
+    <Sprite texture="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
+
+    <ItemContainer capacity="30" slotsperrow="6" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI"/>
+      <Containable identifiers="smallitem,chem,medical"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item
+    name="Toxic Cabinet"
+    nameidentifier="toxcabinet"
+    Aliases="Toxic Cabinet"
+    category="Legacy"
+    tags="container,toxcontainer"
+    linkable="true"
+    pickdistance="150"
+    waterproof="true">
+
+    <Sprite texture="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
+
+    <ItemContainer capacity="30" slotsperrow="6" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI"/>
+      <Containable identifiers="smallitem,chem,medical"/>
+    </ItemContainer>
+  </Item>
+</Items>
+

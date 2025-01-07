@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Afflictions>
+
+  <!-- positive effects -->
+
+  <Affliction
+    name="Increased Swimming Speed"
+    identifier="increasedswimmingspeed"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100">
+      <StatValue stattype="SwimmingSpeed" minvalue="0.1" maxvalue="0.5"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+
+  <!-- Used by mudraptor genes -->
+  <AfflictionHusk
+    name="Natural Melee Weapon"
+    identifier="naturalmeleeweapon"
+    type="alieninfection"
+    healableinmedicalclinic="false"
+    limbspecific="false"
+    targets="human"
+    huskedspeciesname="husk"
+    indicatorlimb="Head"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    needsair="true"
+    causespeechimpediment="false"
+    treatmentthreshold="1000"
+    dormantthreshold="0"
+    activethreshold="0"
+    transitionthreshold="1000"
+    transformthresholdondeath="1000"
+    sendmessages="false"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+    <Effect minstrength="0" maxstrength="100"
+            resistancefor="damage"
+            resistancelimbs="head"
+            minresistance="0.2"
+            maxresistance="0.6">
+      <StatValue stattype="NaturalMeleeAttackMultiplier" minvalue="0.2" maxvalue="0.6"/>
+    </Effect>
+  </AfflictionHusk>
+
+  <!-- Used by spineling genes -->
+  <AfflictionHusk
+    name="Natural Ranged Weapon"
+    identifier="naturalrangedweapon"
+    type="alieninfection"
+    healableinmedicalclinic="false"
+    limbspecific="false"
+    targets="human"
+    huskedspeciesname="husk"
+    indicatorlimb="Head"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    needsair="true"
+    causespeechimpediment="false"
+    treatmentthreshold="1000"
+    dormantthreshold="0"
+    activethreshold="0"
+    transitionthreshold="1000"
+    transformthresholdondeath="1000"
+    sendmessages="false"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+    <Effect minstrength="0" maxstrength="100">
+      <StatValue stattype="NaturalRangedAttackMultiplier" minvalue="0" maxvalue="1.0"/>
+    </Effect>
+  </AfflictionHusk>
+
+  <Affliction
+    name="Damage Resistance"
+    identifier="damageresistance"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100"
+      resistancefor="damage"
+      minresistance="0.1"
+      maxresistance="0.25"/>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Decreased Oxygen Consumption"
+    identifier="decreasedoxygenconsumption"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100"
+      resistancefor="oxygenlow"
+      minresistance="0.2"
+      maxresistance="1.0">
+      <StatusEffect target="Character" usehulloxygen="false" setvalue="true"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Increased Walking Speed"
+    identifier="increasedwalkingspeed"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100">
+      <StatValue stattype="WalkingSpeed" minvalue="0.1" maxvalue="0.25"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Increased Melee Damage"
+    identifier="increasedmeleedamage"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100">
+      <StatValue stattype="MeleeAttackMultiplier" minvalue="0.2" maxvalue="1.0"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Heal Damage"
+    identifier="healdamage"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="20">
+      <StatusEffect target="Character" interval="0.1" disabledeltatime="true">
+        <ReduceAffliction type="damage" amount="0.01"/>
+        <ReduceAffliction type="bleeding" amount="0.0025"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="20" maxstrength="40">
+      <StatusEffect target="Character" interval="0.1" disabledeltatime="true">
+        <ReduceAffliction type="damage" amount="0.035"/>
+        <ReduceAffliction type="bleeding" amount="0.0088"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="40" maxstrength="60">
+      <StatusEffect target="Character" interval="0.1" disabledeltatime="true">
+        <ReduceAffliction type="damage" amount="0.05"/>
+        <ReduceAffliction type="bleeding" amount="0.0125"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="80">
+      <StatusEffect target="Character" interval="0.1" disabledeltatime="true">
+        <ReduceAffliction type="damage" amount="0.065"/>
+        <ReduceAffliction type="bleeding" amount="0.016"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="80" maxstrength="100">
+      <StatusEffect target="Character" interval="0.1" disabledeltatime="true">
+        <ReduceAffliction type="damage" amount="0.075"/>
+        <ReduceAffliction type="bleeding" amount="0.018"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Vigor On Damage"
+    identifier="vigorondamage"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="20">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="strengthen" amount="10"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="20" maxstrength="40">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="strengthen" amount="20"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="40" maxstrength="60">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="strengthen" amount="30"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="80">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="strengthen" amount="45"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="80" maxstrength="100">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="strengthen" amount="60"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Hyperactivity On Damage"
+    identifier="hyperactivityondamage"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="20">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="haste" amount="10"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="20" maxstrength="40">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="haste" amount="20"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="40" maxstrength="60">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="haste" amount="30"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="80">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="haste" amount="45"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="80" maxstrength="100">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="haste" amount="60"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Increased Melee Damage On Damage"
+    identifier="increasedmeleedamageondamage"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="20">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="increasedmeleedamage_temporary" amount="20"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="20" maxstrength="40">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="increasedmeleedamage_temporary" amount="40"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="40" maxstrength="60">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="increasedmeleedamage_temporary" amount="60"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="80">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="increasedmeleedamage_temporary" amount="80"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="80" maxstrength="100">
+      <StatusEffect target="Character" type="OnDamaged">
+        <requiredaffliction type="damage" minstrength="5"/>
+        <Affliction identifier="increasedmeleedamage_temporary" amount="100"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Increased Melee Damage (Temporary)"
+    identifier="increasedmeleedamage_temporary"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100" strengthchange="-1">
+      <StatValue stattype="MeleeAttackMultiplier" minvalue="0.75" maxvalue="1.5"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Resistance to Husk Transformation"
+    identifier="husktransformimmunity"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    showinhealthscannerthreshold="1000"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="20">
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 50"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.08"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 76"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.08"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="20" maxstrength="40">
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 50"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.08"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 76"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.11"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="40" maxstrength="60">
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 50"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.08"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 76"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.14"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="80">
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 50"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.08"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 76"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.17"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="80" maxstrength="99" blocktransformation="huskinfection">
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 50"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.08"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 76"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.2"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="99" maxstrength="100" blocktransformation="huskinfection">
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 50"/>
+        <ReduceAffliction identifier="huskinfection" amount="0.08"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 80"/>
+        <ReduceAffliction identifier="huskinfection" amount="1"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    identifier="husktransformimmunitytemporary"
+    translationoverride="husktransformimmunity"
+    type="geneticmaterialbuff"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    treatmentthreshold="1000"
+    showiconthreshold="1000"
+    showinhealthscannerthreshold="1000"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100" blocktransformation="huskinfection" strengthchange="-10">
+      <StatusEffect target="Character" type="OnActive" interval="1" disabledeltatime="true">
+        <Conditional huskinfection="gt 90"/>
+        <!-- husktransformimmunitytemporary has been removed from zealot robes, thus we want to remove huskinfection entirely from anyone using this -->
+        <ReduceAffliction identifier="huskinfection" amount="100"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,0" sheetelementsize="128,128" color="181,230,29,255" origin="0,0"/>
+  </Affliction>
+  
+  <!-- negative effects -->
+
+  <Affliction
+    name="Tunnel Vision"
+    identifier="tunnelvision"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    indicatorlimb="Head"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect
+      minstrength="0"
+      maxstrength="100"
+      minradialdistort="0.2"
+      maxradialdistort="0.3"
+      graincolor="0,0,0,255"
+      mingrainstrength="8.0"
+      maxgrainstrength="10.0">
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Rigid Joints"
+    identifier="rigidjoints"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    indicatorlimb="RightLeg"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    treatmentthreshold="100"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect
+      minstrength="0"
+      maxstrength="100"
+      minspeedmultiplier="0.9"
+      maxspeedmultiplier="0.8"/>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Hypersensitivity"
+    identifier="hypersensitivity"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    maxstrength="100"
+    treatmentthreshold="100"
+    hideiconafterdelay="true"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100"
+      resistancefor="damage"
+      minresistance="-0.1"
+      maxresistance="-0.15"/>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Xenobiology"
+    identifier="xenobiology"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    maxstrength="100"
+    treatmentthreshold="100"
+    hideiconafterdelay="true"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100">
+      <StatValue stattype="MedicalItemEffectivenessMultiplier" minvalue="-0.2" maxvalue="-0.25"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Outside Influence"
+    identifier="outsideinfluence"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    indicatorlimb="Head"
+    hideiconafterdelay="true"
+    showiconthreshold="0"
+    treatmentthreshold="100"
+    showinhealthscannerthreshold="1000"
+    maxstrength="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="25">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <Affliction identifier="psychosis" amount="0.08"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="25" maxstrength="50">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <Affliction identifier="psychosis" amount="0.1"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="50" maxstrength="75">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <Affliction identifier="psychosis" amount="0.12"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="75" maxstrength="100">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <Affliction identifier="psychosis" amount="0.14"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Glass Jaw"
+    identifier="glassjaw"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="100"
+    treatmentthreshold="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100"
+      resistancefor="stun,incrementalstun,progressivestun"
+      minresistance="-0.25"
+      maxresistance="-0.3"/>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Decrepify"
+    identifier="decrepify"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="100"
+    treatmentthreshold="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100">
+      <StatValue stattype="MaximumHealthMultiplier" minvalue="-0.1" maxvalue="-0.15"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="163,73,764,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Muscular Dystrophy"
+    identifier="musculardystrophy"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="100"
+    treatmentthreshold="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100">
+      <StatValue stattype="MeleeAttackMultiplier" minvalue="-0.3" maxvalue="-0.4"/>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Inflamed Lung"
+    identifier="inflamedlung"
+    type="geneticmaterialdebuff"
+    limbspecific="false"
+    hideiconafterdelay="true"
+    maxstrength="100"
+    treatmentthreshold="100"
+    iconcolors="94,54,95;163,73,164;200,191,231">
+    <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="20"
+      strengthchange="0.1">
+      <StatusEffect target="Character" type="OnActive" conditionalcomparison="And" interval="0.1" disabledeltatime="true">
+        <Conditional oxygenlow="gt 10"/>
+        <Conditional inflamedlung="gt 1.1"/>
+        <ReduceAffliction identifier="inflamedlung" amount="1"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnActive" interval="0.1" disabledeltatime="true">
+        <Conditional NeedsOxygen="false"/>
+        <ReduceAffliction identifier="inflamedlung" amount="1"/>
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,0" sheetelementsize="128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+</Afflictions>

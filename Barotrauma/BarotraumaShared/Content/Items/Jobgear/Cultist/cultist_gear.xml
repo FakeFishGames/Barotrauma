@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="cultistrobes" category="Equipment" tags="smallitem,clothing,huskcult" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" canbespecial="false" sold="false">
+      <Price storeidentifier="merchanthusk" minavailable="1" maxavailable="4" sold="true">
+        <Reputation faction="huskcult" min="50"/>
+      </Price>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="340,54,62,48"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="254,359,117,65" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="30" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" variants="1" msg="ItemMsgPickUpSelect">
+      <sprite name="Cultist Torso" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Hand" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Hand" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Lower Arm" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Lower Arm" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Upper Arm" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Upper Arm" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Waist" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Thigh" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Thigh" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Leg" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Leg" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Shoe" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Shoe" texture="Content/Items/Jobgear/Cultist/cultist.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Head" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidelimb="true" inheritlimbdepth="true" sourcerect="394,537,118,130" inherittexturescale="true" origin="0.55,0.6"/>
+      <StatusEffect type="OnWearing" target="Character" interval="0.5" disabledeltatime="true">
+        <Affliction identifier="disguisedashusk" amount="1.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true"/>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="zealotrobes" category="Equipment" tags="smallitem,clothing,huskcult" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="550" canbespecial="false" sold="false">
+      <Price storeidentifier="merchanthusk" minavailable="1" maxavailable="4" sold="true">
+        <Reputation faction="huskcult" min="90"/>
+      </Price>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="409,2,63,45" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="383,359,117,65" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="30" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" variants="1" msg="ItemMsgPickUpSelect">
+      <sprite name="Cultist Torso" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Hand" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Hand" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Lower Arm" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Lower Arm" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Upper Arm" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Upper Arm" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Waist" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Thigh" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Thigh" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Leg" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Leg" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Left Shoe" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Right Shoe" texture="Content/Items/Jobgear/Cultist/cultist2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Cultist Head" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidelimb="true" inheritlimbdepth="true" sourcerect="394,537,118,130" inherittexturescale="true" origin="0.55,0.6"/>
+      <StatusEffect type="OnWearing" target="Character" interval="0.5" disabledeltatime="true">
+        <Affliction identifier="disguisedashusk" amount="1.0"/>
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnWearing" HideFace="true" setvalue="true">
+      </StatusEffect>
+      <StatusEffect target="Character" type="OnWearing">
+        <Conditional huskinfection="gt 50"/>
+        <ReduceAffliction type="damage" amount="0.25"/>
+        <ReduceAffliction type="bleeding" amount="0.1"/>
+      </StatusEffect>
+    </Wearable>
+  </Item>
+  <Item name="" identifier="rituallantern" category="Equipment" maxstacksize="12" cargocontaineridentifier="metalcrate" Scale="0.5" tags="smallitem,light,huskcult" impactsoundtag="impact_soft" isshootable="true">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="100" canbespecial="false" sold="false">
+      <Price storeidentifier="merchanthusk" minavailable="1" maxavailable="4" sold="true">
+        <Reputation faction="huskcult" min="70"/>
+      </Price>
+    </Price>
+    <Deconstruct time="5"/>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="169,137,45,60" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="218,137,41,54" depth="0.55" origin="0.5,0.5"/>
+    <Body width="40" height="50" density="12"/>
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="70,-70" handle1="-5,10" holdangle="0" throwforce="4.0" aimpos="30,-30" msg="ItemMsgPickUpSelect"/>
+    <LightComponent LightColor="219,100,239,80" Flicker="0.2" pulsefrequency="0.2" pulseamount="0.5" range="600" IsOn="false">
+      <StatusEffect type="OnUse" targettype="This" IsOn="true"/>
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.25"/>
+      <StatusEffect type="OnActive" targettype="This">
+        <Conditional PhysicsBodyActive="eq true"/>
+        <ParticleEmitter particle="flare" particlespersecond="15" scalemin="0.1" scalemax="0.1"/>
+        <ParticleEmitter particle="ritualsmoke" particlespersecond="5" anglemin="0" anglemax="360" velocitymin="10" velocitymax="150" scalemin="0.5" scalemax="1.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnActive" target="NearbyCharacters" range="800" interval="0.5" disabledeltatime="true">
+        <Affliction identifier="disguisedashusk" amount="1.0"/>
+        <ReduceAffliction type="damage" amount="0.1"/>
+        <ReduceAffliction type="burn" amount="0.2"/>
+        <ReduceAffliction type="opiatewithdrawal" amount="0.2"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" targettype="This" IsOn="false"/>
+    </LightComponent>
+  </Item>
+  <!-- a non-interactable always-on variant of the lantern, used in events -->
+  <Item name="" identifier="rituallanternspecial" nameidentifier="rituallantern" variantof="rituallantern" noninteractable="true" indestructible="true" hideinmenus="true">
+    <Price>
+      <Clear/>
+    </Price>
+    <LightComponent IsOn="true"/>
+  </Item>
+  <!-- a kind of hacky way to make the "HuskContainer" a purchaseable item - this item only spawns the character-->
+  <Item name="" identifier="huskcontainerspawner" tags="huskcult" scale="0.5" hideinmenus="true">
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="179,83,57,50" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="179,83,57,50" depth="0.55" origin="0.5,0.5"/>
+    <Price baseprice="370" sold="false"/>
+    <Price baseprice="300" canbespecial="false" sold="false">
+      <Price storeidentifier="merchanthusk" minavailable="1" maxavailable="2" sold="true">
+        <Reputation faction="huskcult" min="60"/>
+      </Price>
+    </Price>
+    <ItemComponent>
+      <StatusEffect type="Always" targettype="This">
+        <RemoveItem/>
+        <SpawnCharacter speciesname="HuskContainer" inheritteam="true"/>
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+  <Item name="" identifier="bookofchalices1" category="Misc" hideinmenus="true" Tags="smallitem,huskcult" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <Price baseprice="20" canbespecial="false" sold="false">
+      <Price storeidentifier="merchanthusk" minavailable="1" maxavailable="2" sold="true">
+        <Reputation faction="huskcult" min="30"/>
+      </Price>
+    </Price>
+    <PreferredContainer primary="crewcab" secondary="locker"/>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="59,110,51,65" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="114,165,41,51" depth="0.8" origin="0.5,0.5"/>
+    <Body width="40" height="50" density="8"/>
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect"/>
+    <Terminal canbeselected="true" msg="ItemMsgInteractSelect" AllowInGameEditing="false" readonly="true" autoscrolltobottom="false" AutoHideScrollbar="true" linestartsymbol="" marginmultiplier="1.5" drawhudwhenequipped="true" welcomemessage="threemetamorphoses" textcolor="50,50,50,255">
+      <GuiFrame relativesize="0.3,0.5" anchor="Center" style="Parchment" hidedragicons="true"/>
+    </Terminal>
+  </Item>
+  <Item name="" identifier="bookofchalices2" variantof="bookofchalices1">
+    <Price baseprice="20" canbespecial="false" sold="false">
+      <Price storeidentifier="merchanthusk" minavailable="0" maxavailable="1" sold="true">
+        <Reputation faction="huskcult" min="30"/>
+      </Price>
+    </Price>
+    <Terminal welcomemessage="heraldofthetide"/>
+  </Item>
+</Items>

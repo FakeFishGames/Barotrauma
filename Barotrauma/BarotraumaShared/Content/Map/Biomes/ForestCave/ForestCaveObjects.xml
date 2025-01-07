@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<levelobjects>
+  <BackgroundChunks identifier="forestcavebackgroundchunks" spawnpos="Wall" minsurfacewidth="0" minsize="1" maxsize="2" randomrotation="-180,180" commonness="0" depthrange="1200,3200" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="100,500">
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="0,1559,325,489" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="327,1555,344,495" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="674,1555,339,486" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1432,13,503,454" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1432,471,413,388" origin="0.5,0.5"/>
+    <overridecommonness leveltype="forestcave" commonness="100"/>
+  </BackgroundChunks>
+  <EdgeChunks identifier="forestcaveedgechunks" spawnpos="Wall, RuinWall" minsurfacewidth="100" minsize="0.5" maxsize="0.7" randomrotation="-5,5" randomoffset="-20,20" commonness="0" depthrange="-1,0" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="3,826,477,395" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="486,871,484,346" origin="0.5074102,0.8789334"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="0,1219,515,340" origin="0.5119922,0.9647082"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="518,1248,487,309" origin="0.5136877,0.91831523"/>
+    <overridecommonness leveltype="forestcave" commonness="50"/>
+  </EdgeChunks>
+  <mossyrock identifier="forestcavelevelobjects" spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1" randomrotation="-5,5" randomoffset="50,50" commonness="0" depthrange="2,3" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1353,1135,334,330" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1695,1131,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1042,1808,326,235" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1756,1775,292,260" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1715,1489,317,291" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1363,1466,342,342" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1018,1490,331,314" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1017,1144,342,342" origin="0.5,0.5"/>
+    <overridecommonness leveltype="forestcave" commonness="50"/>
+  </mossyrock>
+  <tangledroots identifier="forestcaveroots" spawnpos="Wall, RuinWall" minsurfacewidth="250" minsize="0.5" maxsize="0.6" randomrotation="0,30" randomoffset="0,0" commonness="0" depthrange="-2,-1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="3.5999997" swingfrequency="0.2" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <!--     
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="0,8,682,958" origin="0.35,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="784,24,540,942" origin="0.58,0.95"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1418,0,630,966" origin="0.32,0.98"/>
+    -->
+    <DeformableSprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="0,0,431,817" origin="0.5,0.98" subdivisions="5,5">
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="0.3" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="1.0,0.0 1.0,0.0 1.0,0.0 1.0,0.0 1.0,0.0" row1="0.8,0.0 0.8,0.0 0.8,0.0 0.8,0.0 0.8,0.0" row2="0.6,0.0 0.6,0.0 0.6,0.0 0.6,0.0 0.6,0.0" row3="0.4,0.0 0.4,0.0 0.4,0.0 0.4,0.0 0.4,0.0" row4="0.2,0.0 0.2,0.0 0.2,0.0 0.2,0.0 0.2,0.0" row5="0,0 0,0 0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <DeformableSprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="453,0,453,874" origin="0.5,0.98" subdivisions="5,5">
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="0.3" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="1.0,0.0 1.0,0.0 1.0,0.0 1.0,0.0 1.0,0.0" row1="0.8,0.0 0.8,0.0 0.8,0.0 0.8,0.0 0.8,0.0" row2="0.6,0.0 0.6,0.0 0.6,0.0 0.6,0.0 0.6,0.0" row3="0.4,0.0 0.4,0.0 0.4,0.0 0.4,0.0 0.4,0.0" row4="0.2,0.0 0.2,0.0 0.2,0.0 0.2,0.0 0.2,0.0" row5="0,0 0,0 0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <DeformableSprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="906,0,469,805" origin="0.5,0.98" subdivisions="5,5">
+      <SpriteDeformation frequency="0.5" scale="0.5" sync="-1" typename="reacttotriggerers" blendmode="Add" maxdeformation="0.3" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5"/>
+      <SpriteDeformation frequency="0" amplitude="1" sync="-1" typename="custom" blendmode="Multiply" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="False" sineoffset="0" resolution="5,5" row0="1.0,0.0 1.0,0.0 1.0,0.0 1.0,0.0 1.0,0.0" row1="0.8,0.0 0.8,0.0 0.8,0.0 0.8,0.0 0.8,0.0" row2="0.6,0.0 0.6,0.0 0.6,0.0 0.6,0.0 0.6,0.0" row3="0.4,0.0 0.4,0.0 0.4,0.0 0.4,0.0 0.4,0.0" row4="0.2,0.0 0.2,0.0 0.2,0.0 0.2,0.0 0.2,0.0" row5="0,0 0,0 0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <Trigger position="0,250" radius="150" height="400" triggeredby="Character" force="30.0" forcevelocitylimit="50" forcemode="LimitVelocity" forcefalloff="false" forcefluctuationstrength="0.5" forcefluctuationinterval="0.5">
+      <OverrideProperties swingamount="3" swingfrequency="4"/>
+    </Trigger>
+    <overridecommonness leveltype="ForestCave" commonness="30"/>
+    <ChildObject names="forestcavebranch" mincount="3" maxcount="4"/>
+  </tangledroots>
+  <!--   
+  <tangledbranch identifier="forestcavebranch" spawnpos="Wall, RuinWall" minsurfacewidth="300" minsize="0.8" maxsize="1" randomrotation="-30,30" randomoffset="40,0" commonness="0" depthrange="-0.5,1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="3.5999997" swingfrequency="0.2" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1375,0,476,576" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="0,874,476,636" origin="0.5,0.9"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1375,593,280,563" origin="0.5,0.9"/>
+    <overridecommonness leveltype="ForestCave" commonness="0"/>
+  </tangledbranch>
+  -->
+  <GasVents identifier="forestcavevents" spawnpos="Wall, RuinWall" minsurfacewidth="250" minsize="0.5" maxsize="1" randomrotation="0,0" randomoffset="25,30" commonness="0" depthrange="-1,-0.1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="1000">
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1066,880,315,250" origin="0.4867014,0.8085538"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1705,843,341,298" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/ForestCave/CaveHazards.png" sourcerect="1386,899,310,238" origin="0.5,0.5"/>
+    <overridecommonness leveltype="ForestCave" commonness="15"/>
+    <ParticleEmitter particle="toxinmistlargefade" copyentityangle="true" particlespersecond="2" position="0,0" anglemin="220" anglemax="320" scalemin="1.0" scalemax="1.5" distancemin="0" distancemax="0" velocitymin="50" velocitymax="550"/>
+    <ParticleEmitter particle="toxinmist" copyentityangle="true" particlespersecond="20" position="0,40" anglemin="255" anglemax="285" scalemin="1.0" scalemax="1.0" distancemin="0" distancemax="0" velocitymin="300" velocitymax="800"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="800" position="0,0"/>
+    <Trigger position="0,180" radius="250" triggeredby="Human">
+      <StatusEffect target="Character,Contained" targetlimb="Head" targettags="oxygentank,weldingfueltank,oxygenitetank" condition="-3" onlyoutside="true">
+        <Conditional HasTag="eq diving" targetcontainer="true"/>
+        <Sound file="Content/Items/Diving/ITEMS_divingSuitOxygenLeakLoop.ogg" range="500" loop="true" dontmuffle="true"/>
+        <ParticleEmitter particle="bubbles" particlespersecond="15" position="0,0" anglemin="0" anglemax="360" velocitymin="10" velocitymax="100" scalemin="0.6" scalemax="0.8"/>
+      </StatusEffect>
+    </Trigger>
+  </GasVents>
+</levelobjects>

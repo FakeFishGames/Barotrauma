@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuinGenerationParameters>
+  <RuinConfig
+    identifier="ruins_20_a"
+    preferreddifficulty="20"
+    ismissionready="false"
+    totalmodulecount="3" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="2"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_25_a"
+    preferreddifficulty="25"
+    ismissionready="false"
+    totalmodulecount="4" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="3"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_25_b"
+    preferreddifficulty="25"
+    ismissionready="false"
+    totalmodulecount="5" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="4"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_30_a"
+    preferreddifficulty="30"
+    totalmodulecount="5" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="3"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_40_a"
+    preferreddifficulty="40"
+    totalmodulecount="7" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="4"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinWorkshop" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_40_b"
+    preferreddifficulty="40"
+    totalmodulecount="7" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="4"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinShrine" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_50_a"
+    preferreddifficulty="50"
+    totalmodulecount="10" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="7"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinWorkshop" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_50_b"
+    preferreddifficulty="50"
+    totalmodulecount="10" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="6"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="2"/>
+    <modulecount flag="RuinShrine" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_50_c"
+    preferreddifficulty="50"
+    totalmodulecount="9" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="7"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_60_a"
+    preferreddifficulty="60"
+    totalmodulecount="12" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="9"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinShrine" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_60_b"
+    preferreddifficulty="60"
+    totalmodulecount="12" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="9"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="2"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_60_c"
+    preferreddifficulty="60"
+    totalmodulecount="11" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="8"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinWorkshop" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_70_a"
+    preferreddifficulty="70"
+    totalmodulecount="15" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="12"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinWorkshop" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+  identifier="ruins_70_b"
+  preferreddifficulty="70"
+  totalmodulecount="15" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="11"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="2"/>
+    <modulecount flag="RuinShrine" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_70_c"
+    preferreddifficulty="70"
+    totalmodulecount="13" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="10"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinWorkshop" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_80_a"
+    preferreddifficulty="80"
+    totalmodulecount="16" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="13"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinShrine" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_80_b"
+    preferreddifficulty="80"
+    totalmodulecount="16" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="11"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="2"/>
+    <modulecount flag="RuinWorkshop" count="1"/>
+    <modulecount flag="RuinShrine" count="1"/>
+  </RuinConfig>
+  <RuinConfig
+    identifier="ruins_80_c"
+    preferreddifficulty="80"
+    totalmodulecount="15" minhallwaylength="300" minwaterpercentage="100" maxwaterpercentage="100" lockunuseddoors="true" removeunusedgaps="false" alwaysdestructible="true" allowstealing="true">
+    <modulecount flag="Ruin" count="12"/>
+    <modulecount flag="RuinVault" count="1"/>
+    <modulecount flag="RuinEntrance" count="1"/>
+    <modulecount flag="RuinWorkshop" count="1"/>
+  </RuinConfig>
+</RuinGenerationParameters>

@@ -1,0 +1,1393 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<prefabs prefabtype="wrecked">
+  <!-- Everything is categorized as 'Structure' unless explicitly categorized otherwise -->
+  <!-- INTERIOR WALLS FF -->
+  <structure name="" identifier="ff_x_wall_wrecked" nameidentifier="ff_x_wall" description="" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="75" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.06" sourcerect="512,934,512,48" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="512,934,512,48" depth="0.85" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="ff_x_wall_cables_wrecked" nameidentifier="ff_x_wall_cables" description="" width="512" height="73" resizehorizontal="true" body="true" bodyheight="52" bodyoffset="0,12" castshadow="true" health="75" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.06" sourcerect="0,934,512,74" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="0,934,512,74" depth="0.85" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="ff_y_wall_wrecked" nameidentifier="ff_y_wall" description="" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="75" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.06" sourcerect="976,0,48,512" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="976,0,48,512" depth="0.85" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwalll90cables_wrecked" nameidentifier="inwalll90cables" description="" resizevertical="true" body="true" bodywidth="52" bodyoffset="12,0" castshadow="true" health="75" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.06" sourcerect="897,0,73,512" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="897,0,73,512" depth="0.85" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwalllcaph1_wrecked" nameidentifier="inwalllcaph1" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="725,419,27,50" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwalllcaph2_wrecked" nameidentifier="inwalllcaph2" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="782,420,52,48" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwalllcaph3_wrecked" nameidentifier="inwalllcaph3" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="697,44,51,58" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwalllcapy1_wrecked" nameidentifier="inwalllcapy1" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="821,47,49,52" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwalllcapy2_wrecked" nameidentifier="inwalllcapy2" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="822,157,48,27" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwalllcapy4_wrecked" nameidentifier="inwalllcapy4" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="811,194,59,50" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwallltieh1_wrecked" nameidentifier="inwallltieh1" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="725,477,74,48" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwallltieh2_wrecked" nameidentifier="inwallltieh2" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="800,494,73,17" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwallltieh3_wrecked" nameidentifier="inwallltieh3" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="730,541,111,54" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwallltiev1_wrecked" nameidentifier="inwallltiev1" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="813,262,48,72" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwallltiev2_wrecked" nameidentifier="inwallltiev2" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="828,336,16,72" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="inwallltiev3_wrecked" nameidentifier="inwallltiev3" description="" body="false" castshadow="false" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" depth="0.03" sourcerect="736,132,53,110" origin="0.5,0.5"/>
+  </structure>
+  <!-- BACK WALLS START -->
+  <!--<Wall_B name="" identifier="FF_Wall_B_Sunken" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Map/BackgroundWalls_sunken.png" sourcerect="513,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_B>-->
+  <!--<Wall_BC name="" identifier="bwbc_Sunken" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Map/BackgroundWalls_sunken.png" sourcerect="1,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_BC>-->
+  <Wall_D1 name="" identifier="FF_Wall_D1_Wrecked" nameidentifier="FF_Wall_D1" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="335,0,687,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_D1>
+  <Wall_D2 name="" identifier="FF_Wall_D2_Wrecked" nameidentifier="FF_Wall_D2" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="335,224,687,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_D2>
+  <Wall_D3 name="" identifier="FF_Wall_D3_Wrecked" nameidentifier="FF_Wall_D3" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="335,464,687,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_D3>
+  <Wall_G1 name="" identifier="FF_Wall_G1_Wrecked" nameidentifier="FF_Wall_G1" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="1,0,332,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_G1>
+  <Wall_G2 name="" identifier="FF_Wall_G2_Wrecked" nameidentifier="FF_Wall_G2" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="1,222,332,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_G2>
+  <Wall_G3 name="" identifier="FF_Wall_G3_Wrecked" nameidentifier="FF_Wall_G3" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="1,444,332,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_G3>
+  <Wall_BP name="" identifier="FF_Wall_BP_Wrecked" nameidentifier="FF_Wall_BP" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="1,673,510,253" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_BP>
+  <Wall_C1 name="" identifier="FF_Wall_C1_Wrecked" nameidentifier="FF_Wall_C1" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="1,0,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_C1>
+  <Wall_C2 name="" identifier="FF_Wall_C2_Wrecked" nameidentifier="FF_Wall_C2" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="1,224,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_C2>
+  <Wall_C3 name="" identifier="FF_Wall_C3_Wrecked" nameidentifier="FF_Wall_C3" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="1,448,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_C3>
+  <Wall_E name="" identifier="FF_Wall_E_Wrecked" nameidentifier="FF_Wall_E" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/Wall_C_wrecked.png" sourcerect="513,673,510,254" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Wall_E>
+  <!-- BACK WALLS END -->
+  <!-- VENTILATION - Cosmetic -->
+  <!-- Pipes-->
+  <ventilation name="" identifier="ventpipea1wrecked" nameidentifier="ventpipea1" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,0,512,32" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea190degwrecked" nameidentifier="ventpipea190deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="544,0,32,512" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea2wrecked" nameidentifier="ventpipea2" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,32,448,32" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea290degwrecked" nameidentifier="ventpipea290deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="576,0,32,448" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea3wrecked" nameidentifier="ventpipea3" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,96,512,24" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea390degwrecked" nameidentifier="ventpipea390deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="640,0,24,512" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea4wrecked" nameidentifier="ventpipea4" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,128,480,16" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea490degwrecked" nameidentifier="ventpipea490deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="672,0,17,480" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea5wrecked" nameidentifier="ventpipea5" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,160,512,48" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea590degwrecked" nameidentifier="ventpipea590deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="704,0,48,512" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea6wrecked" nameidentifier="ventpipea6" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,208,512,64" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea690degwrecked" nameidentifier="ventpipea690deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="768,0,64,512" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea7wrecked" nameidentifier="ventpipea7" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,288,512,64" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea790degwrecked" nameidentifier="ventpipea790deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="864,0,64,512" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea8wrecked" nameidentifier="ventpipea8" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,384,256,32" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea890degwrecked" nameidentifier="ventpipea890deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="928,0,32,256" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea9wrecked" nameidentifier="ventpipea9" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,448,161,32" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipea990degwrecked" nameidentifier="ventpipea990deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="992,0,32,160" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipecapa1wrecked" nameidentifier="ventpipecapa1" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="288,383,16,32" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventpipecapa190degwrecked" nameidentifier="ventpipecapa190deg" description="" resizevertical="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="928,365,32,16" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventmediumpipebenda1wrecked" nameidentifier="ventmediumpipebenda1" description="" resizevertical="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="448,400,32,32" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventlargepipebenda1wrecked" nameidentifier="ventlargepipebenda1" description="" resizevertical="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="352,384,64,64" depth="0.96" origin="0.5,0.5"/>
+  </ventilation>
+  <!--Ventilation Connectors Cosmetic-->
+  <ventilation name="" identifier="ventconnectora1wrecked" nameidentifier="ventconnectora1" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="1,512,127,113" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectora2wrecked" nameidentifier="ventconnectora2" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="192,512,208,105" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectora3wrecked" nameidentifier="ventconnectora3" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,640,149,96" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectora4wrecked" nameidentifier="ventconnectora4" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="192,640,192,64" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectora5wrecked" nameidentifier="ventconnectora5" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="1,768,215,91" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectora6wrecked" nameidentifier="ventconnectora6" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,864,176,64" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectora7wrecked" nameidentifier="ventconnectora7" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="0,960,176,64" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectorcapa1wrecked" nameidentifier="ventconnectorcapa1" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="224,768,59,49" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventconnectorcapa2wrecked" nameidentifier="ventconnectorcapa2" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="288,768,26,32" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <!--Ventilation Duct Cosmetic-->
+  <ventilation name="" identifier="ventducta1wrecked" nameidentifier="ventducta1" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="512,512,96,96" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventducta190degwrecked" nameidentifier="ventducta190deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="608,512,96,96" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventducta2wrecked" nameidentifier="ventducta2" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="736,544,64,64" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventducta290degwrecked" nameidentifier="ventducta290deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="800,544,62,63" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventbendducta1wrecked" nameidentifier="ventbendducta1" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="892,544,64,64" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventbendducta2wrecked" nameidentifier="ventbendducta2" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="960,544,64,64" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventsmallductreducerawrecked" nameidentifier="ventsmallductreducera" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="512,640,32,96" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventlargeductreducerawrecked" nameidentifier="ventlargeductreducera" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="576,640,160,96" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventlargeductreducera1wrecked" nameidentifier="ventlargeductreducera1" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="768,640,64,128" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventlargeductreducera2wrecked" nameidentifier="ventlargeductreducera2" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="848,640,64,128" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductfanawrecked" nameidentifier="ventductfana" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="928,640,64,128" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductb1wrecked" nameidentifier="ventductb1" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="472,768,113,64" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductb190degwrecked" nameidentifier="ventductb190deg" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="800,864,64,112" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductlongb2wrecked" nameidentifier="ventductlongb2" description="" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="224,841,224,48" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductb290degwrecked" nameidentifier="ventductb290deg" description="" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="953,800,48,224" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductbendb1wrecked" nameidentifier="ventductbendb1" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="505,864,112,112" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductbendb2wrecked" nameidentifier="ventductbendb2" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="640,832,128,112" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductreducerbwrecked" nameidentifier="ventductreducerb" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="473,832,112,32" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <ventilation name="" identifier="ventductreducerb90degwrecked" nameidentifier="ventductreducerb90deg" description="" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/DecorativeVentilationWrecked.png" sourcerect="768,864,32,112" depth="0.92" origin="0.5,0.5"/>
+  </ventilation>
+  <!-- VENTILATION - Cosmetic ENDS -->
+  <!-- SUBMARINE WALLS aka *SHELLS" START -->
+  <shellA name="" identifier="shella90degwrecked" nameidentifier="shella90deg" description="" body="true" castshadow="true" health="200" bodywidth="72" bodyoffset="12,0" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="2,1,96,510" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella16degwrecked" nameidentifier="shella16deg" description="" body="true" castshadow="true" health="200" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="129,0,256,160" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella34degwrecked" nameidentifier="shella34deg" description="" body="true" castshadow="true" health="200" bodywidth="116" bodyheight="60" bodyrotation="-34" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="864,117,98,156" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella0degwrecked" nameidentifier="shella0deg" description="" body="true" castshadow="true" health="200" width="512" height="96" bodyheight="72" bodyoffset="0,-12" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="416,1,512,96" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella04degwrecked" nameidentifier="shella04deg" description="" body="true" castshadow="true" health="200" bodywidth="514" bodyheight="60" bodyoffset="0,-5" bodyrotation="-4" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1024,1,512,128" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella14adegwrecked" nameidentifier="shella14adeg" description="" body="true" castshadow="true" health="200" bodywidth="522" bodyheight="60" bodyrotation="-14.5" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1536,450,512,224" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella52degwrecked" nameidentifier="shella52deg" description="" body="true" castshadow="true" health="200" bodywidth="385" bodyheight="60" bodyrotation="-52" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="101,174,285,338" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella16degbwrecked" nameidentifier="shella16degb" description="" body="true" castshadow="true" health="200" bodywidth="100" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16.5" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="416,160,96,128" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella25degwrecked" nameidentifier="shella25deg" description="" body="true" castshadow="true" health="200" bodywidth="141" bodyheight="60" bodyoffset="0,-10" bodyrotation="-25" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="544,128,128,160" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella45degwrecked" nameidentifier="shella45deg" description="" body="true" castshadow="true" health="200" bodywidth="180" bodyheight="45" bodyrotation="-45" bodyoffset="-5,-10" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="703,101,129,216" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella45degcwrecked" nameidentifier="shella45degc" description="" body="true" castshadow="true" health="200" bodywidth="100" bodyheight="60" bodyrotation="-45" bodyoffset="-10,10" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1023,1537,98,98" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella45degdwrecked" nameidentifier="shella45degd" description="" body="true" castshadow="true" health="200" bodywidth="140" bodyheight="60" bodyrotation="-45" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1024,1662,131,134" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella32degwrecked" nameidentifier="shella32deg" description="" body="true" castshadow="true" health="200" bodywidth="150" bodyheight="60" bodyoffset="13,-20" bodyrotation="-32" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="802,900,159,125" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella14degbwrecked" nameidentifier="shella14degb" description="" body="true" castshadow="true" health="200" bodywidth="524" bodyheight="60" bodyoffset="0,-12" bodyrotation="-14" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1025,154,512,208" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella43degwrecked" nameidentifier="shella43deg" description="" body="true" castshadow="true" health="200" bodywidth="595" bodyheight="60" bodyrotation="-43" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1592,1,457,449" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="Shella51degwrecked" nameidentifier="Shella51deg" description="" body="true" castshadow="true" health="200" bodywidth="215" bodyheight="60" bodyoffset="12,-16" bodyrotation="-51" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="388,294,188,218" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="Shella47degwrecked" nameidentifier="Shella47deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyrotation="-47" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="607,351,165,159" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="Shella60degwrecked" nameidentifier="Shella60deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyoffset="16,-16" bodyrotation="-60" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="803,288,160,224" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="Shella18degwrecked" nameidentifier="Shella18deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyoffset="0,-12" bodyrotation="20" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1024,380,384,224" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="Shella70degwrecked" nameidentifier="Shella70deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyrotation="-70" bodyoffset="10,0" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="2,544,224,384" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.1"/>
+  </shellA>
+  <shellA name="" identifier="shella90degcurvewrecked" nameidentifier="shella90degcurve" description="" body="true" castshadow="true" health="200" bodywidth="60" bodyheight="480" bodyrotation="0" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="255,543,128,482" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella45degbwrecked" nameidentifier="shella45degb" description="" body="true" castshadow="true" health="200" bodywidth="60" bodyheight="360" bodyrotation="55" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="415,544,320,256" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella57degwrecked" nameidentifier="shella57deg" description="" body="true" castshadow="true" health="200" bodywidth="360" bodyheight="60" bodyrotation="-57" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="766,517,227,317" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella40degwrecked" nameidentifier="shella40deg" description="" body="true" castshadow="true" health="200" bodywidth="540" bodyheight="60" bodyrotation="-40" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1026,637,454,388" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="ShellA61degwrecked" nameidentifier="ShellA61deg" description="" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyrotation="-61" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1156,1071,285,466" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="ShellA17degwrecked" nameidentifier="ShellA17deg" Aliases="Shell A 17 degwrecked" description="" body="true" castshadow="true" health="200" bodywidth="332" bodyheight="60" bodyrotation="-17" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="415,802,321,190" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella34degbwrecked" nameidentifier="shella34degb" description="" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyoffset="0,-18" bodyrotation="-34" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="0,1042,384,336" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella26degwrecked" nameidentifier="shella26deg" description="" body="true" castshadow="true" health="200" bodywidth="550" bodyheight="60" bodyrotation="-26" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="416,1056,513,350" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella54degwrecked" nameidentifier="shella54deg" description="" body="true" castshadow="true" health="200" bodywidth="601" bodyheight="60" bodyrotation="-54" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="0,1519,416,528" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella38degwrecked" nameidentifier="shella38deg" description="" body="true" castshadow="true" health="200" bodywidth="682" bodyheight="60" bodyrotation="-42" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1506,709,544,512" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shella42degwrecked" nameidentifier="shella42deg" description="" body="true" castshadow="true" health="200" bodywidth="400" bodyheight="60" bodyrotation="-42" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="449,1719,292,329" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellacombo11wrecked" nameidentifier="shellacombo11" description="" body="true" castshadow="true" health="200" bodywidth="520" bodyheight="60" bodyrotation="-62" bodyoffset="7,-17" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1201,1549,288,496" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellacombo12wrecked" nameidentifier="shellacombo12" description="" body="true" castshadow="true" health="200" bodywidth="600" bodyheight="60" bodyrotation="-21.5" bodyoffset="-5,15" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1487,1310,560,338" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellacap0degawrecked" nameidentifier="shellacap0dega" description="" body="true" castshadow="true" health="200" bodywidth="89" bodyheight="70" bodyoffset="-6,-4" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="585,1449,99,93" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellacap0degbwrecked" nameidentifier="shellacap0degb" description="" body="true" castshadow="true" health="200" bodywidth="105" bodyheight="73" bodyoffset="-4,-7" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="750,1443,115,103" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellacap90degawrecked" nameidentifier="shellacap90dega" description="" body="true" castshadow="true" health="200" bodywidth="60" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="969,1368,93,101" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellacap90degbwrecked" nameidentifier="shellacap90degb" description="" body="true" castshadow="true" health="200" bodywidth="60" noaitarget="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="978,1185,93,107" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellaboard0degawrecked" nameidentifier="shellaboard0dega" description="" castshadow="true" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="1,1436,511,20" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellaboard0degbwrecked" nameidentifier="shellaboard0degb" description="" castshadow="true" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="0,1470,511,34" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellaboard90degawrecked" nameidentifier="shellaboard90dega" description="" castshadow="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="897,1536,21,509" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <shellA name="" identifier="shellaboard90degbwrecked" nameidentifier="shellaboard90degb" description="" castshadow="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/ExteriorWallsAWrecked.png" sourcerect="957,1536,35,509" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85"/>
+  </shellA>
+  <!-- SUBMARINE WALLS aka *SHELLS" END -->
+  <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS -->
+  <sshellA name="" identifier="sshella01wrecked" nameidentifier="sshella01" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="40" resizevertical="true" castshadow="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="0,0,45,208" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella02wrecked" nameidentifier="sshella02" descriptionidentifier="exteriorshuttleshell" body="true" bodyheight="40" resizehorizontal="true" castshadow="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="65,0,207,45" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella04wrecked" nameidentifier="sshella04" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="177" bodyheight="44" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="458,0,185,45" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella05wrecked" nameidentifier="sshella05" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="150" bodyheight="44" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="649,0,155,45" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaA06wrecked" nameidentifier="sshellaA06" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="104" bodyheight="44" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="807,0,106,45" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella07wrecked" nameidentifier="sshella07" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="77" bodyheight="43" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="916,1,80,44" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella08wrecked" nameidentifier="sshella08" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="63,79,211,47" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella09wrecked" nameidentifier="sshella09" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="286,72,148,52" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella10wrecked" nameidentifier="sshella10" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="160" bodyheight="45" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="449,80,157,43" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella11wrecked" nameidentifier="sshella11" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="180" bodyheight="45" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="660,77,183,46" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella14wrecked" nameidentifier="sshella14" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="186" bodyheight="62" bodyoffset="0,0" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="63,146,186,77" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella15awrecked" nameidentifier="sshella15a" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="298,148,222,28" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella15bwrecked" nameidentifier="sshella15b" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="299,185,220,29" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella15cwrecked" nameidentifier="sshella15c" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="200" bodyheight="25" bodyoffset="0,0" bodyrotation="10" castshadow="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="454,544,207,53" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella17awrecked" nameidentifier="sshella17a" descriptionidentifier="exteriorshuttleshell" castshadow="true" health="100" ishorizontal="true" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="636,156,23,51" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella17bwrecked" nameidentifier="sshella17b" descriptionidentifier="exteriorshuttleshell" castshadow="true" health="100" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="675,156,47,48" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella17cwrecked" nameidentifier="sshella17c" descriptionidentifier="exteriorshuttleshell" castshadow="true" health="100" ishorizontal="false" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="574,169,39,25" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella18wrecked" nameidentifier="sshella18" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" ishorizontal="true" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="731,152,44,51" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella19wrecked" nameidentifier="sshella19" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="787,155,116,51" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella20wrecked" nameidentifier="sshella20" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="2,270,46,101" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella21wrecked" nameidentifier="sshella21" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="115" bodyheight="40" bodyrotation="14" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="79,286,117,73" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella22wrecked" nameidentifier="sshella22" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="190" bodyheight="40" bodyrotation="14.7" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="204,278,188,87" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella23wrecked" nameidentifier="sshella23" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="400,258,116,121" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella24wrecked" nameidentifier="sshella24" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="143" bodyheight="45" bodyrotation="40" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="524,246,108,127" depth="0.1" origin="0.4936646,0.4560038"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella25wrecked" nameidentifier="sshella25" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="635,257,155,113" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella26wrecked" nameidentifier="sshella26" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="118" bodyheight="46" bodyrotation="48" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="812,265,100,112" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella27wrecked" nameidentifier="sshella27" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="118" bodyheight="45" bodyrotation="64.3" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="913,256,86,118" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella28wrecked" nameidentifier="sshella28" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="48" bodyheight="111" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="0,404,49,115" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella30wrecked" nameidentifier="sshella30" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="302,381,50,200" depth="0.1" origin="0.391928,0.4112628"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella32bwrecked" nameidentifier="sshella32b" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="634,398,196,43" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella32cwrecked" nameidentifier="sshella32c" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="838,400,144,43" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella32dwrecked" nameidentifier="sshella32d" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="983,425,41,146" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella36wrecked" nameidentifier="sshella36" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="115" bodyheight="80" bodyrotation="67" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="702,885,172,123" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella37wrecked" nameidentifier="sshella37" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="115" bodyheight="115" bodyrotation="80" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="500,884,177,126" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella38wrecked" nameidentifier="sshella38" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="50" bodyheight="50" bodyrotation="0" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="379,909,110,89" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella39wrecked" nameidentifier="sshella39" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="154" bodyheight="40" bodyrotation="11" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="211,914,160,74" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella40wrecked" nameidentifier="sshella40" descriptionidentifier="exteriorshuttleshell" body="true" bodywidth="210" bodyheight="40" bodyrotation="20" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="0,899,204,102" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella41wrecked" nameidentifier="sshella41" descriptionidentifier="exteriorshuttleshell" body="true" castshadow="true" health="100" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="803,784,148,69" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85" color="60,60,60,255"/>
+  </sshellA>
+  <!-- SHUTTLE SHELLS / SPECIAL PIECES -->
+  <!-- Front / Shuttle Shells -->
+  <sshellA name="" identifier="sshellalightsawrecked" nameidentifier="sshellalightsa" description="" body="false" scale="1.0" category="Wrecked,Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="106,411,128,159" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaplateawrecked" nameidentifier="sshellaplatea" description="" body="false" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="405,413,113,113" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaplatebwrecked" nameidentifier="sshellaplateb" description="" body="false" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="534,414,98,105" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <!-- this seems to be identical to sshellaplateawrecked: set it as hidden -->
+  <sshellA name="" identifier="sshellaplatexlwrecked" nameidentifier="sshellaplatexl" scale="1.35" description="" body="false" castshadow="false" category="Wrecked, Legacy" hideinmenus="true">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="405,413,113,113" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <!-- Bumper / Shuttle Shells -->
+  <sshellA name="" identifier="sshellabumperawrecked" nameidentifier="sshellabumpera" description="" body="true" bodywidth="240" bodyheight="30" health="200" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="714,501,255,53" depth="0.12" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellabumperbwrecked" nameidentifier="sshellabumperb" description="" body="true" bodywidth="105" bodyheight="30" health="200" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="764,464,111,31" depth="0.12" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <!-- Glass / Shuttle Shells -->
+  <sshellA name="" identifier="sshellaglassawrecked" nameidentifier="sshellaglassa" description="" body="true" bodywidth="286" bodyheight="40" bodyrotation="55" castshadow="false" health="50" tags="glass" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="1,573,181,249" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassbwrecked" nameidentifier="sshellaglassb" description="" body="true" bodywidth="286" bodyheight="40" bodyrotation="38" castshadow="false" health="50" tags="glass" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="222,598,268,218" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglasscwrecked" nameidentifier="sshellaglassc" description="" body="true" bodywidth="272" bodyheight="40" bodyrotation="43" castshadow="false" health="50" tags="glass" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="494,600,221,218" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassdwrecked" nameidentifier="sshellaglassd" description="" body="true" bodywidth="206" bodyheight="40" bodyrotation="38" castshadow="false" health="50" tags="glass" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="735,576,181,143" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassewrecked" nameidentifier="sshellaglasse" description="" body="true" resizevertical="true" castshadow="false" health="50" tags="glass" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="979,577,45,190" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassfwrecked" nameidentifier="sshellaglassf" description="" body="true" resizehorizontal="true" castshadow="false" health="50" tags="glass" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="721,736,190,47" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <!-- Fins / Shuttle Shells -->
+  <sshellA name="" identifier="sshellafinawrecked" nameidentifier="sshellafina" description="" body="false" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="702,885,165,121" depth="0.9" origin="0.5,0.5"/>
+    <!--  <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="702,885,172,123" depth="0.85"/> -->
+  </sshellA>
+  <sshellA name="" identifier="sshellafinbwrecked" nameidentifier="sshellafinb" description="" body="false" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="500,884,172,120" depth="0.9" origin="0.5,0.5"/>
+    <!-- <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="500,884,177,126" depth="0.85"/> -->
+  </sshellA>
+  <sshellA name="" identifier="sshellafincwrecked" nameidentifier="sshellafinc" description="" body="false" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="858,46,130,101" depth="0.9" origin="0.5,0.5"/>
+    <!-- <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="858,44,145,108" depth="0.85"/> -->
+  </sshellA>
+  <sshellA name="" identifier="sshellafindwrecked" nameidentifier="sshellafind" description="" body="false" castshadow="false" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="892,887,102,131" depth="0.9" origin="0.5,0.5"/>
+    <!-- <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="892,890,107,129" depth="0.85"/> -->
+  </sshellA>
+  <!-- Gromits / Shuttle Shells  -->
+  <sshellA name="" identifier="sshellagromitawrecked" nameidentifier="sshellagromita" description="" castshadow="true" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="539,172,18,18" depth="0.1" origin="0.414694,0.4719137"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellagromitbwrecked" nameidentifier="sshellagromitb" description="" castshadow="true" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="915,181,45,16" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellagromitcwrecked" nameidentifier="sshellagromitc" description="" castshadow="true" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="914,158,39,14" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellagromitdwrecked" nameidentifier="sshellagromitd" description="" castshadow="true" noaitarget="true" scale="1.0" category="Wrecked, Legacy">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" sourcerect="966,159,12,11" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked.png" depth="0.85"/>
+  </sshellA>
+  <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS END -->
+  <!-- NEW SHUTTLE SHELLS / NEW SHUTTLE EXTERIOR WALLS -->
+  <sshellA name="" identifier="sshella01wrecked2" nameidentifier="sshella01" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="90" resizevertical="true" castshadow="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="0,1,90,413" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella02wrecked2" nameidentifier="sshella02" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodyheight="80" resizehorizontal="true" castshadow="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="130,0,413,90" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <!-- <sshellA name="" identifier="sshella03wrecked2" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="292,-2,159,52" depth="0.1" origin="0.5068434,0.5813913"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" sourcerect="292,-2,159,52" depth="0.85"/>
+  </sshellA> -->
+  <sshellA name="" identifier="sshella04wrecked2" nameidentifier="sshella04" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="354" bodyheight="88" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="909,0,373,95" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella05wrecked2" nameidentifier="sshella05" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="300" bodyheight="88" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1298,0,307,90" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaA06wrecked2" nameidentifier="sshellaA06" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="208" bodyheight="88" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1614,0,216,92" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella07wrecked2" nameidentifier="sshella07" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="154" bodyheight="86" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1837,1,176,94" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella08wrecked2" nameidentifier="sshella08" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="126,158,427,98" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella09wrecked2" nameidentifier="sshella09" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="572,143,296,104" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella10wrecked2" nameidentifier="sshella10" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="320" bodyheight="90" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="897,159,325,87" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella11wrecked2" nameidentifier="sshella11" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="360" bodyheight="90" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1320,154,366,92" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella14wrecked2" nameidentifier="sshella14" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="372" bodyheight="124" bodyoffset="0,-8" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="124,296,372,154" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella15awrecked2" nameidentifier="sshella15a" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="596,293,447,65" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella15bwrecked2" nameidentifier="sshella15b" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="596,369,442,63" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella15cwrecked2" nameidentifier="sshella15c" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="400" bodyheight="50" bodyoffset="-5,-5" bodyrotation="10" castshadow="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="903,987,414,106" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella17awrecked2" nameidentifier="sshella17a" descriptionidentifier="exteriorshuttleshell" category="Wrecked" castshadow="true" health="100" ishorizontal="true" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1272,312,46,102" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella17bwrecked2" nameidentifier="sshella17b" descriptionidentifier="exteriorshuttleshell" category="Wrecked" castshadow="true" health="100" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1347,308,99,103" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella17cwrecked2" nameidentifier="sshella17c" descriptionidentifier="exteriorshuttleshell" category="Wrecked" castshadow="true" health="100" ishorizontal="false" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1148,338,92,61" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella18wrecked2" nameidentifier="sshella18" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true" health="100" ishorizontal="false" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1464,306,91,105" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella19wrecked2" nameidentifier="sshella19" descriptionidentifier="sshella19" category="Wrecked" body="true" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1560,310,258,114" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella20wrecked2" nameidentifier="sshella20" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="8,421,95,215" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella23wrecked2" nameidentifier="sshella23" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="280" bodyheight="70" bodyrotation="40" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="798,460,244,255" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella24wrecked2" nameidentifier="sshella24" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="270" bodyheight="80" bodyrotation="60" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1051,441,216,254" depth="0.1" origin="0.4936646,0.4560038"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella25wrecked2" nameidentifier="sshella25" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="295" bodyheight="90" bodyrotation="40" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1270,463,326,233" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella28wrecked2" nameidentifier="sshella28" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="96" bodyheight="222" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="3,692,101,232" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella30wrecked2" nameidentifier="sshella30" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="75" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1962,302,83,386" depth="0.1" origin="0.391928,0.4112628"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella32bwrecked2" nameidentifier="sshella32b" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodyheight="75" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1268,703,392,86" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella32cwrecked2" nameidentifier="sshella32c" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1676,707,288,86" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella32dwrecked2" nameidentifier="sshella32d" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="75" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1964,687,83,288" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella38wrecked2" nameidentifier="sshella38" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="150" bodyheight="100" bodyrotation="0" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1818,1381,227,180" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella39wrecked2" nameidentifier="sshella39" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="308" bodyheight="80" bodyrotation="11" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1468,1365,323,155" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella40wrecked2" nameidentifier="sshella40" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="415" bodyheight="75" bodyrotation="20" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="383,587,417,217" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshella41wrecked2" nameidentifier="sshella41" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodyheight="110" castshadow="true" health="100" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="569,4,296,137" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <!-- NEW SHUTTLE SHELLS / NEW SPECIAL PIECES -->
+  <!-- NEW Front / NEW Shuttle Shells -->
+  <sshellA name="" identifier="sshellalightsawrecked2" nameidentifier="sshellalightsa" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="120,461,256,318" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaplateawrecked2" nameidentifier="sshellaplatea" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="false" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="810,729,226,226" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaplatebwrecked2" nameidentifier="sshellaplateb" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="false" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1068,731,196,210" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <!-- NEW Bumper / NEW Shuttle Shells -->
+  <sshellA name="" identifier="sshellabumperawrecked2" nameidentifier="sshellabumpera" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="true" bodywidth="480" bodyheight="60" health="200" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1428,906,510,106" depth="0.12" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellabumperbwrecked2" nameidentifier="sshellabumperb" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="true" bodywidth="210" bodyheight="60" health="200" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1527,831,222,62" depth="0.12" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <!-- NEW Glass / NEW Shuttle Shells -->
+  <sshellA name="" identifier="sshellaglassawrecked2" nameidentifier="sshellaglassa" descriptionidentifier="sshellaglassa" category="Wrecked" body="true" bodywidth="60" bodyheight="560" bodyrotation="-35" castshadow="false" health="50" tags="glass" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="2,1073,374,502" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassbwrecked2" nameidentifier="sshellaglassb" descriptionidentifier="sshellaglassb" category="Wrecked" body="true" bodywidth="570" bodyheight="75" bodyrotation="38" castshadow="false" health="50" tags="glass" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="454,1118,540,443" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglasscwrecked2" nameidentifier="sshellaglassc" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="500" bodyheight="50" bodyrotation="43" castshadow="false" health="50" tags="glass" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1007,1113,433,422" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassdwrecked2" nameidentifier="sshellaglassd" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" bodywidth="390" bodyheight="50" bodyrotation="38" castshadow="false" health="50" tags="glass" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1468,1051,363,297" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassewrecked2" nameidentifier="sshellaglasse" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" resizevertical="true" castshadow="false" health="50" tags="glass" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1949,978,98,383" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellaglassfwrecked2" nameidentifier="sshellaglassf" descriptionidentifier="exteriorshuttleshell" category="Wrecked" body="true" resizehorizontal="true" castshadow="false" health="50" tags="glass" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="390,476,382,98" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <!-- NEW Fins / NEW Shuttle Shells -->
+  <sshellA name="" identifier="sshellafinawrecked2" nameidentifier="sshellafina" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="false" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1608,439,332,250" depth="0.9" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellafinbwrecked2" nameidentifier="sshellafinb" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="false" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="321,821,342,243" depth="0.9" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellafincwrecked2" nameidentifier="sshellafinc" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="false" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1716,94,260,202" depth="0.9" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellafindwrecked2" nameidentifier="sshellafind" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" body="false" castshadow="false" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="118,785,197,256" depth="0.9" origin="0.5,0.5"/>
+  </sshellA>
+  <!-- NEW Gromits / NEW Shuttle Shells  -->
+  <sshellA name="" identifier="sshellagromitawrecked2" nameidentifier="sshellagromita" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" castshadow="true" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1078,344,36,36" depth="0.1" origin="0.414694,0.4719137"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellagromitbwrecked2" nameidentifier="sshellagromit" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" castshadow="true" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1829,361,92,34" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellagromitcwrecked2" nameidentifier="sshellagromitc" descriptionidentifier="sshellagromitc" category="Wrecked" castshadow="true" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1828,316,84,30" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <sshellA name="" identifier="sshellagromitdwrecked2" nameidentifier="sshellagromitd" descriptionidentifier="decorativeshuttlepiece" category="Wrecked" castshadow="true" noaitarget="true" scale="0.5">
+    <sprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" sourcerect="1932,318,24,22" depth="0.1" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Items/Shipwrecks/ShuttleWallsWrecked2.png" color="60,60,60,255" depth="0.85" origin="0.5,0.5"/>
+  </sshellA>
+  <!--  FINS A START-->
+  <fin name="" identifier="finabodyedge01wrecked" nameidentifier="finabodyedge01" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,0,192,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyedge02wrecked" nameidentifier="finabodyedge02" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="224,0,192,96" depth="0.985" origin="0.4270749,0.4675465"/>
+  </fin>
+  <fin name="" identifier="finabodyedge03wrecked" nameidentifier="finabodyedge03" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="224,128,192,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyedge04wrecked" nameidentifier="finabodyedge04" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="224,224,192,32" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyedge05wrecked" nameidentifier="finabodyedge05" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="448,0,192,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyedge06wrecked" nameidentifier="finabodyedge06" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="672,0,96,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyedge07wrecked" nameidentifier="finabodyedge07" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="800,0,64,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyedge08wrecked" nameidentifier="finabodyedge08" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="897,0,32,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside01wrecked" nameidentifier="finabodyinside01" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1120,0,192,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside02wrecked" nameidentifier="finabodyinside02" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1344,0,192,96" depth="0.985" origin="0.4270749,0.4675465"/>
+  </fin>
+  <fin name="" identifier="finabodyinside03wrecked" nameidentifier="finabodyinside03" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1344,128,192,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside04wrecked" nameidentifier="finabodyinside04" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="448,224,192,32" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside05wrecked" nameidentifier="finabodyinside05" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1568,0,192,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside06wrecked" nameidentifier="finabodyinside06" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1792,0,96,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finbodyinside07wrecked" nameidentifier="finbodyinside07" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1920,0,64,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside08wrecked" nameidentifier="finabodyinside08" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="2016,0,32,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside11wrecked" nameidentifier="finabodyinside11" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="768,224,192,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside12wrecked" nameidentifier="finabodyinside12" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="993,224,96,193" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside13wrecked" nameidentifier="finabodyinside13" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1120,352,192,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside14wrecked" nameidentifier="finabodyinside14" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1120,224,192,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside15wrecked" nameidentifier="finabodyinside15" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1984,1152,65,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabodyinside16wrecked" nameidentifier="finabodyinside16" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1344,224,192,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabelt01wrecked" nameidentifier="finabelt01" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1374,928,22,194" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabelt02wrecked" nameidentifier="finabelt02" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1312,928,36,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabelt03wrecked" nameidentifier="finabelt03" description="" body="false" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1312,1024,34,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabelt04wrecked" nameidentifier="finabelt04" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1536,480,192,16" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabelt05wrecked" nameidentifier="finabelt05" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1936,480,112,32" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finabelt06wrecked" nameidentifier="finabelt06" description="" body="false" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1760,480,176,32" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner01wrecked" nameidentifier="finacorner01" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="-1,225,97,95" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner02wrecked" nameidentifier="finacorner02" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="128,224,64,96" depth="0.985" origin="0.51259,0.4739301"/>
+  </fin>
+  <fin name="" identifier="finacorner03wrecked" nameidentifier="finacorner03" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,352,96,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner04wrecked" nameidentifier="finacorner04" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="192,352,112,64" depth="0.985" origin="0.3047689,0.2925825"/>
+  </fin>
+  <fin name="" identifier="finacorner05wrecked" nameidentifier="finacorner05" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="128,352,32,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner06wrecked" nameidentifier="finacorner06" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="320,288,96,128" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner07wrecked" nameidentifier="finacorner07" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="448,384,64,32" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner08wrecked" nameidentifier="finacorner08" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="448,224,192,32" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner09wrecked" nameidentifier="finacorner09" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="448,288,64,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finacorner11wrecked" nameidentifier="finacorner11" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="544,288,128,64" depth="0.985" origin="0.4595993,0.6038165"/>
+  </fin>
+  <fin name="" identifier="finacorner12wrecked" nameidentifier="finacorner12" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="544,384,32,32" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finacorner13wrecked" nameidentifier="finacorner13" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="512,448,64,96" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finacorner14wrecked" nameidentifier="finacorner14" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="224,448,96,96" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finacorner15wrecked" nameidentifier="finacorner15" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="224,576,64,64" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finadeco01wrecked" nameidentifier="finadeco01" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1862,934,48,48" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco02wrecked" nameidentifier="finadeco02" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1920,928,61,58" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco03wrecked" nameidentifier="finadeco03" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1985,928,60,61" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco04wrecked" nameidentifier="finadeco04" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1861,996,56,55" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco05wrecked" nameidentifier="finadeco05" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1922,995,57,55" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco06wrecked" nameidentifier="finadeco06" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1993,999,50,53" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco07wrecked" nameidentifier="finadeco07" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1858,1061,53,53" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco08wrecked" nameidentifier="finadeco08" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1219,1102,90,80" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco09wrecked" nameidentifier="finadeco09" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1536,1226,109,113" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finadeco10wrecked" nameidentifier="finadeco10" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1228,908,76,74" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart72wrecked" nameidentifier="finawingpart72" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1228,1003,77,80" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart19wrecked" nameidentifier="finawingpart19" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1622,805,91,119" depth="0.985" origin="0.4595993,0.6038165"/>
+  </fin>
+  <fin name="" identifier="finawingpart20wrecked" nameidentifier="finawingpart20" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1580,619,143,170" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finapatch01wrecked" nameidentifier="finapatch01" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="961,33,128,127" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finapatch02wrecked" nameidentifier="finapatch02" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1792,1760,257,48" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finapatch03wrecked" nameidentifier="finapatch03" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1792,1840,64,80" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finapatch04wrecked" nameidentifier="finapatch04" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1856,1840,80,80" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finapatch05wrecked" nameidentifier="finapatch05" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1792,1952,128,96" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finawingpart22wrecked" nameidentifier="finawingpart22" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,928,128,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart23wrecked" nameidentifier="finawingpart23" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="128,928,128,96" depth="0.985" origin="0.4750288,0.5112525"/>
+  </fin>
+  <fin name="" identifier="finawingpart24wrecked" nameidentifier="finawingpart24" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="256,928,64,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart25wrecked" nameidentifier="finawingpart25" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="320,928,192,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart26wrecked" nameidentifier="finawingpart26" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="512,928,224,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart27wrecked" nameidentifier="finawingpart27" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="736,928,208,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart28wrecked" nameidentifier="finawingpart28" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,1024,128,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart29wrecked" nameidentifier="finawingpart29" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="128,1024,128,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart30wrecked" nameidentifier="finawingpart30" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="256,1024,64,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart31wrecked" nameidentifier="finawingpart31" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="320,1024,192,192" depth="0.985" origin="0.6148124,0.5381715"/>
+  </fin>
+  <fin name="" identifier="finawingpart32wrecked" nameidentifier="finawingpart32" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="512,1024,224,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart33wrecked" nameidentifier="finawingpart33" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="736,1024,480,192" depth="0.985" origin="0.4361971,0.4431255"/>
+  </fin>
+  <fin name="" identifier="finawingpart09wrecked" nameidentifier="finawingpart09" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1024,480,96,112" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart10wrecked" nameidentifier="finawingpart10" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1024,592,160,80" depth="0.985" origin="0.5043059,0.5000123"/>
+  </fin>
+  <fin name="" identifier="finawingpart53wrecked" nameidentifier="finawingpart53" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1376,1728,160,128" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart54wrecked" nameidentifier="finawingpart54" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1424,1856,112,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart55wrecked" nameidentifier="finawingpart55" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1568,1728,192,144" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart56wrecked" nameidentifier="finawingpart56" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1680,1872,80,176" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart34wrecked" nameidentifier="finawingpart34" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1,1345,191,239" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart35wrecked" nameidentifier="finawingpart35" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="192,1344,416,240" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart40wrecked" nameidentifier="finawingpart40" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="192,1584,416,112" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart41wrecked" nameidentifier="finawingpart41" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,1584,192,112" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart42wrecked" nameidentifier="finawingpart42" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="608,1504,160,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart37wrecked" nameidentifier="finawingpart37" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1664,1440,384,128" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart38wrecked" nameidentifier="finawingpart38" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="800,1424,400,208" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart39wrecked" nameidentifier="finawingpart39" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="800,1344,224,80" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart36wrecked" nameidentifier="finawingpart36" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="800,1632,480,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart43wrecked" nameidentifier="finawingpart43" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1312,1504,224,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart44wrecked" nameidentifier="finawingpart44" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1536,1568,96,128" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart45wrecked" nameidentifier="finawingpart45" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1312,1408,112,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart46wrecked" nameidentifier="finawingpart46" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1312,1376,68,32" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart67wrecked" nameidentifier="finawingpart67" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1632,1600,128,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart68wrecked" nameidentifier="finawingpart68" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1760,1632,256,65" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart05wrecked" nameidentifier="finawingpart05" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="608,608,192,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart06wrecked" nameidentifier="finawingpart06" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="608,448,128,160" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart13wrecked" nameidentifier="finawingpart13" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="608,800,208,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart14wrecked" nameidentifier="finawingpart14" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="816,800,176,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart15wrecked" nameidentifier="finawingpart15" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="608,704,128,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart16wrecked" nameidentifier="finawingpart16" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="736,704,137,97" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart03wrecked" nameidentifier="finawingpart03" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="320,608,160,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart04wrecked" nameidentifier="finawingpart04" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="320,512,112,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart11wrecked" nameidentifier="finawingpart11" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="320,800,256,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart12wrecked" nameidentifier="finawingpart12" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="320,704,208,96" depth="0.985" origin="0.4549732,0.4953284"/>
+  </fin>
+  <fin name="" identifier="finawingpart08wrecked" nameidentifier="finawingpart08" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="-1,704,177,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart07wrecked" nameidentifier="finawingpart07" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,800,224,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart01wrecked" nameidentifier="finawingpart01" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,544,208,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart02wrecked" nameidentifier="finawingpart02" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="-1,447,161,97" depth="0.985" origin="0.4956147,0.5034655"/>
+  </fin>
+  <fin name="" identifier="finawingpart17wrecked" nameidentifier="finawingpart17" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1024,704,288,192" depth="0.985" origin="0.695432,0.9253635"/>
+  </fin>
+  <fin name="" identifier="finawingpart18wrecked" nameidentifier="finawingpart18" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1342,704,257,193" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart21wrecked" nameidentifier="finawingpart21" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1408,1024,448,192" depth="0.985" origin="0.5339039,0.4379086"/>
+  </fin>
+  <fin name="" identifier="finawingpart47wrecked" nameidentifier="finawingpart47" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,1728,176,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart48wrecked" nameidentifier="finawingpart48" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="176,1728,81,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart49wrecked" nameidentifier="finawingpart49" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="288,1728,512,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart50wrecked" nameidentifier="finawingpart50" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="832,1728,240,192" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart52wrecked" nameidentifier="finawingpart52" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1072,1824,272,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart57wrecked" nameidentifier="finawingpart57" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1248,480,128,48" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart58wrecked" nameidentifier="finawingpart58" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1248,528,192,48" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart59wrecked" nameidentifier="finawingpart59" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1248,576,320,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart60wrecked" nameidentifier="finawingpart60" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="768,448,192,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart61wrecked" nameidentifier="finawingpart61" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1728,576,160,144" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart62wrecked" nameidentifier="finawingpart62" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1728,720,256,176" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart63wrecked" nameidentifier="finawingpart63" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="0,1952,352,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart64wrecked" nameidentifier="finawingpart64" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="384,1952,224,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart65wrecked" nameidentifier="finawingpart65" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="608,1952,288,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart66wrecked" nameidentifier="finawingpart66" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="928,1952,353,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart69wrecked" nameidentifier="finawingpart69" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1760,256,289,64" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart70wrecked" nameidentifier="finawingpart70" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1538,352,510,96" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart71wrecked" nameidentifier="finawingpart71" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1536,272,224,48" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <fin name="" identifier="finawingpart73wrecked" nameidentifier="finawingpart73" description="" body="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/FinsA_Wrecked.png" sourcerect="1664,1280,384,128" depth="0.985" origin="0.5,0.5"/>
+  </fin>
+  <!-- FINS A ENDS -->
+  <PipesBackground name="" identifier="PipesBackgroundWrecked" nameidentifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="263,824,190,190" depth="0.98" origin="0.5,0.5"/>
+  </PipesBackground>
+  <SlopeForward name="" identifier="SlopeForwardWrecked" nameidentifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="261,691,224,64" depth="0.95" origin="0.5,0.5"/>
+  </SlopeForward>
+  <SlopeBack name="" identifier="SlopeBackWrecked" nameidentifier="SlopeBack" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="261,754,224,64" depth="0.95" origin="0.5,0.5"/>
+  </SlopeBack>
+  <stairsright name="" identifier="stairsrightwrecked" nameidentifier="stairs" width="256" height="320" stairangle="45" stairdirection="Right" AllowRotatingInEditor="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="3,704,256,319" depth="0.1" origin="0.5,0.5"/>
+  </stairsright>
+  <stairsleft name="" identifier="stairsleftwrecked" nameidentifier="stairs" width="256" height="320" stairangle="45" stairdirection="Left" AllowRotatingInEditor="false" category="Wrecked" hideinmenus="true">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="3,704,256,319" fliphorizontal="true" depth="0.1" origin="0.5,0.5"/>
+  </stairsleft>
+  <TailFin name="" identifier="tailfinbwrecked" nameidentifier="tailfinb" description="" scale="0.5" body="false" castshadow="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="0,0,936,512" depth="0.9" origin="0.5,0.5"/>
+  </TailFin>
+  <TailFin name="" identifier="tailfincwrecked" nameidentifier="tailfinc" description="" scale="0.5" body="false" castshadow="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="0,521,1030,158" depth="0.9" origin="0.5,0.5"/>
+  </TailFin>
+  <TailFin name="" identifier="tailfindwrecked" nameidentifier="tailfind" description="" scale="0.5" body="false" castshadow="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1,908,995,516" depth="0.9" origin="0.5,0.5"/>
+  </TailFin>
+  <TailFinD2p1 name="" identifier="tailfind2p1wrecked" nameidentifier="tailfind2p1" description="" scale="0.5" body="false" castshadow="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="0,683,288,225" depth="0.9" origin="0.5,0.5"/>
+  </TailFinD2p1>
+  <TailFinD2p2 name="" identifier="tailfind2p2wrecked" nameidentifier="tailfind2p2" description="" scale="0.5" resizehorizontal="false" body="false" castshadow="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="288,683,227,227" depth="0.9" origin="0.5,0.5"/>
+  </TailFinD2p2>
+  <TailFinD2p3 name="" identifier="tailfind2p3wrecked" nameidentifier="tailfind2p3" description="" scale="0.5" body="false" castshadow="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="514,683,482,231" depth="0.9" origin="0.5,0.5"/>
+  </TailFinD2p3>
+  <!-- TAILS START-->
+  <extA_Tail name="" identifier="extA_Tail_Wrecked" nameidentifier="extA_Tail" description="" scale="1.2" body="true" bodywidth="80" bodyheight="330" bodyoffset="-20,0" castshadow="false" health="200" category="Wrecked">
+    <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1921,-1,128,339" depth="0.01" origin="0.5,0.5"/>
+  </extA_Tail>
+  <Front name="" identifier="extA_Front_Wrecked" nameidentifier="extA_Front" description="" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="370" bodyoffset="-60,0" castshadow="true" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1369,4,262,487" depth="0.01" origin="0.5,0.5"/>
+  </Front>
+  <Front name="" identifier="subfrontb_Wrecked" nameidentifier="subfrontb" description="" scale="0.7" resizehorizontal="false" body="true" bodywidth="60" bodyheight="850" bodyoffset="-30,0" castshadow="true" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1072,2,271,975" depth="0.01" origin="0.238248,0.5"/>
+  </Front>
+  <FrontG1p1 name="" identifier="subfrontg1p1_Wrecked" nameidentifier="subfrontg1p1" description="" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="50" bodyoffset="-10,-10" castshadow="false" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1073,2,271,299" depth="0.01" origin="0.5,0.5"/>
+  </FrontG1p1>
+  <FrontG1p2 name="" identifier="subfrontg1p2_Wrecked" nameidentifier="subfrontg1p2" description="" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1073,300,271,438" depth="0.01" origin="0.5,0.5"/>
+  </FrontG1p2>
+  <FrontG1p3 name="" identifier="subfrontg1p3_Wrecked" nameidentifier="subfrontg1p3" description="" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="-50" bodyoffset="0,25" castshadow="false" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1073,737,269,254" depth="0.01" origin="0.5,0.5"/>
+  </FrontG1p3>
+  <FrontG2p1 name="" identifier="subfrontg2p1_Wrecked" nameidentifier="subfrontg2p1" description="" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="40" bodyoffset="-10,-16" castshadow="false" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1371,7,260,134" depth="0.01" origin="0.5,0.5"/>
+  </FrontG2p1>
+  <FrontG2p2 name="" identifier="subfrontg2p2_Wrecked" nameidentifier="subfrontg2p2" description="" scale="1.5" body="true" bodywidth="300" bodyheight="120" bodyrotation="90" bodyoffset="0,0" castshadow="false" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1412,141,219,223" depth="0.01" origin="0.5,0.5"/>
+  </FrontG2p2>
+  <FrontG2p3 name="" identifier="subfrontg2p3_Wrecked" nameidentifier="subfrontg2p3" description="" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="-40" bodyoffset="0,25" castshadow="false" health="400" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1370,364,261,126" depth="0.01" origin="0.5,0.5"/>
+  </FrontG2p3>
+  <!-- TAIL ENDS-->
+  <!-- OLD PIECES -->
+  <largehorizontalback identifier="largehorizontalbackwrecked" nameidentifier="largehorizontalback" allowattachitems="true" description="" width="128" height="64" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="4,1424,896,64" depth="0.9" origin="0.5,0.5"/>
+  </largehorizontalback>
+  <smallhorizontalback identifier="smallhorizontalbackwrecked" nameidentifier="smallhorizontalback" allowattachitems="true" description="" width="128" height="32" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="4,1487,896,32" depth="0.9" origin="0.5,0.5"/>
+  </smallhorizontalback>
+  <largeverticalback identifier="largeverticalbackwrecked" nameidentifier="largeverticalback" allowattachitems="true" description="" width="64" height="128" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="4,1519,64,448" depth="0.9" origin="0.5,0.5"/>
+  </largeverticalback>
+  <largeverticalback2 identifier="largeverticalback2wrecked" nameidentifier="largeverticalback2" allowattachitems="true" description="" width="64" height="128" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="67,1519,64,448" depth="0.9" origin="0.5,0.5"/>
+  </largeverticalback2>
+  <smallverticalback identifier="smallverticalbackwrecked" nameidentifier="smallverticalback" allowattachitems="true" description="" width="32" height="128" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="132,1519,32,352" depth="0.9" origin="0.5,0.5"/>
+  </smallverticalback>
+  <smallverticalback2 identifier="smallverticalback2wrecked" nameidentifier="smallverticalback2" allowattachitems="true" description="" width="32" height="128" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="165,1519,32,352" depth="0.9" origin="0.5,0.5"/>
+  </smallverticalback2>
+  <CableHolderHorizontal name="" identifier="CableHolderHorizontalwrecked" nameidentifier="CableHolderHorizontal" allowattachitems="true" width="32" height="16" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="645,1530,32,16" depth="0.85" origin="0.5,0.5"/>
+  </CableHolderHorizontal>
+  <CableHolderHorizontal2 name="" identifier="CableHolderHorizontal2wrecked" nameidentifier="CableHolderHorizontal" allowattachitems="true" width="32" height="28" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="603,1530,32,28" depth="0.85" origin="0.5,0.5"/>
+  </CableHolderHorizontal2>
+  <CableHolderHorizontal3 name="" identifier="CableHolderHorizontal3wrecked" nameidentifier="CableHolderHorizontal" allowattachitems="true" width="32" height="38" resizehorizontal="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="561,1530,32,38" depth="0.85" origin="0.5,0.5"/>
+  </CableHolderHorizontal3>
+  <CableHolderVertical name="" identifier="CableHolderVerticalwrecked" nameidentifier="CableHolderVertical" allowattachitems="true" width="16" height="32" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="535,1530,16,32" depth="0.85" origin="0.5,0.5"/>
+  </CableHolderVertical>
+  <CableHolderVertical2 name="" identifier="CableHolderVertical2wrecked" nameidentifier="CableHolderVertical" allowattachitems="true" width="27" height="32" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="498,1530,27,32" depth="0.85" origin="0.5,0.5"/>
+  </CableHolderVertical2>
+  <CableHolderVertical3 name="" identifier="CableHolderVertical3wrecked" nameidentifier="CableHolderVertical" allowattachitems="true" width="38" height="32" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="450,1530,38,32" depth="0.85" origin="0.5,0.5"/>
+  </CableHolderVertical3>
+  <largeplatform name="" identifier="largeplatformwrecked" nameidentifier="largeplatform" allowattachitems="true" width="64" height="51" resizehorizontal="true" body="true" platform="true" AllowRotatingInEditor="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="901,1424,126,51" depth="0.89" origin="0.5,0.5"/>
+  </largeplatform>
+  <platform name="" identifier="platformwrecked" nameidentifier="platform" allowattachitems="true" width="64" height="27" resizehorizontal="true" body="true" platform="true" AllowRotatingInEditor="false" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="901,1477,126,27" depth="0.89" origin="0.5,0.5"/>
+  </platform>
+  <bgpanels name="" identifier="bgpanelswrecked" nameidentifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="204,1769,222,222" depth="0.98" origin="0.5,0.5"/>
+  </bgpanels>
+  <roughbgwall name="" identifier="roughbgwallwrecked" nameidentifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="204,1528,240,239" depth="0.98" origin="0.5,0.5"/>
+  </roughbgwall>
+  <decal name="" identifier="wreckdecal1" nameidentifier="wreckdecal" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1358,735,307,210" depth="0.98" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" identifier="wreckdecal2" nameidentifier="wreckdecal" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="457,1580,299,194" depth="0.98" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" identifier="wreckdecal3" nameidentifier="wreckdecal" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="441,1790,337,237" depth="0.98" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" identifier="wreckdecal4" nameidentifier="wreckdecal" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1710,649,337,163" depth="0.98" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" identifier="wreckdecal5" nameidentifier="wreckdecal" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1688,509,356,146" depth="0.98" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" identifier="wreckdecal6" nameidentifier="wreckdecal" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1751,814,294,131" depth="0.98" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" identifier="wreckdecal7" nameidentifier="wreckdecal" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1359,527,318,211" depth="0.98" origin="0.5,0.5"/>
+  </decal>
+</prefabs>

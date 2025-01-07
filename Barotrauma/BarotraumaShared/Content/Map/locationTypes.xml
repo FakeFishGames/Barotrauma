@@ -1,0 +1,369 @@
+﻿<locationtypes>
+  <!--
+  ChangeTo:
+    requiredlocations                       = The change can only happen if there's at least one of the given types of locations near this one.
+    requiredproximity                       = How close the location needs to be to one of the RequiredLocations for the change to occur (defaults to 1).
+    probability                             = Base probability per turn for the location to change if near one of the RequiredLocations.
+    requiredproximityforprobabilityincrease = How close the location needs to be to one of the RequiredLocations for the probability to increase.
+    proximityprobabilityincrease            = How much the probability increases per turn if within RequiredProximityForProbabilityIncrease steps of RequiredLocations.
+    
+    disallowedadjacentlocations             = The change can't happen if there's one or more of the given types of locations near this one
+    disallowedproximity                     = How close the location needs to be to one of the DisallowedAdjacentLocations for the change to be disabled (defaults to 1).
+    
+    requirediscovered                       = Does this location need to be discovered before the change can occur (defaults to true).
+    
+    requireddurationrange                   = If a type change is triggered, a value is randomly chosen within this range and the change is delayed for that many turns.
+    requiredduration                        = Can be used in place of the previous attribute if you want to use a fixed delay. 
+    
+    locationtypechangecooldown              = The location can't change it's type for this many turns after this location type changes occurs.
+    
+  Store:
+    dailyspecialscount        = The number of daily specials for merchants at this location type. Defaults to 1.
+    requestedgoodscount       = The number of requested goods for merchants at this location type. Defaults to 1.
+    maxreputationmodifier     = The maximum effect positive reputation can have on store prices. Defaults to 0.1.
+    minreputationmodifier     = The maximum effect negative reputation can have on store prices. Defaults to 1.
+    sellpricemodifier         = Used to determine the selling price from the base price of an item. Defaults to 0.3.
+    dailyspecialpricemodifier = Change in buying price of daily specials. Defaults to 0.5.
+    requestgoodpricemodifier  = Change in selling price of requested goods. Defaults to 2.
+    initialbalance            = Initial balance of the store. Defaults to 5000.
+    pricemodifierrange        = The range of randomized price modifier. Randomized for each store individually. Defaults to 5. Note: value is direct percentage, i.e. 5 = 5%. 
+  -->
+
+
+  <None
+    identifier="None"
+    nameidentifiers="generic,alien"
+    commonnessperzone="1: 1.5, 2: 3.0, 3: 4.0, 4: 5.0, 5: 5.0, 6: 0"
+    hasoutpost="false"
+    beaconstationchance="0.5"
+    AllowAsBiomeGate="false">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="640,640,128,128" color="128,206,175,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+
+    <ChangeTo type="Outpost" disallowedadjacentlocations="Lair" messagetag="locationchange.none.changeto.outpost">
+      <!-- May be settled if within 3 steps of a colony, with an increasing chance should it be within 2 or less steps -->
+      <Requirement requiredlocations="City" requireddurationrange="1,2" probability="0.2" requiredproximity="3" requiredproximityforprobabilityincrease="2" proximityprobabilityincrease="0.1"/>
+      <!-- if near a beacon station, increase the probability -->
+      <Requirement requirebeaconstation="true" requireddurationrange="1,2" probability="0.1" requiredproximity="2" requiredproximityforprobabilityincrease="3" proximityprobabilityincrease="0.1"/>
+      <!-- multiply probability by 0 if next to hunting grounds-->
+      <Requirement function="Multiply" requirehuntinggrounds="true" probability="0.0" requiredproximity="0"/>
+    </ChangeTo>
+  </None>
+
+  <City
+    identifier="City"
+    replaceinradiation="Abandoned"
+    nameidentifiers="city"
+    commonnessperzone="1: 0, 2: 0.5"
+    mincountperzone="1: 1"
+    AllowAsBiomeGate="true">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="384,512,128,128" color="128,206,175,255"/>
+    <RadiationSymbol texture="Content/Map/MapAtlas.png" sourcerect="896,512,128,128" color="245,105,105"/>
+    <Portrait texture="Content/Map/LocationPortraits/Colony.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/Colony2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/Colony3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/Colony4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+
+    <Hireable identifier="assistant" commonness="10" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="engineer" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="mechanic" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="medicaldoctor" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="securityofficer" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="captain" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+
+    <Store
+      maxreputationmodifier="0.1"
+      minreputationmodifier="1.0"
+      sellpricemodifier="0.3"
+      dailyspecialpricemodifier="0.5"
+      requestgoodpricemodifier="2"
+      initialbalance="6000"
+      pricemodifierrange="5"
+      dailyspecialscount="3"
+      requestedgoodscount="3"/>
+  </City>
+
+  <Outpost
+    identifier="Outpost"
+    replaceinradiation="Abandoned"
+    nameidentifiers="generic,city"
+    commonnessperzone="1: 1.5, 2: 2.5, 3: 1.0, 4: 0.75"
+    AllowAsBiomeGate="true">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="256,512,128,128" color="128,206,175,255"/>
+    <RadiationSymbol texture="Content/Map/MapAtlas.png" sourcerect="896,512,128,128" color="245,105,105"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+
+    <Hireable identifier="assistant" commonness="10" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="engineer" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="mechanic" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="medicaldoctor" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="securityofficer" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="captain" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+
+    <!-- can become a specialized outpost if there are no adjacent lairs -->
+    <ChangeTo type="Military" probability="0.2" 
+              requireddurationrange="2,5"
+              disallowedadjacentlocations="Lair"
+              disallowedproximity="2"
+              messagetag="locationchange.outpost.changeto.military"/>
+
+    <ChangeTo type="Research" probability="0.2" 
+              requireddurationrange="2,5"
+              disallowedadjacentlocations="Lair"
+              disallowedproximity="2"
+              messagetag="locationchange.outpost.changeto.research"/>
+    
+    <ChangeTo type="Mine" probability="0.2" 
+              requireddurationrange="2,5"
+              disallowedadjacentlocations="Lair"
+              disallowedproximity="2"
+              messagetag="locationchange.outpost.changeto.mine"/>
+
+    <ChangeTo type="Abandoned" requireddurationrange="1,1" messagetag="locationchange.outpost.changeto.abandoned">
+      <Requirement requirehuntinggrounds="true" probability="0.5" requiredproximity="0"/>
+    </ChangeTo>
+
+    <Store
+      maxreputationmodifier="0.1"
+      minreputationmodifier="1.0"
+      sellpricemodifier="0.3"
+      dailyspecialpricemodifier="0.5"
+      requestgoodpricemodifier="2"
+      initialbalance="5000"
+      pricemodifierrange="5"/>
+  </Outpost>
+
+  <Abandoned
+    identifier="Abandoned"
+    nameidentifiers="alien"
+    commonnessperzone="1: 0, 2: 0.8, 3: 0.8, 4: 0.5, 5: 0.5, 6: 0"
+    missiontags="abandonedoutpost"
+    hideentitysubcategories="abandonedhuman,abandonedmonster"
+    outpostteam="None"
+    IsAnyOutpost="false"
+    AllowAsBiomeGate="false">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="896,512,128,128" color="245,105,105"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+  </Abandoned>
+
+  <Military
+    identifier="Military"
+    replaceinradiation="Abandoned"
+    nameidentifiers="city"
+    commonnessperzone="1: 0.6, 2: 1.75, 3: 1.0, 4: 0.75"
+    UsePortraitInMainMenu="true"
+    AllowAsBiomeGate="true">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="640,512,128,128" color="128,206,175,255"/>
+    <RadiationSymbol texture="Content/Map/MapAtlas.png" sourcerect="896,512,128,128" color="245,105,105"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+
+    <Hireable identifier="securityofficer" commonness="10" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="captain" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="assistant" commonness="2" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="engineer" commonness="2" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="mechanic" commonness="2" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="medicaldoctor" commonness="2" AlwaysAvailableIfMissingFromCrew="true"/>
+
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City"
+              requireddurationrange="3,5"
+              probability="0.2"
+              requiredlocations="City" requiredproximity="3"
+              disallowedadjacentlocations="Lair,City"
+              disallowedproximity="2"
+              messagetag="locationchange.military.changeto.city"/>
+
+    <ChangeTo type="Abandoned" requireddurationrange="1,1" messagetag="locationchange.outpost.changeto.abandoned">
+      <Requirement requirehuntinggrounds="true" probability="0.5" requiredproximity="0"/>
+    </ChangeTo>
+
+    <Store
+      maxreputationmodifier="0.1"
+      minreputationmodifier="1.0"
+      sellpricemodifier="0.3"
+      dailyspecialpricemodifier="0.5"
+      requestgoodpricemodifier="2"
+      initialbalance="5000"
+      pricemodifierrange="5"/>
+  </Military>
+
+  <Research
+    identifier="Research"
+    replaceinradiation="Abandoned"
+    nameidentifiers="generic,city"
+    commonnessperzone="1: 0.0, 2: 1.75, 3: 1.0, 4: 0.75"
+    AllowAsBiomeGate="true">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="512,512,128,128" color="128,206,175,255"/>
+    <RadiationSymbol texture="Content/Map/MapAtlas.png" sourcerect="896,512,128,128" color="245,105,105"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility1.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+
+    <Hireable identifier="engineer" commonness="5" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="mechanic" commonness="5" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="medicaldoctor" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="assistant" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="securityofficer" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="captain" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City"
+          requireddurationrange="2,4"
+          probability="0.2"
+          requiredlocations="City" requiredproximity="3"
+          disallowedadjacentlocations="Lair,City"
+          disallowedproximity="2"
+          messagetag="locationchange.research.changeto.city"/>
+
+    <ChangeTo type="Abandoned" requireddurationrange="1,1" messagetag="locationchange.outpost.changeto.abandoned">
+      <Requirement requirehuntinggrounds="true" probability="0.5" requiredproximity="0"/>
+    </ChangeTo>
+
+    <Store
+      maxreputationmodifier="0.1"
+      minreputationmodifier="1.0"
+      sellpricemodifier="0.3"
+      dailyspecialpricemodifier="0.5"
+      requestgoodpricemodifier="2"
+      initialbalance="5000"
+      pricemodifierrange="5"/>
+  </Research>
+  
+  <Mine
+    identifier="Mine"
+    replaceinradiation="Abandoned"
+    nameidentifiers="generic,city"
+    commonnessperzone="1: 0.6, 2: 1.75, 3: 1.0, 4: 0.75"
+    AllowAsBiomeGate="true">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="256,640,128,128" color="128,206,175,255"/>
+    <RadiationSymbol texture="Content/Map/MapAtlas.png" sourcerect="896,512,128,128" color="245,105,105"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining1.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+	  
+    <Hireable identifier="engineer" commonness="5" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="mechanic" commonness="5" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="assistant" commonness="3" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="medicaldoctor" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="securityofficer" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+    <Hireable identifier="captain" commonness="1" AlwaysAvailableIfMissingFromCrew="true"/>
+
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City"
+          requireddurationrange="2,4"
+          probability="0.15"
+          requiredlocations="City" requiredproximity="3"
+          disallowedadjacentlocations="Lair,City"
+          disallowedproximity="2"
+          messagetag="locationchange.mine.changeto.city"/>
+
+    <ChangeTo type="Abandoned" requireddurationrange="1,1" messagetag="locationchange.outpost.changeto.abandoned">
+      <Requirement requirehuntinggrounds="true" probability="0.5" requiredproximity="0"/>
+    </ChangeTo>
+
+    <Store
+      maxreputationmodifier="0.1"
+      minreputationmodifier="1.0"
+      sellpricemodifier="0.3"
+      dailyspecialpricemodifier="0.5"
+      requestgoodpricemodifier="2"
+      initialbalance="5000"
+      pricemodifierrange="5"/>
+  </Mine>
+
+  <EndLocation
+    identifier="EndLocation"
+    name="eyeofeuropa"
+    commonnessperzone="1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 1"
+    showsonarmarker="false"
+    hasoutpost="true"
+    outpostteam="None"
+    allowinrandomlevels="false"
+    UsePortraitInRandomLoadingScreens="false"
+    AllowAsBiomeGate="false">
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="521,648,110,110" color="245,105,105"/>
+    <Portrait texture="Content/Map/LocationPortraits/EndPortrait4.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+  </EndLocation>
+
+  <Tutorial
+    identifier="TutorialOutpost"
+    replaceinradiation="Abandoned"
+    nameidentifiers="generic,city"
+    forceoutpostgenerationparams="tutorialoutpost"    
+    allowinrandomlevels="false"
+    ignoregenericevents="true"
+    AllowAsBiomeGate="false">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="256,512,128,128" color="128,206,175,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+
+    <!-- can become a specialized outpost if there are no adjacent lairs -->
+    <ChangeTo type="Military" probability="0.2"
+              requireddurationrange="2,5"
+              disallowedadjacentlocations="Lair"
+              disallowedproximity="2"
+              messagetag="locationchange.outpost.changeto.military"/>
+
+    <ChangeTo type="Research" probability="0.2"
+              requireddurationrange="2,5"
+              disallowedadjacentlocations="Lair"
+              disallowedproximity="2"
+              messagetag="locationchange.outpost.changeto.research"/>
+
+    <ChangeTo type="Mine" probability="0.2"
+              requireddurationrange="2,5"
+              disallowedadjacentlocations="Lair"
+              disallowedproximity="2"
+              messagetag="locationchange.outpost.changeto.mine"/>
+
+    <ChangeTo type="Abandoned" requireddurationrange="1,1" messagetag="locationchange.outpost.changeto.abandoned">
+      <Requirement requirehuntinggrounds="true" probability="0.5" requiredproximity="0"/>
+    </ChangeTo>
+
+    <Store
+      sellpricemodifier="0.3"
+      pricemodifierrange="5"
+      dailyspecialscount="0"
+      requestedgoodscount="0"/>
+  </Tutorial>
+  
+  <!-- 
+  <Ruins
+    identifier="Ruins"
+    namefile="Content/Map/alienNames.txt"
+    commonnessperzone="3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
+    halo="1,0,0,0.2"
+    useinmainmenu="true">
+
+    <Symbol texture="Content/Map/MapAtlas.png" sourcerect="256,128,128,128" color="250,59,59,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/AlienRuins.png" premultiplyalpha="false"/>
+	  <Portrait texture="Content/Map/LocationPortraits/AlienRuins2.png" premultiplyalpha="false"/>
+	  <Portrait texture="Content/Map/LocationPortraits/AlienRuins3.png" premultiplyalpha="false"/>
+    <Portrait texture="Content/Map/LocationPortraits/AlienRuins4.png" premultiplyalpha="false"/>
+
+    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
+    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
+    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair"/>
+  </Ruins>-->
+</locationtypes>

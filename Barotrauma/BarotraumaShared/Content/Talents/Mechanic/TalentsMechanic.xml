@@ -1,0 +1,651 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Talents>
+  <Talent identifier="powerarmor">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.powerarmor">
+      <Replace tag="[bonusmovement]" value="25" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.exosuit" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionHasItem tags="deepdivinglarge"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyStat stattype="MovementSpeed" value="0.25"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AddedRecipe itemidentifier="exosuit"/>
+  </Talent>
+  
+  <Talent identifier="foolhardy">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.lowhealthstatboost">
+      <Replace tag="[health]" value="50" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.physicalresistance" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionAboveVitality invert="true" vitalitypercentage="0.5"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="foolhardy" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="berserker">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.lowhealthstatboost">
+      <Replace tag="[health]" value="50" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.meleedamagebonus" color="gui.orange"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionAboveVitality invert="true" vitalitypercentage="0.5"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true" multiplyafflictionsbymaxvitality="true">
+              <Affliction identifier="berserker" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="mudraptorwrestler">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="2,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.mudraptorwrestler">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattypeself">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.physicalresistance" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnAttack">
+      <Conditions>
+        <AbilityConditionAttackData weapontype="NoWeapon,Melee"/>
+        <AbilityConditionCharacter>
+          <Conditional group="eq mudraptor"/>
+        </AbilityConditionCharacter>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyAttackData addeddamagemultiplier="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveResistance resistanceid="damage" multiplier="0.9"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="heavylifting">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="1,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.heavylifting">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionHoldingItem tags="alienartifact,crate"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyStat stattype="MovementSpeed" value="0.2"/>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+
+  <Talent identifier="iamthatguy">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.iamthatguy">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.skillbonus">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[skillname]" value="stattypenames.weaponsskillbonus" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.heavywrench" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="WeaponsSkillBonus" value="20"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnAddDamageAffliction">
+      <Abilities>
+        <CharacterAbilityModifyAffliction afflictionidentifiers="blunttrauma" addedmultiplier="0.2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="heavywrench"/>
+  </Talent>
+  
+  <Talent identifier="robotics">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,7" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.robotics"/>
+    <Description tag="talentdescription.roboticsreminder">
+      <Replace tag="[amount]" value="2" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.defensebotspawner,entityname.defensebotammobox" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="defensebotspawner"/>
+    <AddedRecipe itemidentifier="defensebotammobox"/>
+  </Talent>
+  
+  <Talent identifier="ironstorm">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="7,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.ironstorm">
+      <Replace tag="[chance]" value="10" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.scrapcannon" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilitySetMetadataInt identifier="tiermodifieroverride" value="3"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="scrapcannon"/>
+  </Talent>
+  
+  <Talent identifier="residualwaste">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="6,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.residualwaste">
+      <Replace tag="[chance]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnItemDeconstructedMaterial">
+      <Conditions>
+        <AbilityConditionServerRandom randomChance="0.2"/>
+        <!-- don't allow duplicating genetic materials, and prevent infinite FPGA circuits -->
+        <AbilityConditionItem tags="geneticmaterial,unidentifiedgeneticmaterial,circuitboxcomponent,lightcomponent" invert="true"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="massproduction">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="6,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.massproduction">
+      <Replace tag="[chance]" value="40" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnItemFabricatedIngredients">
+      <Conditions>
+        <AbilityConditionServerRandom randomChance="0.4"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityRemoveRandomIngredient>
+          <AbilityConditionItem category="Material"/>
+        </CharacterAbilityRemoveRandomIngredient>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="toolmaintenance">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="5,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.toolmaintenance">
+      <Replace tag="[amount]" value="1" color="gui.green"/>
+    </Description>
+    <!-- Give once when unlocking the talent -->
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="tool~toolmaintenance" stattype="IncreaseFabricationQuality" value="1" targetallies="true" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <!-- Give every 60 seconds for late comers -->
+    <AbilityGroupInterval interval="60">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="tool~toolmaintenance" stattype="IncreaseFabricationQuality" value="1" targetallies="true" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="miner">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="2,3" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.miner">
+      <Replace tag="[probability]" value="20" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.gainoredetachspeed">
+      <Replace tag="[amount]" value="100" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="RepairToolDeattachTimeMultiplier" value="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnItemDeconstructedMaterial">
+      <Conditions>
+        <AbilityConditionServerRandom randomchance="0.2"/>
+        <AbilityConditionItem tags="ore"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="retrofit">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="3,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.retrofit"/>
+    <Description tag="talentdescription.doesnotstack"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilitySetMetadataInt identifier="tiermodifiers.increasewallhealth" value="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="ironman">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="6,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.ironhelmet,entityname.makeshiftarmor" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="ironhelmet"/>
+    <AddedRecipe itemidentifier="makeshiftarmor"/>
+  </Talent>
+  
+  <Talent identifier="oiledmachinery">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="4,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.oiledmachinery">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.doesnotstack"/>
+    <AbilityGroupInterval interval="60">
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="fabricator" stattype="FabricationSpeed" value="1.5"/>
+        <CharacterAbilityGiveItemStatToTags tags="deconstructor" stattype="DeconstructorSpeed" value="1.5"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="fabricator" stattype="FabricationSpeed" value="1.5"/>
+        <CharacterAbilityGiveItemStatToTags tags="deconstructor" stattype="DeconstructorSpeed" value="1.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="pumpndump">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="1,7" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.pumpndump">
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.maxflow" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnRepairComplete">
+      <conditions>
+        <AbilityConditionItem tags="pump"/>
+      </conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStat stattype="PumpSpeed" value="1.1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="ballastdenizen">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="7,6" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.ballastdenizen">
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="HoldBreathMultiplier" value="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="engineengineer">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="2,5" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.engineengineer">
+      <Replace tag="[amount]" value="2.5" color="gui.green"/>
+      <Replace tag="[max]" value="20" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.maxspeed" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.doesnotstack"/>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel levelequals="1"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.025"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel levelequals="2"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.05"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel levelequals="3"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.075"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel levelequals="4"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.1"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel levelequals="5"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.125"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel levelequals="6"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.15"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel levelequals="7"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.175"/>
+      </Abilities>
+    </AbilityGroupInterval>
+    <AbilityGroupInterval interval="60">
+      <Conditions>
+        <AbilityConditionHasLevel minlevel="8"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveItemStatToTags tags="engine" stattype="EngineMaxSpeed" stackable="false" value="1.2"/>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="multifunctional">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="6,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.multifunctional">
+      <Replace tag="[powerincrease]" value="50" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnAttack">
+      <Conditions>
+        <AbilityConditionAttackData tags="wrenchitem"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyAttackData addeddamagemultiplier="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnAttack">
+      <Conditions>
+        <AbilityConditionAttackData tags="crowbaritem"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyAttackData addeddamagemultiplier="0.5"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+  
+  <Talent identifier="salvagecrew">
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,7" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.bonusxponmission">
+      <Replace tag="[xpbonus]" value="30" color="gui.green"/>
+      <Replace tag="[missiontype]" value="missiontype.salvage" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.salvagecrew">
+      <Replace tag="[swimbonus]" value="50" color="gui.green"/>
+      <Replace tag="[resistanceamount]" value="10" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnGainMissionExperience">
+      <Conditions>
+        <AbilityConditionMission missiontype="Salvage"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="1.3"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupInterval interval="0.9">
+      <Conditions>
+        <AbilityConditionInSubmarine submarinetype="Wreck"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="This" disabledeltatime="true">
+              <Affliction identifier="salvagecrew" amount="1.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupInterval>
+  </Talent>
+  
+  <Talent identifier="machinemaniac" trackedstat="machinemaniac_counter" trackedmax="100">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="3,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.machinemaniac">
+      <Replace tag="[bonus]" value="80" color="gui.green"/>
+      <Replace tag="[amount]" value="3" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.machinemaniac.30">
+      <Replace tag="[requirement]" value="12" color="gui.green"/>
+      <Replace tag="[amount]" value="10" color="gui.green"/>
+      <Replace tag="[skill]" value="stattypenames.mechanicalskillbonus" color="gui.orange"/>
+      <Replace tag="[xpamount]" value="500" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.machinemaniac.50">
+      <Replace tag="[requirement]" value="20" color="gui.green"/>
+      <Replace tag="[level]" value="1" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.machinemaniac.100">
+      <Replace tag="[requirement]" value="40" color="gui.green"/>
+      <Replace tag="[amount]" value="50" color="gui.green"/>
+    </Description>
+
+    <!-- Give the player stats that tracks if the rewards should be given -->
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="machinemaniac_30" value="1" maxvalue="1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="machinemaniac_50" value="1" maxvalue="1" setvalue="true"/>
+        <CharacterAbilityGivePermanentStat statidentifier="machinemaniac_100" value="1" maxvalue="1" setvalue="true"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+    <AbilityGroupEffect abilityeffecttype="OnRepairComplete">
+      <Conditions>
+        <AbilityConditionItem tags="fabricator,door,engine,oxygengenerator,pump,turretammosource,deconstructor,medicalfabricator,ductblock"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="machinemaniac_counter" value="1" removeondeath="false"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+    <AbilityGroupEffect abilityeffecttype="OnRepairComplete">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="machinemaniac_30" min="1"/>
+        <AbilityConditionHasPermanentStat statidentifier="machinemaniac_counter" min="12"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGiveExperience amount="500"/>
+        <CharacterAbilityGivePermanentStat stattype="MechanicalSkillBonus" statidentifier="machinemaniac" value="10" setvalue="true" removeondeath="false"/>
+        <CharacterAbilityResetPermanentStat statidentifier="machinemaniac_30"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+    <AbilityGroupEffect abilityeffecttype="OnRepairComplete">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="machinemaniac_50" min="1"/>
+        <AbilityConditionHasPermanentStat statidentifier="machinemaniac_counter" min="20"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityUpgradeSubmarine upgradeprefab="increasemaxpumpflow" upgradecategory="pumps" level="1"/>
+        <CharacterAbilityResetPermanentStat statidentifier="machinemaniac_50"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+    <AbilityGroupEffect abilityeffecttype="OnRepairComplete">
+      <Conditions>
+        <AbilityConditionHasPermanentStat statidentifier="machinemaniac_100" min="1"/>
+        <AbilityConditionHasPermanentStat statidentifier="machinemaniac_counter" min="40"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityGivePermanentStat stattype="MechanicalRepairSpeed" statidentifier="machinemaniac" value="0.5" setvalue="true" removeondeath="false"/>
+        <CharacterAbilityResetPermanentStat statidentifier="machinemaniac_100"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="tinkerer">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.increasemaxrepairmechanical">
+      <Replace tag="[percentage]" value="40" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MaxRepairConditionMultiplierMechanical" value="0.4"/>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="modularrepairs">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="5,1" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.repairpack" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.freeupgrade">
+      <Replace tag="[level]" value="1" color="gui.green"/>
+      <Replace tag="[upgradename]" value="upgradename.decreaselowskillfixduration" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="repairpack"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityUpgradeSubmarine upgradeprefab="decreaselowskillfixduration" upgradecategory="electricaldevices" level="1"/>
+        <CharacterAbilityUpgradeSubmarine upgradeprefab="decreaselowskillfixduration" upgradecategory="mechanicaldevices" level="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+
+  </Talent>
+
+  <Talent identifier="hullfixer">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="0,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.fixfoamgrenade,entityname.handheldstatusmonitor" color="gui.orange"/>
+    </Description>
+    <Description tag="talentdescription.additionalstattype">
+      <Replace tag="[amount]" value="25" color="gui.green"/>
+      <Replace tag="[stattype]" value="stattypenames.repairtoolstructurerepairmultiplier" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="RepairToolStructureRepairMultiplier" value="0.25"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="fixfoamgrenade"/>
+    <AddedRecipe itemidentifier="handheldstatusmonitor"/>
+  </Talent>
+
+  <Talent identifier="letitdrain">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="1,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.letitdrain"/>
+    <Description tag="talentdescription.letitdrainreminder">
+      <Replace tag="[itemcount]" value="2" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.portablepump" color="gui.orange"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGivePermanentStat statidentifier="portablepump" stattype="MaxAttachableCount" value="2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AddedRecipe itemidentifier="portablepump"/>
+  </Talent>
+
+  <Talent identifier="quickfixer">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="5,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.quickfixer">
+      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[duration]" value="10" color="gui.green"/>
+    </Description>
+    <Description tag="talentdescription.repairmechanicaldevicestwiceasfast"/>
+    <AbilityGroupEffect abilityeffecttype="None">
+      <Abilities>
+        <CharacterAbilityGiveStat stattype="MechanicalRepairSpeed" value="1"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnRepairComplete">
+      <Conditions>
+        <AbilityConditionItem tags="fabricator,door,engine,oxygengenerator,pump,turretammosource,deconstructor,medicalfabricator,ductblock"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityApplyStatusEffects>
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="Character" disabledeltatime="true">
+              <Affliction identifier="quickfixer" amount="10.0"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilityApplyStatusEffects>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="scrapsavant">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="6,3" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.doublescrapoutput"/>
+    <Description tag="talentdescription.findadditionalscrap">
+      <Replace tag="[probability]" value="20" color="gui.green"/>
+    </Description>
+    <AbilityGroupEffect abilityeffecttype="OnItemDeconstructedMaterial">
+      <Conditions>
+        <AbilityConditionItem tags="scrap"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilityModifyValue multiplyvalue="2"/>
+      </Abilities>
+    </AbilityGroupEffect>
+    <AbilityGroupEffect abilityeffecttype="OnOpenItemContainer">
+      <Conditions>
+        <AbilityConditionItemInSubmarine submarinetype="Wreck"/>
+        <AbilityConditionItem tags="container"/>
+      </Conditions>
+      <Abilities>
+        <CharacterAbilitySpawnItemsToContainer randomchance="0.2" oncepercontainer="true">
+          <StatusEffects>
+            <StatusEffect type="OnAbility" target="UseTarget">
+              <SpawnItem identifiers="scrap" spawnposition="ThisInventory" spawnifcantbecontained="false"/>
+            </StatusEffect>
+          </StatusEffects>
+        </CharacterAbilitySpawnItemsToContainer>
+      </Abilities>
+    </AbilityGroupEffect>
+  </Talent>
+
+  <Talent identifier="safetyfirst">
+    <Icon texture="Content/UI/TalentsIcons2.png" sheetindex="4,2" sheetelementsize="128,128"/>
+    <Description tag="talentdescription.unlockrecipe">
+      <Replace tag="[itemname]" value="entityname.safetyharness" color="gui.orange"/>
+    </Description>
+    <AddedRecipe itemidentifier="safetyharness"/>
+  </Talent>
+
+</Talents>

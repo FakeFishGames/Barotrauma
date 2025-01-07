@@ -1,0 +1,1001 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<prefabs>
+  <!-- Everything is categorized as 'Structure' unless explicitly categorized otherwise -->
+  <!-- OUTPOST BACKGROUND WALLS -->
+  <Opdeco name="" identifier="op_clownfence" allowattachitems="true" width="205" height="150" resizehorizontal="true" resizevertical="false" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ClownDistrict.png" sourcerect="817,308,205,150" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opdeco>
+  <Opbg name="" identifier="op_clowncurtain1" nameidentifier="op_clowncurtain2" allowattachitems="true" width="178" height="372" resizehorizontal="true" resizevertical="false" scale="0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ClownDistrict.png" sourcerect="2,387,178,372" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="op_clowncurtain3" nameidentifier="op_clowncurtain2"  allowattachitems="true" width="108" height="89" resizehorizontal="true" resizevertical="false" scale="0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ClownDistrict.png" sourcerect="205,2,108,89" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="FF_Wall_I1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="FF_Wall_I2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,256,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="FF_Wall_I3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/backgroundwalls1.png" sourcerect="0,1664,255,255" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_generic1" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="0,0,832,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  
+  <Opbg name="" identifier="opbg_generic2" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="832,0,831,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_generic3" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="0,416,832,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_generic4" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="833,416,830,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_generic5" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="0,832,832,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_generic6" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="833,832,830,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_generic7" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="833,1248,831,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_airlock1" allowattachitems="true" width="192" height="208" resizehorizontal="false" resizevertical="false" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="1664,0,384,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="Concrete_Wall_1" nameidentifier="concretewall" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" tags="backgroundwall">
+    <sprite texture="Content/Map/backgroundwalls3.png" sourcerect="0,832,833,417" depth="0.98" premultiplyalpha="false"/>
+  </Opbg>
+  <Opbg name="" identifier="Concrete_Wall_2" nameidentifier="concretewall" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" tags="backgroundwall">
+    <sprite texture="Content/Map/backgroundwalls3.png" sourcerect="833,833,830,414" depth="0.97" premultiplyalpha="false"/>
+  </Opbg>
+  <!-- OLD SOCIAL CENTER AND SHOP WALLS -->
+  <Opbg name="" identifier="opbgshopa1" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,0,2007,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbgsocialcentera1" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,608,2036,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- BARRACKS WALLS -->
+  <Opbg name="" identifier="opbg_barracks1" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="0,415,831,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_barracks2" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="831,416,831,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_barracks3" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="0,831,831,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- MAINTENANCE BAY AND SERVICES WALLS -->
+  <Opbg name="" identifier="opbg_services1" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="0,1249,831,414" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_services2" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls.png" sourcerect="831,1247,831,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbgmaintenancebaya1" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,0,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbgmaintenancebaya2" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,768,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbgmaintenancebaya3" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,1440,1926,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- RESEARCH LAB WALLS -->
+  <Opbg name="" identifier="opbg_researchlab1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="0,1,832,412" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_researchlab2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="832,0,831,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!--  TUNNEL -->
+  <Opbg name="" identifier="opbg_tunnel1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="0,0,832,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_tunnel2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="832,0,831,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!--Moved opbg_tunnel3 to OutpostDecorativeItems.xml to allow flickering lights-->
+  <!--<Opbg name="" identifier="opbg_tunnel3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="0,416,831,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>-->
+  <Opbg name="" identifier="opbg_tunnel4" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="832,417,831,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_tunnel5" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="0,833,832,414" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_tunnel6" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="832,832,831,414" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!--  TUNNEL WALLS -->
+  <structure name="" identifier="icewall" description="" width="1024" height="96" resizehorizontal="true" body="true" castshadow="true" minhealth="200" health="350" tags="inner,ice" Scale="0.5" indestructibleinoutposts="false">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.06" sourcerect="0,0,1024,96" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="0,0,1024,96" color="60,60,60,255" depth="0.9" origin="0.5,0.5"/>
+  </structure>
+  <OpDeco name="" nameidentifier="opdeco_icepillar" identifier="icepillar1" description="" width="295" height="16" resizehorizontal="false" resizevertical="true" tags="ice" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="0,896,592,512" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_icepillar" identifier="icepillar2" description="" width="152" height="16" resizehorizontal="false" resizevertical="true" tags="ice" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="0,1424,303,512" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_icepillar" identifier="icepillarmelt1" description="" width="224" height="160" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="576,224,240,160" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_icepillar" identifier="icepillarmelt2" description="" width="336" height="192" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="480,448,336,192" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_icepillar" identifier="icepillarmelt3" description="" width="432" height="192" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="16,448,432,192" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_icepillar" identifier="icepillarmelt4" description="" width="654" height="226" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="0,656,654,226" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="icechunkdecorative1" nameidentifier="opdeco_icecube" description="" width="683" height="1024" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="icechunkdecorative2" nameidentifier="opdeco_icecube" description="" width="683" height="1024" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="683,0,683,1024" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="icechunkdecorative3" nameidentifier="opdeco_icecube" description="" width="683" height="1024" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="1365,0,683,1024" origin="0.5,0.5"/>
+  </OpDeco>
+  <structure name="" identifier="icewallcracked" description="" width="1024" height="96" resizehorizontal="true" body="true" castshadow="true" health="125" tags="inner,ice" Scale="0.5" indestructibleinoutposts="false">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.06" sourcerect="0,112,1024,96" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="0,112,1024,96" color="60,60,60,255" depth="0.9" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="icewall90" description="" width="96" height="1024" resizevertical="true" body="true" castshadow="true" minhealth="200" health="350" tags="inner,ice" Scale="0.5" indestructibleinoutposts="false">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.06" sourcerect="928,224,96,1024" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="928,224,1024,96" color="60,60,60,255" depth="0.9" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="icewallcracked90" description="" width="96" height="1024" resizevertical="true" body="true" castshadow="true" health="125" tags="inner,ice" Scale="0.5" indestructibleinoutposts="false">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.06" sourcerect="816,224,96,1024" origin="0.5,0.5"/>
+    <backgroundsprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="816,224,96,1024" color="60,60,60,255" depth="0.9" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="icerock01" description="" body="false" castshadow="false" noaitarget="true" Scale="0.5" tags="ice" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.3" sourcerect="0,224,96,96" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="icerock02" description="" body="false" castshadow="false" noaitarget="true" Scale="0.5" tags="ice" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.3" sourcerect="96,224,96,96 " origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="icerock03" description="" body="false" castshadow="false" noaitarget="true" Scale="0.5" tags="ice" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.6" sourcerect="192,224,112,208" origin="0.5,0.5"/>
+  </structure>
+  <structure name="" identifier="icerock04" description="" body="false" castshadow="false" noaitarget="true" Scale="0.5" tags="ice" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" depth="0.6" sourcerect="304,224,224,112" origin="0.5,0.5"/>
+  </structure>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris01" description="" width="176" height="128" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="624,896,176,128" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris02" description="" width="160" height="96" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="624,1024,160,96" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris03" description="" width="144" height="96" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="656,1136,144,96" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris04" description="" width="270" height="173" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="591,1250,270,173" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris05" description="" width="144" height="128" texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="880,1264,144,128" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris06" description="" width="352" height="192 " texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="304,1424,352,192" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris07" description="" width="272" height="192 " texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="656,1424,272,192" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris08" description="" width="256" height="176 " texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="320,1616,256,176" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris09" description="" width="192" height="128 " texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="592,1632,192,128" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris10" description="" width="144" height="96 " texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="320,1808,144,96" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="icedebris" identifier="icedebris11" description="" width="192" height="144 " texturescale="1.0,1.0" scale="0.5" tags="ice" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelIceWalls.png" sourcerect="480,1792,192,144" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="miningengine" width="832" height="320" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="0,32,832,320" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="drillingmodule1" width="304" height="320" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="848,32,304,320" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="drillingmodule2" width="96" height="320" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="1168,32,96,320" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="drillingmodule3" width="128" height="320" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="1280,32,128,320" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="drillingbit1" width="433" height="320" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="1439,32,433,320" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="wheels" width="352" height="112" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="1440,384,352,112" depth="0.972" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="rockcrusher" width="752" height="288" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="0,384,752,288" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="shovel" width="625" height="288" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="800,384,625,288" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="miningmachines" identifier="sawblade" width="656" height="352" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="0,672,656,352" depth="0.975" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="heavydoor" descriptionidentifier="decodoor" body="true" castshadow="true" width="197" height="417" bodywidth="95" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="4,1627,197,417" depth="0.51" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <Opbg name="" nameidentifier="opdeco_supportbeam" identifier="rebardecor" allowattachitems="true" width="32" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MiningMachine.png" sourcerect="1920,0,64,32" depth="0.978" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- SEED VAULT WALLS -->
+  <!--<Opbg name="Outpost Seed Vault Background 1" identifier="opbg_seedvault1" description="Seed vault background wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SeedVaultWalls.png" sourcerect="410,0,820,410" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="Outpost Seed Vault Background 2" identifier="opbg_seedvault2" description="Seed vault background wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SeedVaultWalls.png" sourcerect="1230,0,820,410" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="Outpost Seed Vault Background 3" identifier="opbg_seedvault3" description="Seed vault background wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SeedVaultWalls.png" sourcerect="410,410,820,410" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="Outpost Seed Vault Background 4" identifier="opbg_seedvault4" description="Seed vault background wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/SeedVaultWalls.png" sourcerect="1230,410,820,410" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>-->
+  <!-- MANAGER'S OFFICE WALLS -->
+  <Opbg name="" identifier="opbg_manageroffice1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="0,0,832,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_manageroffice2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="832,0,831,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_manageroffice3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="0,416,832,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- DORM WALLS -->
+  <Opbg name="" identifier="opbg_dorm1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="832,416,832,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- MESS HALL WALLS -->
+  <Opbg name="" identifier="opbg_messhall1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="0,832,832,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- SHOP WALLS -->
+  <Opbg name="" identifier="opbg_shop2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="832,832,831,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_shop3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="0,1248,831,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_shop4" allowattachitems="true" width="191" height="208" resizehorizontal="false" resizevertical="false" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/GenericWalls2.png" sourcerect="1664,0,383,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- DECORATIVE STRUCTURES -->
+  <!-- SUIT STORAGE -->
+  <OpDeco name="" identifier="opdeco_weaponstoragesuit1" width="176" height="320" texturescale="1.0,1.0" scale="0.5" category="Decorative" noninteractable="true" allowattachitems="true">
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,0,177,320" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="528,0,176,320" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="176,0,176,320" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_weaponstoragesuit2" nameidentifier="opdeco_weaponstoragesuit1" width="176" height="320" texturescale="1.0,1.0" scale="0.5" category="Decorative" noninteractable="true" allowattachitems="true">
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,0,177,320" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="703,0,176,320" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="176,0,176,320" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_weaponstoragesuit3" nameidentifier="opdeco_weaponstoragesuit1" width="176" height="320" texturescale="1.0,1.0" scale="0.5" category="Decorative" noninteractable="true" allowattachitems="true">
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,0,177,320" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="353,0,176,320" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="176,0,176,320" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!--WEAPON STORAGE-->
+  <OpDeco name="" identifier="op_weaponstoragesmall" width="223" height="127" texturescale="1.0,1.0" scale="0.5" category="Decorative" noninteractable="true" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,320,223,127" depth="0.94" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="224,320,223,127" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Items/Diving/Scooter.png" sourcerect="0,0,219,144" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="0,0" scale="0.4" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Diving/Scooter.png" sourcerect="0,0,219,144" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-65,0" scale="0.4" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Diving/Scooter.png" sourcerect="0,0,219,144" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="65,0" scale="0.4" rotation="-90"/>
+  </OpDeco>
+  <OpDeco name="" identifier="op_weaponstoragemedium" width="366" height="336" texturescale="1.0,1.0" scale="0.5" category="Decorative" noninteractable="true" allowattachitems="true" canflipx="false" canflipy="false">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="737,321,366,336" depth="0.94" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="737,657,366,320" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" sourcerect="1,1,127,86" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-130,-110" scale="0.8" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" sourcerect="130,1,127,86" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-50,-110" scale="0.8" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" sourcerect="0,90,217,34" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="50,-70" scale="0.8" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" sourcerect="0,131,217,34" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="80,-70" scale="0.8" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" sourcerect="0,170,217,34" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="110,-70" scale="0.8" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" sourcerect="0,90,217,34" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="140,-70" scale="0.8" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" sourcerect="0,131,217,34" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="20,-70" scale="0.8" rotation="-90"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="20,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="40,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="60,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.954" premultiplyalpha="false" origin="0.5,0.5" offset="80,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="100,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="120,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="140,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="20,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="40,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="60,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.954" premultiplyalpha="false" origin="0.5,0.5" offset="80,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="100,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="120,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="140,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="20,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="40,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="60,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.954" premultiplyalpha="false" origin="0.5,0.5" offset="80,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="100,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="120,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="140,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="152,477,50,34" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="-20,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="152,477,50,34" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="-40,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="152,477,50,34" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="-60,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="152,477,50,34" depth="0.954" premultiplyalpha="false" origin="0.5,0.5" offset="-80,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="152,477,50,34" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="-100,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="152,477,50,34" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="-120,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="152,477,50,34" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="-140,80" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="204,476,50,34" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="-20,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="204,476,50,34" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="-40,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="204,476,50,34" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="-60,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="204,476,50,34" depth="0.954" premultiplyalpha="false" origin="0.5,0.5" offset="-80,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="204,476,50,34" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="-100,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="204,476,50,34" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="-120,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="204,476,50,34" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="-140,120" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="-20,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="-40,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="-60,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="-80,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="-100,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="-120,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="101,476,49,34" depth="0.958" premultiplyalpha="false" origin="0.5,0.5" offset="-140,40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="-20,0" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="-40,0" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="-60,0" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.954" premultiplyalpha="false" origin="0.5,0.5" offset="-80,0" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="-100,0" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="-120,0" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="51,478,48,33" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="-140,0" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.951" premultiplyalpha="false" origin="0.5,0.5" offset="-20,-40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.952" premultiplyalpha="false" origin="0.5,0.5" offset="-40,-40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.953" premultiplyalpha="false" origin="0.5,0.5" offset="-60,-40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.954" premultiplyalpha="false" origin="0.5,0.5" offset="-80,-40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.955" premultiplyalpha="false" origin="0.5,0.5" offset="-100,-40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.956" premultiplyalpha="false" origin="0.5,0.5" offset="-120,-40" scale="0.8" rotation="0"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="2,478,47,32" depth="0.957" premultiplyalpha="false" origin="0.5,0.5" offset="-140,-40" scale="0.8" rotation="0"/>
+  </OpDeco>
+  <OpDeco name="" identifier="op_weaponstoragelarge" width="735" height="318" texturescale="1.0,1.0" scale="0.5" category="Decorative" noninteractable="true" allowattachitems="true" canflipx="false" canflipy="false">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,449,735,318" depth="0.94" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,769,735,318" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-275,90" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-275,55" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-275,20" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,192,64" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-275,-25" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,192,64" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-275,-60" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,192,64" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-275,-95" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Tools/tools.png" sourcerect="0,93,149,71" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-160,90" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Tools/tools.png" sourcerect="0,93,149,71" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-160,30" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Tools/tools.png" sourcerect="0,93,149,71" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-160,-30" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Tools/tools.png" sourcerect="0,93,149,71" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-160,-90" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-45,90" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-45,55" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-45,20" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,192,64" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-45,-25" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,192,64" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-45,-60" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,192,64" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="-45,-95" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="100,90" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="100,30" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="100,-30" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,199,181,44" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="100,-90" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="267,135,147,57" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="250,120" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="267,135,147,57" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="250,85" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="267,135,147,57" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="250,50" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,244,186,65" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="250,-25" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,244,186,65" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="250,-60" scale="0.6"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,244,186,65" depth="0.95" premultiplyalpha="false" origin="0.5,0.5" offset="250,-95" scale="0.6"/>
+  </OpDeco>
+  <!--SINGLE STORAGE SHELVES-->
+  <OpDeco name="" identifier="opdeco_storageitemshelf" width="206" height="110" texturescale="1,1" scale="0.5" category="Decorative" noninteractable="true">
+    <!--Frame-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="849,993,206,110" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Light-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1063,1002,194,92" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Glass-->
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="849,1216,206,110" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Contents-->
+    <decorativesprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="129,11,118,59" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" offset="0,-15"/>
+    <!--Background-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="856,1112,193,96" depth="0.99" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_storagemineralshelf" width="206" height="110" texturescale="1,1" scale="0.5" category="Decorative" noninteractable="true">
+    <!--Frame-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="849,993,206,110" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Light-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1063,1002,194,92" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Glass-->
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="849,1328,206,110" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Contents-->
+    <decorativesprite texture="Content/Items/Materials/Minerals.png" sourcerect="11,111,91,74" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" offset="-30,-10"/>
+    <decorativesprite texture="Content/Items/Materials/Minerals.png" sourcerect="108,111,91,74" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" offset="30,-10"/>
+    <!--Background-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="856,1112,193,96" depth="0.99" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_storageweaponshelf" width="206" height="110" texturescale="1,1" scale="0.5" category="Decorative" noninteractable="true">
+    <!--Frame-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="849,993,206,110" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Light-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1063,1002,194,92" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Glass-->
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="849,1441,206,110" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Contents-->
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="263,135,147,57" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" offset="-30,-10"/>
+    <decorativesprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,417,77,44" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" offset="50,-10"/>
+    <!--Background-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="856,1112,193,96" depth="0.99" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_storageseedshelf" width="206" height="110" texturescale="1,1" scale="0.5" category="Decorative" noninteractable="true">
+    <!--Frame-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="849,993,206,110" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Light-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1063,1002,194,92" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Glass-->
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="855,1679,194,96" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <!--Contents-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1072,1227,182,84" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" randomgroupid="1"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1069,1340,182,84" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" randomgroupid="1"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1069,1452,182,84" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" randomgroupid="1"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1069,1564,182,84" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" randomgroupid="1"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1070,1677,182,84" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" randomgroupid="1"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1069,1789,182,84" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" randomgroupid="1"/>
+    <!--Background-->
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="856,1112,193,96" depth="0.99" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_storagefrozenseedshelf" width="316" height="124" texturescale="1,1" scale="0.5" category="Decorative" noninteractable="true">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1301,994,316,124" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1298,994,316,124" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- MESS HALL DECORATIONS -->
+  <OpDeco name="" identifier="opdeco_diningtable" width="208" height="236" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1529,654,210,238" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_diningtablesmall" width="144" height="160" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1744,656,144,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!--<OpDeco name="" identifier="opdeco_trashcan" width="122" height="201" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="225,625,122,201" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>-->
+  <OpDeco name="" identifier="opdeco_boxes1" width="237" height="124" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1788,912,237,124" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_boxes2" nameidentifier="opdeco_boxes1" width="205" height="61" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1789,1042,208,61" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- DORM DECORATIONS -->
+  <!--<OpDeco name="" identifier="opdeco_cabinetsdorm" allowattachitems="false" width="110" height="398" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="465,0,110,398" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>-->
+  <OpDeco name="" identifier="opdeco_bunks2" nameidentifier="opdeco_bunks1" allowattachitems="false" width="347" height="420" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1168,544,347,420" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- RESEARCH LAB SCREEN DECALS -->
+  <OpDeco name="" identifier="opdeco_researchdecal1" allowattachitems="false" width="525" height="171" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="1,1666,525,171" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_researchdecal2" nameidentifier="opdeco_researchdecal1" allowattachitems="false" width="523" height="123" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="2,1842,523,123" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_researchdecal3" nameidentifier="opdeco_researchdecal1" allowattachitems="false" width="330" height="220" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="530,1666,330,220" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_researchdecal4" nameidentifier="opdeco_researchdecal1" allowattachitems="false" width="160" height="254" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="865,1667,160,254" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <Opbg name="" identifier="opbg_jail" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="832,1248,415,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <Opbg name="" identifier="opbg_rock" allowattachitems="true" width="32" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="1248,1248,415,415" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- HUMAN RESOURCES -->
+  <OpDeco name="" identifier="opdeco_hrwindow1" allowattachitems="true" width="194" height="208" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="383,0,193,207" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="0,0,194,208" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrwindow2" allowattachitems="true" width="192" height="336" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="384,224,192,336" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <decorativesprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="0,224,194,336" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrglassoffice" allowattachitems="true" width="288" height="400" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="576,0,288,400" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrblinds" allowattachitems="true" width="193" height="321" resizevertical="true" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="193,224,193,321" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrwindowblinds" allowattachitems="true" width="193" height="208" resizevertical="true" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="193,0,193,208" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrticketdispenser" allowattachitems="true" width="64" height="208" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="864,0,64,208" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrnewspaperrack" allowattachitems="true" width="96" height="192" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="928,0,96,192" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrcalendar" allowattachitems="true" width="64" height="96" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="864,208,64,96" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrsign" allowattachitems="true" width="48" height="65" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="928,207,48,65" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrheater" allowattachitems="true" width="144" height="96" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="864,320,144,96" depth="0.979" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrelectricpanel" allowattachitems="true" width="320" height="235" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="576,416,320,235" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_hrbench" allowattachitems="true" width="480" height="96" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/HumanResourcesAssets.png" sourcerect="0,576,480,96" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_door" descriptionidentifier="decodoor" allowattachitems="true" width="160" height="319" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="896,0,160,319" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- MANAGER'S OFFICE -->
+  <OpDeco name="" identifier="opdeco_officeshelf1" allowattachitems="false" width="336" height="400" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="0,0,336,400" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officebench" nameidentifier="opdeco_hrbench" allowattachitems="false" width="551" height="176" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="349,0,551,176" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedesk1" allowattachitems="false" width="159" height="207" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="352,177,159,207" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedesk2" nameidentifier="opdeco_officedesk1" allowattachitems="false" width="416" height="155" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="512,181,416,155" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officeshelf2" nameidentifier="opdeco_officeshelf1" allowattachitems="false" width="496" height="135" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="0,521,496,135" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedisplay1" allowattachitems="false" width="55" height="110" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="59,411,55,110" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedisplay2" nameidentifier="opdeco_officedisplay1" allowattachitems="false" width="60" height="116" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="137,405,60,116" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedisplay3" nameidentifier="opdeco_officedisplay1" allowattachitems="false" width="78" height="110" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="215,411,78,110" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedisplay4" nameidentifier="opdeco_officedisplay1" allowattachitems="false" width="57" height="107" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="312,414,57,107" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedisplay5" nameidentifier="opdeco_officedisplay1" allowattachitems="false" width="71" height="111" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="379,408,71,111" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedesk3" nameidentifier="opdeco_officedesk1" allowattachitems="false" width="336" height="80" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="512,608,336,80" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_officedesk4" nameidentifier="opdeco_officedesk1" allowattachitems="false" width="162" height="227" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="792,544,162,227" depth="0.94" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_monitor" identifier="opdeco_monitor01" width="48" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="912,0,96,64" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_monitor" identifier="opdeco_monitor02" width="48" height="32" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="912,64,96,64" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter5" width="160" height="224" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="864,352,160,224" depth="0.965" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter6" width="160" height="224" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="864,576,160,224" depth="0.965" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter7" width="160" height="224" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="864,800,160,224" depth="0.965" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter8" width="160" height="224" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="704,800,160,224" depth="0.965" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter9" width="160" height="224" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ManagerOfficeAssets.png" sourcerect="546,800,160,224" depth="0.965" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <!-- GENERIC DECO -->
+  <OpDeco name="" identifier="opdeco_computer" allowattachitems="true" width="128" height="271" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1103,0,128,271" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_shelflarge" allowattachitems="true" width="272" height="336" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1504,1,272,336" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_shelfsmall" allowattachitems="true" width="112" height="224" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1776,0,112,224" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_shelfmedium" allowattachitems="true" width="158" height="284" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1890,0,158,284" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_box1" allowattachitems="true" width="142" height="192" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1106,272,142,192" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_box2" allowattachitems="true" width="224" height="128" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1247,272,224,128" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_box3" allowattachitems="true" width="176" height="112" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1472,336,174,112" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+    <Upgrade gameversion="1.5.0.0" refreshrect="true"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_box4" allowattachitems="true" width="128" height="144" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1647,336,128,144" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_box5" allowattachitems="true" width="144" height="80" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1775,336,144,80" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="metal_box1" nameidentifier="MetalBox" allowattachitems="true" width="199" height="157" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="715,1890,199,157" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="metal_box2" nameidentifier="MetalBox" allowattachitems="true" width="159" height="158" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="926,1890,159,158" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="metal_box3" nameidentifier="MetalBox" allowattachitems="true" width="224" height="157" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1097,1889,224,157" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="metal_box4" nameidentifier="MetalBox" allowattachitems="true" width="242" height="158" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1328,1889,242,158" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="metal_box5" nameidentifier="MetalBox" allowattachitems="true" width="282" height="159" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1577,1889,282,159" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="metal_box6" nameidentifier="MetalBox" allowattachitems="true" width="182" height="159" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1866,1889,182,159" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="windowglass" nameidentifier="windowglass" allowattachitems="true" width="118" height="118" resizevertical="true" resizehorizontal="true" texturescale="1,1" scale="0.5" spritecolor="255,255,255,120" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="5,901,118,118" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="windowgframehorizontal" nameidentifier="windowframe" allowattachitems="true" width="16" height="43" resizevertical="false" resizehorizontal="true" texturescale="1,1" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="160,896,85,43" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="windowgframevertical" nameidentifier="windowframe" allowattachitems="true" width="43" height="16" resizevertical="true" resizehorizontal="false" texturescale="1,1" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="316,843,43,85" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- MISC STORAGE -->
+  <OpDeco name="" identifier="opdeco_rollupdoor" allowattachitems="true" width="831" height="16" resizevertical="true" resizehorizontal="false" texturescale="1,1" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,1088,831,416" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_rollupdoorframe" allowattachitems="true" width="831" height="415" texturescale="1,1" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,1504,831,415" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- MAINTENANCE BAY -->
+  <OpDeco name="" identifier="opdeco_subblueprint1" allowattachitems="true" width="396" height="142" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="578,2,396,142" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_subblueprint2" nameidentifier="opdeco_subblueprint1" allowattachitems="true" width="380" height="142" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="578,145,380,142" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_subblueprint3" nameidentifier="opdeco_subblueprint1" allowattachitems="true" width="268" height="142" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="2,338,268,142" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_toolrack1" allowattachitems="true" width="185" height="139" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="274,338,185,139" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_toolrack2" nameidentifier="opdeco_toolrack1" allowattachitems="true" width="108" height="139" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="464,338,108,139" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_ladder" allowattachitems="false" width="95" height="364" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="0,484,95,364" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- SHOP -->
+  <OpDeco name="" identifier="opdeco_shelf" width="304" height="368" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="576,288,304,368" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_desk" description="Outpost shop cashier desk" width="176" height="192" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="400,480,176,192" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_oxygentanks" description="Outpost shop oxygen tanks" width="144" height="273" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Shop.png" sourcerect="256,480,144,273" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="shop_shelf1" nameidentifier="shelf" width="301" height="377" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="723,0,301,377" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="shop_shelf2" nameidentifier="shelf" width="301" height="377" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="418,379,301,377" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="shop_shelf3" nameidentifier="shelf" width="301" height="377" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="723,379,301,377" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- TUNNEL -->
+  <OpDeco name="" identifier="opdeco_crane" width="224" height="416" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="832,1257,224,416" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="supportbeamhorizontal" identifier="opdeco_supportbeam_horizontal" width="16" height="48" resizehorizontal="true" resizevertical="false" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="0,1937,832,96" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="supportbeamvertical" identifier="opdeco_supportbeam_vertical" width="40" height="416" resizehorizontal="false" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1968,1120,80,416" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_trolley1" width="272" height="192" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1156,1257,272,192" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_trolley2" width="272" height="192" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1428,1257,272,192" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_debris1" width="624" height="144" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1060,1449,624,144" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_debris2" width="448" height="112" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1252,1593,448,112" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_debris3" width="336" height="80" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1364,1705,336,90" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_construction_sign" width="176" height="128" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1076,1593,176,128" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_sign" identifier="opdeco_construction_sign_3" width="128" height="174" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1200,1728,128,174" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_sign" identifier="opdeco_construction_sign_4" width="128" height="256" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1072,1728,128,256" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_sign" identifier="opdeco_construction_sign_5" width="128" height="225" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1328,1823,128,225" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_sign" identifier="opdeco_construction_sign_6" width="110" height="353" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1792,1695,110,353" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_sign" identifier="opdeco_construction_sign_7" width="80" height="353" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1904,1695,80,353" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_barrier" identifier="opdeco_construction_barrier" width="32" height="240" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1456,1808,32,240" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_barrier" identifier="opdeco_construction_barriertape" width="16" height="8" resizehorizontal="true" resizevertical="false" texturescale="0.5,0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1504,1808,64,16" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_nuclearsign" width="65" height="68" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1531,1095,65,68" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_construction_sign" identifier="opdeco_constructionsign2" width="65" height="67" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1444,1096,65,67" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_instructionsign" width="95" height="63" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1650,1096,95,63" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter1" width="460" height="124" texturescale="1.0,1.0" scale="0.5" category="Decorative" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1291,902,460,124" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter2" width="304" height="224" texturescale="1.0,1.0" scale="0.5" category="Decorative" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1696,592,304,224" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter3" width="224" height="176" texturescale="1.0,1.0" scale="0.5" category="Decorative" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1760,816,224,176" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_propagandaposter" identifier="opdeco_propagandaposter4" width="224" height="304" texturescale="1.0,1.0" scale="0.5" category="Decorative" allowattachitems="true">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1760,992,224,304" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" identifier="crackedwall1" width="319" height="228" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="2,0,319,228" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="crackedwall1" identifier="crackedwall2" width="362" height="196" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="336,12,362,196" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="crackedwall1" identifier="crackedwall3" width="254" height="190" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="698,0,245,190" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="crackedwall1" identifier="crackedwall4" width="448" height="288" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1600,1296,448,288" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="graffiti1" width="214" height="239" texturescale="1.0,1.0" scale="0.5" spritecolor="255,255,255,90" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="986,34,214,239" depth="0.98" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="graffiti1" identifier="graffiti2" width="244" height="236" texturescale="1.0,1.0" scale="0.5" spritecolor="255,255,255,90" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1200,34,244,236" depth="0.98" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="graffiti1" identifier="graffiti3" width="173" height="175" texturescale="1.0,1.0" scale="0.5" spritecolor="255,255,255,90" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1477,44,173,175" depth="0.98" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="graffiti1" identifier="graffiti4" width="176" height="166" texturescale="1.0,1.0" scale="0.5" spritecolor="255,255,255,90" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1675,34,176,166" depth="0.98" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="graffiti1" identifier="graffiti5" width="140" height="198" texturescale="1.0,1.0" scale="0.5" spritecolor="255,255,255,90" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1866,34,140,198" depth="0.98" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="graffiti1" identifier="graffiti6" width="175" height="163" texturescale="1.0,1.0" scale="0.5" spritecolor="255,255,255,90" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1250,299,175,163" depth="0.98" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="graffiti1" identifier="graffiti7" width="205" height="181" texturescale="1.0,1.0" scale="0.5" spritecolor="255,255,255,90" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="1489,287,205,181" depth="0.98" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_icecube" identifier="opdeco_icecubechain" width="142" height="191" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1505,1856,142,191" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_icecube" identifier="opdeco_icecube" width="142" height="128" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1649,1920,142,128" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_liftingequpiment" identifier="opdeco_tongs" width="142" height="110" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1649,1808,142,110" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_liftingequpiment" identifier="opdeco_tongs2" width="62" height="144" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1201,1904,62,144" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_liftingequpiment" identifier="opdeco_beam_trolley" width="62" height="32" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1264,1904,62,32" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="opdeco_liftingequpiment" identifier="opdeco_control_bar" width="224" height="144" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/TunnelWalls.png" sourcerect="1712,1552,224,144" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- MEDICAL BAY BACKGROUND WALLS -->
+  <Opbg name="" identifier="medbaywall1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative" subcategory="backgroundwall">
+    <sprite texture="Content/Map/Outposts/Art/ResearchBackgroundWalls.png" sourcerect="833,831,831,416" depth="0.98" premultiplyalpha="false" origin="0.5,0.5"/>
+  </Opbg>
+  <!-- MEDICAL BAY DECORATIONS -->
+  <OpDeco name="" identifier="opdeco_mountedmonitor2" nameidentifier="medicalmonitor" width="96" height="96" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedBayAssets.png" sourcerect="0,128,96,96" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_mountedmonitor3" nameidentifier="medicalmonitor" width="96" height="96" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedBayAssets.png" sourcerect="0,224,96,96" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_mountedmonitor4" nameidentifier="medicalmonitor" width="87" height="131" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="867,171,87,131" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_medrack" width="96" height="176" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedBayAssets.png" sourcerect="0,320,96,176" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_towelrack" width="136" height="280" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="316,550,136,280" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_medicalposter1" nameidentifier="opdeco_adposter" width="151" height="216" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="459,554,151,216" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_medicalposter2" nameidentifier="opdeco_adposter" width="151" height="216" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="624,558,151,216" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_medbench" nameidentifier="opdeco_hrbench" allowattachitems="true" width="609" height="175" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="398,369,609,175" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_medbaydoor" nameidentifier="opdeco_door" allowattachitems="true" width="315" height="416" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="1,475,315,416" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" nameidentifier="sign" identifier="ersign" width="88" height="162" texturescale="1.0,1.0" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/MedicalColonyAssets.png" sourcerect="867,0,88,162" depth="0.94" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- ArmoryColonyModule -->
+  <OpDeco name="" identifier="opdeco_StorageDoor" nameidentifier="opdeco_rollupdoor" width="316" height="407" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="2,2,316,407" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_LargeTable" nameidentifier="Table" width="337" height="138" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="322,2,337,138" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_LargeTable2" nameidentifier="Table" width="599" height="174" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="285,768,599,174" depth="0.95" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Cashier_Desk" nameidentifier="opdeco_desk" width="157" height="178" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="833,2,157,178" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_SmallTable" nameidentifier="Table" width="152" height="138" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="663,111,152,138" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Target" nameidentifier="Target" width="136" height="182" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="819,184,136,182" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage01" nameidentifier="op_weaponstoragesmall" width="131" height="105" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="462,144,131,105" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage02" nameidentifier="op_weaponstoragesmall" width="166" height="105" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="663,2,166,105" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage3" nameidentifier="op_weaponstoragesmall" width="129" height="163" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="455,253,129,163" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage04" nameidentifier="op_weaponstoragesmall" width="52" height="165" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="587,252,52,165" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage05" nameidentifier="op_weaponstoragesmall" width="53" height="174" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="959,184,53,174" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage06" nameidentifier="op_weaponstoragesmall" width="136" height="36" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="322,144,136,36" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage07" nameidentifier="op_weaponstoragesmall" width="86" height="35" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="643,254,86,35" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage08" nameidentifier="op_weaponstoragesmall" width="41" height="107" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="597,144,41,107" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Storage09" nameidentifier="op_weaponstoragesmall" width="129" height="163" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="322,184,129,163" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="opdeco_Sign" nameidentifier="Sign" width="94" height="26" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/ArmoryColonyModule.png" sourcerect="322,370,94,26" depth="0.94" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <!-- EngineerColonyModule -->
+  <OpDeco name="" identifier="Blueprint_Typhon2" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="1,1,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Winterhalter" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="379,1,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Berilia" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="1,154,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Herja" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="379,154,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Kastrull" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="1,307,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Orca" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="379,307,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Orca2" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="1,460,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_R-29" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="379,460,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Remora" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="1,613,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Blueprint_Typhon" nameidentifier="opdeco_subblueprint1" width="376" height="151" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="379,613,376,151" depth="0.97" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerequipment07" nameidentifier="engineerequipment" width="873" height="318" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="2,2,873,318" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerequipment10" nameidentifier="engineerequipment" width="678" height="432" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="2,324,678,432" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerequipment08" nameidentifier="engineerequipment" width="558" height="256" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="2,760,558,256" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerequipment09" nameidentifier="engineerequipment" width="542" height="345" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="684,324,542,345" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerEquipment03" nameidentifier="engineerequipment" width="384" height="535" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="1230,2,384,535" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Workbench" nameidentifier="engineerequipment" width="492" height="416" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="1230,541,492,416" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="advertisment" nameidentifier="opdeco_adposter" width="193" height="489" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="1618,2,193,489" depth="0.975" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" identifier="op_propaposter" nameidentifier="opdeco_propagandaposter" width="180" height="222" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/AdminResidentAssets.png" sourcerect="559,0,180,222" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" identifier="op_cafeteriaposter1" nameidentifier="op_cafeteriaposter" width="88" height="123" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/CafeteriaGardenAssets.png" sourcerect="353,778,88,123" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" identifier="op_cafeteriaposter2" nameidentifier="op_cafeteriaposter" width="97" height="143" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/CafeteriaGardenAssets.png" sourcerect="921,361,97,143" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" identifier="op_gardenposter1" nameidentifier="op_gardenposter" width="97" height="135" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/CafeteriaGardenAssets.png" sourcerect="921,508,97,135" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" identifier="op_gardenposter2" nameidentifier="op_gardenposter" width="216" height="121" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/CafeteriaGardenAssets.png" sourcerect="338,399,216,121" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" canflipx="false"/>
+  </OpDeco>
+  <OpDeco name="" identifier="ladder" nameidentifier="engineerequipment" width="256" height="391" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="1726,495,256,391" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerEquipment02" nameidentifier="engineerequipment" width="381" height="344" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="684,673,381,344" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerEquipment04" nameidentifier="engineerequipment" width="181" height="377" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="1815,2,181,377" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Trolley02" nameidentifier="engineerequipment" width="246" height="264" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule2.png" sourcerect="879,2,246,264" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerEquipment05" nameidentifier="engineerequipment" width="257" height="350" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="2,2,257,350" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerEquipment01" nameidentifier="engineerequipment" width="321" height="348" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="2,356,321,348" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="engineerequipment06" nameidentifier="engineerequipment" width="327" height="348" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="263,2,327,348" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Trolley01" nameidentifier="engineerequipment" width="246" height="190" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule3.png" sourcerect="2,708,246,190" depth="0.96" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+  <OpDeco name="" identifier="Jaildoor" nameidentifier="Jaildoor" width="216" height="425" scale="0.5" noninteractable="true" category="Decorative">
+    <sprite texture="Content/Map/Outposts/Art/EngineerColonyModule.png " sourcerect="811,409,216,425" depth="0.899" premultiplyalpha="false" origin="0.5,0.5"/>
+  </OpDeco>
+</prefabs>

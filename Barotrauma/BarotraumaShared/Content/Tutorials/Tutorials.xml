@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Tutorials>
+  <Tutorial identifier="basic" order="1" outpostpath="Content/Tutorials/BasicsTutorial.sub" submarinepath="Content/Submarines/Selkie.sub">
+    <CharacterInfo jobidentifier="assistant" startingitemtags="clothing,mobileradio">
+      <Skill identifier="medical" level="50"/>
+      <Skill identifier="weapons" level="50"/>
+      <Skill identifier="mechanical" level="50"/>
+      <Skill identifier="electrical" level="50"/>
+      <Skill identifier="helm" level="50"/>
+    </CharacterInfo>
+    <ScriptedEvent identifier="tutorial_basic_1"/>
+    <Banner texture="Content/Tutorials/BasicTutorialBanner.png"/>
+    <EndMessage type="continue" nexttutorial="roles"/>
+  </Tutorial>
+  <Tutorial identifier="roles" order="2" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" outpostpath="Content/Tutorials/TutorialOutpost.sub" levelparams="ColdCavernsTutorial" levelseed="nLoZLLtza" allowcharacterswitch="true">
+    <CharacterInfo jobidentifier="assistant" startingitemtags="clothing,mobileradio,identitycard">
+      <Skill identifier="medical" level="10"/>
+      <Skill identifier="weapons" level="10"/>
+      <Skill identifier="mechanical" level="10"/>
+      <Skill identifier="electrical" level="10"/>
+      <Skill identifier="helm" level="10"/>
+    </CharacterInfo>
+    <ScriptedEvent identifier="tutorial_roles_start"/>
+    <Banner texture="Content/Tutorials/RolesTutorialBanner.png"/>
+    <EndMessage type="restart"/>
+  </Tutorial>
+</Tutorials>

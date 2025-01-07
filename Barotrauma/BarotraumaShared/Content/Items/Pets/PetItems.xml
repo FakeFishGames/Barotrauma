@@ -1,0 +1,110 @@
+<Items>
+  <Item name="" identifier="poop" nameidentifier="poop" Tags="smallitem" maxstacksize="8" hideinmenus="true" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" scale="0.5" impactsoundtag="impact_soft" impacttolerance="6">
+    <Sprite texture="Content/Characters/Pets/pets.png" depth="0.7" sourcerect="387,15,53,41" origin="0.5,0.5"/>
+    <Deconstruct time="10">
+      <Item identifier="carbon"/>
+    </Deconstruct>
+    <!-- rectangular body to prevent the poop from rolling -->
+    <Body width="53" height="41" density="9"/>
+    <Throwable characterusable="true" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <Explosion range="0.0" structuredamage="0" itemdamage="0" force="0.0" severlimbsprobability="0.0" shockwave="false" decal="fruitsplatter_brown" decalsize="1.0"/>
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1.5" scalemax="2" colormultiplier="185,122,87,255"/>
+        <Sound file="Content/Sounds/Damage/Gore6.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  <Item name="" identifier="food" nameidentifier="food" Tags="smallitem,petfood1,petfood2,petfood3,monsterfood" maxstacksize="8" hideinmenus="true" health="50" damagedbyexplosions="true" category="Misc" scale="0.5" impactsoundtag="impact_metal_light" cargocontaineridentifier="metalcrate">
+    <Sprite texture="Content/Characters/Pets/pets.png" depth="0.7" sourcerect="206,390,34,53" origin="0.5,0.5"/>
+    <Price baseprice="120" minleveldifficulty="10">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Body width="34" height="53" density="20"/>
+    <Throwable characterusable="true" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+    <AiTarget sightrange="1000" static="true"/>
+  </Item>
+  <Item name="" identifier="petnametag" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
+    <Price baseprice="10" minleveldifficulty="10">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,64,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/idcard.png" depth="0.5" sourcerect="0,0,16,16"/>
+    <Body width="16" height="12" density="10.5"/>
+    <NameTag/>
+    <Pickable slots="Card,Any" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item identifier="mucusball" Tags="smallitem" maxstacksize="8" hideinmenus="true" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" scale="0.5" impactsoundtag="impact_soft" impacttolerance="6" cargocontaineridentifier="metalcrate">
+    <Sprite texture="Content/Characters/Pets/pets.png" depth="0.2" sourcerect="330,11,42,44" origin="0.5,0.5"/>
+    <Price baseprice="1" sold="false" canbespecial="false"/>
+    <Deconstruct time="10">
+      <Item identifier="antibleeding1"/>
+      <Item identifier="paralyxis"/>
+      <Item identifier="calcium"/>
+    </Deconstruct>
+    <Body width="53" height="41" density="15"/>
+    <Throwable characterusable="true" slots="Any,RightHand,LeftHand" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
+      <StatusEffect type="OnFire" target="This" Condition="0.0" setvalue="true" delay="0.5"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <Explosion range="50.0" structuredamage="0" itemdamage="0" force="0.0" severlimbsprobability="0.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false">
+          <!--effect here-->
+        </Explosion>
+        <ParticleEmitter particle="whitegoosplash" anglemin="0" anglemax="360" particleamount="2" velocitymin="0" velocitymax="0" scalemin="1.5" scalemax="2" colormultiplier="128,0,0,255"/>
+        <Sound file="Content/Sounds/Damage/Gore3.ogg" range="500"/>
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  <Item identifier="chitin" Tags="smallitem" maxstacksize="8" hideinmenus="true" health="20" category="Misc" scale="0.5" impactsoundtag="impact_soft" impacttolerance="6" cargocontaineridentifier="metalcrate">
+    <Sprite texture="Content/Characters/Pets/pets.png" depth="0.2" sourcerect="330,265,52,44" origin="0.5,0.5"/>
+    <Price baseprice="1" sold="false" canbespecial="false"/>
+    <Deconstruct time="10">
+      <Item identifier="carbon"/>
+    </Deconstruct>
+    <Body width="53" height="41" density="15"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
+  </Item>
+  <Item name="" identifier="chitinhelmet" category="Equipment" tags="smallitem" impactsoundtag="impact_metal_heavy" scale="0.4" cargocontaineridentifier="metalcrate">
+    <Price baseprice="175" sold="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary" multiplier="1.6"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="chitin"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredItem identifier="chitin"/>
+      <RequiredItem identifier="chitin"/>
+      <RequiredItem identifier="chitin"/>
+    </Fabricate>
+    <Sprite texture="Content/Characters/Pets/pets.png" sourcerect="386,260,62,58" depth="0.6" origin="0.5,0.5"/>
+    <InventoryIcon texture="Content/Characters/Pets/pets.png" sourcerect="453,258,56,56" origin="0.5,0.5"/>
+    <Body radius="30" density="20"/>
+    <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
+      <damagemodifier afflictionidentifiers="blunttrauma,lacerations,gunshotwound" armorsector="0.0,360.0" damagemultiplier="0.4" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier afflictionidentifiers="bitewounds" armorsector="0.0,360.0" damagemultiplier="0.6" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.65" hidewearablesoftype="Hair" sourcerect="207,8,100,95" origin="0.55,0.5"/>
+    </Wearable>
+  </Item>
+
+</Items>

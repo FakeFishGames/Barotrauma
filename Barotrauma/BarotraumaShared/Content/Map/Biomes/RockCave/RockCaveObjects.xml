@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--ROCK CAVES-->
+<levelobjects>
+  <!-- a series of background chunks that spawn along walls -->
+  <BackgroundChunks identifier="rockcavebackgroundchunks" spawnpos="Wall" minsurfacewidth="0" minsize="1" maxsize="2" randomrotation="-180,180" commonness="0" depthrange="1200,3200" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000" randomoffset="100,500">
+    <Sprite texture="Content/Map/Biomes/RockCave/BackgroundChunks.png" sourcerect="4,4,333,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/RockCave/BackgroundChunks.png" sourcerect="345,4,333,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/RockCave/BackgroundChunks.png" sourcerect="687,4,333,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/RockCave/BackgroundChunks.png" sourcerect="4,516,504,504" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/RockCave/BackgroundChunks.png" sourcerect="516,516,504,504" origin="0.5,0.5"/>
+    <overridecommonness leveltype="rockcave" commonness="100"/>
+  </BackgroundChunks>
+  <EdgeChunks identifier="rockcaveedgechunks" spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="0.5" randomrotation="-5,5" randomoffset="50,50" commonness="0" depthrange="0,1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/RockCave/WallEdgeChunks.png" sourcerect="0,0,512,512" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/RockCave/WallEdgeChunks.png" sourcerect="512,0,512,512" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/RockCave/WallEdgeChunks.png" sourcerect="0,512,512,512" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/RockCave/WallEdgeChunks.png" sourcerect="512,512,512,512" origin="0.5,0.5"/>
+    <overridecommonness leveltype="rockcave" commonness="50"/>
+  </EdgeChunks>
+  <Stalactites identifier="rockcavehazards1" spritecolor="190,185,171,255" spawnpos="Wall, RuinWall" minsurfacewidth="200" minsize="0.5" maxsize="0.8" randomrotation="0,0" randomoffset="10,10" commonness="0" depthrange="0,1" alignment="Bottom" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="287,556,211,425" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="497,562,293,462" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="790,534,232,490" origin="0.5,0.5"/>
+    <overridecommonness leveltype="rockcave" commonness="50"/>
+  </Stalactites>
+  <GasVents identifier="rockcavevents" spritecolor="190,185,171,255" spawnpos="Wall, RuinWall" minsurfacewidth="200" minsize="0.5" maxsize="1" randomrotation="0,0" randomoffset="25,30" commonness="0" depthrange="-1,-0.1" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="5,787,276,237" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Biomes/CrystalCave/CaveHazards.png" sourcerect="0,456,283,328" origin="0.5,0.5"/>
+    <overridecommonness leveltype="rockcave" commonness="15"/>
+    <ParticleEmitter particle="toxinmistlargefade" copyentityangle="true" particlespersecond="2" position="0,0" anglemin="220" anglemax="320" scalemin="1.0" scalemax="1.5" distancemin="0" distancemax="0" velocitymin="50" velocitymax="550"/>
+    <ParticleEmitter particle="toxinmist" copyentityangle="true" particlespersecond="20" position="0,40" anglemin="255" anglemax="285" scalemin="1.0" scalemax="1.0" distancemin="0" distancemax="0" velocitymin="300" velocitymax="800"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="800" position="0,0"/>
+    <Trigger position="0,180" radius="250" triggeredby="Human">
+      <StatusEffect target="Character,Contained" targetlimb="Head" targettags="oxygentank,weldingfueltank,oxygenitetank" condition="-3" onlyoutside="true">
+        <Conditional HasTag="eq diving" targetcontainer="true"/>
+        <Sound file="Content/Items/Diving/ITEMS_divingSuitOxygenLeakLoop.ogg" range="500" loop="true" dontmuffle="true"/>
+        <ParticleEmitter particle="bubbles" particlespersecond="15" position="0,0" anglemin="0" anglemax="360" velocitymin="10" velocitymax="100" scalemin="0.6" scalemax="0.8"/>
+      </StatusEffect>
+    </Trigger>
+  </GasVents>
+</levelobjects>

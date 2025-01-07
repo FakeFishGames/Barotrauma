@@ -1,0 +1,334 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Randomevents>
+
+  <EventPrefabs>
+    <!--RANDOM NPC MISSIONS-->
+    <ScriptedEvent identifier="missionevent_killmonster" commonness="100">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="missionnpc" spawnlocation="Outpost" spawnpointtype="Path"/>
+      <ConversationAction text="EventText.missionevent_killmonster.c1" speakertag="missionnpc" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killmonster_set1"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargo" commonness="100" requiredDestinationTypes="anyoutpost">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="missionnpc" spawnlocation="Outpost" spawnpointtype="Path"/>
+      <ConversationAction text="EventText.missionevent_cargo.c1" speakertag="missionnpc" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargo"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_salvage" commonness="100">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="missionnpc" spawnlocation="Outpost" spawnpointtype="Path"/>
+      <ConversationAction text="EventText.missionevent_salvage.c1" speakertag="missionnpc" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="salvage"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_clownoutbreak" commonness="40" requiredDestinationTypes="anyoutpost">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemidentifier:opdeco_hrflyers" tag="potentialflyers" submarinetype="outpost"/>
+      <TriggerAction target1tag="potentialflyers" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.missionevent_clownoutbreak.c1">
+        <Option text="EventText.missionevent_clownoutbreak.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.missionevent_clownoutbreak.o1.c1"/>
+          <MissionAction missiontag="cargoclown"/>
+        </Option>
+        <Option text="EventText.missionevent_clownoutbreak.o2">
+          <ConversationAction targettag="triggerer_player" text="EventText.missionevent_clownoutbreak.o2.c1"/>
+          <MissionAction missiontag="cargoclown"/>
+        </Option>
+        <Option text="EventText.missionevent_clownoutbreak.o3"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--MANAGER MISSIONS-->
+    <ScriptedEvent identifier="missionevent_cargo1" commonness="125" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargo1.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargomaterials"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargo2" commonness="50" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargo2.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargoexplosive"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargo3" commonness="100" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargo3.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargoresearch"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargoany" commonness="100" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargo1.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargo"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargo_difficult" commonness="75" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargo_difficult.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargodifficult"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargoweaponscoalition" commonness="100" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargoweaponscoalition.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargoweaponscoalition"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargoexplosiveseparatists" commonness="100" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargocompoundn.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargoexplosiveseparatists"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargoexplosiveseparatistsvolatile" commonness="100" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_cargocompoundn.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="cargoexplosiveseparatistsvolatile"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killswarm_set1" commonness="100">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killswarm.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killswarm_set1"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killswarm_set2" commonness="100">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killswarm.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killswarm_set2"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killswarm_set3" commonness="100">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killswarm.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killswarm_set3"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killswarm_set4" commonness="100">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killswarm.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killswarm_set4"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killswarm_set5" commonness="100">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killswarm.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killswarm_set5"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killmonster_set1" commonness="85">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killmonstercommon.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killmonster_set1"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killmonster_set2" commonness="85">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killmonstercommon.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killmonster_set2"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killmonster_set3" commonness="85">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killmonsterrare.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killmonster_set3"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_killmonster_set4" commonness="85">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_killmonsterrare.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="killmonster_set4"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_salvageartifact" commonness="75">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_salvageartifact.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="salvageartifact"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_salvageartifactabyss" commonness="25">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="Eventtext.missionevent_salvageartifactabyss.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="salvageartifactabyss"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_salvagewreck" commonness="75">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_salvagewreck.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="salvagewreck"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_salvagewreckcargo" commonness="75">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_salvagewreckcargo.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="salvagewreckcargo"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_salvagewreckartifact" commonness="50">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_salvagewreckartifact.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="salvagewreckartifact"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_wreckthalamus" commonness="50">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="eventtext.missionevent_wreckthalamus.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="wreckthalamus"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_crawlernest" commonness="80">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_crawlernest.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="crawlernest"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_mudraptornest" commonness="70">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_mudraptornest.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="mudraptornest"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_tigerthreshernest" commonness="60">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_tigerthreshernest.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="tigerthreshernest"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_crawlernest_hard" commonness="80">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_crawlernest.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="crawlernesthard"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_mudraptornest_hard" commonness="70">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_mudraptornest.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="mudraptornesthard"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_tigerthreshernest_hard" commonness="60">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_tigerthreshernest.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="tigerthreshernesthard"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_beacon" commonness="200" requirebeaconstation="True">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text= "EventText.missionevent_beacon.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missionidentifier="beacon"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_collectminerals_mainpath" commonness="70">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_collectminerals.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="collectminerals_mainpath"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_collectminerals_set1" commonness="70">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_collectminerals.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="collectminerals_set1"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_collectminerals_set2" commonness="70">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_collectminerals.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="collectminerals_set2"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_collectminerals_set3" commonness="70">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_collectminerals.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="collectminerals_set3"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_collectminerals_set4" commonness="70">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_collectminerals.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="collectminerals_set4"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_escort1coalition" commonness="100" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_escort1.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="escortcommonerscoalition"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_escort2coalition" commonness="80" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_escort2.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="escortVIPcoalition"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_escort3coalition" commonness="60" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_escort3.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="escortprisonerscoalition"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_escort4coalition" commonness="60" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_escort4.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="escortterroristscoalition"/>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="missionevent_escort1separatists" commonness="100" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_escort1separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="escortcommonersseparatists"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_escort2separatists" commonness="80" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_escort2separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="escortVIPseparatists"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_escort3separatists" commonness="60" requiredDestinationTypes="anyoutpost">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_escort3separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="escortprisonersseparatists"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_escort4separatists" commonness="60" requiredDestinationTypes="anyoutpost">
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 30">
+        <Success>
+          <NPCWaitAction npctag="outpostmanager" wait="true"/>
+          <ConversationAction text="EventText.missionevent_escort4separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+          <MissionAction missiontag="escortterroristsseparatists"/>
+        </Success>
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="missionevent_pirate1" commonness="80">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_pirate1.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="combatcoalitionvsseparatists"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_pirate1separatists" commonness="80">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text="EventText.missionevent_pirate1separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="combatseparatistsvscoalition"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_scanruin" commonness="200">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text= "eventtext.missionevent_scanruin.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="alienruinscan"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_clearruin" commonness="200">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text= "eventtext.missionevent_clearruin.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="alienruinclear"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_clearruin2" commonness="200">
+      <NPCWaitAction npctag="outpostmanager" wait="true"/>
+      <ConversationAction text= "eventtext.missionevent_clearruin.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small"/>
+      <MissionAction missiontag="alienruinclearhard"/>
+      <NPCWaitAction npctag="outpostmanager" wait="false"/>
+    </ScriptedEvent>
+  </EventPrefabs>
+</Randomevents>

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="assistantclothes" category="Equipment" tags="smallitem,clothing" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" amount="1" spawnprobability="0.1" notcampaign="true"/>
+    <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.1"/>
+    <Price baseprice="150">
+      <Price storeidentifier="merchantoutpost" minavailable="1"/>
+      <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" minavailable="1"/>
+      <Price storeidentifier="merchantmine" minavailable="1"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <InventoryIcon name="Assistant Clothes Icon" texture="Content/Items/Jobgear/OutfitIcons.png" sourcerect="383,274,128,110" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="6,363,124,67" depth="0.6" origin="0.5,0.5"/>
+    <Body width="100" height="50" density="15" friction="0.8" restitution="0.01"/>
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+      <sprite name="Assistant's Uniform Torso" texture="Assistant.png" limb="Torso" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Right Hand" texture="Assistant.png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Left Hand" texture="Assistant.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Left Lower Arm" texture="Assistant.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Right Lower Arm" texture="Assistant.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Left Upper Arm" texture="Assistant.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Right Upper Arm" texture="Assistant.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Waist" texture="Assistant.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Right Thigh" texture="Assistant.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Left Thigh" texture="Assistant.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Right Leg" texture="Assistant.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Left Leg" texture="Assistant.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Right Shoe" texture="Assistant.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Assistant's Uniform Left Shoe" texture="Assistant.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <SkillModifier skillidentifier="electrical" skillvalue="5"/>
+      <SkillModifier skillidentifier="helm" skillvalue="5"/>
+      <SkillModifier skillidentifier="mechanical" skillvalue="5"/>
+      <SkillModifier skillidentifier="medical" skillvalue="5"/>
+      <SkillModifier skillidentifier="weapons" skillvalue="5"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations,bitewounds" damagemultiplier="0.95"/>
+    </Wearable>
+  </Item>
+</Items>

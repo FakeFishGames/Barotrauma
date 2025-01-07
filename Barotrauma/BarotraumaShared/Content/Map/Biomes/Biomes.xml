@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LevelGenerationParameters>
+  <Biomes>
+    <Biome
+      identifier="coldcaverns"
+      name="Cold Caverns"
+      description=""
+      AllowedZones="1"
+      ExperienceFromMissionRewards="0.09"
+      mindifficulty="0"
+      maxdifficulty="15">
+      <Submarines maxtier="1"/>
+    </Biome>
+    <Biome
+      identifier="europanridge"
+      name="Europan Ridge"
+      description=""
+      AllowedZones="2"
+      ExperienceFromMissionRewards="0.11"
+      mindifficulty="15"
+      maxdifficulty="35">
+      <Submarines maxtier="1">
+        <Override locationtype="city" maxtier="2"/>
+        <Override locationtype="military" class="attack" maxtier="2"/>
+        <Override locationtype="research" class="scout" maxtier="2"/>
+        <Override locationtype="mine" class="transport" maxtier="2"/>
+      </Submarines>
+    </Biome>
+    <Biome
+      identifier="theaphoticplateau"
+      name="The Aphotic Plateau"
+      description=""
+      AllowedZones="3"
+      ExperienceFromMissionRewards="0.14"
+      mindifficulty="35"
+      maxdifficulty="50">
+      <Submarines maxtier="2"/>
+    </Biome>
+    <Biome
+      identifier="thegreatsea"
+      oldidentifier="thegreatvoid"
+      name="The Great Sea"
+      description=""
+      AllowedZones="4"
+      ExperienceFromMissionRewards="0.18"
+      mindifficulty="50"
+      maxdifficulty="65">
+      <Submarines maxtier="2">
+        <Override locationtype="city" maxtier="3"/>
+        <Override locationtype="military" class="attack" maxtier="3"/>
+        <Override locationtype="research" class="scout" maxtier="3"/>
+        <Override locationtype="mine" class="transport" maxtier="3"/>
+      </Submarines>
+    </Biome>
+    <Biome
+      identifier="hydrothermalwastes"
+      name="Hydrothermal Wastes"
+      description=""
+      AllowedZones="5"
+      ExperienceFromMissionRewards="0.25"
+      mindifficulty="65"
+      maxdifficulty="80">
+      <Submarines maxtier="3"/>
+    </Biome>
+    <Biome
+      identifier="endzone"
+      name="???"
+      description=""
+      AllowedZones="6"
+      endbiome="true"
+      endbiomelocationcount="2"/>
+  </Biomes>
+  <!-- provided for backwards compatibility, not used (commonness 0) -->
+  <OutpostTest
+    identifier="outpostlevel"
+    type="Outpost"
+    biomes="Any"
+    createholenexttoend="False"
+    createholetoabyss="False"
+    height="40000"
+    commonness="0"
+    initialdepthmin="100000"
+    initialdepthmax="200000"
+    levelobjectamount="50"
+    ambientlightcolor="4,6,8,255"
+    backgroundtexturecolor="8,16,20,255"
+    backgroundcolor="2,4,5,255"
+    wallcolor="255,255,255,255"
+    minwidth="40000"
+    maxwidth="40000"
+    voronoisiteinterval="2000,2000"
+    voronoisitevariance="800,800"
+    cellsubdivisionlength="1500"
+    cellroundingamount="0.1"
+    cellirregularity="0.3"
+    mainpathnodeintervalrange="500,500"
+    cavecount="0"
+    itemcount="0"
+    floatingicechunkcount="0"
+    seafloordepth="-300000"
+    seafloorvariance="1000"
+    mountaincountmin="0"
+    mountaincountmax="3"
+    mountainheightmin="10000"
+    mountainheightmax="20000"
+    ruincount="0"
+    minwreckcount="0"
+    maxwreckcount="0"
+    bottomholeprobability="0"
+    waterparticlescale="1"
+    startposition="0.3,0.1"
+    endposition="0.7,0.3"
+    mintunnelradius="25000"
+    mincorpsecount="1"
+    maxcorpsecount="5"
+    thalamusprobability="0"
+    wreckhullfloodingchance="0.5"
+    wreckfloodinghullminwaterpercentage="0.1"
+    wreckfloodinghullmaxwaterpercentage="1"
+    sidetunnelcount="0,0"
+    minsidetunnelradius="25000,25000"
+    backgroundcreatureamount="80"
+    walltexturesize="512"
+    walledgetexturewidth="1024"
+    walledgeexpandoutwardsamount="128"
+    walledgeexpandinwardsamount="128"
+    sidetunnelvariance="0.5"
+    mainpathvariance="0"
+    resourceintervalrange="19200,38400"
+    caveresourceintervalrange="9600,19200"
+    resourceclustersizerange="3,6"
+    resourcespawnchance="0.3"
+    caveresourcespawnchance="0.6"
+    islandcount="0"
+    abyssislandcount="0"
+    icespirecount="0">
+    <WaterParticles
+      texture="Content/Map/Biomes/ColdCaverns/BackgroundParticles.png"/>
+    <Wall
+      texture="Content/Map/Biomes/ColdCaverns/LevelWall.png"
+      premultiplyalpha="false"/>
+    <WallEdge
+      texture="Content/Map/Biomes/ColdCaverns/LevelWallEdge.png"/>
+    <DestructibleWall
+      texture="Content/Map/Biomes/DestructibleWall.png"/>
+    <DestructibleWallEdge
+      texture="Content/Map/Biomes/DestructibleWallEdge.png"/>
+    <WallDestroyed
+      texture="Content/Map/Biomes/DestroyedWall.png"
+      premultiplyalpha="false"/>
+  </OutpostTest>
+</LevelGenerationParameters>

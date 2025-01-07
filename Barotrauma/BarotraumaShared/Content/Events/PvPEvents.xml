@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RandomEvents>
+  <EventPrefabs>
+    <ScriptedEvent identifier="deathmatchweapondrop1" tags="deathmatchweapondrop">
+
+      <!-- INITIAL BASIC SUPPLIES -->
+      
+      <Label name="basictrashitems"/>
+      <ClearTagAction tag="selectedtrashcan"/>
+      <!-- choose a random trash can to spawn stuff in -->
+      <TagAction criteria="itemidentifier:opdeco_trashcan" tag="selectedtrashcan" submarinetype="outpost" ChooseRandom="true" ChooseRandomExcludingTag="usedtrashcan" ContinueIfNoTargetsFound="true"/>
+      <!-- mark as already used-->
+      <TagAction criteria="eventtag:selectedtrashcan" tag="usedtrashcan" submarinetype="outpost" ContinueIfNoTargetsFound="true"/>
+      
+      <CountTargetsAction TargetTag="selectedtrashcan" minamount="1">
+        <Success>
+          <RNGAction chance="0.6">
+            <Success>
+              <SpawnAction itemidentifier="antibleeding1" amount="4" targetinventory="selectedtrashcan" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+            </Success>
+            <Failure>
+              <SpawnAction itemidentifier="revolverround" amount="12" targetinventory="selectedtrashcan" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+            </Failure>
+          </RNGAction>
+          <RNGAction chance="0.6">
+            <Success>
+              <SpawnAction itemidentifier="antibloodloss2" amount="2" targetinventory="selectedtrashcan" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+            </Success>
+            <Failure>
+              <SpawnAction itemidentifier="smgmagazine" amount="1" targetinventory="selectedtrashcan" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+            </Failure>
+          </RNGAction>
+          <RNGAction chance="0.6">
+            <Success>
+              <SpawnAction itemidentifier="opium" amount="2" targetinventory="selectedtrashcan" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+            </Success>
+            <Failure>
+              <SpawnAction itemidentifier="spear" amount="12" targetinventory="selectedtrashcan" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+            </Failure>
+          </RNGAction>
+        </Success>
+      </CountTargetsAction>
+
+      <GoTo name="basictrashitems" maxtimes="10"/>
+      <WaitAction time="1"/>
+
+      <Label name="basicsupplies"/>
+      <ClearTagAction tag="selectedsupplycab"/>
+      <!-- choose a random supply cab to spawn stuff in -->
+      <TagAction criteria="itemidentifier:suppliescabinet" tag="selectedsupplycab" submarinetype="outpost" ChooseRandom="true" ChooseRandomExcludingTag="usedsupplycab" ContinueIfNoTargetsFound="true"/>
+      <!-- mark as already used-->
+      <TagAction criteria="eventtag:selectedsupplycab" tag="usedsupplycab" submarinetype="outpost" ContinueIfNoTargetsFound="true"/>
+
+      <CountTargetsAction TargetTag="selectedsupplycab" minamount="1">
+        <Success>
+          <RNGAction chance="0.5">
+            <Success>
+              <RNGAction chance="0.75">
+                <Success>
+                  <SpawnAction itemidentifier="antibleeding1" amount="4" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                  <SpawnAction itemidentifier="antibloodloss1" amount="4" targetinventory="selectedtrashcan" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Success>
+                <Failure>
+                  <SpawnAction itemidentifier="revolver" TargetTag="spawnedrevolver" amount="1" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                  <SpawnAction itemidentifier="revolverround" amount="6" targetinventory="spawnedrevolver" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Failure>
+              </RNGAction>
+            </Success>
+            <Failure>
+              <RNGAction chance="0.9">
+                <Success>
+                  <SpawnAction itemidentifier="wrench" amount="1" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Success>
+                <Failure>
+                  <SpawnAction itemidentifier="heavywrench" amount="1" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Failure>
+              </RNGAction>
+            </Failure>
+          </RNGAction>
+          <RNGAction chance="0.5">
+            <Success>
+              <RNGAction chance="0.9">
+                <Success>
+                  <SpawnAction itemidentifier="crowbar" amount="1" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Success>
+                <Failure>
+                  <SpawnAction itemidentifier="boardingaxe" amount="1" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Failure>
+              </RNGAction>
+            </Success>
+            <Failure>
+              <RNGAction chance="0.5">
+                <Success>
+                  <SpawnAction itemidentifier="screwdriver" amount="1" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Success>
+                <Failure>
+                  <SpawnAction itemidentifier="weldingtool" amount="1" TargetTag="spawnedwelder" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                  <SpawnAction itemidentifier="weldingfueltank" amount="1" targetinventory="spawnedwelder" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                  <SpawnAction itemidentifier="weldingfueltank" amount="4" targetinventory="selectedsupplycab" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+                </Failure>
+              </RNGAction>
+            </Failure>
+          </RNGAction>
+        </Success>
+      </CountTargetsAction>
+
+      <GoTo name="basicsupplies" maxtimes="10"/>
+      
+      <!-- TIER 1 -->
+      <SpawnAction itemtag="weapondroptier1" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <SpawnAction itemtag="weapondroptier1" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <SpawnAction itemtag="weapondroptier1" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <SpawnAction itemtag="weapondroptier1" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemtag="weapondroptier1_special" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+        </Success>
+      </RNGAction>
+
+      <WaitAction time="120"/>
+
+      <TriggerEventAction identifier="cleanup_weapondrops"/>
+
+      <!-- TIER 2 -->
+
+      <Label name="tier2"/>
+      <SpawnAction itemtag="weapondroptier2" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <SpawnAction itemtag="weapondroptier2" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemtag="weapondroptier2_special" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+        </Success>
+      </RNGAction>
+      <WaitAction time="120"/>
+
+      <GoTo name="tier2" maxtimes="2"/>
+
+      <!-- TIER 3 -->
+
+      <Label name="tier3"/>
+      <SpawnAction itemtag="weapondroptier3" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <SpawnAction itemtag="weapondroptier3" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemtag="weapondroptier3_special" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+        </Success>
+      </RNGAction>
+      <WaitAction time="120"/>
+
+      <GoTo name="tier3" maxtimes="2"/>
+
+      <!-- TIER 4-->
+
+      <Label name="tier4"/>
+      <SpawnAction itemtag="weapondroptier4" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <SpawnAction itemtag="weapondroptier4" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemtag="weapondroptier4_special" SpawnPointTag="deathmatchweapondrop" ignorebyai="true" offset="200"/>
+        </Success>
+      </RNGAction>
+      <WaitAction time="120"/>
+
+      <GoTo name="tier4"/>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="cleanup_weapondrops">
+      <Label name="repeat"/>
+      <WaitAction time="10"/>
+      <ClearTagAction tag="weaponcrate"/>
+      <TagAction criteria="itemtag:weapondrop" tag="weaponcrate" submarinetype="outpost" ContinueIfNoTargetsFound="true"/>
+      <!-- Check if the crate no longer contains at least one item (medium or small item) -->
+      <CheckConditionalAction targettag="weaponcrate" targetitemcomponent="ItemContainer" ContainedItemCount="0">
+        <Success>
+          <!-- Despawn crates that do not have anything in them -->
+          <RemoveItemAction targettag="weaponcrate"/>
+        </Success>
+      </CheckConditionalAction>
+      <GoTo name="repeat"/>
+    </ScriptedEvent>
+  </EventPrefabs>
+</RandomEvents>

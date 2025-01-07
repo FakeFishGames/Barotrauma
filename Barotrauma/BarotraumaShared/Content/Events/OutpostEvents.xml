@@ -1,0 +1,1981 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Randomevents>
+  
+  <!-- Define flavor sprites that appear top left of the message box here, identifier is required -->
+  <EventSprites>
+    <Sprite identifier="gambler" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="559,6,165,240" origin="0.5,0.5"/>
+    <Sprite identifier="cultist" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="37,507,182,249" origin="0.5,0.5"/>
+    <Sprite identifier="mediator" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="267,5,225,242" origin="0.5,0.5"/>
+    <Sprite identifier="huskinvite" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="555,775,182,248" origin="0.5,0.5"/>
+    <Sprite identifier="map" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="259,521,249,240" origin="0.5,0.5"/>
+    <Sprite identifier="vent" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="507,0,249,252" origin="0.5,0.5"/>
+    <Sprite identifier="brokenterminal" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="768,0,244,251" origin="0.5,0.5"/>
+    <Sprite identifier="ambush" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="261,542,248,174" origin="0.5,0.5"/>
+    <Sprite identifier="trashcan" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="771,15,244,241" origin="0.5,0.5"/>
+    <Sprite identifier="clown" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="544,259,182,249" origin="0.5,0.5"/>
+    <Sprite identifier="unconscious" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="770,321,241,152" origin="0.5,0.5"/>
+    <Sprite identifier="noticeboard" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="263,523,243,231" origin="0.5,0.5"/>
+    <Sprite identifier="ventinside" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="510,520,248,242" origin="0.5,0.5"/>
+    <Sprite identifier="redbluebottles" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="549,516,182,248" origin="0.5,0.5"/>
+    <Sprite identifier="redyellowbottles" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="764,520,243,232" origin="0.5,0.5"/>
+    <Sprite identifier="dorm" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="267,269,231,237" origin="0.5,0.5"/>
+    <Sprite identifier="cleaner" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="34,1,182,242" origin="0.5,0.5"/>
+    <Sprite identifier="note" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="808,768,182,247" origin="0.5,0.5"/>
+    <Sprite identifier="noteopened" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="812,514,182,247" origin="0.5,0.5"/>
+    <Sprite identifier="group" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="37,772,182,247" origin="0.5,0.5"/>
+    <Sprite identifier="mechanic" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="553,775,182,248" origin="0.5,0.5"/>
+    <Sprite identifier="crowd" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="1,293,248,174" origin="0.5,0.5"/>
+    <Sprite identifier="clownambush" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="519,280,241,219" origin="0.5,0.5"/>
+    <Sprite identifier="office" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="34,256,182,248" origin="0.5,0.5"/>
+    <Sprite identifier="mines" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="760,772,246,245" origin="0.5,0.5"/>
+    <Sprite identifier="oldman" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="28,516,202,249" origin="0.5,0.5"/>
+    <Sprite identifier="security" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="294,775,182,248" origin="0.5,0.5"/>
+    <Sprite identifier="captain" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="34,0,182,251" origin="0.5,0.5"/>
+    <Sprite identifier="officeinside" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="766,264,245,230" origin="0.5,0.5"/>
+    <Sprite identifier="JacovSubra1" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="0,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="JacovSubra2" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="256,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="JacovSubra3" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="512,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="JacovSubra4" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="768,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Infiltration1" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="0,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Infiltration2" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="256,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Terrorism1" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="512,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Terrorism2" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="768,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Stuckinthemiddle1" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="0,512,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Censorship1" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="256,512,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="BadVibration1" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="512,512,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="BadVibration2" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="768,512,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="BombScare1" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="0,768,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="BombScare2" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="256,768,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Stowaway1A" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="512,768,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Stowaway1B" texture="Content/Map/Outposts/Art/Event_pic3.png" sourcerect="768,768,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Stowaway2" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="0,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="ShockJock" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="256,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="HeartOfGold" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="512,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="ManAndHisRaptor" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="768,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Receptiondude" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="0,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Instructor" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="256,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Ancient1" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="512,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Ancient2" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="768,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="engineer" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="0,512,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Separatists" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="256,512,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Researcher" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="768,768,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Coalition" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="256,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Ecclesiast" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="256,256,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="Jestmaster" texture="Content/Map/Outposts/Art/Event_pic1.png" sourcerect="256,768,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="doctor" texture="Content/Map/Outposts/Art/Event_pic2.png" sourcerect="36,771,182,249" origin="0.5,0.5"/>
+    <Sprite identifier="GuyWithAlcohol" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="1280,0,256,256" origin="0.5,0.5"/>
+    <Sprite identifier="MysteryWoman" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="1026,2,252,252" origin="0.5,0.5"/>
+    <Sprite identifier="MysteryMan" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="1026,260,252,252" origin="0.5,0.5"/>
+    <Sprite identifier="MysteryMan2" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="1285,263,241,241" origin="0.5,0.5"/>
+    <Sprite identifier="ScrapMetal" texture="Content/Map/Outposts/Art/Event_pic4.png" sourcerect="1040,527,219,227" origin="0.5,0.5"/>
+  </EventSprites>
+  
+  <!-- Events defined in <EventPrefabs> can only be triggered via a console command or with a TriggerEventAction -->
+  <EventPrefabs>
+    <!-- test event -->
+    <ScriptedEvent identifier="testevent">
+      <ConversationAction text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." eventsprite="cultist">
+        <Option text="Next">
+          <ConversationAction text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." eventsprite="huskinvite">
+            <Option text="Next">
+              <ConversationAction text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." eventsprite="cultist">
+                <Option text="Next">
+                  <ConversationAction text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." eventsprite="mediator" closedialog="true"/>
+                </Option>
+                <Option text="End" endconversation="true">
+                  <TagAction criteria="player" tag="player"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="End"/>
+          </ConversationAction>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <!--"Giving directions"-->
+    <ScriptedEvent identifier="givingdirections" commonness="100">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="captain" targettag="givingdirections_captain" spawnlocation="Outpost" spawnpointtype="Path" targetmoduletags="crewmodule"/>
+      <TagAction criteria="player" tag="player"/>
+      <TriggerAction target1tag="givingdirections_captain" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
+      <NPCWaitAction npctag="givingdirections_captain" wait="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.givingdirections.c1" eventsprite="captain">
+        <Option text="EventText.givingdirections.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.givingdirections.o1.c1">
+            <Option text="EventText.givingdirections.o1.o1">
+              <SkillCheckAction requiredskill="Helm" requiredlevel="50" targettag="triggerer_player">
+                <Success>
+                  <GiveSkillEXPAction skill="helm" amount="5" targettag="triggerer_player"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.givingdirections.o1.o1.c1">
+                    <Option text="EventText.givingdirections.o1.o1.o1"/>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.givingdirections.o1.o1.c2">
+                    <Option text="EventText.givingdirections.o1.o1.o2"/>
+                  </ConversationAction>
+                </Failure>
+              </SkillCheckAction>
+            </Option>
+            <Option text="EventText.givingdirections.o1.o2"/>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.givingdirections.o2">
+          <RNGAction chance="0.15">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.givingdirections.o2.c1">
+                <Option text="EventText.givingdirections.o2.o1" endconversation="true">
+                  <SpawnAction itemidentifier="revolver" targettag="prizerevolver" targetinventory="triggerer_player"/>
+                  <SpawnAction itemidentifier="revolverround" targetinventory="prizerevolver"/>
+                  <SpawnAction itemidentifier="revolverround" targetinventory="prizerevolver"/>
+                  <SpawnAction itemidentifier="revolverround" targetinventory="prizerevolver"/>
+                </Option>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.givingdirections.o2.c2">
+                <Option text="EventText.givingdirections.o2.o2"/>
+              </ConversationAction>
+              <CombatAction combatmode="Offensive" npctag="givingdirections_captain" enemytag="triggerer_player" isinstigator="false" guardreaction="none" witnessreaction="retreat"/>
+            </Failure>
+          </RNGAction>
+        </Option>
+        <Option text="EventText.givingdirections.o3"/>
+      </ConversationAction>
+      <NPCWaitAction npctag="givingdirections_captain" wait="false"/>
+    </ScriptedEvent>
+    <!--"A sound in the vent"
+    TODO:
+    -follow-up event?-->
+    <ScriptedEvent identifier="soundinthevent" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:mudraptorspawnvent" tag="mudraptorspawnvent" SubmarineType="Outpost" chooserandom="true"/>
+      <TriggerAction target1tag="mudraptorspawnvent" target2tag="player" applytotarget1="looseventspawnpoint" applytotarget2="triggerer_player" radius="150"/>
+      <SpawnAction itemidentifier="loosevent" spawnlocation="Outpost" SpawnPointTag="looseventspawnpoint" TargetTag="selectedmudraptorspawnvent" offset="0"/>
+      <StatusEffectAction targettag="selectedmudraptorspawnvent">
+        <StatusEffect target="This" spritecolor="0,0,0,0" spritedepth="0.89" setvalue="true">
+          <Sound file="Content/Sounds/Damage/Creak4.ogg" range="400" volume="3" frequencymultiplier="2"/>
+        </StatusEffect>
+      </StatusEffectAction>
+      <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.c1" eventsprite="vent"/>
+      <Label name="UseitemOnVent"/>
+      <TriggerAction target1tag="selectedmudraptorspawnvent" target2tag="player" radius="80" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="eventtext.soundinthevent.whatdoyoudo" eventsprite="vent">
+        <!-- use a screwdriver -->
+        <Option text="EventText.soundinthevent.o1">
+          <CheckItemAction targettag="triggerer_player" itemtags="screwdriveritem">
+            <Success>
+              <SkillCheckAction targettag="triggerer_player" requiredskill="Mechanical" requiredlevel="60">
+                <Success>
+                  <GiveSkillEXPAction skill="mechanical" amount="5" targettag="triggerer_player"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o1.c1"/>
+                  <MoneyAction amount="1000"/>
+                </Success>
+                <Failure>
+                  <AfflictionAction affliction="lacerations" strength="15" limbtype="LeftHand" targettag="triggerer_player"/>
+                  <StatusEffectAction targettag="selectedmudraptorspawnvent">
+                    <StatusEffect target="This">
+                      <Explosion range="200.0" stun="0.2" force="5.0" flames="false" flash="false" shockwave="false" sparks="false" underwaterbubble="false"/>
+                      <Sound file="Content/Sounds/Damage/StructureCrunch2.ogg" range="500"/>
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o1.c2"/>
+                </Failure>
+              </SkillCheckAction>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="eventtext.soundinthevent.getscrewdriver"/>
+              <Goto name="UseitemOnVent"/>
+            </Failure>
+          </CheckItemAction>
+        </Option>
+        <!-- shine a flashlight -->
+        <Option text="EventText.soundinthevent.o2">
+          <CheckItemAction targettag="triggerer_player" itemidentifiers="flashlight" RequireEquipped="true">
+            <Success>
+              <SkillCheckAction targettag="triggerer_player" requiredskill="weapons" requiredlevel="70">
+                <Success>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o2.c1" eventsprite="ambush"/>
+                  <WaitAction time="1.5"/>
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint"/>
+                  <StatusEffectAction targettag="selectedmudraptorspawnvent">
+                    <StatusEffect target="This">
+                      <Explosion range="200.0" stun="0.5" force="5.0" flash="false" flames="false" shockwave="false" sparks="false" underwaterbubble="false"/>
+                      <Sound file="Content/Items/Door/DoorBreak1.ogg" range="500"/>
+                    </StatusEffect>
+                  </StatusEffectAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o2.c2" eventsprite="ambush"/>
+                  <WaitAction time="1.5"/>
+                  <StatusEffectAction targettag="selectedmudraptorspawnvent">
+                    <StatusEffect target="This">
+                      <Explosion range="200.0" stun="0.5" force="5.0" flash="false" flames="false" shockwave="false" sparks="false" underwaterbubble="false"/>
+                      <Sound file="Content/Items/Door/DoorBreak1.ogg" range="500"/>
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint"/>
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint"/>
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint"/>
+                </Failure>
+              </SkillCheckAction>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="eventtext.soundinthevent.getflashlight"/>
+              <Goto name="UseitemOnVent"/>
+            </Failure>
+          </CheckItemAction>
+        </Option>
+        <Option text="EventText.soundinthevent.o3">
+          <RNGAction chance="0.33">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o3.c1">
+                <Option text="EventText.soundinthevent.o3.o1"/>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <SkillCheckAction requiredskill="Helm" requiredlevel="70" targettag="triggerer_player">
+                <Success>
+                  <GiveSkillEXPAction skill="helm" amount="5" targettag="triggerer_player"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o3.c2">
+                    <Option text="EventText.soundinthevent.o3.o2"/>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o3.c3">
+                    <Option text="EventText.soundinthevent.o3.o3"/>
+                  </ConversationAction>
+                </Failure>
+              </SkillCheckAction>
+            </Failure>
+          </RNGAction>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Impromptu engineering"-->
+    <ScriptedEvent identifier="impromptuengineering" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <!--<TagAction criteria="itemidentifier:opdeco_computer" tag="potentialresearchterminal" submarinetype="outpost"/>-->
+      <!--<TagAction criteria="itemidentifier:opdeco_desk" tag="potentialresearchterminal" submarinetype="outpost"/>-->
+      <TagAction criteria="itemidentifier:op_researchtable" tag="potentialresearchterminal" submarinetype="outpost"/>
+      <TagAction criteria="itemidentifier:op_researchterminal" tag="potentialresearchterminal" submarinetype="outpost"/>
+      <TriggerAction target1tag="potentialresearchterminal" target2tag="player" applytotarget1="selectedresearchterminal" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <StatusEffectAction targettag="selectedresearchterminal">
+        <StatusEffect  target="This" indestructible="false" condition="0" setvalue="true"/>
+      </StatusEffectAction>
+      <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.c1" eventsprite="brokenterminal">
+        <Option text="EventText.impromptuengineering.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.o1.c1">
+            <Option text="EventText.impromptuengineering.o1.o1">
+              <SkillCheckAction targettag="triggerer_player" requiredskill="Mechanical" requiredlevel="40">
+                <Success>
+                  <GiveSkillEXPAction skill="mechanical" amount="5" targettag="triggerer_player"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.o1.o1.c1">
+                    <Option text="EventText.impromptuengineering.o1.o1.o1" endconversation="true">
+                      <SpawnAction itemidentifier="redwire" targetinventory="triggerer_player"/>
+                      <SpawnAction itemidentifier="copper" targetinventory="triggerer_player"/>
+                      <SpawnAction itemidentifier="fpgacircuit" targetinventory="triggerer_player"/>
+                    </Option>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.o1.o1.c2">
+                    <Option text="EventText.impromptuengineering.o1.o1.o2" endconversation="true">
+                      <SpawnAction itemidentifier="redwire" targetinventory="triggerer_player"/>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+              </SkillCheckAction>
+            </Option>
+            <Option text="EventText.impromptuengineering.o1.o2">
+              <SkillCheckAction targettag="triggerer_player" requiredskill="electrical" requiredlevel="50">
+                <Success>
+                  <StatusEffectAction targettag="selectedresearchterminal">
+                    <StatusEffect  target="This" condition="100" indestructible="true" setvalue="true"/>
+                  </StatusEffectAction>
+                  <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.o1.o2.c1">
+                    <Option text="EventText.impromptuengineering.o1.o2.o1">
+                      <SpawnAction itemidentifier="coilgunammobox" spawnlocation="MainSub"/>
+                      <SpawnAction itemidentifier="coilgunammobox" spawnlocation="MainSub"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.o1.o2.o1.c1">
+                        <Option text="EventText.impromptuengineering.o1.o2.o1.o1"/>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.impromptuengineering.o1.o2.o2">
+                      <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.o1.o2.o2.c1">
+                        <Option text="EventText.impromptuengineering.o1.o2.o2.o1" endconversation="true">
+                          <GiveSkillEXPAction skill="electrical" amount="5" targettag="triggerer_player"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.impromptuengineering.o1.o2.c2">
+                    <Option text="EventText.impromptuengineering.o1.o2.o3" endconversation="true">
+                      <AfflictionAction targettag="triggerer_player" affliction="burn" strength="15" limbtype="lefthand"/>
+                      <StatusEffectAction targettag="triggerer_player">
+                        <StatusEffect target="This" targetlimbs="LeftHand,RightHand">
+                          <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+                          <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+                          <Affliction identifier="stun" strength="4" probability="0.5"/>
+                          <Affliction identifier="electricshock" strength="60"/>
+                          <Affliction identifier="burn" strength="5"/>
+                          <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+                        </StatusEffect>
+                      </StatusEffectAction>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+              </SkillCheckAction>
+            </Option>
+            <Option text="EventText.impromptuengineering.o1.o3"></Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.impromptuengineering.o2"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Good samaritan"-->
+    <ScriptedEvent identifier="goodsamaritan" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="patient" spawnlocation="Outpost" spawnpointtype="Path"/>
+      <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="0.4" MultiplyByMaxVitality="true"/>
+      <!-- stun to force the character unconscious regardless of any vitality multipliers -->
+      <AfflictionAction targettag="patient" affliction="stun" strength="1.0" MultiplyByMaxVitality="true"/>
+      <GodModeAction targettag="patient" enabled="true"/>
+      <StatusEffectAction targettag="patient">
+        <StatusEffect target="This" UseHealthWindow="false"/>
+      </StatusEffectAction>
+      <TriggerAction target1tag="patient" target2tag="player" applytotarget2="triggerer_player" disableiftargetincapacitated="false" radius="150" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.c1" eventsprite="unconscious">
+        <Option text="EventText.goodsamaritan.o1">
+          <SkillCheckAction targettag="triggerer_player" requiredskill="Medical" requiredlevel="30">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.c1">
+                <Option text="EventText.goodsamaritan.o1.o1">
+                  <CheckItemAction targettag="triggerer_player" itemidentifiers="antinarc">
+                    <Success>
+                      <RemoveItemAction targettag="triggerer_player" itemidentifiers="antinarc"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.o1.c1"/>
+                      <ReputationAction targettype="Location" increase="2"/>
+                      <GodModeAction targettag="patient" enabled="false"/>
+                      <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="-0.66" MultiplyByMaxVitality="true"/>
+                    </Success>
+                    <Failure>
+                      <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.o1.c2"/>
+                      <ReputationAction targettype="Location" increase="2"/>
+                      <GodModeAction targettag="patient" enabled="false"/>
+                    </Failure>
+                  </CheckItemAction>
+                </Option>
+                <Option text="EventText.goodsamaritan.o1.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.o2.c1">
+                    <Option text="EventText.goodsamaritan.o1.o2.o1"/>
+                  </ConversationAction>
+                  <GiveSkillEXPAction targettag="triggerer_player" skill="Medical" amount="5"/>
+                  <GodModeAction targettag="patient" enabled="false"/>
+                </Option>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.c2">
+                <Option text="EventText.goodsamaritan.o1.o3"/>
+              </ConversationAction>
+              <GodModeAction targettag="patient" enabled="false"/>
+              <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="0.66" MultiplyByMaxVitality="true"/>
+              <AfflictionAction targettag="patient" affliction="oxygenlow" strength="1.0" MultiplyByMaxVitality="true"/>
+            </Failure>
+          </SkillCheckAction>
+        </Option>
+        <Option text="EventText.goodsamaritan.o2" endconversation="true">
+          <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o2.c1"/>
+          <ReputationAction targettype="Location" increase="-2"/>
+          <MoneyAction amount="14" targettag="player"/>
+          <GodModeAction targettag="patient" enabled="false"/>
+          <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="0.66" MultiplyByMaxVitality="true"/>
+        </Option>
+        <Option text="EventText.goodsamaritan.o3" endconversation="true">
+          <GodModeAction targettag="patient" enabled="false"/>
+          <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="0.66" MultiplyByMaxVitality="true"/>
+          <AfflictionAction targettag="patient" affliction="oxygenlow" strength="1.0" MultiplyByMaxVitality="true"/>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Propaganda"-->
+    <ScriptedEvent identifier="propaganda" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemidentifier:opdeco_hrflyers" tag="potentialflyers" submarinetype="outpost" chooserandom="true"/>
+      <TriggerAction target1tag="potentialflyers" target2tag="player" applytotarget2="triggerer_player" radius="250" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.propaganda.c1" eventsprite="noticeboard">
+        <Option text="EventText.propaganda.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.propaganda.o1.c1">
+            <Option text="EventText.propaganda.o1.o1">
+              <RNGAction chance="0.66">
+                <Success>
+                  <SpawnAction itemidentifier="op_sepgraffiti" spawnlocation="Outpost" SpawnPointTag="potentialflyers" TargetTag="separatistgraffiti" offset="0"/>
+                  <StatusEffectAction targettag="separatistgraffiti">
+                    <StatusEffect target="This" duration="0.5" spritecolor="255,255,255,150" spritedepth="0.89" setvalue="true">
+                      <Sound file="Content/Items/MechanicalRepairFail.ogg" range="800" volume="0.8" loop="true" frequencymultiplier="2"/>
+                      <ParticleEmitter particle="dustcloud" particleamount="5" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" scalemin="0.15" scalemax="0.25" Spread="50" distancemin="-50" distancemax="50" colormultiplier="255,255,255,255"/>
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <WaitAction time="0.5"/>
+                  <ReputationAction targettype="Faction" identifier="separatists" increase="3"/>
+                  <ReputationAction targettype="Faction" identifier="coalition" increase="-2"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.propaganda.o1.o1.c1">
+                    <Option text="EventText.propaganda.o1.o1.o1"/>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <SpawnAction itemidentifier="banditprop13" spawnlocation="Outpost" SpawnPointTag="potentialflyers" TargetTag="uglygraffiti1" offset="0"/>
+                  <SpawnAction itemidentifier="banditprop16" spawnlocation="Outpost" SpawnPointTag="potentialflyers" TargetTag="uglygraffiti2" offset="0"/>
+                  <StatusEffectAction targettag="uglygraffiti1">
+                    <StatusEffect target="This" duration="0.5" spritecolor="255,50,0,150" spritedepth="0.89" setvalue="true">
+                      <Sound file="Content/Items/MechanicalRepairFail.ogg" range="800" volume="0.8" loop="true" frequencymultiplier="2"/>
+                      <ParticleEmitter particle="dustcloud" particleamount="5" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" scalemin="0.15" scalemax="0.25" Spread="50" distancemin="-50" distancemax="50" colormultiplier="255,255,255,255"/>
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <StatusEffectAction targettag="uglygraffiti2">
+                    <StatusEffect target="This" spritecolor="255,50,0,150" spritedepth="0.89" setvalue="true"/>
+                  </StatusEffectAction>
+                  <WaitAction time="0.5"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.propaganda.o1.o2.c1">
+                    <Option text="EventText.propaganda.o1.o2.o1"/>
+                  </ConversationAction>
+                </Failure>
+              </RNGAction>
+            </Option>
+            <Option text="EventText.propaganda.o1.o2"/>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.propaganda.o2"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Goblin cooking"-->
+    <ScriptedEvent identifier="goblincooking1" commonness="50">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:mudraptorspawnvent" tag="psychosisvent"/>
+      <TriggerAction target1tag="psychosisvent" target2tag="player" applytotarget1="selectedpsychosisvent" applytotarget2="triggerer_player" radius="150"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.c1" eventsprite="officeinside">
+        <Option text="EventText.goblincooking1.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.o1.c1">
+            <Option text="EventText.goblincooking1.o1.o1">
+              <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="5"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.o1.o1.c1" eventsprite="vent">
+                <Option text="EventText.goblincooking1.o1.o1.o1">
+                  <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="25"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.o1.o1.o1.c1" fadetoblack="true" eventsprite="ventinside">
+                    <Option text="EventText.goblincooking1.o1.o1.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.o1.o1.o1.o1.c1" fadetoblack="true">
+                        <Option text="EventText.goblincooking1.o1.o1.o1.o1.o1">
+                          <AfflictionAction targettag="triggerer_player" affliction="stun" strength="2"/>
+                          <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="25"/>
+                          <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.o1.o1.o1.o1.o1.c1"/>
+                          <MoneyAction amount="-500"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.goblincooking1.o1.o1.o1.o2" fadetoblack="true">
+                      <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="25"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.o1.o1.o1.o2.c1">
+                        <Option text="EventText.goblincooking1.o1.o1.o1.o2.o1"/>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.goblincooking1.o1.o1.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.goblincooking1.o1.o1.o2.c1">
+                    <Option text="EventText.goblincooking1.o1.o1.o2.o1"/>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.goblincooking1.o1.o2"/>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.goblincooking1.o2"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Crawler outbreak"-->
+    <ScriptedEvent identifier="crawleroutbreak" commonness="250">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:containmentdoor" tag="containmentdoorevent" SubmarineType="Outpost" ContinueIfNoTargetsFound="false"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="panickedresearcher" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="research"/>
+      <!-- make npc run towards you as you enter research module  -->
+      <TriggerAction target1tag="player" targetmoduletype="researchmodule" radius="100" applytotarget1="triggerer_player"/>
+      <NPCFollowAction npctag="panickedresearcher" targettag="triggerer_player" follow="True"/>
+      <TriggerAction target1tag="panickedresearcher" target2tag="triggerer_player" radius="150" waitforinteraction="false"/>
+      <!-- spawn crawlers and break down containment door -->
+      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="testsubject" spawnpointtype="enemy" RequireSpawnPointTag="true"/>
+      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="testsubject" spawnpointtype="enemy" RequireSpawnPointTag="true"/>
+      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="testsubject" spawnpointtype="enemy" RequireSpawnPointTag="true"/>
+      <WaitAction time="0.5"/>
+      <StatusEffectAction targettag="containmentdoorevent">
+        <StatusEffect target="This" indestructible="false" condition="0" setvalue="true"/>
+        <Sound file="Content/Items/Door/Doorbreak1.ogg" range="800" volume="1"/>
+      </StatusEffectAction>
+      <ConversationAction targettag="triggerer_player" text="EventText.crawleroutbreak.c1" eventsprite="ambush"/>
+      <!-- make researcher run out of module after conversation -->
+      <TagAction criteria="hullname:airlock" tag="airlock" submarinetype="Outpost"/>
+      <NPCFollowAction npctag="panickedresearcher" targettag="airlock" follow="true"/>
+    </ScriptedEvent>
+    <!--"Taste test"-->
+    <ScriptedEvent identifier="tastetest" commonness="150">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemidentifier:opdeco_trashcan" tag="potentialtrashcan" submarinetype="outpost"/>
+      <TriggerAction target1tag="potentialtrashcan" target2tag="player" applytotarget1="selectedtrashcan" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
+      <ConversationAction text="EventText.tastetest.c1" targettag="triggerer_player" eventsprite="redbluebottles">
+        <Option text="EventText.tastetest.o1">
+          <SkillCheckAction requiredskill="Medical" requiredlevel="40" targettag="triggerer_player">
+            <Success>
+              <GiveSkillEXPAction skill="medical" amount="5" targettag="triggerer_player"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.c1">
+                <Option text="EventText.tastetest.o1.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o1.c1">
+                    <Option text="EventText.tastetest.o1.o1.o1" endconversation="true">
+                      <WaitAction time="20"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="internaldamage" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="lacerations" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="blunttrauma" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="bitewounds" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="gunshotwound" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="organdamage" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="explosiondamage" strength="-50"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o1.o1.c1">
+                        <Option text="EventText.tastetest.o1.o1.o1.o1" endconversation="true">
+                          <TriggerAction target1tag="selectedtrashcan" target2tag="triggerer_player" radius="100"/>
+                          <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o1.o1.o1.c1" eventsprite="redyellowbottles"/>
+                          <SpawnAction itemidentifier="hyperzine" targetinventory="triggerer_player"/>
+                          <SpawnAction itemidentifier="steroids" targetinventory="triggerer_player"/>
+                          <SpawnAction itemidentifier="sulphuricacid" targetinventory="triggerer_player"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.tastetest.o1.o2" endconversation="true"/>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.c2">
+                <Option text="EventText.tastetest.o1.o3">
+                  <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o3.c1">
+                    <Option text="EventText.tastetest.o1.o3.o1" endconversation="true">
+                      <WaitAction time="20"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="internaldamage" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="lacerations" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="blunttrauma" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="bitewounds" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="gunshotwound" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="organdamage" strength="-50"/>
+                      <AfflictionAction targettag="triggerer_player" affliction="explosiondamage" strength="-50"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o3.o1.c1" eventsprite="redbluebottles">
+                        <Option text="EventText.tastetest.o1.o3.o1.o1" endconversation="true">
+                          <TriggerAction target1tag="selectedtrashcan" target2tag="triggerer_player" radius="100"/>
+                          <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o3.o1.o1.c1"/>
+                          <SpawnAction itemidentifier="hyperzine" targetinventory="triggerer_player"/>
+                          <SpawnAction itemidentifier="steroids" targetinventory="triggerer_player"/>
+                          <SpawnAction itemidentifier="sulphuricacid" targetinventory="triggerer_player"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.tastetest.o1.o4">
+                  <AfflictionAction targettag="triggerer_player" affliction="organdamage" limbtype="torso" strength="50"/>
+                  <AfflictionAction targettag="triggerer_player" affliction="stun" strength="6"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o4.c1">
+                    <Option text="EventText.tastetest.o1.o4.o1"/>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.tastetest.o1.o5"/>
+              </ConversationAction>
+            </Failure>
+          </SkillCheckAction>
+        </Option>
+        <Option text="EventText.tastetest.o2"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Firefighting"-->
+    <ScriptedEvent identifier="firefighting" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemidentifier:opdeco_trashcan" tag="potentialtrashcan" submarinetype="outpost" chooserandom="true"/>
+      <!-- trash can smokes until either extinguished or catches on fire via options. sets conditon to 0 to make it stop -->
+      <StatusEffectAction targettag="potentialtrashcan">
+        <StatusEffect target="This" duration="999" interval="1" checkconditionalalways="true">
+          <Conditional condition="gt 1"/>
+          <ParticleEmitter particle="swirlysmoke" particlespersecond="3" velocitymin="25" velocitymax="50" anglemin="70" anglemax="110" scalemin="0.5" scalemax="1" distancemin="20" distancemax="20" colormultiplier="255,255,255,255" drawontop="true"/>
+        </StatusEffect>
+      </StatusEffectAction>
+      <TriggerAction target1tag="potentialtrashcan" target2tag="player" applytotarget1="selectedtrashcan" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.firefighting.c1" eventsprite="trashcan">
+        <Option text="EventText.firefighting.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.firefighting.o1.c1">
+            <Option text="EventText.firefighting.o1.o1">
+              <AfflictionAction targettag="triggerer_player" affliction="burn" strength="15" limbtype="rightarm"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.firefighting.o1.o1.c1"/>
+              <!-- more burns, but you get a cigar. -->
+              <SpawnAction itemidentifier="cigar" TargetTag="burntcigar" targetinventory="triggerer_player"/>
+              <StatusEffectAction targettag="potentialtrashcan">
+                <StatusEffect target="This" condition="0" setvalue="true"/>
+              </StatusEffectAction>
+              <StatusEffectAction targettag="burntcigar">
+                <StatusEffect target="This" condition="62" setvalue="true"/>
+              </StatusEffectAction>
+            </Option>
+            <Option text="EventText.firefighting.o1.o2" endconversation="true">
+              <!-- causes a fire after 30 seconds -->
+              <Label name="waitforfire"/>
+              <WaitAction time="30"/>
+              <FireAction size="10" targettag="selectedtrashcan"/>
+              <StatusEffectAction targettag="potentialtrashcan">
+                <StatusEffect target="This" condition="0" setvalue="true"/>
+              </StatusEffectAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.firefighting.o2" endconversation="true">
+          <Goto name="waitforfire"/>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Sleight of Hand"-->
+    <ScriptedEvent identifier="sleightofhand" commonness="100">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="gambler" spawnlocation="Outpost" targetmoduletags="crewmodule"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="gambler" spawnlocation="Outpost" targetmoduletags="crewmodule"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="gamblingsecurity" spawnlocation="Outpost" targetmoduletags="crewmodule"/>
+      <!--<NPCFollowAction npctag="gambler" targettag="gamblingsecurity" follow="true"/>
+      <NPCFollowAction npctag="gamblingsecurity" targettag="gambler" follow="true"/>-->
+      <TagAction criteria="player" tag="player"/>
+      <TriggerAction target1tag="gambler" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.c1" eventsprite="gambler">
+        <Option text="EventText.sleightofhand.o1">
+          <RNGAction chance="0.125">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.o1.c1"/>
+              <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player"/>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.o1.c2"></ConversationAction>
+              <MoneyAction amount="-500"/>
+            </Failure>
+          </RNGAction>
+        </Option>
+        <Option text="EventText.sleightofhand.o2">
+          <RNGAction chance="0.25">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.o2.c1"/>
+              <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player"/>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.o2.c2"/>
+              <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player"/>
+              <CombatAction combatmode="defensive" npctag="gamblingsecurity" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="none"/>
+              <ReputationAction targettype="Location" increase="-2"/>
+            </Failure>
+          </RNGAction>
+        </Option>
+        <Option text="EventText.sleightofhand.o3"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Foreshadowing"-->
+    <!--NOTE: disabled in event lists-->
+    <ScriptedEvent identifier="foreshadowing" commonness="25">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="bot" tag="potentialnotegiver"/>
+      <TriggerAction target1tag="potentialnotegiver" target2tag="player" applytotarget1="notegiver" applytotarget2="triggerer_player" radius="100" waitforinteraction="false"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.foreshadowing.c1" eventsprite="note">
+        <Option text="EventText.foreshadowing.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.foreshadowing.o1.c1" eventsprite="noteopened"></ConversationAction>
+        </Option>
+        <Option text="EventText.foreshadowing.o2"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Engineers are special"-->
+    <ScriptedEvent identifier="Engineers_are_special" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="humanprefabidentifier:reactoroperator" tag="repairnpc"/>
+      <TriggerAction target1tag="repairnpc" target2tag="player" applytotarget2="triggerer_player" radius="250" waitforinteraction="true"/>
+      <NPCWaitAction npctag="repairnpc" wait="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.Engineers_are_special.c1" eventsprite="mechanic" continueconversation="true" _npos="2839.201,261.54736"/>
+      <SkillCheckAction targettag="triggerer_player" requiredskill="mechanical" requiredlevel="50" _npos="3262.4575,261.54736">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="EventText.Engineers_are_special.c1.c1" continueconversation="true" _npos="3700.167,125.27942">
+            <Option text="EventText.Engineers_are_special.c1.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.Engineers_are_special.c1.o1.c1" _npos="4287.3125,-70.810974"/>
+            </Option>
+            <Option text="EventText.Engineers_are_special.c1.o2">
+              <RNGAction chance="0.6" _npos="4285.822,189.16768">
+                <Success>
+                  <ConversationAction targettag="triggerer_player" text="EventText.Engineers_are_special.c1.o2.c1" _npos="4714.9326,97.9465"/>
+                  <ReputationAction targettype="Location" increase="2"/>
+                  <GiveSkillEXPAction skill="mechanical" amount="5" targettag="triggerer_player"/>
+                  <SetPriceMultiplierAction multiplier="0.85" operation="Multiply" targetmultiplier="Mechanical"/>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.Engineers_are_special.c1.o2.c2" _npos="4714.8335,315.59344"/>
+                </Failure>
+              </RNGAction>
+            </Option>
+          </ConversationAction>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="EventText.Engineers_are_special.c1.c2" _npos="3700.1667,325.55194"/>
+        </Failure>
+      </SkillCheckAction>
+      <NPCWaitAction npctag="repairnpc" wait="false"/>
+    </ScriptedEvent>
+    <!--"Mediator"-->
+    <ScriptedEvent identifier="mediator" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="troublemaker1" spawnlocation="Outpost" spawnpointtype="Path" lootingisstealing="false"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="troublemaker2" spawnlocation="Outpost" spawnpointtype="Path" lootingisstealing="false"/>
+      <!-- make sure the npcs have something to fight with -->
+      <SpawnAction itemidentifier="wrench" targetinventory="troublemaker1"/>
+      <SpawnAction itemidentifier="wrench" targetinventory="troublemaker2"/>
+      <NPCFollowAction npctag="troublemaker1" targettag="troublemaker2" follow="true"/>
+      <NPCFollowAction npctag="troublemaker2" targettag="troublemaker1" follow="true"/>
+      <TriggerAction target1tag="troublemaker1" target2tag="player" applytotarget2="triggerer_player" radius="250" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.mediator.c1" eventsprite="mediator">
+        <Option text="EventText.mediator.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.mediator.o1.c1">
+            <Option text="EventText.mediator.o1.o1">
+              <SkillCheckAction targettag="triggerer_player" requiredskill="Helm" requiredlevel="70">
+                <Success>
+                  <GiveSkillEXPAction skill="helm" amount="5" targettag="triggerer_player"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.mediator.o1.o1.c1"/>
+                  <ReputationAction targettype="Location" increase="1"/>
+                  <NPCFollowAction npctag="troublemaker1" targettag="troublemaker2" follow="false"/>
+                  <NPCFollowAction npctag="troublemaker2" targettag="troublemaker1" follow="false"/>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.mediator.o1.o1.c2"/>
+                  <ReputationAction targettype="Location" increase="-2"/>
+                </Failure>
+              </SkillCheckAction>
+            </Option>
+            <Option text="EventText.mediator.o1.o2">
+              <SkillCheckAction targettag="triggerer_player" requiredskill="weapons" requiredlevel="50">
+                <Success>
+                  <GiveSkillEXPAction skill="weapons" amount="5" targettag="triggerer_player"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.mediator.o1.o2.c1"/>
+                  <ReputationAction targettype="Location" increase="2"/>
+                  <NPCFollowAction npctag="troublemaker1" targettag="troublemaker2" follow="false"/>
+                  <NPCFollowAction npctag="troublemaker2" targettag="troublemaker1" follow="false"/>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.mediator.o1.o2.c2">
+                    <Option text="EventText.mediator.o1.o2.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.mediator.o1.o2.o1.c1">
+                        <Option text="EventText.mediator.o1.o2.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.mediator.o1.o2.o1.o1.c1"/>
+                          <CombatAction combatmode="Offensive" npctag="troublemaker1" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat"/>
+                          <CombatAction combatmode="Offensive" npctag="troublemaker2" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+              </SkillCheckAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.mediator.o2">
+          <ConversationAction targettag="triggerer_player" text="EventText.mediator.o2.c1"/>
+          <ReputationAction targettype="Location" increase="-2"/>
+          <CombatAction combatmode="Offensive" npctag="troublemaker1" enemytag="troublemaker2" isinstigator="false" guardreaction="arrest" witnessreaction="retreat"/>
+          <CombatAction combatmode="Offensive" npctag="troublemaker2" enemytag="troublemaker1" isinstigator="false" guardreaction="arrest" witnessreaction="retreat"/>
+        </Option>
+        <Option text="EventText.mediator.o3"/>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Black market"-->
+    <ScriptedEvent identifier="blackmarket" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="smuggler" spawnlocation="Outpost" spawnpointtype="Path"/>
+      <TriggerAction target1tag="smuggler" target2tag="player" applytotarget2="triggerer_player" radius="250" waitforinteraction="true"/>
+      <NPCFollowAction npctag="smuggler" targettag="triggerer_player" follow="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.c1" eventsprite="MysteryMan">
+        <Option text="EventText.blackmarket.o1">
+          <RNGAction chance="0.5">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c1" continueconversation="true"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c1.c1">
+                <Option text="EventText.blackmarket.o1.c1.o1">
+                  <CheckMoneyAction amount="1000">
+                    <Success>
+                      <MoneyAction amount="-1000"/>
+                      <RNGAction chance="0.33">
+                        <Success>
+                          <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c1.o1.c1"/>
+                          <SpawnAction itemidentifier="alienpistol" targettag="boughtpistol" targetinventory="triggerer_player"/>
+                          <SpawnAction itemidentifier="alienpowercell" targetinventory="boughtpistol"/>
+                        </Success>
+                        <Failure>
+                          <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c1.o1.c2"/>
+                        </Failure>
+                      </RNGAction>
+                    </Success>
+                    <Failure>
+                      <ConversationAction targettag="triggerer_player" text="eventtext.blackmarket.nomoney"/>
+                    </Failure>
+                  </CheckMoneyAction>
+                </Option>
+                <Option text="EventText.blackmarket.o1.c1.o2"/>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c2"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c2.c2">
+                <Option text="EventText.blackmarket.o1.c2.o1">
+                  <CheckMoneyAction amount="500">
+                    <Success>
+                      <MoneyAction amount="-500"/>
+                      <RNGAction chance="0.33">
+                        <Success>
+                          <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c2.o1.c1"/>
+                          <SpawnAction itemidentifier="smallmudraptoregg" targetinventory="triggerer_player"/>
+                        </Success>
+                        <Failure>
+                          <ConversationAction targettag="triggerer_player" text="EventText.blackmarket.o1.c2.o1.c2"/>
+                          <SpawnAction itemidentifier="huskeggsbasic" targetinventory="triggerer_player"/>
+                        </Failure>
+                      </RNGAction>
+                    </Success>
+                    <Failure>
+                      <ConversationAction targettag="triggerer_player" text="eventtext.blackmarket.nomoney"/>
+                    </Failure>
+                  </CheckMoneyAction>
+                </Option>
+                <Option text="EventText.blackmarket.o1.c2.o2"/>
+              </ConversationAction>
+            </Failure>
+          </RNGAction>
+        </Option>
+        <Option text="EventText.blackmarket.o2"/>
+      </ConversationAction>
+      <NPCFollowAction npctag="smuggler" targettag="triggerer_player" follow="false"/>
+    </ScriptedEvent>
+    <!--"Fan club"-->
+    <ScriptedEvent identifier="fanclub" commonness="75">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="fan" spawnlocation="Outpost" targetmoduletags="airlock,cityairlock"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="fan" spawnlocation="Outpost" targetmoduletags="airlock,cityairlock"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="fan" spawnlocation="Outpost" targetmoduletags="airlock,cityairlock"/>
+      <TriggerAction target1tag="fan" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <NPCFollowAction npctag="fan" targettag="triggerer_player" follow="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.fanclub.c1" eventsprite="crowd">
+        <Option text="EventText.fanclub.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.fanclub.o1.c1"/>
+          <ReputationAction targettype="Location" increase="2"/>
+          <NPCFollowAction npctag="fan" targettag="triggerer_player" follow="false"/>
+        </Option>
+        <Option text="EventText.fanclub.o2" endconversation="true">
+          <WaitAction time="10"/>
+          <NPCFollowAction npctag="fan" targettag="triggerer_player" follow="false"/>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"At Wit's End"-->
+    <ScriptedEvent identifier="atwitsend" commonness="70">
+      <CheckDataAction identifier="atwitsend_complete" condition="eq true">
+        <Success>
+          <!--Don't repeat event-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="artiedolittle" targettag="artie" spawnlocation="Outpost" targetmoduletags="airlock,cityairlock"/>
+          <TriggerAction target1tag="artie" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="true"/>
+          <NPCFollowAction npctag="artie" targettag="triggerer_player" follow="true"/>
+          <ConversationAction targettag="triggerer_player" speakertag="artie" WaitForInteraction="false" text="EventText.atwitsend.c1" eventsprite="GuyWithAlcohol">
+            <Option text="EventText.atwitsend.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.atwitsend.o1.c1">
+                <Option text="EventText.atwitsend.o1.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.atwitsend.o1.o1.c1"/>
+                  <NPCChangeTeamAction npctag="artie" teamid="Team1" addtocrew="true"/>
+                  <NPCFollowAction npctag="artie" targettag="triggerer_player" follow="false"/>
+                </Option>
+                <Option text="EventText.atwitsend.o1.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.atwitsend.o1.o2.c1"/>
+                  <NPCFollowAction npctag="artie" targettag="triggerer_player" follow="false"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.atwitsend.o2">
+              <ConversationAction targettag="triggerer_player" text="EventText.atwitsend.o2.c1"/>
+              <NPCFollowAction npctag="artie" targettag="triggerer_player" follow="false"/>
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="atwitsend_complete" value="true"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    
+    <!--"Consultant" -->
+    <ScriptedEvent identifier="consultant" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="mineowner" spawnlocation="Outpost" targetmoduletags="adminmodule"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="miner" targettag="foreman" spawnlocation="Outpost" targetmoduletags="minemodule"/>
+      <NPCWaitAction npctag="mineowner" wait="true"/>
+      <NPCWaitAction npctag="foreman" wait="true"/>
+      <TriggerAction target1tag="mineowner" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.consultant.c1" eventsprite="office">
+        <Option text="EventText.consultant.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.c1">
+            <Option text="EventText.consultant.o1.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1"/>
+              <TriggerAction target1tag="foreman" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+              <NPCWaitAction npctag="foreman" wait="true"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.c1" eventsprite="mines">
+                <Option text="EventText.consultant.o1.o1.c1.o1">
+                  <SkillCheckAction requiredskill="Helm" requiredlevel="60" targettag="triggerer_player">
+                    <Success>
+                      <GiveSkillEXPAction skill="helm" amount="5" targettag="triggerer_player"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o1.c1"/>
+                      <MoneyAction amount="2000"/>
+                    </Success>
+                    <Failure>
+                      <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o1.c2"/>
+                    </Failure>
+                  </SkillCheckAction>
+                </Option>
+                <Option text="EventText.consultant.o1.o1.c1.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o2.c1">
+                    <Option text="EventText.consultant.o1.o1.c1.o2.o1">
+                      <SkillCheckAction requiredskill="Medical" requiredlevel="50" targettag="triggerer_player">
+                        <Success>
+                          <GiveSkillEXPAction skill="medical" amount="5" targettag="triggerer_player"/>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o2.o1.c1"/>
+                          <MoneyAction amount="2000"/>
+                        </Success>
+                        <Failure>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o2.o1.c2"/>
+                        </Failure>
+                      </SkillCheckAction>
+                    </Option>
+                    <Option text="EventText.consultant.o1.o1.c1.o2.o2">
+                      <SkillCheckAction requiredskill="Helm" requiredlevel="60" targettag="triggerer_player">
+                        <Success>
+                          <GiveSkillEXPAction skill="helm" amount="5" targettag="triggerer_player"/>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o2.o2.c1"/>
+                          <MoneyAction amount="2000"/>
+                        </Success>
+                        <Failure>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o2.o2.c2"/>
+                        </Failure>
+                      </SkillCheckAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.consultant.o1.o1.c1.o3">
+                  <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o3.c1">
+                    <Option text="EventText.consultant.o1.o1.c1.o3.o1">
+                      <SkillCheckAction requiredskill="Medical" requiredlevel="50" targettag="triggerer_player">
+                        <Success>
+                          <GiveSkillEXPAction skill="medical" amount="5" targettag="triggerer_player"/>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o3.o1.c1"/>
+                          <MoneyAction amount="2000"/>
+                        </Success>
+                        <Failure>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o3.o1.c2"/>
+                        </Failure>
+                      </SkillCheckAction>
+                    </Option>
+                    <Option text="EventText.consultant.o1.o1.c1.o3.o2">
+                      <SkillCheckAction requiredskill="Helm" requiredlevel="60" targettag="triggerer_player">
+                        <Success>
+                          <GiveSkillEXPAction skill="helm" amount="5" targettag="triggerer_player"/>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o3.o2.c1"/>
+                          <MoneyAction amount="2000"/>
+                        </Success>
+                        <Failure>
+                          <ConversationAction targettag="triggerer_player" text="EventText.consultant.o1.o1.c1.o3.o2.c2"/>
+                        </Failure>
+                      </SkillCheckAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+              <NPCWaitAction npctag="foreman" wait="false"/>
+            </Option>
+            <Option text="EventText.consultant.o1.o2"/>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.consultant.o2"/>
+      </ConversationAction>
+      <NPCWaitAction npctag="mineowner" wait="false"/>
+    </ScriptedEvent>
+    <!--Big brother-->
+    <ScriptedEvent identifier="bigbrother" commonness="150">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="securitychief" spawnlocation="Outpost" targetmoduletags="adminmodule"/>
+      <NPCWaitAction npctag="securitychief" wait="true"/>
+      <WaitAction time="5"/>
+      <ConversationAction text="EventText.bigbrother.c1" dialogtype="Small" eventsprite="officeinside"/>
+      <TriggerAction target1tag="player" target2tag="securitychief" radius="150" applytotarget1="triggerer_player"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1" speakertag="securitychief" eventsprite="officeinside" waitforinteraction="true">
+        <Option text="EventText.bigbrother.c1.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.o1.c1">
+            <Option text="EventText.bigbrother.c1.o1.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.o1.o1.c1">
+                <Option text="EventText.bigbrother.c1.o1.o1.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.o1.o1.o1.c1"/>
+                </Option>
+                <Option text="EventText.bigbrother.c1.o1.o1.o2" endconversation="true">
+                  <GoTo name="end"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.bigbrother.c1.o2" endconversation="true">
+          <GoTo name="end"/>
+        </Option>
+      </ConversationAction>
+      <NPCWaitAction npctag="securitychief" wait="false"/>
+      <TriggerAction target1tag="triggerer_player" targetmoduletype="seccrewmodule" radius="10" applytotarget1="triggerer_player"/>
+      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.c1" eventsprite="dorm">
+        <Option text="EventText.bigbrother.c1.c1.o1">
+          <RNGAction chance="0.2">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.c1" dialogtype="Small"/>
+              <ConversationAction text="EventText.bigbrother.c1.c1.o1.c1.c1" speakertag="securitychief" dialogtype="Small"/>
+              <MoneyAction amount="2000"/>
+            </Success>
+            <Failure>
+              <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="guard" spawnlocation="Outpost" spawnpointtag="triggerer_player"/>
+              <NPCWaitAction npctag="guard" wait="true"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.c2" eventsprite="security">
+                <Option text="EventText.bigbrother.c1.c1.o1.o1">
+                  <SkillCheckAction requiredskill="weapons" requiredlevel="40" targettag="triggerer_player">
+                    <Success>
+                      <GiveSkillEXPAction skill="weapons" amount="5" targettag="triggerer_player"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c1" dialogtype="Small"/>
+                      <ConversationAction text="EventText.bigbrother.c1.c1.o1.o1.c1.c1" speakertag="securitychief" dialogtype="Small"/>
+                      <MoneyAction amount="2000"/>
+                    </Success>
+                    <Failure>
+                      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c2"/>
+                      <WaitAction time="20"/>
+                      <TriggerAction target1tag="triggerer_player" target2tag="guard" radius="250"/>
+                      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c2.c2" eventsprite="security" dialogtype="Small"/>
+                      <WaitAction time="10"/>
+                      <CombatAction combatmode="Offensive" npctag="guard" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="retreat"/>
+                    </Failure>
+                  </SkillCheckAction>
+                </Option>
+                <Option text="EventText.bigbrother.c1.c1.o1.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o2.c1" eventsprite="security"/>
+                  <WaitAction time="20"/>
+                  <TriggerAction target1tag="triggerer_player" target2tag="guard" radius="250"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o2.c1.c1" eventsprite="security" dialogtype="Small"/>
+                  <WaitAction time="10"/>
+                  <CombatAction combatmode="Offensive" npctag="guard" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="retreat"/>
+                </Option>
+              </ConversationAction>
+              <NPCWaitAction npctag="guard" wait="false"/>
+            </Failure>
+          </RNGAction>
+        </Option>
+        <Option text="EventText.bigbrother.c1.c1.o2">
+          <SkillCheckAction requiredskill="Electrical" requiredlevel="30" targettag="triggerer_player">
+            <Success>
+              <GiveSkillEXPAction skill="electrical" amount="5" targettag="triggerer_player"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.c1" dialogtype="Small"/>
+              <ConversationAction text="EventText.bigbrother.c1.c1.o2.c1.c1" speakertag="securitychief" dialogtype="Small"/>
+              <MoneyAction amount="2000"/>
+            </Success>
+            <Failure>
+              <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="guard" spawnlocation="Outpost" spawnpointtag="triggerer_player"/>
+              <NPCWaitAction npctag="guard" wait="true"/>
+              <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.c2" eventsprite="security">
+                <Option text="EventText.bigbrother.c1.c1.o2.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.o1.c1" dialogtype="Small"/>
+                  <ConversationAction text="EventText.bigbrother.c1.c1.o2.o1.c1.c1" speakertag="securitychief" dialogtype="Small"/>
+                  <MoneyAction amount="2000"/>
+                </Option>
+                <Option text="EventText.bigbrother.c1.c1.o2.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.o2.c1"/>
+                  <WaitAction time="20"/>
+                  <TriggerAction target1tag="triggerer_player" target2tag="guard" radius="250"/>
+                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.o2.c1.c1" eventsprite="security" dialogtype="Small"/>
+                  <WaitAction time="10"/>
+                  <CombatAction combatmode="Offensive" npctag="guard" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="retreat"/>
+                </Option>
+              </ConversationAction>
+              <NPCWaitAction npctag="guard" wait="false"/>
+            </Failure>
+          </SkillCheckAction>
+        </Option>
+      </ConversationAction>
+      <Label name="end"/>
+    </ScriptedEvent>
+    <!--Stowaway 1-->
+    <ScriptedEvent identifier="stowaway1" commonness="50">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction itemidentifier="metalcrate" targettag="stowawaytoolbox" spawnlocation="MainSub" ignorebyai="true"/>
+      <Label name="stowawayreturn"/>
+      <TriggerAction target1tag="stowawaytoolbox" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <ConversationAction text="EventText.stowaway1.c1" dialogtype="Regular" eventsprite="Stowaway1A" targettag="triggerer_player">
+        <Option text="EventText.stowaway1.o1">
+          <ConversationAction text="EventText.stowaway1.o1.c1" dialogtype="Regular" targettag="triggerer_player" eventsprite="Stowaway1A">
+            <Option text="EventText.stowaway1.o1.o1">
+              <ConversationAction text="EventText.stowaway1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                <Option text="EventText.stowaway1.o1.o1.o1">
+                  <ConversationAction text="EventText.stowaway1.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                    <Option text="EventText.stowaway1.o1.o1.o1.o1">
+                      <RNGAction chance="0.66">
+                        <Success>
+                          <ConversationAction text="EventText.stowaway1.o1.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player" eventsprite="Stowaway1B"/>
+                          <SpawnAction speciesname="Crawler_hatchling" spawnpointtag="triggerer_player"/>
+                        </Success>
+                        <Failure>
+                          <ConversationAction text="EventText.stowaway1.o1.o1.o1.o1.c2" dialogtype="Regular" targettag="triggerer_player" eventsprite="Stowaway1B"/>
+                          <RNGAction chance="0.5">
+                            <Success>
+                              <SpawnAction speciesname="psilotoad" spawnpointtag="triggerer_player"/>
+                            </Success>
+                            <Failure>
+                              <SpawnAction speciesname="orangeboy" spawnpointtag="triggerer_player"/>
+                            </Failure>
+                          </RNGAction>
+                        </Failure>
+                      </RNGAction>
+                    </Option>
+                    <Option text="EventText.generic.walkaway" endconversation="true">
+                      <!--Return-->
+                      <GoTo name="stowawayreturn"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.generic.walkaway" endconversation="true">
+                  <!--Return-->
+                  <GoTo name="stowawayreturn"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.walkaway" endconversation="true">
+          <!--Return-->
+          <GoTo name="stowawayreturn"/>
+        </Option>
+      </ConversationAction>
+      <OnRoundEndAction>
+        <RemoveItemAction targettag="stowawaytoolbox"/>
+      </OnRoundEndAction>
+    </ScriptedEvent>
+    <!--Stowaway 2-->
+    <ScriptedEvent identifier="stowaway2" commonness="50">
+      <CheckDataAction identifier="stowaway2_complete" condition="eq true">
+        <Success>
+          <!--Don't repeat event-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <TagAction criteria="itemidentifier:steelcabinet" tag="potentialcabinet" submarinetype="player"/>
+          <TagAction criteria="itemidentifier:mediumwindowedsteelcabinet" tag="potentialcabinet" submarinetype="player"/>
+          <TagAction criteria="itemidentifier:mediumsteelcabinet" tag="potentialcabinet" submarinetype="player"/>
+          <!--disabled return label for now-->
+          <Label name="stowawayreturn"/>
+          <TriggerAction target1tag="potentialcabinet" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+          <ConversationAction text="EventText.stowaway2.c1" dialogtype="Regular" targettag="triggerer_player" eventsprite="Stowaway2">
+            <Option text="EventText.stowaway2.o1">
+              <!--disabled clown part for now-->
+              <CheckReputationAction targettype="faction" identifier="clowns" condition="gte 200">
+                <Success>
+                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="clownmessenger" targettag="messenger" spawnpointtag="triggerer_player"/>
+                  <ConversationAction text="EventText.stowaway2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                    <Option text="EventText.stowaway2.o1.o1">
+                      <ConversationAction text="EventText.stowaway2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                      <MissionAction missiontag="salvageclownwreck" minlocationdistance="2" unlockfurtheronmap="true"/>
+                    </Option>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <ConversationAction text="EventText.stowaway2.o1.c2" dialogtype="Regular" targettag="triggerer_player">
+                    <Option text="EventText.stowaway2.o1.o2">
+                      <ConversationAction text="EventText.stowaway2.o1.o2.c1" dialogtype="Regular" targettag="triggerer_player">
+                        <Option text="EventText.stowaway2.o1.o2.o1">
+                          <ConversationAction text="EventText.stowaway2.o1.o2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                            <Option text="EventText.stowaway2.o1.o2.o1.o1">
+                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                                <Option text="EventText.stowaway2.o1.o2.o1.o1.o1">
+                                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                                  <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                                  <MissionAction missiontag="escortstowaway"/>
+                                </Option>
+                                <Option text="EventText.stowaway2.o1.o2.o1.o1.o2">
+                                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                                  <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                                  <MissionAction missiontag="escortstowaway"/>
+                                </Option>
+                                <Option text="EventText.stowaway2.o1.o2.o1.o1.o3">
+                                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                                  <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o3.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                                  <NPCChangeTeamAction npctag="stowaway" teamid="Team1" addtocrew="true"/>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.stowaway2.o1.o2.o2" endconversation="true">
+                          <GoTo name="stowawayreturn"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.stowaway2.o1.o2.o1">
+                      <ConversationAction text="EventText.stowaway2.o1.o2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                        <Option text="EventText.stowaway2.o1.o2.o1.o1">
+                          <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                            <Option text="EventText.stowaway2.o1.o2.o1.o1.o1">
+                              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                              <MissionAction missiontag="escortstowaway"/>
+                            </Option>
+                            <Option text="EventText.stowaway2.o1.o2.o1.o1.o2">
+                              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                              <MissionAction missiontag="escortstowaway"/>
+                            </Option>
+                            <Option text="EventText.stowaway2.o1.o2.o1.o1.o3">
+                              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o3.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                              <NPCChangeTeamAction npctag="stowaway" teamid="Team1" addtocrew="true"/>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.stowaway2.o1.o2.o2" endconversation="true">
+                      <GoTo name="stowawayreturn"/>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+              </CheckReputationAction>
+            </Option>
+            <Option text="EventText.generic.walkaway" endconversation="true">
+              <GoTo name="stowawayreturn"/>
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="stowaway2_complete" value="true"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- radiation escapee -->
+    <ScriptedEvent identifier="radiationescapee" commonness="50">
+      <CheckDataAction identifier="radiationescapee_missionreceived" condition="eq true">
+        <Success>
+          <!--Don't repeat-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="radiationescapee" targettag="radiationescapee" spawnlocation="Outpost"/>
+          <TriggerAction target1tag="radiationescapee" target2tag="player" applytotarget2="triggerer_player" radius="500" waitforinteraction="false"/>
+          <NPCFollowAction npctag="radiationescapee" targettag="triggerer_player" follow="true"/>
+          <TriggerAction target1tag="radiationescapee" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="false"/>
+          <ConversationAction text="EventText.radiationescapee.c1" targettag="triggerer_player" eventsprite="ManAndHisRaptor">
+            <Option text="EventText.radiationescapee.o1">
+              <ConversationAction text="EventText.radiationescapee.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.radiationescapee.o1.o1">
+                  <ConversationAction text="EventText.radiationescapee.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="eventtext.manandhisraptor1.takeonboard">
+                      <MissionAction missionidentifier="radiationescapeeescort" unlockfurtheronmap="true"/>
+                      <ConversationAction text="EventText.radiationescapee.great" targettag="triggerer_player"/>
+                    </Option>
+                    <Option text="EventText.generic.refuse" endconversation="true">
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.radiationescapee.o1.o2">
+                  <ConversationAction text="EventText.radiationescapee.o1.o2.c1" targettag="triggerer_player">
+                    <Option text="EventText.manandhisraptor1.takeonboard">
+                      <MissionAction missionidentifier="radiationescapeeescort" unlockfurtheronmap="true"/>
+                      <ConversationAction text="EventText.radiationescapee.great" targettag="triggerer_player"/>
+                    </Option>
+                    <Option text="EventText.generic.refuse" endconversation="true">
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="radiationescapee_missionreceived" value="true"/>
+          <NPCFollowAction npctag="radiationescapee" targettag="triggerer_player" follow="false"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- researcher escort -->
+    <ScriptedEvent identifier="researcherescort" commonness="50">
+      <CheckDataAction identifier="researcherescort_missionreceived" condition="eq true">
+        <Success>
+          <!--Don't repeat-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="eyeresearcher" targettag="eyeresearcher" spawnlocation="Outpost"/>
+          <TriggerAction target1tag="player" target2tag="eyeresearcher" applytotarget1="triggerer_player" waitforinteraction="true"/>
+          <ConversationAction text="EventText.researcherescort.c1" targettag="triggerer_player" eventsprite="BombScare1">
+            <Option text="EventText.researcherescort.o1">
+              <ConversationAction text="EventText.researcherescort.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.researcherescort.o1.o1">
+                  <ConversationAction text="EventText.researcherescort.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.researcherescort.o1.o1.o1">
+                      <ConversationAction text="EventText.researcherescort.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="eventtext.manandhisraptor1.takeonboard">
+                          <MissionAction missionidentifier="researcherescort" unlockfurtheronmap="true"/>
+                          <ConversationAction text="EventText.researcherescort.great" targettag="triggerer_player"/>
+                          <SetDataAction identifier="researcherescort_missionreceived" value="true"/>
+                        </Option>
+                        <Option text="EventText.generic.refuse" endconversation="true">
+                          <!--END-->
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- returner -->
+    <ScriptedEvent identifier="returner" commonness="50">
+      <CheckDataAction identifier="returner" condition="eq true">
+        <Success>
+          <!--Don't repeat-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player"/>
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="returner" spawnlocation="Outpost"/>
+          <TriggerAction target1tag="player" target2tag="returner" applytotarget1="triggerer_player" radius="150" waitforinteraction="false"/>
+          <ConversationAction text="EventText.returner.c1" targettag="triggerer_player" eventsprite="BadVibration2">
+            <Option text="EventText.returner.o1">
+              <ConversationAction text="EventText.returner.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.returner.o1.o1">
+                  <ConversationAction text="EventText.returner.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.returner.o1.o1.o1">
+                      <ConversationAction text="EventText.returner.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.returner.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.returner.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="returner" value="true"/>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--Captive souls-->
+    <ScriptedEvent identifier="captivesouls" commonness="50">
+      <TagAction criteria="player" tag="player"/>
+      <!-- needs a containment tank preplaced or event will not trigger. hopefully in research module -->
+      <TagAction criteria="itemidentifier:op_researchcontainmenttank3" tag="captivesoulstank" SubmarineType="Outpost" chooserandom="true" ContinueIfNoTargetsFound="false"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="captivesouls_scientist" targetmoduletags="airlock,cityairlock" spawnlocation="Outpost"/>
+      <NPCWaitAction npctag="captivesouls_scientist" wait="true"/>
+      <Label name="beginning"/>
+      <ClearTagAction tag="triggerer_player"/>
+      <!-- scientist conversation -->
+      <TriggerAction target1tag="player" target2tag="captivesouls_scientist" applytotarget1="triggerer_player" waitforinteraction="true"/>
+      <ConversationAction text="EventText.captivesouls.c1" targettag="triggerer_player" eventsprite="mediator">
+        <Option text="EventText.captivesouls.o1">
+          <ConversationAction text="EventText.captivesouls.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.generic.continue">
+              <ConversationAction text="EventText.captivesouls.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.generic.continue">
+                  <ConversationAction text="EventText.captivesouls.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true">
+                    <Option text="EventText.generic.continue">
+                      <ConversationAction text="EventText.captivesouls.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore" endconversation="true">
+          <!--END-->
+          <GoTo name="beginning"/>
+        </Option>
+      </ConversationAction>
+      <!--Interact with containment tank-->
+      <TriggerAction target1tag="triggerer_player" target2tag="captivesoulstank" waitforinteraction="true"/>
+      <ConversationAction text="EventText.captivesouls.c1.c1" targettag="triggerer_player">
+        <Option text="EventText.captivesouls.c1.o1">
+          <ConversationAction text="EventText.captivesouls.c1.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.captivesouls.c1.o1.o1">
+              <ConversationAction text="EventText.captivesouls.c1.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.captivesouls.c1.o1.o1.o1">
+                  <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.captivesouls.c1.o1.o1.o1.o1">
+                      <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                        <!-- break the glass and spawn the crawler -->
+                        <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1" endconversation="true">
+                          <StatusEffectAction targettag="captivesoulstank">
+                            <StatusEffect target="This">
+                              <SpawnItem identifier="banditprop7" spawnposition="This" Offset="0,-10"/>
+                              <Sound file="Content/Sounds/Damage/GlassImpact2.ogg" range="500"/>
+                              <ParticleEmitter particle="watersplash" particleamount="10" velocitymin="0" velocitymax="50" anglemin="240" anglemax="300" scalemin="1" scalemax="2"/>
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <SpawnAction speciesname="crawler_hatchling" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="captivesoulstank" TargetTag="crawlerhybrid"/>
+                          <StatusEffectAction targettag="crawlerhybrid">
+                            <StatusEffect target="This" disabledeltatime="true">
+                              <!-- stun to prevent crazy ragdolling when it spawns -->
+                              <Affliction identifier="stun" strength="1"/>
+                              <Affliction identifier="nausea" strength="100"/>
+                            </StatusEffect>
+                            <StatusEffect target="This" delay="2" duration="10">
+                              <!-- dies after a few seconds from organ failure -->
+                              <Affliction identifier="organdamage" strength="3"/>
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <!-- 5 seconds after breaking glass, interact with the tank again to grab the curio -->
+                          <WaitAction time="5"/>
+                          <TriggerAction target1tag="triggerer_player" target2tag="captivesoulstank" waitforinteraction="true"/>
+                          <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                            <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                              <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player" TargetTag="trinket"/>
+                              <StatusEffectAction targettag="trinket">
+                                <!-- mark as stolen -->
+                                <StatusEffect target="This" SpawnedInCurrentOutpost="true" AllowStealing="false"/>
+                              </StatusEffectAction>
+                            </Option>
+                            <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o2">
+                              <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o2.c1" targettag="triggerer_player" endconversation="true"/>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o2">
+                          <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o2.c1" targettag="triggerer_player" endconversation="true"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.captivesouls.c1.o1.o2">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.captivesouls.c1.o2">
+          <!--END-->
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <!--Explosive Mishap-->
+    <ScriptedEvent identifier="explosivemishap" commonness="50">
+      <TagAction criteria="player" tag="player"/>
+      <SpawnAction itemidentifier="ancientweapon" targettag="mishapweapon" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="research" ignorebyai="true"/>
+      <SpawnAction itemidentifier="aliencircuitry" SpawnPointTag="mishapweapon" amount="3" offset="120"/>
+      <StatusEffectAction targettag="mishapweapon">
+        <StatusEffect target="This" noninteractable="true" setvalue="true"/>
+      </StatusEffectAction>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="exploder1" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="mishapweapon" AllowInPlayerView="false" ignorebyai="true"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="exploder2" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="exploder1" AllowInPlayerView="false" offset="50"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="securitymishap" spawnlocation="Outpost" targetmoduletags="airlock,cityairlock"/>
+      <NPCWaitAction npctag="securitymishap" wait="true"/>
+      <NPCWaitAction npctag="exploder1" wait="true"/>
+      <NPCFollowAction npctag="exploder2" targettag="exploder1" follow="true"/>
+      <!-- proximity trigger -->
+      <TriggerAction target1tag="player" target2tag="mishapweapon" applytotarget1="triggerer_player" radius="350"/>
+      <ConversationAction text="EventText.explosivemishap.c1" targettag="triggerer_player" eventsprite="Stowaway2">
+        <Option text="EventText.explosivemishap.o1">
+          <ConversationAction text="EventText.explosivemishap.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.generic.continue">
+              <ConversationAction text="EventText.explosivemishap.o1.o1.c1" targettag="triggerer_player" ContinueAutomatically="true"/>
+              <!-- explosions ahoy -->
+              <StatusEffectAction targettag="mishapweapon">
+                <StatusEffect target="This" duration="2" spritecolor="255,255,255,255" noninteractable="false" spawnedincurrentoutpost="true" allowstealing="false" setvalue="true">
+                  <sound file="Content/Items/Weapons/WEAPONS_laserGunShot1.ogg" range="1000" frequencymultiplier="0.5"/>
+                  <ParticleEmitter particle="electricshock" particlespersecond="2" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" scalemin="0.15" scalemax="0.25" Spread="0" distancemin="0" distancemax="0" colormultiplier="255,255,255,255"/>
+                  <ParticleEmitter particle="plasmaspark" particleamount="2" velocitymin="100" velocitymax="300" anglemin="20" anglemax="160" scalemin="0.5" scalemax="1" Spread="50" distancemin="0" distancemax="100" colormultiplier="255,255,255,255"/>
+                </StatusEffect>
+                <StatusEffect target="This" delay="2">
+                  <Explosion range="800.0" structuredamage="0" itemdamage="200" force="5" severlimbsprobability="0" debris="true" decal="explosion" decalsize="0.5">
+                    <Affliction identifier="stun" strength="4"/>
+                  </Explosion>
+                  <Sound file="Content/Sounds/Damage/StructureCrunch2.ogg" range="800" volume="2"/>
+                </StatusEffect>
+              </StatusEffectAction>
+              <StatusEffectAction targettag="exploder1">
+                <StatusEffect target="This" delay="2">
+                  <Explosion range="200.0" structuredamage="0" itemdamage="200" force="5" severlimbsprobability="1" debris="true" decal="explosion" decalsize="0.5">
+                    <Affliction identifier="explosiondamage" strength="100"/>
+                    <Affliction identifier="bleeding" strength="50"/>
+                    <Affliction identifier="stun" strength="5"/>
+                  </Explosion>
+                  <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" range="1000" volume="1"/>
+                </StatusEffect>
+              </StatusEffectAction>
+                <!-- make sure the characters die -->
+              <AfflictionAction targettag="exploder1" affliction="explosiondamage" strength="10000"/>
+              <AfflictionAction targettag="exploder2" affliction="explosiondamage" strength="10000"/>
+              <!-- security hurries to the module -->
+              <NPCFollowAction npctag="securitymishap" targettag="exploder1" follow="True"/>
+              <ConversationAction text="EventText.explosivemishap.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+              <TriggerAction target1tag="player" target2tag="mishapweapon" applytotarget1="lootermishap" radius="50" waitforinteraction="true"/>
+              <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.c1" targettag="lootermishap">
+                <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1">
+                  <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.o1.c1" targettag="lootermishap" ContinueConversation="true">
+                    <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1">
+                      <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.c1" targettag="lootermishap">
+                        <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1">
+                          <!-- remove the weapon from the floor and spawn it in inventory -->
+                          <StatusEffectAction targettag="mishapweapon">
+                            <StatusEffect target="This">
+                              <Remove/>
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <SpawnAction itemidentifier="ancientweapon" targettag="mishapweaponlooted" targetinventory="lootermishap"/>
+                          <StatusEffectAction targettag="mishapweaponlooted">
+                            <StatusEffect target="This" spawnedincurrentoutpost="true" allowstealing="false" setvalue="true"/>
+                          </StatusEffectAction>
+                          <RNGAction chance="0.25">
+                            <Success>
+                              <SpawnAction itemidentifier="alienpowercell" targetinventory="mishapweaponlooted"/>
+                              <ConversationAction targettag="lootermishap" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c1" endconversation="true"/>
+                            </Success>
+                            <Failure>
+                              <ConversationAction targettag="lootermishap" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c2" endconversation="true"/>
+                            </Failure>
+                          </RNGAction>
+                          <!-- trigger the guard if you get near it -->
+                          <TriggerAction target1tag="lootermishap" target2tag="securitymishap" radius="100" waitforinteraction="false"/>
+                          <NPCFollowAction npctag="securitymishap" targettag="lootermishap" follow="true"/>
+                          <ConversationAction text="EventText.explosivemishap.securitycheck" targettag="lootermishap" eventsprite="security">
+                            <Option text="EventText.explosivemishap.didntseeanything">
+                              <!-- if you have the weapon on you, guard arrests you -->
+                              <CheckItemAction targettag="lootermishap" itemtags="mishapweaponlooted">
+                                <Success>
+                                  <ConversationAction text="EventText.explosivemishap.noticedweapon" targettag="lootermishap" eventsprite="security" endconversation="true"/>
+                                  <CombatAction combatmode="Arrest" npctag="securitymishap" enemytag="lootermishap" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+                                </Success>
+                                <Failure>
+                                  <ConversationAction text="EventText.explosivemishap.noweapon" targettag="lootermishap" eventsprite="security" endconversation="true"/>
+                                  <NPCFollowAction npctag="securitymishap" targettag="lootermishap" follow="false"/>
+                                </Failure>
+                              </CheckItemAction>
+                            </Option>
+                            <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2">
+                              <StatusEffectAction targettag="mishapweaponlooted">
+                                <StatusEffect target="This">
+                                  <Remove/>
+                                </StatusEffect>
+                              </StatusEffectAction>
+                              <ConversationAction targettag="lootermishap" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2.c1" endconversation="true"/>
+                              <ReputationAction targettype="Location" increase="3"/>
+                              <NPCWaitAction npctag="securitymishap" wait="true"/>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.explosivemishap.o1.o1.o1.o1.o2">
+                  <!--END-->
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore" endconversation="true">
+          <!--END-->
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <!--Occupational Hazards-->
+    <ScriptedEvent identifier="occupationalhazards" commonness="50">
+      <TagAction criteria="player" tag="player"/>
+      <Label name="beginning"/>
+      <ClearTagAction tag="triggerer_player"/>
+
+      <TagAction criteria="itemtag:chair" tag="chair" RequiredModuleTag="CrewModule"/>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="hardhatman" targettag="hardhatman" spawnlocation="Outpost" targetmoduletags="CrewModule"/>
+      <NPCOperateItemAction npctag="hardhatman" targettag="chair" Operate="true"/>
+      <TriggerAction target1tag="player" target2tag="hardhatman" applytotarget1="triggerer_player" waitforinteraction="true"/>
+      
+      <ConversationAction text="EventText.occupationalhazards.c1" targettag="triggerer_player" eventsprite="engineer">
+        <Option text="EventText.occupationalhazards.o1">
+          <ConversationAction text="EventText.occupationalhazards.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.occupationalhazards.o1.o1">
+              <ConversationAction text="EventText.occupationalhazards.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.occupationalhazards.o1.o1.o1">
+                  <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.occupationalhazards.o1.o1.o1.o1">
+                      <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.occupationalhazards.o1.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                            <Option text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                <Option text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1">
+                                  <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                                    <Option text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1.o1">
+                                      <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                                      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="raptorvictim" targettag="occupationalhazards_miner" spawnlocation="Outpost" spawnpointtype="Path" targetmoduletags="minemodule"/>
+                                      <SpawnAction itemidentifier="smallmudraptoregg" spawnlocation="Outpost" targetmoduletags="minemodule"/>
+                                      <SpawnAction itemidentifier="smallmudraptoregg" spawnlocation="Outpost" targetmoduletags="minemodule"/>
+                                      <AfflictionAction targettag="occupationalhazards_miner" affliction="bitewounds" strength="1000"/>
+                                      <TriggerAction target1tag="occupationalhazards_miner" target2tag="triggerer_player" radius="100" disableiftargetincapacitated="false"/>
+                                      <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1.o1.c1.c1" targettag="triggerer_player" eventsprite="unconscious">
+                                        <Option text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1.o1.c1.o1">
+                                          <ConversationAction text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1.o1.c1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                                          <MoneyAction amount="904"/>
+                                        </Option>
+                                        <Option text="EventText.occupationalhazards.o1.o1.o1.o1.o1.o1.o1.o1.c1.o2"/>
+                                      </ConversationAction>
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore" endconversation="true">
+          <!--END-->
+          <GoTo name="beginning"/>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="mindsunraveled" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <ClearTagAction tag="triggerer_player"/>
+      <TagAction criteria="itemidentifier:opdeco_hospitalbed" tag="bed" RequiredModuleTag="MedicalModule"/>
+      <!-- TODO tag also the medical doctor? To ensure the two of them are close to eachother -->
+      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="haraldthecurious" targettag="patient" spawnlocation="Outpost" targetmoduletags="MedicalModule" SpawnPointTag="medical"/>
+      <NPCOperateItemAction npctag="patient" targettag="bed" Operate="true"/>
+
+      <StatusEffectAction targettag="bed">
+        <StatusEffect target="This" AllowSelectingWhenSelectedByBot="false" setvalue="true"/>
+      </StatusEffectAction>
+      
+      <Label name="beginning"/>
+      <TriggerAction target1tag="player" target2tag="patient" applytotarget1="triggerer_player" waitforinteraction="true"/>
+      <ConversationAction text="EventText.mindsunraveled.c1" targettag="triggerer_player" eventsprite="MentalBreakdown">
+        <Option text="EventText.mindsunraveled.o1">
+          <GoTo name="continue1"/>
+        </Option>
+        <Option text="EventText.mindsunraveled.o2">
+          <GoTo name="continue1"/>
+        </Option>
+        <Option text="EventText.generic.ignore" endconversation="true">
+          <!--END-->
+          <GoTo name="beginning"/>
+        </Option>
+      </ConversationAction>
+      <Label name="continue1"/>
+      <ConversationAction text="EventText.mindsunraveled.c2" targettag="triggerer_player" eventsprite="doctor">
+        <Option text="EventText.mindsunraveled.o3">
+          <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="40"/>
+          <ConversationAction text="EventText.mindsunraveled.o3.c1" targettag="triggerer_player">
+            <Option text="EventText.mindsunraveled.o3.o1">
+              <GoTo name="continue2"/>
+            </Option>
+            <Option text="EventText.mindsunraveled.o3.o2">
+              <GoTo name="continue2"/>
+            </Option>
+          </ConversationAction>
+        </Option>
+      </ConversationAction>
+      <Label name="restart"/>
+      <TriggerAction target1tag="player" target2tag="patient" applytotarget1="triggerer_player" waitforinteraction="true"/>
+      <Label name="continue2"/>
+      <ConversationAction text="EventText.mindsunraveled.c3" targettag="triggerer_player" eventsprite="MentalBreakdown">
+        <Option text="EventText.mindsunraveled.o4">
+          <ConversationAction text="EventText.mindsunraveled.o4.c1" targettag="triggerer_player">
+            <Option text="EventText.mindsunraveled.o4.c1.o1">
+              <ConversationAction text="EventText.mindsunraveled.o4.c1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.mindsunraveled.o4.c1.o1.o1">
+                  
+                  <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="30"/>
+                  <AfflictionAction targettag="triggerer_player" affliction="hallucinating" strength="30"/>
+                  
+                  <ConversationAction text="EventText.mindsunraveled.o4.o1.o1.o1.c1" targettag="triggerer_player" eventsprite="doctor">
+                    <Option text="eventtext.generic.continue">
+                      <AfflictionAction targettag="triggerer_player" affliction="hallucinating_mindsunraveled" strength="1.5"/>
+                      <ConversationAction text="EventText.mindsunraveled.o4.o1.o1.o1.o1.c1" targettag="triggerer_player" eventsprite="doctor" ContinueConversation="true"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.mindsunraveled.o4.c1.o1.o2">
+                  <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="10"/>
+                  <ConversationAction text="EventText.mindsunraveled.o4.c1.o1.o2.c1" targettag="triggerer_player" ContinueConversation="true"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.mindsunraveled.o5" endconversation="true">
+          <!--END-->
+          <GoTo name="restart"/>
+        </Option>
+      </ConversationAction>
+      
+      <AfflictionAction targettag="triggerer_player" affliction="hallucinating_mindsunraveled" strength="-100"/>
+      <StatusEffectAction targettag="bed">
+        <StatusEffect target="This">
+          <SpawnItem identifier="dementonite_mindsunraveled" spawnposition="This" impulse="5"/>
+        </StatusEffect>
+      </StatusEffectAction>
+      <AfflictionAction targettag="triggerer_player" affliction="psychosis" strength="-75"/>
+      <ConversationAction text="EventText.mindsunraveled.c4" targettag="triggerer_player" eventsprite="doctor">
+        <Option text="EventText.mindsunraveled.o6">
+          <GoTo name="continue4"/>
+        </Option>
+        <Option text="EventText.mindsunraveled.o7">
+          <GoTo name="continue4"/>
+        </Option>
+      </ConversationAction>
+      <Label name="continue4"/>
+      <ConversationAction text="EventText.mindsunraveled.c5" targettag="triggerer_player" eventsprite="doctor">
+        <Option text="EventText.mindsunraveled.o8" endconversation="true">
+
+          <TagAction criteria="hullname:airlock" tag="airlock" submarinetype="Outpost"/>
+          <NPCFollowAction npctag="patient" targettag="airlock" follow="true"/>
+          
+          <SpawnAction itemidentifier="antipsychosis" amount="4" targetinventory="triggerer_player"/>
+
+          <WaitAction time="10"/>
+
+          <NPCFollowAction npctag="patient" targettag="airlock" follow="false"/>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <!-- Storage room events-->
+    <ScriptedEvent identifier="lostengineeringsupplies" commonness="100">
+      <!-- Requires doors or containers having a 'id_reactor' PickedRequired on it in order to be locked -->
+      <TagAction criteria="itemtag:lostengineeringsupplies" tag="storage" submarinetype="Outpost"/>
+      <!-- Spawn valuable loot-->
+      <SpawnAction itemidentifier="plasmacutter" amount="1" TargetTag="spawnedplasmacutter" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="oxygentank" amount="1" targetinventory="spawnedplasmacutter" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="weldingtool" amount="1"  TargetTag="spawnedweldingtool" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="weldingfueltank" amount="1" targetinventory="spawnedweldingtool" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="weldingfueltank" amount="4" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="fuelrod" amount="3" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <RNGAction chance="0.6">
+        <Success>
+          <SpawnAction itemidentifier="fixfoamgrenade" amount="4" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+        </Success>
+      </RNGAction>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemidentifier="incendiumfueltank" amount="2" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+        </Success>
+      </RNGAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="lostvaluables" commonness="100">
+      <!-- Requires container having a 'id_outpostmanager' PickedRequired on it in order to be locked -->
+      <TagAction criteria="itemtag:lostvaluables" tag="storage" submarinetype="Outpost"/>
+      <!-- Spawn valuable loot-->
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemidentifier="molochbone" amount="1" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+        </Success>
+      </RNGAction>
+      <SpawnAction itemidentifier="rum" amount="3"  targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="cigar" amount="4" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemidentifier="triphylite" amount="4" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+        </Success>
+      </RNGAction>
+      <SpawnAction itemidentifier="langbeinite" amount="4" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="diamond" amount="3" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="lostclownstorage" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <!-- Requires door having a 'clown' PickedRequired on it in order to be locked  -->
+      <TagAction criteria="itemtag:clowncontainer" tag="storage" submarinetype="Outpost"/>
+      <RNGAction chance="0.3">
+        <Success>
+          <SpawnAction itemidentifier="cymbals" amount="1" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+        </Success>
+      </RNGAction>
+      <SpawnAction itemidentifier="bananapeel" amount="3"  targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="bikehorn" amount="6" targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      <SpawnAction itemidentifier="ethanol" amount="3"  targetinventory="storage" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+      
+      <!-- Chance to spawn a psychoclown-->
+      <TriggerAction target1tag="storage" target2tag="player" applytotarget2="triggerer_player" radius="200" waitforinteraction="false"/>
+      <WaitAction time="2"/>
+      <RNGAction chance="0.5">
+        <Success>
+          <!-- Randomise the time a bit -->
+          <WaitAction time="2"/>
+        </Success>
+      </RNGAction>
+      <RNGAction chance="0.6">
+        <Failure>
+          <StatusEffectAction targettag="storage">
+            <StatusEffect target="This">
+              <Sound file="Content/Items/Weapons/honk.ogg" range="100"/>
+            </StatusEffect>
+          </StatusEffectAction>
+          
+          <SpawnAction npcsetidentifier="abandonedoutpostnpcs" npcidentifier="psychoclown" targettag="psychoclown" spawnpointtag="lostpsychoclown" spawnlocation="Outpost" requirespawnpointtag="true" team="None"/>
+          <AfflictionAction targettag="psychoclown" affliction="psychoclown" strength="100"/>
+          <CombatAction combatmode="Offensive" npctag="psychoclown" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat"/>
+        </Failure>
+      </RNGAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="malfunctioningdefensebot" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <!-- Requires doors or containers having a 'id_reactor' PickedRequired on it in order to be locked -->
+
+      <SpawnAction speciesname="Defensebot" targettag="scrapbot" spawnlocation="Outpost" spawnpointtag="scrapbot" requirespawnpointtag="true" ContinueIfFailedToSpawn="false"/>
+      <SpawnAction itemidentifier="defensebotammobox" amount="1"  targetinventory="scrapbot" SpawnIfInventoryFull="false" ContinueIfFailedToSpawn="true"/>
+
+      <StatusEffectAction targettag="scrapbot">
+        <StatusEffect target="This" IsDead="true" setvalue="true"/>
+      </StatusEffectAction>
+
+      <Label name="restart"/>
+      <ClearTagAction tag="triggerer_player"/>
+      <TriggerAction target1tag="scrapbot" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true" DisableIfTargetIncapacitated="false"/>
+
+      <ConversationAction text="EventText.malfunctioningdefensebot.c1" targettag="triggerer_player" eventsprite="ScrapMetal">
+        <Option text="EventText.malfunctioningdefensebot.o1">
+          <SkillCheckAction requiredskill="Mechanical" requiredlevel="60" targettag="triggerer_player">
+            <Success>
+              <ConversationAction text="EventText.malfunctioningdefensebot.o1.c1" targettag="triggerer_player" eventsprite="ScrapMetal">
+                <Option text="EventText.malfunctioningdefensebot.o1.c1.o1">
+                  <SkillCheckAction requiredskill="Electrical" requiredlevel="40" targettag="triggerer_player">
+                    <Success>
+                      <ConversationAction text="EventText.malfunctioningdefensebot.o1.c1.o1.c1" targettag="triggerer_player" eventsprite="ScrapMetal" endconversation="true">
+                      </ConversationAction>
+                      <!-- Revive it -->
+                      <StatusEffectAction targettag="scrapbot">
+                        <StatusEffect target="This" IsDead="false" setvalue="true">
+                          <Sound file="Content/Characters/Defensebot/DEFENCEBOT_interact1.ogg" range="100"/>
+                        </StatusEffect>
+                      </StatusEffectAction>
+                      <!-- 'Petting' (playing with) them makes them join the crew automatically -->
+                    </Success>
+                    <Failure>
+                      <ConversationAction text="EventText.malfunctioningdefensebot.o1.c1.o1.c2" targettag="triggerer_player" eventsprite="ScrapMetal" endconversation="true">
+                      </ConversationAction>
+                      <!-- Revive it-->
+                      <StatusEffectAction targettag="scrapbot">
+                        <StatusEffect target="This" IsDead="false" setvalue="true">
+                          <Sound file="Content/Characters/Defensebot/DEFENCEBOT_interact3.ogg" range="100"/>
+                        </StatusEffect>
+                      </StatusEffectAction>
+                      <!-- Turn hostile -->
+                      <NPCChangeTeamAction npctag="scrapbot" teamid="Team2"/>
+                    </Failure>
+                  </SkillCheckAction>
+                </Option>
+                <Option text="EventText.malfunctioningdefensebot.o1.c1.o2" endconversation="true">
+                  <!-- Revive it -->
+                  <StatusEffectAction targettag="scrapbot">
+                    <StatusEffect target="This" IsDead="false" setvalue="true">
+                      <Sound file="Content/Characters/Defensebot/DEFENCEBOT_interact3.ogg" range="100"/>
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <!-- Turn hostile -->
+                  <NPCChangeTeamAction npctag="scrapbot" teamid="Team2"/>
+                </Option>
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <ConversationAction text="EventText.malfunctioningdefensebot.o1.c2" targettag="triggerer_player" eventsprite="ScrapMetal">
+                <Option text="EventText.malfunctioningdefensebot.o1.c2.o1" endconversation="true">
+                  <!-- Player broke it, but learns some mechanical skill in the process -->
+                  <GiveSkillEXPAction skill="mechanical" amount="2" targettag="triggerer_player"/>
+                </Option>
+              </ConversationAction>
+            </Failure>
+          </SkillCheckAction>
+        </Option>
+        <Option text="EventText.malfunctioningdefensebot.o2" endconversation="true">
+          <!-- Leave -->
+          <Goto name="restart"/>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    
+    <!-- Associate -->
+    <ScriptedEvent identifier="associate" commonness="100">
+      <CheckDataAction identifier="associate_complete" condition="eq true">
+        <Success>
+          <!--Don't repeat event-->
+        </Success>
+        <Failure>
+          <CheckDataAction identifier="explorealienruins_state" condition="gt 0">
+            <Success>
+              <!--Don't start event if explore alien ruins event part 1 has been cleared-->
+            </Success>
+            <Failure>
+              <TagAction criteria="player" tag="player"/>
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="associate1" targettag="associate" spawnlocation="Outpost"/>
+              <Label name="beginning"/>
+              <TriggerAction target1tag="player" target2tag="associate" applytotarget1="triggerer_player" waitforinteraction="true"/>
+              <NPCWaitAction npctag="associate" wait="true"/>
+              <ConversationAction text="EventText.associate.c1" targettag="triggerer_player" eventsprite="ManAndHisRaptor">
+                <Option text="EventText.associate.o1">
+                  <ConversationAction text="EventText.associate.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.associate.o1.o1">
+                      <ConversationAction text="EventText.associate.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.associate.o1.o1.o1">
+                          <GoTo name="continue" endconversation="false"/>
+                        </Option>
+                        <Option text="EventText.associate.o1.o1.o2">
+                          <ConversationAction text="EventText.associate.o1.o1.o2.c1" targettag="triggerer_player">
+                            <Option text="EventText.associate.o1.o1.o2.o1">
+                              <GoTo name="continue" endconversation="false"/>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="eventtext.atwitsend.o1.o2">
+                      <GoTo name="beginning"/>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+              <Label name="continue"/>
+              <NPCWaitAction npctag="associate" wait="true"/>
+              <ConversationAction text="EventText.associate.o1.o1.o1.c1" targettag="triggerer_player" eventsprite="ManAndHisRaptor">
+                <Option text="EventText.associate.o1.o1.o1.o1">
+                  <ConversationAction text="EventText.associate.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.associate.o1.o1.o1.o1.o1" endconversation="true"/>
+                  </ConversationAction>
+                  <SetDataAction identifier="associate_complete" value="true"/>
+                </Option>
+              </ConversationAction>
+            </Failure>
+          </CheckDataAction>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+          
+  </EventPrefabs>
+  
+</Randomevents>

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="idcard" category="Equipment" Tags="smallitem,identitycard" cargocontaineridentifier="metalcrate">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="10">
+      <Price storeidentifier="merchantoutpost" minavailable="4"/>
+      <Price storeidentifier="merchantcity" minavailable="6"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,64,64,64" origin="0.5,0.5"/>
+    <Sprite texture="idcard.png" depth="0.5" sourcerect="0,0,16,16"/>
+    <Body width="16" height="12" density="10.05"/>
+    <IdCard slots="Card,Any" msg="ItemMsgPickUpSelect"/>
+  </Item>
+  <Item name="" identifier="idcardwreck" category="Equipment" Tags="smallitem,wreck_id,identitycard" cargocontaineridentifier="metalcrate">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="10" sold="false"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,64,64,64" origin="0.5,0.5"/>
+    <Sprite texture="idcard.png" depth="0.5" sourcerect="0,0,16,16"/>
+    <Body width="16" height="12" density="10.05"/>
+    <IdCard slots="Card,Any" msg="ItemMsgPickUpSelect"/>
+  </Item>
+</Items>

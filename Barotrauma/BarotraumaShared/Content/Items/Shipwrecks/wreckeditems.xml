@@ -1,0 +1,791 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="reactor1wrecked" nameidentifier="reactor1" variantof="reactor1" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="railgunwrecked" nameidentifier="railgun" variantof="railgun" category="Wrecked" condition="0" scale="1.0">
+    <Upgrade gameversion="0.20.6.0" scale="1.0" condition="0" refreshrect="true" barrelpos="126,89"/>
+    <!-- remove SwappableItem element (can't be swapped with normal turrets) -->
+    <SwappableItem/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="0,256,256,256"/>
+    <Turret targetcharacters="false" targetsubmarines="true" randommovement="true" targetitems="false" randomaimmaxtime="3" randomaimmintime="1" randomaimamount="60" aimdelay="true" barrelpos="126,89">
+      <RailSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="716,0,167,228"/>
+      <BarrelSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="578,8,129,284"/>
+    </Turret>
+  </Item>
+  <Item name="" identifier="periscopewrecked" nameidentifier="periscope" variantof="periscope" category="Wrecked" condition="1">
+    <Upgrade gameversion="0.20.8.0" scale="0.5" condition="1"/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="888,1,134,203"/>
+  </Item>
+  <Item name="" identifier="railgunloaderwrecked" nameidentifier="railgunloader" variantof="railgunloader" category="Wrecked" condition="0">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0"/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="719,231,298,276"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="railgunloadersingleverticalwrecked" nameidentifier="railgunloadersinglevertical" variantof="railgunloadersinglevertical" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+  </Item>
+  <Item name="" identifier="railgunloadersinglehorizontalwrecked" nameidentifier="railgunloadersinglehorizontal" variantof="railgunloadersinglehorizontal" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+  </Item>
+  <Item name="" identifier="coilgunwrecked" nameidentifier="coilgun" variantof="coilgun" category="Wrecked" condition="0">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0"/>
+    <!-- remove SwappableItem element (can't be swapped with normal turrets) -->
+    <SwappableItem/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="0,0,256,256"/>
+    <Turret targetcharacters="true" targetmonsters="false" targetsubmarines="false" targetitems="false" randommovement="true" randomaimmaxtime="3" randomaimmintime="1" randomaimamount="60" aimdelay="true">
+      <RailSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="405,16,120,287"/>
+      <BarrelSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="261,8,125,333"/>
+    </Turret>
+  </Item>
+  <Item name="" identifier="coilgunloaderwrecked" nameidentifier="coilgunloader" variantof="coilgunloader" category="Wrecked" condition="0" spritecolor="237,200,183,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="oxygeneratorwrecked" nameidentifier="oxygenerator" variantof="oxygenerator" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="shuttleoxygeneratorwrecked" nameidentifier="shuttleoxygenerator" variantof="shuttleoxygenerator" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="ventwrecked" nameidentifier="vent" variantof="vent" category="Wrecked" condition="0">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="100,75,50,255"/>
+    <Sprite name="Vent (Wrecked)" texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1902,363,143,143"/>
+  </Item>
+  <Item name="" identifier="ladderwrecked" nameidentifier="ladder" variantof="ladder" category="Wrecked" condition="0">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="981,1600,22,240"/>
+    <Ladder>
+      <BackgroundSprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="955,1600,26,240"/>
+    </Ladder>
+  </Item>
+  <Item name="" identifier="fabricatorwrecked" nameidentifier="fabricator" category="Wrecked" variantof="fabricator" condition="0" spritecolor="250,200,150,256">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="medicalfabricatorwrecked" nameidentifier="medicalfabricator" category="Wrecked" variantof="medicalfabricator" condition="0" spritecolor="250,200,150,256">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="deconstructorwrecked" nameidentifier="deconstructor" category="Wrecked" variantof="deconstructor" condition="0" spritecolor="250,200,150,256">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="enginewrecked" nameidentifier="engine" category="Wrecked" variantof="engine" condition="0" spritecolor="250,200,150,256">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="largeenginewrecked" nameidentifier="largeengine" category="Wrecked" variantof="largeengine" condition="0" spritecolor="250,200,150,256">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="shuttleenginewrecked" nameidentifier="shuttleengine" category="Wrecked" variantof="shuttleengine" condition="0" spritecolor="250,200,150,256">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="doorwrecked" nameidentifier="door" tags="door,weldable" scale="0.5" health="75" category="Wrecked" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" ondamagedthreshold="10">
+    <Sprite name="doorwrecked.background" texture="MiscWrecked.png" sourcerect="1790,1236,49,416" depth="0.51" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1841,1236,44,417" depth="0.89" origin="0.5,0.5"/>
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="6.0" shadowscale="0.7,1" OpeningSpeed="1.0">
+      <Upgrade gameversion="0.22.0.0" PickingTime="6.0"/>
+      <RequiredItem items="crowbar" type="Equipped"/>
+      <Sprite name="doorwrecked.door" texture="MiscWrecked.png" sourcerect="1936,1025,42,416" depth="0.05" origin="0.5,0"/>
+      <!--<WeldedSprite name="doorwrecked.welded" texture="MiscWrecked.png" sourcerect="1984,1025,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>-->
+      <WeldedSprite name="doorwrecked.welded" texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>
+      <BrokenSprite name="doorwrecked.broken" texture="Content/Items/Door/door.png" sourcerect="271,0,121,416" depth="0.509" origin="0.5,0.0" scale="true"/>
+      <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" onlyinsamesub="true"/>
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300"/>
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300"/>
+      <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="2000"/>
+      <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="2000"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <sound file="Content/Items/Door/DoorBreak1.ogg" selectionmode="Random" range="800"/>
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="800"/>
+      </StatusEffect>
+    </Door>
+    <AiTarget sightrange="3000.0" static="True"/>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem items="wrench" type="equipped"/>
+    </Repairable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="windoweddoorwrecked" nameidentifier="windoweddoor" tags="door,weldable" scale="0.5" health="75" category="Wrecked" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" ondamagedthreshold="10">
+    <Sprite name="windoweddoorwrecked.background" texture="MiscWrecked.png" sourcerect="1789,1236,49,416" depth="0.51" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1840,1236,46,417" depth="0.89" origin="0.5,0.5"/>
+    <Door window="0,-76,50,153" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="6.0" shadowscale="0.7,1" OpeningSpeed="1.0">
+      <Upgrade gameversion="0.22.0.0" PickingTime="6.0"/>
+      <RequiredItem items="crowbar" type="Equipped"/>
+      <Sprite name="windoweddoorwrecked.door" texture="MiscWrecked.png" sourcerect="1885,1025,50,416" depth="0.05" origin="0.5,0"/>
+      <!--<WeldedSprite name="windoweddoorwrecked.welded" texture="MiscWrecked.png" sourcerect="1984,1025,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>-->
+      <WeldedSprite name="windoweddoorwrecked.welded" texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>
+      <BrokenSprite name="doorwrecked.broken" texture="Content/Items/Door/door.png" sourcerect="392,0,120,416" depth="0.509" origin="0.5,0.0" scale="true"/>
+      <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" onlyinsamesub="true"/>
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300"/>
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300"/>
+      <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="2000"/>
+      <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="2000"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <sound file="Content/Items/Door/DoorBreak1.ogg" selectionmode="Random" range="800"/>
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="800"/>
+      </StatusEffect>
+    </Door>
+    <AiTarget sightrange="3000.0" static="True"/>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem items="wrench" type="equipped"/>
+    </Repairable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="hatchwrecked" nameidentifier="hatch" allowedlinks="gap, hull" tags="door,weldable" scale="0.5" health="75" category="Wrecked" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" allowrotatingineditor="false" ondamagedthreshold="10">
+    <Upgrade gameversion="1.2.14.0" spritedepth="0.7"/>
+    <Sprite name="hatchwrecked.background" texture="MiscWrecked.png" sourcerect="1234,1815,256,98" depth="0.7" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1234,1995,256,50" depth="0.69" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1234,1815,256,98" depth="0.04" origin="0.5,0.5"/>
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="6.0" shadowscale="1,0.8" OpeningSpeed="1.0">
+      <Upgrade gameversion="0.22.0.0" PickingTime="6.0"/>
+      <RequiredItem items="crowbar" type="Equipped"/>
+      <Sprite name="hatchwrecked.door" texture="MiscWrecked.png" sourcerect="1775,1883,256,38" depth="0.05" origin="0,0.5"/>
+      <!--<WeldedSprite name="hatchwrecked.welded" texture="MiscWrecked.png" sourcerect="1233,1915,227,78" depth="0.0" origin="0.5,0.5" scale="true"/>-->
+      <WeldedSprite name="hatchwrecked.welded" texture="Content/Items/Door/hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" scale="true"/>
+      <BrokenSprite name="hatchwrecked.broken" texture="MiscWrecked.png" sourcerect="1775,1927,256,114" depth="0.6" origin="0,0.5" scale="true"/>
+      <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" onlyinsamesub="true"/>
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300"/>
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300"/>
+      <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="2000"/>
+      <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="2000"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <sound file="Content/Items/Door/DoorBreak1.ogg" selectionmode="Random" range="800"/>
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="800"/>
+      </StatusEffect>
+    </Door>
+    <AiTarget sightrange="1500.0" static="True"/>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem items="wrench" type="equipped"/>
+    </Repairable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="doorwbuttonswrecked" nameidentifier="doorwbuttons" tags="door,weldable" scale="0.5" health="75" requirebodyinsidetrigger="false" category="Wrecked" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" ondamagedthreshold="10">
+    <Sprite name="doorwbuttonswrecked.background" texture="MiscWrecked.png" sourcerect="1789,1236,49,416" depth="0.51" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1884,1452,164,416" depth="0.89" origin="0.5,0.5"/>
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="6.0" shadowscale="0.7,1" hasintegratedbuttons="true" OpeningSpeed="1.0">
+      <Upgrade gameversion="0.22.0.0" PickingTime="6.0"/>
+      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <Requireditem items="idcard" type="Picked" optional="true" msg="itemmsgunauthorizedaccess"/>
+      <Sprite name="doorwbuttonswrecked.door" texture="MiscWrecked.png" sourcerect="1936,1025,42,416" depth="0.05" origin="0.5,0"/>
+      <BrokenSprite name="doorwbuttonswrecked.broken" texture="Content/Items/Door/door.png" sourcerect="271,0,121,416" depth="0.509" origin="0.5,0.0" scale="true"/>
+      <WeldedSprite name="doorwbuttonswrecked.welded" texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>
+      <!--<WeldedSprite name="doorwbuttonswrecked.welded" texture="MiscWrecked.png" sourcerect="1984,1025,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>-->
+      <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" onlyinsamesub="true"/>
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300"/>
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300"/>
+      <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="2000"/>
+      <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="2000"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <sound file="Content/Items/Door/DoorBreak1.ogg" selectionmode="Random" range="800"/>
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="800"/>
+      </StatusEffect>
+    </Door>
+    <trigger x="-60" y="-140" width="170" height="85"/>
+    <AiTarget sightrange="3000.0" static="True"/>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem items="wrench" type="equipped"/>
+    </Repairable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="windoweddoorwbuttonswrecked" nameidentifier="windoweddoorwbuttons" tags="door,weldable" scale="0.5" health="75" requirebodyinsidetrigger="false" category="Wrecked" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" ondamagedthreshold="10">
+    <Sprite name="windoweddoorwbuttonswrecked.background" texture="MiscWrecked.png" sourcerect="1789,1236,49,416" depth="0.51" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1884,1452,164,416" depth="0.89" origin="0.5,0.5"/>
+    <Door window="0,-76,50,153" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="6.0" shadowscale="0.7,1" hasintegratedbuttons="true" OpeningSpeed="1.0">
+      <Upgrade gameversion="0.22.0.0" PickingTime="6.0"/>
+      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <Requireditem items="idcard" type="Picked" optional="true" msg="itemmsgunauthorizedaccess"/>
+      <Sprite name="windoweddoorwbuttonswrecked.door" texture="MiscWrecked.png" sourcerect="1885,1025,50,416" depth="0.05" origin="0.5,0"/>
+      <BrokenSprite name="windoweddoorwbuttonswrecked.broken" texture="Content/Items/Door/door.png" sourcerect="392,0,120,416" depth="0.509" origin="0.5,0.0" scale="true"/>
+      <WeldedSprite name="windoweddoorwbuttonswrecked.welded" texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>
+      <!--<WeldedSprite name="windoweddoorwbuttonswrecked.welded" texture="MiscWrecked.png" sourcerect="1984,1025,65,377" depth="0.0" origin="0.5,0.5" scale="true"/>-->
+      <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" onlyinsamesub="true"/>
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300"/>
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300"/>
+      <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="2000"/>
+      <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="2000"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <sound file="Content/Items/Door/DoorBreak1.ogg" selectionmode="Random" range="800"/>
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="800"/>
+      </StatusEffect>
+    </Door>
+    <trigger x="-60" y="-140" width="170" height="85"/>
+    <AiTarget sightrange="3000.0" static="True"/>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem items="wrench" type="equipped"/>
+    </Repairable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="hatchwbuttonswrecked" nameidentifier="hatchwbuttons" allowedlinks="gap, hull" tags="door,weldable" scale="0.5" health="75" requirebodyinsidetrigger="false" category="Wrecked" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" allowrotatingineditor="false" ondamagedthreshold="10">
+    <Upgrade gameversion="1.2.14.0" spritedepth="0.7"/>
+    <Sprite name="hatchwbuttonswrecked.background" texture="MiscWrecked.png" sourcerect="1234,1815,256,98" depth="0.7" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1234,1995,256,50" depth="0.69" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1234,1815,256,98" depth="0.04" origin="0.5,0.5"/>
+    <DecorativeSprite texture="MiscWrecked.png" sourcerect="1502,1853,256,193" depth="0.7" origin="0.5,0.5"/>
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="6.0" shadowscale="1,0.8" hasintegratedbuttons="true" OpeningSpeed="1.0">
+      <Upgrade gameversion="0.22.0.0" PickingTime="6.0"/>
+      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <Requireditem items="idcard" type="Picked" optional="true" msg="itemmsgunauthorizedaccess"/>
+      <Sprite name="hatchwbuttonswrecked.door" texture="MiscWrecked.png" sourcerect="1775,1883,256,38" depth="0.05" origin="0,0.5"/>
+      <!--<WeldedSprite name="hatchwbuttonswrecked.welded" texture="MiscWrecked.png" sourcerect="1233,1915,227,78" depth="0.0" origin="0.5,0.5"/>-->
+      <WeldedSprite name="hatchwbuttonswrecked.welded" texture="Content/Items/Door/hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" scale="true"/>
+      <BrokenSprite name="hatchwbuttonswrecked.broken" texture="MiscWrecked.png" sourcerect="1775,1927,256,114" depth="0.6" origin="0,0.5" scale="true"/>
+      <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" onlyinsamesub="true"/>
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300"/>
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300"/>
+      <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="2000"/>
+      <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="2000"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <sound file="Content/Items/Door/DoorBreak1.ogg" selectionmode="Random" range="800"/>
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="800"/>
+      </StatusEffect>
+    </Door>
+    <trigger x="170" y="51" width="70" height="200"/>
+    <AiTarget sightrange="1500.0" static="True"/>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem items="wrench" type="equipped"/>
+    </Repairable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="dockingportwrecked" nameidentifier="dockingport" tags="dock" linkable="true" indestructible="true" category="Wrecked">
+    <Sprite texture="MiscWrecked.png" sourcerect="1745,1025,113,209" depth="0.94" origin="0.5,0.5"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="power" displayname="connection.power"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+      <output name="proximity_sensor" displayname="connection.dockingproximitysensor" fallbackdisplayname="label.readytodock"/>
+      <output name="on_dock" displayname="connection.ondock"/>
+      <output name="on_undock" displayname="connection.onundock"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="dockinghatchwrecked" nameidentifier="dockinghatch" tags="dock" linkable="true" indestructible="true" category="Wrecked">
+    <Sprite texture="MiscWrecked.png" sourcerect="1595,1403,128,112" depth="0.94" origin="0.5,0.5"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+      <input name="power" displayname="connection.power"/>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+      <output name="proximity_sensor" displayname="connection.dockingproximitysensor" fallbackdisplayname="label.readytodock"/>
+      <output name="on_dock" displayname="connection.ondock"/>
+      <output name="on_undock" displayname="connection.onundock"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="suppliescabinetwrecked" variantof="suppliescabinet" nameidentifier="suppliescabinet" tags="container,suppliescontainer,wrecksupplycab" category="Wrecked">
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.84" sourcerect="1601,1519,120,132" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="mediumsteelcabinetwrecked" variantof="mediumsteelcabinet" nameidentifier="mediumsteelcabinet" tags="locker,container" category="Wrecked">
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.84" sourcerect="1569,1026,175,374" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="mediumwindowedsteelcabinetwrecked" variantof="mediumwindowedsteelcabinet" nameidentifier="mediumwindowedsteelcabinet" tags="locker,container" category="Wrecked">
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.84" sourcerect="1399,1024,168,377" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="steelcabinetwrecked" variantof="steelcabinet" nameidentifier="steelcabinet" tags="locker,container" category="Wrecked">
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.84" sourcerect="1022,1025,364,373" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="securesteelcabinetwrecked" variantof="securesteelcabinet" nameidentifier="securesteelcabinet" tags="container,securecontainer" category="Wrecked">
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.84" sourcerect="1574,1651,105,160" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="railgunshellrackwrecked" nameidentifier="railgunshellrack" variantof="railgunshellrack" tags="container,wreckrailgunammocontainer" category="Wrecked">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0"/>
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="936,1869,182,176"/>
+    <ItemContainer capacity="6" slotsperrow="6" itempos="28,-100" iteminterval="30,0"/>
+  </Item>
+  <Item name="" identifier="coilgunammoshelfwrecked" nameidentifier="coilgunammoshelf" variantof="coilgunammoshelf" tags="container,wreckammoboxcontainer" category="Wrecked" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1028,1407,140,306"/>
+  </Item>
+  <Item name="" identifier="medcabinetwrecked" nameidentifier="medcabinet" variantof="medcabinet" category="Wrecked" scale="0.5" condition="0">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" spritecolor="200,150,100,255"/>
+    <Sprite name="Medical Cabinet (Wrecked)" texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1691,10,208,346"/>
+  </Item>
+  <Item name="" identifier="toxcabinetwrecked" variantof="toxcabinet" nameidentifier="toxcabinet" tags="container,wrecktoxcontainer" waterproof="true" scale="0.4" category="Wrecked">
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.84" sourcerect="1682,1654,157,185" canflipx="false" origin="0.5,0.5"/>
+  </Item>
+  <Item name="" identifier="divingsuitlockerwrecked" nameidentifier="divingsuitlocker" tags="divingsuitcontainerwindow,wreckdivingsuitcontainer" pickdistance="50" scale="0.5" category="Wrecked">
+    <Sprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.84" sourcerect="1126,1710,99,254" origin="0.5,0.5"/>
+    <!-- 70% opacity wrecked locker sprite on top, to make the window look more dirty when there's a suit inside -->
+    <DecorativeSprite texture="Content/Items/Shipwrecks/MiscWrecked.png" depth="0.83" sourcerect="1126,1710,99,254" origin="0.5,0.5" color="255,255,255,150"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="0,0" iteminterval="0,0" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <SlotIcon slotindex="0" texture="Content/Map/LabelIcons.png" sourcerect="512,0,256,256" origin="0.5,0.5"/>
+      <Containable items="deepdiving" excludeditems="deepdivinglarge"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="oxygentankshelf2wrecked" nameidentifier="oxygentankshelf" tags="wreckoxygentankcontainer" pickdistance="50" scale="0.5" category="Wrecked">
+    <Sprite name="Diving Suit Locker Small" texture="Content/Items/Shipwrecks/MiscWrecked.png" sourcerect="1126,1964,99,83" depth="0.84" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="3" maxstacksize="1" slotsperrow="3" itempos="27,-42" iteminterval="22.5,0" itemrotation="0" canbeselected="true" containedspritedepth="0.83" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.16,0.18" anchor="Center" style="ItemUI"/>
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <Containable items="oxygensource,weldingfuel"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="extinguisherbracketwrecked" nameidentifier="extinguisherbracket" variantof="extinguisherbracket" tags="wreckextinguisherholder" spritecolor="200,150,100,255" category="Wrecked">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" spritecolor="200,150,100,255"/>
+  </Item>
+  <Item name="" identifier="weaponholderwrecked" nameidentifier="weaponholder" variantof="weaponholder" tags="wreckweaponholder" scale="0.5" category="Wrecked" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" spritecolor="200,150,100,255"/>
+  </Item>
+  <Item name="" identifier="navterminalwrecked" nameidentifier="navterminal" variantof="navterminal" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="shuttlenavterminalwrecked" nameidentifier="shuttlenavterminal" variantof="shuttlenavterminal" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="statusmonitorwrecked" nameidentifier="statusmonitor" variantof="statusmonitor" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="sonartransducerwrecked" nameidentifier="sonartransducer" variantof="sonartransducer" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+  </Item>
+  <Item name="" identifier="junctionboxwrecked" nameidentifier="junctionbox" variantof="junctionbox" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="batterywrecked" nameidentifier="battery" variantof="battery" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="shuttlebatterywrecked" nameidentifier="shuttlebattery" variantof="shuttlebattery" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+  </Item>
+  <Item name="" identifier="supercapacitorwrecked" nameidentifier="supercapacitor" variantof="supercapacitor" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="chargingdockwrecked" nameidentifier="chargingdock" variantof="chargingdock" category="Wrecked" condition="0" spritecolor="200,150,100,255">
+    <Upgrade gameversion="0.20.4.0" scale="0.5" condition="0" spritecolor="200,150,100,255"/>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm01wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1170,1402,85,124" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,528,80,112" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm02wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1258,1401,74,126" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="560,528,80,112"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm03wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1335,1401,68,124" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="640,528,64,112"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentm04wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1407,1400,85,126" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="704,528,80,112" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentl01wrecked" category="Wrecked" Tags="largeitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1228,1711,346,90" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,816,240,64"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightfluorescentl02wrecked" category="Wrecked" Tags="largeitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1169,1650,367,59" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/light_fluorescent_L2.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,896,288,48"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenmm01wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1171,1528,76,124" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="480,672,80,128" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenmm02wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1248,1547,124,77" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="560,672,128,80" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenmm03wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1370,1526,103,123" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="688,672,112,128"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lighthalogenm04wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1473,1534,124,101" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="800,672,128,96" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" nameidentifier="lamp" identifier="lightleds01wrecked" category="Wrecked" Tags="smallitem,light" scale="0.5">
+    <Sprite texture="MiscWrecked.png" sourcerect="1492,1402,99,99" depth="0.8" origin="0.5,0.5"/>
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" LightSpriteScale="1.3" powerconsumption="5">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="842,794,59,59" origin="0.5,0.5"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate"/>
+      <input name="set_state" displayname="connection.setstate"/>
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="bunkwrecked" nameidentifier="bunk" width="173" height="129" category="Wrecked">
+    <sprite texture="Content/Items/Shipwrecks/BackgroundStructuresWrecked.png" sourcerect="497,692,173,129" depth="0.88" origin="0.5,0.5"/>
+    <Controller UserPos="0,-150" direction="Right" hidehud="false" canbeselected="true" drawuserbehind="true">
+      <limbposition limb="Head" position="-13,-85"/>
+      <limbposition limb="Torso" position="42,-70"/>
+      <limbposition limb="Waist" position="112,-80"/>
+      <limbposition limb="RightFoot" position="222,-80"/>
+      <limbposition limb="LeftFoot" position="222,-80"/>
+      <limbposition limb="RightHand" position="112,-80" allowusinglimb="false"/>
+      <limbposition limb="LeftHand" position="112,-80" allowusinglimb="false"/>
+      <StatusEffect type="OnActive" target="Character">
+        <reduceaffliction type="damage" strength="0.05"/>
+        <reduceaffliction identifier="concussion" strength="0.04"/>
+        <reduceaffliction identifier="infection" strength="0.02"/>
+        <reduceaffliction identifier="bloodloss" strength="0.05"/>
+        <reduceaffliction identifier="bleeding" strength="0.05"/>
+        <reduceaffliction identifier="nausea" strength="0.5"/>
+        <reduceaffliction identifier="drunk" strength="0.5"/>
+        <reduceaffliction identifier="opiatewithdrawal" strength="0.06"/>
+        <reduceaffliction identifier="opiateaddiction" strength="0.06"/>
+        <reduceaffliction identifier="chemwithdrawal" strength="0.06"/>
+        <reduceaffliction identifier="chemaddiction" strength="0.06"/>
+      </StatusEffect>
+    </Controller>
+  </Item>
+  <Item name="" identifier="pulselaserloaderwrecked" nameidentifier="pulselaserloader" variantof="pulselaserloader" category="Wrecked" allowedlinks="pulselaser,pulselaserwrecked" condition="0">
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="1196,4,165,358"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="chaingunloaderwrecked" nameidentifier="chaingunloader" variantof="chaingunloader" category="Wrecked" allowedlinks="chaingun,chaingunwrecked" condition="0">
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="1367,4,149,356"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="flakcannonloaderwrecked" nameidentifier="flakcannonloader" variantof="flakcannonloader" category="Wrecked" allowedlinks="flakcannon,flakcannonwrecked" condition="0">
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="1520,4,151,347"/>
+    <Repairable>
+      <!-- don't emit particles unless repaired above 0 condition -->
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+      <ParticleEmitter mincondition="1.0"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="pulselaserwrecked" nameidentifier="pulselaser" variantof="pulselaser" category="Wrecked" condition="0">
+    <!-- remove SwappableItem element (can't be swapped with normal turrets) -->
+    <SwappableItem/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="2,479,256,256"/>
+    <Turret targetcharacters="true" targetmonsters="false" targetsubmarines="false" targetitems="false" randommovement="true" randomaimmaxtime="3" randomaimmintime="1" randomaimamount="60" aimdelay="true">
+      <RailSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="455,268,120,287"/>
+      <BarrelSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="480,508,125,333"/>
+      <ChargeSprite chargetarget="25, 15" texture="Content/Items/Shipwrecks/TurretsWrecked.png" depth="0.01"  sourcerect="264,857,59,150" origin="1, 1.6"/>
+      <ChargeSprite chargetarget="-25, 15" texture="Content/Items/Shipwrecks/TurretsWrecked.png" depth="0.01"  sourcerect="336,857,59,150" origin="0, 1.6"/>
+    </Turret>
+  </Item>
+  <Item name="" identifier="chaingunwrecked" nameidentifier="chaingun" variantof="chaingun" category="Wrecked" condition="0">
+    <!-- remove SwappableItem element (can't be swapped with normal turrets) -->
+    <SwappableItem/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="2,704,256,256"/>
+    <Turret targetcharacters="true" targetmonsters="false" targetsubmarines="false" targetitems="false" randommovement="true" randomaimmaxtime="3" randomaimmintime="1" randomaimamount="60" aimdelay="true">
+      <RailSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="264,341,212,512"/>
+      <SpinningBarrelSprite spriteamount="5" texture="Content/Items/Shipwrecks/TurretsWrecked.png" depth="0.013" sourcerect="1959,4,46,296" origin="0.1, 1.4"/>
+    </Turret>
+  </Item>
+  <Item name="" identifier="flakcannonwrecked" nameidentifier="flakcannon" variantof="flakcannon" category="Wrecked" condition="0" scale="0.5">
+    <!-- remove SwappableItem element (can't be swapped with normal turrets) -->
+    <SwappableItem/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="1032,517,504,504"/>
+    <Turret targetcharacters="false" targetsubmarines="true" randommovement="true" targetitems="false" randomaimmaxtime="3" randomaimmintime="1" randomaimamount="60" aimdelay="true" barrelpos="250,180">
+      <RailSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="719,517,307,470"/>
+      <BarrelSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="605,296,111,582"/>
+    </Turret>
+  </Item>
+  <Item name="" identifier="doublecoilgunwrecked" nameidentifier="doublecoilgun" variantof="doublecoilgun" category="Wrecked" condition="0" scale="0.5">
+    <!-- remove SwappableItem element (can't be swapped with normal turrets) -->
+    <SwappableItem/>
+    <Sprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="1540,517,504,504"/>
+    <Turret targetcharacters="false" targetsubmarines="true" randommovement="true" targetitems="false" randomaimmaxtime="3" randomaimmintime="1" randomaimamount="60" aimdelay="true" barrelpos="250,180">
+      <RailSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="1675,4,280,336"/>
+      <BarrelSprite texture="Content/Items/Shipwrecks/TurretsWrecked.png" sourcerect="1026,4,166,483"/>
+    </Turret>
+  </Item>
+</Items>

@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items itemtype="thalamus">
+  <Item name="" identifier="thalamusbrain1" tags="thalamus,thalamusbrain" category="Thalamus" noninteractable="False" scale="0.8" health="150" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbyrepairtools="true" damagedbymeleeweapons="true" itemdamagemultiplier="3">
+    <Sprite texture="thalamus.png" sourcerect="96,577,320,319" depth="0.59"/>
+    <BrokenSprite texture="thalamus.png" sourcerect="416,577,320,319" depth="0.59" maxcondition="0"/>
+    <Body radius="120" bodytype="Static"/>
+    <ItemComponent>
+      <StatusEffect type="OnDeath" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainDeath1.ogg" range="10000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainDeath2.ogg" range="10000" selectionmode="Random"/>
+        <ParticleEmitter particle="organeruption" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="heavygib" drawontop="true" particleamount="1" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="gib" particleamount="100" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="30" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5"/>
+        <ParticleEmitter particle="whitegoosplash" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainHit1.ogg" range="5000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainHit2.ogg" range="5000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainHit3.ogg" range="5000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainHit5.ogg" range="5000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainHit6.ogg" range="5000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_brainHit7.ogg" range="5000" selectionmode="Random"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="1" scalemin="1" scalemax="1.5" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="waterblood" particleamount="1" anglemin="0" anglemax="360" scalemin="2" scalemax="4"/>
+        <ParticleEmitter particle="gib" particleamount="4" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_idle1.ogg" range="2000" selectionmode="Random" volume="0.5"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_idle2.ogg" range="2000" selectionmode="Random" volume="0.5"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_idle3.ogg" range="2000" selectionmode="Random" volume="0.5"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_idle4.ogg" range="2000" selectionmode="Random" volume="0.5"/>
+        <Conditional Condition="gt 0"/>
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+  <Item name="" description="" identifier="fleshgun1" Tags="turret,thalamus,fleshgun" category="Thalamus" interactthroughwalls="true" Scale="1" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="750" linkable="true" allowedlinks="fleshgunloader">
+    <Sprite texture="Content/Map/Thalamus/thalamus.png" depth="0.51" sourcerect="96,384,448,192" canflipy="false" origin="0.5,0.5"/>
+    <BrokenSprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="544,384,448,192" depth="0.59" maxcondition="0"/>
+    <StaticBody radius="80"/>
+    <Turret targetcharacters="false" targetitems="false" canbeselected="false" characterusable="false" maxactiveprojectiles="1" linkable="true" barrelpos="243,50" hidebarrelwhenbroken="true" rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="5.0" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8" spread="10">
+      <Sound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonLaunch1.ogg" range="10000" type="OnUse"/>
+      <Sound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonLaunch2.ogg" range="10000" type="OnUse"/>
+      <Sound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonLaunch3.ogg" range="10000" type="OnUse"/>
+      <BarrelSprite name="fleshgun barrel" texture="Content/Map/Thalamus/thalamus.png" depth="0.52" sourcerect="612,295,55,50" origin="0.5,1.5"/>
+      <MoveSound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonMoveLoop.ogg"/>
+      <StartMoveSound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonMoveStart.ogg"/>
+      <EndMoveSound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonMoveStop.ogg"/>
+      <ParticleEmitter particle="gib" anglemin="-15" anglemax="15" particleamount="10" velocitymin="300" velocitymax="600" scalemin="0.5" scalemax="1.0"/>
+      <ParticleEmitter particle="heavygib" anglemin="-15" anglemax="15" particleamount="10" velocitymin="500" velocitymax="1000" scalemin="0.5" scalemax="1.0"/>
+      <StatusEffect type="OnUse" target="This">
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="5.0" flames="false" smoke="false" sparks="false" underwaterbubble="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnDeath" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs1.ogg" range="2000"/>
+        <ParticleEmitter particle="organeruption" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360" distancemin="-50" distancemax="-50"/>
+        <ParticleEmitter particle="heavygib" drawontop="true" particleamount="1" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" distancemin="-50" distancemax="-50"/>
+        <ParticleEmitter particle="gib" particleamount="10" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="whitegoosplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+    </Turret>
+    <ConnectionPanel selectkey="Action" canbeselected="false" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
+      <input name="toggle_light" displayname="connection.togglelight"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item name="" identifier="fleshgunloader1" tags="thalamus,fleshgunequipment" category="Thalamus" linkable="true" allowedlinks="fleshgun" scale="0.8" health="100" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" noninteractable="False" itemdamagemultiplier="3">
+    <Sprite texture="thalamus.png" depth="0.51" sourcerect="736,580,160,348" origin="0.5,0.5"/>
+    <BrokenSprite texture="thalamus.png" sourcerect="896,580,160,348" depth="0.51" maxcondition="0"/>
+    <Body width="100" height="230" bodytype="Static"/>
+    <ItemContainer hideitems="true" drawinventory="true" capacity="1" slotsperrow="6" itempos="74,-281" iteminterval="0,0" itemrotation="0" canbeselected="false" containedspritedepth="0.79">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <Containable items="fleshguntendon"/>
+      <!-- 4 shots -->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="fleshguntendon1" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnDeath" target="This">
+        <ParticleEmitter particle="organeruption" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs2.ogg" range="2000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs3.ogg" range="2000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs4.ogg" range="2000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs5.ogg" range="2000" selectionmode="Random"/>
+        <ParticleEmitter particle="heavygib" drawontop="true" particleamount="1" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="gib" particleamount="10" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="whitegoosplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs6.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs7.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs8.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs9.ogg" range="1000" selectionmode="Random"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="1" scalemin="1" scalemax="1.5" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="waterblood" particleamount="1" anglemin="0" anglemax="360" scalemin="2" scalemax="4"/>
+        <ParticleEmitter particle="gib" particleamount="4" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="fleshguntendon1" tags="fleshguntendon,thalamus" health="20" hideinmenus="true" category="Thalamus" sonarsize="5" scale="1" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbyrepairtools="true" damagedbymeleeweapons="true" impactsoundtag="impact_soft">
+    <InventoryIcon texture="Content/Map/Thalamus/thalamus.png" sourcerect="676,296,24,48" origin="0.5,0.5"/>
+    <Sprite texture="thalamus.png" sourcerect="0,0,1,1" depth="0.55" origin="0.5,0.5"/>
+    <Body radius="10" density="35"/>
+    <Rope targetpullforce="40000" projectilepullforce="10" maxlength="10000" snaponcollision="true" spritewidth="30" tile="true">
+      <Sprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="617,352,174,32" depth="0.57" origin="0.5,0.5"/>
+      <EndSprite texture="Content/Map/Thalamus/thalamus.png" sourcerect="672,288,32,64" depth="0.56" origin="0.5,0.5"/>
+      <SnapSound file="Content/Items/Weapons/HarpoonGun1.ogg" range="500" frequencymultiplier="3.0,4.0"/>
+      <!-- Automatically snap after 300 seconds -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="300"/>
+      <!-- Remove 1 second after snapping -->
+      <StatusEffect type="Always" target="This" delay="1" checkconditionalalways="true">
+        <Conditional Snapped="true"/>
+        <Remove/>
+      </StatusEffect>
+      <!-- Snap after 5 seconds if not stuck to anything -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="5" checkconditionalalways="true">
+        <Conditional targetitemcomponent="Projectile" IsStuckToTarget="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnDeath" target="This" Snapped="true">
+        <Sound file="Content/Sounds/Damage/Gore1.ogg" range="2000" selectionmode="Random"/>
+        <Sound file="Content/Sounds/Damage/Gore2.ogg" range="2000"/>
+        <Sound file="Content/Sounds/Damage/Gore3.ogg" range="2000"/>
+        <ParticleEmitter particle="organeruption" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="heavygib" drawontop="true" particleamount="3" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="gib" particleamount="20" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="10" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5"/>
+        <ParticleEmitter particle="whitegoosplash" particleamount="10" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5"/>
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <Sound file="Content/Sounds/Damage/LimbSlash2.ogg" range="1000"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="1" scalemin="1" scalemax="1.5" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="waterblood" particleamount="1" anglemin="0" anglemax="360" scalemin="2" scalemax="4"/>
+        <ParticleEmitter particle="gib" particleamount="4" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+      </StatusEffect>
+    </Rope>
+    <Projectile characterusable="false" launchimpulse="50.0" sticktostructures="true" maxtargetstohit="2" maxjointtranslation="100">
+      <Attack structuredamage="300"/>
+      <StatusEffect type="OnImpact" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonHit1.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_harpoonHit2.ogg" range="1000"/>
+        <ParticleEmitter particle="gib" anglemin="0" anglemax="360" particleamount="15" velocitymin="100" velocitymax="2000" scalemin="0.5" scalemax="1.0"/>
+        <ParticleEmitter particle="heavygib" anglemin="0" anglemax="360" particleamount="15" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1.0"/>
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
+  <Item name="" description="" identifier="fleshspike1" Tags="fleshspike,turret,thalamus" category="Thalamus" interactthroughwalls="true" Scale="1" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="750" linkable="true" health="100">
+    <Sprite texture="Content/Map/Thalamus/thalamus.png" depth="0.896" sourcerect="96,0,352,96" canflipy="false" origin="0.5,0.5"/>
+    <Brokensprite texture="Content/Map/Thalamus/thalamus.png" depth="0.896" sourcerect="448,0,352,96" canflipy="false" origin="0.5,0.5" maxcondition="0"/>
+    <StaticBody width="150" height="50"/>
+    <Turret targetcharacters="false" targetitems="false" ignoreaimdelay="true" airange="600" launchwithoutprojectile="true" canbeselected="false" characterusable="false" linkable="true" barrelpos="176,20" hidebarrelwhenbroken="true" rotationlimits="270,270" powerconsumption="0.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="-700" reload="10.0" retractiondurationmultiplier="0.15" recoiltime="0.25" retractiondelay="0.5" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
+      <Sound file="Content/Map/Thalamus/Sounds/CARRIER_spikeLaunch1.ogg" range="10000" type="OnUse"/>
+      <Sound file="Content/Map/Thalamus/Sounds/CARRIER_spikeLaunch2.ogg" range="10000" type="OnUse"/>
+      <Sound file="Content/Map/Thalamus/Sounds/CARRIER_spikeLaunch3.ogg" range="10000" type="OnUse"/>
+      <BarrelSprite name="fleshgun spike" texture="Content/Map/Thalamus/thalamus.png" depth="0.897" sourcerect="0,32,96,992" origin="0.5,0.1"/>
+      <ParticleEmitter particle="risingbubbles" particleamount="20" scalemin="1" scalemax="2" velocitymin="50" velocitymax="1000" anglemin="-20" anglemax="20" distancemin="0" distancemax="400"/>
+      <ParticleEmitter particle="bloodtrail" particleamount="30" scalemin="2" scalemax="5" velocitymin="200" velocitymax="1000" anglemin="-20" anglemax="20" distancemin="0" distancemax="400"/>
+      <ParticleEmitter particle="waterblood" particleamount="40" scalemin="2" scalemax="4" velocitymin="0" velocitymax="100" anglemin="-10" anglemax="10" distancemin="0" distancemax="400"/>
+      <ParticleEmitter particle="blackwaterblood" particleamount="40" scalemin="3" scalemax="5" velocitymin="0" velocitymax="100" anglemin="-10" anglemax="10" distancemin="0" distancemax="400"/>
+      <StatusEffect type="OnUse" target="This" offset="0,300" delay="0.1" condition="-10" disabledeltatime="true"> <!--MAX 10 hits-->
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_spikeHit1.ogg" range="10000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_spikeHit2.ogg" range="10000"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_spikeHit3.ogg" range="10000"/>
+        <Explosion range="200.0" structuredamage="1000" force="0.01" camerashake="5.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false" flash="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" offset="0,400" delay="0.125">
+        <Explosion range="200.0" structuredamage="800" force="0.01" camerashake="0.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false" flash="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" offset="0,500" delay="0.15">
+        <Explosion range="200.0" structuredamage="800" force="0.01" camerashake="0.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false" flash="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" offset="0,600" delay="0.175">
+        <Explosion range="200.0" structuredamage="600" force="0.01" camerashake="0.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false" flash="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" offset="0,650" delay="0.1875">
+        <Explosion range="200.0" structuredamage="400" force="0.01" camerashake="0.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false" flash="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" offset="0,700" delay="0.2">
+        <Explosion range="200.0" structuredamage="200" force="0.01" camerashake="0.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false" flash="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" offset="0,600" delay="0.29">
+        <Explosion range="200.0" structuredamage="200" force="0.01" camerashake="0.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" shockwave="false" flash="false"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" delay="0.3">
+        <SpawnCharacter speciesname="Terminalcell" count="2" offset="0,700" spread="100"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" delay="0.35">
+        <SpawnCharacter speciesname="Terminalcell" count="3" offset="0,750" spread="50"/>
+      </StatusEffect>
+      <StatusEffect type="OnDeath" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs1.ogg" range="2000"/>
+        <ParticleEmitter particle="organeruption" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360" distancemin="-50" distancemax="-50"/>
+        <ParticleEmitter particle="heavygib" drawontop="true" particleamount="1" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" distancemin="-50" distancemax="-50"/>
+        <ParticleEmitter particle="gib" particleamount="10" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="whitegoosplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+    </Turret>
+  </Item>
+
+  <Item name="" identifier="cellspawnorgan1" tags="thalamus,cellspawnorgan" category="Thalamus" linkable="false" scale="0.8" health="100" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" itemdamagemultiplier="3">
+    <Sprite texture="thalamus.png" depth="0.55" sourcerect="800,1,192,191" origin="0.5,0.5"/>
+    <BrokenSprite texture="thalamus.png" sourcerect="800,193,192,191" depth="0.55" maxcondition="0"/>
+    <Body width="175" height="175" bodytype="Static"/>
+    <ItemComponent>
+      <StatusEffect type="OnDeath" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs2.ogg" range="2000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs3.ogg" range="2000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs4.ogg" range="2000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs5.ogg" range="2000" selectionmode="Random"/>
+        <ParticleEmitter particle="organeruption" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="heavygib" drawontop="true" particleamount="1" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="gib" particleamount="10" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="whitegoosplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs6.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs7.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs8.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs9.ogg" range="1000" selectionmode="Random"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="1" scalemin="1" scalemax="1.5" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="waterblood" particleamount="1" anglemin="0" anglemax="360" scalemin="2" scalemax="4"/>
+        <ParticleEmitter particle="gib" particleamount="4" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+      </StatusEffect>
+      <StatusEffect type="NotInWater" target="This" condition="-10"/>
+    </ItemComponent>
+  </Item>
+
+  <Item name="" identifier="thalamuswire" category="Thalamus" Tags="thalamus,wire" canbepicked="false">
+    <InventoryIcon texture="thalamus.png" sourcerect="6,4,85,24" origin="0.5,0.5"/>
+    <Sprite texture="thalamus.png" depth="0.55" sourcerect="9,8,78,16" origin="0.5,0.5"/>
+    <Body radius="7" width="60" density="15"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
+    <Wire width="1.0" hiddeningame="true">
+      <WireSprite texture="Content/Map/Thalamus/thalamus.png" depth="0.56" sourcerect="9,8,78,16" origin="0.5,0.5"/>
+    </Wire>
+  </Item>
+
+  <Item name="" identifier="storageorgan1" tags="container,thalamus,storageorgan" category="Thalamus" health="50" linkable="false" pickdistance="150" scale="1" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" itemdamagemultiplier="3">
+    <Sprite texture="thalamus.png" depth="0.6" sourcerect="96,96,320,192" origin="0.5,0.5"/>
+    <BrokenSprite texture="thalamus.png" depth="0.6" sourcerect="416,96,320,192" origin="0.5,0.5"/>
+    <Body width="300" height="150" bodytype="Static"/>
+    <ItemContainer capacity="4" slotsperrow="2" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect" accessonlywhenbroken="true">
+      <GuiFrame relativesize="0.18,0.25" anchor="Center" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem"/>
+      <StatusEffect type="OnDeath" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs1.ogg" range="2000" selectionmode="Random"/>
+        <ParticleEmitter particle="organeruption" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="heavygib" drawontop="true" particleamount="1" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="gib" particleamount="10" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="whitegoosplash" particleamount="5" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-5.0"/>
+      <StatusEffect type="OnDamaged" target="This">
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs6.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs7.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs8.ogg" range="1000" selectionmode="Random"/>
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs9.ogg" range="1000" selectionmode="Random"/>
+        <ParticleEmitter particle="bloodsplash" particleamount="1" scalemin="1" scalemax="1.5" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360"/>
+        <ParticleEmitter particle="waterblood" particleamount="1" anglemin="0" anglemax="360" scalemin="2" scalemax="4"/>
+        <ParticleEmitter particle="gib" particleamount="4" scalemin="0.25" scalemax="1" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  
+</Items>

@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EventManagerSettings>
+  
+  <!-- DefaultEventThreshold
+      Event threshold determines how low the intensity of the current situation has to be for a new random event to be created.
+      The threshold may increase over time, but is reset to this default value after creating a new event. -->
+
+  <!-- EventThresholdIncrease
+      How much the event threshold increases per second. Can be used to make sure that new events will be created
+      eventually even if the current crisis situation is not resolved (e.g. sub laying flooded on the ocean floor...)-->
+
+  <!-- EventCooldown
+      Minimum amount of time between creating new random events. -->
+  
+  <!-- FreezeDurationWhenCrewAway
+      Additional events don't trigger during this time when the crew (or more specifically, more than 50% of the non-bot characters) 
+      is outside the sub (exploring a wreck, cave, ruin or a beacon station). -->
+
+  <Easiest
+    DefaultEventThreshold="0.2"
+    EventThresholdIncrease="0.005"
+    EventCooldown="60.0"
+    MinLevelDifficulty="0.0"
+    MaxLevelDifficulty="15.0"
+    FreezeDurationWhenCrewAway="1000000"/>
+
+  <Easy
+    DefaultEventThreshold="0.3"
+    EventThresholdIncrease="0.006"
+    EventCooldown="60.0"
+    MinLevelDifficulty="15.0"
+    MaxLevelDifficulty="35.0"
+    FreezeDurationWhenCrewAway="1000000"/>
+
+  <Medium
+    DefaultEventThreshold="0.35"
+    EventThresholdIncrease="0.007"
+    EventCooldown="60.0"
+    MinLevelDifficulty="35.0"
+    MaxLevelDifficulty="50.0"
+    FreezeDurationWhenCrewAway="1800"/>
+
+  <Challenging
+    DefaultEventThreshold="0.4"
+    EventThresholdIncrease="0.008"
+    EventCooldown="60.0"
+    MinLevelDifficulty="50.0"
+    MaxLevelDifficulty="65.0"
+    FreezeDurationWhenCrewAway="1200"/>
+
+  <Hard
+    DefaultEventThreshold="0.45"
+    EventThresholdIncrease="0.009"
+    EventCooldown="60.0"
+    MinLevelDifficulty="65.0"
+    MaxLevelDifficulty="80.0"
+    FreezeDurationWhenCrewAway="600"/>
+
+  <Hellish
+    DefaultEventThreshold="0.5"
+    EventThresholdIncrease="0.01"
+    EventCooldown="60.0"
+    MinLevelDifficulty="80.0"
+    MaxLevelDifficulty="100.0"
+    FreezeDurationWhenCrewAway="300"/>
+</EventManagerSettings>

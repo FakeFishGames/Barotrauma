@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Slideshows>
+  <Slideshow identifier="campaignstart">
+    <Slide text="campaignstart1">
+      <Portrait texture="Content/Map/LocationPortraits/NaturalFormations3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    </Slide>
+    <Slide text="campaignstart2">
+      <Portrait texture="Content/Map/LocationPortraits/Colony.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    </Slide>
+    <Slide text="campaignstart3">
+      <Portrait texture="Content/Map/LocationPortraits/MainMenu2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    </Slide>
+  </Slideshow>
+
+  <Slideshow identifier="campaignending">
+    <Slide text="campaignending1" fadeindelay="3" fadeinduration="5" textfadeindelay="7">
+      <Portrait texture="Content/Map/LocationPortraits/EndPortrait1.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    </Slide>
+    <Slide text="campaignending2">
+      <Portrait texture="Content/Map/LocationPortraits/EndPortrait2.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    </Slide>
+    <Slide text="campaignending3">
+      <Portrait texture="Content/Map/LocationPortraits/EndPortrait3.png" sourcerect="0,0,2160,1080" premultiplyalpha="false"/>
+    </Slide>
+  </Slideshow>
+  
+</Slideshows>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TraitorMissions>
+
+  <!--Mission 1: "Easter bunny"-->
+  <!--Objective 1: Find mudraptor egg-->
+  <!--Objective 2: Feed the egg saline until it hatches-->
+  <!--Objective 3: Keep the mudraptor alive for 2 min.-->
+
+  <TraitorMission identifier="easterbunny">
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    <StartInfoText id="flood_1_traitormissionstartinfotext"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="easterbunny_objectivesuccessmessage1"/>
+      <StartMessage id="flood_1_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" identifier="smallmudraptoregg" preferNew="true" allowNew="true" allowExisting="false" allowedContainers="loosevent">
+        <InfoText id="easterbunny_goalinfotext_1"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="easterbunny_objectivesuccessmessage2"/>
+      <StartMessage id="easterbunny_traitorobjectivestartmessage2"/>
+      <Goal type="transformentity" entities="smallmudraptoregg,mediummudraptoregg,largemudraptoregg,mudraptor_hatchling" entitytypes="item,item,item,character" catalystid="antibloodloss1">
+        <InfoText id="easterbunny_goalinfotext_2"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="easterbunny_objectivesuccessmessage3"/>
+      <StartMessage id="easterbunny_traitorobjectivestartmessage3"/>
+      <Goal type="keeptransformedalive" speciesname="mudraptor_hatchling">
+        <InfoText id="easterbunny_goalinfotext_3"/>
+        <Modifier type="duration" duration="120" cumulative="false"/>
+      </Goal>
+    </Objective>
+  </TraitorMission>
+
+  <!--Mission 2: "One of Us"-->
+  <!--TODO: Edit text to fit shorter mission-->
+  <!--Objective 1: Find husk eggs-->
+  <!--Objective 2: Inject everyone with husk eggs-->
+
+  <TraitorMission identifier="oneofus">
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="512,0,256,256" color="200,0,0,255"/>
+    <StartInfoText id="mvptraitormissionstartinfotext"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="one_of_us_objectivesuccessmessage2"/>
+      <StartMessage id="mvptraitorobjectivestartmessage2"/>
+      <Goal type="finditem" identifier="huskeggs" preferNew="true" allowNew="true" allowExisting="true" allowedContainers="loosevent">
+        <InfoText id="one_of_us_goalinfotext_2"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="mvpobjectivesuccessmessage3"/>
+      <StartMessage id="one_of_us_traitorobjectivestartmessage4"/>
+      <Goal type="injectpoison" poison="huskeggs" affliction="huskinfection" targetpercentage="100">
+        <InfoText id="one_of_us_goalinfotext_4"/>
+      </Goal>
+    </Objective>
+  </TraitorMission>
+
+  <!--Mission 3: "Tainted welding tools"-->
+  <!--TODO: Edit text to fit shorter mission-->
+  <!--Objective 1: Replace welding fuel inside welding tools with oxygen tanks-->
+  <!--Objective 2: Flood 15% of the sub-->
+  <!--Objective 3: Escape-->
+
+  <TraitorMission identifier="taintedwelding">
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    <StartInfoText id="flood_2_traitormissionstartinfotext"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage2"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage2"/>
+      <Goal type="replaceinventory" containers="weldingtool" replacements="oxygentank" percentage="75">
+        <InfoText id="tainted_welding_goalinfotext_2"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage3"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage3"/>
+      <Goal type="floodsub" percentage="15">
+        <InfoText id="traitorgoalfloodpercentofsub"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage5"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage5"/>
+      <Goal type="reachdistancefromsub" distance="50">
+        <InfoText id="traitorgoalreachdistancefromsub"/>
+      </Goal>
+    </Objective>
+
+  </TraitorMission>
+
+  <!--Mission 4: "Acid party"-->
+  <!--TODO: Edit text to fit shorter mission-->
+  <!--Objective 1: Find deliriumine-->
+  <!--Objective 2: Inject everyone with deliriumine-->
+  <!--Objective 3: Cause a nuclear meltdown-->
+
+  <TraitorMission identifier="acidparty">
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    <StartInfoText id="acidparty_traitormissionStartInfoText"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="acidparty_objectiveSuccessMessage1"/>
+      <StartMessage id="acidparty_traitorobjectivestartmessage1"/>
+      <Goal type="finditem" percentage="100" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="loosevent,loosepanel,toxcabinet">
+        <InfoText id="traitorgoalfinditeminfo"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="acidparty_objectiveSuccessMessage3"/>
+      <StartMessage id="acidparty_traitorobjectivestartmessage3"/>
+      <Goal type="injectpoison" poison="deliriumine" affliction="psychosis" targetpercentage="100">
+        <InfoText id="traitorgoalpoisoninfo"/>
+      </Goal>
+    </Objective>
+  </TraitorMission>
+
+  <!--Mission 5: "Flood"-->
+  <!--Objective 1: Destroy almost all diving masks-->
+  <!--Objective 2: Flood 50% of the sub-->
+
+  <TraitorMission identifier="flood2">
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    <StartInfoText id="flood_2_traitormissionStartInfoText"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage2"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage2"/>
+      <Goal type="destroyitems" tag="divingmask" percentage="85">
+        <InfoText id="traitorgoaldestroyitems"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="flood_2_objectiveSuccessMessage3"/>
+      <StartMessage id="flood_2_traitorobjectivestartmessage3"/>
+      <Goal type="floodsub" percentage="25">
+        <InfoText id="traitorgoalfloodpercentofsub"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="tainted_welding_objectiveSuccessMessage5"/>
+      <StartMessage id="tainted_welding_traitorobjectivestartmessage5"/>
+      <Goal type="reachdistancefromsub" distance="50">
+        <InfoText id="traitorgoalreachdistancefromsub"/>
+      </Goal>
+    </Objective>
+
+  </TraitorMission>
+
+  <!--Mission 6: "Trap"-->
+  <!--TODO: Texts-->
+  <!--Objective 1: Sabotage engine-->
+  <!--Objective 2: Kill mechanic-->
+  
+  <TraitorMission identifier="enginetrap">
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    <StartInfoText id="traitormissionstartmessage_trap"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="traitorobjectivemessagesuccess_trap1"/>
+      <StartMessage id="traitorobjectivemessage_trap1"/>
+      <Goal type="sabotage" tag="engine" threshold="10">
+        <InfoText id="traitorgoalsabotageinfo"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="traitormissionsuccessmessage"/>
+      <StartMessage id="traitorobjectivemessage_trap2"/>
+      <Goal type="killtarget">
+        <InfoText id="traitorgoalinfos_trap2"/>
+      </Goal>
+    </Objective>
+  </TraitorMission>
+
+  <!--Mission 7: "I'm the captain now"-->
+  <!--TODO: Texts-->
+  <!--Objective 1: Find captain's cap-->
+  <!--Objective 2: Kill captain-->
+
+  <!--<TraitorMission identifier="mutiny">
+    <Icon texture="Content/UI/MissionIcons.png" sourcerect="0,0,256,256" color="200,0,0,255"/>
+    <StartInfoText id="traitormissionstartmessage"/>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageFailure id="traitormissionsuccessmessage"/>
+      <StartMessage id="traitorobjectivestartmessage"/>
+      <Goal type="finditem" identifier="captainscap1" preferNew="true" allowNew="true" allowExisting="false" allowedContainers="loosevent,loosepanel,crewcab">
+        <InfoText id="traitorgoalfinditeminfo"/>
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <EndMessageFailure id="traitormissionfailuremessage"/>
+      <EndMessageSuccess id="traitormissionsuccessmessage"/>
+      <StartMessage id="traitorobjectivestartmessage"/>
+      <Goal type="killtarget" job="captain">
+        <InfoText id="traitorgoalkilltargetinfo"/>
+      </Goal>
+    </Objective>
+  </TraitorMission>-->
+
+</TraitorMissions>

@@ -1,0 +1,519 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="deepdiverduck" category="Misc" Tags="smallitem,traitormissionitem" maxstacksize="1" impacttolerance="4" inventoryiconcolor="110,120,110,255" spritecolor="110,120,110" impactsoundtag="impact_metal_heavy">
+    <PreferredContainer primary="storagecab"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" spawnprobability="0"/>
+    <Price baseprice="38" sold="false" canbespecial="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.3"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" hidefornontraitors="true" requiredtime="10">
+      <RequiredSkill identifier="helm" level="10"/>
+      <RequiredItem identifier="rubber"/>
+      <RequiredItem identifier="lead"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="448,448,64,64"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="394,200,43,43" depth="0.55" origin="0.5,0.5"/>
+    <Body width="3" radius="15" density="30"/>
+    <ItemComponent>
+      <StatusEffect target="This" type="OnImpact">
+        <sound file="Content/Sounds/Damage/StructureBlunt1.ogg" range="500" frequencymultiplier="1.2"/>
+        <Explosion range="50.0" showeffects="false" structuredamage="10" decal=""/>
+      </StatusEffect>
+    </ItemComponent>
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="3.5" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnSecondaryUse" target="This" delay="0.1">
+        <Use/>
+      </StatusEffect>
+    </Throwable>
+    <Projectile characterusable="false" launchimpulse="0.0" sticktocharacters="false">
+      <Attack structuredamage="5">
+        <Affliction identifier="blunttrauma" strength="5"/>
+        <Affliction identifier="stun" strength="0.5"/>
+        <StatusEffect type="OnUse" target="UseTarget">
+          <Conditional entitytype="eq Character"/>
+          <Sound file="Content/Items/Weapons/Smack1.ogg" selectionmode="random" range="500"/>
+          <Sound file="Content/Items/Weapons/Smack2.ogg" range="500"/>
+        </StatusEffect>
+        <StatusEffect type="OnUse" target="Limb" targetLimbs="Head">
+          <Affliction identifier="concussion" strength="10"/>
+          <Affliction identifier="stun" strength="5"/>
+        </StatusEffect>
+      </Attack>
+    </Projectile>
+  </Item>
+
+  <Item name="" identifier="huskfigurine" category="Misc" maxstacksize="2" Tags="smallitem,traitormissionitem" scale="0.5" health="10" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" isshootable="true">
+    <Price baseprice="50" sold="false" canbespecial="false">
+      <Price storeidentifier="merchantoutpost"/>
+      <Price storeidentifier="merchantcity"/>
+      <Price storeidentifier="merchantresearch"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine"/>
+    </Price>
+    <Fabricate suitablefabricators="fabricator" hidefornontraitors="true" requiredtime="10">
+      <RequiredItem identifier="aluminium" amount="2 "/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="384,448,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="399,451,35,60" depth="0.55" origin="0.5,0.5"/>
+    <Body width="30" height="55" density="15"/>
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="3.0" aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="false" aimable="true">
+      <RequiredItem items="wrench,deattachtool" excludeditems="multitool" type="Equipped"/>
+      <StatusEffect type="OnNotContained" target="This" interval="25">
+        <Conditional targetitemcomponent="Holdable" Attached="eq true"/>
+        <particleemitter particle="shockwavesmall" particleamount="1" scalemin="0.5" scalemax="0.5"/>
+        <Sound file="Content/Characters/Husk/Husk_Idle1.ogg" type="OnUse" range="300" selectionmode="Random"/>
+        <Sound file="Content/Characters/Husk/Husk_Idle2.ogg" type="OnUse" range="300"/>
+        <Sound file="Content/Characters/Husk/Husk_Idle3.ogg" type="OnUse" range="300"/>
+        <Sound file="Content/Characters/Husk/Husk_Idle4.ogg" type="OnUse" range="300"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  
+  <Item name="" identifier="faultycultistrobes" nameidentifier="cultistrobes" variantof="cultistrobes" hideinmenus="true">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="150" canbespecial="false" sold="false">
+      <Price sold="false"/>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="organicfiber"/>
+    </Deconstruct>
+    <Wearable slots="Any,InnerClothes" variants="1" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnWearing" target="Character" interval="0.5" disabledeltatime="true">
+        <!-- Disable disguisedashusk - they're faulty!
+        <Affliction identifier="disguisedashusk" amount="0"/> -->
+        <Clear/>
+      </StatusEffect>
+    </Wearable>
+  </Item>
+
+  <Item name="" identifier="huskcaller" hideinmenus="true" Tags="smallitem,instrument,traitormissionitem" cargocontaineridentifier="metalcrate" scale="0.5" description="" price="300" impactsoundtag="impact_metal_light" isshootable="true">
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" depth="0.55" sourcerect="235,252,79,46" origin="0.5,0.5"/>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="235,252,79,46" origin="0.5,0.5"/>
+    <Body width="5" radius="20" density="15"/>
+    <PreferredContainer primary="crewcab" spawnprobability="0" notcampaign="true"/>
+    <PreferredContainer secondary="wreckcrewcab,abandonedcrewcab,piratecrewcab" spawnprobability="0"/>
+    <Price baseprice="50" sold="false" canbespecial="false"/>
+    <Holdable slots="RightHand+LeftHand,Any" aimable="false" aimpos="35,15" handle1="-10,0" handle2="0,0" msg="ItemMsgPickUpSelect"/>
+    <RangedWeapon reload="2">
+      <Sound file="Content/Items/Weapons/WEAPON_harpoonCoilRifleChargeUp.ogg" type="OnUse" range="500" frequencymultiplier="0.5"/>
+    </RangedWeapon>
+  </Item>
+
+  <Item name="" identifier="traitorduffelbag" nameidentifier="duffelbag" variantof="duffelbag" hideinmenus="true" tags="mobilecontainer" fireproof="true" description="" impactsoundtag="impact_soft" scale="0.4">
+    <Holdable>
+      <!-- Disable deteriorating -->
+      <StatusEffect type="OnActive" targettype="This" Condition="0"/>
+    </Holdable>
+  </Item>
+
+  <!-- Basic time bomb, can be dumped into water to get rid of -->
+  <Item name="" identifier="traitortimebomb" category="Weapon" hideinmenus="true" Tags="smallitem,explosive,traitorbomb,traitormissionitem" maxstacksize="1" Scale="0.5" health="120" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light">
+    <Price baseprice="160" sold="false" canbespecial="false"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" depth="0.55" sourcerect="448,198,38,76" origin="0.5,0.5"/>
+    <Body width="30" height="70" density="20"/>
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" canbecombined="true" removeoncombined="true" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect type="OnBroken" target="This">
+        <!-- Nuke -->
+        <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" range="50000"/>
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="50000"/>
+        <Explosion range="500.0" ballastfloradamage="300" structuredamage="300" itemdamage="1000" force="20" severlimbsprobability="0.75" debris="true" decal="explosion" decalsize="0.75" penetration="0.5"
+                   camerashake="200" camerashakerange="10000"
+                   flashrange="1000" flashduration="2.0"
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
+          <Affliction identifier="explosiondamage" strength="200"/>
+          <Affliction identifier="burn" strength="200"/>
+          <Affliction identifier="bleeding" strength="40" probability="0.05" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="10"/>
+          <Affliction identifier="radiationsickness" strength="30"/>
+        </Explosion>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="6000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="6000"/>
+      </StatusEffect>
+    </Throwable>
+    <LightComponent LightColor="248,81,81,100" range="20" powerconsumption="0" IsOn="false" blinkfrequency="1.0" offset="0,16">
+      <sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="492,218,17,7" origin="0.5,0.5"/>
+      <StatusEffect type="OnActive" target="This" interval="1" Condition="-1.0" disabledeltatime="true">
+        <sound file="Content/Items/Button/Switch1.ogg" range="200" frequencymultiplier="1.5" volume="0.75"/>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+
+  <!-- Variant that cannot be dumped into the water to get rid of, it explodes and probably still nukes the ship -->
+  <Item name="" identifier="traitortimebomb2" category="Weapon" hideinmenus="true" Tags="smallitem,explosive,traitorbomb,traitormissionitem" maxstacksize="1" Scale="0.5" health="120" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light">
+    <Price baseprice="160" sold="false" canbespecial="false"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" depth="0.55" sourcerect="448,198,38,76" origin="0.5,0.5"/>
+    <Body width="30" height="70" density="20"/>
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" canbecombined="true" removeoncombined="true" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect type="OnBroken" target="This">
+        <!-- Nuke -->
+        <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" range="50000"/>
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="50000"/>
+        <Explosion range="500.0" ballastfloradamage="300" structuredamage="300" itemdamage="1000" force="20" severlimbsprobability="0.75" debris="true" decal="explosion" decalsize="0.75" penetration="0.5"
+                   camerashake="200" camerashakerange="10000"
+                   flashrange="1000" flashduration="2.0"
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
+          <Affliction identifier="explosiondamage" strength="200"/>
+          <Affliction identifier="burn" strength="200"/>
+          <Affliction identifier="bleeding" strength="40" probability="0.05" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="10"/>
+          <Affliction identifier="radiationsickness" strength="30"/>
+        </Explosion>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="6000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="6000"/>
+      </StatusEffect>
+    </Throwable>
+    <LightComponent LightColor="248,81,81,100" range="20" powerconsumption="0" IsOn="false" blinkfrequency="1.0" offset="0,16">
+      <sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="492,218,17,7" origin="0.5,0.5"/>
+      <StatusEffect type="OnActive" target="This" interval="1" Condition="-1.0" disabledeltatime="true">
+        <sound file="Content/Items/Button/Switch1.ogg" range="200" frequencymultiplier="1.5" volume="0.75"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This">
+        <ParticleEmitter particle="weldspark" particlespersecond="5" anglemin="0" anglemax="360" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="2" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="0.7" anglemin="0" anglemax="360" velocitymin="-10" velocitymax="10"/>
+        <sound file="Content/Items/Electricity/Zap1.ogg" type="OnActive" range="500.0" loop="true"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" delay="5.0" setvalue="true" condition="0" stackable="false" checkconditionalalways="true">
+        <!-- check the item is still in water after the delay has run out-->
+        <Conditional InWater="true"/>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+
+  <!-- Variant that needs battery renewed, water = boom -->
+  <Item name="" identifier="traitortimebomb3" category="Weapon" hideinmenus="true" Tags="smallitem,explosive,traitorbomb,traitormissionitem" maxstacksize="1" Scale="0.5" health="120" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light">
+    <Price baseprice="160" sold="false" canbespecial="false"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" depth="0.55" sourcerect="448,198,38,76" origin="0.5,0.5"/>
+    <Body width="30" height="70" density="20"/>
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" canbecombined="true" removeoncombined="true" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect type="OnBroken" target="This">
+        <!-- Nuke -->
+        <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" range="50000"/>
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="50000"/>
+        <Explosion range="500.0" ballastfloradamage="300" structuredamage="300" itemdamage="1000" force="20" severlimbsprobability="0.75" debris="true" decal="explosion" decalsize="0.75" penetration="0.5"
+                   camerashake="200" camerashakerange="10000"
+                   flashrange="1000" flashduration="2.0"
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
+          <Affliction identifier="explosiondamage" strength="200"/>
+          <Affliction identifier="burn" strength="200"/>
+          <Affliction identifier="bleeding" strength="40" probability="0.05" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="10"/>
+          <Affliction identifier="radiationsickness" strength="30"/>
+        </Explosion>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="6000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="6000"/>
+      </StatusEffect>
+    </Throwable>
+    <Powered PowerConsumption="1">
+      <StatusEffect type="InWater" target="This">
+        <ParticleEmitter particle="weldspark" particlespersecond="5" anglemin="0" anglemax="360" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="swirlysmoke" particlespersecond="2" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="0.7" anglemin="0" anglemax="360" velocitymin="-10" velocitymax="10"/>
+        <sound file="Content/Items/Electricity/Zap1.ogg" type="OnActive" range="500.0" loop="true"/>
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" delay="3.0" setvalue="true" condition="0" stackable="false" checkconditionalalways="true">
+        <!-- check the item is still in water after the delay has run out-->
+        <Conditional InWater="true"/>
+      </StatusEffect>
+    </Powered>
+    <LightComponent LightColor="248,81,81,100" range="20" powerconsumption="0" IsOn="false" blinkfrequency="1.0" offset="0,16">
+      <sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="492,218,17,7" origin="0.5,0.5"/>
+      <StatusEffect type="OnActive" target="Contained" Condition="-0.1" interval="1" disabledeltatime="true">
+        <RequiredItem items="mobilebattery" type="Contained"/>
+        <sound file="Content/Items/Button/Switch1.ogg" range="200" frequencymultiplier="1.5" volume="0.75"/>
+      </StatusEffect>
+      <!-- explode in 5 seconds if voltage drops to 0 (if battery is removed) -->
+      <StatusEffect type="OnActive" target="This" delay="5.0" setvalue="true" condition="0" stackable="false" checkconditionalalways="true">
+        <Conditional Voltage="lte 0.5"/>
+      </StatusEffect>
+      <!-- warning if battery is removed -->
+      <StatusEffect type="OnActive" target="This" setvalue="true" stackable="false" checkconditionalalways="true">
+        <Conditional Voltage="lte 0.5"/>
+        <sound file="Content/Items/AlarmBuzzerLoop.ogg" range="1000.0" frequencymultiplier="2.0"/>
+      </StatusEffect>
+    </LightComponent>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" containedstateindicatorstyle="battery">
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="128,448,64,64" origin="0.5,0.5"/>
+      <Containable items="mobilebattery">
+        <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true"/>
+      </Containable>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="bloodsamplevial" hideinmenus="true" category="Medical" maxstacksize="8" maxstacksizecharacterinventory="1" cargocontaineridentifier="mediccrate" Tags="smallitem,traitormissionitem" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
+    <PreferredContainer primary="medcab" secondary="medcontainer"/>
+    <Deconstruct time="20">
+      <Item identifier="opium"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="320,448,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/FactionItems.png" sourcerect="419,268,16,46" depth="0.6" origin="0.5,0.5"/>
+    <Body width="25" height="65" density="10.2" waterdragcoefficient="1"/>
+    <MeleeWeapon canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="0,0" holdangle="220" reload="1.0" msg="ItemMsgPickUpSelect" HitOnlyCharacters="true">
+      <!-- 1% condition because otherwise the item is "broken" and can't be swung-->
+      <StatusEffect type="OnSpawn" target="this" condition="1" setvalue="true"/>
+      <StatusEffect type="OnSuccess" target="UseTarget" condition="10" AllowWhenBroken="true" disabledeltatime="true" comparison="And">
+        <Conditional bleeding="gt 0"/>
+        <Conditional hasstatustag="! bloodsampletaken"/>
+        <Conditional istraitor="false"/>
+        <EventTarget eventidentifier="bloodsamples" tag="sampletaken"/>
+      </StatusEffect>
+      <!-- increase condition ("fill the vial" when used on a bleeding target) -->
+      <StatusEffect type="OnSuccess" target="UseTarget,This" condition="10" AllowWhenBroken="true" disabledeltatime="true" comparison="Or">
+        <Conditional bleeding="gt 0"/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="" identifier="idcardfakesootman" Tags="smallitem,idcard" variantof="idcard" hideinmenus="true">
+    <PreferredContainer primary="crewcab"/>
+    <Price baseprice="10" sold="false" canbespecial="false">
+      <Price minavailable="0"/>
+      <Price minavailable="0"/>
+    </Price>
+    <IdCard slots="Card,Any" OwnerNameLocalized="charactername.Sootman" msg="ItemMsgPickUpSelect"/>
+  </Item>
+
+  <Item name="" identifier="dirtybomb_showofstrength" variantof="dirtybomb" hideinmenus="true">
+    <!-- not purchaseable -->
+    <Price/>
+    <!-- not fabricable -->
+    <Fabricate/>
+    <ItemComponent>
+      <StatusEffect type="OnBroken" target="NearbyCharacters" range="1000">
+        <EventTarget eventidentifier="showofstrength" tag="explodedcharacter"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="NearbyItems" targetidentifiers="primarynavterminal" range="1000">
+        <EventTarget eventidentifier="showofstrength" tag="explodednavterminal"/>
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+
+  <Item name="" identifier="c4block_vipbombing" variantof="c4block" hideinmenus="true">
+    <PreferredContainer minamount="0" maxamount="0" spawnprobability="0"/>
+    <PreferredContainer amount="0" spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <!-- not purchaseable -->
+    <Price/>
+    <!-- not fabricable -->
+    <Fabricate/>
+    <ItemComponent>
+      <StatusEffect type="OnBroken" target="NearbyCharacters" range="500">
+        <EventTarget eventidentifier="vipbombing" tag="explodedcharacter"/>
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+
+  <Item name="" identifier="radiojammer" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="engcab"/>
+    <Deconstruct time="15">
+      <Item identifier="copper" amount="2"/>
+      <Item identifier="plastic" amount="2"/>
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="128,960,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="231,102,25,54" depth="0.55" origin="0.5,0.5"/>
+    <Body width="23" height="50" density="12"/>
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="0,-15" msg="ItemMsgPickUpSelect"/>
+    <LightComponent LightColor="0,255,0,255" range="25" powerconsumption="10" flicker="1" blinkfrequency="2" castshadows="false" IsOn="false" canbeselected="false">
+      <StatusEffect type="OnActive" targettype="Contained" Condition="-1.66" Interval="1" disabledeltatime="true">
+        <RequiredItem items="mobilebattery" type="Contained"/>
+      </StatusEffect>
+      <StatusEffect type="OnActive" targettype="This" SoundRange="50000" setvalue="true">
+        <Conditional Voltage="gt 0.5" targetitemcomponent="LightComponent"/>
+        <sound file="Content/Items/AlarmBuzzerLoop.ogg" range="150.0" frequencymultiplier="0.7" loop="true" volume="0.3"/>
+      </StatusEffect>
+      <StatusEffect type="OnActive" target="NearbyItems" Interval="1" Range="1000" targetidentifiers="mobileradio" JamTimer="1.5" setvalue="true"/>
+    </LightComponent>
+    <CustomInterface canbeselected="false" drawhudwhenequipped="true" allowuioverlap="true">
+      <GuiFrame relativesize="0.16,0.075" anchor="CenterLeft" pivot="BottomLeft" relativeoffset="0.006,-0.05" style="ItemUI"/>
+      <TickBox text="radiojammer.transmit">
+        <StatusEffect type="OnUse" targettype="This" IsOn="true"/>
+        <StatusEffect type="OnSecondaryUse" targettype="This" IsOn="false"/>
+      </TickBox>
+    </CustomInterface>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" containedstateindicatorstyle="battery">
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="128,448,64,64" origin="0.5,0.5"/>
+      <Containable items="mobilebattery">
+        <StatusEffect type="OnContaining" targettype="This" Voltage="1.0" setvalue="true"/>
+      </Containable>
+    </ItemContainer>
+  </Item>
+  
+  <Item name="" identifier="partybanner" hideinmenus="true" Tags="smallitem,traitormissionitem" cargocontaineridentifier="metalcrate" scale="0.5" description="" impactsoundtag="impact_soft" isshootable="true">
+    <ContainedSprite texture="Content/Map/Outposts/Art/ClownDistrict.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="703,833,311,141" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/Outposts/Art/ClownDistrict.png" depth="0.8" sourcerect="870,981,155,46" origin="0.5,0.5" canflipx="false" canflipy="false"/>
+    <Body width="100" radius="15" density="15"/>
+    <PreferredContainer primary="crewcab" spawnprobability="0"/>
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetach" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true"/>
+  </Item>
+
+  <Item name="" identifier="divingknife_murdermystery" nameidentifier="murderweapon" variantof="divingknife" Tags="smallitem,weapon,gunsmith,mountableweapon,sharptool,murderweapon,traitormissionitem" hideinmenus="true">
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <!-- not purchaseable -->
+    <Price sold="false" canbespecial="false"/>
+    <!-- not fabricable -->
+    <Fabricate/>
+    <MeleeWeapon>
+      <Attack>
+        <Affliction/>
+        <Affliction/>
+        <Affliction/>
+        <Affliction identifier="mysteryaffliction" strength="20"/>
+      </Attack>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="" identifier="screwdriver_murdermystery" nameidentifier="murderweapon" variantof="screwdriver" Tags="smallitem,simpletool,tool,electricalrepairtool,screwdriveritem,murderweapon,traitormissionitem" hideinmenus="true">
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <!-- not purchaseable -->
+    <Price sold="false" canbespecial="false"/>
+    <!-- not fabricable -->
+    <Fabricate/>
+    <MeleeWeapon>
+      <Attack>
+        <Affliction identifier="lacerations" strength="10"/>
+        <Affliction identifier="bleeding" strength="10"/>
+        <Affliction identifier="stun" strength="0.2"/>
+        <Affliction identifier="mysteryaffliction" strength="20"/>
+      </Attack>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="" identifier="wrench_murdermystery" nameidentifier="murderweapon" variantof="wrench" Tags="smallitem,tool,simpletool,mechanicalrepairtool,wrenchitem,murderweapon,traitormissionitem" hideinmenus="true">
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <!-- not purchaseable -->
+    <Price sold="false" canbespecial="false"/>
+    <!-- not fabricable -->
+    <Fabricate/>
+    <MeleeWeapon>
+      <Attack>
+        <Affliction identifier="blunttrauma" strength="10"/>
+        <Affliction identifier="stun" strength="0.2"/>
+        <Affliction identifier="mysteryaffliction" strength="20"/>
+      </Attack>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="" identifier="coilgunammobox_blanks" nameidentifier="coilgunammobox" variantof="coilgunammobox" hideinmenus="true">
+    <PreferredContainer primary="coilgunammoloader" spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0.01"/><!-- Tiny chance Thalamus/wrecks get the funny ammo -->
+    <PreferredContainer spawnprobability="0"/>
+    <Price sold="false"/>
+    <Deconstruct time="10">
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+    <Fabricate/>
+    <Fabricate/>
+    <ItemContainer>
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <SpawnItem identifiers="coilgunbolt_blank" spawnposition="ThisInventory"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <RequiredItem items="coilgunbolt_blank" type="Contained"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This">
+        <Conditional health="lte 90"/>
+        <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse" range="1000"/>
+      </StatusEffect>
+      <Containable items="coilgunbolt_blank"/>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="coilgunbolt_blank" nameidentifier="coilgunbolt" variantof="coilgunbolt" hideinmenus="true" sonarsize="0">
+    <Sprite texture="weapons_new.png" sourcerect="0,0,1,1" depth="0.55"/>
+    <Holdable/>
+    <Projectile>
+      <Attack/>
+      <StatusEffect/>
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="0.1">
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect/>
+    </Projectile>
+  </Item>
+
+  <Item name="" identifier="huskeggs_huskroulette_harmless" nameidentifier="huskeggs" variantof="huskeggs" Tags="smallitem,syringe,huskroulette,traitormissionitem" hideinmenus="true" maxstacksize="1" maxstacksizecharacterinventory="1">
+    <PreferredContainer primary="toxcontainer" spawnprobability="0" notcampaign="true"/>
+    <PreferredContainer primary="wrecktoxcontainer" spawnprobability="0"/>
+    <PreferredContainer secondary="medfabcab"/>
+    <Price baseprice="400" sold="false"/>
+    <Fabricate/>
+    <Deconstruct/>
+    <MeleeWeapon>
+      <StatusEffect type="OnSuccess" target="This" Condition="-100.0" setvalue="true"/>
+      <StatusEffect>
+        <Conditional/><!-- Remove conditional -->
+        <Affliction identifier="huskroulette" amount="120"/><!-- Should override the huskinfection -->
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="" identifier="huskeggs_huskroulette_infect" nameidentifier="huskeggs" variantof="huskeggs" Tags="smallitem,syringe,huskroulette,traitormissionitem" hideinmenus="true" maxstacksize="1" maxstacksizecharacterinventory="1">
+    <PreferredContainer primary="toxcontainer" spawnprobability="0" notcampaign="true"/>
+    <PreferredContainer primary="wrecktoxcontainer" spawnprobability="0"/>
+    <PreferredContainer secondary="medfabcab"/>
+    <Price baseprice="400" sold="false"/>
+    <Fabricate/>
+    <Deconstruct/>
+    <MeleeWeapon>
+      <StatusEffect type="OnSuccess"/>
+      <StatusEffect type="OnSuccess" target="UseTarget" duration="1">
+        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
+        <Conditional huskinfection="lt 0.01"/>
+        <Affliction identifier="huskinfectionresistance" amount="-600"/>
+        <Affliction identifier="huskinfection" amount="50"/>
+        <Affliction identifier="huskroulette" amount="120"/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item name="" identifier="dementonite_mindsunraveled" nameidentifier="dementonite" variantof="dementonite" HideInMenus="true">
+    <PreferredContainer/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <PreferredContainer spawnprobability="0"/>
+    <Price sold="false">
+      <Clear/>
+    </Price>
+    <Holdable/>
+    <ItemComponent>
+      <StatusEffect type="Always" target="This,NearbyCharacters" range="300" Interval="5" Duration="2" stackable="false" checkconditionalalways="true">
+        <Affliction identifier="psychosis" strength="10"/>
+        <ParticleEmitter particle="psychosisfx" anglemax="360" particlespersecond="8"/>
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" volume="0.5"/>
+      </StatusEffect>
+    </ItemComponent>
+    <LevelResource/>
+  </Item>
+</Items>

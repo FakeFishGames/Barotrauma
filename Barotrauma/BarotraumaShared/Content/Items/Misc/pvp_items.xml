@@ -1,0 +1,359 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+
+  <!-- TIER 1 -->
+
+  <Item name="" identifier="weapondroptier1_1" tags="crate,weapondrop,weapondroptier1" nameidentifier="weapondrop" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy" spritecolor="255,242,100,255">
+    <Deconstruct time="0.5"/>
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="407,376,152,89" origin="0.5,0.5"/>
+    <Body width="150" height="75" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer capacity="20" maxstacksize="32" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
+      <Containable items="smallitem,mediumitem" excludeditems="toolbelt,toolbox,bandolier,cargoscooter,largemobilecontainer"/>
+      <StatusEffect type="OnSpawn" target="this">
+        <SpawnItem identifier="revolver" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="revolverround" spawnposition="ThisInventory" mincount="12" maxcount="24"/>
+        <SpawnItem identifiers="ballistichelmet2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="medicinebelt_tier1" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnActive" target="this" Condition="-1"/>
+      <StatusEffect type="OnBroken" target="this">
+        <Remove/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="157,1,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="weapondroptier1_2" variantof="weapondroptier1_1">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="machinepistol" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="smgmagazine" spawnposition="ThisInventory" mincount="3" maxcount="4"/>
+        <SpawnItem identifiers="ballistichelmet2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="medicinebelt_tier1" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="crowbar" spawnposition="ThisInventory" probability="0.5"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier1_3" variantof="weapondroptier1_1">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="harpoongun" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="spear" spawnposition="ThisInventory" mincount="24" maxcount="36"/>
+        <SpawnItem identifiers="ballistichelmet2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="medicinebelt_tier1" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier1_special" nameidentifier="weapondropspecial" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier1_special">
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="alienpistol" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="chitinhelmet" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="alienpowercell" spawnposition="ThisInventory" mincount="2" maxcount="3"/>
+        <SpawnItem identifier="medicinebelt_tier1" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="311,0,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+
+  <!-- TIER 2 -->
+  
+  <Item name="" identifier="weapondroptier2_1" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier2" spritecolor="255,128,0,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="smg" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="smgmagazine" spawnposition="ThisInventory" mincount="2" maxcount="3"/>
+        <SpawnItem identifier="medicinebelt_tier2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="thermalgoggles" spawnposition="ThisInventory" probability="0.2"/>
+        <SpawnItem identifiers="ballistichelmet3" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier2_2" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier2" spritecolor="255,128,0,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="shotgun" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="shotgunshell" spawnposition="ThisInventory" mincount="12" maxcount="24"/>
+        <SpawnItem identifier="medicinebelt_tier2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="bodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="fraggrenade" spawnposition="ThisInventory" mincount="1" maxcount="3"/>
+        <SpawnItem identifier="heavywrench" spawnposition="ThisInventory" probability="0.2"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier2_3" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier2" spritecolor="255,128,0,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="rifle" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="riflebullet" spawnposition="ThisInventory" count="24"/>
+        <SpawnItem identifier="medicinebelt_tier2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="bodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="incendiumgrenade" spawnposition="ThisInventory" mincount="1" maxcount="3"/>
+        <SpawnItem identifier="meth" spawnposition="ThisInventory" count="2" probability="0.5"/>
+        <SpawnItem identifier="dirtybomb" spawnposition="ThisInventory" probability="0.2"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier2_4" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier2" spritecolor="255,128,0,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="harpooncoilrifle" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="spear" spawnposition="ThisInventory" mincount="12" maxcount="24"/>
+        <SpawnItem identifier="batterycell" spawnposition="ThisInventory" mincount="2" maxcount="4"/>
+        <SpawnItem identifier="medicinebelt_tier2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="bodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="stungrenade" spawnposition="ThisInventory" count="2" probability="0.5"/>
+        <SpawnItem identifier="steroids" spawnposition="ThisInventory" mincount="2" maxcount="3"/>
+        <SpawnItem identifier="boardingaxe" spawnposition="ThisInventory" probability="0.2"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier2_special" nameidentifier="weapondropspecial" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier2_special" spritecolor="255,128,0,255">
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="smgunique" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="smgmagazine" spawnposition="ThisInventory" mincount="4" maxcount="6"/>
+        <SpawnItem identifier="medicinebelt_tier2" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="steroids" spawnposition="ThisInventory" count="4"/>
+        <SpawnItem identifier="boardingaxe" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="thermalgoggles" spawnposition="ThisInventory"/>
+        <SpawnItem identifiers="piratehelmet" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="311,0,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+
+  <!-- TIER 3 -->
+  
+  <Item name="" identifier="weapondroptier3_1" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier3" spritecolor="237,28,36,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="handcannon" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="handcannonround" spawnposition="ThisInventory" mincount="12" maxcount="24"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="piratebodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="morbusine" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="fraggrenade" spawnposition="ThisInventory" count="2"/>
+        <SpawnItem identifier="timeddetonator" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="c4block" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="molotovcoctail" spawnposition="ThisInventory" mincount="2" maxcount="3" probability="0.1"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier3_2" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier3" spritecolor="237,28,36,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="machinepistol" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="riotshield" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="smgmagazine" spawnposition="ThisInventory" mincount="4" maxcount="5"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="piratebodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="cyanide" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="fraggrenade" spawnposition="ThisInventory" count="2"/>
+        <SpawnItem identifier="timeddetonator" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="uex" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="extinguisher" spawnposition="ThisInventory" probability="0.5"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier3_3" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier3" spritecolor="237,28,36,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="autoshotgun" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="shotgunshell" spawnposition="ThisInventory" mincount="12" maxcount="36"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="piratebodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="radiotoxin" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="fraggrenade" spawnposition="ThisInventory" count="2"/>
+        <SpawnItem identifier="timeddetonator" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="uex" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="ancientweapon" spawnposition="ThisInventory" probability="0.05"/>
+        <SpawnItem identifier="alienpowercell" spawnposition="ThisInventory"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier3_special1" nameidentifier="weapondropspecial" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier3_special" spritecolor="237,28,36,255">
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="ancientweapon" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="alienpowercell" spawnposition="ThisInventory" count="2"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="fraggrenade" spawnposition="ThisInventory" mincount="2" maxcount="4"/>
+        <SpawnItem identifier="chitinhelmet" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="311,0,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="weapondroptier3_special2" nameidentifier="weapondropspecial" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier3_special" spritecolor="237,28,36,255">
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="flamer" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="incendiumfueltank" spawnposition="ThisInventory" count="2"/>
+        <SpawnItem identifier="piratebodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="molotovcoctail" spawnposition="ThisInventory" mincount="2" maxcount="3"/>
+        <SpawnItem identifiers="piratehelmet" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="311,0,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+
+
+  <!-- TIER 4 -->
+  
+  <Item name="" identifier="weapondroptier4_1" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier4" spritecolor="157,13,535,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="assaultrifle" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="assaultriflemagazine" spawnposition="ThisInventory" mincount="4" maxcount="5"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="piratebodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="steroids" spawnposition="ThisInventory" count="2" probability="0.25"/>
+        <SpawnItem identifier="morbusine" spawnposition="ThisInventory" count="1" probability="0.25"/>
+        <SpawnItem identifier="fraggrenade" spawnposition="ThisInventory" count="4"/>
+        <SpawnItem identifier="bananapeel" spawnposition="ThisInventory" probability="0.1" count="5"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier4_2" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier4" spritecolor="157,13,535,255">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="autoshotgun" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="shotgunshell" spawnposition="ThisInventory" mincount="24" maxcount="36"/>
+        <SpawnItem identifier="shotgunslugexplosive" spawnposition="ThisInventory" mincount="3" maxcount="6"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="piratebodyarmor" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifier="stungrenade" spawnposition="ThisInventory" count="4"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="weapondroptier4_special1" nameidentifier="weapondropspecial" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier4_special" spritecolor="157,13,535,255">
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="grenadelauncher" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="40mmchemgrenade" spawnposition="ThisInventory" mincount="5" maxcount="6"/>
+        <SpawnItem identifier="40mmstungrenade" spawnposition="ThisInventory" mincount="1" maxcount="2"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="311,0,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="weapondroptier4_special2" nameidentifier="weapondropspecial" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier4_special" spritecolor="157,13,535,255">
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="nucleargun" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="fuelrod" spawnposition="ThisInventory" count="4"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="311,0,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="weapondroptier4_special3" nameidentifier="weapondropspecial" variantof="weapondroptier1_1" tags="crate,weapondrop,weapondroptier4_special" spritecolor="157,13,535,255">
+    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="arcemitter" spawnposition="ThisInventory"/>
+        <SpawnItem identifier="fulguriumbatterycell" spawnposition="ThisInventory" count="2"/>
+        <SpawnItem identifier="medicinebelt_tier3" spawnposition="ThisInventory" count="1"/>
+        <SpawnItem identifiers="ballistichelmet1" spawnposition="ThisInventory" count="1"/>
+      </StatusEffect>
+    </ItemContainer>
+    <LightComponent range="120.0" lightcolor="255,224,0,80" alphablend="true" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.2">
+      <Sprite texture="Content/Items/Containers/containers2.png" depth="0.53" sourcerect="311,0,152,89" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+  </Item>
+  
+  <!-- Medicine belts -->
+  <Item name="" identifier="medicinebelt_tier1" nameidentifier="toolbelt" hideinmenus="true" category="Equipment" tags="mediumitem,mobilecontainer,tool" showcontentsintooltip="true" Scale="0.5" fireproof="true" description="" impactsoundtag="impact_soft">
+    <PreferredContainer primary="engcab"/>
+    <Price baseprice="65" sold="false">
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,576,64,64" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="256,102,112,54" depth="0.6"/>
+    <Body width="100" height="45" density="15"/>
+    <Wearable slots="Bag" msg="ItemMsgEquipSelect" canbeselected="false" canbepicked="true" pickkey="Select">
+      <sprite name="ToolBelt" texture="Content/Items/Tools/tools.png" sourcerect="256,102,112,54" limb="Torso" inherittexturescale="true" origin="0.5,-0.2"/>
+    </Wearable>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-70" handle1="-5,0" handle2="10,-20" holdangle="0" msg="ItemMsgPickUpUse" canbeselected="false" canbepicked="true" pickkey="Use" allowswappingwhenpicked="false"/>
+    <ItemContainer capacity="6" maxstacksize="32" depth="0.5">
+      <Containable items="smallitem" excludeditems="toolbelt,toolbox,bandolier"/>
+      <StatusEffect type="OnSpawn" target="this">
+        <SpawnItem identifier="antibleeding1" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+        <SpawnItem identifier="antibloodloss1" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+        <SpawnItem identifier="opium" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="medicinebelt_tier2" nameidentifier="toolbelt" hideinmenus="true" variantof="medicinebelt_tier1">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="antibleeding2" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+        <SpawnItem identifier="antibloodloss2" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+        <SpawnItem identifier="antidama1" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="medicinebelt_tier3" nameidentifier="toolbelt" hideinmenus="true" variantof="medicinebelt_tier1">
+    <ItemContainer>
+      <StatusEffect type="OnSpawn" target="this">
+        <Clear/>
+        <SpawnItem identifier="antibleeding2" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+        <SpawnItem identifier="antibloodloss2" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+        <SpawnItem identifier="antidama1" spawnposition="ThisInventory" mincount="4" maxcount="8"/>
+        <SpawnItem identifier="hyperzine" spawnposition="ThisInventory" count="1" probability="0.25"/>
+        <SpawnItem identifier="deusizine" spawnposition="ThisInventory" count="1" probability="0.25"/>
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+</Items>

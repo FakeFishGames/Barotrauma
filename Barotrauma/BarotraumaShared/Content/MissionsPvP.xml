@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Missions>
+  <CombatMission
+    identifier="pvpmission"
+    type="SubVsSubCombat"
+    achievementidentifier="combatmission"
+    multiplayeronly="true"
+    commonness="100"
+    reward="2000"
+    allowrespawning="false"
+    wincondition="LastManStanding">
+    <!-- no outposts at either end of the level -->
+    <LocationType from="None" to="None"/>
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,768,256,256" color="243,146,55"/>
+    <message text="missionmessage0.combatmission"/>
+    <message text="missionmessage1.combatmission"/>
+  </CombatMission>
+
+  <CombatMission
+    identifier="outpostdeathmatch"
+    type="OutpostCombat"
+    multiplayeronly="true"
+    commonness="100"
+    reward="2000"
+    pointsperkill="10"
+    allowrespawning="true"
+    wincondition="KillCount"
+    loadsubmarines="false"
+    AllowOutpostNPCs="False"
+    ForceOutpostGenerationParameters="colonypvp"
+    AllowOutpostSelectionFromTag="PvPOutpost"
+    ForceRespawnMode="MidRound">
+    <LocationType identifier="city"/>
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,768,256,256" color="243,146,55"/>
+    <message text="missionmessage0.outpostdeathmatch"/>
+    <message text="missionmessage1.outpostdeathmatch"/>
+    <TriggerEvent state="0" delay="10" eventtag="deathmatchweapondrop"/>
+    <OverrideMusic state="0" type="pvp"/>
+  </CombatMission>
+
+  <CombatMission
+    identifier="kingofthehull_beaconstation"
+    type="KingOfTheHull"
+    achievementidentifier="kingofthehull"
+    multiplayeronly="true"
+    commonness="100"
+    reward="2000"
+    allowrespawning="true"
+    TargetSubmarineType="BeaconStation"
+    targetSubmarineSonarLabel="beaconstationsonarlabel"
+    SpawnBeaconStationInMiddle="true"
+    RequireBeaconStation="true"
+    wincondition="ControlSubmarine">
+    <!-- no outposts at either end of the level -->
+    <LocationType from="None" to="None"/>
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="0,768,256,256" color="243,146,55"/>
+    <message text="missionmessage0.kingofthehull"/>
+    <message text="missionmessage1.kingofthehull"/>
+  </CombatMission>
+</Missions>

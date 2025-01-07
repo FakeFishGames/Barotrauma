@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<items>
+  <!-- Abandoned Outpost Bandit HideoutProps -->
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop1" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="4,8,239,164" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop2" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="485,0,99,257" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop3" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="749,246,265,165" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop4" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="529,309,116,198" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop5" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="365,322,157,192" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop6" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="173,324,187,158" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop7" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="5,317,164,154" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop8" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="582,0,73,255" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop9" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="751,-1,260,165" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop10" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="709,1,42,224" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop11" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="655,1,43,168" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop12" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="219,193,127,97" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop13" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="106,177,113,145" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop14" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="12,170,89,113" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop15" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="311,22,78,155" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop16" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="247,9,61,166" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop17" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="403,2,70,140" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop18" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="723,419,302,95" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop19" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="352,171,85,119" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop20" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="794,831,231,193" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop21" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="5,854,364,169" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop22" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="933,695,87,111" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop23" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="822,699,101,107" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop24" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="584,676,232,138" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop25" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="298,671,284,186" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop26" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="2,647,295,207" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop27" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="885,520,125,156" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop28" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="590,522,289,154" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop29" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="304,514,283,155" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <banditprops name="" nameidentifier="humanitems" noninteractable="true" identifier="banditprop30" scale="0.5" category="Wrecked" subcategory="abandonedhuman">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/HumanEnemyA.png" sourcerect="0,511,303,134" depth="0.75" origin="0.5,0.5"/>
+  </banditprops>
+  <!-- Abandoned Outpost Nest Props -->
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums1" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="4,494,420,206" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums2" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="823,742,190,74" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums3" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="605,746,198,72" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums4" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="592,824,433,181" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums5" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="292,845,184,176" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums6" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="263,708,323,130" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums7" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="4,706,260,313" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums8" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="724,527,289,211" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums9" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="431,525,285,175" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums10" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="-1,-1,260,140" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums11" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="263,1,253,125" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums12" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="521,1,289,120" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums13" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="841,20,132,96" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums14" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="0,144,94,242" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums15" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="124,153,251,157" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums16" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="416,133,309,166" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums17" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="738,136,138,290" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums18" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="897,135,85,354" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums19" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="1,391,63,94" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums20" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="105,334,317,105" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <monsterscums name="" nameidentifier="monsterscums" noninteractable="true" identifier="monsterscums21" scale="0.5" category="Wrecked" subcategory="abandonedmonster">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/MonsterScumsA.png" sourcerect="455,309,228,187" depth="0.75" origin="0.5,0.5"/>
+  </monsterscums>
+  <!-- RUSTED WALL DECALS -->
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustwalldecal1" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalWall.png" sourcerect="0,0,512,342" depth="0.975" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustwalldecal2" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalWall.png" sourcerect="0,342,512,342" depth="0.975" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustwalldecal3" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalWall.png" sourcerect="0,684,512,342" depth="0.975" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustwalldecal4" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalWall.png" sourcerect="512,0,512,342" depth="0.975" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustwalldecal5" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalWall.png" sourcerect="512,342,512,342" depth="0.975" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustwalldecal6" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalWall.png" sourcerect="512,684,512,342" depth="0.975" origin="0.5,0.5"/>
+  </decal>
+  <!-- RUSTED ITEM DECALS -->
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal1" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="0,0,446,450" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal2" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="463,0,343,257" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal3" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="830,0,187,239" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal4" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="463,269,289,286" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal5" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="760,275,264,264" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal6" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="0,456,119,132" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal7" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="126,469,135,94" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal8" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="268,462,154,175" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal9" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="0,597,193,205" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal10" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="211,632,145,145" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal11" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="364,649,92,113" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal12" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="462,562,174,197" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal13" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="643,570,193,177" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal14" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="843,570,182,237" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal15" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="35,828,324,182" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal16" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="392,808,291,200" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+  <decal name="" nameidentifier="rustdecal" noninteractable="true" identifier="rustitemdecal17" scale="0.5" category="Wrecked" subcategory="abandoned">
+    <sprite texture="Content/Map/Outposts/AbandonedOutpost/RustedDecalItem.png" sourcerect="735,811,282,202" depth="0.75" origin="0.5,0.5"/>
+  </decal>
+</items>

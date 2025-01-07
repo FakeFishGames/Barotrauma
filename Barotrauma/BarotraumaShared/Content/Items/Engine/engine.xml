@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="engine" tags="engine" category="Machine" Scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2" GrabWhenSelected="true">
+    <UpgradePreviewSprite scale="3.0" texture="Content/UI/WeaponUI.png" sourcerect="512,960,64,64" origin="0.5,0.45"/>
+    <Sprite texture="Engines.png" depth="0.8" sourcerect="0,0,659,317" canflipx="true" origin="0.5,0.5"/>
+    <!-- vibrating decorative sprite that activates when the engine is broken -->
+    <DecorativeSprite texture="Engines.png" depth="0.79" sourcerect="0,0,659,317" canflipx="true" origin="0.5,0.5" offset="5,5" offsetanim="Noise" offsetanimspeed="5.0">
+      <IsActiveConditional CurrentBrokenVolume="gt 0.1" targetitemcomponent="Engine"/>
+    </DecorativeSprite>
+    <BrokenSprite texture="Engines.png" sourcerect="1372,0,659,317" depth="0.78" maxcondition="80" fadein="true"/>
+    <BrokenSprite texture="Engines.png" sourcerect="3,1520,659,317" depth="0.78" maxcondition="0"/>
+    <trigger x="200" y="-50" width="400" height="240"/>
+    <aitarget minsightrange="1000" maxsightrange="4000" soundrange="6000" fadeouttime="5"/>
+    <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="300" canbeselected="true" propellerpos="-320,0" msg="ItemMsgInteractSelect">
+      <Upgrade gameversion="0.11.0.9" propellerpos="-320,0"/>
+      <GuiFrame relativesize="0.2,0.18" minsize="450,200" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="InWater" target="This" condition="-1.0"/>
+      <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="5000.0" volumeproperty="CurrentVolume" loop="true"/>
+      <sound file="Content/Items/Engine/EngineBroken.ogg" type="Always" range="10000.0" volumeproperty="CurrentBrokenVolume" loop="true"/>
+      <poweronsound file="Content/Items/PowerOnHeavy2.ogg" range="1000" loop="false"/>
+      <propellerdamage damagerange="60" targetforce="500" severlimbsprobability="1.0">
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="bleeding" strength="10"/>
+      </propellerdamage>
+    </Engine>
+    <LightComponent range="10.0" lightcolor="255,255,255,0" powerconsumption="0"  IsOn="false" castshadows="false" allowingameediting="false">
+      <IsActive targetitemcomponent="Engine" currentvolume="gt 0.01"/>
+      <sprite texture="Content/Items/Engine/Engines.png" depth="0.025" sourcerect="664,0,659,317" origin="0.5,0.5" alpha="0.2"/>
+    </LightComponent>
+    <LightComponent range="10.0" lightcolor="255,0,0,0" blinkfrequency="1" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false">
+      <IsActive targetitemcomponent="Repairable" StressDeteriorationMultiplier="gt 2.0"/>
+      <sprite texture="Content/Items/Engine/Engines.png" depth="0.025" sourcerect="664,0,659,317" origin="0.5,0.5" alpha="0.2"/>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="100" maxcondition="15.0"/>
+      </StatusEffect>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="55"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="set_force" displayname="connection.setforce"/>
+      <output name="condition_out" displayname="connection.conditionout"/>
+    </ConnectionPanel>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" RepairThreshold="80" fixDurationHighSkill="5" fixDurationLowSkill="25"                 
+                StressDeteriorationThreshold="0.9" MaxStressDeteriorationMultiplier="6" StressDeteriorationIncreaseSpeed="0.05" StressDeteriorationDecreaseSpeed="0.1"
+                msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,200" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" distancemax="100" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="80.0"/>
+      <ParticleEmitter particle="DarkSmoke" particlespersecond="8" scalemin="1.8" scalemax="2.5" anglemax="360" distancemax="100" velocitymin="-50" velocitymax="50" mincondition="0.0" maxcondition="80.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="100" mincondition="0.0" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+      <Upgrade gameversion="0.20.7.0" RepairThreshold="80"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="largeengine" tags="engine" category="Machine" Scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2" GrabWhenSelected="true">
+    <UpgradePreviewSprite scale="5.0" texture="Content/UI/WeaponUI.png" sourcerect="512,960,64,64" origin="0.5,0.45"/>
+    <Upgrade gameversion="0.10.0.0" scale="*0.625"/>
+    <Sprite texture="Engines.png" depth="0.8" sourcerect="0,317,1613,592" canflipx="true" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Engines.png" depth="0.79" sourcerect="0,317,1613,592" canflipx="true" origin="0.5,0.5" offset="5,5" offsetanim="Noise" offsetanimspeed="5.0">
+      <IsActiveConditional CurrentBrokenVolume="gt 0.1" targetitemcomponent="Engine"/>
+    </DecorativeSprite>
+    <BrokenSprite texture="Engines.png" sourcerect="749,1557,384,376" depth="0.78" maxcondition="80" offset="200,0" fadein="true"/>
+    <BrokenSprite texture="Engines.png" sourcerect="1187,1490,861,558" depth="0.78" maxcondition="1" offset="0,30" fadein="true"/>
+    <trigger x="436" y="-80" width="1106" height="430"/>
+    <aitarget minsightrange="1000" maxsightrange="4000" soundrange="7000" fadeouttime="5"/>
+    <Engine minvoltage="0.5" powerconsumption="4000.0" maxforce="500" canbeselected="true" propellerpos="-760,0" msg="ItemMsgInteractSelect">
+      <Upgrade gameversion="0.11.0.9" propellerpos="-760,0"/>
+      <GuiFrame relativesize="0.2,0.18" minsize="450,200" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="InWater" target="This" condition="-1.0"/>
+      <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="7500.0" volumeproperty="CurrentVolume" loop="true"/>
+      <sound file="Content/Items/Engine/EngineBroken.ogg" type="Always" range="15000.0" volumeproperty="CurrentBrokenVolume" loop="true"/>
+      <poweronsound file="Content/Items/PowerOnHeavy1.ogg" range="3000" loop="false"/>
+      <propellerdamage damagerange="100" targetforce="500" severlimbsprobability="1.0">
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="bleeding" strength="10"/>
+      </propellerdamage>
+    </Engine>
+    <LightComponent range="10.0" lightcolor="255,255,255,0" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false">
+      <IsActive targetitemcomponent="Engine" currentvolume="gt 0.01"/>
+      <sprite texture="Content/Items/Engine/Engines.png" depth="0.025" sourcerect="0,933,1613,592" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+    <LightComponent range="10.0" lightcolor="255,255,255,0" blinkfrequency="1" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false">
+      <Upgrade gameversion="0.13.0.9" lightcolor="255,255,255,0"/>
+      <IsActive targetitemcomponent="Engine" currentvolume="gt 0.01"/>
+      <sprite texture="Content/Items/Engine/Engines.png" depth="0.025" sourcerect="0,933,1613,592" origin="0.5,0.5" alpha="0.2"/>
+    </LightComponent>
+    <LightComponent range="10.0" lightcolor="255,0,0,0" blinkfrequency="1" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false">
+      <IsActive targetitemcomponent="Repairable" StressDeteriorationMultiplier="gt 2.0"/>
+      <sprite texture="Content/Items/Engine/Engines.png" depth="0.025" sourcerect="0,933,1613,592" origin="0.5,0.5" alpha="0.2"/>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="100" maxcondition="15.0"/>
+      </StatusEffect>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="55"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="set_force" displayname="connection.setforce"/>
+      <output name="condition_out" displayname="connection.conditionout"/>
+    </ConnectionPanel>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" RepairThreshold="80" fixDurationHighSkill="5" fixDurationLowSkill="25"                
+                StressDeteriorationThreshold="0.9" MaxStressDeteriorationMultiplier="6" StressDeteriorationIncreaseSpeed="0.05" StressDeteriorationDecreaseSpeed="0.1"
+                msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,200" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" distancemax="100" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="80.0"/>
+      <ParticleEmitter particle="DarkSmoke" particlespersecond="8" scalemin="1.8" scalemax="2.5" anglemax="360" distancemax="100" velocitymin="-50" velocitymax="50" mincondition="0.0" maxcondition="80.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="100" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+      <Upgrade gameversion="0.20.7.0" RepairThreshold="80"/>
+    </Repairable>
+  </Item>
+  <Item name="" identifier="shuttleengine" tags="engine" category="Machine" Scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2" GrabWhenSelected="true">
+    <UpgradePreviewSprite scale="2.0" texture="Content/UI/WeaponUI.png" sourcerect="512,960,64,64" origin="0.5,0.45"/>
+    <Sprite texture="Engines.png" depth="0.8" sourcerect="1615,318,426,178" canflipx="true" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Engines.png" depth="0.79" sourcerect="1615,318,426,178" canflipx="true" origin="0.5,0.5" offset="5,5" offsetanim="Noise" offsetanimspeed="5.0">
+      <IsActiveConditional CurrentBrokenVolume="gt 0.1" targetitemcomponent="Engine"/>
+    </DecorativeSprite>
+    <BrokenSprite texture="Engines.png" sourcerect="1615,501,426,178" depth="0.78" maxcondition="80" fadein="true"/>
+    <BrokenSprite texture="Engines.png" sourcerect="1615,684,426,178" depth="0.78" maxcondition="0"/>
+    <trigger x="180" y="-30" width="200" height="146"/>
+    <aitarget minsightrange="1000" maxsightrange="4000" soundrange="5000" fadeouttime="5"/>
+    <Engine minvoltage="0.5" powerconsumption="500.0" maxforce="300" canbeselected="true" propellerpos="-200,0" msg="ItemMsgInteractSelect">
+      <Upgrade gameversion="0.11.0.9" propellerpos="-200,0"/>
+      <GuiFrame relativesize="0.2,0.18" minsize="450,200" anchor="Center" style="ItemUI"/>
+      <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="3000.0" volumeproperty="CurrentVolume" loop="true"/>
+      <sound file="Content/Items/Engine/EngineBroken.ogg" type="Always" range="6000.0" volumeproperty="CurrentBrokenVolume" loop="true"/>
+      <propellerdamage damagerange="30" targetforce="500" severlimbsprobability="1.0">
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="bleeding" strength="10"/>
+      </propellerdamage>
+    </Engine>
+    <LightComponent range="10.0" lightcolor="255,255,255,0" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false">
+      <IsActive targetitemcomponent="Engine" currentvolume="gt 0.01"/>
+      <sprite texture="Content/Items/Engine/Engines.png" depth="0.025" sourcerect="1614,867,426,178" origin="0.5,0.5" alpha="1.0"/>
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="55"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="set_force" displayname="connection.setforce"/>
+      <output name="condition_out" displayname="connection.conditionout"/>
+    </ConnectionPanel>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,200" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="55"/>
+      <RequiredItem items="wrench" type="equipped"/>
+      <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" distancemax="100" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="DarkSmoke" particlespersecond="8" scalemin="1.8" scalemax="2.5" anglemax="360" distancemax="100" velocitymin="-50" velocitymax="50" mincondition="0.0" maxcondition="50.0"/>
+      <ParticleEmitter particle="heavysmoke" particlespersecond="2" scalemin="1.0" scalemax="2.5" anglemax="360" distancemax="100" maxcondition="15.0"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Items/MechanicalRepairFail.ogg" range="1000"/>
+        <Affliction identifier="lacerations" strength="5"/>
+        <Affliction identifier="stun" strength="4"/>
+      </StatusEffect>
+    </Repairable>
+  </Item>
+</Items>

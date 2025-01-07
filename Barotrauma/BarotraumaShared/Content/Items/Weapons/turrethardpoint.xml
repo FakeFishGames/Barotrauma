@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" 
+        description=""
+        identifier="turrethardpoint" Tags="turret,hardpoint" showinstatusmonitor="false" category="Machine,Weapon" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" linkable="true" allowedlinks="turretammosource">
+    <Sprite texture="Loaders.png" depth="0.01" sourcerect="0,262,256,84" canflipy="false"/>
+    <UpgradePreviewSprite scale="2.5" texture="Content/UI/WeaponUI.png" sourcerect="736,807,84,68" origin="0.5,0.5"/>
+    <SwappableItem price="0" origin="128,78" swapidentifier="basicturret">
+      <SchematicSprite texture="Content/UI/WeaponUI.png" sourcerect="0,425,256,117"/>
+      <SwapConnectedItem tag="periscope" swapto="blankperiscope"/>
+      <SwapConnectedItem tag="turretammosource" swapto="blankloader"/>
+    </SwappableItem>
+    <StaticBody width="80" radius="80"/>
+    <Turret rotationlimits="180,360" projectilecount="0" canbeselected="false" characterusable="false" linkable="true" barrelpos="128,-50">
+      <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" IsOn="true" drawbehindsubs="true" ignorecontinuoustoggle="true" InheritParentIsActive="false">
+        <LightTexture texture="Content/Lights/alphaOne.png"/>
+      </LightComponent>
+    </Turret>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
+      <input name="toggle_light" displayname="connection.togglelight"/>
+      <input name="set_light" displayname="connection.setlight"/>
+      <input name="set_auto_operate" displayname="connection.setautooperate"/>
+      <input name="toggle_auto_operate" displayname="connection.toggleautooperate"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item name=""
+      description=""
+      identifier="largeturrethardpoint" Tags="turret,hardpoint" showinstatusmonitor="false" category="Machine,Weapon" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" linkable="true" allowedlinks="turretammosource">
+    <Sprite texture="TurretsAndDepthCharges.png" depth="0.01" sourcerect="538,272,444,139" canflipy="false"/>
+    <UpgradePreviewSprite scale="3.5" texture="Content/UI/WeaponUI.png" sourcerect="834,806,84,68" origin="0.5,0.5"/>
+    <SwappableItem price="0" origin="222,125" swapidentifier="largeturret">
+      <SchematicSprite texture="Content/UI/WeaponUI.png" sourcerect="44,581,168,51"/>
+      <SwapConnectedItem tag="periscope" swapto="blankperiscope"/>
+      <SwapConnectedItem tag="turretammosource" swapto="blankloader"/>
+    </SwappableItem>
+    <StaticBody width="80" radius="80"/>
+    <Turret rotationlimits="180,360" projectilecount="0" canbeselected="false" characterusable="false" linkable="true" barrelpos="220,-128">
+      <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" IsOn="true" drawbehindsubs="true" ignorecontinuoustoggle="true" InheritParentIsActive="false">
+        <LightTexture texture="Content/Lights/alphaOne.png"/>
+      </LightComponent>
+    </Turret>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="position_in" displayname="connection.turretaimingin"/>
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
+      <input name="toggle_light" displayname="connection.togglelight"/>
+      <input name="set_light" displayname="connection.setlight"/>
+      <input name="set_auto_operate" displayname="connection.setautooperate"/>
+      <input name="toggle_auto_operate" displayname="connection.toggleautooperate"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item name="" description="" identifier="blankperiscope" tags="periscope" category="Machine,Weapon" type="Controller" scale="0.5">
+    <SwappableItem canbebought="false" origin="67,0"/>
+    <Sprite texture="Loaders.png" depth="0.1" sourcerect="1,355,134,203" origin="0.5,0.5"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim"/>
+      <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot"/>
+    </ConnectionPanel>
+  </Item>
+  
+  <Item name="" identifier="blankloader" tags="turretammosource" category="Machine,Weapon" linkable="true" allowedlinks="turrethardpoint, largeturrethardpoint" scale="0.5">
+    <SwappableItem canbebought="false" origin="82,334"/>
+    <UpgradePreviewSprite scale="2.0" texture="Content/UI/WeaponUI.png" sourcerect="576,960,64,64" origin="0.5,0.45"/>
+    <Sprite name="Blank Loader" texture="Loaders.png" depth="0.78" sourcerect="537,376,165,334" origin="0.5,0.5"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <output name="condition_out" displayname="connection.conditionout"/>
+      <output name="contained_items" displayname="connection.ammunitionout"/>
+    </ConnectionPanel>
+  </Item>
+</Items>

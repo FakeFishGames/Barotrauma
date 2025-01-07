@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 
+SingleRoundSkillGainMultiplier:
+  All skill gains are multiplied when playing a single round (i.e. any other game mode than campaign) 
+  
+SkillIncreasePerRepair:
+  Skill gained for repairing a device. Divided by the character's current skill, 
+  so a character with a skill level 10 will be able to increase the skill twice as fast as a lvl 20 character.
+  
+SkillIncreasePerSabotage:
+  Skill gained for sabotaging a device as a traitor. Works the same as SkillIncreasePerRepair.
+  
+SkillIncreasePerCprRevive:
+  Skill gained when reviving someone with CPR. 
+  
+SkillIncreasePerRepairedStructureDamage:
+  Skill gained per amount of repaired structure damage. Divided by the character's current skill.
+  
+SkillIncreasePerSecondWhenSteering:
+  Skill gained per second when operating a nav terminal. Divided by the character's current skill. Multiplied by velocity vector squared.
+  For example, at 50% speed a value of 0.001 would mean a character with a helm skill of 10 gains 0.005 skill by second (0.3 per minute).
+  
+SkillIncreasePerFabricatorRequiredSkill:
+  Skill gained when fabricating an item. Multiplied by the skill requirements of fabricating the item,
+  and divided by the character's current skill. For example, if fabricating an item requires a mechanical skill of 50,
+  and this value is set to 2, and a character with a mechanical skill of 25 fabricates the item, their skill increases by 2 * 50 / 25^1.5 = 0.8.
+  Repeated for every skill requirement.
+  
+SkillIncreasePerHostileDamage
+  Skill gained when damaging an enemy. Multiplied by the damage done to the enemy, divided by the character's current skill.
+  For example, a value of 0.7 would mean killing an enemy with 100 health when your current skill is 25 would increase the skill by 0.7 * 100 / 25^1.5 = 0.56
+  
+SkillIncreasePerSecondWhenOperatingTurret
+  Skill gained per second when manning a turret. Divided by the character's current skill.
+  For example, a value of 0.001 would mean a character with a weapons skill of 10 gains 0.01 skill by second (0.6 per minute).
+  
+SkillIncreasePerFriendlyHealed
+  Skill gained per second when healing other members of your crew. Multiplied the amount of damage you heal, divided by the character's current skill.
+  For example, a value of 0.7 would mean healing a character from 0 to 100 with a medical skill of 25 increases the skill by 0.7 * 100 / 25^1.5 = 0.56
+  
+AssistantSkillIncreaseMultiplier
+  Multiplier to skill gains when playing as an assistant. For example, a value of 1.5 would make assistants gain skills 50% faster than other classes.
+  
+SkillIncreaseExponent
+  Increased skill diminishes skill gains returns by this exponent. All skill increases are divided by the skill level ^ 1.5
+  
+-->
+
+<SkillSettings
+  SingleRoundSkillGainMultiplier="5.0"
+  SkillIncreasePerRepair="40.0"
+  SkillIncreasePerCprRevive="40.0"
+  SkillIncreasePerRepairedStructureDamage="0.1"
+  SkillIncreasePerSecondWhenSteering="0.6"
+  SkillIncreasePerFabricatorRequiredSkill="2"
+  SkillIncreasePerHostileDamage="0.25"
+  SkillIncreasePerSecondWhenOperatingTurret="0.1"
+  SkillIncreasePerFriendlyHealed="2.0"
+  AssistantSkillIncreaseMultiplier="1.0"
+  MaximumSkillWithTalents="200.0"
+  SkillIncreaseExponent="1.5"
+/>

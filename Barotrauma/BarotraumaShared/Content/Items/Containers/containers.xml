@@ -1,0 +1,521 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="suppliescabinet" tags="container,suppliescontainer" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="889,349,120,132" origin="0.5,0.5"/>
+    <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.16,0.22" anchor="Center" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem" excludedidentifiers="mobilecontainer"/>
+    </ItemContainer>
+    <!-- backwards compatibility for older versions in which mobile containers like storage containers were containable in any cabinet -->
+    <Upgrade gameversion="1.1.0.0" campaignsaveonly="true">
+      <ItemContainer>
+        <Containable items="smallitem,mediumitem"/>
+        <ClearSubContainerRestrictions/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="mediumsteelcabinet" tags="locker,container" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="1,1,175,374" origin="0.5,0.5"/>
+    <ItemContainer capacity="20" slotsperrow="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem" excludedidentifiers="mobilecontainer"/>
+      <SubContainer capacity="3" maxstacksize="1">
+        <SlotIcon texture="Content/UI/CommandUIAtlas.png" sourcerect="639,926,128,80" origin="0.5,0.5"/>
+        <Containable items="mobilecontainer"/>
+      </SubContainer>
+    </ItemContainer>
+    <!-- backwards compatibility for older versions in which mobile containers like storage containers were containable in any cabinet -->
+    <Upgrade gameversion="1.1.0.0" campaignsaveonly="true">
+      <ItemContainer>
+        <Containable items="smallitem,mediumitem"/>
+        <ClearSubContainerRestrictions/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  <Item name="" aliases="Diving Gear Cabinet" identifier="mediumwindowedsteelcabinet" category="Diving" tags="locker,container" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="178,1,168,377" origin="0.5,0.5"/>
+    <ItemContainer capacity="20" slotsperrow="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem" excludedidentifiers="mobilecontainer"/>
+      <SubContainer capacity="3" maxstacksize="1">
+        <SlotIcon texture="Content/UI/CommandUIAtlas.png" sourcerect="639,926,128,80" origin="0.5,0.5"/>
+        <Containable items="mobilecontainer"/>
+      </SubContainer>
+    </ItemContainer>
+    <!-- backwards compatibility for older versions in which mobile containers like storage containers were containable in any cabinet -->
+    <Upgrade gameversion="1.1.0.0" campaignsaveonly="true">
+      <ItemContainer>
+        <Containable items="smallitem,mediumitem"/>
+        <ClearSubContainerRestrictions/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="steelcabinet" tags="locker,container" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="348,2,364,373" origin="0.5,0.5"/>
+    <ItemContainer capacity="35" slotsperrow="7" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.28,0.48" anchor="Center" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem" excludedidentifiers="mobilecontainer"/>
+      <SubContainer capacity="5" maxstacksize="1">
+        <SlotIcon texture="Content/UI/CommandUIAtlas.png" sourcerect="639,926,128,80" origin="0.5,0.5"/>
+        <Containable items="mobilecontainer"/>
+      </SubContainer>
+    </ItemContainer>
+    <!-- backwards compatibility for older versions in which mobile containers like storage containers were containable in any cabinet -->
+    <Upgrade gameversion="1.1.0.0" campaignsaveonly="true">
+      <ItemContainer>
+        <Containable items="smallitem,mediumitem"/>
+        <ClearSubContainerRestrictions/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  <!-- TODO: switch to SecureSteelLockRed.png when access denied and SecureSteelLockGreen.png when access granted-->
+  <Item name="" identifier="securesteelcabinet" tags="locker,container,securecontainer" linkable="true" spritecolor="255,255,255,255" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="1,380,105,160" origin="0.5,0.5"/>
+    <ItemContainer capacity="20" slotsperrow="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI"/>
+      <RequiredItem items="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true"/>
+      <Containable items="smallitem,mediumitem" excludedidentifiers="mobilecontainer"/>
+      <SubContainer capacity="3" maxstacksize="1">
+        <SlotIcon texture="Content/UI/CommandUIAtlas.png" sourcerect="639,926,128,80" origin="0.5,0.5"/>
+        <Containable items="mobilecontainer"/>
+      </SubContainer>
+    </ItemContainer>
+    <!-- backwards compatibility for older versions in which mobile containers like storage containers were containable in any cabinet -->
+    <Upgrade gameversion="1.1.0.0" campaignsaveonly="true">
+      <ItemContainer>
+        <Containable items="smallitem,mediumitem"/>
+        <ClearSubContainerRestrictions/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="railgunshellrack" tags="container,railgunammocontainer" pickdistance="120" scale="0.5" canflipx="false" canflipy="false">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="330,811,218,212" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="32,-100" iteminterval="30,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
+      <Upgrade gameversion="0.18.0.0" itempos="32,-100" iteminterval="30,0"/>
+      <GuiFrame relativesize="0.3,0.2" anchor="Center" style="ItemUI"/>
+      <Containable items="railgunammo"/>
+    </ItemContainer>
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+  </Item>
+  <Item name="" identifier="railgunshellrack3" nameidentifier="railgunshellrack" category="Legacy" tags="container,railgunammocontainer" pickdistance="120" scale="0.5" canflipx="false" canflipy="false">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="330,811,218,212" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="53,-100" iteminterval="55,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI"/>
+      <Containable items="railgunammo"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="coilgunammoshelf" tags="container,ammoboxcontainer" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="188,717,140,306" canflipx="false" origin="0.5,0.5"/>
+    <ItemContainer capacity="3" canbeselected="true" hideitems="false" itempos="70,-52" iteminterval="0,-96" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI"/>
+      <Containable items="ammobox,coilgunammo,depthchargeammo"  excludedidentifiers="boardingpod"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="medcabinet" tags="container,medcontainer" category="Medical" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="815,1,208,346"/>
+    <ItemContainer capacity="35" slotsperrow="7" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.28,0.48" anchor="Center" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem" excludedidentifiers="mobilecontainer"/>
+      <SubContainer capacity="5" maxstacksize="1">
+        <SlotIcon texture="Content/UI/CommandUIAtlas.png" sourcerect="639,926,128,80" origin="0.5,0.5"/>
+        <Containable items="mobilecontainer"/>
+      </SubContainer>
+    </ItemContainer>
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <!-- backwards compatibility for older versions in which mobile containers like storage containers were containable in any cabinet -->
+    <Upgrade gameversion="1.1.0.0" campaignsaveonly="true">
+      <ItemContainer>
+        <Containable items="smallitem,mediumitem"/>
+        <ClearSubContainerRestrictions/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="toxcabinet" tags="container,toxcontainer" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="889,483,125,148" origin="0.5,0.5"/>
+    <ItemContainer capacity="20" slotsperrow="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI"/>
+      <RequiredItem items="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true"/>
+      <Containable items="smallitem,mediumitem" excludedidentifiers="mobilecontainer"/>
+      <SubContainer capacity="3" maxstacksize="1">
+        <SlotIcon texture="Content/UI/CommandUIAtlas.png" sourcerect="639,926,128,80" origin="0.5,0.5"/>
+        <Containable items="mobilecontainer"/>
+      </SubContainer>
+    </ItemContainer>
+    <Upgrade gameversion="0.10.0.0" scale="0.5"/>
+    <!-- backwards compatibility for older versions in which mobile containers like storage containers were containable in any cabinet -->
+    <Upgrade gameversion="1.1.0.0" campaignsaveonly="true">
+      <ItemContainer>
+        <Containable items="smallitem,mediumitem"/>
+        <ClearSubContainerRestrictions/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="divingsuitlocker2" category="Legacy" tags="container,divingsuitcontainer,divingsuitcontainerhorizontal" pickdistance="50" scale="0.6">
+    <Sprite name="Large Diving Suit Locker Horizontal" texture="DivingSuitLocker.png" depth="0.84" sourcerect="82,0,248,338" origin="0.5,0.5"/>
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,130"/>
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,65"/>
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5"/>
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,-65"/>
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,-130"/>
+    <!-- TODO: implement
+    <DecorativeSprite name="Diving Suit Locker Light" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,77,241,67" origin="0.5,0.5"/>
+    -->
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="5" itempos="132,-44" iteminterval="0,-65" itemrotation="0" containedspritedepth="0.83" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI"/>
+      <SlotIcon slotindex="0" texture="Content/Map/LabelIcons.png" sourcerect="512,0,256,256" origin="0.5,0.5"/>
+      <Containable items="deepdiving" excludeditems="deepdivinglarge"/>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="oxygentankshelf" category="Legacy" tags="container,oxygentankcontainer,oxygentankrefiller" pickdistance="50" scale="0.6">
+    <Sprite name="Oxygen Tank Shelf" texture="DivingSuitLocker.png" depth="0.84" sourcerect="0,0,92,338" origin="0.5,0.5"/>
+    <!--TODO: add light textures for powered-on state?-->
+    <Powered powerconsumption="50" currpowerconsumption="50" isactive="true">
+      <GuiFrame relativesize="0.18,0.15" minsize="350,160" maxsize="420,192" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" msg="ItemMsgInteractSelect"/>
+    </Powered>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="25"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" stun="0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <ParticleEmitter particle="spark" particleamount="5" emitinterval="1.05" anglemax="360" distancemax="20" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="50.0"/>
+      <input name="power_in" displayname="connection.powerin"/>
+    </ConnectionPanel>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="10" maxstacksize="1" slotsperrow="5" itempos="24,-41" iteminterval="42,-65" itemsperrow="2" itemrotation="0" canbeselected="true" containedspritedepth="0.83" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI"/>
+      <StatusEffect type="OnFire" target="This" tags="onfire" duration="1" stackable="false"/>
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="3" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="4" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="5" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="6" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="7" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="8" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="9" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <Containable items="oxygensource,weldingfuel" excludebroken="false" excludefullcondition="true">
+        <StatusEffect type="OnContaining" targettype="Contained" Condition="1.0" Comparison="And">
+          <Conditional Voltage="gt 0.1" targetcontainer="true" targetitemcomponent="Powered"/>
+          <Conditional HasTag="refillableoxygensource"/>
+          <Conditional targetcontainer="true" HasStatusTag="!eq onfire"/>
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="divingsuitlocker" category="Diving" tags="container,divingsuitcontainer,divingsuitcontainerwindow" pickdistance="50" scale="0.5">
+    <Sprite name="Diving Suit Locker Vertical" texture="containers.png" depth="0.84" sourcerect="714,1,99,256" origin="0.5,0.5"/>
+    <!--TODO: add light textures for powered-on state?-->
+    <Powered powerconsumption="10" currpowerconsumption="10" isactive="true">
+      <GuiFrame relativesize="0.18,0.15" minsize="350,160" maxsize="420,192" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" msg="ItemMsgInteractSelect"/>
+    </Powered>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="25"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" stun="0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <ParticleEmitter particle="spark" particleamount="5" emitinterval="1.05" anglemax="360" distancemax="20" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="50.0"/>
+      <input name="power_in" displayname="connection.powerin"/>
+    </ConnectionPanel>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="0,0" iteminterval="0,0" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <SlotIcon slotindex="0" texture="Content/Map/LabelIcons.png" sourcerect="512,0,256,256" origin="0.5,0.5"/>
+      <Containable items="deepdiving" excludeditems="deepdivinglarge"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item name="" identifier="oxygentankshelf2" nameidentifier="oxygentankshelf" category="Diving" tags="container,oxygentankcontainer,oxygentankrefiller" pickdistance="50" scale="0.5">
+    <Sprite name="Diving Suit Locker Small" texture="Content/Items/Containers/containers.png" sourcerect="714,259,99,82" depth="0.84" origin="0.5,0.5"/>
+    <!--TODO: add light textures for powered-on state?-->
+    <Powered powerconsumption="30" currpowerconsumption="30" isactive="true">
+      <GuiFrame relativesize="0.18,0.15" minsize="350,160" maxsize="420,192" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" msg="ItemMsgInteractSelect"/>
+    </Powered>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="25"/>
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000"/>
+        <Explosion range="100.0" stun="0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
+        <Affliction identifier="stun" strength="4" probability="0.5"/>
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5"/>
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12"/>
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <ParticleEmitter particle="spark" particleamount="5" emitinterval="1.05" anglemax="360" distancemax="20" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="50.0"/>
+      <input name="power_in" displayname="connection.powerin"/>
+    </ConnectionPanel>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="3" maxstacksize="1" slotsperrow="3" itempos="27,-42" iteminterval="22.5,0" itemrotation="0" canbeselected="true" containedspritedepth="0.83" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.16,0.18" anchor="Center" style="ItemUI"/>
+      <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5"/>
+      <StatusEffect type="OnFire" target="This" tags="onfire" duration="1" stackable="false"/>
+      <Containable items="oxygensource,weldingfuel" excludebroken="false" excludefullcondition="true">
+        <StatusEffect type="OnContaining" targettype="Contained" Condition="1.0" Comparison="And">
+          <Conditional Voltage="gt 0.1" targetcontainer="true" targetitemcomponent="Powered"/>
+          <Conditional HasTag="refillableoxygensource"/>
+          <Conditional targetcontainer="true" HasStatusTag="!eq onfire"/>
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="metalcrate" tags="crate,allowcleanup" aliases="metalcrate_event" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy">
+    <Deconstruct time="0.5"/>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>-->
+    <Sprite texture="containers.png" depth="0.54" sourcerect="407,376,152,89" origin="0.5,0.5"/>
+    <Body width="150" height="75" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer capacity="20" maxstacksize="32" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
+      <Containable items="smallitem,mediumitem" excludeditems="toolbelt,toolbox,bandolier,cargoscooter,largemobilecontainer"/>
+    </ItemContainer>
+    <!-- the item used to have the (default) 64 max stack size, i.e. stack size was only limited by the max stack size of the contained items -->
+    <!-- set the stack size back in old saves/subs to prevent items from dropping from containers -->
+    <Upgrade gameversion="1.1.0.0" maxstacksize="64">
+      <ItemContainer maxstacksize="64"/>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="securemetalcrate" tags="crate,securecrate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
+    <Deconstruct time="0.5"/>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>-->
+    <Sprite texture="containers.png" depth="0.54" sourcerect="561,377,151,86" origin="0.5,0.5"/>
+    <Body width="150" height="75" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer capacity="20" maxstacksize="32" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
+      <RequiredItem items="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true"/>
+      <Containable items="smallitem,mediumitem" excludeditems="toolbelt,toolbox,bandolier,cargoscooter,largemobilecontainer"/>
+    </ItemContainer>
+    <!-- the item used to have the (default) 64 max stack size, i.e. stack size was only limited by the max stack size of the contained items -->
+    <!-- set the stack size back in old saves/subs to prevent items from dropping from containers -->
+    <Upgrade gameversion="1.1.0.0" maxstacksize="64">
+      <ItemContainer maxstacksize="64"/>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="explosivecrate" tags="crate,allowcleanup" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy" waterproof="true">
+    <Deconstruct time="0.5"/>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="containers.png" depth="0.54" sourcerect="410,466,150,88" origin="0.5,0.5"/>
+    <Body width="150" height="75" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer capacity="12" maxstacksize="32" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
+      <Containable items="smallitem"/>
+    </ItemContainer>
+    <!-- the item used to have the (default) 64 max stack size, i.e. stack size was only limited by the max stack size of the contained items -->
+    <!-- set the stack size back in old saves/subs to prevent items from dropping from containers -->
+    <Upgrade gameversion="1.1.0.0" maxstacksize="64">
+      <ItemContainer maxstacksize="64"/>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="chemicalcrate" tags="crate,allowcleanup" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy" waterproof="true">
+    <Deconstruct time="0.5"/>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64"/>-->
+    <Sprite texture="containers.png" depth="0.54" sourcerect="562,467,148,87" origin="0.5,0.5"/>
+    <Body width="145" height="75" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer capacity="12" maxstacksize="32" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
+      <Containable items="smallitem"/>
+    </ItemContainer>
+    <!-- the item used to have the (default) 64 max stack size, i.e. stack size was only limited by the max stack size of the contained items -->
+    <!-- set the stack size back in old saves/subs to prevent items from dropping from containers -->
+    <Upgrade gameversion="1.1.0.0" maxstacksize="64">
+      <ItemContainer maxstacksize="64"/>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="mediccrate" category="Medical" tags="crate,allowcleanup" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy" waterproof="true">
+    <Deconstruct time="0.5"/>
+    <Sprite texture="containers.png" depth="0.54" sourcerect="410,563,148,87" origin="0.5,0.5"/>
+    <Body width="145" height="75" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <ItemContainer capacity="12" maxstacksize="32" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
+      <Containable items="smallitem"/>
+    </ItemContainer>
+    <!-- the item used to have the (default) 64 max stack size, i.e. stack size was only limited by the max stack size of the contained items -->
+    <!-- set the stack size back in old saves/subs to prevent items from dropping from containers -->
+    <Upgrade gameversion="1.1.0.0" maxstacksize="64">
+      <ItemContainer maxstacksize="64"/>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="extinguisherbracket" category="Equipment" tags="extinguisherholder" canflipx="false" canflipy="false" scale="0.5" pickdistance="75">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="815,349,72,204" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" AutoInteractWithContained="true" maxstacksize="1" slotsperrow="1" itempos="35,-130" iteminterval="0,0" itemrotation="0" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="extinguisher"/>
+    </ItemContainer>
+    <Upgrade gameversion="0.10.0.0" scale="*0.5" itempos="35,-130"/>
+    <!-- the item used to have the (default) 64 max stack size, i.e. stack size was only limited by the max stack size of the contained items -->
+    <!-- set the stack size back in old saves/subs to prevent items from dropping from containers -->
+    <Upgrade gameversion="1.1.0.0" maxstacksize="64">
+      <ItemContainer maxstacksize="64"/>
+    </Upgrade>
+  </Item>
+  <Item name="" identifier="weaponholder" category="Weapon" tags="weaponholder" canflipx="false" canflipy="false" scale="0.5">
+    <Sprite texture="containers.png" depth="0.85" sourcerect="188,596,84,85" origin="0.5,0.5"/>
+    <DecorativeSprite texture="containers.png" depth="0.83" sourcerect="188,682,124,33" origin="0.5,0.5"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" AutoInteractWithContained="true" maxstacksize="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" containedspritedepth="0.831" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="mountableweapon"/>
+    </ItemContainer>
+    <Upgrade gameversion="0.18.3.0">
+      <ItemContainer>
+        <!-- previously the holder was configured to hold items with the tag "weapon", and sub builders 
+        used this tag in non-weapon items to allow placing various decorative items on the holders.
+        Let's readd the tag in older subs so we don't cause those items to drop. -->
+        <Containable items="mountableweapon,weapon"/>
+      </ItemContainer>
+    </Upgrade>
+  </Item>
+  
+  <Item name="" identifier="loosepanel" nameidentifier="loosepanel" tags="hidden" scale="0.5" 
+    interactdistance="100"
+    requirebodyinsidetrigger="false"
+    requirecursorinsidetrigger="true">
+    <trigger x="55" y="-55" width="40" height="40"/>
+    <Upgrade gameversion="1.5.0.0" refreshrect="true"/>
+    <sprite texture="containers.png" sourcerect="330,652,162,157" depth="0.885" origin="0.5339039,0.4379086" canflipx="false"/>
+    <ItemContainer capacity="1" slotsperrow="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.11,0.17" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem"/>
+    </ItemContainer>
+    <Upgrade gameversion="0.10.0.0" scale="*0.77"/>
+  </Item>
+  
+  <Item name="" identifier="loosepanel2" nameidentifier="loosepanel" tags="hidden" scale="0.5" 
+    interactdistance="100"
+    requirebodyinsidetrigger="false"
+    requirecursorinsidetrigger="true">
+    <trigger x="35" y="-35" width="30" height="30"/>
+    <sprite texture="containers.png" sourcerect="1,545,112,110" depth="0.885" origin="0.5,0.5" canflipx="false"/>
+    <ItemContainer capacity="1" slotsperrow="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.11,0.17" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI"/>
+      <Containable items="smallitem,mediumitem"/>
+    </ItemContainer>
+    <Upgrade gameversion="0.10.0.0" scale="*0.676"/>
+  </Item>
+
+  <Item name="" identifier="crateshelf" tags="container,cargocontainer" linkable="true" canflipx="false" pickdistance="150" scale="0.5">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="1,657,185,366" origin="0.5,0.5"/>
+    <ItemContainer capacity="4" maxstacksize="1" canbeselected="true" hideitems="false" itempos="92,-48" iteminterval="0,-92" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
+      <Containable items="crate"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item name="" identifier="artifacttransportcase" category="Equipment" tags="mediumitem,mobilecontainer,artifactcontainer,poweredcontainer" cargocontaineridentifier="metalcrate" showcontentsintooltip="true" Scale="0.5" fireproof="true" description="" impactsoundtag="impact_soft">
+    <PreferredContainer primary="engcab"/>
+    <Deconstruct time="20">
+      <Item identifier="lead"/>
+      <Item identifier="titanium"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="30">
+      <Item identifier="lead" amount="3"/>
+      <Item identifier="titanium" amount="2"/>
+    </Fabricate>
+    <Price baseprice="300" sold="false" minleveldifficulty="35">
+      <Price storeidentifier="merchantoutpost" multiplier="0.7"/>
+      <Price storeidentifier="merchantcity" sold="true" minavailable="1"/>
+      <Price storeidentifier="merchantresearch" sold="true" minavailable="1"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.8"/>
+      <Price storeidentifier="merchantmine" multiplier="0.8"/>
+    </Price>
+    <InventoryIcon texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="806,103,124,100" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="806,2,124,100" depth="0.6"/>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="934,49,30,30" offset="24,-11" depth="0.59999" rotationspeed="500">
+      <AnimationConditional Voltage="gt 0.1" targetitemcomponent="LightComponent"/>
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="934,49,30,30" offset="-23,-11" depth="0.59999" rotationspeed="-500">
+      <AnimationConditional Voltage="gt 0.1" targetitemcomponent="LightComponent"/>
+    </DecorativeSprite>
+    <Body width="124" height="95" density="20"/>
+    <LightComponent range="100" lightcolor="142,145,184,120" castshadows="false" depth="0.6" powerconsumption="10" IsOn="true" allowingameediting="false"/>
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="0,-70" handle1="0,45" holdangle="0" msg="ItemMsgPickUpUse" canbeselected="false" canbepicked="true" allowswappingwhenpicked="false"/>
+    <ItemContainer capacity="1" hideitems="true" ContainedStateIndicatorSlot="1">
+      <Containable items="alienartifact"/>
+      <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="128,448,64,64" origin="0.5,0.5"/>
+      <SubContainer capacity="1"  maxstacksize="1">
+        <Containable items="mobilebattery">
+          <StatusEffect type="OnContaining" target="Contained" Condition="-0.15">
+            <RequiredItem items="alienartifact" type="Contained"/>
+          </StatusEffect>
+          <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
+        </Containable>
+      </SubContainer>
+    </ItemContainer>
+  </Item>
+
+
+  <Item name="" identifier="sealedsupplycrate" tags="crate" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy" hideinmenus="true">
+    <PreferredContainer secondary="wreckstoragecab" spawnprobability="0.02"/>
+    <Price baseprice="1250" sold="false" canbespecial="false"/>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>-->
+    <Sprite texture="containers.png" depth="0.54" sourcerect="562,563,147,86" origin="0.5,0.5"/>
+    <Body width="150" height="75" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+  </Item>
+  <Item name="" identifier="unitloaddevice" tags="cargocontainer" linkable="true" pickdistance="150" scale="0.5" waterproof="true">
+    <Sprite texture="UnitLoadDevice.png" depth="0.8" sourcerect="0,0,567,446" origin="0.5,0.5"/>
+    <DecorativeSprite texture="UnitLoadDevice.png" depth="0.85" sourcerect="0,457,567,446" origin="0.5,0.5"/>
+    <ItemContainer capacity="12" maxstacksize="1" canbeselected="true" hideitems="false" itempos="120,-364" iteminterval="150,80" itemsperrow="3" slotsperrow="4" msg="ItemMsgInteractSelect" containedspritedepths="0.81,0.82,0.81,0.82,0.81,0.82,0.81,0.82,0.81,0.82,0.81,0.82">
+      <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI"/>
+      <Containable items="crate"/>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="magneticsuspensioncrate" tags="crate,magneticsuspensioncrate,poweredcontainer,donttakeitems" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy" waterproof="true">
+    <Deconstruct time="0.5"/>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>-->
+    <Sprite texture="containers2.png" depth="0.54" sourcerect="0,0,147,85" origin="0.5,0.5"/>
+    <Body width="150" height="80" density="25"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <DecorativeSprite texture="Content/Items/Electricity/signalcomp.png" depth="0.53" sourcerect="195,33,27,31" origin="0.5,1.0"/>
+    <LightComponent range="60.0" lightcolor="100,225,100,50" alphablend="true" powerconsumption="1" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.9" pulsefrequency="0.5">
+      <Sprite texture="Content/Items/Electricity/signalcomp.png" depth="0.53" sourcerect="195,33,27,31" origin="0.5,1.0" alpha="1.0"/>
+    </LightComponent>
+    <ItemContainer capacity="0" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true" containedstateindicatorstyle="battery" containedstateindicatorslot="0" containedspritedepth="0.56">
+      <SlotIcon slotindex="0" texture="Content/UI/ContainerIndicators.png" sourcerect="1,185,120,29" origin="0.5,0.5"/>
+      <SubContainer capacity="1" maxstacksize="1">
+        <Containable items="mobilebattery">
+          <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
+          <StatusEffect type="OnContaining" target="Contained" Condition="-0.34"/>
+          <StatusEffect type="OnContaining" target="This" interval="2">
+            <sound file="Content/Items/Weapons/TaserShot1.ogg" range="200" frequencymultiplier="1" volume="0.75"/>
+          </StatusEffect>
+          <StatusEffect type="OnContaining" target="Contained" comparison="and" interval="0.5">
+            <Conditional health="gte 8"/>
+            <Conditional health="lt 20"/>
+            <sound file="Content/Items/WarningBeepSlow.ogg" range="300" frequencymultiplier="1.5" volume="0.8"/>
+          </StatusEffect>
+          <StatusEffect type="OnContaining" target="Contained" interval="0.2">
+            <Conditional health="lt 8"/>
+            <sound file="Content/Items/WarningBeep.ogg" range="500" frequencymultiplier="2" volume="1"/>
+          </StatusEffect>
+        </Containable>
+      </SubContainer>
+      <SubContainer capacity="11">
+        <Containable items="smallitem">
+          <StatusEffect type="OnContaining" target="This,Contained"/>
+        </Containable>
+      </SubContainer>
+    </ItemContainer>
+  </Item>
+
+  <Item name="" identifier="chemicalcratedamaged" variantof="chemicalcrate" tags="crate" waterproof="false">
+    <DecorativeSprite texture="containers2.png" sourcerect=" 0,86,146,83" depth="0.53" origin="0.5,0.5"/>
+  </Item>
+  
+</Items>

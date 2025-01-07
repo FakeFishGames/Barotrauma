@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContainerTags>
+  <!-- RecommendedAmount defaults to 0. WarnIfLess defaults to true. -->
+  <!-- tagname. and tagdescription. is automatically retrieved from localization, e.g. tagname.armcab and tagdescription.armcab with the option to inherit to avoid duplicates -->
+  
+  <!-- Submarine-->
+  <ContainerTag identifier="armcab" category="Submarine" RecommendedAmount="1" WarnIfLess="true"/>
+  <ContainerTag identifier="batterycellrecharger" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="crewcab" category="Submarine" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="divingcab" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="divingsuitcontainer" category="Submarine" RecommendedAmount="4"/>
+  <ContainerTag identifier="engcab" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="extinguisherholder" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="medcab" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="oxygengenerator" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="plantcontainer" category="Submarine"/>
+  <ContainerTag identifier="reactorcab" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="secarmcab" category="Submarine" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="storagecab" category="Submarine" RecommendedAmount="1"/>
+  <ContainerTag identifier="supplycab" category="Submarine" RecommendedAmount="3"/>
+  <ContainerTag identifier="toxcab" category="Submarine" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="mineralcab" category="Submarine" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="medfabcab" category="Submarine" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="respawncontainer" category="Submarine"/>
+
+  <!-- Abandoned Outposts -->
+  <ContainerTag identifier="abandonedarmcab" category="AbandonedOutpost" nameidentifier="armcab" suffix="abandoned"/>
+  <ContainerTag identifier="abandonedcrewcab" category="AbandonedOutpost" nameidentifier="crewcab" suffix="abandoned"/>
+  <ContainerTag identifier="abandonedengcab" category="AbandonedOutpost" nameidentifier="engcab" suffix="abandoned"/>
+  <ContainerTag identifier="abandonedmedcab" category="AbandonedOutpost" nameidentifier="medcab" suffix="abandoned"/>
+  <ContainerTag identifier="abandonedreactorcab" category="AbandonedOutpost" nameidentifier="reactorcab" suffix="abandoned"/>
+  <ContainerTag identifier="abandonedsecarmcab" category="AbandonedOutpost" nameidentifier="secarmcab" suffix="abandoned"/>
+  <ContainerTag identifier="abandonedstoragecab" category="AbandonedOutpost" nameidentifier="storagecab" suffix="abandoned"/>
+  <ContainerTag identifier="abandonedtoxcab" category="AbandonedOutpost" nameidentifier="toxcab" suffix="abandoned"/>
+
+  <!-- Wrecks -->
+  <ContainerTag identifier="wreckarmcab" category="Wreck" nameidentifier="armcab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckcrewcab" category="Wreck" nameidentifier="crewcab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckdivingcab" category="Wreck" nameidentifier="divingcab" suffix="wreck" RecommendedAmount="1"/>
+  <ContainerTag identifier="wreckdivingsuitcontainer" category="Wreck" nameidentifier="divingsuitcontainer" suffix="wreck" RecommendedAmount="2"/>
+  <ContainerTag identifier="wreckengcab" category="Wreck" nameidentifier="engcab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckextinguisherholder" category="Wreck" nameidentifier="extinguisherholder" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckmedcab" category="Wreck" nameidentifier="medcab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckreactorcab" category="Wreck" nameidentifier="reactorcab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wrecksecarmcab" category="Wreck" nameidentifier="secarmcab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckstoragecab" category="Wreck" nameidentifier="storagecab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wrecksupplycab" category="Wreck" nameidentifier="supplycab" suffix="wreck" RecommendedAmount="3" WarnIfLess="false"/>
+  <ContainerTag identifier="wrecktoxcab" category="Wreck" nameidentifier="toxcab" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckweaponholder" category="Wreck" nameidentifier="weaponholder" suffix="wreck" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="wreckcoilgunloader" category="Wreck" nameidentifier="coilgunloader" suffix="wreck"/>
+  <ContainerTag identifier="wreckchaingunloader" category="Wreck" nameidentifier="chaingunloader" suffix="wreck"/>
+  <ContainerTag identifier="wreckflakcannonloader" category="Wreck" nameidentifier="flakcannonloader" suffix="wreck"/>
+  <ContainerTag identifier="wreckrailgunloader" category="Wreck" nameidentifier="railgunloader" suffix="wreck"/>
+  
+  <!-- Beacon Station -->
+  <ContainerTag identifier="beaconengcab" category="BeaconStation" nameidentifier="engcab" suffix="beacon" RecommendedAmount="1" WarnIfLess="false"/>
+  <ContainerTag identifier="beaconsupplycab" category="BeaconStation" nameidentifier="supplycab" suffix="beacon" RecommendedAmount="2" WarnIfLess="false"/>
+  
+  <!-- Ruin -->
+  <ContainerTag identifier="ruinstorage" category="Ruins"/>
+  <ContainerTag identifier="ruinstoragelarge" category="Ruins"/>
+  <ContainerTag identifier="ruinstoragesmall" category="Ruins"/>
+  <ContainerTag identifier="ruintreasure" category="Ruins"/>
+  
+  <!-- Outposts -->
+  <ContainerTag identifier="outpostarmcab" category="Outpost" nameidentifier="armcab" suffix="outpost"/>
+  <ContainerTag identifier="outpostcrewcabinet" category="Outpost" nameidentifier="crewcab" suffix="outpost"/>
+  <ContainerTag identifier="outpostengcab" category="Outpost" nameidentifier="engcab" suffix="outpost"/>
+  <ContainerTag identifier="outpostmedcab" category="Outpost" nameidentifier="medcab" suffix="outpost"/>
+  <ContainerTag identifier="outpostmedcompartment" category="Outpost" nameidentifier="medcompartment" suffix="outpost"/>
+  <ContainerTag identifier="outpostsecarmcab" category="Outpost" nameidentifier="secarmcab" suffix="outpost"/>
+  <ContainerTag identifier="outpostsupplycab" category="Outpost" nameidentifier="supplycab" suffix="outpost"/>
+  <ContainerTag identifier="outposttrashcan" category="Outpost" nameidentifier="armcab" suffix="outpost"/>
+  <ContainerTag identifier="researchcontainer" category="Outpost"/>
+
+  <!-- EnemySubmarine -->
+  <ContainerTag identifier="piratedivingsuitcontainer" category="EnemySubmarine" nameidentifier="divingsuitcontainer" suffix="enemy" RecommendedAmount="5"/>
+  <ContainerTag identifier="piratearmcab" category="EnemySubmarine" nameidentifier="armcab" suffix="enemy" RecommendedAmount="1"/>
+  <ContainerTag identifier="piratecrewcab" category="EnemySubmarine" nameidentifier="crewcab" suffix="enemy" RecommendedAmount="1"/>
+  <ContainerTag identifier="pirateengcab" category="EnemySubmarine" nameidentifier="engcab" suffix="enemy" RecommendedAmount="1"/>
+  <ContainerTag identifier="piratemedcab" category="EnemySubmarine" nameidentifier="medcab" suffix="enemy" RecommendedAmount="1"/>
+  <ContainerTag identifier="piratereactorcab" category="EnemySubmarine" nameidentifier="reactorcab" suffix="enemy" RecommendedAmount="1"/>
+  <ContainerTag identifier="piratesecarmcab" category="EnemySubmarine" nameidentifier="secarmcab" suffix="enemy"/>
+  <ContainerTag identifier="piratestoragecab" category="EnemySubmarine" nameidentifier="storagecab" suffix="enemy"/>
+  <ContainerTag identifier="piratetoxcab" category="EnemySubmarine" nameidentifier="toxcab" suffix="enemy"/>
+
+</ContainerTags>

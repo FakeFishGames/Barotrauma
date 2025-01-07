@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="AlienHatchAssembly" description="" hideinmenus="true">
+  <Item name="" identifier="alienbutton" ID="9" rect="-17,-80,24,27" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien,alienbutton" displaysidebysidewhenlinked="False" spritedepth="0.8" hiddeningame="False">
+    <Controller istoggle="False" pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem items="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="14"/>
+      </output>
+    </ConnectionPanel>
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,255" minvoltage="0" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+  </Item>
+  <Item name="" identifier="alienbutton" ID="6" rect="-17,112,24,27" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien,alienbutton" displaysidebysidewhenlinked="False" spritedepth="0.8" hiddeningame="False">
+    <Controller istoggle="False" pickingtime="0" canbepicked="True" allowingameediting="False" msg="itemmsgpressselect"/>
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
+      <requireditem items="screwdriver" type="Equipped" optional="false" ignoreineditor="false"/>
+      <output name="signal_out">
+        <link w="13"/>
+      </output>
+    </ConnectionPanel>
+    <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,255" minvoltage="0" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg=""/>
+  </Item>
+  <Item name="" identifier="blackwire" ID="14" rect="50040,-70086,48,20" noninteractable="False" scale="0.5" spritecolor="49,49,49,255" inventoryiconcolor="49,49,49,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" hiddeningame="False" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="0;-96;0;8"/>
+  </Item>
+  <Item name="" identifier="blackwire" ID="13" rect="50040,-70086,48,20" noninteractable="False" scale="0.5" spritecolor="49,49,49,255" inventoryiconcolor="49,49,49,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" hiddeningame="False" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg=""/>
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="0;96;0;8"/>
+  </Item>
+  <Item name="" identifier="alienhatch" ID="10" rect="-104,32,208,48" linked="11" noninteractable="False" scale="0.5" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,aliendoor" displaysidebysidewhenlinked="False" spritedepth="0.8" hiddeningame="False">
+    <Door openingspeed="3" closingspeed="3" togglecooldown="1" isopen="True" pickingtime="30" canbepicked="True" allowingameediting="True" msg="ItemMsgForceOpenCrowbar">
+      <requireditem items="crowbar" type="Equipped" optional="false" ignoreineditor="false"/>
+    </Door>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
+      <input name="toggle">
+        <link w="13"/>
+        <link w="14"/>
+      </input>
+      <input name="set_state"/>
+      <output name="state_out"/>
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="11" horizontal="false" rect="-104,37,208,58"/>
+</ItemAssembly>

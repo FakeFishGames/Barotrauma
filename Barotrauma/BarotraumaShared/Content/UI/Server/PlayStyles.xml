@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Style>
+  <PlayStyleBanner.Serious>
+    <Sprite name="PlayStyleBanner.Serious" texture="Content/UI/Server/PlaystyleSerious.png" sourcerect="0,0,1920,768" bannercolor="#20686c"/>
+  </PlayStyleBanner.Serious>
+  <PlayStyleBanner.Casual>
+    <Sprite name="PlayStyleBanner.Casual" texture="Content/UI/Server/PlaystyleCasual.png" sourcerect="0,0,1920,768" bannercolor="#1f661c"/>
+  </PlayStyleBanner.Casual>
+  <PlayStyleBanner.Roleplay>
+    <Sprite name="PlayStyleBanner.Roleplay" texture="Content/UI/Server/PlaystyleRoleplay.png" sourcerect="0,0,1920,768" bannercolor="#8b1b45"/>
+  </PlayStyleBanner.Roleplay>
+  <PlayStyleBanner.Rampage>
+    <Sprite name="PlayStyleBanner.Rampage" texture="Content/UI/Server/PlaystyleRampage.png" sourcerect="0,0,1920,768" bannercolor="#8a3622"/>
+  </PlayStyleBanner.Rampage>
+  <PlayStyleBanner.SomethingDifferent>
+    <Sprite name="PlayStyleBanner.SomethingDifferent" texture="Content/UI/Server/PlaystyleSomethingDifferent.png" sourcerect="0,0,1920,768" bannercolor="#6d2460"/>
+  </PlayStyleBanner.SomethingDifferent>
+
+  <PlayStyleIcon.friendlyfire.true>
+    <Sprite name="PlayStyleIcon.friendlyfire.true" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="0,2,128,128"/>
+  </PlayStyleIcon.friendlyfire.true>
+  <PlayStyleIcon.friendlyfire.false>
+    <Sprite name="PlayStyleIcon.friendlyfire.false" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="512,2,128,128"/>
+  </PlayStyleIcon.friendlyfire.false>
+  <PlayStyleIcon.modded.true>
+    <Sprite name="PlayStyleIcon.modded.true" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="128,2,128,128"/>
+  </PlayStyleIcon.modded.true>
+  <PlayStyleIcon.modded.false>
+    <Sprite name="PlayStyleIcon.modded.false" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="640,2,128,128"/>
+  </PlayStyleIcon.modded.false>
+  <PlayStyleIcon.karma.true>
+    <Sprite name="PlayStyleIcon.karma.true" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="256,2,128,128"/>
+  </PlayStyleIcon.karma.true>
+  <PlayStyleIcon.karma.false>
+    <Sprite name="PlayStyleIcon.karma.false" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="768,2,128,128"/>
+  </PlayStyleIcon.karma.false>
+  <PlayStyleIcon.traitors.true>
+    <Sprite name="PlayStyleIcon.traitors.true" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="384,2,128,128"/>
+  </PlayStyleIcon.traitors.true>
+  <PlayStyleIcon.traitors.false>
+    <Sprite name="PlayStyleIcon.traitors.false" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="896,2,128,128"/>
+  </PlayStyleIcon.traitors.false>
+  <PlayStyleIcon.247.true>
+    <Sprite name="PlayStyleIcon.247.true" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="0,13,128,128"/>
+  </PlayStyleIcon.247.true>
+  <PlayStyleIcon.247.false>
+    <Sprite name="PlayStyleIcon.247.false" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="512,130,128,128"/>
+  </PlayStyleIcon.247.false>
+  <PlayStyleIcon.voip.true>
+    <Sprite name="PlayStyleIcon.voip.true" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="128,130,128,128"/>
+  </PlayStyleIcon.voip.true>
+  <PlayStyleIcon.voip.false>
+    <Sprite name="PlayStyleIcon.voip.false" texture="Content/UI/Server/ServerAtlas2.png" sourcerect="640,130,128,128"/>
+  </PlayStyleIcon.voip.false>
+</Style>

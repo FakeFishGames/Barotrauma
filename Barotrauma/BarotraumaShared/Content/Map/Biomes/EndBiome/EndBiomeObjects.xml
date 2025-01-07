@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<levelobjects>
+  <!-- a series of background chunks that spawn along walls -->
+  <BackgroundChunks identifier="endbiomebackgroundchunks" spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="1000,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000000" randomoffset="100,100">
+    <overridecommonness leveltype="endlocationbasic" commonness="100"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="497,358,533,519" depth="0.97" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="1043,334,585,610" depth="0.97" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="557,876,594,757" depth="0.97" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="1859,291,189,217" depth="0.97" origin="0.5,0.5"/>
+  </BackgroundChunks>
+  <EdgeChunks identifier="endbiomeedgechunks" spawnpos="Wall, RuinWall" minsurfacewidth="900" minsize="0.5" maxsize="0.5" randomrotation="-5,5" randomoffset="50,50" commonness="0" depthrange="-1,0" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0" maxcount="10000">
+    <overridecommonness leveltype="endlocationbasic" commonness="100"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="1190,941,858,451" depth="0.97" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="516,1643,595,404" depth="0.97" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="1188,1392,857,467" depth="0.97" origin="0.5,0.5"/>
+    <sprite texture="Content/Map/AlienRuins_CornerWebbing.png" sourcerect="9,1636,345,406" depth="0.97" origin="0.5,0.5"/>
+  </EdgeChunks>
+</levelobjects>

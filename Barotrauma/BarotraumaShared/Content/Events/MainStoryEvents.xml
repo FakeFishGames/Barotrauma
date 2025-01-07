@@ -1,0 +1,632 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Randomevents>
+  <EventPrefabs>
+    <!-- ****************************************************************************************************************************************************** -->
+    <!-- Core gameplay events, without which the game wouldn't progress/function as normal, such as unlocking paths -->
+    <!-- ****************************************************************************************************************************************************** -->
+
+
+    <!-- No longer used in the vanilla content -->
+    <ScriptedEvent identifier="forcebeaconmission" requirebeaconstation="True">
+      <MissionAction missiontag="specialbeaconmission"/>
+    </ScriptedEvent>
+
+    <!--"Unlock Path"-->
+    <ScriptedEvent identifier="unlockpathgeneric" commonness="0" unlockpathevent="true">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchman" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 30">
+        <Success>
+          <ConversationAction text="EventText.unlockpathgeneric.c1" speakertag="unlockpathnpc" dialogtype="Regular"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpathgeneric.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpathgeneric.o1">
+              <CheckMoneyAction amount="2000">
+                <Success>
+                  <MoneyAction amount="-2000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgeneric.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgeneric.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpathgeneric.o2">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgeneric.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpathcoldcaverns" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipcoalitionreputation" unlockpathreputation="30" faction="coalition" biome="coldcaverns">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchman" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 30">
+        <Success>
+          <ConversationAction text="EventText.unlockpathcoldcaverns.c1" speakertag="unlockpathnpc" dialogtype="Regular"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpathcoldcaverns.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpathcoldcaverns.o1">
+              <CheckMoneyAction amount="2000">
+                <Success>
+                  <MoneyAction amount="-2000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathcoldcaverns.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathcoldcaverns.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathcoldcaverns.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpatheuropanridge" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipcoalitionreputation" unlockpathreputation="40" faction="coalition" biome="europanridge">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchman" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 40">
+        <Success>
+          <ConversationAction text="EventText.unlockpatheuropanridge.c1" speakertag="unlockpathnpc" dialogtype="Regular"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpatheuropanridge.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpatheuropanridge.o1">
+              <CheckMoneyAction amount="4000">
+                <Success>
+                  <MoneyAction amount="-4000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpatheuropanridge.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpatheuropanridge.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpatheuropanridge.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpathaphoticplateau" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipcoalitionreputation" unlockpathreputation="50" faction="coalition" biome="theaphoticplateau">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchman" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 50">
+        <Success>
+          <ConversationAction text="EventText.unlockpathaphoticplateau.c1" speakertag="unlockpathnpc" dialogtype="Regular"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpathaphoticplateau.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpathaphoticplateau.o1">
+              <CheckMoneyAction amount="8000">
+                <Success>
+                  <MoneyAction amount="-8000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathaphoticplateau.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathaphoticplateau.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathaphoticplateau.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpathgreatsea" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipcoalitionreputation" unlockpathreputation="75" faction="coalition" biome="thegreatsea">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchman" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 75">
+        <Success>
+          <ConversationAction text="EventText.unlockpathgreatsea.c1" speakertag="unlockpathnpc" dialogtype="Regular" eventsprite="captain"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpathgreatsea.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpathgreatsea.o1">
+              <CheckMoneyAction amount="16000">
+                <Success>
+                  <MoneyAction amount="-16000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgreatsea.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgreatsea.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgreatsea.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpathcoldcavernsseparatists" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipseparatistreputation" unlockpathreputation="30" faction="separatists" biome="coldcaverns">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchmanseparatist" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 30">
+        <Success>
+          <ConversationAction text="EventText.unlockpathcoldcavernsseparatists.c1" speakertag="unlockpathnpc" dialogtype="Regular"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="eventtext.unlockpathcoldcavernsseparatists.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpathcoldcaverns.o1">
+              <CheckMoneyAction amount="2000">
+                <Success>
+                  <MoneyAction amount="-2000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="eventtext.unlockpathcoldcavernsseparatists.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="eventtext.unlockpathcoldcavernsseparatists.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="eventtext.unlockpathcoldcavernsseparatists.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpatheuropanridgeseparatists" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipseparatistreputation" unlockpathreputation="40" faction="separatists" biome="europanridge">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchmanseparatist" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 40">
+        <Success>
+          <ConversationAction text="eventtext.unlockpatheuropanridgeseparatists.c1" speakertag="unlockpathnpc" dialogtype="Regular"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpatheuropanridge.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpatheuropanridge.o1">
+              <CheckMoneyAction amount="4000">
+                <Success>
+                  <MoneyAction amount="-4000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpatheuropanridge.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpatheuropanridge.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpatheuropanridge.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpathaphoticplateauseparatists" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipseparatistreputation" unlockpathreputation="50" faction="separatists" biome="theaphoticplateau">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchmanseparatist" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 50">
+        <Success>
+          <ConversationAction text="EventText.unlockpathaphoticplateauseparatists.c1" speakertag="unlockpathnpc" dialogtype="Regular"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpathaphoticplateau.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpathaphoticplateau.o1">
+              <CheckMoneyAction amount="8000">
+                <Success>
+                  <MoneyAction amount="-8000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="eventtext.unlockpathaphoticplateauseparatists.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathaphoticplateau.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathaphoticplateau.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="unlockpathgreatseaseparatists" commonness="1" unlockpathevent="true" unlockpathtooltip="lockedpathtooltipseparatistreputation" unlockpathreputation="75" faction="separatists" biome="thegreatsea">
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="watchmanseparatist" targettag="unlockpathnpc" spawnlocation="Outpost" spawnpointtag="unlockpath"/>
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 75">
+        <Success>
+          <ConversationAction text="eventtext.unlockpathgreatseaseparatists.c1" speakertag="unlockpathnpc" dialogtype="Regular" eventsprite="captain"/>
+          <UnlockPathAction/>
+        </Success>
+        <Failure>
+          <Label name="retry"/>
+          <ConversationAction text="EventText.unlockpathgreatsea.c2" speakertag="unlockpathnpc" invokertag="player" dialogtype="Regular" eventsprite="captain">
+            <Option text="EventText.unlockpathgreatsea.o1">
+              <CheckMoneyAction amount="16000">
+                <Success>
+                  <MoneyAction amount="-16000"/>
+                  <UnlockPathAction/>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgreatsea.o1.c1" eventsprite="captain"/>
+                </Success>
+                <Failure>
+                  <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgreatsea.o1.nomoney" eventsprite="captain"/>
+                  <GoTo name="retry"/>
+                </Failure>
+              </CheckMoneyAction>
+            </Option>
+            <Option text="EventText.unlockpath.refusebribe">
+              <ConversationAction speakertag="unlockpathnpc" waitforinteraction="false" targettag="player" text="EventText.unlockpathgreatsea.o2.c1" eventsprite="captain"/>
+              <GoTo name="retry"/>
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+    </ScriptedEvent>
+
+    <!-- LEGACY: This is here (for now) only in order to not break existing saves -->
+    <ScriptedEvent identifier="healreaperstax" commonness="100">
+      <WaitAction time="5"/>
+      <TagAction criteria="crew" tag="crew"/>
+      <!-- one of the players needs to have the reaper's tax affliction for the event to do anything -->
+      <CheckAfflictionAction identifier="reaperstax" targettag="crew">
+        <Success>
+          <ConversationAction text="EventText.healreaperstax.c1" speakertag="outpostdoctor" invokertag="patient" endeventifinterrupted="false" dialogtype="Regular" eventsprite="redbluebottles"/>
+          <CheckAfflictionAction identifier="reaperstax" targettag="patient">
+            <Success>
+              <ConversationAction text="EventText.healreaperstax.c2" speakertag="outpostdoctor" waitforinteraction="false" targettag="patient" endeventifinterrupted="false" dialogtype="Regular" eventsprite="redbluebottles">
+                <Option text="EventText.healreaperstax.o1" endconversation="true">
+                  <CheckMoneyAction amount="1000" endconversation="true">
+                    <Success endconversation="true">
+                      <MoneyAction amount="-1000"/>
+                      <AfflictionAction affliction="reaperstax" strength="-100" targettag="patient"/>
+                      <TriggerEventAction identifier="healreaperstax"/>
+                    </Success>
+                    <Failure endconversation="true">
+                      <ConversationAction speakertag="outpostdoctor" waitforinteraction="false" targettag="patient" text="EventText.healreaperstax.o1.nomoney" eventsprite="redbluebottles"/>
+                      <TriggerEventAction identifier="healreaperstax"/>
+                    </Failure>
+                  </CheckMoneyAction>
+                </Option>
+                <Option text="EventText.healreaperstax.o2" endconversation="true">
+                  <TriggerEventAction identifier="healreaperstax"/>
+                </Option>
+              </ConversationAction>
+            </Success>
+            <Failure endconversation="true">
+              <TriggerEventAction identifier="healreaperstax"/>
+            </Failure>
+          </CheckAfflictionAction>
+        </Success>
+        <Failure/>
+      </CheckAfflictionAction>
+    </ScriptedEvent>
+
+    <!-- ****************************************************************************************************************************************************** -->
+    <!-- Main story events, f.e. end-game and lore related. -->
+    <!-- ****************************************************************************************************************************************************** -->
+
+    <!--Prophet of Sierpinsk-->
+    <ScriptedEvent identifier="prophetofsierpinsk" commonness="0">
+      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="prophetofsierpinsk" targettag="prophet" spawnpointtag="saferoom" spawnlocation="beaconstation" requirespawnpointtag="true"/>
+      <TagAction criteria="player" tag="player"/>
+      <TriggerAction target1tag="prophet" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true" eventsprite="officeinside"/>
+      <ConversationAction text="EventText.prophetofsierpinsk.c1" targettag="triggerer_player">
+        <Option text="EventText.prophetofsierpinsk.o1">
+          <ConversationAction text="EventText.prophetofsierpinsk.o1.c1" targettag="triggerer_player"/>
+          <ConversationAction text="EventText.prophetofsierpinsk.o1.c1.c1" targettag="triggerer_player">
+            <Option text="EventText.prophetofsierpinsk.o1.c1.o1">
+              <ConversationAction text="EventText.prophetofsierpinsk.o1.c1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.prophetofsierpinsk.o1.c1.o1.o1">
+                  <GoTo name="explain"/>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.prophetofsierpinsk.o1.c1.o2">
+              <ConversationAction text="EventText.prophetofsierpinsk.o1.c1.o2.c1" targettag="triggerer_player">
+                <Option text="EventText.prophetofsierpinsk.o1.c1.o2.o1">
+                  <GoTo name="explain"/>
+                </Option>
+              </ConversationAction>
+              <Label name="explain"/>
+              <ConversationAction text="EventText.prophetofsierpinsk.o1.c1.o2.c1.c1" targettag="triggerer_player"/>
+              <ConversationAction text="EventText.prophetofsierpinsk.o1.c1.o2.c1.c1.c1" targettag="triggerer_player" endconversation="true"/>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.prophetofsierpinsk.o2">
+          <ConversationAction text="EventText.prophetofsierpinsk.o2.c1" targettag="triggerer_player">
+            <Option text="EventText.prophetofsierpinsk.o2.o1">
+              <ConversationAction text="EventText.prophetofsierpinsk.o2.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.prophetofsierpinsk.o2.o1.o1">
+                  <ConversationAction text="EventText.prophetofsierpinsk.o2.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.prophetofsierpinsk.o2.o1.o1.o1">
+                      <ConversationAction text="EventText.prophetofsierpinsk.o2.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.prophetofsierpinsk.o2.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.prophetofsierpinsk.o2.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <!--"Alien writing 1"-->
+    <ScriptedEvent identifier="alienwriting1" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:alienwriting1" tag="alienwriting1"/>
+      <Label name="writingstart"/>
+      <TriggerAction target1tag="alienwriting1" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <CheckItemAction targettag="triggerer_player" itemidentifiers="alientranslator">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start">
+            <Option text="eventtext.alienwriting.listen">
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.writingstart"/>
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.1_1"/>
+              <SetDataAction identifier="alien_writings_deciphered" value="true"/>
+            </Option>
+            <Option text="eventtext.alienwriting.dontlisten" endconversation="true">
+              <GoTo name="writingstart"/>
+            </Option>
+          </ConversationAction>
+          <GoTo name="writingstart"/>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start_alt" endconversation="true"/>
+          <GoTo name="writingstart"/>
+        </Failure>
+      </CheckItemAction>
+    </ScriptedEvent>
+
+    <!--"Alien writing 2"-->
+    <ScriptedEvent identifier="alienwriting2" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:alienwriting2" tag="alienwriting2"/>
+      <Label name="writingstart"/>
+      <TriggerAction target1tag="alienwriting2" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <CheckItemAction targettag="triggerer_player" itemidentifiers="alientranslator">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start">
+            <Option text="eventtext.alienwriting.listen">
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.writingstart"/>
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.2_1"/>
+              <SetDataAction identifier="alien_writings_deciphered" value="true"/>
+            </Option>
+            <Option text="eventtext.alienwriting.dontlisten" endconversation="true">
+              <GoTo name="writingstart"/>
+            </Option>
+          </ConversationAction>
+          <GoTo name="writingstart"/>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start_alt" endconversation="true"/>
+          <GoTo name="writingstart"/>
+        </Failure>
+      </CheckItemAction>
+    </ScriptedEvent>
+
+    <!--"Alien writing 3"-->
+    <ScriptedEvent identifier="alienwriting3" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:alienwriting3" tag="alienwriting3"/>
+      <Label name="writingstart"/>
+      <TriggerAction target1tag="alienwriting3" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <CheckItemAction targettag="triggerer_player" itemidentifiers="alientranslator">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start">
+            <Option text="eventtext.alienwriting.listen">
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.writingstart"/>
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.3_1"/>
+              <SetDataAction identifier="alien_writings_deciphered" value="true"/>
+            </Option>
+            <Option text="eventtext.alienwriting.dontlisten" endconversation="true">
+              <GoTo name="writingstart"/>
+            </Option>
+          </ConversationAction>
+          <GoTo name="writingstart"/>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start_alt" endconversation="true"/>
+          <GoTo name="writingstart"/>
+        </Failure>
+      </CheckItemAction>
+    </ScriptedEvent>
+
+    <!--"Alien writing 4"-->
+    <ScriptedEvent identifier="alienwriting4" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:alienwriting4" tag="alienwriting4"/>
+      <Label name="writingstart"/>
+      <TriggerAction target1tag="alienwriting4" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <CheckItemAction targettag="triggerer_player" itemidentifiers="alientranslator">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start">
+            <Option text="eventtext.alienwriting.listen">
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.writingstart"/>
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.4_1"/>
+              <SetDataAction identifier="alien_writings_deciphered" value="true"/>
+            </Option>
+            <Option text="eventtext.alienwriting.dontlisten" endconversation="true">
+              <GoTo name="writingstart"/>
+            </Option>
+          </ConversationAction>
+          <GoTo name="writingstart"/>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start_alt" endconversation="true"/>
+          <GoTo name="writingstart"/>
+        </Failure>
+      </CheckItemAction>
+    </ScriptedEvent>
+
+    <!--"Alien writing 5"-->
+    <ScriptedEvent identifier="alienwriting5" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:alienwriting5" tag="alienwriting5"/>
+      <Label name="writingstart"/>
+      <TriggerAction target1tag="alienwriting5" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <CheckItemAction targettag="triggerer_player" itemidentifiers="alientranslator">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start">
+            <Option text="eventtext.alienwriting.listen">
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.writingstart"/>
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.5_1"/>
+              <SetDataAction identifier="alien_writings_deciphered" value="true"/>
+              <SetDataAction identifier="alien_writings_yohwey_deciphered" value="true"/>
+            </Option>
+            <Option text="eventtext.alienwriting.dontlisten" endconversation="true">
+              <GoTo name="writingstart"/>
+            </Option>
+          </ConversationAction>
+          <GoTo name="writingstart"/>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start_alt" endconversation="true"/>
+          <GoTo name="writingstart"/>
+        </Failure>
+      </CheckItemAction>
+    </ScriptedEvent>
+
+    <!--"Alien writing 6"-->
+    <ScriptedEvent identifier="alienwriting6" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:alienwriting6" tag="alienwriting6"/>
+      <Label name="writingstart"/>
+      <TriggerAction target1tag="alienwriting6" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+      <CheckItemAction targettag="triggerer_player" itemidentifiers="alientranslator">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start">
+            <Option text="eventtext.alienwriting.listen">
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.writingstart"/>
+              <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.6_1"/>
+              <SetDataAction identifier="alien_writings_deciphered" value="true"/>
+            </Option>
+            <Option text="eventtext.alienwriting.dontlisten" endconversation="true">
+              <GoTo name="writingstart"/>
+            </Option>
+          </ConversationAction>
+          <GoTo name="writingstart"/>
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="eventtext.alienwriting.start_alt" endconversation="true"/>
+          <GoTo name="writingstart"/>
+        </Failure>
+      </CheckItemAction>
+    </ScriptedEvent>
+
+    <!--"Ancient encounter"-->
+    <ScriptedEvent identifier="ancientencounter" commonness="100">
+      <WaitAction time="10"/>
+      <ConversationAction text="EventText.ancientencounter.c1" eventsprite="Ancient1">
+        <Option text="EventText.ancientencounter.o1">
+          <ConversationAction text="EventText.ancientencounter.o1.c1" eventsprite="Ancient2">
+            <Option text="EventText.ancientencounter.o1.o1">
+              <ConversationAction text="EventText.ancientencounter.o1.o1.c1" eventsprite="Ancient2">
+                <Option text="EventText.ancientencounter.o1.o1.o1">
+                  <ConversationAction text="EventText.ancientencounter.o1.o1.o1.c1" eventsprite="Ancient2">
+                    <Option text="EventText.ancientencounter.o1.o1.o1.o1">
+                      <ConversationAction text="EventText.ancientencounter.o1.o1.o1.o1.c1" eventsprite="Ancient2">
+                        <Option text="EventText.ancientencounter.o1.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.ancientencounter.o1.o1.o1.o1.o1.c1" eventsprite="Ancient2">
+                            <Option text="EventText.ancientencounter.o1.o1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.ancientencounter.o1.o1.o1.o1.o1.o1.c1" eventsprite="Ancient2">
+                                <Option text="EventText.ancientencounter.o1.o1.o1.o1.o1.o1.o1" endconversation="true"/>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.ancientencounter.o1.o1.o2">
+                  <ConversationAction text="EventText.ancientencounter.o1.o1.o2.c1" eventsprite="Ancient2">
+                    <Option text="EventText.ancientencounter.o1.o1.o1">
+                      <ConversationAction text="EventText.ancientencounter.o1.o1.o1.c1" eventsprite="Ancient2">
+                        <Option text="EventText.ancientencounter.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.ancientencounter.o1.o1.o1.o1.c1" eventsprite="Ancient2">
+                            <Option text="EventText.ancientencounter.o1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.ancientencounter.o1.o1.o1.o1.o1.c1" eventsprite="Ancient2">
+                                <Option text="EventText.ancientencounter.o1.o1.o1.o1.o1.o1">
+                                  <ConversationAction text="EventText.ancientencounter.o1.o1.o1.o1.o1.o1.c1" eventsprite="Ancient2">
+                                    <Option text="EventText.ancientencounter.o1.o1.o1.o1.o1.o1.o1" endconversation="true"/>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="ancientencounterfinal" commonness="0">
+      <ConversationAction text="EventText.ancientencounterfinal" dialogtype="Regular" endconversation="true" eventsprite="Ancient2"/>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="buttonpressed1" commonness="100">
+      <TagAction criteria="player" tag="player"/>
+      <TagAction criteria="itemtag:alienentrancebutton" tag="alienentrancebutton"/>
+      <TagAction criteria="itemtag:anomalydoor" tag="door"/>
+      <TriggerAction target1tag="alienentrancebutton" target2tag="player" applytotarget2="triggerer_player" radius="500"/>
+      <Label name="retry"/>
+      <WaitAction time="1"/>
+      <CheckConditionalAction targettag="door" targetitemcomponent="Door" IsOpen="true">
+        <Success>
+          <ConversationAction text="EventText.buttonpressed1.c1" dialogtype="Regular" endconversation="true"/>
+        </Success>
+        <Failure>
+          <Goto name="retry"/>
+        </Failure>
+      </CheckConditionalAction>
+    </ScriptedEvent>
+  </EventPrefabs>
+</Randomevents>

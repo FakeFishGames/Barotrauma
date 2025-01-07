@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<prefabs>
+  <!-- Pirate Submarine Exterior -->
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub1" bodywidth="1570" bodyheight="496" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets.png" sourcerect="1,0,1570,496" depth="0.75" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub2" bodywidth="467" bodyheight="495" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets.png" sourcerect="1581,0,467,495" depth="0.75" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub3" body="true" bodywidth="448" bodyheight="875" bodyoffset="25,-60" castshadow="true" health="200" scale="0.68" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets.png" sourcerect="0,505,653,1515" depth="0.495" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub4" scale="0.7" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets.png" sourcerect="651,497,1200,404" depth="0.75" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub5" body="true" bodywidth="261" bodyheight="922" bodyoffset="-15,15" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets.png" sourcerect="657,956,363,1079" depth="0.495" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub6" scale="0.7" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets.png" sourcerect="1034,986,340,340" depth="0.490" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub7" bodywidth="1029" bodyheight="685" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets.png" sourcerect="1019,1363,1029,685" depth="0.75" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub8" bodywidth="2017" bodyheight="727" castshadow="true" health="200" scale="0.7" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets2.png" sourcerect="0,0,2017,727" depth="0.7" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub9" scale="0.7" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets2.png" sourcerect="0,732,1188,512" depth="0.45" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub10" bodywidth="1325" bodyheight="544" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets3.png" sourcerect="0,0,1325,544" depth="0.99" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub11" bodywidth="930" bodyheight="1319" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets3.png" sourcerect="0,565,930,1319" depth="0.99" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub12" bodywidth="1097" bodyheight="669" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets3.png" sourcerect="951,565,1097,669" depth="0.45" origin="0.5,0.5"/>
+  </piratesubs>
+  <piratesubs name="" nameidentifier="piratesubexterior" noninteractable="true" identifier="piratesub13" bodywidth="901" bodyheight="359" castshadow="true" health="200" scale="0.5" category="Decorative">
+    <sprite texture="Content/Map/Pirates/PirateShipAssets3.png" sourcerect="951,1255,901,359" depth="0.99" origin="0.5,0.5"/>
+  </piratesubs>
+</prefabs>
