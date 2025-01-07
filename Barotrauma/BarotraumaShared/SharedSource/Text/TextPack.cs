@@ -50,7 +50,7 @@ namespace Barotrauma
 
         public readonly record struct Text(List<XNode> Content, bool IsOverride, TextPack TextPack)
         {
-            public string RetrieveValue() => Content.Aggregate("", (current, subNode) => current + RetrieveSubValue(subNode));
+            public string String => Content.Aggregate("", (current, subNode) => current + RetrieveSubValue(subNode));
 
             private static string RetrieveSubValue(XNode subNode) => subNode switch
             {

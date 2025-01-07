@@ -63,11 +63,11 @@ namespace Barotrauma
                 if (firstOverride != default)
                 {
                     //if there's overrides defined, choose from the first pack that defines overrides
-                    return (candidates.Where(static c => c.IsOverride).Where(c => c.TextPack == firstOverride.TextPack).GetRandomUnsynced().RetrieveValue(), loaded: true);
+                    return (candidates.Where(static c => c.IsOverride).Where(c => c.TextPack == firstOverride.TextPack).GetRandomUnsynced().String, loaded: true);
                 }
                 else
                 {
-                    return (candidates.GetRandomUnsynced().RetrieveValue(), loaded: true);
+                    return (candidates.GetRandomUnsynced().String, loaded: true);
                 }
             }
 

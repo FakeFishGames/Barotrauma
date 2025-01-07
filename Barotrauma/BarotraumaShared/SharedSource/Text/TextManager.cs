@@ -225,11 +225,11 @@ namespace Barotrauma
             var firstOverride = allTexts.FirstOrDefault(t => t.IsOverride);
             if (firstOverride != default)
             {
-                return allTexts.Where(t => t.IsOverride && t.TextPack == firstOverride.TextPack).Select(t => t.RetrieveValue());
+                return allTexts.Where(t => t.IsOverride && t.TextPack == firstOverride.TextPack).Select(t => t.String);
             }
             else
             {
-                return allTexts.Select(t => t.RetrieveValue());
+                return allTexts.Select(t => t.String);
             }
         }
 
@@ -247,14 +247,14 @@ namespace Barotrauma
                     foreach (var text in textList.Value)
                     {
                         if (!text.IsOverride) { continue; }
-                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.RetrieveValue());
+                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.String);
                     }
                 }
                 else
                 {
                     foreach (var text in textList.Value)
                     {
-                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.RetrieveValue());
+                        yield return new KeyValuePair<Identifier, string>(textList.Key, text.String);
                     }
                 }
             }
