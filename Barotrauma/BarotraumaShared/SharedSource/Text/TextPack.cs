@@ -55,7 +55,7 @@ namespace Barotrauma
             private static string RetrieveSubValue(XNode subNode) => subNode switch
             {
                 XText text => text.Value,
-                XElement element => TextManager.GetWithVariables(element.Name.ToString(), element.Attributes().Select(attr => (attr.Name.ToString(), attr.Value)).ToArray()).Value,
+                XElement element => TextManager.GetWithVariables(element.Name.ToString(), element.Attributes().Select(attr => ($"[{attr.Name}]", attr.Value)).ToArray()).Value,
                 _ => ""
             };
         }
