@@ -12,38 +12,39 @@
       scale="0.5">
       <UpgradePreviewSprite scale="2.5" texture="Content/UI/WeaponUI.png" sourcerect="384,960,64,64" origin="0.5,0.45" />
       <Upgrade gameversion="0.10.0.0" scale="*0.5" />
-      <Sprite texture="oxygengenerator.png" depth="0.8" origin="0.5,0.5" sourcerect="0,0,416,384"/>
-      <BrokenSprite texture="oxygengenerator.png" sourcerect="416,0,416,384" origin="0.5,0.5" depth="0.8" maxcondition="80" fadein="true" />
-      <BrokenSprite texture="oxygengenerator.png" sourcerect="0,400,416,384" origin="0.5,0.5" depth="0.8" maxcondition="0" />
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="416,400,416,48" depth="0.824" origin="0.5,4.0"
+      <Sprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" depth="0.8" origin="0.5,0.5" sourcerect="0,0,416,384"/>
+      <BrokenSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,0,416,384" origin="0.5,0.5" depth="0.8" maxcondition="80" fadein="true" />
+      <BrokenSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="0,400,416,384" origin="0.5,0.5" depth="0.8" maxcondition="0" />
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,400,416,48" depth="0.824" origin="0.5,4.0"
                         offset="0,25" offsetanim="Sine" offsetanimspeed="0.5">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- bellow parts from top to bottom -->
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="416,480,416,32" depth="0.82" origin="0.5,5.2"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.82" origin="0.5,5.2"
                         offset="0,25" offsetanim="Sine" offsetanimspeed="0.5">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="416,480,416,32" depth="0.821" origin="0.5,4.7"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.821" origin="0.5,4.7"
                         offset="1,18" offsetanim="Sine" offsetanimspeed="0.5">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="416,480,416,32" depth="0.822" origin="0.5,4.2"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.822" origin="0.5,4.2"
                         offset="2,10" offsetanim="Sine" offsetanimspeed="0.5">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="416,480,416,32" depth="0.823" origin="0.5,3.7"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.823" origin="0.5,3.7"
                         offset="1,5" offsetanim="Sine" offsetanimspeed="0.5">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- tube -->
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="416,656,416,112" depth="0.824" origin="0.5,0.8"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,656,416,112" depth="0.824" origin="0.5,0.8"
                         offset="0,5" offsetanim="Sine" offsetanimspeed="0.5">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
     <LightComponent range="140.0" lightcolor="255,184,108,193" powerconsumption="5" IsOn="false" castshadows="false" allowingameediting="false" />
 
       <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected="true" msg="ItemMsgInteractSelect">
+        <GuiFrame relativesize="0.25,0.15" minsize="350,130" anchor="Center" relativeoffset="0,-0.075" style="ItemUI"/>
         <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1500" loop="false" />
         <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001" loop="true"/>    
         <StatusEffect type="OnFire" target="This" Condition="-0.5" tags="onfire" duration="1" stackable="false" />
@@ -62,7 +63,7 @@
 
       <ItemContainer capacity="5" maxstacksize="1" canbeselected="true" hideitems="false" itempos="31,-250" iteminterval="44.5,0" msg="ItemMsgOxygenRefill">
         <Upgrade gameversion="0.15.22.1" itempos="31,-250" iteminterval="44.5,0" />
-        <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
+        <GuiFrame relativesize="0.25,0.2" anchor="Center" relativeoffset="0,0.075" style="ItemUI" />
         <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5" />
         <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5" />
         <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5" />
@@ -81,11 +82,13 @@
         <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
         <RequiredItem items="screwdriver" type="Equipped"/>
         <input name="power_in" displayname="connection.powerin"/>
+        <input name="set_rate" displayname="connection.oxygen.setrate"/>
         <output name="condition_out" displayname="connection.conditionout" />
+        <output name="rate_out" displayname="connection.oxygen.rateout"/>
       </ConnectionPanel>
 
       <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" RepairThreshold="80" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
-        <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+        <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" style="ItemUI"/>
         <RequiredSkill identifier="mechanical" level="55"/>
         <RequiredItem items="wrench" type="equipped"/>
         <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0" />
@@ -109,41 +112,42 @@
       <Upgrade gameversion="0.10.0.0" scale="*0.5" />
 
       <UpgradePreviewSprite texture="Content/UI/WeaponUI.png" sourcerect="384,960,64,64" origin="0.5,0.45" />
-      <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,784,336,240"/>
-      <BrokenSprite texture="oxygengenerator.png" sourcerect="336,784,336,240" depth="0.8" maxcondition="40" fadein="true" />
-      <BrokenSprite texture="oxygengenerator.png" sourcerect="672,784,336,240" depth="0.8" maxcondition="0" />
+      <Sprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" depth="0.8" sourcerect="0,784,336,240"/>
+      <BrokenSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="336,784,336,240" depth="0.8" maxcondition="40" fadein="true" />
+      <BrokenSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="672,784,336,240" depth="0.8" maxcondition="0" />
 
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="610,400,336,48" depth="0.824" origin="0.6,2.4"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,400,336,48" depth="0.824" origin="0.6,2.4"
                         offset="0,15" offsetanim="Sine" offsetanimspeed="0.5" scale="0.7" rotation="9">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- bellows from top to bottom -->
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="610,480,336,32" depth="0.82" origin="0.45,2.0"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.82" origin="0.45,2.0"
                         offset="0,15" offsetanim="Sine" offsetanimspeed="0.5"  rotation="9">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="610,480,336,32" depth="0.821" origin="0.45,1.5"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.821" origin="0.45,1.5"
                         offset="1,12" offsetanim="Sine" offsetanimspeed="0.5" rotation="6">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="610,480,336,32" depth="0.822" origin="0.45,1.0"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.822" origin="0.45,1.0"
                         offset="2,8" offsetanim="Sine" offsetanimspeed="0.5" rotation="3">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="610,480,336,32" depth="0.823" origin="0.45,0.5"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.823" origin="0.45,0.5"
                         offset="1,5" offsetanim="Sine" offsetanimspeed="0.5">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- tube -->
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="610,656,336,112" depth="0.824" origin="0.45,0.3"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,656,336,112" depth="0.824" origin="0.45,0.3"
                         offset="0,5" offsetanim="Sine" offsetanimspeed="0.5" rotation="345">
         <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- background for bottles -->
-      <DecorativeSprite texture="oxygengenerator.png" sourcerect="656,564,96,74" depth="0.819" origin="0.07,0.0"
+      <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="656,564,96,74" depth="0.819" origin="0.07,0.0"
                         offset="0,0" />
 
       <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true" msg="ItemMsgInteractSelect">
+        <GuiFrame relativesize="0.25,0.15" minsize="350,130" anchor="Center" relativeoffset="0,-0.075" style="ItemUI"/>
         <poweronsound file="Content/Items/PowerOnLight1.ogg" range="1000" loop="false" />
         <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001" loop="true"/>
         <StatusEffect type="OnFire" target="This" Condition="-0.5" tags="onfire" duration="1" stackable="false" />
@@ -161,7 +165,7 @@
       <trigger/>
 
       <ItemContainer capacity="3" maxstacksize="1" canbeselected = "true" hideitems="false" itempos="185,-172" iteminterval="27,0" msg="ItemMsgOxygenRefill" containedspritedepth="0.81">
-        <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
+        <GuiFrame relativesize="0.25,0.2" anchor="Center" relativeoffset="0,0.075" style="ItemUI" />
         <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5" />
         <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5" />
         <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5" />
@@ -189,11 +193,13 @@
         </StatusEffect>
         <RequiredItem items="screwdriver" type="Equipped"/>
         <input name="power_in" displayname="connection.powerin"/>
+        <input name="set_rate" displayname="connection.oxygen.setrate"/>
         <output name="condition_out" displayname="connection.conditionout" />
+        <output name="rate_out" displayname="connection.oxygen.rateout"/>
       </ConnectionPanel>
 
       <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" RepairThreshold="80" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
-        <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+        <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" style="ItemUI"/>
         <RequiredSkill identifier="mechanical" level="55"/>
         <RequiredItem items="wrench" type="equipped"/>
         <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
@@ -211,6 +217,7 @@
       <BrokenSprite texture="Content/Map/Outposts/Art/GenericAssets2.png" sourcerect="243,1629,213,286" depth="0.79" origin="0.5,0.5" offset="100,0" maxcondition="10" fadein="true" />
       <UpgradePreviewSprite scale="2.5" texture="Content/UI/WeaponUI.png" sourcerect="384,960,64,64" origin="0.5,0.45" />
       <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" generatedamount="5000" canbeselected="true" msg="ItemMsgInteractSelect">
+        <GuiFrame relativesize="0.25,0.15" minsize="350,130" anchor="Center" relativeoffset="0,-0.075" style="ItemUI"/>
         <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1500" loop="false" />
         <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001" loop="true" />
         <StatusEffect type="OnFire" target="This" Condition="-0.5" />
@@ -227,17 +234,19 @@
       </OxygenGenerator>
       <trigger />
       <ItemContainer capacity="5" maxstacksize="1" canbeselected="true" hideitems="false" itempos="163,-290" iteminterval="42,0" msg="ItemMsgOxygenRefill">
-        <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
+        <GuiFrame relativesize="0.25,0.2" anchor="Center" relativeoffset="0,0.075" style="ItemUI" />
         <Containable items="oxygentank" />
       </ItemContainer>
       <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
         <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
         <RequiredItem items="screwdriver" type="Equipped" />
         <input name="power_in" displayname="connection.powerin" />
+        <input name="set_rate" displayname="connection.oxygen.setrate"/>
         <output name="condition_out" displayname="connection.conditionout" />
+        <output name="rate_out" displayname="connection.oxygen.rateout"/>
       </ConnectionPanel>
       <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
-        <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+        <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" style="ItemUI" />
         <RequiredSkill identifier="mechanical" level="55" />
         <RequiredItem items="wrench" type="equipped" />
         <ParticleEmitter particle="damagebubbles" particlespersecond="2" scalemin="0.5" scalemax="1.5" anglemax="360" velocitymin="-10" velocitymax="10" mincondition="0.0" maxcondition="50.0" />
