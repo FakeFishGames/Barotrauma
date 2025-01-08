@@ -41,9 +41,10 @@ namespace Barotrauma.Items.Components
                 Enabled = false,
                 OnAddedToGUIUpdateList = comp => comp.Selected = controlLockTimer > 0f,
                 ToolTip = TextManager.Get("AutoControlTip"),
-                TextBlock = { Wrap = true }
+                TextBlock = { Wrap = true, TextAlignment = Alignment.CenterRight }
             };
             autoControlIndicator.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
+            autoControlIndicator.TextBlock.SetAsFirstChild();
             GUITextBlock.AutoScaleAndNormalize(powerIndicator.TextBlock, autoControlIndicator.TextBlock);
 
             GUITextBlock rateName = new(new(Vector2.UnitX, paddedFrame.RectTransform), TextManager.Get("OxygenGenerationRate"), GUIStyle.TextColorNormal, GUIStyle.SubHeadingFont, Alignment.CenterLeft);
