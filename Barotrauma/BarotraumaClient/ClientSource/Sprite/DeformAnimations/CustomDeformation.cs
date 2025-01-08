@@ -109,15 +109,13 @@ namespace Barotrauma.SpriteDeformations
                         (normalizedY % divY) / divY);
                 }
             }
-            int width = Deformation.GetLength(0);
-            int height = Deformation.GetLength(1);
-            FlippedDeformation = new Vector2[width, height];
+            FlippedDeformation = new Vector2[Resolution.X, Resolution.Y];
 
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < Resolution.X; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < Resolution.Y; y++)
                 {
-                    FlippedDeformation[x, y] = Deformation[width - x - 1, y]; // read the rows from right to left
+                    FlippedDeformation[x, y] = Deformation[Resolution.X - x - 1, y]; // read the rows from right to left
                 }
             }
         }
