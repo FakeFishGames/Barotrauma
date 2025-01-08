@@ -38,6 +38,8 @@ namespace Barotrauma.SpriteDeformations
         }
         private float phase;
 
+        private Vector2[,] FlippedDeformation;
+
         public CustomDeformation(XElement element) : base(element, new CustomDeformationParams(element))
         {
             phase = Rand.Range(0.0f, MathHelper.TwoPi);
@@ -107,25 +109,24 @@ namespace Barotrauma.SpriteDeformations
                         (normalizedY % divY) / divY);
                 }
             }
+            int width = Deformation.GetLength(0);
+            int height = Deformation.GetLength(1);
+            FlippedDeformation = new Vector2[width, height];
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    FlippedDeformation[x, y] = Deformation[width - x - 1, y]; // read the rows from right to left
+                }
+            }
         }
 
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse, bool isFlipped = false)
         {
             if (isFlipped)
             {
-                Vector2[,] flippedDeformation = new Vector2[Deformation.GetLength(0), Deformation.GetLength(1)];
-
-                int width = Deformation.GetLength(0);
-                int height = Deformation.GetLength(1);
-
-                for (int x = 0; x < width; x++)
-                {
-                    for (int y = 0; y < height; y++)
-                    {
-                        flippedDeformation[x, y] = Deformation[width - x - 1, y]; // read the rows from right to left
-                    }
-                }
-                deformation = flippedDeformation;
+                deformation = FlippedDeformation;
             }
             else
             {
