@@ -21,22 +21,22 @@ namespace Barotrauma.Items.Components
                 DebugConsole.AddWarning($"OxygenGenerator component of {Item.Name} ({Item.Prefab.Identifier}) has no GUIFrame defined.", Item.ContentPackage);
                 return;
             }
-            GUILayoutGroup paddedFrame = new(new(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset })
+            GUILayoutGroup paddedFrame = new(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset })
             {
                 Stretch = true,
                 RelativeSpacing = 0.1f
             };
 
             int indicatorHeight = MathUtils.RoundToInt(GUIStyle.SubHeadingFont.LineHeight * 2);
-            GUILayoutGroup indicatorArea = new(new(Vector2.One, paddedFrame.RectTransform), isHorizontal: true, Anchor.CenterLeft) { Stretch = true };
-            powerIndicator = new(new(Vector2.UnitX, indicatorArea.RectTransform, minSize: (0, indicatorHeight)), TextManager.Get("EnginePowered"), GUIStyle.SubHeadingFont, style: "IndicatorLightGreen")
+            GUILayoutGroup indicatorArea = new(new RectTransform(Vector2.One, paddedFrame.RectTransform), isHorizontal: true, Anchor.CenterLeft) { Stretch = true };
+            powerIndicator = new GUITickBox(new RectTransform(Vector2.UnitX, indicatorArea.RectTransform, minSize: (0, indicatorHeight)), TextManager.Get("EnginePowered"), GUIStyle.SubHeadingFont, style: "IndicatorLightGreen")
             {
                 CanBeFocused = false,
                 OnAddedToGUIUpdateList = comp => comp.Selected = HasPower && IsActive,
                 TextBlock = { Wrap = true }
             };
             powerIndicator.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
-            autoControlIndicator = new(new(Vector2.UnitX, indicatorArea.RectTransform, minSize: (0, indicatorHeight)), TextManager.Get("PumpAutoControl", "ReactorAutoControl"), GUIStyle.SubHeadingFont, style: "IndicatorLightYellow")
+            autoControlIndicator = new GUITickBox(new RectTransform(Vector2.UnitX, indicatorArea.RectTransform, minSize: (0, indicatorHeight)), TextManager.Get("PumpAutoControl", "ReactorAutoControl"), GUIStyle.SubHeadingFont, style: "IndicatorLightYellow")
             {
                 Enabled = false,
                 OnAddedToGUIUpdateList = comp => comp.Selected = controlLockTimer > 0f,
@@ -47,15 +47,15 @@ namespace Barotrauma.Items.Components
             autoControlIndicator.TextBlock.SetAsFirstChild();
             GUITextBlock.AutoScaleAndNormalize(powerIndicator.TextBlock, autoControlIndicator.TextBlock);
 
-            GUITextBlock rateName = new(new(Vector2.UnitX, paddedFrame.RectTransform), TextManager.Get("OxygenGenerationRate"), GUIStyle.TextColorNormal, GUIStyle.SubHeadingFont, Alignment.CenterLeft);
-            GUITextBlock rateText = new(new(Vector2.One, rateName.RectTransform), "", GUIStyle.TextColorNormal, GUIStyle.Font, Alignment.CenterRight)
+            GUITextBlock rateName = new(new RectTransform(Vector2.UnitX, paddedFrame.RectTransform), TextManager.Get("OxygenGenerationRate"), GUIStyle.TextColorNormal, GUIStyle.SubHeadingFont, Alignment.CenterLeft);
+            GUITextBlock rateText = new(new RectTransform(Vector2.One, rateName.RectTransform), "", GUIStyle.TextColorNormal, GUIStyle.Font, Alignment.CenterRight)
             {
                 TextGetter = () => $"{MathUtils.RoundToInt(generatedAmount * generationRatio)}/s ({MathUtils.RoundToInt(generationRatio * 100f)}%)"
             };
             if (rateText.TextSize.X > rateText.Rect.Width) { rateText.Font = GUIStyle.SmallFont; }
 
-            GUIFrame rateSliderContainer = new(new(Vector2.UnitX, paddedFrame.RectTransform, minSize: (0, 50)));
-            new GUICustomComponent(new(new Vector2(0.95f, 0.9f), rateSliderContainer.RectTransform, Anchor.Center), (sb, comp) =>
+            GUIFrame rateSliderContainer = new(new RectTransform(Vector2.UnitX, paddedFrame.RectTransform, minSize: (0, 50)));
+            new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), rateSliderContainer.RectTransform, Anchor.Center), (sb, comp) =>
             {
                 if (RateWarningIndicatorLow > 0f)
                 {
@@ -66,9 +66,9 @@ namespace Barotrauma.Items.Components
                     GUI.DrawRectangle(sb, comp.Rect.Location.ToVector2(), (comp.Rect.Width * RateWarningIndicatorExtremelyLow, comp.Rect.Height), GUIStyle.Red, isFilled: true);
                 }
             });
-            rateSlider = new(new(Vector2.One, rateSliderContainer.RectTransform, Anchor.Center), barSize: 0.1f, isHorizontal: true, style: "DeviceSliderSeeThrough")
+            rateSlider = new GUIScrollBar(new RectTransform(Vector2.One, rateSliderContainer.RectTransform, Anchor.Center), barSize: 0.1f, isHorizontal: true, style: "DeviceSliderSeeThrough")
             {
-                Step = 0.1f,
+                Step = GenerationRatioStepFloat,
                 OnMoved = (_, newRatio) =>
                 {
                     GenerationRatio = newRatio;
@@ -81,20 +81,19 @@ namespace Barotrauma.Items.Components
                 },
                 OnAddedToGUIUpdateList = comp => comp.Enabled = controlLockTimer <= 0f
             };
-            rateSlider.Bar.RectTransform.MaxSize = new(rateSlider.Bar.Rect.Height);
+            rateSlider.Bar.RectTransform.MaxSize = new Point(rateSlider.Bar.Rect.Height);
         }
 
+        partial void InitProjSpecific() => CreateGUI();
+        
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
             UpdateSlider();
         }
 
-        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData)
-        {
-            msg.WriteRangedInteger(MathUtils.RoundToInt(generationRatio * 10), 0, 10);
-        }
-
+        #region Networking
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData) => WriteGenerationRatio(msg);
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0f)
@@ -103,8 +102,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            GenerationRatio = msg.ReadRangedInteger(0, 10) / 10f;
+            GenerationRatio = ReadGenerationRatio(msg);
         }
+        #endregion
 
         private void UpdateSlider()
         {
