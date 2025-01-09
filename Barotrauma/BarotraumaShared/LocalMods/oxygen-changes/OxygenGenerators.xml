@@ -17,29 +17,29 @@
       <BrokenSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="0,400,416,384" origin="0.5,0.5" depth="0.8" maxcondition="0" />
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,400,416,48" depth="0.824" origin="0.5,4.0"
                         offset="0,25" offsetanim="Sine" offsetanimspeed="0.5">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- bellow parts from top to bottom -->
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.82" origin="0.5,5.2"
                         offset="0,25" offsetanim="Sine" offsetanimspeed="0.5">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.821" origin="0.5,4.7"
                         offset="1,18" offsetanim="Sine" offsetanimspeed="0.5">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.822" origin="0.5,4.2"
                         offset="2,10" offsetanim="Sine" offsetanimspeed="0.5">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,480,416,32" depth="0.823" origin="0.5,3.7"
                         offset="1,5" offsetanim="Sine" offsetanimspeed="0.5">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- tube -->
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="416,656,416,112" depth="0.824" origin="0.5,0.8"
                         offset="0,5" offsetanim="Sine" offsetanimspeed="0.5">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
     <LightComponent range="140.0" lightcolor="255,184,108,193" powerconsumption="5" IsOn="false" castshadows="false" allowingameediting="false" />
 
@@ -118,29 +118,29 @@
 
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,400,336,48" depth="0.824" origin="0.6,2.4"
                         offset="0,15" offsetanim="Sine" offsetanimspeed="0.5" scale="0.7" rotation="9">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- bellows from top to bottom -->
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.82" origin="0.45,2.0"
                         offset="0,15" offsetanim="Sine" offsetanimspeed="0.5"  rotation="9">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.821" origin="0.45,1.5"
                         offset="1,12" offsetanim="Sine" offsetanimspeed="0.5" rotation="6">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.822" origin="0.45,1.0"
                         offset="2,8" offsetanim="Sine" offsetanimspeed="0.5" rotation="3">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,480,336,32" depth="0.823" origin="0.45,0.5"
                         offset="1,5" offsetanim="Sine" offsetanimspeed="0.5">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- tube -->
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="610,656,336,112" depth="0.824" origin="0.45,0.3"
                         offset="0,5" offsetanim="Sine" offsetanimspeed="0.5" rotation="345">
-        <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+        <AnimationConditional currFlow="gt 0" targetitemcomponent="OxygenGenerator" />
       </DecorativeSprite>
       <!-- background for bottles -->
       <DecorativeSprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" sourcerect="656,564,96,74" depth="0.819" origin="0.07,0.0"

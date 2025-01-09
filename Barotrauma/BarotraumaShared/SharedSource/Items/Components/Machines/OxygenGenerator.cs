@@ -25,6 +25,7 @@ namespace Barotrauma.Items.Components
 
         private float controlLockTimer;
         
+        [Serialize(0f, IsPropertySaveable.No, "The current adjusted oxygen output of the generator. Setting this value in XML has no effect.")]
         public float CurrFlow
         {
             get;
