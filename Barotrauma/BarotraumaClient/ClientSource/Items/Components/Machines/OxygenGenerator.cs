@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
             });
             rateSlider = new GUIScrollBar(new RectTransform(Vector2.One, rateSliderContainer.RectTransform, Anchor.Center), barSize: 0.1f, isHorizontal: true, style: "DeviceSliderSeeThrough")
             {
-                Step = GenerationRatioStepFloat,
+                Step = GenerationRatioStep,
                 OnMoved = (_, newRatio) =>
                 {
                     GenerationRatio = newRatio;

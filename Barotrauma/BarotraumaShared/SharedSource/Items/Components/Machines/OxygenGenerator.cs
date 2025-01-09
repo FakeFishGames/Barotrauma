@@ -9,8 +9,8 @@ namespace Barotrauma.Items.Components
 {
     internal partial class OxygenGenerator : Powered
     {
-        private const int GenerationRatioStepInt = 10;
-        private const float GenerationRatioStepFloat = GenerationRatioStepInt / 100f;
+        private const int GenerationRatioSteps = 10;
+        private const float GenerationRatioStep = 1f / GenerationRatioSteps;
         
         private float generatedAmount;
         private float generationRatio;
@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (!MathUtils.IsValid(value)) { return; }
-                generationRatio = MathUtils.RoundTowardsClosest(MathHelper.Clamp(value, 0f, 1f), GenerationRatioStepFloat);
+                generationRatio = MathUtils.RoundTowardsClosest(MathHelper.Clamp(value, 0f, 1f), GenerationRatioStep);
 #if CLIENT
                 UpdateSlider();
 #endif
@@ -195,8 +195,8 @@ namespace Barotrauma.Items.Components
         }
         
         #region Networking
-        private static float ReadGenerationRatio(IReadMessage msg) => msg.ReadRangedInteger(0, GenerationRatioStepInt) / (float)GenerationRatioStepInt;
-        private void WriteGenerationRatio(IWriteMessage msg) => msg.WriteRangedInteger(MathUtils.RoundToInt(generationRatio * GenerationRatioStepInt), 0, GenerationRatioStepInt);
+        private static float ReadGenerationRatio(IReadMessage msg) => msg.ReadRangedInteger(0, GenerationRatioSteps) * GenerationRatioStep;
+        private void WriteGenerationRatio(IWriteMessage msg) => msg.WriteRangedInteger(MathUtils.RoundToInt(generationRatio / GenerationRatioStep), 0, GenerationRatioSteps);
         #endregion
     }
 }
