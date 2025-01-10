@@ -46,7 +46,7 @@ namespace Barotrauma
         {
             get
             {
-                List<MapEntity> nonWireEntities = MapEntity.FilteredSelectedList.Where(entity => (entity as Item)?.GetComponent<Wire>() == null).ToList();
+                IEnumerable<MapEntity> nonWireEntities = MapEntity.FilteredSelectedList.Where(entity => (entity as Item)?.GetComponent<Wire>() == null);
                 return nonWireEntities.Any()
                     ? Vector2.Lerp((nonWireEntities.Min(entity => entity.DrawPosition.X), nonWireEntities.Min(entity => entity.DrawPosition.Y)), (nonWireEntities.Max(entity => entity.DrawPosition.X), nonWireEntities.Max(entity => entity.DrawPosition.Y)), 0.5f)
                     : Vector2.Zero;
@@ -131,7 +131,7 @@ namespace Barotrauma
                         
                         if (RotateToolToggle.Selected && entity is Item { Prefab.AllowRotatingInEditor: true } or Structure { Prefab.AllowRotatingInEditor: true })
                         {
-                            float newRotation = MathHelper.ToDegrees(MathHelper.WrapAngle(oldData.rotation + (entity.FlippedX ^ entity.FlippedY ? -rotationAngleRad : rotationAngleRad)));
+                            float newRotation = MathHelper.ToDegrees(MathHelper.WrapAngle(oldData.rotation + (entity is Structure && entity.FlippedX ^ entity.FlippedY ? -rotationAngleRad : rotationAngleRad)));
                             switch (entity)
                             {
                                 case Item item:
@@ -158,7 +158,7 @@ namespace Barotrauma
                         }
 
                         entity.Move(MathUtils.RotatePointAroundTarget(oldSelectionCenter + (oldData.pos - oldSelectionCenter) * scaleMult, oldSelectionCenter, -rotationAngleRad) - entity.DrawPosition);
-                        oldData.wires?.ForEach(pair => pair.Key.SetNodes(pair.Value.nodes.Select(nodePos => MathUtils.RotatePointAroundTarget(selectionWirePos + (nodePos - selectionWirePos) * scaleMult, selectionWirePos, -rotationAngleRad)).ToList()));
+                        oldData.wires?.ForEach(pair => pair.Key.SetNodes(pair.Value.nodes.Select(nodePos => MathUtils.RotatePointAroundTarget(selectionWirePos + (nodePos - selectionWirePos) * scaleMult, selectionWirePos, -rotationAngleRad))));
                     }
                 };
                 return transformWidget;
