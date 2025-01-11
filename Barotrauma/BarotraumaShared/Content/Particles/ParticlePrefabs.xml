@@ -39,7 +39,7 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="320,448,64,64" />
+      sourcerect="320,448,64,64"/>
   </artifactholderfx>
   <scannerdot
     startsizemin="0.3,0.3"
@@ -77,7 +77,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="320,448,64,64" />
+      sourcerect="320,448,64,64"/>
   </scannerdot>
   <scannerwavefx
     lifetime="0.8"
@@ -115,7 +115,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </scannerwavefx>
   <gravityspherefx
     lifetime="2"
@@ -153,7 +153,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </gravityspherefx>
   <gravityspherefx2
     lifetime="1"
@@ -191,7 +191,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </gravityspherefx2>
   <hologramsphere
     LifeTime="5"
@@ -232,7 +232,7 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </hologramsphere>
   <gravityshellfx
     drawontop="False"
@@ -274,7 +274,7 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </gravityshellfx>
   <psychosisfx
     lifetime="2"
@@ -312,7 +312,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </psychosisfx>
   <nasonovsparkles
     startsizemin="0.2,0.2"
@@ -350,7 +350,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="320,448,64,64" />
+      sourcerect="320,448,64,64"/>
   </nasonovsparkles>
   <nasonovfx
     lifetime="0.6"
@@ -388,7 +388,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </nasonovfx>
   <faradayfx
     lifetime="1"
@@ -426,16 +426,16 @@
     priority="0">
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="0,0,256,256" />
+      sourcerect="0,0,256,256"/>
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="0,256,256,256" />
+      sourcerect="0,256,256,256"/>
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="256,0,256,256" />
+      sourcerect="256,0,256,256"/>
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="256,256,256,256" />
+      sourcerect="256,256,256,256"/>
   </faradayfx>
   <thermalSetFire
     lifetime="0.4"
@@ -477,7 +477,7 @@
       columns="10"
       rows="5"
       origin="0.5,0.8"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </thermalSetFire>
   <thermalfx
     lifetime="0.4"
@@ -519,7 +519,7 @@
       columns="10"
       rows="5"
       origin="0.5,0.8"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </thermalfx>
   <skyholderfx
     lifetime="0.5"
@@ -557,7 +557,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </skyholderfx>
   <skyholderfx2
     startsizemin="0.3,0.3"
@@ -595,7 +595,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="320,448,64,64" />
+      sourcerect="320,448,64,64"/>
   </skyholderfx2>
   <ElectricShock
     lifetimemin="0.15"
@@ -633,16 +633,16 @@
     priority="0">
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="0,0,256,256" />
+      sourcerect="0,0,256,256"/>
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="0,256,256,256" />
+      sourcerect="0,256,256,256"/>
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="256,0,256,256" />
+      sourcerect="256,0,256,256"/>
     <sprite
       texture="Content/Particles/LightningParticleSheet.png"
-      sourcerect="256,256,256,256" />
+      sourcerect="256,256,256,256"/>
   </ElectricShock>
   <toxinmistlargefade
     startsizemin="0.8,0.8"
@@ -680,7 +680,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </toxinmistlargefade>
   <toxinmist
     startsizemin="0.1,0.1"
@@ -718,7 +718,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </toxinmist>
   <bloodsplashwater
     lifetime="1.5"
@@ -759,19 +759,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </bloodsplashwater>
   <gazerage
     lifetime="0.5"
@@ -812,7 +812,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </gazerage>
   <acidmist
     startsizemin="2,2"
@@ -850,7 +850,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </acidmist>
   <acidmistsmall
     startsizemin="0.7,0.7"
@@ -888,7 +888,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </acidmistsmall>
   <acidmistgrenade
     drawontop="True"
@@ -930,7 +930,7 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </acidmistgrenade>
   <toxins
     lifetime="3"
@@ -971,7 +971,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </toxins>
   <bloodsplash
     lifetime="1.5"
@@ -1012,19 +1012,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </bloodsplash>
   <watersplash
     startsizemin="0.15,0.15"
@@ -1063,13 +1063,13 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,128,128,128" />
+      sourcerect="256,128,128,128"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,254,128,128" />
+      sourcerect="256,254,128,128"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,128,128,128" />
+      sourcerect="384,128,128,128"/>
   </watersplash>
   <waterspatter
     lifetime="1.0"
@@ -1110,19 +1110,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
   </waterspatter>
   <mist
     startsizemin="0.4,0.4"
@@ -1160,7 +1160,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </mist>
   <MistSmoke
     startsizemin="0.2,0.4"
@@ -1198,7 +1198,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </MistSmoke>
   <DarkSmoke
     startsizemin="0.2,0.4"
@@ -1236,7 +1236,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </DarkSmoke>
   <GlowDot
     startsizemin="0.6,0.6"
@@ -1274,7 +1274,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="320,448,64,64" />
+      sourcerect="320,448,64,64"/>
   </GlowDot>
   <steamspray
     startsizemin="0.4,0.4"
@@ -1312,7 +1312,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </steamspray>
   <waterdrop
     lifetime="5"
@@ -1350,28 +1350,28 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,96,32,32" />
+      sourcerect="0,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,96,32,32" />
+      sourcerect="32,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,96,32,32" />
+      sourcerect="64,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,96,32,32" />
+      sourcerect="96,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,96,32,32" />
+      sourcerect="128,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,96,32,32" />
+      sourcerect="160,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,96,32,32" />
+      sourcerect="192,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,96,32,32" />
+      sourcerect="224,96,32,32"/>
   </waterdrop>
   <dustcloud
     startsizemin="0.8,0.8"
@@ -1411,13 +1411,13 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,128,128,128" />
+      sourcerect="256,128,128,128"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,254,128,128" />
+      sourcerect="256,254,128,128"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,128,128,128" />
+      sourcerect="384,128,128,128"/>
   </dustcloud>
   <bubbles
     startsizemin="0.6,0.6"
@@ -1455,7 +1455,7 @@
     priority="-1">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="270,5,103,119" />
+      sourcerect="270,5,103,119"/>
   </bubbles>
   <FlareBubbles
     startsizemin="0.6,0.6"
@@ -1493,7 +1493,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="270,5,103,119" />
+      sourcerect="270,5,103,119"/>
   </FlareBubbles>
   <blood
     startsizemin="0.5,0.5"
@@ -1534,19 +1534,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </blood>
   <blackblood
     startsizemin="0.5,0.5"
@@ -1587,19 +1587,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </blackblood>
   <whitegoosplash
     startsizemin="0.5,0.5"
@@ -1640,19 +1640,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </whitegoosplash>
   <EggGooSplash
     startsizemin="0.5,2"
@@ -1693,19 +1693,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </EggGooSplash>
   <waterblood
     startsizemin="0.1,0.1"
@@ -1747,7 +1747,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </waterblood>
   <blackwaterblood
     startsizemin="0.1,0.1"
@@ -1789,7 +1789,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </blackwaterblood>
   <blooddrop
     lifetime="3"
@@ -1827,28 +1827,28 @@
     priority="5">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,96,32,32" />
+      sourcerect="0,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,96,32,32" />
+      sourcerect="32,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,96,32,32" />
+      sourcerect="64,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,96,32,32" />
+      sourcerect="96,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,96,32,32" />
+      sourcerect="128,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,96,32,32" />
+      sourcerect="160,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,96,32,32" />
+      sourcerect="192,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,96,32,32" />
+      sourcerect="224,96,32,32"/>
   </blooddrop>
   <blackblooddrop
     lifetime="3"
@@ -1886,28 +1886,28 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,96,32,32" />
+      sourcerect="0,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,96,32,32" />
+      sourcerect="32,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,96,32,32" />
+      sourcerect="64,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,96,32,32" />
+      sourcerect="96,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,96,32,32" />
+      sourcerect="128,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,96,32,32" />
+      sourcerect="160,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,96,32,32" />
+      sourcerect="192,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,96,32,32" />
+      sourcerect="224,96,32,32"/>
   </blackblooddrop>
   <bloodtrail
     lifetime="0.5"
@@ -1945,13 +1945,13 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,128,128,128" />
+      sourcerect="256,128,128,128"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,254,128,128" />
+      sourcerect="256,254,128,128"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,128,128,128" />
+      sourcerect="384,128,128,128"/>
   </bloodtrail>
   <gib
     lifetime="5"
@@ -1989,25 +1989,25 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="0,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="32,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="64,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="96,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="128,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="160,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
+      sourcerect="208,64,48,32"/>
   </gib>
   <blackgib
     lifetime="5"
@@ -2045,25 +2045,25 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="0,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="32,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="64,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="96,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="128,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="160,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
+      sourcerect="208,64,48,32"/>
   </blackgib>
   <heavygib
     lifetime="1"
@@ -2101,25 +2101,25 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="0,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="32,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="64,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="96,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="128,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="160,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
+      sourcerect="208,64,48,32"/>
     <ParticleEmitter
       particle="bloodtrail"
       particlespersecond="10"
@@ -2127,7 +2127,7 @@
       anglemin="0"
       anglemax="360"
       velocitymin="10"
-      velocitymax="20" />
+      velocitymax="20"/>
   </heavygib>
   <spark
     lifetime="1"
@@ -2165,7 +2165,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="392,83,106,16" />
+      sourcerect="392,83,106,16"/>
   </spark>
   <whitespark
     lifetime="1"
@@ -2203,7 +2203,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="392,83,106,16" />
+      sourcerect="392,83,106,16"/>
   </whitespark>
   <artifactspark
     lifetime="0.5"
@@ -2242,7 +2242,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="395,41,108,11"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
   </artifactspark>
   <shockwave
     lifetime="0.3"
@@ -2280,7 +2280,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </shockwave>
   <shockwaveinverted
     lifetime="0.5"
@@ -2318,7 +2318,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </shockwaveinverted>
   <SonarFloraWave
     lifetime="0.3"
@@ -2356,7 +2356,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </SonarFloraWave>
   <shockwavesmall
     lifetime="0.3"
@@ -2394,7 +2394,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </shockwavesmall>
   <flame
     lifetime="1.2"
@@ -2437,7 +2437,7 @@
       columns="10"
       rows="5"
       origin="0.5,0.4"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </flame>
   <flamethrower
     lifetime="0.8"
@@ -2480,7 +2480,7 @@
       columns="10"
       rows="5"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </flamethrower>
   <flamethrowersmoke
     lifetime="3"
@@ -2520,7 +2520,7 @@
       texture="Content/Particles/SmokeParticleSheet.png"
       sourcerect="0,0,1024,1024"
       columns="5"
-      rows="5" />
+      rows="5"/>
   </flamethrowersmoke>
   <flameburningcharacter
     drawontop="False"
@@ -2566,7 +2566,7 @@
       columns="10"
       rows="5"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </flameburningcharacter>
   <steam
     lifetime="2.5"
@@ -2606,12 +2606,12 @@
       texture="Content/Particles/SmokeParticleSheet.png"
       sourcerect="0,0,1024,1024"
       columns="5"
-      rows="5" />
+      rows="5"/>
     <animatedsprite
       texture="Content/Particles/SmokeParticleSheet.png"
       sourcerect="0,0,1024,1024"
       columns="5"
-      rows="5" />
+      rows="5"/>
   </steam>
   <smoke
     startsizemin="0.3,0.3"
@@ -2651,7 +2651,7 @@
       texture="Content/Particles/SmokeParticleSheet.png"
       sourcerect="0,0,1024,1024"
       columns="5"
-      rows="5" />
+      rows="5"/>
   </smoke>
   <heavysmoke
     startsizemin="0.3,0.3"
@@ -2691,7 +2691,7 @@
       texture="Content/Particles/SmokeParticleSheet.png"
       sourcerect="0,0,1024,1024"
       columns="5"
-      rows="5" />
+      rows="5"/>
   </heavysmoke>
   <hydrosmoke
     LifeTime="7"
@@ -2733,19 +2733,19 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="0,410,204,204" />
+      sourcerect="0,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="204,410,204,204" />
+      sourcerect="204,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="410,410,204,204" />
+      sourcerect="410,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="614,410,204,204" />
+      sourcerect="614,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="819,410,204,204" />
+      sourcerect="819,410,204,204"/>
   </hydrosmoke>
   <hydrosmokesmall
     LifeTime="4"
@@ -2787,19 +2787,19 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="0,410,204,204" />
+      sourcerect="0,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="204,410,204,204" />
+      sourcerect="204,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="410,410,204,204" />
+      sourcerect="410,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="614,410,204,204" />
+      sourcerect="614,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="819,410,204,204" />
+      sourcerect="819,410,204,204"/>
   </hydrosmokesmall>
   <lavasplash
     lifetime="2"
@@ -2841,19 +2841,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </lavasplash>
   <lavachunk
     LifeTime="3"
@@ -2894,25 +2894,25 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="0,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="32,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="64,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="96,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="128,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="160,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
+      sourcerect="208,64,48,32"/>
   </lavachunk>
 
   <volcanosmoke
@@ -2955,19 +2955,19 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="0,410,204,204" />
+      sourcerect="0,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="204,410,204,204" />
+      sourcerect="204,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="410,410,204,204" />
+      sourcerect="410,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="614,410,204,204" />
+      sourcerect="614,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="819,410,204,204" />
+      sourcerect="819,410,204,204"/>
   </volcanosmoke>
   <volcanosmokefast
     LifeTime="2"
@@ -3009,19 +3009,19 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="0,410,204,204" />
+      sourcerect="0,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="204,410,204,204" />
+      sourcerect="204,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="410,410,204,204" />
+      sourcerect="410,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="614,410,204,204" />
+      sourcerect="614,410,204,204"/>
     <sprite
       texture="Content/Particles/SmokeParticleSheet.png"
-      sourcerect="819,410,204,204" />
+      sourcerect="819,410,204,204"/>
   </volcanosmokefast>
   <volcanofire
     LifeTime="1"
@@ -3066,8 +3066,8 @@
       columns="8"
       rows="8"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
-  </volcanofire> 
+      premultiplyalpha="false"/>
+  </volcanofire>
   
   <explosionfire
     lifetime="1.5"
@@ -3109,7 +3109,7 @@
       columns="8"
       rows="8"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <ParticleEmitter
       particle="explosionfireadditive"
       particlespersecond="0"
@@ -3158,7 +3158,7 @@
       columns="8"
       rows="8"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </explosionfireadditive>
   <explosionsmoke
     lifetime="4"
@@ -3199,7 +3199,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </explosionsmoke>
   <explosiondebris
     LifeTime="3"
@@ -3239,52 +3239,52 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,0,32,32" />
+      sourcerect="0,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,0,32,32" />
+      sourcerect="32,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,0,32,32" />
+      sourcerect="64,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,0,32,32" />
+      sourcerect="96,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,0,32,32" />
+      sourcerect="128,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,0,32,32" />
+      sourcerect="160,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,0,32,32" />
+      sourcerect="192,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,0,32,32" />
+      sourcerect="224,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,32,32,32" />
+      sourcerect="0,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,32,32,32" />
+      sourcerect="32,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,32,32,32" />
+      sourcerect="64,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,32,32,32" />
+      sourcerect="96,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,32,32,32" />
+      sourcerect="128,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,32,32,32" />
+      sourcerect="160,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,32,32,32" />
+      sourcerect="192,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,32,32,32" />
+      sourcerect="224,32,32,32"/>
   </explosiondebris>
   <muzzleflash
     lifetime="0.15"
@@ -3324,42 +3324,42 @@
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="0,384,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <sprite
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="64,384,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <sprite
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="128,384,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <sprite
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="192,384,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <sprite
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="0,448,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <sprite
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="64,448,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <sprite
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="128,448,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
     <sprite
       texture="Content/Particles/MuzzleFlashParticleSheet.png"
       sourcerect="192,448,64,64"
       origin="0.15,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </muzzleflash>
   <muzzleflashcoilgun
     lifetime="0.35"
@@ -3401,7 +3401,7 @@
       columns="4"
       rows="3"
       origin="-0.1,0.6"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </muzzleflashcoilgun>
   <tracerfirearm
     lifetime="0.1"
@@ -3440,7 +3440,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="157,440,1,22"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </tracerfirearm>
   <impactfirearm
     lifetime="0.1"
@@ -3479,7 +3479,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="186,436,30,30"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </impactfirearm>
   <casingfirearm
     lifetime="8"
@@ -3514,7 +3514,7 @@
     loopanim="True"
     drawontop="False"
     priority="0">
-    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="195,281,11,7" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="195,281,11,7" depth="0.55" origin="0.5,0.5"/>
   </casingfirearm>
   <muzzleflashpulselaser
     lifetime="0.3"
@@ -3552,7 +3552,7 @@
     priority="5">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,448,64,64" />
+      sourcerect="256,448,64,64"/>
   </muzzleflashpulselaser>
   <muzzleflashguardianlaser
     lifetime="0.1"
@@ -3590,7 +3590,7 @@
     priority="5">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,448,64,64" />
+      sourcerect="256,448,64,64"/>
   </muzzleflashguardianlaser>
   <pulselasermist
     startsizemin="1,1"
@@ -3628,7 +3628,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </pulselasermist>
   <tracerpulselaser
     lifetime="0.4"
@@ -3667,7 +3667,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="144,440,1,68"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </tracerpulselaser>
   <tracerguardianlaser
     lifetime="0.2"
@@ -3706,7 +3706,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="144,440,1,68"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </tracerguardianlaser>
   <chainguntrail
     lifetime="0.3"
@@ -3745,7 +3745,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="130,383,225,40"
-      origin="0.8,0.5" />
+      origin="0.8,0.5"/>
   </chainguntrail>
   <chargepulselaser
     lifetime="0.1"
@@ -3783,7 +3783,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="256,448,64,64" />
+      sourcerect="256,448,64,64"/>
   </chargepulselaser>
   <muzzleflashrailgun
     lifetime="0.5"
@@ -3825,7 +3825,7 @@
       columns="4"
       rows="4"
       origin="-0.1,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </muzzleflashrailgun>
   <muzzleflashflakcannon
     lifetime="0.5"
@@ -3867,7 +3867,7 @@
       columns="4"
       rows="4"
       origin="-0.1,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </muzzleflashflakcannon>
   <muzzleflashchaingun
     lifetime="0.2"
@@ -3909,7 +3909,7 @@
       columns="4"
       rows="3"
       origin="-0.1,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </muzzleflashchaingun>
   <underwaterexplosion
     lifetime="3"
@@ -3951,7 +3951,7 @@
       columns="10"
       rows="10"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </underwaterexplosion>
   <underwaterexplosionfast
     lifetime="1"
@@ -3993,7 +3993,7 @@
       columns="10"
       rows="10"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </underwaterexplosionfast>
   <risingbubbles
     lifetime="4"
@@ -4035,7 +4035,7 @@
       columns="8"
       rows="8"
       origin="0.5,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </risingbubbles>
   <damagebubbles
     startsizemin="0.6,0.6"
@@ -4073,7 +4073,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="270,5,103,119" />
+      sourcerect="270,5,103,119"/>
   </damagebubbles>
   <weld
     startsizemin="1.5,0.9"
@@ -4112,7 +4112,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="394,13,102,12"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
   </weld>
   <weldspark
     lifetime="1"
@@ -4150,7 +4150,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="392,83,106,16" />
+      sourcerect="392,83,106,16"/>
   </weldspark>
   <weldsmoke
     lifetime="3"
@@ -4191,7 +4191,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </weldsmoke>
   <plasma
     startsizemin="1.5,0.9"
@@ -4231,7 +4231,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="395,41,108,11"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
   </plasma>
   <plasmaspark
     lifetime="1"
@@ -4269,7 +4269,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="392,83,106,16" />
+      sourcerect="392,83,106,16"/>
   </plasmaspark>
   <plasmasmoke
     lifetime="3"
@@ -4310,7 +4310,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </plasmasmoke>
   <largeplasma
     startsizemin="0.9,3"
@@ -4350,7 +4350,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="395,41,108,11"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
   </largeplasma>
   <plasmared
     startsizemin="1.5,0.9"
@@ -4390,7 +4390,7 @@
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="395,41,108,11"
-      origin="0.1,0.5" />
+      origin="0.1,0.5"/>
   </plasmared>
   <plasmasparkred
     lifetime="1"
@@ -4428,7 +4428,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="392,83,106,16" />
+      sourcerect="392,83,106,16"/>
   </plasmasparkred>
   <fleshsmoke
     lifetime="3"
@@ -4469,7 +4469,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </fleshsmoke>
   <swirlysmoke
     lifetime="3"
@@ -4510,7 +4510,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </swirlysmoke>
   <ritualsmoke
     LifeTime="5"
@@ -4551,7 +4551,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </ritualsmoke>
   <ammotrailwater
     lifetime="1"
@@ -4592,7 +4592,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </ammotrailwater>
   <ammotrail
     lifetime="1"
@@ -4633,7 +4633,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </ammotrail>
   <extinguisher
     lifetime="1.4"
@@ -4671,7 +4671,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </extinguisher>
   <fixfoamgoosplash
     startsizemin="1,1"
@@ -4712,19 +4712,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </fixfoamgoosplash>
   <fixfoam
     lifetime="4"
@@ -4762,7 +4762,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </fixfoam>
   <flare
     startsizemin="0.1,0.1"
@@ -4800,7 +4800,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </flare>
   <shrapnel
     startsizemin="0.1,0.1"
@@ -4838,52 +4838,52 @@
     priority="-1">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,0,32,32" />
+      sourcerect="0,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,0,32,32" />
+      sourcerect="32,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,0,32,32" />
+      sourcerect="64,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,0,32,32" />
+      sourcerect="96,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,0,32,32" />
+      sourcerect="128,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,0,32,32" />
+      sourcerect="160,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,0,32,32" />
+      sourcerect="192,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,0,32,32" />
+      sourcerect="224,0,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,32,32,32" />
+      sourcerect="0,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,32,32,32" />
+      sourcerect="32,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,32,32,32" />
+      sourcerect="64,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,32,32,32" />
+      sourcerect="96,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,32,32,32" />
+      sourcerect="128,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,32,32,32" />
+      sourcerect="160,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,32,32,32" />
+      sourcerect="192,32,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,32,32,32" />
+      sourcerect="224,32,32,32"/>
   </shrapnel>
   <iceexplosion
     LifeTime="6"
@@ -4924,7 +4924,7 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/IceExplosion.png"
-      sourcerect="11,1,756,505" />
+      sourcerect="11,1,756,505"/>
   </iceexplosion>
   <iceexplosionsmall
     LifeTime="4"
@@ -4965,7 +4965,7 @@
     LoopAnim="True">
     <sprite
       texture="Content/Particles/IceExplosion.png"
-      sourcerect="11,1,756,505" />
+      sourcerect="11,1,756,505"/>
   </iceexplosionsmall>
   <iceburst
     lifetime="4"
@@ -5008,7 +5008,7 @@
       columns="6"
       rows="12"
       origin="0.007,0.5"
-      premultiplyalpha="false" />
+      premultiplyalpha="false"/>
   </iceburst>
   <iceshards
     startsizemin="0.1,0.1"
@@ -5046,49 +5046,49 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="0,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="32,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="64,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="96,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="128,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="160,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
+      sourcerect="208,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,96,32,32" />
+      sourcerect="0,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,96,32,32" />
+      sourcerect="32,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,96,32,32" />
+      sourcerect="64,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,96,32,32" />
+      sourcerect="96,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,96,32,32" />
+      sourcerect="128,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,96,32,32" />
+      sourcerect="160,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,96,32,32" />
+      sourcerect="192,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,96,32,32" />
+      sourcerect="224,96,32,32"/>
   </iceshards>
   <iceshardslarge
     startsizemin="3,10"
@@ -5126,49 +5126,49 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="0,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="32,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="64,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="96,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="128,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="160,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
+      sourcerect="208,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,96,32,32" />
+      sourcerect="0,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,96,32,32" />
+      sourcerect="32,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,96,32,32" />
+      sourcerect="64,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,96,32,32" />
+      sourcerect="96,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,96,32,32" />
+      sourcerect="128,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,96,32,32" />
+      sourcerect="160,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,96,32,32" />
+      sourcerect="192,96,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="224,96,32,32" />
+      sourcerect="224,96,32,32"/>
   </iceshardslarge>
   <brownchunks
     lifetime="3"
@@ -5206,25 +5206,25 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,128,32,32" />
+      sourcerect="128,128,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,128,32,32" />
+      sourcerect="160,128,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,128,32,32" />
+      sourcerect="192,128,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,160,32,32" />
+      sourcerect="128,160,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,160,32,32" />
+      sourcerect="160,160,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,160,32,32" />
+      sourcerect="192,160,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,192,32,32" />
+      sourcerect="128,192,32,32"/>
   </brownchunks>
   <mudrapeggbrownchunks
     lifetime="4"
@@ -5262,25 +5262,25 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,128,32,32" />
+      sourcerect="128,128,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,128,32,32" />
+      sourcerect="160,128,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,128,32,32" />
+      sourcerect="192,128,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,160,32,32" />
+      sourcerect="128,160,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,160,32,32" />
+      sourcerect="160,160,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="192,160,32,32" />
+      sourcerect="192,160,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,192,32,32" />
+      sourcerect="128,192,32,32"/>
   </mudrapeggbrownchunks>
   <aliengas
     lifetime="5"
@@ -5321,7 +5321,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </aliengas>
   <leucogib
     startsizemin="0.1,0.1"
@@ -5363,7 +5363,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </leucogib>
   <termgib
     startsizemin="0.1,0.1"
@@ -5405,7 +5405,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </termgib>
   <cellgib
     lifetime="5"
@@ -5443,7 +5443,7 @@
     priority="0">
     <sprite
       texture="Content/Map/Thalamus/thalamus.png"
-      sourcerect="252,958,14,14" />
+      sourcerect="252,958,14,14"/>
   </cellgib>
   <organeruption
     lifetime="4"
@@ -5481,22 +5481,22 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="416,384,64,64" />
+      sourcerect="416,384,64,64"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="480,384,32,64" />
+      sourcerect="480,384,32,64"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,448,32,64" />
+      sourcerect="384,448,32,64"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="416,448,32,32" />
+      sourcerect="416,448,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="416,480,32,32" />
+      sourcerect="416,480,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="448,448,64,64" />
+      sourcerect="448,448,64,64"/>
   </organeruption>
   <spray
     lifetime="0.8"
@@ -5534,7 +5534,7 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="384,254,128,128" />
+      sourcerect="384,254,128,128"/>
   </spray>
   <anomaly
     lifetime="3"
@@ -5575,7 +5575,7 @@
       sourcerect="0,0,4096,4096"
       columns="8"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </anomaly>
   <fruitchunks
     lifetime="3"
@@ -5613,25 +5613,25 @@
     priority="0">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,64,32,32" />
+      sourcerect="0,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="32,64,32,32" />
+      sourcerect="32,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="64,64,32,32" />
+      sourcerect="64,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="96,64,32,32" />
+      sourcerect="96,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="128,64,32,32" />
+      sourcerect="128,64,32,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="160,64,48,32" />
+      sourcerect="160,64,48,32"/>
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="208,64,48,32" />
+      sourcerect="208,64,48,32"/>
   </fruitchunks>
   <vomitsplash
     startsizemin="0.5,0.5"
@@ -5672,19 +5672,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </vomitsplash>
   <crawlervomitsplash
     startsizemin="1,1"
@@ -5725,19 +5725,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </crawlervomitsplash>
   <tonguehitsplash
     startsizemin="1,1"
@@ -5778,19 +5778,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </tonguehitsplash>
   <eggsplashwater
     startsizemin="1,1"
@@ -5831,19 +5831,19 @@
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.2,0.5" />
+      origin="0.2,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter2.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
     <animatedsprite
       texture="Content/Particles/Spatter3.png"
       sourcerect="0,0,1024,1024"
       columns="4"
       rows="8"
-      origin="0.3,0.5" />
+      origin="0.3,0.5"/>
   </eggsplashwater>
   <spore
     lifetime="10"
@@ -5884,7 +5884,7 @@
       sourcerect="0,0,1024,512"
       columns="8"
       rows="4"
-      origin="0.5,0.5" />
+      origin="0.5,0.5"/>
   </spore>
   <muzzleflashnucleargun
     lifetime="0.3"
@@ -5920,7 +5920,7 @@
     usemiddlecolor="False"
     animduration="1"
     priority="0">
-    <sprite name="muzzleflashnucleargun" texture="Content/Particles/ParticleAtlas.png" sourcerect="129,253,70,70" origin="0.5,0.5" />
+    <sprite name="muzzleflashnucleargun" texture="Content/Particles/ParticleAtlas.png" sourcerect="129,253,70,70" origin="0.5,0.5"/>
   </muzzleflashnucleargun>
   <tracernucleargun
     lifetime="0.4"
@@ -5956,7 +5956,7 @@
     usemiddlecolor="False"
     animduration="1"
     priority="0">
-    <sprite name="tracernucleargun" texture="Content/Particles/ParticleAtlas.png" sourcerect="169,441,1,68" origin="0.5,0.5" />
+    <sprite name="tracernucleargun" texture="Content/Particles/ParticleAtlas.png" sourcerect="169,441,1,68" origin="0.5,0.5"/>
   </tracernucleargun>
   <tracerguardianrepair
     lifetime="0.05"
@@ -5992,7 +5992,7 @@
     usemiddlecolor="False"
     animduration="1"
     priority="0">
-    <sprite name="tracerguardianrepair" texture="Content/Particles/ParticleAtlas.png" sourcerect="169,441,1,68" origin="0.5,0.5" />
+    <sprite name="tracerguardianrepair" texture="Content/Particles/ParticleAtlas.png" sourcerect="169,441,1,68" origin="0.5,0.5"/>
   </tracerguardianrepair>
   <chargenucleargun
     lifetime="0.08"
@@ -6028,7 +6028,7 @@
     sizechangemin="0,0"
     sizechangemax="0,0"
     priority="0">
-    <sprite name="chargenucleargun" texture="Content/Particles/ParticleAtlas.png" sourcerect="130,252,70,70" origin="0.5,0.5" />
+    <sprite name="chargenucleargun" texture="Content/Particles/ParticleAtlas.png" sourcerect="130,252,70,70" origin="0.5,0.5"/>
   </chargenucleargun>
   <EmpBlast
     LifeTime="1"
@@ -6067,7 +6067,7 @@
     LoopAnim="False">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </EmpBlast>
   <ShieldHit
     LifeTime="0.2"
@@ -6106,7 +6106,7 @@
     LoopAnim="False">
     <sprite
       texture="Content/Particles/ParticleAtlas.png"
-      sourcerect="0,256,128,128" />
+      sourcerect="0,256,128,128"/>
   </ShieldHit>
   <cyborgammotracer
     LifeTime="1"
@@ -6145,16 +6145,16 @@
     LoopAnim="False">
       <sprite
         texture="Content/Particles/LightningParticleSheet.png"
-        sourcerect="0,0,256,256" />
+        sourcerect="0,0,256,256"/>
       <sprite
         texture="Content/Particles/LightningParticleSheet.png"
-        sourcerect="0,256,256,256" />
+        sourcerect="0,256,256,256"/>
       <sprite
         texture="Content/Particles/LightningParticleSheet.png"
-        sourcerect="256,0,256,256" />
+        sourcerect="256,0,256,256"/>
       <sprite
         texture="Content/Particles/LightningParticleSheet.png"
-        sourcerect="256,256,256,256" />
+        sourcerect="256,256,256,256"/>
   </cyborgammotracer>
 
   <mantiscamouflagechunks
@@ -6196,10 +6196,10 @@
     LoopAnim="True">
     <sprite
       texture="Content/Characters/Mantis/mantis.png"
-      SourceRect="710,116,166,128" />
+      SourceRect="710,116,166,128"/>
     <sprite
       texture="Content/Characters/Mantis/mantis.png"
-      SourceRect="710,252,166,132" />
+      SourceRect="710,252,166,132"/>
   </mantiscamouflagechunks>
   <grenadepin 
     lifetime="6"
@@ -6240,7 +6240,7 @@
       texture="Content/Particles/ParticleAtlas.png" 
       sourcerect="226,172,29,30" 
       origin="0.48055297,0.53349656" 
-      depth="0.565" />
+      depth="0.565"/>
   </grenadepin>
   <grenadelever 
     lifetime="6" 
@@ -6281,6 +6281,6 @@
       texture="Content/Particles/ParticleAtlas.png" 
       sourcerect="229,130,10,38" 
       origin="0.48055297,0.53349656" 
-      depth="0.565" />
+      depth="0.565"/>
   </grenadelever>
 </prefabs>
