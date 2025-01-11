@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<prefabs>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="0,0,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="32,0,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="64,0,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="96,0,32,32" origin="0.5,0.5"/>
+  
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="0,32,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="32,32,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="64,32,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="96,32,32,32" origin="0.5,0.5"/>
+  
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="0,64,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="32,64,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="64,64,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="96,64,32,32" origin="0.5,0.5"/>
+
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="0,96,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="32,96,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="64,96,32,32" origin="0.5,0.5"/>
+  <grime texture="Content/Particles/GrimeSheet.png" sourcerect="96,96,32,32" origin="0.5,0.5"/>
+  
+  <blood
+    color="102,0,0,255"
+    lifetime="6000"
+    fadeouttime="20">
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,254,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,128,128,128"/>
+  </blood>
+  <blackblood
+    color="0,0,0,255"
+    lifetime="6000"
+    fadeouttime="20">
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,254,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,128,128,128"/>
+  </blackblood>
+  <explosion
+    color="255,255,255,255"
+    lifetime="1000000"
+    fadeouttime="20">
+    <sprite texture="Content/Particles/explosiondecal.png" sourcerect="0,0,512,512"/>
+  </explosion>
+  <burnt
+    color="255,255,255,255"
+    lifetime="1000000"
+    fadeintime="30"
+    fadeouttime="30">
+    <sprite texture="Content/Particles/burnt.png" sourcerect="0,0,512,512"/>
+  </burnt>
+  <fruitsplatter1 color="128,63,0,255" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,416,192,192" origin="0.5,0.5" />
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,160,192,192" origin="0.5,0.5" />
+  </fruitsplatter1>
+
+  <fruitsplatter_red color="128,0,0,230" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,416,192,192" origin="0.5,0.5" />
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,160,192,192" origin="0.5,0.5" />
+  </fruitsplatter_red>
+
+  <fruitsplatter_green color="0,255,0,230" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,416,192,192" origin="0.5,0.5" />
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,160,192,192" origin="0.5,0.5" />
+  </fruitsplatter_green>
+
+  <fruitsplatter_blue color="0,0,128,230" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,416,192,192" origin="0.5,0.5" />
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,160,192,192" origin="0.5,0.5" />
+  </fruitsplatter_blue>
+
+  <fruitsplatter_black color="0,0,0,230" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,416,192,192" origin="0.5,0.5" />
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,160,192,192" origin="0.5,0.5" />
+  </fruitsplatter_black>
+
+  <fruitsplatter_white color="128,128,128,230" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,416,192,192" origin="0.5,0.5" />
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,160,192,192" origin="0.5,0.5" />
+  </fruitsplatter_white>
+
+  <fruitsplatter_brown color="42,29,20,230" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,416,192,192" origin="0.5,0.5" />
+    <sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="672,160,192,192" origin="0.5,0.5" />
+  </fruitsplatter_brown>
+  
+  <vomitsplatter color="255,255,255,200" lifetime="6000" fadeouttime="30">
+    <sprite texture="Content/Particles/vomitdecal.png" sourcerect="16,16,96,96" origin="0.5,0.5" />
+  </vomitsplatter>
+</prefabs>

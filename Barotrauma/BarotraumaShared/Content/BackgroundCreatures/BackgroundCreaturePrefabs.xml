@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<backgroundcreatures>
+  <Fish1 speed ="200.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="2" swarmmax="10" swarmradius="500" scale="0.25" commonness="10">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,0,256,171"/>
+  </Fish1>
+
+  <Fish2 speed="80.0" wanderamount="0.2" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.25" commonness="10">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="256,0,256,171"/>
+  </Fish2>
+
+  <Fish3 speed="40.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="3" swarmmax="6" swarmradius="300" scale="0.25" commonness="10">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,341,512,171"/>
+  </Fish3>
+
+  <Fish4 speed="200.0" wanderamount="3.0" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.25" commonness="10">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="0,171,256,171"/>
+  </Fish4>
+
+  <Fish5 speed="80.0" wanderamount="0.1" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300" scale="0.25" commonness="10">
+    <Sprite texture="Content/BackgroundCreatures/bgFish1.png" sourcerect="256,171,256,171"/>
+  </Fish5>
+
+  <GlowingJellyfish speed="20.0" wanderamount="0.1" wanderzamount="0.1" swarmmin="3" swarmmax="10" swarmradius="1000" scale="0.5" disablerotation="true" disableflipping="true" commonness="10">
+    <DeformableSprite texture="Content/BackgroundCreatures/GlowingBgCreatures.png" sourcerect="1,2,109,162">
+      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="1" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" onlyinwater="False" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,1 2,2 2,2 2,2 1,1" row1="1,1 1,1 1,1 1,1 1,1" row2="0,0 0,0 0,0 0,0 0,0" row3="0,0 0,0 0,0 0,0 0,0" row4="0,0 0,0 0,0 0,0 0,0" />
+    </DeformableSprite>
+    <DeformableLightSprite texture="Content/BackgroundCreatures/GlowingBgCreatures.png" sourcerect="1,2,109,162">
+      <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="1" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" onlyinwater="False" />
+    </DeformableLightSprite>
+  </GlowingJellyfish>
+
+  <PaasselkaDevil1 speed="20.0" wanderamount="0.1" wanderzamount="0.1" swarmmin="1" swarmmax="1" scale="5.0" disablerotation="true" disableflipping="true" mindepth="3000" maxdepth="10000" commonness="0">
+    <overridecommonness leveltype="ridgebasic" commonness="1" />
+    <overridecommonness leveltype="ridgeadvanced" commonness="1" />
+    <DeformableSprite texture="Content/BackgroundCreatures/GlowingBgCreatures.png" sourcerect="114,1,134,162">
+      <SpriteDeformation type="noise" resolution="5,5" frequency="0.99" amplitude="2.0" changespeed="0.2" blendmode="Add" sync="1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="True" sineoffset="0" />
+      <SpriteDeformation type="inflate" resolution="5,5" frequency="0.2" scale="1" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" onlyinwater="False" />
+    </DeformableSprite>
+    <DeformableLightSprite texture="Content/BackgroundCreatures/GlowingBgCreatures.png" sourcerect="114,1,134,162">
+      <SpriteDeformation type="noise" resolution="5,5" frequency="0.99" amplitude="2.0" changespeed="0.2" blendmode="Add" sync="1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" onlyinwater="True" sineoffset="0"/>
+      <SpriteDeformation type="inflate" resolution="5,5" frequency="0.2" scale="1" sync="1" stopwhenhostisdead="True" typename="inflate" blendmode="Add" usemovementsine="False" sineoffset="0" strength="1" maxrotation="90" onlyinwater="False" />
+    </DeformableLightSprite>
+  </PaasselkaDevil1>
+
+  <Behemoth speed="20.0" wanderamount="0.1" wanderzamount="0.1" swarmmin="1" swarmmax="1" scale="10.0" disablerotation="true" disableflipping="true" mindepth="6000" maxdepth="10000" commonness="0" maxcount="1">
+    <overridecommonness leveltype="greatseabasic" commonness="1" />
+    <Sprite texture="Content/BackgroundCreatures/Behemoth.png" sourcerect="0,299,512,299" origin="0.5,0.7"/>
+    <LightSprite texture="Content/BackgroundCreatures/Behemoth.png" sourcerect="0,0,512,299" origin="0.5,0.6"/>
+  </Behemoth>
+
+</backgroundcreatures>
