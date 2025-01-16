@@ -2314,7 +2314,7 @@ namespace Barotrauma
                 int autoCompletedArgIndex = args.Length > 0 && command.Last() != ' ' ? args.Length - 1 : args.Length;
 
                 //get all valid arguments for the given command
-                string[][] allArgs = matchingCommand.GetValidArgs();
+                string[] allArgs = matchingCommand.GetValidArgs(args);
                 if (allArgs == null || allArgs.GetLength(0) < autoCompletedArgIndex + 1) { return command; }
 
                 if (string.IsNullOrEmpty(currentAutoCompletedCommand))
