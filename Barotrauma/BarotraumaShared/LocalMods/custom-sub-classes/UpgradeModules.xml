@@ -1,5 +1,5 @@
 <UpgradeModules>
-  <SubmarineClass identifier="undefined" purchasable="false">
+  <SubmarineClass identifier="undefined" purchasable="false" usableincampaign="false">
     <LocationIndicator texture="Content/UI/UIPositionIndicators.png" sourcerect="0,0,128,128"/>
   </SubmarineClass>
   <SubmarineClass identifier="scout" altidentifier="deepdiver">

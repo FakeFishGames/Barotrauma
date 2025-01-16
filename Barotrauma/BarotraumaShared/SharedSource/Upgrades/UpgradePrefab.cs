@@ -140,7 +140,7 @@ namespace Barotrauma
         public readonly ImmutableHashSet<Identifier> AltIdentifiers;
         public readonly Identifier TextIdentifier;
         public readonly LocalizedString Name, Description;
-        public readonly bool Purchasable;
+        public readonly bool Purchasable, UsableInCampaign;
         
         public SubmarineClass(ContentXElement element, UpgradeModulesFile file) : base(element, file)
         {
@@ -151,6 +151,7 @@ namespace Barotrauma
             Description = TextManager.Get($"SubmarineClass.{TextIdentifier}.Description").Fallback(element.GetAttributeString("description", ""));
             
             Purchasable = element.GetAttributeBool("purchasable", true);
+            UsableInCampaign = element.GetAttributeBool("usableincampaign", true);
 
 #if CLIENT
             foreach (ContentXElement subElement in element.Elements())

@@ -152,7 +152,7 @@ namespace Barotrauma
                                              OutpostModuleInfo.ModuleFlags.Contains("ruinworkshop".ToIdentifier()) ||
                                              OutpostModuleInfo.ModuleFlags.Contains("ruinshrine".ToIdentifier()));
 
-        public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && Class != null;
+        public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && Class.UsableInCampaign;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
 
         public bool AllowPreviewImage => Type == SubmarineType.Player;
