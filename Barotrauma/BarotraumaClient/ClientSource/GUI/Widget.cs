@@ -112,8 +112,7 @@ namespace Barotrauma
         {
             PreUpdate?.Invoke(deltaTime);
             if (!enabled) { return; }
-            if (IsMouseOver) { Hovered?.Invoke(); }
-            if (PlayerInput.PrimaryMouseButtonHeld() && (IsMouseOver || !RequireMouseOn && SelectedWidgets.Contains(this)))
+            if (IsMouseOver || (!RequireMouseOn && SelectedWidgets.Contains(this) && PlayerInput.PrimaryMouseButtonHeld()))
             {
                 if (RequireMouseOn || PlayerInput.PrimaryMouseButtonDown())
                 {
