@@ -11,12 +11,12 @@ namespace Barotrauma
         {
             DeselectEditorSpecific();
 #if !DEBUG
-            //reset cheats the player might have used in the editor
-            GameMain.LightManager.LightingEnabled = true;
-            GameMain.LightManager.LosEnabled = true;
-            Hull.EditFire = false;
-            Hull.EditWater = false;
-            HumanAIController.DisableCrewAI = false;
+                //reset cheats the player might have used in the editor
+                GameMain.LightManager.LightingEnabled = true;
+                GameMain.LightManager.LosEnabled = true;
+                Hull.EditFire = false;
+                Hull.EditWater = false;
+                HumanAIController.DisableCrewAI = false;
 #endif
         }
 
@@ -54,20 +54,25 @@ namespace Barotrauma
             };
 
             // Add RGB picker
-            var colorPickerButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1f), layoutParents[0].RectTransform), style: "ColorPicker")
+            var colorPickerButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1f), layoutParents[0].RectTransform), style: "GUIButtonSmall")
             {
                 OnClicked = (button, obj) =>
                 {
-                    var colorPicker = new GUIColorPicker(BackgroundColor, (color) =>
+                    var colorPicker = new GUIColorPicker(new RectTransform(new Vector2(0.5f, 0.5f), msgBox.Content.RectTransform))
                     {
-                        rInput.IntValue = color.R;
-                        gInput.IntValue = color.G;
-                        bInput.IntValue = color.B;
-                        BackgroundColor = color;
-                        var config = GameSettings.CurrentConfig;
-                        config.SubEditorBackground = color;
-                        GameSettings.SetCurrentConfig(config);
-                    });
+                        CurrentColor = BackgroundColor,
+                        OnColorSelected = (component, color) =>
+                        {
+                            rInput.IntValue = color.R;
+                            gInput.IntValue = color.G;
+                            bInput.IntValue = color.B;
+                            BackgroundColor = color;
+                            var config = GameSettings.CurrentConfig;
+                            config.SubEditorBackground = color;
+                            GameSettings.SetCurrentConfig(config);
+                            return true;
+                        }
+                    };
                     return true;
                 }
             };
