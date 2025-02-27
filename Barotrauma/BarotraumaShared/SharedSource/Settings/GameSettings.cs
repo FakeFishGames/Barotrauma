@@ -658,7 +658,7 @@ namespace Barotrauma
             bool languageChanged = currentConfig.Language != newConfig.Language;
             bool audioOutputChanged = currentConfig.Audio.AudioOutputDevice != newConfig.Audio.AudioOutputDevice;
             bool voiceCaptureChanged = currentConfig.Audio.VoiceCaptureDevice != newConfig.Audio.VoiceCaptureDevice;
-            bool textScaleChanged = Math.abs(currentConfig.Graphics.TextScale - newConfig.Graphics.TextScale) > MathF.Pow(2.0f, -7);
+            bool textScaleChanged = Math.Abs(currentConfig.Graphics.TextScale - newConfig.Graphics.TextScale) > MathF.Pow(2.0f, -7);
 
             bool hudScaleChanged = !MathUtils.NearlyEqual(currentConfig.Graphics.HUDScale, newConfig.Graphics.HUDScale);
 
