@@ -147,7 +147,7 @@ namespace Barotrauma
                         var color = preset.Attribute("color")?.Value;
                         if (name != null && color != null)
                         {
-                            retVal.ColorPresets[name] = Color.Parse(color);
+                            retVal.ColorPresets[name] = ParseColor(color);
                         }
                     }
                 }
@@ -529,7 +529,7 @@ namespace Barotrauma
             [StructSerialization.Skip]
             public InventoryKeyMapping InventoryKeyMap;
 #endif
-            public Dictionary<string, Color> ColorPresets { get; set; } = new Dictionary<string, Color>();
+public Dictionary<string, Color> ColorPresets { get; set; } = new Dictionary<string, Color>();
 
             public void SerializeElement(XElement element)
             {
@@ -541,9 +541,34 @@ namespace Barotrauma
                 {
                     presetsElement.Add(new XElement("preset",
                         new XAttribute("name", kvp.Key),
-                        new XAttribute("color", kvp.Value.ToString())));
+                        new XAttribute("color", ColorToString(kvp.Value))));
                 }
                 element.Add(presetsElement);
+            }
+
+            private static Color ParseColor(string colorString)
+            {
+                // Parse the color string in the format "#RRGGBB"
+                if (colorString.StartsWith("#"))
+                {
+                    colorString = colorString.Substring(1);
+                }
+
+                if (colorString.Length != 6)
+                {
+                    throw new ArgumentException("Invalid color string format");
+                }
+
+                byte r = byte.Parse(colorString.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
+                byte g = byte.Parse(colorString.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
+                byte b = byte.Parse(colorString.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
+
+                return new Color(r, g, b);
+            }
+
+            private static string ColorToString(Color color)
+            {
+                return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
             }
         }
 
