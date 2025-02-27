@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public void CreateBackgroundColorPicker()
         {
-            var msgBox = new GUIMessageBox(TextManager.Get("CharacterEditor.EditBackgroundColor"), "", new[] { TextManager.Get("OK") }, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
+            var msgBox = new GUIMessageBox(TextManager.Get("CharacterEditor.EditBackgroundColor"), "", new[] { TextManager.Get("OK") }, new Vector2(0.2f, 0.3f), minSize: new Point(300, 300));
             var rgbLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), msgBox.Content.RectTransform), isHorizontal: true);
 
             // Generate R,G,B labels and parent elements
@@ -36,7 +36,7 @@ namespace Barotrauma
                 layoutParents[i] = colorContainer;
             }
 
-            // attach number inputs to our generated parent elements
+            // Attach number inputs to our generated parent elements
             var rInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[0].RectTransform), NumberType.Int) { IntValue = BackgroundColor.R };
             var gInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[1].RectTransform), NumberType.Int) { IntValue = BackgroundColor.G };
             var bInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[2].RectTransform), NumberType.Int) { IntValue = BackgroundColor.B };
@@ -53,34 +53,6 @@ namespace Barotrauma
                 GameSettings.SetCurrentConfig(config);
             };
 
-            // Create button
-            var createButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Create"));
-            createButton.OnClicked += (button, obj) =>
-            {
-                var colorName = new GUITextBox(new RectTransform(new Vector2(1f, 0.1f), msgBox.Content.RectTransform));
-                if (string.IsNullOrWhiteSpace(colorName.Text))
-                {
-                    colorName.Flash(GUIStyle.Red);
-                    return false;
-                }
-                GameSettings.CurrentConfig.ColorPresets[colorName.Text] = BackgroundColor;
-                GameSettings.SaveCurrentConfig();
-                return true;
-            };
-
-            // Delete button
-            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Delete"));
-            deleteButton.OnClicked += (button, obj) =>
-            {
-                var selectedPreset = presetDropdown.SelectedData as string;
-                if (selectedPreset != null)
-                {
-                    GameSettings.CurrentConfig.ColorPresets.Remove(selectedPreset);
-                    GameSettings.SaveCurrentConfig();
-                }
-                return true;
-            };
-
             // Dropdown for color presets
             var presetDropdown = new GUIDropDown(new RectTransform(new Vector2(1f, 0.1f), msgBox.Content.RectTransform));
             foreach (var preset in GameSettings.CurrentConfig.ColorPresets)
@@ -95,6 +67,43 @@ namespace Barotrauma
                     rInput.IntValue = color.R;
                     gInput.IntValue = color.G;
                     bInput.IntValue = color.B;
+                }
+
+                // Disable delete button if "default" is selected
+                deleteButton.Enabled = selectedPreset != "default";
+                return true;
+            };
+
+            // Create button
+            var colorNameBox = new GUITextBox(new RectTransform(new Vector2(1f, 0.1f), msgBox.Content.RectTransform));
+            var createButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Create"));
+            createButton.OnClicked += (button, obj) =>
+            {
+                if (string.IsNullOrWhiteSpace(colorNameBox.Text))
+                {
+                    colorNameBox.Flash(GUIStyle.Red);
+                    return false;
+                }
+                GameSettings.CurrentConfig.ColorPresets[colorNameBox.Text] = BackgroundColor;
+                GameSettings.SaveCurrentConfig();
+                presetDropdown.AddItem(colorNameBox.Text, colorNameBox.Text);
+                return true;
+            };
+
+            // Delete button
+            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Delete"));
+            deleteButton.OnClicked += (button, obj) =>
+            {
+                var selectedPreset = presetDropdown.SelectedData as string;
+                if (selectedPreset != null && selectedPreset != "default")
+                {
+                    GameSettings.CurrentConfig.ColorPresets.Remove(selectedPreset);
+                    GameSettings.SaveCurrentConfig();
+                    presetDropdown.ClearChildren();
+                    foreach (var preset in GameSettings.CurrentConfig.ColorPresets)
+                    {
+                        presetDropdown.AddItem(preset.Key, preset.Key);
+                    }
                 }
                 return true;
             };

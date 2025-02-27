@@ -55,60 +55,62 @@ namespace Barotrauma
         {
             public const float DefaultAimAssist = 0.05f;
 
+            // Explicit constructor to initialize fields
+            public Config()
+            {
+                Language = LanguageIdentifier.None;
+                VerboseLogging = false;
+                SaveDebugConsoleLogs = false;
+                SavePath = string.Empty;
+                SubEditorUndoBuffer = 32;
+                MaxAutoSaves = 8;
+                AutoSaveIntervalSeconds = 300;
+                SubEditorBackground = new Color(13, 37, 69, 255);
+                EnableSplashScreen = true;
+                PauseOnFocusLost = true;
+                AimAssistAmount = DefaultAimAssist;
+                EnableMouseLook = true;
+                ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll;
+                ChatSpeechBubbles = true;
+                InteractionLabelDisplayMode = InteractionLabelDisplayMode.Everything;
+                ChatOpen = true;
+                CrewMenuOpen = true;
+                ShowOffensiveServerPrompt = true;
+                TutorialSkipWarning = true;
+                CorpseDespawnDelay = 600;
+                CorpseDespawnDelayPvP = 60;
+                CorpsesPerSubDespawnThreshold = 5;
+                UseDualModeSockets = true;
+                DisableInGameHints = false;
+                EnableSubmarineAutoSave = true;
+                QuickStartSub = Identifier.Empty;
+                RemoteMainMenuContentUrl = "https://www.barotraumagame.com/gamedata/";
+                Graphics = GraphicsSettings.GetDefault();
+                Audio = AudioSettings.GetDefault();
+                ColorPresets = new Dictionary<string, Color>
+                {
+                    { "default", new Color(13, 37, 69, 255) }
+                };
+#if CLIENT
+                CrossplayChoice = Eos.EosSteamPrimaryLogin.CrossplayChoice.Unknown;
+                DisableGlobalSpamList = false;
+                KeyMap = KeyMapping.GetDefault();
+                InventoryKeyMap = InventoryKeyMapping.GetDefault();
+                SavedCampaignSettings = new XElement("campaignsettings");
+#endif
+#if DEBUG
+                QuickStartSub = "Humpback".ToIdentifier();
+                AutomaticQuickStartEnabled = false;
+                AutomaticCampaignLoadEnabled = false;
+                TextManagerDebugModeEnabled = false;
+                ModBreakerMode = false;
+                TestScreenEnabled = false;
+#endif
+            }
+
             public static Config GetDefault()
             {
-                Config config = new Config
-                {
-#if SERVER
-                    //server defaults to English, clients get a prompt to select a language
-                    Language = TextManager.DefaultLanguage,
-#else
-                    Language = LanguageIdentifier.None,
-#endif
-                    SubEditorUndoBuffer = 32,
-                    MaxAutoSaves = 8,
-                    AutoSaveIntervalSeconds = 300,
-                    SubEditorBackground = new Color(13, 37, 69, 255),
-                    EnableSplashScreen = true,
-                    PauseOnFocusLost = true,
-                    RemoteMainMenuContentUrl = "https://www.barotraumagame.com/gamedata/",
-                    AimAssistAmount = DefaultAimAssist,
-                    ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
-                    ChatSpeechBubbles = true,
-                    InteractionLabelDisplayMode = InteractionLabelDisplayMode.Everything,
-                    EnableMouseLook = true,
-                    ChatOpen = true,
-                    CrewMenuOpen = true,
-                    ShowOffensiveServerPrompt = true,
-                    TutorialSkipWarning = true,
-                    CorpseDespawnDelay = 600,
-                    CorpseDespawnDelayPvP = 60,
-                    CorpsesPerSubDespawnThreshold = 5,
-#if OSX
-                    UseDualModeSockets = false,
-#else
-                    UseDualModeSockets = true,
-#endif
-                    DisableInGameHints = false,
-                    EnableSubmarineAutoSave = true,
-                    Graphics = GraphicsSettings.GetDefault(),
-                    Audio = AudioSettings.GetDefault(),
-#if CLIENT
-                    CrossplayChoice = Eos.EosSteamPrimaryLogin.CrossplayChoice.Unknown,
-                    DisableGlobalSpamList = false,
-                    KeyMap = KeyMapping.GetDefault(),
-                    InventoryKeyMap = InventoryKeyMapping.GetDefault()
-#endif
-
-                };
-#if DEBUG
-                config.QuickStartSub = "Humpback".ToIdentifier();
-                config.AutomaticQuickStartEnabled = false;
-                config.AutomaticCampaignLoadEnabled = false;
-                config.TextManagerDebugModeEnabled = false;
-                config.ModBreakerMode = false;
-#endif
-                return config;
+                return new Config();
             }
 
             public static Config FromElement(XElement element, in Config? fallback = null)
@@ -150,6 +152,12 @@ namespace Barotrauma
                             retVal.ColorPresets[name] = ParseColor(color);
                         }
                     }
+                }
+
+                // Ensure the default color preset is present
+                if (!retVal.ColorPresets.ContainsKey("default"))
+                {
+                    retVal.ColorPresets["default"] = new Color(13, 37, 69, 255);
                 }
 
                 return retVal;
@@ -529,11 +537,43 @@ namespace Barotrauma
             [StructSerialization.Skip]
             public InventoryKeyMapping InventoryKeyMap;
 #endif
-public Dictionary<string, Color> ColorPresets { get; set; } = new Dictionary<string, Color>();
+            public Dictionary<string, Color> ColorPresets { get; set; }
 
             public void SerializeElement(XElement element)
             {
-                // ... existing code ...
+                // Serialize existing fields
+                element.SetAttributeValue("language", Language.ToString());
+                element.SetAttributeValue("verboselogging", VerboseLogging);
+                element.SetAttributeValue("savedebugconsolelogs", SaveDebugConsoleLogs);
+                element.SetAttributeValue("savepath", SavePath);
+                element.SetAttributeValue("subeditorundobuffer", SubEditorUndoBuffer);
+                element.SetAttributeValue("maxautosaves", MaxAutoSaves);
+                element.SetAttributeValue("autosaveintervalseconds", AutoSaveIntervalSeconds);
+                element.SetAttributeValue("subeditorbackground", ColorToString(SubEditorBackground));
+                element.SetAttributeValue("enablesplashscreen", EnableSplashScreen);
+                element.SetAttributeValue("pauseonfocuslost", PauseOnFocusLost);
+                element.SetAttributeValue("aimassistamount", AimAssistAmount);
+                element.SetAttributeValue("enablemouselook", EnableMouseLook);
+                element.SetAttributeValue("showenemyhealthbars", ShowEnemyHealthBars.ToString());
+                element.SetAttributeValue("chatspeechbubbles", ChatSpeechBubbles);
+                element.SetAttributeValue("interactionlabeldisplaymode", InteractionLabelDisplayMode.ToString());
+                element.SetAttributeValue("chatopen", ChatOpen);
+                element.SetAttributeValue("crewmenuopen", CrewMenuOpen);
+                element.SetAttributeValue("showoffensiveserverprompt", ShowOffensiveServerPrompt);
+                element.SetAttributeValue("tutorialskipwarning", TutorialSkipWarning);
+                element.SetAttributeValue("corpsedespawndelay", CorpseDespawnDelay);
+                element.SetAttributeValue("corpsedespawndelaypvp", CorpseDespawnDelayPvP);
+                element.SetAttributeValue("corpsespersubdespawnthreshold", CorpsesPerSubDespawnThreshold);
+                element.SetAttributeValue("usedualmodesockets", UseDualModeSockets);
+                element.SetAttributeValue("disableingamehints", DisableInGameHints);
+                element.SetAttributeValue("enablesubmarineautosave", EnableSubmarineAutoSave);
+                element.SetAttributeValue("quickstartsub", QuickStartSub.ToString());
+                element.SetAttributeValue("remotemainmenucontenturl", RemoteMainMenuContentUrl);
+#if CLIENT
+                element.SetAttributeValue("crossplaychoice", CrossplayChoice.ToString());
+                element.SetAttributeValue("disableglobalspamlist", DisableGlobalSpamList);
+                element.SetAttributeValue("savedcampaignsettings", SavedCampaignSettings.ToString());
+#endif
 
                 // Save color presets
                 var presetsElement = new XElement("colorpresets");
@@ -618,7 +658,7 @@ public Dictionary<string, Color> ColorPresets { get; set; } = new Dictionary<str
             bool languageChanged = currentConfig.Language != newConfig.Language;
             bool audioOutputChanged = currentConfig.Audio.AudioOutputDevice != newConfig.Audio.AudioOutputDevice;
             bool voiceCaptureChanged = currentConfig.Audio.VoiceCaptureDevice != newConfig.Audio.VoiceCaptureDevice;
-            bool textScaleChanged = Math.Abs(currentConfig.Graphics.TextScale - newConfig.Graphics.TextScale) > MathF.Pow(2.0f, -7);
+            bool textScaleChanged = Math.abs(currentConfig.Graphics.TextScale - newConfig.Graphics.TextScale) > MathF.Pow(2.0f, -7);
 
             bool hudScaleChanged = !MathUtils.NearlyEqual(currentConfig.Graphics.HUDScale, newConfig.Graphics.HUDScale);
 
