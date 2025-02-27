@@ -78,6 +78,25 @@ namespace Barotrauma
             {
                 presetDropdown.AddItem(preset.Key, preset.Key);
             }
+
+            // Delete button
+            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Delete"));
+            deleteButton.OnClicked += (button, obj) =>
+            {
+                var selectedPreset = presetDropdown.SelectedData as string;
+                if (selectedPreset != null && selectedPreset != "default")
+                {
+                    GameSettings.CurrentConfig.ColorPresets.Remove(selectedPreset);
+                    GameSettings.SaveCurrentConfig();
+                    presetDropdown.ClearChildren();
+                    foreach (var preset in GameSettings.CurrentConfig.ColorPresets)
+                    {
+                        presetDropdown.AddItem(preset.Key, preset.Key);
+                    }
+                }
+                return true;
+            };
+
             presetDropdown.OnSelected += (selected, obj) =>
             {
                 var selectedPreset = obj as string;
@@ -107,24 +126,6 @@ namespace Barotrauma
                 GameSettings.SaveCurrentConfig();
                 presetDropdown.AddItem(colorNameBox.Text, colorNameBox.Text);
                 colorNameBox.Text = string.Empty; // Clear the naming field
-                return true;
-            };
-
-            // Delete button
-            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Delete"));
-            deleteButton.OnClicked += (button, obj) =>
-            {
-                var selectedPreset = presetDropdown.SelectedData as string;
-                if (selectedPreset != null && selectedPreset != "default")
-                {
-                    GameSettings.CurrentConfig.ColorPresets.Remove(selectedPreset);
-                    GameSettings.SaveCurrentConfig();
-                    presetDropdown.ClearChildren();
-                    foreach (var preset in GameSettings.CurrentConfig.ColorPresets)
-                    {
-                        presetDropdown.AddItem(preset.Key, preset.Key);
-                    }
-                }
                 return true;
             };
 
