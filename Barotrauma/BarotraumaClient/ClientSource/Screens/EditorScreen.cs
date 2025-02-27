@@ -37,7 +37,7 @@ namespace Barotrauma
             }
 
             // Attach number inputs to our generated parent elements
-            var rInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[0].RectTransform), NumberType.Int) { IntValue = BackgroundColor.R };
+            var rInput = new GUINumberInput(new RectTransform(new Vector2(0.6f, 1f), layoutParents[0].RectTransform, Anchor.CenterRight), NumberType.Int) { IntValue = BackgroundColor.R };
             var gInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[1].RectTransform), NumberType.Int) { IntValue = BackgroundColor.G };
             var bInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[2].RectTransform), NumberType.Int) { IntValue = BackgroundColor.B };
 
@@ -54,7 +54,7 @@ namespace Barotrauma
             };
 
             // Add RGB picker
-            var colorPickerButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1f), layoutParents[0].RectTransform), style: "GUIButtonSmall")
+            var colorPickerButton = new GUIButton(new RectTransform(new Vector2(.3f, 1f), layoutParents[0].RectTransform, Anchor.CenterLeft), style: "GUIButtonSmall")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -135,7 +135,7 @@ namespace Barotrauma
             };
 
             // Ok button
-            msgBox.Buttons[0].RectTransform.RelativeOffset = new Vector2(0, 0.05f); // Move the OK button down
+            msgBox.Buttons[0].RectTransform.RelativeOffset = new Vector2(0, 0.1f); // Move the OK button down
             msgBox.Buttons[0].OnClicked = (button, o) => 
             { 
                 msgBox.Close();
