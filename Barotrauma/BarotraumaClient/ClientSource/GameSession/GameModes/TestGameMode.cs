@@ -68,6 +68,9 @@ namespace Barotrauma
                     }
                 };
             }
+
+            // Set the background color to the selected color
+            GameMain.LightManager.BackgroundColor = GameSettings.CurrentConfig.SubEditorBackground;
         }
 
         public override void AddToGUIUpdateList()

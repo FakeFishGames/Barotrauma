@@ -24,8 +24,7 @@ namespace Barotrauma
 
         public void CreateBackgroundColorPicker()
         {
-            var msgBox = new GUIMessageBox(TextManager.Get("CharacterEditor.EditBackgroundColor"), "", new[] { TextManager.Get("Reset"), TextManager.Get("OK")}, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
-
+            var msgBox = new GUIMessageBox(TextManager.Get("CharacterEditor.EditBackgroundColor"), "", new[] { TextManager.Get("OK") }, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
             var rgbLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), msgBox.Content.RectTransform), isHorizontal: true);
 
             // Generate R,G,B labels and parent elements
@@ -44,7 +43,7 @@ namespace Barotrauma
 
             rInput.MinValueInt = gInput.MinValueInt = bInput.MinValueInt = 0;
             rInput.MaxValueInt = gInput.MaxValueInt = bInput.MaxValueInt = 255;
-            
+
             rInput.OnValueChanged = gInput.OnValueChanged = bInput.OnValueChanged = delegate
             {
                 var color = new Color(rInput.IntValue, gInput.IntValue, bInput.IntValue);
@@ -53,18 +52,55 @@ namespace Barotrauma
                 config.SubEditorBackground = color;
                 GameSettings.SetCurrentConfig(config);
             };
-            
-            // Reset button
-            msgBox.Buttons[0].OnClicked = (button, o) =>
+
+            // Create button
+            var createButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Create"));
+            createButton.OnClicked += (button, obj) =>
             {
-                rInput.IntValue = 13;
-                gInput.IntValue = 37;
-                bInput.IntValue = 69;
+                var colorName = new GUITextBox(new RectTransform(new Vector2(1f, 0.1f), msgBox.Content.RectTransform));
+                if (string.IsNullOrWhiteSpace(colorName.Text))
+                {
+                    colorName.Flash(GUIStyle.Red);
+                    return false;
+                }
+                GameSettings.CurrentConfig.ColorPresets[colorName.Text] = BackgroundColor;
+                GameSettings.SaveCurrentConfig();
+                return true;
+            };
+
+            // Delete button
+            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.Content.RectTransform), TextManager.Get("Delete"));
+            deleteButton.OnClicked += (button, obj) =>
+            {
+                var selectedPreset = presetDropdown.SelectedData as string;
+                if (selectedPreset != null)
+                {
+                    GameSettings.CurrentConfig.ColorPresets.Remove(selectedPreset);
+                    GameSettings.SaveCurrentConfig();
+                }
+                return true;
+            };
+
+            // Dropdown for color presets
+            var presetDropdown = new GUIDropDown(new RectTransform(new Vector2(1f, 0.1f), msgBox.Content.RectTransform));
+            foreach (var preset in GameSettings.CurrentConfig.ColorPresets)
+            {
+                presetDropdown.AddItem(preset.Key, preset.Key);
+            }
+            presetDropdown.OnSelected += (selected, obj) =>
+            {
+                var selectedPreset = obj as string;
+                if (selectedPreset != null && GameSettings.CurrentConfig.ColorPresets.TryGetValue(selectedPreset, out var color))
+                {
+                    rInput.IntValue = color.R;
+                    gInput.IntValue = color.G;
+                    bInput.IntValue = color.B;
+                }
                 return true;
             };
 
             // Ok button
-            msgBox.Buttons[1].OnClicked = (button, o) => 
+            msgBox.Buttons[0].OnClicked = (button, o) => 
             { 
                 msgBox.Close();
                 GameSettings.SaveCurrentConfig();

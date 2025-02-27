@@ -137,6 +137,21 @@ namespace Barotrauma
                 LoadSubEditorImages(element);
 #endif
 
+                // Load color presets
+                var presets = element.Element("colorpresets");
+                if (presets != null)
+                {
+                    foreach (var preset in presets.Elements("preset"))
+                    {
+                        var name = preset.Attribute("name")?.Value;
+                        var color = preset.Attribute("color")?.Value;
+                        if (name != null && color != null)
+                        {
+                            retVal.ColorPresets[name] = Color.Parse(color);
+                        }
+                    }
+                }
+
                 return retVal;
             }
 
@@ -514,6 +529,22 @@ namespace Barotrauma
             [StructSerialization.Skip]
             public InventoryKeyMapping InventoryKeyMap;
 #endif
+            public Dictionary<string, Color> ColorPresets { get; set; } = new Dictionary<string, Color>();
+
+            public void SerializeElement(XElement element)
+            {
+                // ... existing code ...
+
+                // Save color presets
+                var presetsElement = new XElement("colorpresets");
+                foreach (var kvp in ColorPresets)
+                {
+                    presetsElement.Add(new XElement("preset",
+                        new XAttribute("name", kvp.Key),
+                        new XAttribute("color", kvp.Value.ToString())));
+                }
+                element.Add(presetsElement);
+            }
         }
 
         public const string PlayerConfigPath = "config_player.xml";
