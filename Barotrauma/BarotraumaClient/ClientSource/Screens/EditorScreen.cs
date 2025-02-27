@@ -53,6 +53,25 @@ namespace Barotrauma
                 GameSettings.SetCurrentConfig(config);
             };
 
+            // Add RGB picker
+            var colorPickerButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1f), layoutParents[0].RectTransform), style: "ColorPicker")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    var colorPicker = new GUIColorPicker(BackgroundColor, (color) =>
+                    {
+                        rInput.IntValue = color.R;
+                        gInput.IntValue = color.G;
+                        bInput.IntValue = color.B;
+                        BackgroundColor = color;
+                        var config = GameSettings.CurrentConfig;
+                        config.SubEditorBackground = color;
+                        GameSettings.SetCurrentConfig(config);
+                    });
+                    return true;
+                }
+            };
+
             // Dropdown for color presets
             var presetDropdown = new GUIDropDown(new RectTransform(new Vector2(1f, 0.1f), msgBox.Content.RectTransform));
             foreach (var preset in GameSettings.CurrentConfig.ColorPresets)
@@ -87,6 +106,7 @@ namespace Barotrauma
                 GameSettings.CurrentConfig.ColorPresets[colorNameBox.Text] = BackgroundColor;
                 GameSettings.SaveCurrentConfig();
                 presetDropdown.AddItem(colorNameBox.Text, colorNameBox.Text);
+                colorNameBox.Text = string.Empty; // Clear the naming field
                 return true;
             };
 
@@ -109,6 +129,7 @@ namespace Barotrauma
             };
 
             // Ok button
+            msgBox.Buttons[0].RectTransform.RelativeOffset = new Vector2(0, 0.05f); // Move the OK button down
             msgBox.Buttons[0].OnClicked = (button, o) => 
             { 
                 msgBox.Close();
