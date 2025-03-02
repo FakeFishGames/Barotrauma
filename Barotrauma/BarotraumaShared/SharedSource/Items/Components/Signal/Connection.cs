@@ -18,7 +18,15 @@ namespace Barotrauma.Items.Components
         public readonly int MaxWires = 5;
 
         public readonly string Name;
-        public readonly LocalizedString DisplayName;
+
+        private readonly LocalizedString _displayName;
+        public LocalizedString DisplayName
+        {
+	        get => DisplayNameOverride ?? _displayName;
+	        private init => _displayName = value;
+        }
+
+        public LocalizedString DisplayNameOverride;
 
         private readonly HashSet<Wire> wires;
         public IReadOnlyCollection<Wire> Wires => wires;
