@@ -230,7 +230,22 @@ namespace Barotrauma
 
         private static LocalizedString GetTotalHullVolume()
         {
-            return $"{TextManager.Get("TotalHullVolume")}:\n{Hull.HullList.Sum(h => h.Volume)}";
+            float totalVolume = 0.0f;
+            float ballastVolume = 0.0f;
+            Hull.HullList.ForEach(h =>
+            {
+                totalVolume += h.Volume;
+
+                if (h.IsBallast())
+                {
+                    ballastVolume += h.Volume;
+                }
+            });
+
+            string retVal = $"{TextManager.Get("TotalHullVolume")}:\n{totalVolume}";
+            retVal += $" ({(ballastVolume / totalVolume * 100).ToString("0.00")} % {TextManager.Get("roomname.Ballast")})";
+
+            return retVal;
         }
 
         private static LocalizedString GetSelectedHullVolume()
