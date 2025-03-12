@@ -4,17 +4,13 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class EscortMission : Mission
     {
-        private readonly ContentXElement characterConfig;
         private readonly ContentXElement itemConfig;
-
-        private readonly List<Character> characters = new List<Character>();
-        private readonly Dictionary<Character, List<Item>> characterItems = new Dictionary<Character, List<Item>>();
+        
         private readonly Dictionary<HumanPrefab, List<StatusEffect>> characterStatusEffects = new Dictionary<HumanPrefab, List<StatusEffect>>();
 
         private readonly int baseEscortedCharacters;
@@ -36,7 +32,6 @@ namespace Barotrauma
             : base(prefab, locations, sub)
         {
             missionSub = sub;
-            characterConfig = prefab.ConfigElement.GetChildElement("Characters");
             baseEscortedCharacters = prefab.ConfigElement.GetAttributeInt("baseescortedcharacters", 1);
             scalingEscortedCharacters = prefab.ConfigElement.GetAttributeFloat("scalingescortedcharacters", 0);
             terroristChance = prefab.ConfigElement.GetAttributeFloat("terroristchance", 0);
@@ -61,7 +56,7 @@ namespace Barotrauma
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
-        public override int GetBaseReward(Submarine sub)
+        public override float GetBaseReward(Submarine sub)
         {
             if (sub != missionSub)
             {
@@ -192,7 +187,6 @@ namespace Barotrauma
             foreach (ContentXElement element in characterConfig.Elements())
             {
                 string escortIdentifier = element.GetAttributeString("escortidentifier", string.Empty);
-                string colorIdentifier = element.GetAttributeString("color", string.Empty);
                 for (int k = 0; k < scalingCharacterCount; k++)
                 {
                     // for each element defined, we need to initialize that type of character equal to the scaling escorted character count

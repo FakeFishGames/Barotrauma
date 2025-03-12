@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common;
@@ -98,7 +99,7 @@ namespace FarseerPhysics.Dynamics
         /// <value>The revolutions.</value>
         public float Revolutions
         {
-            get { return Rotation / (float)Math.PI; }
+            get { return Rotation / MathF.PI; }
         }
 
         /// <summary>
@@ -614,6 +615,10 @@ namespace FarseerPhysics.Dynamics
 
             fixture.Body = this;
             this.FixtureList.Add(fixture);
+                        
+            RefreshCollidesWithMatchesBetweenFixtures();
+            RefreshCollisionCategoriesMatchBetweenFixtures();
+
 #if DEBUG
             if (fixture.Shape.ShapeType == ShapeType.Polygon)
                 ((PolygonShape)fixture.Shape).Vertices.AttachedToBody = true;
@@ -685,6 +690,8 @@ namespace FarseerPhysics.Dynamics
 
             fixture.Body = null;
             FixtureList.Remove(fixture);
+            RefreshCollidesWithMatchesBetweenFixtures();
+            RefreshCollisionCategoriesMatchBetweenFixtures();
 #if DEBUG
             if (fixture.Shape.ShapeType == ShapeType.Polygon)
                 ((PolygonShape)fixture.Shape).Vertices.AttachedToBody = false;
@@ -1241,13 +1248,48 @@ namespace FarseerPhysics.Dynamics
                 FixtureList[i].Friction = friction;
         }
 
+        public bool CollisionCategoriesMatchBetweenFixtures
+        {
+            get; private set;
+        } = false;
+
+        private Category _collisionCategories;
         public Category CollisionCategories
         {
+            get { return _collisionCategories; }
             set { SetCollisionCategories(value); }
         }
+
+        public bool CollidesWithMatchesBetweenFixtures
+        {
+            get; private set;
+        } = false;
+
+        private Category _collidesWith;
         public Category CollidesWith
         {
+            get { return _collidesWith; }
             set { SetCollidesWith(value); }
+        }
+
+        public void RefreshCollisionCategoriesMatchBetweenFixtures()
+        {
+            if (FixtureList.Count < 2)
+            {
+                if (FixtureList.Count > 0) { _collisionCategories = FixtureList[0].CollisionCategories; }               
+                CollisionCategoriesMatchBetweenFixtures = true;
+                return;
+            }
+            for (int i = 1; i < FixtureList.Count; i++)
+            {
+                if (FixtureList[i].CollisionCategories != FixtureList[0].CollisionCategories)
+                {
+                    CollisionCategoriesMatchBetweenFixtures = false;
+                    return;
+                }
+            }
+            CollisionCategoriesMatchBetweenFixtures = true;
+            _collisionCategories = FixtureList[0].CollisionCategories;
         }
 
         /// <summary>
@@ -1255,15 +1297,40 @@ namespace FarseerPhysics.Dynamics
         /// </summary>
         public void SetCollisionCategories(Category category)
         {
+            CollisionCategoriesMatchBetweenFixtures = true;
+            _collisionCategories = category;
             for (int i = 0; i < FixtureList.Count; i++)
                 FixtureList[i].CollisionCategories = category;
         }
+
+        public void RefreshCollidesWithMatchesBetweenFixtures()
+        {
+            if (FixtureList.Count < 2)
+            {
+                if (FixtureList.Count > 0) { _collidesWith = FixtureList[0].CollidesWith; }
+                CollidesWithMatchesBetweenFixtures = true;
+                return;
+            }
+            for (int i = 1; i < FixtureList.Count; i++)
+            {
+                if (FixtureList[i].CollidesWith != FixtureList[0].CollidesWith)
+                {
+                    CollidesWithMatchesBetweenFixtures = false;
+                    return;
+                }
+            }
+            CollidesWithMatchesBetweenFixtures = true;
+            _collidesWith = FixtureList[0].CollidesWith;
+        }
+
 
         /// <summary>
         /// Warning: This method applies the value on existing Fixtures. It's not a property of Body.
         /// </summary>
         public void SetCollidesWith(Category category)
         {
+            CollidesWithMatchesBetweenFixtures = true;
+            _collidesWith = category;
             for (int i = 0; i < FixtureList.Count; i++)
                 FixtureList[i].CollidesWith = category;
         }

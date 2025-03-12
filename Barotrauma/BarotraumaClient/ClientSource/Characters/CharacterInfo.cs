@@ -17,7 +17,8 @@ namespace Barotrauma
         private static Sprite infoAreaPortraitBG;
 
         public bool LastControlled;
-        public int CrewListIndex { get; set; } = -1;
+               
+        public int CrewListIndex { get; set; } = int.MaxValue; //default to the bottom of the list
 
         private Sprite disguisedPortrait;
         private List<WearableSprite> disguisedAttachmentSprites;
@@ -31,6 +32,8 @@ namespace Barotrauma
         private Sprite tintMask;
         private float tintHighlightThreshold;
         private float tintHighlightMultiplier;
+
+        public bool ShowTalentResetPopupOnOpen = true;
 
         public static void Init()
         {
@@ -208,7 +211,7 @@ namespace Barotrauma
             return frame;
         }
 
-        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel)
+        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel, bool forceNotification)
         {
             if (TeamID == CharacterTeamType.FriendlyNPC) { return; }
             if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
@@ -225,6 +228,18 @@ namespace Barotrauma
                     "+[value] "+ TextManager.Get("SkillName." + skillIdentifier).Value, 
                     specialIncrease ? GUIStyle.Orange : GUIStyle.Green, 
                     playSound: Character == Character.Controlled, skillIdentifier, increase);
+            }
+            else if (forceNotification)
+            {
+                float change = newLevel - prevLevel;
+                if (Math.Abs(change) > 0.01f)
+                {
+                    string sign = change > 0 ? "+" : "-";
+                    Character?.AddMessage(
+                        $"{sign}{Math.Round(change, 2)} {TextManager.Get("SkillName." + skillIdentifier).Value}",
+                        specialIncrease ? GUIStyle.Orange : GUIStyle.Green,
+                        playSound: Character == Character.Controlled);
+                }
             }
         }
 
@@ -511,6 +526,17 @@ namespace Barotrauma
             else
             {
                 origin = attachment.Sprite.Origin;
+                if (spriteEffects.HasFlag(SpriteEffects.FlipHorizontally))
+                {
+                    origin.X = attachment.Sprite.size.X - origin.X;
+                }
+                if (spriteEffects.HasFlag(SpriteEffects.FlipVertically))
+                {
+                    origin.Y = attachment.Sprite.size.Y - origin.Y;
+                }
+                //the portrait's origin is forced to 0,0 (presumably for easier drawing on the UI?), see LoadHeadElement
+                //we need to take that into account here and draw the attachment at where the origin of the "actual" head sprite would be
+                drawPos += HeadSprite.Origin * scale;
             }
             float depth = attachment.Sprite.Depth;
             if (attachment.InheritLimbDepth)
@@ -526,6 +552,8 @@ namespace Barotrauma
             string newName = inc.ReadString();
             string originalName = inc.ReadString();
             bool renamingEnabled = inc.ReadBoolean();
+            BotStatus botStatus = (BotStatus)inc.ReadByte();
+            int salary = inc.ReadInt32();
             int tagCount = inc.ReadByte();
             HashSet<Identifier> tagSet = new HashSet<Identifier>();
             for (int i = 0; i < tagCount; i++)
@@ -576,6 +604,8 @@ namespace Barotrauma
                 MinReputationToHire = (factionId, minReputationToHire),
                 RenamingEnabled = renamingEnabled
             };
+            ch.BotStatus = botStatus;
+            ch.Salary = salary;
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;
             ch.Head.HairColor = hairColor;
@@ -586,6 +616,8 @@ namespace Barotrauma
             ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
             ch.PermanentlyDead = inc.ReadBoolean();
+            ch.TalentRefundPoints = inc.ReadInt32();
+            ch.TalentResetCount = inc.ReadInt32();
             return ch;
         }
 

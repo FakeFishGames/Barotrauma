@@ -709,7 +709,7 @@ namespace FarseerPhysics.Common
         /// </summary>
         public void Normalize()
         {
-            float d = MathHelper.TwoPi * (float)Math.Floor(A0 / MathHelper.TwoPi);
+            float d = MathHelper.TwoPi * MathF.Floor(A0 / MathHelper.TwoPi);
             A0 -= d;
             A -= d;
         }

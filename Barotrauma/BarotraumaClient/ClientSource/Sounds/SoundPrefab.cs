@@ -183,6 +183,9 @@ namespace Barotrauma
         public readonly ContentPath SoundPath;
         public readonly ContentXElement Element;
         public readonly Identifier ElementName;
+
+        public readonly float Volume;
+
         public Sound Sound { get; private set; }
 
         public SoundPrefab(ContentXElement element, SoundsFile file, bool stream = false) : base(file, element)
@@ -191,6 +194,8 @@ namespace Barotrauma
             Element = element;
             ElementName = element.NameAsIdentifier();
             Sound = GameMain.SoundManager.LoadSound(element, stream: stream);
+
+            Volume = element.GetAttributeFloat(nameof(Volume), 1.0f);
         }
 
         public bool IsPlaying()
@@ -235,7 +240,6 @@ namespace Barotrauma
 
         public readonly Identifier Type;
         public readonly bool DuckVolume;
-        public readonly float Volume;
 
         public readonly Vector2 IntensityRange;
         public readonly bool MuteIntensityTracks;
@@ -244,6 +248,10 @@ namespace Barotrauma
         public readonly bool StartFromRandomTime;
         public readonly bool ContinueFromPreviousTime;
         public int PreviousTime;
+        /// <summary>
+        /// The music is forced to play at least for this long when it triggers, even if the situation changes and makes the music no longer suitable.
+        /// </summary>
+        public readonly float MinimumPlayDuration;
 
         public BackgroundMusic(ContentXElement element, SoundsFile file) : base(element, file, stream: true)
         {
@@ -255,9 +263,9 @@ namespace Barotrauma
             {
                 ForceIntensityTrack = element.GetAttributeFloat(nameof(ForceIntensityTrack), 0.0f);
             }
-            Volume = element.GetAttributeFloat(nameof(Volume), 1.0f);
             StartFromRandomTime = element.GetAttributeBool(nameof(StartFromRandomTime), false);
-            ContinueFromPreviousTime = element.GetAttributeBool(nameof(ContinueFromPreviousTime), false);
+            ContinueFromPreviousTime = element.GetAttributeBool(nameof(ContinueFromPreviousTime), false); 
+            MinimumPlayDuration = element.GetAttributeFloat(nameof(MinimumPlayDuration), 0.0f);
         }
     }
 

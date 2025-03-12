@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="[DebugOnlyTest]RotationAndFlippingTests" modversion="1.0.2" corepackage="False" gameversion="1.7.6.0">
+  <Submarine file="%ModDir%/RotationAndFlippingTests.sub" />
+</contentpackage>

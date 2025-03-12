@@ -19,6 +19,16 @@ namespace Barotrauma
     {
         [Serialize("", IsPropertySaveable.Yes), Editable]
         public Identifier SpeciesName { get; private set; }
+        
+        [Serialize("", IsPropertySaveable.Yes), Editable]
+        public string Tags
+        {
+            get => tags.ConvertToString();
+            set => tags = value.ToIdentifiers().ToHashSet();
+        }
+        private HashSet<Identifier> tags = new HashSet<Identifier>();
+        
+        public bool HasTag(Identifier tag) => tags.Contains(tag);
 
         [Serialize("", IsPropertySaveable.Yes, description: "References to another species. Define only if the creature is a variant that needs to use a pre-existing translation."), Editable]
         public Identifier SpeciesTranslationOverride { get; private set; }
@@ -37,9 +47,21 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature interact with items?"), Editable]
         public bool CanInteract { get; private set; }
+        
+        [Serialize(true, IsPropertySaveable.Yes, description: "Can the creature use ladders? Doesn't have an effect, if CanInteract is false."), Editable]
+        public bool CanClimb { get; private set; }
+        
+        [Serialize(false, IsPropertySaveable.Yes, description: "If set true, this character only uses the climbing parameters defined in the walk parameters (not run)."), Editable]
+        public bool ForceSlowClimbing { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Should this character be treated as a husk?"), Editable]
         public bool Husk { get; private set; }
+        
+        [Serialize("", IsPropertySaveable.Yes, description: "If this character can turn into a husk, which character it turns to? If not defined, uses the default pattern (e.g. Crawler -> Crawlerhusk, Human -> Humanhusk)."), Editable]
+        public Identifier HuskedSpecies { get; private set; }
+        
+        [Serialize("", IsPropertySaveable.Yes, description: "If this character is a husk, from what species it can be turned into? If not defined, uses the default pattern (e.g. Crawlerhusk -> Crawler, Humanhusk -> Human)."), Editable]
+        public Identifier NonHuskedSpecies { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description:"Should this character use a special husk appendage, attached to the ragdoll, when it turns into a husk?"), Editable]
         public bool UseHuskAppendage { get; private set; }
@@ -125,7 +147,17 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier or tag of the item the character's items are placed inside when the character despawns."), Editable]
         public Identifier DespawnContainer { get; private set; }
 
+        [Serialize("monster", IsPropertySaveable.Yes, description: "If changed, this character will try to play a custom music track with the specified identifier when encountered."), Editable]
+        public Identifier MusicType { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The commonness of this character's music when a random track will be chosen."), Editable]
+        public float MusicCommonness { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The multiplier of the minimum distance required between this character and the player/submarine before the music starts playing. The default distance is twice the length of the submarine, or a minimum of 50 meters."), Editable]
+        public float MusicRangeMultiplier { get; private set; }
+
         public readonly CharacterFile File;
+        public bool IsPet => AI?.IsPet ?? false;
 
         public XDocument VariantFile { get; private set; }
 
@@ -161,7 +193,7 @@ namespace Barotrauma
             }
         }
 
-        public static XElement CreateVariantXml(XElement variantXML, XElement baseXML)
+        public static XElement CreateVariantXml(ContentXElement variantXML, ContentXElement baseXML)
         {
             XElement newXml = variantXML.CreateVariantXML(baseXML);
             XElement variantAi = variantXML.GetChildElement("ai");
@@ -171,25 +203,32 @@ namespace Barotrauma
             {
                 return newXml;
             }
-            // CreateVariantXML seems to merge the ai targets so that in the new xml we have both the old and the new target definitions.
+
+            // CreateVariantXML does not understand anything about targeting tags, it just replaces the <target> elements in the order they're defined in.
+            // We can do better here by replacing the target with a matching tag, so let's clear the element and do that.
             var finalAiElement = newXml.GetChildElement("ai");
-            var processedTags = new HashSet<string>();
-            foreach (var aiTarget in finalAiElement.Elements().ToArray())
+            finalAiElement.Elements().Remove();
+
+            //add all the targets from the base character
+            baseAi.Elements().ForEach(e => finalAiElement.Add(e));
+
+            var processedTags = new List<Identifier>();
+            foreach (var variantTargetElement in variantAi.Elements())
             {
-                string tag = aiTarget.GetAttributeString("tag", null);
-                if (tag == null) { continue; }
-                if (processedTags.Contains(tag))
+                Identifier tag = variantTargetElement.GetAttributeIdentifier("tag", Identifier.Empty);
+                var matchingElements = finalAiElement.Elements().Where(e => e.GetAttributeIdentifier("tag", Identifier.Empty) == tag);
+                int alreadyProcessed = processedTags.Count(t => t == tag);
+                if (matchingElements.Count() > alreadyProcessed)
                 {
-                    aiTarget.Remove();
-                    continue;
+                    //more matching elements found, replace the first one that hasn't been processed yet
+                    matchingElements.Skip(alreadyProcessed).First().ReplaceWith(variantTargetElement);
+                }
+                else
+                {
+                    //no more matching elements in the base XML, this must be a new target
+                    finalAiElement.Add(variantTargetElement);
                 }
                 processedTags.Add(tag);
-                var matchInSelf = variantAi.Elements().FirstOrDefault(e => e.GetAttributeString("tag", null) == tag);
-                var matchInParent = baseAi.Elements().FirstOrDefault(e => e.GetAttributeString("tag", null) == tag);
-                if (matchInSelf != null && matchInParent != null)
-                {
-                    aiTarget.ReplaceWith(new XElement(matchInSelf));
-                }
             }
             return newXml;
         }
@@ -433,17 +472,11 @@ namespace Barotrauma
             [Serialize("", IsPropertySaveable.Yes, description: "Which tags are required for this sound to play?"), Editable()]
             public string Tags
             {
-                get { return string.Join(',', TagSet); }
-                private set
-                {
-                    TagSet = value.Split(',')
-                        .ToIdentifiers()
-                        .Where(id => !id.IsEmpty)
-                        .ToImmutableHashSet();
-                }
+                get => TagSet.ConvertToString();
+                private set => TagSet = value.ToIdentifiers().ToImmutableHashSet();
             }
 
-            public ImmutableHashSet<Identifier> TagSet { get; private set; }
+            public ImmutableHashSet<Identifier> TagSet { get; private set; } = ImmutableHashSet<Identifier>.Empty;
 
             public SoundParams(ContentXElement element, CharacterParams character) : base(element, character)
             {
@@ -549,6 +582,15 @@ namespace Barotrauma
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float EmpVulnerability { get; set; }
+            
+            [Serialize(true, IsPropertySaveable.Yes, description: "Apply movement penalties when legs or tail limbs get damaged. Enabled by default."), Editable]
+            public bool ApplyMovementPenalties { get; set; }
+            
+            [Serialize(true, IsPropertySaveable.Yes, description: "Normally characters die when they don't have a head. But maybe not all of them?"), Editable]
+            public bool DieFromBeheading { get; set; }
+            
+            [Serialize(false, IsPropertySaveable.Yes, description: "Severing legs doesn't work with most characters, because we'd need to take that into account with the walking animations and the standing position of the main collider etc. But there might be cases where you'll want to override this default."), Editable]
+            public bool AllowSeveringLegs { get; set; }
 
             [Serialize(false, IsPropertySaveable.Yes, description: "Can afflictions affect the face/body tint of the character."), Editable]
             public bool ApplyAfflictionColors { get; private set; }
@@ -719,34 +761,50 @@ namespace Barotrauma
 
             [Serialize(WallTargetingMethod.Target, IsPropertySaveable.Yes, description: "Defines the method of checking whether there's a blocking (submarine) wall."), Editable]
             public WallTargetingMethod WallTargetingMethod { get; private set; }
+            
+            [Serialize(0f, IsPropertySaveable.Yes, "How likely it is that the creature plays dead (= ragdolls) while idling? Only allowed inside a sub (not in the open waters). Evaluated once, when the creature spawns."), Editable]
+            public float PlayDeadProbability { get; set; }
+            
+            public readonly bool IsPet;
 
             public IEnumerable<TargetParams> Targets => targets;
-            protected readonly List<TargetParams> targets = new List<TargetParams>();
+            private readonly List<TargetParams> targets = new List<TargetParams>();
 
             public AIParams(ContentXElement element, CharacterParams character) : base(element, character)
             {
                 if (element == null) { return; }
-                element.GetChildElements("target").ForEach(t => TryAddTarget(t, out _));
-                element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, out _));
+                element.GetChildElements("target").ForEach(t => AddTarget(t));
+                element.GetChildElements("targetpriority").ForEach(t => AddTarget(t));
+                IsPet = element.GetChildElement("petbehavior") != null;
             }
 
+            /// <summary>
+            /// Adds a target but checks for duplicates first. Doesn't allow adding multiple targets with the same tag (see <see cref="AddTarget"/>).
+            /// </summary>
             private bool TryAddTarget(ContentXElement targetElement, out TargetParams target)
             {
                 string tag = targetElement.GetAttributeString("tag", null);
                 if (HasTag(tag))
                 {
                     target = null;
-                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!",
-                        targetElement.ContentPackage);
-                    return false;
+                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!", targetElement.ContentPackage);
                 }
                 else
                 {
-                    target = new TargetParams(targetElement, Character);
-                    targets.Add(target);
-                    SubParams.Add(target);
-                    return true;
+                    target = AddTarget(targetElement);
                 }
+                return target != null;
+            }
+            
+            /// <summary>
+            /// This method allows adding multiple targets with the same tag.
+            /// </summary>
+            private TargetParams AddTarget(ContentXElement targetElement)
+            {
+                var target = new TargetParams(targetElement, Character);
+                targets.Add(target);
+                SubParams.Add(target);
+                return target;
             }
 
             public bool TryAddEmptyTarget(out TargetParams targetParams) => TryAddNewTarget("newtarget" + targets.Count, AIState.Attack, 0f, out targetParams);
@@ -782,26 +840,40 @@ namespace Barotrauma
             }
 
             public bool RemoveTarget(TargetParams target) => RemoveSubParam(target, targets);
-
-            public bool TryGetTarget(string targetTag, out TargetParams target)
-                => TryGetTarget(targetTag.ToIdentifier(), out target);
             
-            public bool TryGetTarget(Identifier targetTag, out TargetParams target)
+            public IEnumerable<TargetParams> GetMatchingTargets(Func<TargetParams, bool> predicate) => targets.Where(predicate);
+            public IEnumerable<TargetParams> GetTargets(Identifier target) => GetMatchingTargets(t => t.Tag == target);
+            public IEnumerable<TargetParams> GetTargets(Character target) => GetMatchingTargets(t => t.Tag == target.SpeciesName || t.Tag == target.Params.Group || target.Params.HasTag(t.Tag));
+            public TargetParams GetHighestPriorityTarget(Identifier target) => GetHighestPriorityTarget(GetTargets(target));
+            public TargetParams GetHighestPriorityTarget(Character target) => GetHighestPriorityTarget(GetTargets(target));
+            
+            private static TargetParams GetHighestPriorityTarget(IEnumerable<TargetParams> targetParams) => targetParams.MaxBy(static t => t.Priority);
+            
+            public bool TryGetTargets(Identifier target, out IEnumerable<TargetParams> targetParams)
             {
-                target = targets.FirstOrDefault(t => t.Tag == targetTag);
-                return target != null;
+                targetParams = GetTargets(target);
+                return targetParams.Any();
+            }
+            
+            public bool TryGetTargets(Character target, out IEnumerable<TargetParams> targetParams)
+            {
+                targetParams = GetTargets(target);
+                return targetParams.Any();
+            }
+            
+            public bool TryGetHighestPriorityTarget(Identifier target, out TargetParams targetParams)
+            {
+                targetParams = GetHighestPriorityTarget(target);
+                return targetParams != null;
+            }
+            
+            public bool TryGetHighestPriorityTarget(Character target, out TargetParams targetParams)
+            {
+                targetParams = GetHighestPriorityTarget(target);
+                return targetParams != null;
             }
 
-            public bool TryGetTarget(Character targetCharacter, out TargetParams target)
-            {
-                if (!TryGetTarget(targetCharacter.SpeciesName, out target))
-                {
-                    target = targets.FirstOrDefault(t => t.Tag == targetCharacter.Params.Group);
-                }
-                return target != null;
-            }
-
-            public bool TryGetTarget(IEnumerable<Identifier> tags, out TargetParams target)
+            public bool TryGetHighestPriorityTarget(IEnumerable<Identifier> tags, out TargetParams target)
             {
                 target = null;
                 if (tags == null || tags.None()) { return false; }
@@ -818,22 +890,6 @@ namespace Barotrauma
                     }
                 }
                 return target != null;
-            }
-
-            public TargetParams GetTarget(string targetTag, bool throwError = true)
-                => GetTarget(targetTag.ToIdentifier(), throwError);
-            
-            public TargetParams GetTarget(Identifier targetTag, bool throwError = true)
-            {
-                if (targetTag.IsEmpty) { return null; }
-                if (!TryGetTarget(targetTag, out TargetParams target))
-                {
-                    if (throwError)
-                    {
-                        DebugConsole.ThrowError($"Cannot find a target with the tag {targetTag}!");
-                    }
-                }
-                return target;
             }
         }
 
@@ -889,7 +945,7 @@ namespace Barotrauma
             [Serialize(-1f, IsPropertySaveable.Yes, description: "A generic max threshold. Not used if set to negative."), Editable]
             public float ThresholdMax { get; private set; }
 
-            [Serialize(1.0f, IsPropertySaveable.Yes, description: "Can be used to make the monster perceive the target further than it normally can."), Editable]
+            [Serialize(1.0f, IsPropertySaveable.Yes, description: "Can be used to make the monster perceive the target further or closer than it normally can."), Editable]
             public float PerceptionDistanceMultiplier { get; private set; }
 
             [Serialize(-1.0f, IsPropertySaveable.Yes, description: "Maximum distance at which the monster can perceive the target, regardless of the sight/hearing or how visible or how much noise the target is making. Not used if set to negative."), Editable]

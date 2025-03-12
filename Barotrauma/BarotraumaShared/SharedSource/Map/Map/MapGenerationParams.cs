@@ -10,23 +10,24 @@ namespace Barotrauma
     class MapGenerationParams : Prefab, ISerializableEntity
     {
         public static readonly PrefabSelector<MapGenerationParams> Params = new PrefabSelector<MapGenerationParams>();
+
         public static MapGenerationParams Instance
         {
-            get
-            {
-                return Params.ActivePrefab;
-            }
+            get { return Params.ActivePrefab; }
         }
 
 #if DEBUG
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool ShowLocations { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool ShowLevelTypeNames { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool ShowOverlay { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "When enabled, locations that have an active store (= a store whose stocks are kept track of in the save file) are displayed in green, locations with no active store (due to not having been visited in a long time, or not having a store in the first place) are displayed in blue, and everything else in yellow."), Editable]
+        public bool ShowStoreInfo { get; set; }
 #else
         public readonly bool ShowLocations = true;
         public readonly bool ShowLevelTypeNames = false;
@@ -49,8 +50,8 @@ namespace Barotrauma
         public float LargeLevelConnectionLength { get; set; }
 
         [Serialize("20,20", IsPropertySaveable.Yes, description: "How far from each other voronoi sites are placed. " +
-            "Sites determine shape of the voronoi graph. Locations are placed at the vertices of the voronoi cells. " +
-            "(Decreasing this value causes the number of sites, and the complexity of the map, to increase exponentially - be careful when adjusting)"), Editable]
+                                                                 "Sites determine shape of the voronoi graph. Locations are placed at the vertices of the voronoi cells. " +
+                                                                 "(Decreasing this value causes the number of sites, and the complexity of the map, to increase exponentially - be careful when adjusting)"), Editable]
         public Point VoronoiSiteInterval { get; set; }
 
         [Serialize("5,5", IsPropertySaveable.Yes), Editable]

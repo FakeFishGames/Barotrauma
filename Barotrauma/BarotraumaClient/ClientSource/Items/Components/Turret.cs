@@ -91,18 +91,19 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                float size = Math.Max(transformedBarrelPos.X, transformedBarrelPos.Y);
-                if (barrelSprite != null)
+                float size = Math.Max(transformedBarrelPos.X, transformedBarrelPos.Y);       
+                if (railSprite != null && barrelSprite != null)
                 {
-                    if (railSprite != null)
-                    {
-                        size += Math.Max(Math.Max(barrelSprite.size.X, barrelSprite.size.Y), Math.Max(railSprite.size.X, railSprite.size.Y)) * item.Scale;
-                    }
-                    else
-                    {
-                        size += Math.Max(barrelSprite.size.X, barrelSprite.size.Y) * item.Scale;
-                    }
+                    size += Math.Max(Math.Max(barrelSprite.size.X, barrelSprite.size.Y), Math.Max(railSprite.size.X, railSprite.size.Y)) * item.Scale;
                 }
+                else if (railSprite != null)
+                {
+                    size += Math.Max(railSprite.size.X, railSprite.size.Y) * item.Scale;
+                }
+                else if (barrelSprite != null)
+                {
+                    size += Math.Max(barrelSprite.size.X, barrelSprite.size.Y) * item.Scale;
+                }                
                 return Vector2.One * size * 2;
             }
         }
@@ -227,14 +228,14 @@ namespace Barotrauma.Items.Components
             {
                 if (moveSoundChannel == null && startMoveSound != null)
                 {
-                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound.Sound, item.WorldPosition, startMoveSound.Volume, startMoveSound.Range, ignoreMuffling: startMoveSound.IgnoreMuffling, freqMult: startMoveSound.GetRandomFrequencyMultiplier());
+                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound, item.WorldPosition, hullGuess: item.CurrentHull);
                 }
                 else if (moveSoundChannel == null || !moveSoundChannel.IsPlaying)
                 {
                     if (moveSound != null)
                     {
                         moveSoundChannel?.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, item.WorldPosition, moveSound.Volume, moveSound.Range, ignoreMuffling: moveSound.IgnoreMuffling, freqMult: moveSound.GetRandomFrequencyMultiplier());
+                        moveSoundChannel = SoundPlayer.PlaySound(moveSound, item.WorldPosition, hullGuess: item.CurrentHull);
                         if (moveSoundChannel != null) { moveSoundChannel.Looping = true;}
                     }
                 }
@@ -246,7 +247,7 @@ namespace Barotrauma.Items.Components
                     if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound.Sound)
                     {
                         moveSoundChannel.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, item.WorldPosition, endMoveSound.Volume, endMoveSound.Range, ignoreMuffling: endMoveSound.IgnoreMuffling, freqMult: endMoveSound.GetRandomFrequencyMultiplier());
+                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound, item.WorldPosition, hullGuess: item.CurrentHull);
                         if (moveSoundChannel != null) { moveSoundChannel.Looping = false; }
                     }
                     else if (!moveSoundChannel.IsPlaying)
@@ -275,7 +276,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (chargeSound != null)
                         {
-                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling, freqMult: chargeSound.GetRandomFrequencyMultiplier());
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound, item.WorldPosition, hullGuess: item.CurrentHull);
                             if (chargeSoundChannel != null) { chargeSoundChannel.Looping = true; }
                         }
                     }
@@ -385,17 +386,20 @@ namespace Barotrauma.Items.Components
 
             if (item.Condition > 0.0f || !HideBarrelWhenBroken)
             {
-                railSprite?.Draw(spriteBatch,
+                var currentRailSprite = item.Condition <= 0.0f && railSpriteBroken != null ? railSpriteBroken : railSprite;
+                var currentBarrelSprite = item.Condition <= 0.0f && barrelSpriteBroken != null ? barrelSpriteBroken : barrelSprite;
+
+                currentRailSprite?.Draw(spriteBatch,
                     drawPos,
                     overrideColor ?? item.SpriteColor,
                     Rotation + MathHelper.PiOver2, item.Scale,
-                    SpriteEffects.None, item.SpriteDepth + (railSprite.Depth - item.Sprite.Depth));
+                    SpriteEffects.None, item.SpriteDepth + (currentRailSprite.Depth - item.Sprite.Depth));
 
-                barrelSprite?.Draw(spriteBatch,
+                currentBarrelSprite?.Draw(spriteBatch,
                     drawPos - GetRecoilOffset() * item.Scale,
                     overrideColor ?? item.SpriteColor,
                     Rotation + MathHelper.PiOver2, item.Scale,
-                    SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
+                    SpriteEffects.None, item.SpriteDepth + (currentBarrelSprite.Depth - item.Sprite.Depth));
 
                 float chargeRatio = currentChargeTime / MaxChargeTime;
 
@@ -702,12 +706,14 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
+
             if (HudTint.A > 0)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                     new Color(HudTint.R, HudTint.G, HudTint.B) * (HudTint.A / 255.0f), true);
             }
-            
+
             GetAvailablePower(out float batteryCharge, out float batteryCapacity);
 
             List<Item> availableAmmo = new List<Item>();

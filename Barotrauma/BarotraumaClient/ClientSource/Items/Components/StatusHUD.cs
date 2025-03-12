@@ -175,6 +175,8 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) { return; }
 
+            base.DrawHUD(spriteBatch, character);
+
             if (OverlayColor.A > 0)
             {
                 GUIStyle.UIGlow.Draw(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
@@ -206,42 +208,49 @@ namespace Barotrauma.Items.Components
 
             if (ThermalGoggles)
             {
-                spriteBatch.End();
-                GameMain.LightManager.SolidColorEffect.Parameters["color"].SetValue(Color.Red.ToVector4() * (0.3f + MathF.Sin(thermalEffectState) * 0.05f));
-                GameMain.LightManager.SolidColorEffect.CurrentTechnique = GameMain.LightManager.SolidColorEffect.Techniques["SolidColorBlur"];
-                GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(0.01f + MathF.Sin(thermalEffectState) * 0.005f);
-                GameMain.LightManager.SolidColorEffect.CurrentTechnique.Passes[0].Apply();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: Screen.Selected.Cam.Transform, effect: GameMain.LightManager.SolidColorEffect);
-
                 Entity refEntity = equipper;
                 if (!isEquippable || refEntity == null)
                 {
                     refEntity = item;
                 }
+                DrawThermalOverlay(spriteBatch, refEntity, character, OverlayColor, Range, thermalEffectState, ShowDeadCharacters);
 
-                foreach (Character c in Character.CharacterList)
-                {
-                    if (c == character || !c.Enabled || c.Removed || c.Params.HideInThermalGoggles) { continue; }
-                    if (!ShowDeadCharacters && c.IsDead) { continue; }
-
-                    float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
-                    if (dist > Range * Range) { continue; }
-
-                    Sprite pingCircle = GUIStyle.UIThermalGlow.Value.Sprite;
-                    foreach (Limb limb in c.AnimController.Limbs)
-                    {
-                        if (limb.Mass < 0.5f && limb != c.AnimController.MainLimb) { continue; }
-                        float noise1 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.02f);
-                        float noise2 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.008f);
-                        Vector2 spriteScale = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) / pingCircle.size * (noise1 * 0.5f + 2f);
-                        Vector2 drawPos = new Vector2(limb.body.DrawPosition.X + (noise1 - 0.5f) * 100, -limb.body.DrawPosition.Y + (noise2 - 0.5f) * 100);
-                        pingCircle.Draw(spriteBatch, drawPos, 0.0f, scale: Math.Max(spriteScale.X, spriteScale.Y));
-                    }
-                }
-
-                spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
             }
+        }
+
+        public static void DrawThermalOverlay(SpriteBatch spriteBatch, Entity refEntity, Character user, Color overlayColor, float range, float effectState, bool showDeadCharacters)
+        {
+            spriteBatch.End();
+            float colorIntensityBase = 0.5f; //Multiplies the overlay color by this amount, the higher the value, the more bright/vibrant the color.
+            float colorIntensityVariance = 0.05f; //The variance of the pulse effect affecting the color's brightness/vibrance 
+            GameMain.LightManager.SolidColorEffect.Parameters["color"].SetValue(overlayColor.ToVector4() * (colorIntensityBase + MathF.Sin(effectState) * colorIntensityVariance));
+            GameMain.LightManager.SolidColorEffect.CurrentTechnique = GameMain.LightManager.SolidColorEffect.Techniques["SolidColorBlur"];
+            GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(0.01f + MathF.Sin(effectState) * 0.005f);
+            GameMain.LightManager.SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: Screen.Selected.Cam.Transform, effect: GameMain.LightManager.SolidColorEffect);
+
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c == user || !c.Enabled || c.Removed || c.Params.HideInThermalGoggles) { continue; }
+                if (!showDeadCharacters && c.IsDead) { continue; }
+
+                float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
+                if (dist > range * range) { continue; }
+
+                Sprite pingCircle = GUIStyle.UIThermalGlow.Value.Sprite;
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    if (limb.Mass < 0.5f && limb != c.AnimController.MainLimb) { continue; }
+                    float noise1 = PerlinNoise.GetPerlin((effectState + limb.Params.ID + c.ID) * 0.01f, (effectState + limb.Params.ID + c.ID) * 0.02f);
+                    float noise2 = PerlinNoise.GetPerlin((effectState + limb.Params.ID + c.ID) * 0.01f, (effectState + limb.Params.ID + c.ID) * 0.008f);
+                    Vector2 spriteScale = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) / pingCircle.size * (noise1 * 0.5f + 2f);
+                    Vector2 drawPos = new Vector2(limb.body.DrawPosition.X + (noise1 - 0.5f) * 100, -limb.body.DrawPosition.Y + (noise2 - 0.5f) * 100);
+                    pingCircle.Draw(spriteBatch, drawPos, 0.0f, scale: Math.Max(spriteScale.X, spriteScale.Y));
+                }
+            }
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
         }
 
         private void DrawCharacterInfo(SpriteBatch spriteBatch, Character target, float alpha = 1.0f)
@@ -273,7 +282,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (!target.CustomInteractHUDText.IsNullOrEmpty() && target.AllowCustomInteract)
+                if (target.ShouldShowCustomInteractText)
                 {
                     texts.Add(target.CustomInteractHUDText);
                     textColors.Add(GUIStyle.Green);

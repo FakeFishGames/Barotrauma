@@ -23,13 +23,13 @@ namespace Barotrauma
 
         partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos)
         {
-            if (character != GameMain.Client.Character || !character.CanMove)
+            if (character != GameMain.Client.Character)
             {
                 //remove states without a timestamp (there may still be ID-based states 
                 //in the list when the controlled character switches to timestamp-based interpolation)
                 character.MemState.RemoveAll(m => m.Timestamp == 0.0f);
 
-                //use simple interpolation for other players' characters and characters that can't move
+                //use simple interpolation for other players' characters
                 if (character.MemState.Count > 0)
                 {
                     CharacterStateInfo serverPos = character.MemState.Last();
@@ -93,6 +93,9 @@ namespace Barotrauma
                         character.AnimController.Anim = AnimController.Animation.None;
                     }
 
+                    character.AnimController.IgnorePlatforms = character.MemState[0].IgnorePlatforms;
+                    character.AnimController.overrideTargetMovement = character.MemState[0].TargetMovement;
+
                     Vector2 newVelocity = Collider.LinearVelocity;
                     Vector2 newPosition = Collider.SimPosition;
                     float newRotation = Collider.Rotation;
@@ -103,16 +106,17 @@ namespace Barotrauma
                     {
                         newVelocity = newVelocity.ClampLength(100.0f);
                         if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
-                        overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
                         Collider.LinearVelocity = newVelocity;
                         Collider.AngularVelocity = newAngularVelocity;
                     }
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    float errorTolerance = character.CanMove && (!character.IsRagdolled || character.AnimController.IsHangingWithRope) ? 0.01f : 0.2f;
+                    float errorTolerance = 
+                        ColliderControlsMovement && (!character.IsRagdolled || character.AnimController.IsHangingWithRope) ? 0.01f : 0.2f;
                     if (distSqrd > errorTolerance)
                     {
-                        if (distSqrd > 10.0f || !character.CanMove)
+                        character.AnimController.BodyInRest = false;
+                        if (distSqrd > 10.0f)
                         {
                             Collider.TargetRotation = newRotation;
                             if (distSqrd > 10.0f)
@@ -126,29 +130,34 @@ namespace Barotrauma
                                 }
                             }
                             SetPosition(newPosition, lerp: distSqrd < 5.0f, ignorePlatforms: false);
+                            //make sure ragdoll isn't stuck at the wrong side of a platform if the movement is controlled by the ragdoll, and the ragdoll has come to rest server-side
+                            if (!ColliderControlsMovement && newVelocity.LengthSquared() < 0.01f) { TryPlatformCorrection(newPosition); }
                         }
-                        else
+                        else if (ColliderControlsMovement)
                         {
                             Collider.TargetRotation = newRotation;
                             Collider.TargetPosition = newPosition;
                             Collider.MoveToTargetPosition(true);
                         }
-                    }
-                    
-                    //immobilized characters can't correct their position using AnimController movement
-                    // -> we need to correct it manually
-                    if (!character.CanMove)
-                    {
-                        float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, Collider.SimPosition);
-                        float mainLimbErrorTolerance = 0.1f;
-                        //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
-                        //don't attempt to correct the position.
-                        if (mainLimbDistSqrd > mainLimbErrorTolerance || Collider.LinearVelocity.LengthSquared() > 0.05f)
+                        else
                         {
-                            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-                            MainLimb.PullJointEnabled = true;
+                            float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, newPosition);
+                            float mainLimbErrorTolerance = character == GameMain.Client.Character ? 0.25f : 0.1f;
                             MainLimb.body.LinearVelocity = newVelocity;
+                            //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
+                            //don't attempt to correct the position.
+                            if (mainLimbDistSqrd > mainLimbErrorTolerance)
+                            {
+                                MainLimb.PullJointWorldAnchorB = newPosition;
+                                MainLimb.PullJointEnabled = true;
+                                if (!ColliderControlsMovement && newVelocity.LengthSquared() < 0.01f) { TryPlatformCorrection(newPosition); }
+                            }
                         }
+                    }
+                    else if (!ColliderControlsMovement)
+                    {
+                        //correct velocity regardless of the positional error
+                        MainLimb.body.LinearVelocity = newVelocity;
                     }
                 }
                 character.MemLocalState.Clear();
@@ -179,11 +188,13 @@ namespace Barotrauma
                     }
                 }
 
-                if (character.MemState.Count < 1) return;
+                if (character.MemState.Count < 1) { return; }
 
-                overrideTargetMovement = Vector2.Zero;
+                overrideTargetMovement = null;
 
                 CharacterStateInfo serverPos = character.MemState.Last();
+
+                Collider.LastServerState = serverPos;
 
                 if (!character.isSynced)
                 {
@@ -282,17 +293,64 @@ namespace Barotrauma
                         }
                         else if (errorMagnitude > 0.01f)
                         {
-                            Collider.TargetPosition = Collider.SimPosition + positionError;
-                            Collider.TargetRotation = Collider.Rotation + rotationError;
-                            Collider.MoveToTargetPosition(lerp: true);
+                            if (ColliderControlsMovement)
+                            {
+                                Collider.TargetPosition = Collider.SimPosition + positionError;
+                                Collider.TargetRotation = Collider.Rotation + rotationError;
+                                Collider.MoveToTargetPosition(lerp: true);
+                            }
+                            else
+                            {
+                                float mainLimbErrorTolerance = character == GameMain.Client.Character ? 0.25f : 0.1f;
+                                //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
+                                //don't attempt to correct the position.
+                                if (errorMagnitude > mainLimbErrorTolerance)
+                                {
+                                    MainLimb.PullJointWorldAnchorB = MainLimb.SimPosition + positionError;
+                                    MainLimb.PullJointEnabled = true;
+                                    if (serverPos.LinearVelocity.LengthSquared() < 0.01f) { TryPlatformCorrection(MainLimb.SimPosition + positionError); }
+                                }
+                            }
                         }
                     }
 
                 }
 
-                if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
+                if (character.MemLocalState.Count > 120) { character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120); }
                 character.MemState.Clear();
             }
+        }
+
+        /// <summary>
+        /// Attempts to correct the ragdoll to the correct side of a platform if the server position is above the platform and some of the ragdoll's limbs below it client-side, or vice versa.
+        /// </summary>
+        private void TryPlatformCorrection(Vector2 serverPos)
+        {
+            float highestPos = limbs.Where(static l => !l.IsSevered).Max(static l => l.SimPosition.Y);
+            highestPos = Math.Max(serverPos.Y, highestPos);
+            float lowestPos = limbs.Where(static l => !l.IsSevered).Min(static l => l.SimPosition.Y);
+            lowestPos = Math.Min(serverPos.Y, lowestPos);
+
+            var platform = Submarine.PickBody(new Vector2(serverPos.X, highestPos), new Vector2(serverPos.X, lowestPos), collisionCategory: Physics.CollisionPlatform, allowInsideFixture: true);
+            if (platform == null) { return; }
+
+            int serverDir = Math.Sign(serverPos.Y - platform.Position.Y);
+            foreach (var limb in limbs)
+            {
+                if (limb.IsSevered) { continue; }
+                int limbDir = Math.Sign(limb.SimPosition.Y - platform.Position.Y);
+
+                const float Margin = 0.01f;
+
+                if (limbDir != serverDir)
+                {
+                    limb.body.SetTransformIgnoreContacts(
+                        new Vector2(
+                            limb.SimPosition.X, 
+                            serverDir > 0 ? Math.Max(serverPos.Y + Margin + limb.body.GetMaxExtent(), limb.SimPosition.Y) : Math.Min(serverPos.Y - Margin - limb.body.GetMaxExtent(), limb.SimPosition.Y)),
+                        limb.Rotation);
+                }
+            }            
         }
         
         partial void ImpactProjSpecific(float impact, Body body)
@@ -563,15 +621,19 @@ namespace Barotrauma
                 
                 void AdjustDepthOffset(Item item)
                 {
-                    if (item?.GetComponent<Controller>() is { ControlCharacterPose: true, UserInCorrectPosition: true } controller && controller.User == character)
+                    if (item == null) { return; }
+                    foreach (var controller in item.GetComponents<Controller>())
                     {
-                        if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
+                        if (controller is { ControlCharacterPose: true, UserInCorrectPosition: true } && controller.User == character)
                         {
-                            depthOffset = Math.Max(controller.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
-                        }
-                        else
-                        {
-                            depthOffset = Math.Max(controller.Item.GetDrawDepth() - 0.0001f - maxDepth, 0.0f);
+                            if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
+                            {
+                                depthOffset = Math.Max(controller.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
+                            }
+                            else
+                            {
+                                depthOffset = Math.Max(controller.Item.GetDrawDepth() - 0.0001f - maxDepth, 0.0f);
+                            }
                         }
                     }
                 }

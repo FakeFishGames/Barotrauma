@@ -39,58 +39,57 @@ namespace Barotrauma
                 // Don't go into rooms with any enemies, unless it's an order
                 Priority = 0;
                 Abandon = true;
+                return Priority;
             }
-            else
+            // Prioritize fires that currently damage the character.
+            bool inDamageRange = targetHull.FireSources.Any(fs => fs.IsInDamageRange(character, fs.DamageRange));
+            float severity = inDamageRange ? 1.0f : AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
+            float characterY = character.CurrentHull?.WorldPosition.Y ?? character.WorldPosition.Y;
+            float distanceFactor = targetHull == character.CurrentHull ? 1.0f 
+                : HumanAIController.VisibleHulls.Contains(targetHull) ? 0.75f : 0.0f;
+            
+            if (distanceFactor <= 0.0f)
             {
-                float characterY = character.CurrentHull?.WorldPosition.Y ?? character.WorldPosition.Y;
-
-                float distanceFactor = 1.0f;
-                if (targetHull != character.CurrentHull && 
-                    !HumanAIController.VisibleHulls.Contains(targetHull))
-                {
-                    distanceFactor = 
-                        GetDistanceFactor(
-                            new Vector2(character.WorldPosition.Y, characterY),
-                            targetHull.WorldPosition,
-                            verticalDistanceMultiplier: 3,
-                            maxDistance: 5000,
-                            factorAtMaxDistance: 0.1f);
-                }
-                float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
-                if (severity > 0.75f && !isOrder && 
-                    targetHull.RoomName != null &&
-                    !targetHull.RoomName.Contains("reactor", StringComparison.OrdinalIgnoreCase) && 
-                    !targetHull.RoomName.Contains("engine", StringComparison.OrdinalIgnoreCase) && 
-                    !targetHull.RoomName.Contains("command", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Ignore severe fires to prevent casualities unless ordered to extinguish.
-                    Priority = 0;
-                    Abandon = true;
-                }
-                else
-                {
-                    float devotion = CumulatedDevotion / 100;
-                    Priority = MathHelper.Lerp(0, AIObjectiveManager.MaxObjectivePriority, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
-                }
+                distanceFactor = 
+                    GetDistanceFactor(
+                        new Vector2(character.WorldPosition.Y, characterY),
+                        targetHull.WorldPosition,
+                        verticalDistanceMultiplier: 3,
+                        maxDistance: 5000,
+                        factorAtMaxDistance: 0.1f);
             }
+            
+            if (!inDamageRange && severity > 0.75f && distanceFactor < 0.75f && !isOrder && character.IsOnPlayerTeam &&
+                targetHull.RoomName != null &&
+                !targetHull.RoomName.Contains("reactor", StringComparison.OrdinalIgnoreCase) && 
+                !targetHull.RoomName.Contains("engine", StringComparison.OrdinalIgnoreCase) && 
+                !targetHull.RoomName.Contains("command", StringComparison.OrdinalIgnoreCase))
+            {
+                // Bots in the player crew ignore severe fires that are not close to the target to prevent casualties unless ordered to extinguish.
+                Priority = 0;
+                Abandon = true;
+                return Priority;
+            }
+            float devotion = CumulatedDevotion / 100;
+            Priority = MathHelper.Lerp(0, AIObjectiveManager.MaxObjectivePriority, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
             return Priority;
         }
 
-        protected override bool CheckObjectiveSpecific() => targetHull.FireSources.None();
+        protected override bool CheckObjectiveState() => targetHull.FireSources.None();
 
         private float sinTime;
         protected override void Act(float deltaTime)
         {
-            var extinguisherItem = character.Inventory.FindItemByTag("fireextinguisher".ToIdentifier());
+            var extinguisherItem = character.Inventory.FindItemByTag(Tags.FireExtinguisher);
             if (extinguisherItem == null || extinguisherItem.Condition <= 0.0f || !character.HasEquippedItem(extinguisherItem))
             {
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
-                    if (character.IsOnPlayerTeam && !character.HasEquippedItem("fireextinguisher".ToIdentifier(), allowBroken: false))
+                    if (character.IsOnPlayerTeam && !character.HasEquippedItem(Tags.FireExtinguisher, allowBroken: false))
                     {
-                        character.Speak(TextManager.Get("DialogFindExtinguisher").Value, null, 2.0f, "findextinguisher".ToIdentifier(), 30.0f);
+                        character.Speak(TextManager.Get("DialogFindExtinguisher").Value, null, 2.0f, Tags.FireExtinguisher, 30.0f);
                     }
-                    var getItemObjective = new AIObjectiveGetItem(character, "fireextinguisher".ToIdentifier(), objectiveManager, equip: true)
+                    var getItemObjective = new AIObjectiveGetItem(character, Tags.FireExtinguisher, objectiveManager, equip: true)
                     {
                         AllowStealing = true,
                         // If the item is inside an unsafe hull, decrease the priority
@@ -124,7 +123,9 @@ namespace Barotrauma
                         break;
                     }
                     float xDist = Math.Abs(character.WorldPosition.X - fs.WorldPosition.X);
-                    float yDist = Math.Abs(character.CurrentHull.WorldPosition.Y - targetHull.WorldPosition.Y);
+                    // If fire source and the character are on the same level, it's better to ignore the y-axis (e.g. it doesn't matter if we stand or crouch), as the fire size is rectangular.
+                    // If we'd do this while climbing, the character would often get too close to the fire.
+                    float yDist = !character.IsClimbing && MathUtils.NearlyEqual(character.CurrentHull.WorldPosition.Y, targetHull.WorldPosition.Y) ? 0.0f : Math.Abs(character.CurrentHull.WorldPosition.Y - fs.WorldPosition.Y);
                     float dist = xDist + yDist;
                     bool inRange = dist < extinguisher.Range;
                     bool isInDamageRange = fs.IsInDamageRange(character, fs.DamageRange) && character.CanSeeTarget(targetHull);
@@ -153,8 +154,8 @@ namespace Barotrauma
                     {
                         if (TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: extinguisher.Range * 0.8f)
                         {
-                            DialogueIdentifier = "dialogcannotreachfire".ToIdentifier(),
-                            TargetName = fs.Hull.DisplayName,
+                            DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachFire,
+                            TargetName = fs.Hull.DisplayName
                         },
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref gotoObjective)))

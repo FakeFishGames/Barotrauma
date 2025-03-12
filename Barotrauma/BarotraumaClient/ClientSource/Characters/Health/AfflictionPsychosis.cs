@@ -180,7 +180,7 @@ namespace Barotrauma
             fakeBrokenTimer -= deltaTime;
             if (fakeBrokenTimer > 0.0f) { return; }
 
-            foreach (Item item in Item.ItemList)
+            foreach (Item item in Item.RepairableItems)
             {
                 var repairable = item.GetComponent<Repairable>();
                 if (repairable == null) { continue; }

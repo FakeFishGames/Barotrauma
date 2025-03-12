@@ -6,11 +6,11 @@ namespace Barotrauma.Items.Components
 {
     partial class Controller : ItemComponent
     {
-        private bool chatBoxOriginalState;
         private bool isHUDsHidden;
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            base.DrawHUD(spriteBatch, character);
             if (focusTarget != null && character.ViewTarget == focusTarget)
             {
                 foreach (ItemComponent ic in focusTarget.Components)
@@ -23,46 +23,29 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void AddToGUIUpdateList(int order = 0)
+        {
+            base.AddToGUIUpdateList(order);
+            if (focusTarget != null && Character.Controlled.ViewTarget == focusTarget)
+            {
+                focusTarget.AddToGUIUpdateList(order);
+            }
+        }
+
         partial void HideHUDs(bool value)
         {
             if (isHUDsHidden == value) { return; }
-            if (value == true)
+            if (value)
             {
                 GameMain.GameSession?.CrewManager?.AutoHideCrewList();
-                ToggleChatBox(false, storeOriginalState: true);
+                ChatBox.AutoHideChatBox();
             }
             else
             {
-                GameMain.GameSession?.CrewManager?.ResetCrewList();
-                ToggleChatBox(chatBoxOriginalState, storeOriginalState: false);
+                GameMain.GameSession?.CrewManager?.ResetCrewListOpenState();
+                ChatBox.ResetChatBoxOpenState();
             }
             isHUDsHidden = value;
-        }
-
-        private void ToggleChatBox(bool value, bool storeOriginalState)
-        {
-            var crewManager = GameMain.GameSession?.CrewManager;
-            if (crewManager == null) { return; }
-
-            if (crewManager.IsSinglePlayer)
-            {
-                if (crewManager.ChatBox != null)
-                {
-                    if (storeOriginalState)
-                    {
-                        chatBoxOriginalState = crewManager.ChatBox.ToggleOpen;
-                    }
-                    crewManager.ChatBox.ToggleOpen = value;
-                }
-            }
-            else if (GameMain.Client != null)
-            {
-                if (storeOriginalState)
-                {
-                    chatBoxOriginalState = GameMain.Client.ChatBox.ToggleOpen;
-                }
-                GameMain.Client.ChatBox.ToggleOpen = value;
-            }
         }
 
 #if DEBUG

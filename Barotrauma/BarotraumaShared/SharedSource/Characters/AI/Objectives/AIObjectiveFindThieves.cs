@@ -83,7 +83,7 @@ namespace Barotrauma
             {
                 return false;
             }
-            if (!IsValidTarget(target, character)) { return false; }
+            if (!CheckTarget(target)) { return false; }
             float inspectDist = target.IsCriminal ? CriminalInspectDistance : inspectDistance;
             if (Vector2.DistanceSquared(target.WorldPosition, character.WorldPosition) > inspectDist * inspectDist) { return false; }
             if (lastInspectionTimes.TryGetValue(target, out double lastInspectionTime))
@@ -145,26 +145,31 @@ namespace Barotrauma
                 // Might be e.g. sitting on a chair.
                 character.SelectedSecondaryItem = null;
             }
-            foreach (var target in Character.CharacterList)
+            if (HumanAIController.CurrentHullSafety >= HumanAIController.HULL_SAFETY_THRESHOLD)
             {
-                if (!IsValidTarget(target, character)) { continue; }
-                //if we spot someone wearing or holding stolen items, immediately check them (with 100% chance of spotting the stolen items)
-                if (target.Inventory.AllItems.Any(it => it.Illegitimate && target.HasEquippedItem(it)) &&
-                    character.CanSeeTarget(target, seeThroughWindows: true))
+                foreach (var target in Character.CharacterList)
                 {
-                    AIObjectiveCheckStolenItems? existingObjective = 
-                        objectiveManager.GetActiveObjectives<AIObjectiveCheckStolenItems>().FirstOrDefault(o => o.Target == target);
-                    if (existingObjective == null)
+                    if (!CheckTarget(target)) { continue; }
+                    //if we spot someone wearing or holding stolen items, immediately check them (with 100% chance of spotting the stolen items)
+                    if (target.Inventory.AllItems.Any(it => target.HasEquippedItem(it) && AIObjectiveCheckStolenItems.IsItemIllegitimate(target, it)) && character.CanSeeTarget(target, seeThroughWindows: true))
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCheckStolenItems(character, target, objectiveManager));
-                        lastInspectionTimes[target] = Timing.TotalTime;
+                        if (HumanAIController.CalculateObjectiveHullSafety(target) >= HumanAIController.HULL_SAFETY_THRESHOLD)
+                        {
+                            // Don't do inspections in unsafe hulls, because under a threat, bots are allowed to wear diving gear or hold fire extinguishers etc. Even if they are "stolen".
+                            AIObjectiveCheckStolenItems? existingObjective = objectiveManager.GetActiveObjectives<AIObjectiveCheckStolenItems>().FirstOrDefault(o => o.Target == target);
+                            if (existingObjective == null)
+                            {
+                                objectiveManager.AddObjective(new AIObjectiveCheckStolenItems(character, target, objectiveManager));
+                                lastInspectionTimes[target] = Timing.TotalTime;
+                            }   
+                        }
                     }
                 }
             }
             checkVisibleStolenItemsTimer = CheckVisibleStolenItemsInterval;
         }
 
-        private bool IsValidTarget(Character target, Character character)
+        private bool CheckTarget(Character target)
         {
             if (target == null || target.Removed) { return false; }
             if (target.IsIncapacitated) { return false; }
@@ -176,6 +181,8 @@ namespace Barotrauma
             //only player's crew can steal, ignore other teams
             if (!target.IsOnPlayerTeam) { return false; }
             if (target.IsHandcuffed) { return false; }
+            //ignore thieves in the same team
+            if (character.OriginalTeamID == target.TeamID || character.TeamID == target.TeamID) { return false; }
             // Ignore targets that are climbing, because might need to use ladders to get to them.
             if (target.IsClimbing) { return false; }
             if (HumanAIController.IsTrueForAnyBotInTheCrew(bot => 
@@ -190,6 +197,16 @@ namespace Barotrauma
         }
 
         protected override void OnObjectiveCompleted(AIObjective objective, Character target)
+        {
+            MarkTargetAsInspected(target);
+        }
+
+        /// <summary>
+        /// Marks the targets as being inspected for stolen items (e.g. while arresting the character),
+        /// meaning characters with this objective won't attempt to trigger an inspection in a while.
+        /// </summary>
+        /// <param name="target"></param>
+        public static void MarkTargetAsInspected(Character target)
         {
             lastInspectionTimes[target] = Timing.TotalTime;
         }

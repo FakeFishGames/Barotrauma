@@ -106,12 +106,35 @@ namespace Barotrauma
         public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
         public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
         public static float RelativeVerticalAspectRatio => VerticalAspectRatio / (ReferenceResolution.Y / ReferenceResolution.X);
+        
+        /// <summary>
+        /// Returns the difference of the current aspect ratio to the reference aspect ratio (16:9).
+        /// E.g. if the aspect ratio is 16:9, returns 0; if it's 4:3, returns 0.444; if the aspect ratio is 12:5, returns -0.623.
+        /// </summary>
+        public static float AspectRatioDifference
+        {
+            get
+            {
+                // ~ 1.777
+                float referenceAspectRatio = ReferenceResolution.X / ReferenceResolution.Y;
+                float aspectRatioDifference = referenceAspectRatio - HorizontalAspectRatio;
+                if (MathUtils.NearlyEqual(aspectRatioDifference, 0))
+                {
+                    // Handle possible rounding errors, so that we can trust that this returns 0 when the aspect ratio matches the reference aspect ratio.
+                    return 0;
+                }
+                return aspectRatioDifference;
+            }
+        }
+            
         /// <summary>
         /// A horizontal scaling factor for low aspect ratios (small width relative to height)
         /// </summary>
         public static float AspectRatioAdjustment => HorizontalAspectRatio < 1.4f ? (1.0f - (1.4f - HorizontalAspectRatio)) : 1.0f;
 
         public static bool IsUltrawide => HorizontalAspectRatio > 2.3f;
+        
+        public static bool IsHUDScaled => GameSettings.CurrentConfig.Graphics.HUDScale > 1 || GameSettings.CurrentConfig.Graphics.InventoryScale > 1;
 
         public static int UIWidth
         {
@@ -469,7 +492,7 @@ namespace Barotrauma
                             "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                         soundTextY += yStep;
 
-                        for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
+                        for (int i = 0; i < SoundManager.SourceCount; i++)
                         {
                             Color clr = Color.White;
                             string soundStr = i + ": ";
@@ -625,9 +648,13 @@ namespace Barotrauma
 
                 DrawMessages(spriteBatch, cam);
 
-                if (MouseOn != null && !MouseOn.ToolTip.IsNullOrWhiteSpace())
-                {
-                    MouseOn.DrawToolTip(spriteBatch);
+                if (MouseOn != null)
+                { 
+                    if (!MouseOn.ToolTip.IsNullOrWhiteSpace())
+                    {
+                        MouseOn.DrawToolTip(spriteBatch);
+                    }
+                    MouseOn.OnDrawToolTip?.Invoke(MouseOn);
                 }
 
                 if (SubEditorScreen.IsSubEditor())
@@ -1546,7 +1573,7 @@ namespace Barotrauma
         private static readonly VertexPositionColorTexture[] donutVerts = new VertexPositionColorTexture[DonutSegments * 4];
 
         public static void DrawDonutSection(
-            SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float depth = 0.0f)
+            SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float depth = 0.0f, float rotationRad = 0.0f)
         {
             float getRadius(int vertexIndex)
                 => (vertexIndex % 4) switch
@@ -1589,7 +1616,7 @@ namespace Barotrauma
             for (int vertexIndex = 0; vertexIndex < maxDirectionIndex * 4; vertexIndex++)
             {
                 donutVerts[vertexIndex].Color = clr;
-                donutVerts[vertexIndex].Position = new Vector3(center + getDirection(vertexIndex) * getRadius(vertexIndex), 0.0f);
+                donutVerts[vertexIndex].Position = new Vector3(center + Vector2.Transform(getDirection(vertexIndex) * getRadius(vertexIndex), Matrix.CreateRotationZ(rotationRad)), 0.0f);
             }
             sb.Draw(solidWhiteTexture, donutVerts, depth, count: maxDirectionIndex);
         }
@@ -1856,9 +1883,16 @@ namespace Barotrauma
             Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
             sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
-#endregion
 
-#region Element creation
+        public static void DrawCapsule(SpriteBatch sb, Vector2 origin, float length, float radius, float rotation, Color clr, float depth = 0, float thickness = 1)
+        {
+            DrawDonutSection(sb, origin + Vector2.Transform(-new Vector2(length / 2, 0), Matrix.CreateRotationZ(rotation)), new Range<float>(radius - thickness / 2, radius + thickness / 2), MathHelper.Pi, clr, depth, rotation - MathHelper.Pi);
+            DrawRectangle(sb, origin, new Vector2(length, radius * 2), new Vector2(length / 2, radius), rotation, clr, depth, thickness);
+            DrawDonutSection(sb, origin + Vector2.Transform(new Vector2(length / 2, 0), Matrix.CreateRotationZ(rotation)), new Range<float>(radius - thickness / 2, radius + thickness / 2), MathHelper.Pi, clr, depth, rotation);
+        }
+        #endregion
+
+        #region Element creation
 
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
@@ -2488,7 +2522,12 @@ namespace Barotrauma
                 {
                     IgnoreLayoutGroups = true,
                     ToolTip = TextManager.Get("bugreportbutton") + $" (v{GameMain.Version})",
-                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+                    OnClicked = (btn, userdata) => 
+                    {
+                        if (PauseMenuOpen) { TogglePauseMenu(); }                       
+                        GameMain.Instance.ShowBugReporter();
+                        return true;
+                    }
                 };
 
                 CreateButton("PauseMenuResume", buttonContainer, null);
@@ -2524,23 +2563,37 @@ namespace Barotrauma
                             GameMain.GameSession?.EndRound("");
                         });
                     }
-                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null)
                     {
-                        bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel();
-                        if (canSave)
+                        //server owner (host) can't return to the lobby without ending the round for everyone
+                        if (!GameMain.Client.IsServerOwner)
                         {
-                            CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>
-                            {
-                                GameMain.Client?.RequestRoundEnd(save: true);
-                            });
+                            CreateButton("ReturnToServerlobby", buttonContainer,
+                                verificationTextTag: "PauseMenuReturnToServerLobbyVerificationSelf",
+                                action: () =>
+                                {
+                                    GameMain.Client?.EndRoundForSelf();
+                                });
                         }
 
-                        CreateButton(GameMain.GameSession.GameMode is CampaignMode ? "ReturnToServerlobby" : "EndRound", buttonContainer,
-                            verificationTextTag: GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd",
-                            action: () =>
+                        if (GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                        {
+                            bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel();
+                            if (canSave)
                             {
-                                GameMain.Client?.RequestRoundEnd(save: false);
-                            });
+                                CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>
+                                {
+                                    GameMain.Client?.RequestEndRound(save: true);
+                                }, color: GUIStyle.Red);
+                            }
+
+                            CreateButton("EndRound", buttonContainer,
+                                verificationTextTag: GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd",
+                                action: () =>
+                                {
+                                    GameMain.Client?.RequestEndRound(save: false);
+                                }, color: GUIStyle.Red);
+                        }
                     }
                 }
 
@@ -2568,9 +2621,9 @@ namespace Barotrauma
 
             }
 
-            void CreateButton(string textTag, GUIComponent parent, Action action, string verificationTextTag = null)
+            void CreateButton(string textTag, GUIComponent parent, Action action, string verificationTextTag = null, Color? color = null)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), TextManager.Get(textTag))
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), TextManager.Get(textTag))
                 {
                     OnClicked = (btn, userData) =>
                     {
@@ -2586,25 +2639,29 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                if (color.HasValue)
+                {
+                    button.Color = color.Value;
+                }
             }
 
-            void CreateVerificationPrompt(string textTag, Action confirmAction)
+        }
+        public static void CreateVerificationPrompt(string textTag, Action confirmAction)
+        {
+            var msgBox = new GUIMessageBox("", TextManager.Get(textTag),
+                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
             {
-                var msgBox = new GUIMessageBox("", TextManager.Get(textTag),
-                    new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
-                {
-                    UserData = "verificationprompt",
-                    DrawOnTop = true
-                };
-                msgBox.Buttons[0].OnClicked = (_, __) =>
-                {
-                    PauseMenuOpen = false;
-                    confirmAction?.Invoke();
-                    return true;
-                };
-                msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked += msgBox.Close;
-            }
+                UserData = "verificationprompt",
+                DrawOnTop = true
+            };
+            msgBox.Buttons[0].OnClicked = (_, __) =>
+            {
+                PauseMenuOpen = false;
+                confirmAction?.Invoke();
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+            msgBox.Buttons[1].OnClicked += msgBox.Close;
         }
 
         private static bool TogglePauseMenu(GUIButton button, object obj)
@@ -2688,12 +2745,6 @@ namespace Barotrauma
             {
                 messages.Clear();
             }
-        }
-
-        public static bool IsFourByThree()
-        {
-            float aspectRatio = HorizontalAspectRatio;
-            return aspectRatio > 1.3f && aspectRatio < 1.4f;
         }
 
         public static void SetSavingIndicatorState(bool enabled)

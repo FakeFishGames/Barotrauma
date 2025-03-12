@@ -29,15 +29,26 @@ namespace Barotrauma
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);
+            
+            msg.WriteByte((byte)characters.Count);
+            foreach (Character character in characters)
+            {
+                character.WriteSpawnData(msg, character.ID, restrictMessageSize: false);
+                var items = characterItems[character];
+                msg.WriteUInt16((ushort)items.Count);
+                foreach (Item item in items)
+                {
+                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0, item.ParentInventory?.FindIndex(item) ?? -1);
+                }
+            }
 
             foreach (var target in targets)
             {
-                bool targetFound = spawnInfo.ContainsKey(target) && target.Item != null;
+                bool targetFound = spawnInfo.TryGetValue(target, out SpawnInfo sInfo) && target.Item != null;
                 msg.WriteBoolean(targetFound);
                 if (!targetFound) { continue; }
-
-                msg.WriteBoolean(spawnInfo[target].UsedExistingItem);
-                if (spawnInfo[target].UsedExistingItem)
+                msg.WriteBoolean(sInfo.UsedExistingItem);
+                if (sInfo.UsedExistingItem)
                 {
                     msg.WriteUInt16(target.Item.ID);
                 }
@@ -45,14 +56,14 @@ namespace Barotrauma
                 {
                     target.Item.WriteSpawnData(msg, 
                         target.Item.ID, 
-                        spawnInfo[target].OriginalInventoryID, 
-                        spawnInfo[target].OriginalItemContainerIndex,
-                        spawnInfo[target].OriginalSlotIndex);
+                        sInfo.OriginalInventoryID, 
+                        sInfo.OriginalItemContainerIndex,
+                        sInfo.OriginalSlotIndex);
                     msg.WriteUInt16(target.ParentTarget?.Item?.ID ?? Entity.NullEntityID);
                 }
 
-                msg.WriteByte((byte)spawnInfo[target].ExecutedEffectIndices.Count);
-                foreach ((int listIndex, int effectIndex) in spawnInfo[target].ExecutedEffectIndices)
+                msg.WriteByte((byte)sInfo.ExecutedEffectIndices.Count);
+                foreach ((int listIndex, int effectIndex) in sInfo.ExecutedEffectIndices)
                 {
                     msg.WriteByte((byte)listIndex);
                     msg.WriteByte((byte)effectIndex);
@@ -64,9 +75,9 @@ namespace Barotrauma
         {
             base.ServerWrite(msg);
             msg.WriteByte((byte)targets.Count);
-            for (int i = 0; i < targets.Count; i++)
+            foreach (Target t in targets)
             {
-                msg.WriteByte((byte)targets[i].State);
+                msg.WriteByte((byte)t.State);
             }
         }
     }

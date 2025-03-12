@@ -202,12 +202,26 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     if (requiredTime < float.MaxValue && picker == Character.Controlled)
                     {
+                        string text = string.Empty;
+                        if (!string.IsNullOrWhiteSpace(PickingMsg))
+                        {
+                            text = PickingMsg;
+                        }
+                        else if (this is Door door)
+                        {
+                            text = door.IsClosed ? "progressbar.opening" : "progressbar.closing";
+                        }
+                        else
+                        {
+                            text = "progressbar.deattaching";
+                        }
+
                         Character.Controlled?.UpdateHUDProgressBar(
                             this,
                             item.WorldPosition,
                             pickTimer / requiredTime,
                             GUIStyle.Red, GUIStyle.Green,
-                            !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
+                            text);
                     }
 #endif
                     picker.AnimController.UpdateUseItem(!picker.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));

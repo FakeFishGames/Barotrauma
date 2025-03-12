@@ -33,6 +33,10 @@ namespace Barotrauma
         }
 
         public bool HasCharacterInfo { get; private set; }
+        
+        public Identifier Group { get; private set; }
+        
+        public bool MatchesSpeciesNameOrGroup(Identifier speciesNameOrGroup) => Identifier == speciesNameOrGroup || Group == speciesNameOrGroup;
 
         public void InheritFrom(CharacterPrefab parent)
         {
@@ -52,9 +56,10 @@ namespace Barotrauma
             {
                 CharacterInfoPrefab = new CharacterInfoPrefab(this, headsElement, varsElement, menuCategoryElement, pronounsElement);
             }
+            Group = ConfigElement.GetAttributeIdentifier(nameof(Group), Identifier.Empty);
         }
 
-        private readonly XElement originalElement;
+        private readonly ContentXElement originalElement;
         public ContentXElement ConfigElement { get; private set; }
 
         public CharacterInfoPrefab CharacterInfoPrefab { get; private set; }

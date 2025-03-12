@@ -366,7 +366,7 @@ namespace Barotrauma
                 default:
                     ShowCampaignUI = true;
                     CampaignUI.SelectTab(npc.CampaignInteractionType, npc);
-                    CampaignUI.UpgradeStore?.RequestRefresh();
+                    CampaignUI.UpgradeStore?.RequestRefresh(refreshUpgrades: true);
                     break;
             }
 
@@ -395,13 +395,15 @@ namespace Barotrauma
 
         protected void TryEndRoundWithFuelCheck(Action onConfirm, Action onReturnToMapScreen)
         {
+            if (Submarine.MainSub == null) { return; }
+
             Submarine.MainSub.CheckFuel();
             bool lowFuel = Submarine.MainSub.Info.LowFuel;
             if (PendingSubmarineSwitch != null)
             {
                 lowFuel = TransferItemsOnSubSwitch ? (lowFuel && PendingSubmarineSwitch.LowFuel) : PendingSubmarineSwitch.LowFuel;
             }
-            if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
+            if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains(Tags.ReactorFuel))))
             {
                 var extraConfirmationBox =
                     new GUIMessageBox(TextManager.Get("lowfuelheader"),

@@ -10,6 +10,7 @@ namespace Barotrauma.Particles
     {
         public static readonly PrefabCollection<ParticlePrefab> Prefabs = new PrefabCollection<ParticlePrefab>();
 
+        [Flags]
         public enum DrawTargetType { Air = 1, Water = 2, Both = 3 }
 
         public readonly List<Sprite> Sprites;
@@ -151,7 +152,7 @@ namespace Barotrauma.Particles
         public float Friction { get; private set; }
 
         [Editable(0.0f, 1.0f)]
-        [Serialize(0.5f, IsPropertySaveable.No, description: "How much of the particle's velocity is conserved when it collides with something, i.e. the \"bounciness\" of the particle. (1.0 = the particle stops completely).")]
+        [Serialize(0.5f, IsPropertySaveable.No, description: "How much of the particle's velocity is conserved when it collides with something, i.e. the \"bounciness\" of the particle. (0.0 = the particle stops completely).")]
         public float Restitution { get; private set; }
 
         //size -----------------------------------------
@@ -188,8 +189,8 @@ namespace Barotrauma.Particles
         [Editable, Serialize(DrawTargetType.Air, IsPropertySaveable.No, description: "Should the particle be rendered in air, water or both.")]
         public DrawTargetType DrawTarget { get; private set; }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the particle be always rendered on top of entities?")]
-        public bool DrawOnTop { get; private set; }
+        [Editable, Serialize(ParticleDrawOrder.Default, IsPropertySaveable.No, description: "Should the particle be always forced to render on top of entities or behind everything?")]
+        public ParticleDrawOrder DrawOrder { get; private set; }
 
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Draw the particle even when it's calculated to be outside of view (the formula doesn't take scales into account). ")]
         public bool DrawAlways { get; private set; }
@@ -225,6 +226,16 @@ namespace Barotrauma.Particles
             Sprites = new List<Sprite>();
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            //backwards compatibility
+            if (element.GetAttributeBool("drawontop", false))
+            {
+                DrawOrder = ParticleDrawOrder.Foreground;
+            }
+            if (BlendState == ParticleBlendState.Additive && DrawOrder == ParticleDrawOrder.Background)
+            {
+                DebugConsole.AddWarning($"Error in particle prefab {Identifier}: additive particles cannot be rendered in the background.");
+            }
 
             foreach (var subElement in element.Elements())
             {

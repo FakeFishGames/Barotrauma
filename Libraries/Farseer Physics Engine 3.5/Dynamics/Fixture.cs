@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Kastellanos Nikolaos
+﻿// Copyright (c) 2017 Kastellanos Nikolaos
 
 /* Original source Farseer Physics Engine:
  * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
@@ -139,6 +139,10 @@ namespace FarseerPhysics.Dynamics
 
                 _collidesWith = value;
                 Refilter();
+                if (Body != null)
+                {
+                    Body.RefreshCollidesWithMatchesBetweenFixtures();
+                }
             }
         }
 
@@ -151,13 +155,17 @@ namespace FarseerPhysics.Dynamics
         {
             get { return _collisionCategories; }
 
-            set
+            internal set
             {
                 if (_collisionCategories == value)
                     return;
 
                 _collisionCategories = value;
                 Refilter();
+                if (Body != null)
+                {
+                    Body.RefreshCollisionCategoriesMatchBetweenFixtures();
+                }
             }
         }
 

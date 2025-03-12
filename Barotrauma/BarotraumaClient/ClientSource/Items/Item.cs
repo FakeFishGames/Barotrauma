@@ -130,7 +130,7 @@ namespace Barotrauma
             }
         }
 
-        public float GetDrawDepth()
+        public override float GetDrawDepth()
         {
             return GetDrawDepth(SpriteDepth + DrawDepthOffset, Sprite);
         }
@@ -287,7 +287,7 @@ namespace Barotrauma
             }
             else
             {
-                int padding = 100;
+                int padding = 0;
 
                 RectangleF boundingBox = GetTransformedQuad().BoundingAxisAlignedRectangle;
                 Vector2 min = new Vector2(-boundingBox.Width / 2 - padding, -boundingBox.Height / 2 - padding);
@@ -302,11 +302,11 @@ namespace Barotrauma
                 }
                 foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
                 {
-                    float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
-                    min.X = Math.Min(-decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale, min.X);
-                    min.Y = Math.Min(-decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
-                    max.X = Math.Max(decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale, max.X);
-                    max.Y = Math.Max(decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
+                    Vector2 scale = decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                    min.X = Math.Min(-decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale.X, min.X);
+                    min.Y = Math.Min(-decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale.Y, min.Y);
+                    max.X = Math.Max(decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale.X, max.X);
+                    max.Y = Math.Max(decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale.Y, max.Y);
                 }
                 cachedVisibleExtents = extents = new Rectangle(min.ToPoint(), max.ToPoint());
             }
@@ -315,6 +315,9 @@ namespace Barotrauma
 
             if (worldPosition.X + extents.X > worldView.Right || worldPosition.X + extents.Width < worldView.X) { return false; }
             if (worldPosition.Y + extents.Height < worldView.Y - worldView.Height || worldPosition.Y + extents.Y > worldView.Y) { return false; }
+
+            if (extents.Width * Screen.Selected.Cam.Zoom < 1.0f) { return false; }
+            if (extents.Height * Screen.Selected.Cam.Zoom < 1.0f) { return false; }
 
             return true;
         }
@@ -405,7 +408,7 @@ namespace Barotrauma
                     fadeInBrokenSprite.Sprite.effects ^= SpriteEffects;
                 }
 
-                if (body == null)
+                if (body == null || body.BodyType == BodyType.Static)
                 {
                     if (Prefab.ResizeHorizontal || Prefab.ResizeVertical)
                     {
@@ -490,7 +493,7 @@ namespace Barotrauma
                                     }
                                 }
                                 var head = holdable.Picker.AnimController.GetLimb(LimbType.Head);
-                                if (head != null)
+                                if (head?.Sprite != null)
                                 {
                                     //ensure the holdable item is always drawn in front of the head no matter what the wearables or whatnot do with the sprite depths
                                     depth =
@@ -523,8 +526,8 @@ namespace Barotrauma
                         Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -RotationRad) * Scale;
                         if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                         if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
-                        decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                            rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
+                        decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, decorativeSprite.Sprite.Origin,
+                            rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
                             depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                     }
                 }
@@ -673,14 +676,8 @@ namespace Barotrauma
                         origin.Y = -origin.Y + decorativeSprite.Sprite.size.Y;
                         spriteEffects |= SpriteEffects.FlipVertically;
                     }
-                    if (body != null)
-                    {
-                        var ca = MathF.Cos(-body.DrawRotation);
-                        var sa = MathF.Sin(-body.DrawRotation);
-                        offset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
-                    }
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(drawPos.X + offset.X, -(drawPos.Y + offset.Y)), decorativeSpriteColor, origin,
-                        -rotation + spriteRotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffects,
+                        -rotation + spriteRotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffects,
                         depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                 }
             }
@@ -794,6 +791,11 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+
+            foreach (var containedItem in ContainedItems)
+            {
+                containedItem.UpdateSpriteStates(deltaTime);
             }
         }
 
@@ -1069,12 +1071,18 @@ namespace Barotrauma
 
                 foreach (RelatedItem relatedItem in requiredItems)
                 {
-                    //TODO: add to localization
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)),
-                        relatedItem.Type.ToString() + " required", font: GUIStyle.SmallFont)
+                        TextManager.Get($"{relatedItem.Type}.required").Fallback($"{relatedItem.Type} required"), font: GUIStyle.SmallFont)
                     {
                         Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
                     };
+
+                    var tooltip = TextManager.Get($"{relatedItem.Type}.required.tooltip").Fallback(LocalizedString.EmptyString);
+                    if (!tooltip.IsNullOrWhiteSpace())
+                    {
+                        textBlock.ToolTip = tooltip;
+                    }
+                    
                     textBlock.RectTransform.IsFixedSize = true;
                     componentEditor.AddCustomContent(textBlock, 1);
 
@@ -1543,10 +1551,19 @@ namespace Barotrauma
             debugInitialHudPositions.Clear();
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) { continue; }
-                if (!ignoreLocking && ic.LockGuiFramePosition) { continue; }
-                //if the frame covers nearly all of the screen, don't trying to prevent overlaps because it'd fail anyway
-                if (ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f) { continue; }
+                if (ic.GuiFrame == null || ic.GetLinkUIToComponent() != null) { continue; }
+                
+                bool nearlyCoversScreen = ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && 
+                                          ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f;
+                
+                // when we are not using overlap prevention, we still need to clamp the frame to the screen area to
+                // prevent frames becoming inaccessible outside the screen for example after a resolution change
+                if (ic.AllowUIOverlap || (!ignoreLocking && ic.LockGuiFramePosition) || nearlyCoversScreen)
+                {
+                    ic.GuiFrame.ClampToArea(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight));
+                    continue;
+                }
+
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = ic.GuiFrameOffset;
                 elementsToMove.Add(ic.GuiFrame);
                 debugInitialHudPositions.Add(ic.GuiFrame.Rect);
@@ -1744,7 +1761,7 @@ namespace Barotrauma
             if (texts.Any() && !recreateHudTexts) { return texts; }
             texts.Clear();
 
-            string nameText = Name;
+            string nameText = RichString.Rich(Prefab.Name).SanitizedValue;
             if (Prefab.Tags.Contains("identitycard") || Tags.Contains("despawncontainer"))
             {
                 string[] readTags = Tags.Split(',');
@@ -2074,6 +2091,17 @@ namespace Barotrauma
                         }
                     }
                     break;
+                case EventType.SwapItem:
+                    ushort newId = msg.ReadUInt16();
+                    uint prefabUintId = msg.ReadUInt32();
+                    ItemPrefab newPrefab = ItemPrefab.Prefabs.FirstOrDefault(p => p.UintIdentifier == prefabUintId);
+                    if (newPrefab is null)
+                    {
+                        DebugConsole.ThrowError($"Error while reading {EventType.SwapItem} message: could not find an item prefab with the hash {prefabUintId}.");
+                        break;
+                    }
+                    ReplaceFromNetwork(newPrefab, newId);
+                    break;
                 default:
                     throw new Exception($"Malformed incoming item event: unsupported event type {eventType}");
             }
@@ -2171,6 +2199,18 @@ namespace Barotrauma
                 }
             }
 
+            //if the item is outside the level, but not in a sub, it implies the item is inside a sub server-side but the client failed to properly move it
+            // -> let's correct that by finding the correct sub
+            if (Level.IsPositionAboveLevel(WorldPosition) && Submarine == null)
+            {
+                var newSub = Submarine.FindContainingInLocalCoordinates(ConvertUnits.ToDisplayUnits(body.SimPosition), inflate: 0.0f);
+                if (newSub != null)
+                {
+                    Submarine = newSub;
+                    FindHull();
+                }
+            }
+
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
@@ -2249,7 +2289,13 @@ namespace Barotrauma
             if (!components.Contains(ic)) { return; }
 
             var eventData = new ComponentStateEventData(ic, extraData);
-            if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false"); }
+            if (!ic.ValidateEventData(eventData)) {
+                string errorMsg =
+                    $"Client-side component event creation for the item \"{Prefab.Identifier}\" failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false. " +
+                    $"Data: {extraData?.GetType().ToString() ?? "null"}";
+                GameAnalyticsManager.AddErrorEventOnce($"Item.CreateClientEvent:ValidateEventData:{Prefab.Identifier}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                throw new Exception(errorMsg);
+            }
             GameMain.Client.CreateEntityEvent(this, eventData);
         }
 
@@ -2329,15 +2375,15 @@ namespace Barotrauma
                 ownerSheetIndex = (x, y);
             }
             
-            bool tagsChanged        = msg.ReadBoolean();
+            bool tagsChanged = msg.ReadBoolean();
             string tags = "";
             if (tagsChanged)
             {
-                HashSet<Identifier> addedTags = msg.ReadString().Split(',').ToIdentifiers().ToHashSet();
-                HashSet<Identifier> removedTags = msg.ReadString().Split(',').ToIdentifiers().ToHashSet();
+                HashSet<Identifier> addedTags = msg.ReadString().ToIdentifiers().ToHashSet();
+                HashSet<Identifier> removedTags = msg.ReadString().ToIdentifiers().ToHashSet();
                 if (itemPrefab != null)
                 {
-                    tags = string.Join(',',itemPrefab.Tags.Where(t => !removedTags.Contains(t)).Concat(addedTags));
+                    tags = string.Join(',', itemPrefab.Tags.Where(t => !removedTags.Contains(t)).Union(addedTags));
                 }
             }
             
@@ -2455,12 +2501,24 @@ namespace Barotrauma
 
             if (inventory != null)
             {
-                if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
+                if (inventorySlotIndex is >= 0 and < 255 &&
+                    !inventory.TryPutItem(item, inventorySlotIndex, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false, ignoreCondition: true) &&
+                    inventory.IsSlotEmpty(inventorySlotIndex))
                 {
-                    return item;
+                    //If the item won't go nicely, force it to the slot. If the server says the item is in the slot, it should go in the slot.
+                    //May happen e.g. when a character is configured to spawn with an item that won't normally go in its inventory slots.
+                    inventory.ForceToSlot(item, index: inventorySlotIndex);
                 }
-                inventory.TryPutItem(item, null, item.AllowedSlots, false);
+                else
+                {
+                    inventory.TryPutItem(item, user: null, allowedSlots: item.AllowedSlots, createNetworkEvent: false);
+                }
+                item.SetTransform(inventory.Owner.SimPosition, 0.0f);
+                item.Submarine = inventory.Owner.Submarine;
+                if (inventory.Owner is Character { Enabled: false } && item.body != null)
+                {
+                    item.body.Enabled = false;
+                }                
             }
 
             return item;

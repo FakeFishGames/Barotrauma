@@ -263,7 +263,7 @@ namespace FarseerPhysics.Collision
                 // we don't fail to create a pair that may touch later.
                 AABB fatAABB = _tree.GetFatAABB(_queryProxyId);
 
-                object body = _tree.GetBody(_queryProxyId);
+                Body body = _tree.GetBody(_queryProxyId);
 
                 // Query tree, create pairs and add them pair buffer.
                 _tree.Query(_queryCallback, ref fatAABB, ref body);

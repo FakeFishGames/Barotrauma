@@ -159,6 +159,34 @@ namespace Barotrauma
             }
         }
 
+        private GUIComponent holdOverlay;
+
+        private bool requireHold;
+        public bool RequireHold
+        {
+            get => requireHold;
+            set
+            {
+                requireHold = value;
+                if (value)
+                {
+                    holdOverlay ??= new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), Frame.RectTransform, Anchor.CenterLeft), style: null)
+                    {
+                        Color = GUIStyle.Yellow * 0.33f,
+                        CanBeFocused = false,
+                        IgnoreLayoutGroups = true,
+                        Visible = true
+                    };
+                }
+                else if (holdOverlay != null)
+                {
+                    holdOverlay.Visible = false;
+                }
+            }
+        }
+        public float HoldDurationSeconds { get; set; } = 5f;
+        private float holdTimer;
+
         public bool Pulse { get; set; }
         private float pulseTimer;
         private float pulseExpand;
@@ -220,7 +248,7 @@ namespace Barotrauma
                 Rectangle expandRect = Rect;
                 float expand = (pulseExpand * 20.0f) * GUI.Scale;
                 expandRect.Inflate(expand, expand);
-                
+
                 GUIStyle.EndRoundButtonPulse.Draw(spriteBatch, expandRect, ToolBox.GradientLerp(pulseExpand, Color.White, Color.White, Color.Transparent));
             }
         }
@@ -240,6 +268,11 @@ namespace Barotrauma
                 }
                 if (PlayerInput.PrimaryMouseButtonHeld())
                 {
+                    if (RequireHold)
+                    {
+                        holdTimer += deltaTime;
+                    }
+
                     if (OnPressed != null)
                     {
                         if (OnPressed())
@@ -254,25 +287,34 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.PrimaryMouseButtonClicked())
                 {
-                    if (PlaySoundOnSelect)
+                    if (!RequireHold || holdTimer > HoldDurationSeconds)
                     {
-                        SoundPlayer.PlayUISound(ClickSound);
-                    }
-                    if (OnClicked != null)
-                    {
-                        if (OnClicked(this, UserData))
+                        if (PlaySoundOnSelect)
                         {
-                            State = ComponentState.Selected;
+                            SoundPlayer.PlayUISound(ClickSound);
+                        }
+
+                        if (OnClicked != null)
+                        {
+                            if (OnClicked(this, UserData))
+                            {
+                                State = ComponentState.Selected;
+                            }
+                        }
+                        else
+                        {
+                            Selected = !Selected;
                         }
                     }
-                    else
-                    {
-                        Selected = !Selected;
-                    }  
+                }
+                else
+                {
+                    holdTimer = 0.0f;
                 }
             }
             else
             {
+                holdTimer = 0.0f;
                 if (!ExternalHighlight)
                 {
                     State = Selected ? ComponentState.Selected : ComponentState.None;
@@ -281,6 +323,20 @@ namespace Barotrauma
                 {
                     State = ComponentState.Hover;
                 }
+            }
+
+            if (RequireHold)
+            {
+                float width = MathHelper.Clamp(holdTimer / HoldDurationSeconds, 0f, 1f);
+                if (!MathUtils.NearlyEqual(width, holdOverlay.RectTransform.RelativeSize.X))
+                {
+                    holdOverlay.RectTransform.RelativeSize = new Vector2(width, 1f);
+                }
+
+                holdOverlay.Color =
+                    holdTimer >= HoldDurationSeconds
+                        ? Color.Green * 0.33f
+                        : Color.Red * 0.33f;
             }
 
             foreach (GUIComponent child in Children)

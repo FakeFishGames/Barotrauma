@@ -62,6 +62,62 @@ public class MathUtilsTests
         {
             return MathUtils.NearlyEqual(MathUtils.GetShortestAngle(MathHelper.ToRadians(deg1), MathHelper.ToRadians(deg2)), MathHelper.ToRadians(angle));
         }
+    }
 
+    [Fact]
+    public void TestUpscaleVector2Array()
+    {
+        Vector2[,] inputArray = new Vector2[,]
+        {
+            { new Vector2(0, 0), new Vector2(10, 10) },
+            { new Vector2(20, 20), new Vector2(30, 30) }
+        };
+
+        int newWidth = 4;
+        int newHeight = 4;
+
+        Vector2[,] result = MathUtils.ResizeVector2Array(inputArray, newWidth, newHeight);
+
+        MathUtils.NearlyEqual(new Vector2(0, 0), result[0, 0]).Should().BeTrue();
+        MathUtils.NearlyEqual(new Vector2(30, 30), result[3, 3]).Should().BeTrue();
+        MathUtils.NearlyEqual(new Vector2(20, 20), result[2, 2]).Should().BeTrue();
+        MathUtils.NearlyEqual(new Vector2(26.666666f, 26.666666f), result[3, 2]).Should().BeTrue();
+    }
+
+    [Fact]
+    public void TestDownScaleVector2Array()
+    {
+        Vector2[,] inputArray = new Vector2[,]
+        {
+            { new Vector2(0, 0), new Vector2(10, 10), new Vector2(20, 20) },
+            { new Vector2(30, 30), new Vector2(40, 40), new Vector2(50, 50) },
+            { new Vector2(60, 60), new Vector2(70, 70), new Vector2(80, 80) }
+        };
+
+        int newWidth = 2;
+        int newHeight = 2;
+
+        Vector2[,] result = MathUtils.ResizeVector2Array(inputArray, newWidth, newHeight);
+
+        MathUtils.NearlyEqual(new Vector2(0, 0), result[0, 0]).Should().BeTrue();
+        MathUtils.NearlyEqual(new Vector2(80, 80), result[1, 1]).Should().BeTrue();
+    }
+
+    [Fact]
+    public void TestNoChangesToVector2Array()
+    {
+        Vector2[,] inputArray = new Vector2[,]
+        {
+            { new Vector2(0, 0), new Vector2(10, 10) },
+            { new Vector2(20, 20), new Vector2(30, 30) }
+        };
+
+        int newWidth = 2;
+        int newHeight = 2;
+
+        Vector2[,] result = MathUtils.ResizeVector2Array(inputArray, newWidth, newHeight);
+
+        MathUtils.NearlyEqual(new Vector2(0, 0), result[0, 0]).Should().BeTrue();
+        MathUtils.NearlyEqual(new Vector2(30, 30), result[1, 1]).Should().BeTrue();
     }
 }

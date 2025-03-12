@@ -274,7 +274,7 @@ namespace Barotrauma
         public bool IsIgnoredAtOutpost()
         {
             if (!IgnoreAtOutpost) { return false; }
-            if (!Level.IsLoadedFriendlyOutpost) { return false; }
+            if (!Level.IsLoadedFriendlyOutpost && GameMain.GameSession.GameMode is not TestGameMode) { return false; }
             if (!character.IsOnPlayerTeam || character.IsFriendlyNPCTurnedHostile) { return false; }
             if (character.Submarine?.Info == null) { return false; }
             return character.Submarine.Info.IsOutpost && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC;
@@ -513,18 +513,19 @@ namespace Barotrauma
         /// </summary>
         private bool Check()
         {
+            if (isCompleted) { return true; }
             if (AbortCondition != null && AbortCondition(this))
             {
                 Abandon = true;
                 return false;
             }
-            return CheckObjectiveSpecific();
+            return CheckObjectiveState();
         }
 
         /// <summary>
         /// Should return whether the objective is completed or not.
         /// </summary>
-        protected abstract bool CheckObjectiveSpecific();
+        protected abstract bool CheckObjectiveState();
 
         private bool CheckState()
         {
@@ -573,8 +574,6 @@ namespace Barotrauma
                 }
             }
         }
-
-        public virtual void SpeakAfterOrderReceived() { }
 
         protected static bool CanPutInInventory(Character character, Item item, bool allowWearing)
         {

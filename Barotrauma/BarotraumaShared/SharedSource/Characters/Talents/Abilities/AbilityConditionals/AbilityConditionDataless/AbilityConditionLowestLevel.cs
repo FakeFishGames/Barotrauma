@@ -9,7 +9,7 @@ namespace Barotrauma.Abilities
         protected override bool MatchesCharacter(Character character)
         {
             int ownLevel = character.Info.GetCurrentLevel();
-            foreach (Character otherCharacter in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            foreach (Character otherCharacter in Character.GetFriendlyCrew(character))
             {
                 if (otherCharacter == character) { continue; }
                 if (otherCharacter.Info.GetCurrentLevel() < ownLevel) { return false; }

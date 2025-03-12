@@ -1,4 +1,4 @@
-/* Original source Farseer Physics Engine:
+Ôªø/* Original source Farseer Physics Engine:
  * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
  * Microsoft Permissive License (Ms-PL) v1.1
  */
@@ -14,7 +14,7 @@ using FarseerPhysics.Dynamics;
 namespace FarseerPhysics.Common.PhysicsLogic
 {
     // Original Code by Steven Lu - see http://www.box2d.org/forum/viewtopic.php?f=3&t=1688
-    // Ported to Farseer 3.0 by Nicol·s Hormaz·bal
+    // Ported to Farseer 3.0 by Nicol√°s Hormaz√°bal
 
     internal struct ShapeData
     {
@@ -185,7 +185,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
                 if ((shapes[i].Body.BodyType == BodyType.Dynamic) && ps != null)
                 {
                     Vector2 toCentroid = shapes[i].Body.GetWorldPoint(ps.MassData.Centroid) - pos;
-                    float angleToCentroid = (float)Math.Atan2(toCentroid.Y, toCentroid.X);
+                    float angleToCentroid = MathF.Atan2(toCentroid.Y, toCentroid.X);
                     float min = float.MaxValue;
                     float max = float.MinValue;
                     float minAbsolute = 0.0f;
@@ -194,7 +194,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
                     for (int j = 0; j < ps.Vertices.Count; ++j)
                     {
                         Vector2 toVertex = (shapes[i].Body.GetWorldPoint(ps.Vertices[j]) - pos);
-                        float newAngle = (float)Math.Atan2(toVertex.Y, toVertex.X);
+                        float newAngle = MathF.Atan2(toVertex.Y, toVertex.X);
                         float diff = (newAngle - angleToCentroid);
 
                         diff = (diff - MathHelper.Pi) % (2 * MathHelper.Pi);
@@ -253,7 +253,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
                 midpt = midpt / 2;
 
                 Vector2 p1 = pos;
-                Vector2 p2 = radius * new Vector2((float)Math.Cos(midpt), (float)Math.Sin(midpt)) + pos;
+                Vector2 p2 = radius * new Vector2(MathF.Cos(midpt), MathF.Sin(midpt)) + pos;
 
                 // RaycastOne
                 bool hitClosest = false;
@@ -343,7 +343,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
                      j += offset)
                 {
                     Vector2 p1 = pos;
-                    Vector2 p2 = pos + radius * new Vector2((float)Math.Cos(j), (float)Math.Sin(j));
+                    Vector2 p2 = pos + radius * new Vector2(MathF.Cos(j), MathF.Sin(j));
                     Vector2 hitpoint = Vector2.Zero;
                     float minlambda = float.MaxValue;
 
@@ -371,7 +371,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
                         float impulse = (arclen / (MinRays + insertedRays)) * maxForce * 180.0f / MathHelper.Pi * (1.0f - Math.Min(1.0f, minlambda));
 
                         // We Apply the impulse!!!
-                        Vector2 vectImp = Vector2.Dot(impulse * new Vector2((float)Math.Cos(j), (float)Math.Sin(j)), -ro.Normal) * new Vector2((float)Math.Cos(j), (float)Math.Sin(j));
+                        Vector2 vectImp = Vector2.Dot(impulse * new Vector2(MathF.Cos(j), MathF.Sin(j)), -ro.Normal) * new Vector2(MathF.Cos(j), MathF.Sin(j));
                         _data[i].Body.ApplyLinearImpulse(ref vectImp, ref hitpoint);
 
                         // We gather the fixtures for returning them

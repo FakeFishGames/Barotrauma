@@ -7,6 +7,7 @@ using System.Linq;
 using Barotrauma.Eos;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -106,6 +107,11 @@ namespace Barotrauma
         
         public void SelectTab(Tab tab)
         {
+            if (tab == Tab.AudioAndVC && CurrentDeviceMismatchesDisplayed())
+            {
+                CreateAudioAndVCTab(refresh: true);
+            }
+            
             CurrentTab = tab;
             SwitchContent(tabContents[tab].Content);
             tabber.Children.ForEach(c =>
@@ -133,6 +139,11 @@ namespace Barotrauma
 
         private GUIFrame CreateNewContentFrame(Tab tab)
         {
+            if (tabContents.TryGetValue(tab, out (GUIButton Button, GUIFrame Content) tabContent))
+            {
+                return tabContent.Content;
+            }
+
             var content = new GUIFrame(new RectTransform(Vector2.One * 0.95f, contentFrame.RectTransform, Anchor.Center, Pivot.Center), style: null);
             AddButtonToTabber(tab, content);
             return content;
@@ -179,7 +190,7 @@ namespace Barotrauma
         
         private static GUIDropDown Dropdown<T>(GUILayoutGroup parent, Func<T, LocalizedString> textFunc, Func<T, LocalizedString>? tooltipFunc, IReadOnlyList<T> values, T currentValue, Action<T> setter)
         {
-            var dropdown = new GUIDropDown(NewItemRectT(parent));
+            var dropdown = new GUIDropDown(NewItemRectT(parent), elementCount: values.Count);
             values.ForEach(v => dropdown.AddItem(text: textFunc(v), userData: v, toolTip: tooltipFunc?.Invoke(v) ?? null));
             int childIndex = values.IndexOf(currentValue);
             dropdown.Select(childIndex);
@@ -268,6 +279,11 @@ namespace Barotrauma
             DropdownEnum(left, (m) => TextManager.Get($"{m}"), null, unsavedConfig.Graphics.DisplayMode, v => unsavedConfig.Graphics.DisplayMode = v);
             Spacer(left);
 
+            var displayLabel = Label(left, TextManager.Get("TargetDisplay"), GUIStyle.SubHeadingFont);
+            displayLabel.ToolTip = TextManager.Get("TargetDisplay.Tooltip");
+            Dropdown(left, m => TextManager.GetWithVariables(m == 0 ? "PrimaryDisplayFormat" : "SecondaryDisplayFormat", ("[num]", m.ToString()), ("[name]", Display.GetDisplayName(m))), null, Enumerable.Range(0, Display.GetNumberOfDisplays()).ToArray(), unsavedConfig.Graphics.Display, v => unsavedConfig.Graphics.Display = v);
+            Spacer(left);
+
             Tickbox(left, TextManager.Get("EnableVSync"), TextManager.Get("EnableVSyncTooltip"), unsavedConfig.Graphics.VSync, v => unsavedConfig.Graphics.VSync = v);
             Tickbox(left, TextManager.Get("EnableTextureCompression"), TextManager.Get("EnableTextureCompressionTooltip"), unsavedConfig.Graphics.CompressTextures, v => unsavedConfig.Graphics.CompressTextures = v);
             Spacer(right);  
@@ -281,8 +297,8 @@ namespace Barotrauma
             Spacer(right);
 
             Label(right, TextManager.Get("VisibleLightLimit"), GUIStyle.SubHeadingFont);
-            Slider(right, (10, 210), 21, v => v > 200 ? TextManager.Get("unlimited").Value : Round(v).ToString(), unsavedConfig.Graphics.VisibleLightLimit, 
-                v =>  unsavedConfig.Graphics.VisibleLightLimit = v > 200 ? int.MaxValue : Round(v), TextManager.Get("VisibleLightLimitTooltip"));
+            Slider(right, (10, 510), 21, v => v > 500 ? TextManager.Get("unlimited").Value : Round(v).ToString(), unsavedConfig.Graphics.VisibleLightLimit, 
+                v =>  unsavedConfig.Graphics.VisibleLightLimit = v > 500 ? int.MaxValue : Round(v), TextManager.Get("VisibleLightLimitTooltip"));
             Spacer(right);
 
             Tickbox(right, TextManager.Get("RadialDistortion"), TextManager.Get("RadialDistortionTooltip"), unsavedConfig.Graphics.RadialDistortion, v => unsavedConfig.Graphics.RadialDistortion = v);
@@ -346,17 +362,45 @@ namespace Barotrauma
                 current = list[0];
             }
         }
-
-        private void CreateAudioAndVCTab()
+        
+        private static bool IsCurrentDevice(string savedDeviceName, int deviceType)
+        {
+            try
+            {
+                string currentDevice = Alc.GetString(IntPtr.Zero, deviceType);
+                if (string.IsNullOrEmpty(savedDeviceName) || string.IsNullOrEmpty(currentDevice))
+                {
+                    return false;
+                }
+                return currentDevice.Equals(savedDeviceName, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking output device name: {ex.Message}");
+                return false;
+            }
+        }
+        
+        private static bool CurrentDeviceMismatchesDisplayed()
+        {
+            return !IsCurrentDevice(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, Alc.CaptureDefaultDeviceSpecifier) ||
+                   !IsCurrentDevice(GameSettings.CurrentConfig.Audio.AudioOutputDevice, Alc.DefaultDeviceSpecifier);
+        }
+        
+        public void CreateAudioAndVCTab(bool refresh = false)
         {
             if (GameMain.Client == null
-                && VoipCapture.Instance == null)
+                && (refresh || VoipCapture.Instance == null))
             {
                 string currDevice = unsavedConfig.Audio.VoiceCaptureDevice;
                 GetAudioDevices(Alc.CaptureDeviceSpecifier, Alc.CaptureDefaultDeviceSpecifier, out var deviceList, ref currDevice);
 
                 if (deviceList.Any())
                 {
+                    if (VoipCapture.Instance is VoipCapture currentCaptureInstance)
+                    {
+                        currentCaptureInstance.Dispose();
+                    }
                     VoipCapture.Create(unsavedConfig.Audio.VoiceCaptureDevice);
                 }
                 if (VoipCapture.Instance == null)
@@ -366,7 +410,10 @@ namespace Barotrauma
             }
             
             GUIFrame content = CreateNewContentFrame(Tab.AudioAndVC);
-            
+            if (refresh)
+            {
+                content.ClearChildren();
+            }
             var (audio, voiceChat) = CreateSidebars(content, split: true);
 
             static void audioDeviceElement(
@@ -400,23 +447,49 @@ namespace Barotrauma
             
             string currentOutputDevice = unsavedConfig.Audio.AudioOutputDevice;
             audioDeviceElement(audio, v => unsavedConfig.Audio.AudioOutputDevice = v, Alc.OutputDevicesSpecifier, Alc.DefaultDeviceSpecifier, ref currentOutputDevice);
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), audio.RectTransform), text: TextManager.Get("RefreshAudioDevices"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("RefreshAudioDevicesToolTip"),
+                OnClicked = (btn, obj) =>
+                {
+                    CreateAudioAndVCTab(refresh: true);
+                    return true;
+                }
+            };
             Spacer(audio);
 
             Label(audio, TextManager.Get("SoundVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.SoundVolume, v => unsavedConfig.Audio.SoundVolume = v);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.SoundVolume, v =>
+            {
+                unsavedConfig.Audio.SoundVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryDefault, v);
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryWaterAmbience, v);
+            });
 
             Label(audio, TextManager.Get("MusicVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.MusicVolume, v => unsavedConfig.Audio.MusicVolume = v);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.MusicVolume, v =>
+            {
+                unsavedConfig.Audio.MusicVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryMusic, v);
+            });
 
             Label(audio, TextManager.Get("UiSoundVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.UiVolume, v => unsavedConfig.Audio.UiVolume = v);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.UiVolume, v =>
+            {
+                unsavedConfig.Audio.UiVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryUi, v);
+            });
 
             Tickbox(audio, TextManager.Get("MuteOnFocusLost"), TextManager.Get("MuteOnFocusLostTooltip"), unsavedConfig.Audio.MuteOnFocusLost, v => unsavedConfig.Audio.MuteOnFocusLost = v);
             Tickbox(audio, TextManager.Get("DynamicRangeCompression"), TextManager.Get("DynamicRangeCompressionTooltip"), unsavedConfig.Audio.DynamicRangeCompressionEnabled, v => unsavedConfig.Audio.DynamicRangeCompressionEnabled = v);
             Spacer(audio);
 
             Label(audio, TextManager.Get("VoiceChatVolume"), GUIStyle.SubHeadingFont);
-            Slider(audio, (0, 2), 201, Percentage, unsavedConfig.Audio.VoiceChatVolume, v => unsavedConfig.Audio.VoiceChatVolume = v);
+            Slider(audio, (0, 2), 201, Percentage, unsavedConfig.Audio.VoiceChatVolume, v =>
+            {
+                unsavedConfig.Audio.VoiceChatVolume = v;
+                GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryVoip, v);
+            });
 
             Tickbox(audio, TextManager.Get("DirectionalVoiceChat"), TextManager.Get("DirectionalVoiceChatTooltip"), unsavedConfig.Audio.UseDirectionalVoiceChat, v => unsavedConfig.Audio.UseDirectionalVoiceChat = v);
             Tickbox(audio, TextManager.Get("VoipAttenuation"), TextManager.Get("VoipAttenuationTooltip"), unsavedConfig.Audio.VoipAttenuationEnabled, v => unsavedConfig.Audio.VoipAttenuationEnabled = v);
@@ -425,6 +498,15 @@ namespace Barotrauma
 
             string currentInputDevice = unsavedConfig.Audio.VoiceCaptureDevice;
             audioDeviceElement(voiceChat, v => unsavedConfig.Audio.VoiceCaptureDevice = v, Alc.CaptureDeviceSpecifier, Alc.CaptureDefaultDeviceSpecifier, ref currentInputDevice);
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), voiceChat.RectTransform), text: TextManager.Get("RefreshAudioDevices"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("RefreshAudioDevicesToolTip"),
+                OnClicked = (btn, obj) =>
+                {
+                    CreateAudioAndVCTab(refresh: true);
+                    return true;
+                }
+            };
             Spacer(voiceChat);
             
             Label(voiceChat, TextManager.Get("VCInputMode"), GUIStyle.SubHeadingFont);
@@ -729,9 +811,14 @@ namespace Barotrauma
             DropdownEnum(leftColumn, v => TextManager.Get($"InteractionLabels.{v}"), null, unsavedConfig.InteractionLabelDisplayMode, v => unsavedConfig.InteractionLabelDisplayMode = v);
 
             Label(rightColumn, TextManager.Get("HUDScale"), GUIStyle.SubHeadingFont);
-            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
+            // Restricts the max scale to 110% on 16:9, and to 100% on 4:3.
+            // Higher scales are allowed for wide aspect ratios, up to 125%.
+            //float scalar = MathUtils.InverseLerp(0f, 1.0f, 0.4f - GUI.AspectRatioDifference);
+            //float maxScale = MathHelper.Lerp(1.0f, 1.25f, scalar);
+            const float maxScale = 1.25f;
+            Slider(rightColumn, (0.75f, maxScale), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
             Label(rightColumn, TextManager.Get("InventoryScale"), GUIStyle.SubHeadingFont);
-            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
+            Slider(rightColumn, (0.75f, maxScale), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
             Label(rightColumn, TextManager.Get("TextScale"), GUIStyle.SubHeadingFont);
             Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.TextScale, v => unsavedConfig.Graphics.TextScale = v);
             Spacer(rightColumn);
@@ -832,6 +919,8 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
+                    // reset any modified audio settings to current config
+                    GameMain.SoundManager?.ApplySettings();
                     Close();
                     return false;
                 }

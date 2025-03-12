@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Transactions;
 
 namespace Barotrauma
 {
@@ -14,6 +15,8 @@ namespace Barotrauma
         private RenderTarget2D renderTarget;
         private RenderTarget2D renderTargetWater;
         private RenderTarget2D renderTargetFinal;
+
+        private RenderTarget2D renderTargetDamageable;
 
         public readonly Effect DamageEffect;
         private readonly Texture2D damageStencil;
@@ -65,6 +68,7 @@ namespace Barotrauma
             renderTargetBackground = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
+            renderTargetDamageable = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public override void AddToGUIUpdateList()
@@ -133,19 +137,7 @@ namespace Barotrauma
 
             if (Character.Controlled == null && !GUI.DisableHUD)
             {
-                for (int i = 0; i < Submarine.MainSubs.Length; i++)
-                {
-                    if (Submarine.MainSubs[i] == null) continue;
-                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
-
-                    Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
-
-                    Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
-                    GUI.DrawIndicator(
-                        spriteBatch, position, cam, 
-                        Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
-                        GUIStyle.SubmarineLocationIcon.Value.Sprite, indicatorColor); 
-                }
+                DrawPositionIndicators(spriteBatch);
             }
 
             if (!GUI.DisableHUD)
@@ -164,7 +156,118 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:HUD", sw.ElapsedTicks);
             sw.Restart();
         }
+        
+        private void DrawPositionIndicators(SpriteBatch spriteBatch)
+        {
+            Sprite subLocationSprite = GUIStyle.SubLocationIcon.Value?.Sprite;
+            Sprite shuttleSprite = GUIStyle.ShuttleIcon.Value?.Sprite;
+            Sprite wreckSprite = GUIStyle.WreckIcon.Value?.Sprite;
+            Sprite caveSprite = GUIStyle.CaveIcon.Value?.Sprite;
+            Sprite outpostSprite = GUIStyle.OutpostIcon.Value?.Sprite;
+            Sprite ruinSprite = GUIStyle.RuinIcon.Value?.Sprite;
+            Sprite enemySprite = GUIStyle.EnemyIcon.Value?.Sprite;
+            Sprite corpseSprite = GUIStyle.CorpseIcon.Value?.Sprite;
+            Sprite beaconSprite = GUIStyle.BeaconIcon.Value?.Sprite;
+            
+            for (int i = 0; i < Submarine.MainSubs.Length; i++)
+            {
+                if (Submarine.MainSubs[i] == null) { continue; }
+                if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
+                
+                Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
+                
+                Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
+                Sprite displaySprite = Submarine.MainSubs[i].Info.HasTag(SubmarineTag.Shuttle) ? shuttleSprite : subLocationSprite;
+                if (displaySprite != null)
+                {
+                    GUI.DrawIndicator(
+                        spriteBatch, position, cam,
+                        Math.Max(Submarine.MainSubs[i].Borders.Width, Submarine.MainSubs[i].Borders.Height),
+                        displaySprite, indicatorColor);
+                }
+            }
+            
+            if (!GameMain.DevMode) { return;}
+            
+            if (Level.Loaded != null)
+            {
+                foreach (Level.Cave cave in Level.Loaded.Caves)
+                {
+                    Vector2 position = cave.StartPos.ToVector2();
+                    
+                    Color indicatorColor = Color.Yellow * 0.5f;
+                    if (caveSprite != null)
+                    {
+                        GUI.DrawIndicator(
+                            spriteBatch, position, cam, hideDist: 3000f,
+                            caveSprite, indicatorColor);
+                    }
+                }
+            }
+            
+            foreach (Submarine submarine in Submarine.Loaded)
+            {
+                if (Submarine.MainSubs.Contains(submarine)) { continue; }
+                
+                Vector2 position = submarine.WorldPosition;
 
+                Color teamColorIndicator = submarine.TeamID switch
+                {
+                    CharacterTeamType.Team1 => Color.LightBlue * 0.5f,
+                    CharacterTeamType.Team2 => GUIStyle.Red * 0.5f,
+                    CharacterTeamType.FriendlyNPC => GUIStyle.Yellow * 0.5f,
+                    _ => Color.Green * 0.5f
+                };
+                
+                Color indicatorColor = submarine.Info.Type switch
+                {
+                    SubmarineType.Outpost => Color.LightGreen,
+                    SubmarineType.Wreck => Color.SaddleBrown,
+                    SubmarineType.BeaconStation => Color.Azure,
+                    SubmarineType.Ruin => Color.Purple,
+                    _ => teamColorIndicator
+                };
+                
+                Sprite displaySprite = submarine.Info.Type switch
+                {
+                    SubmarineType.Outpost => outpostSprite,
+                    SubmarineType.Wreck => wreckSprite,
+                    SubmarineType.BeaconStation => beaconSprite,
+                    SubmarineType.Ruin => ruinSprite,
+                    _ => subLocationSprite
+                };
+                
+                // use a little dimmer color for transports
+                if (submarine.Info.SubmarineClass == SubmarineClass.Transport) { indicatorColor *= 0.75f; }
+                
+                if (displaySprite != null)
+                {
+                    GUI.DrawIndicator(
+                        spriteBatch, position, cam, hideDist: Math.Max(submarine.Borders.Width, submarine.Borders.Height),
+                        displaySprite, indicatorColor);
+                }
+            }
+            
+            // markers for all enemies and corpses
+            foreach (Character character in Character.CharacterList)
+            {
+                Vector2 position = character.WorldPosition;
+                Color indicatorColor = Color.DarkRed * 0.5f;
+                if (character.IsDead) { indicatorColor = Color.DarkGray * 0.5f; }
+                
+                if (character.TeamID != CharacterTeamType.None) { continue;}
+                
+                Sprite displaySprite = character.IsDead ? corpseSprite : enemySprite;
+                
+                if (displaySprite != null)
+                {
+                    GUI.DrawIndicator(
+                        spriteBatch, position, cam, hideDist: 3000f,
+                        displaySprite, indicatorColor);
+                }
+            }
+        }
+        
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch, double deltaTime)
         {
             foreach (Submarine sub in Submarine.Loaded)
@@ -203,7 +306,7 @@ namespace Barotrauma
             //Draw background structures and wall background sprites 
             //(= the background texture that's revealed when a wall is destroyed) into the background render target
             //These will be visible through the LOS effect.
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null) && !IsFromOutpostDrawnBehindSubs(e));
             Submarine.DrawPaintedColors(spriteBatch, false);
             spriteBatch.End();
@@ -212,8 +315,25 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackStructures", sw.ElapsedTicks);
             sw.Restart();
 
+            graphics.SetRenderTarget(renderTargetDamageable);
+            graphics.Clear(Color.Transparent);
+
+            DamageEffect.CurrentTechnique = DamageEffect.Techniques["StencilShader"];
+            DamageEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.LinearWrap, effect: DamageEffect, transformMatrix: cam.Transform);
+            Submarine.DrawDamageable(spriteBatch, DamageEffect, false);
+            DamageEffect.Parameters["aCutoff"].SetValue(0.0f);
+            DamageEffect.Parameters["cCutoff"].SetValue(0.0f);
+            Submarine.DamageEffectCutoff = 0.0f;
+            DamageEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.End();
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontDamageable", sw.ElapsedTicks);
+            sw.Restart();
+
             graphics.SetRenderTarget(null);
-            GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam, renderTarget);
+            GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam, renderTargetDamageable);
 
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:Lighting", sw.ElapsedTicks);
@@ -231,24 +351,24 @@ namespace Barotrauma
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
             }
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null) && IsFromOutpostDrawnBehindSubs(e));
             spriteBatch.End();
 
             //draw alpha blended particles that are in water and behind subs
 #if LINUX || OSX
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
 #else
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
 #endif
 			GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
 			spriteBatch.End();
             
             //draw additive particles that are in water and behind subs
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
 
@@ -267,8 +387,8 @@ namespace Barotrauma
             GraphicsQuad.Render();
 
             //Draw the rest of the structures, characters and front structures
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, e => !(e is Structure) || e.SpriteDepth < 0.9f);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
+            Submarine.DrawBack(spriteBatch, false, e => e is not Structure || e.SpriteDepth < 0.9f);
             DrawCharacters(deformed: false, firstPass: true);
             spriteBatch.End();
 
@@ -276,7 +396,7 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackCharactersItems", sw.ElapsedTicks);
             sw.Restart();
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             DrawCharacters(deformed: true, firstPass: true);
             DrawCharacters(deformed: true, firstPass: false);
             DrawCharacters(deformed: false, firstPass: false);
@@ -321,19 +441,19 @@ namespace Barotrauma
             GraphicsQuad.Render();
 
             //draw alpha blended particles that are inside a sub
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.DepthRead, transformMatrix: cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.AlphaBlend);
 			spriteBatch.End();
 
 			graphics.SetRenderTarget(renderTarget);
 
 			//draw alpha blended particles that are not in water
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.DepthRead, transformMatrix: cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.AlphaBlend);
 			spriteBatch.End();
 
 			//draw additive particles that are not in water
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
 			spriteBatch.End();
             
@@ -350,20 +470,10 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontParticles", sw.ElapsedTicks);
             sw.Restart();
 
-            DamageEffect.CurrentTechnique = DamageEffect.Techniques["StencilShader"];
-            spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.NonPremultiplied, SamplerState.LinearWrap,
-                null, null,
-                DamageEffect,
-                cam.Transform);
-            Submarine.DrawDamageable(spriteBatch, DamageEffect, false);
-            spriteBatch.End();
+            GraphicsQuad.UseBasicEffect(renderTargetDamageable);
+            GraphicsQuad.Render();
 
-            sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontDamageable", sw.ElapsedTicks);
-            sw.Restart();
-
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             Submarine.DrawFront(spriteBatch, false, null);
             spriteBatch.End();
 
@@ -372,7 +482,7 @@ namespace Barotrauma
             sw.Restart();
 
             //draw additive particles that are inside a sub
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, depthStencilState: DepthStencilState.Default, transformMatrix: cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
             foreach (var discharger in Items.Components.ElectricalDischarger.List)
             {
@@ -388,7 +498,7 @@ namespace Barotrauma
                 GraphicsQuad.Render();
             }
 
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.None, null, null, cam.Transform);
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             foreach (Character c in Character.CharacterList)
             {
                 c.DrawFront(spriteBatch, cam);

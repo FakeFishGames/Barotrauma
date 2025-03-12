@@ -54,7 +54,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific() => IsCompleted;
+        protected override bool CheckObjectiveState() => IsCompleted;
 
         protected override float GetPriority()
         {

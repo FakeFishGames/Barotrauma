@@ -22,7 +22,7 @@ namespace Barotrauma
         private static Dictionary<ItemPrefab, ImmutableHashSet<Identifier>> AllValidContainableItemIdentifiers { get; } = new Dictionary<ItemPrefab, ImmutableHashSet<Identifier>>();
 
         private int itemIndex;
-        private AIObjectiveDecontainItem decontainObjective;
+        private AIObjectiveMoveItem moveItemObjective;
         private readonly HashSet<Item> ignoredItems = new HashSet<Item>();
         private Item targetItem;
         private readonly string abandonGetItemDialogueIdentifier = "dialogcannotfindloadable";
@@ -196,17 +196,17 @@ namespace Barotrauma
                 float devotion = (CumulatedDevotion + (hasContainable ? 100 - MaxDevotion : 0)) / 100;
                 float max = AIObjectiveManager.LowestOrderPriority - (hasContainable ? 1 : 2);
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (distanceFactor * PriorityModifier), 0, 1));
-                if (decontainObjective != null && targetItem.Container != Container)
+                if (moveItemObjective != null && targetItem.Container != Container)
                 {
                     if (!IsValidContainable(targetItem))
                     {
                         // Target is not valid anymore, abandon the objective
-                        decontainObjective.Abandon = true;
+                        moveItemObjective.Abandon = true;
                     }
                     else if (!ItemContainer.Inventory.CanBePut(targetItem) && ItemContainer.Inventory.AllItems.None(i => AIObjectiveLoadItems.ItemMatchesTargetCondition(i, TargetItemCondition)))
                     {
                         // The container is full and there's no item that should be removed, abandon the objective
-                        decontainObjective.Abandon = true;
+                        moveItemObjective.Abandon = true;
                     }
                 }
                 if (ItemContainer.Inventory.IsFull())
@@ -257,26 +257,27 @@ namespace Barotrauma
             }
             else
             {
-                if(decontainObjective == null && !IsValidContainable(targetItem))
+                if(moveItemObjective == null && !IsValidContainable(targetItem))
                 {
                     IgnoreTargetItem();
                     Reset();
                     return;
                 }
-                TryAddSubObjective(ref decontainObjective,
-                    constructor: () => new AIObjectiveDecontainItem(character, targetItem, objectiveManager, targetContainer: ItemContainer, priorityModifier: PriorityModifier)
+                TryAddSubObjective(ref moveItemObjective,
+                    constructor: () => new AIObjectiveMoveItem(character, targetItem, objectiveManager, targetContainer: ItemContainer, priorityModifier: PriorityModifier)
                     {
                         AbandonGetItemDialogueCondition = () => IsValidContainable(targetItem),
                         AbandonGetItemDialogueIdentifier = abandonGetItemDialogueIdentifier,
                         Equip = true,
                         RemoveExistingWhenNecessary = true,
                         RemoveExistingPredicate = (i) => !ValidContainableItemIdentifiers.Contains(i.Prefab.Identifier) || AIObjectiveLoadItems.ItemMatchesTargetCondition(i, TargetItemCondition),
-                        RemoveExistingMax = 1
+                        RemoveExistingMax = 1,
+                        AllowToFindDivingGear = objectiveManager.HasOrder<AIObjectiveLoadItems>()
                     },
                     onCompleted: () =>
                     {
                         IsCompleted = true;
-                        RemoveSubObjective(ref decontainObjective);
+                        RemoveSubObjective(ref moveItemObjective);
                     },
                     onAbandon: () =>
                     {
@@ -318,13 +319,13 @@ namespace Barotrauma
             return true;
         }
 
-        protected override bool CheckObjectiveSpecific() => IsCompleted;
+        protected override bool CheckObjectiveState() => IsCompleted;
 
         public override void Reset()
         {
             base.Reset();
             // Don't reset the target item when resetting the objective because it affects priority calculations
-            decontainObjective = null;
+            moveItemObjective = null;
             itemIndex = 0;
         }
 

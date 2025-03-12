@@ -12,17 +12,22 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,  //update state ingame
 
         SERVER_SETTINGS, //change server settings
-        
+        SERVER_SETTINGS_PERKS, //change disembark perks (has different permissions from the rest of server settings)
+
         CAMPAIGN_SETUP_INFO,
 
         FILE_REQUEST,   //request a (submarine) file from the server
 
         VOICE,
-        
+
         PING_RESPONSE,
+
+        RESPONSE_CANCEL_STARTGAME, //tell the server you do not wish to start with the given warnings active
 
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
+
+        ENDROUND_SELF, //the client wants to end the round for themselves only and return to the lobby
 
         EVENTMANAGER_RESPONSE,
 
@@ -39,7 +44,10 @@ namespace Barotrauma.Networking
         CIRCUITBOX,
         READY_CHECK,
         READY_TO_SPAWN,
-        TAKEOVERBOT
+        TAKEOVERBOT,
+        TOGGLE_RESERVE_BENCH,
+
+        REQUEST_BACKUP_INDICES // client wants a list of available backups for a save file
     }
 
     enum ClientNetSegment
@@ -81,6 +89,8 @@ namespace Barotrauma.Networking
         CLIENT_PINGS,       //tell the client the pings of all other clients
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
+        WARN_STARTGAME,     //round is about to start with invalid (perk) settings, warn the clients before starting
+        CANCEL_STARTGAME,   //someone requested the round start to be cancelled due to invalid settings, tell the other clients
         STARTGAME,          //start a new round
         STARTGAMEFINALIZE,  //finalize round initialization
         ENDGAME,
@@ -92,7 +102,9 @@ namespace Barotrauma.Networking
         MEDICAL,            //medical clinic
         CIRCUITBOX,
         MONEY,
-        READY_CHECK         //start, end and update a ready check
+        READY_CHECK,        //start, end and update a ready check
+
+        SEND_BACKUP_INDICES // the server sends a list of available backups for a save file
     }
     enum ServerNetSegment
     {

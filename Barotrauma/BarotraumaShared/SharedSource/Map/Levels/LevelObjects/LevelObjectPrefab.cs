@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -131,6 +130,14 @@ namespace Barotrauma
 
         [Serialize("0.0,1.0", IsPropertySaveable.Yes, description: "The sprite depth of the object (min, max). Values of 0 or less make the object render in front of walls, values larger than 0 make it render behind walls with a parallax effect."), Editable]
         public Vector2 DepthRange
+        {
+            get;
+            private set;
+        }
+
+
+        [Serialize(3000.0f, IsPropertySaveable.Yes, description: "Objects fade out to the background color of the level the further they are from the camera. This value is the depth at which the object becomes \"maximally\" faded out."), Editable]
+        public float FadeOutDepth
         {
             get;
             private set;
@@ -339,11 +346,11 @@ namespace Barotrauma
                 InitProjSpecific(element);
             }
 
-            //use the maximum width of the sprite as the minimum surface width if no value is given
-            if (element != null && !element.Attributes("minsurfacewidth").Any())
+            //use (a bit less than) the maximum width of the sprite as the minimum surface width if no value is given
+            if (element != null && element.GetAttribute("minsurfacewidth") == null)
             {
-                if (Sprites.Any()) MinSurfaceWidth = Sprites[0].size.X * MaxSize;
-                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * MaxSize);
+                if (Sprites.Any()) { MinSurfaceWidth = Sprites[0].size.X * MaxSize * 0.8f; }
+                if (DeformableSprite != null) { MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * MaxSize * 0.8f); }
             }
         }
 

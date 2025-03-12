@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -27,7 +28,8 @@ namespace Barotrauma
 
         protected float lastRecvPositionUpdateTime;
 
-        private float hudInfoHeight = 100.0f;
+        private const float DefaultHudInfoHeight = 78.0f;
+        private float hudInfoHeight = DefaultHudInfoHeight;
 
         private List<CharacterSound> sounds;
         
@@ -249,7 +251,9 @@ namespace Barotrauma
             public Vector2 Position;
             public Vector2 DrawPosition;
             public float MoveUpAmount;
-            public readonly string Text;
+            public readonly RichString Text;
+            public ImmutableArray<RichTextData>? RichTextData { get; private set; }
+
             public readonly Character Character;
             public readonly Submarine Submarine;
             public readonly Vector2 TextSize;
@@ -259,8 +263,10 @@ namespace Barotrauma
 
             public SpeechBubble(Character character, float lifeTime, Color color, string text = "")
             {
-                Text = ToolBox.WrapText(text, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text));
+                var richStr = RichString.Rich(text);
+                Text = ToolBox.WrapText(richStr.SanitizedValue, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text));
                 TextSize = GUIStyle.SmallFont.MeasureString(Text);
+                RichTextData = richStr.RichTextData;
 
                 Character = character;
                 Position = GetDesiredPosition();
@@ -321,7 +327,6 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-
             if (DisableControls || GUI.InputBlockingMenuOpen)
             {
                 foreach (Key key in keys)
@@ -329,7 +334,7 @@ namespace Barotrauma
                     if (key == null) { continue; }
                     key.Reset();
                 }
-                if (GUI.InputBlockingMenuOpen)
+                if (GUI.InputBlockingMenuOpen || ConversationAction.IsDialogOpen)
                 {
                     cursorPosition = 
                         Position + PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
@@ -416,6 +421,11 @@ namespace Barotrauma
 
                 UpdateLocalCursor(cam);
 
+                if (IsKeyHit(InputType.ToggleRun))
+                {
+                    ToggleRun = !ToggleRun;
+                }
+
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 if (GUI.PauseMenuOpen)
                 {
@@ -471,7 +481,7 @@ namespace Barotrauma
             if (!GUI.InputBlockingMenuOpen)
             {
                 if (SelectedItem != null &&
-                    (SelectedItem.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
+                    (SelectedItem.ActiveHUDs.Any(ic => ic.GuiFrame != null && ic.CloseByClickingOutsideGUIFrame && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
                     ((ViewTarget as Item)?.Prefab.FocusOnSelected ?? false) && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)))
                 {
                     if (GameMain.Client != null)
@@ -543,7 +553,10 @@ namespace Barotrauma
             {
                 if (attackResult.Damage <= 1.0f) { return; }
             }
-            PlaySound(CharacterSound.SoundType.Damage, maxInterval: 2);
+            if (AIState != AIState.PlayDead)
+            {
+                PlaySound(CharacterSound.SoundType.Damage, maxInterval: 2);
+            }
         }
 
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
@@ -588,7 +601,6 @@ namespace Barotrauma
                 }
             }
 
-            sounds.ForEach(s => s.Sound?.Dispose());
             sounds.Clear();
 
             if (GameMain.GameSession?.CrewManager != null &&
@@ -814,9 +826,12 @@ namespace Barotrauma
                                 PlaySound(CharacterSound.SoundType.Idle);
                             }
                             break;
+                        case AIState.PlayDead:
+                        case AIState.Freeze:
+                        case AIState.Hiding:
+                            break;
                         default:
-                            var petBehavior = enemyAI.PetBehavior;
-                            if (petBehavior != null && 
+                            if (enemyAI.PetBehavior is PetBehavior petBehavior && 
                                 (petBehavior.Happiness < petBehavior.UnhappyThreshold || petBehavior.Hunger > petBehavior.HungryThreshold))
                             {
                                 PlaySound(CharacterSound.SoundType.Unhappy);
@@ -948,7 +963,9 @@ namespace Barotrauma
                 Controlled != this &&
                 Submarine != null &&
                 Controlled.Submarine == Submarine &&
-                GameSettings.CurrentConfig.Graphics.LosMode != LosMode.None)
+                GameSettings.CurrentConfig.Graphics.LosMode != LosMode.None &&
+                //less restrictions on name tag visibility in PvP mode (always show them if the character is visible)
+                GameMain.GameSession?.GameMode is not PvPMode)
             {
                 float yPos = Controlled.AnimController.FloorY - 1.5f;
 
@@ -965,15 +982,16 @@ namespace Barotrauma
             Vector2 pos = DrawPosition;
             pos.Y += hudInfoHeight;
 
-            if (CurrentHull != null && DrawPosition.Y > CurrentHull.WorldRect.Y - 130.0f)
+            float paddingBelowCeiling = 30.0f;
+            if (CurrentHull != null && DrawPosition.Y + DefaultHudInfoHeight > CurrentHull.WorldRect.Y - paddingBelowCeiling)
             {
-                float lowerAmount = DrawPosition.Y - (CurrentHull.WorldRect.Y - 130.0f);
-                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, 100.0f - lowerAmount, 0.1f);
+                float lowerAmount = (DrawPosition.Y + DefaultHudInfoHeight) - (CurrentHull.WorldRect.Y - paddingBelowCeiling);
+                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, DefaultHudInfoHeight - lowerAmount, 0.1f);
                 hudInfoHeight = Math.Max(hudInfoHeight, 20.0f);
             }
             else
             {
-                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, 100.0f, 0.1f);
+                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, DefaultHudInfoHeight, 0.1f);
             }
 
             pos.Y = -pos.Y;
@@ -1013,6 +1031,8 @@ namespace Barotrauma
                     CampaignInteractionType == CampaignMode.InteractionType.None ?
                     MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f) :
                     1.0f;
+                //full name tag visibility in PvP mode to make it easier to tell who's an enemy
+                float nameTextAlpha = GameMain.GameSession?.GameMode is PvPMode ? 1.0f : hudInfoAlpha;
 
                 if (!GUI.DisableCharacterNames && hudInfoVisible &&
                     (controlled == null || this != controlled.FocusedCharacter || IsPet) && cam.Zoom > 0.4f)
@@ -1030,7 +1050,7 @@ namespace Barotrauma
                         }
 
                         Vector2 nameSize = GUIStyle.Font.MeasureString(name);
-                        Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
+                        Vector2 namePos = new Vector2(pos.X, pos.Y - 5.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
                         Color nameColor = GetNameColor();
 
                         Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
@@ -1057,7 +1077,7 @@ namespace Barotrauma
                         }
 
                         GUIStyle.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
-                        GUIStyle.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+                        GUIStyle.Font.DrawString(spriteBatch, name, namePos, nameColor * nameTextAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
                         if (GameMain.DebugDraw)
                         {
                             GUIStyle.Font.DrawString(spriteBatch, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
@@ -1068,15 +1088,18 @@ namespace Barotrauma
                     if (petBehavior != null && !IsDead && !IsUnconscious)
                     {
                         var petStatus = petBehavior.GetCurrentStatusIndicatorType();
-                        var iconStyle = GUIStyle.GetComponentStyle("PetIcon." + petStatus);
-                        if (iconStyle != null)
+                        if (petStatus != PetBehavior.StatusIndicatorType.None)
                         {
-                            Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
-                            Vector2 iconPos = headPos;
-                            iconPos.Y = -iconPos.Y;
-                            var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
-                            float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;
-                            icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
+                            var iconStyle = GUIStyle.GetComponentStyle("PetIcon." + petStatus);
+                            if (iconStyle != null)
+                            {
+                                Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
+                                Vector2 iconPos = headPos;
+                                iconPos.Y = -iconPos.Y;
+                                var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
+                                float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;
+                                icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
+                            }   
                         }
                     }
                 }
@@ -1100,7 +1123,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (Params.ShowHealthBar && CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
+                if (Params.ShowHealthBar && CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible && AIState != AIState.PlayDead && AIState != AIState.Hiding)
                 {
                     hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));
 
@@ -1175,7 +1198,7 @@ namespace Barotrauma
                     Vector2 bubbleSize = bubble.TextSize + Vector2.One * GUI.IntScale(15);
                     speechBubbleIconSliced.Draw(spriteBatch, new RectangleF(iconPos - bubbleSize / 2, bubbleSize), bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha);
                 }
-                GUI.DrawString(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, font: GUIStyle.SmallFont);
+                GUI.DrawStringWithColors(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text.SanitizedValue, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, bubble.RichTextData, font: GUIStyle.SmallFont);
             }
             spriteBatch.End();
         }
@@ -1233,7 +1256,7 @@ namespace Barotrauma
         public Color GetNameColor()
         {
             CharacterTeamType team = teamID;
-            if (Info?.IsDisguisedAsAnother != null)
+            if (Info is { IsDisguisedAsAnother: true })
             {
                 var idCard = Inventory.GetItemInLimbSlot(InvSlotType.Card)?.GetComponent<IdCard>();
                 if (idCard != null)
@@ -1249,18 +1272,22 @@ namespace Barotrauma
                 }
             }
 
+            CharacterTeamType myTeam = 
+                Controlled?.TeamID ?? 
+                GameMain.Client?.MyClient?.TeamID ??
+                CharacterTeamType.Team1;
+
             Color nameColor = GUIStyle.TextColorNormal;
-            if (Controlled != null && team != Controlled.TeamID)
+            if (TeamID == CharacterTeamType.FriendlyNPC)
             {
-                if (TeamID == CharacterTeamType.FriendlyNPC)
-                {
-                    nameColor = UniqueNameColor ?? Color.SkyBlue;
-                }
-                else
-                {
-                    nameColor = GUIStyle.Red;
-                }
+                nameColor = UniqueNameColor ?? Color.SkyBlue;
             }
+            else if (team != myTeam)
+            {
+                //opposing team is red when controlling a character
+                nameColor = GUIStyle.Red;
+            }
+
             return nameColor;
         }
 
@@ -1417,7 +1444,10 @@ namespace Barotrauma
 
         partial void OnTalentGiven(TalentPrefab talentPrefab)
         {
-            AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier).Value, GUIStyle.Yellow, playSound: this == Controlled);
+            if (!talentPrefab.IsHiddenExtraTalent)
+            {
+                AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier).Value, GUIStyle.Yellow, playSound: this == Controlled);
+            }
         }
     }
 }

@@ -22,6 +22,8 @@ namespace Barotrauma.Networking
         public UInt16 LastRecvLobbyUpdate
             = NetIdUtils.GetIdOlderThan(GameMain.NetLobbyScreen.LastUpdateID);
 
+        public bool InitialLobbyUpdateSent;
+
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
         public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
 
@@ -82,7 +84,11 @@ namespace Barotrauma.Networking
             set
             {
                 if (characterInfo == value) { return; }
-                characterInfo?.Remove();
+                if (characterInfo is { Character: null })
+                {
+                    //if a character hasn't spawned for this characterInfo, we can remove the info and free the sprites and such
+                    characterInfo.Remove();
+                }
                 characterInfo = value;
             }
         }
@@ -92,6 +98,7 @@ namespace Barotrauma.Networking
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
+        public bool AFK;
         public bool? WaitForNextRoundRespawn;
 
         public int KarmaKickCount;
@@ -102,13 +109,19 @@ namespace Barotrauma.Networking
         {
             get
             {
-                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return 100.0f; }
+                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled || GameMain.GameSession?.GameMode is PvPMode) 
+                { 
+                    return 100.0f; 
+                }
                 if (HasPermission(ClientPermissions.KarmaImmunity)) { return 100.0f; }
                 return karma;
             }
             set
             {
-                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return; }
+                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled || GameMain.GameSession?.GameMode is PvPMode) 
+                { 
+                    return;
+                }
                 karma = Math.Min(Math.Max(value, 0.0f), 100.0f);
                 if (!MathUtils.NearlyEqual(karma, syncedKarma, 10.0f))
                 {
@@ -160,8 +173,8 @@ namespace Barotrauma.Networking
             LastSentChatMsgID = 0;
             LastRecvChatMsgID = ChatMessage.LastID;
 
-            LastRecvLobbyUpdate = 0;
-
+            LastRecvLobbyUpdate = NetIdUtils.GetIdOlderThan(GameMain.NetLobbyScreen.LastUpdateID);
+            InitialLobbyUpdateSent = false;
             LastRecvEntityEventID = 0;
 
             UnreceivedEntityEventCount = 0;
@@ -327,10 +340,21 @@ namespace Barotrauma.Networking
             {
                 //the bot has spawned, but the new CharacterCampaignData technically hasn't, because we just created it
                 characterData.HasSpawned = true;
+                mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.CharacterInfo);
             }
 
             SpectateOnly = false;
             return true;
+        }
+
+        public void ResetSync()
+        {
+            NeedsMidRoundSync = false;
+            PendingPositionUpdates.Clear();
+            EntityEventLastSent.Clear();
+            LastSentEntityEventID = 0;
+            LastRecvEntityEventID = 0;
+            UnreceivedEntityEventCount = 0;
         }
     }
 }

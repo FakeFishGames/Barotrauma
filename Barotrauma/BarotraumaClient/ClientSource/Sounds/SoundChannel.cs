@@ -13,7 +13,7 @@ namespace Barotrauma.Sounds
             private set;
         }
 
-        public SoundSourcePool(int sourceCount = SoundManager.SOURCE_COUNT)
+        public SoundSourcePool(int sourceCount = SoundManager.SourceCount)
         {
             int alError;
 
@@ -398,8 +398,8 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private string category;
-        public string Category
+        private Identifier category;
+        public Identifier Category
         {
             get { return category; }
             set
@@ -433,6 +433,8 @@ namespace Barotrauma.Sounds
         private readonly uint[] streamBuffers;
         private readonly uint[] unqueuedBuffers;
         private readonly float[] streamBufferAmplitudes;
+
+        public bool MuteBackgroundMusic;
 
         public int StreamSeekPos
         {
@@ -481,7 +483,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public SoundChannel(Sound sound, float gain, Vector3? position, float freqMult, float near, float far, string category, bool muffle = false)
+        public SoundChannel(Sound sound, float gain, Vector3? position, float freqMult, float near, float far, Identifier category, bool muffle = false)
         {
             Sound = sound;
 

@@ -11,9 +11,53 @@ using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
+    public readonly struct CampaignDataPath
+    {
+        public readonly string LoadPath;
+        public readonly string SavePath;
+
+        public CampaignDataPath(string loadPath, string savePath)
+        {
+            if (IsBackupPath(savePath, out _))
+            {
+                throw new ArgumentException("Save path cannot be a backup path.", nameof(savePath));
+            }
+
+            LoadPath = loadPath;
+            SavePath = savePath;
+        }
+
+        /// <summary>
+        /// Empty path used for non-campaign game sessions.
+        /// </summary>
+        public static readonly CampaignDataPath Empty = new CampaignDataPath(loadPath: string.Empty, savePath: string.Empty);
+
+        /// <summary>
+        /// Creates a CampaignDataPath with the same load and save path.
+        /// </summary>
+        public static CampaignDataPath CreateRegular(string savePath)
+            => new CampaignDataPath(savePath, savePath);
+
+        public static bool IsBackupPath(string path, out uint foundIndex)
+        {
+            string extension = Path.GetExtension(path);
+            bool startsWith = extension.StartsWith(SaveUtil.BackupExtension, StringComparison.OrdinalIgnoreCase);
+
+            if (!startsWith)
+            {
+                foundIndex = 0;
+                return false;
+            }
+
+            bool hasIndex = SaveUtil.TryGetBackupIndexFromFileName(path, out foundIndex);
+            return hasIndex;
+        }
+    }
+
     static class SaveUtil
     {
         public const string GameSessionFileName = "gamesession.xml";
@@ -43,6 +87,30 @@ namespace Barotrauma
         public static readonly string SubmarineDownloadFolder = Path.Combine("Submarines", "Downloaded");
         public static readonly string CampaignDownloadFolder = Path.Combine("Data", "Saves", "Multiplayer_Downloaded");
 
+        public const string BackupExtension = ".bk";
+
+        /// <summary>
+        /// .save.bk
+        /// </summary>
+        public const string FullBackupExtension = $".save{BackupExtension}";
+
+        /// <summary>
+        /// .save.bk0
+        /// </summary>
+        public const string BackupExtensionFormat = $"{FullBackupExtension}{{0}}";
+
+        /// <summary>
+        /// .xml.bk
+        /// </summary>
+        public const string BackupCharacterDataExtensionStart = $".xml{BackupExtension}";
+
+        /// <summary>
+        /// .xml.bk0
+        /// </summary>
+        public const string BackupCharacterDataFormat = $"{BackupCharacterDataExtensionStart}{{0}}";
+
+        public static int MaxBackupCount = 3;
+
         public static string TempPath
         {
 #if SERVER
@@ -51,6 +119,20 @@ namespace Barotrauma
             get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp"); }
 #endif
         }
+        
+        public static void EnsureSaveFolderExists()
+        {
+            try
+            {
+                // Create the default save folder (only) if it doesn't exist yet.
+                // note, uses System.IO.Directory.CreateDirectory instead of Directory.CreateDirectory from Baro namespace on purpose.
+                System.IO.Directory.CreateDirectory(DefaultSaveFolder);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Failed to create the default save folder \"{DefaultSaveFolder}\"!", e);
+            }
+        }
 
         public enum SaveType
         {
@@ -58,27 +140,47 @@ namespace Barotrauma
             Multiplayer
         }
 
-        public static void SaveGame(string filePath)
+        /// <summary>
+        /// Saves the game to a file.
+        /// </summary>
+        /// <param name="filePath">The path to the save file. </param>
+        /// <param name="isSavingOnLoading">
+        /// Indicates if the save is happening during loading in multiplayer
+        /// to ensure the campaign ID matches the one in the save file.
+        /// Used to work around some quirks with the backup system.
+        /// </param>
+        public static void SaveGame(CampaignDataPath filePath, bool isSavingOnLoading = false)
         {
+            if (!isSavingOnLoading && File.Exists(filePath.SavePath))
+            {
+                BackupSave(filePath.SavePath);
+            }
+
             DebugConsole.Log("Saving the game to: " + filePath);
-            Directory.CreateDirectory(TempPath);
+            Directory.CreateDirectory(TempPath, catchUnauthorizedAccessExceptions: true);
             try
             {
                 ClearFolder(TempPath, new string[] { GameMain.GameSession.SubmarineInfo.FilePath });
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to clear folder", e);
+                LogErrorAndSendToClients("Failed to clear folder", e);
                 return;
             }
 
             try
             {
-                GameMain.GameSession.Save(Path.Combine(TempPath, GameSessionFileName));
+                GameMain.GameSession.Save(Path.Combine(TempPath, GameSessionFileName), isSavingOnLoading);
+
+                if (!isSavingOnLoading)
+                {
+                    // Reset the campaign data path, since if we had a different load path, it would be invalid now
+                    GameMain.GameSession.DataPath = CampaignDataPath.CreateRegular(filePath.SavePath);
+                }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error saving gamesession", e);
+                LogErrorAndSendToClients("Error saving gamesession", e);
                 return;
             }
 
@@ -111,39 +213,53 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error saving submarine", e);
+                LogErrorAndSendToClients("Error saving submarine", e);
                 return;
             }
 
             try
             {
-                CompressDirectory(TempPath, filePath);
+                CompressDirectory(TempPath, filePath.SavePath);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error compressing save file", e);
+                LogErrorAndSendToClients("Error compressing save file", e);
+            }
+
+            void LogErrorAndSendToClients(string errorMsg, Exception e)
+            {
+                DebugConsole.ThrowError(errorMsg, e);
+#if SERVER
+                if (GameMain.Server != null)
+                {
+                    foreach (var client in GameMain.Server.ConnectedClients)
+                    {
+                        GameMain.Server.SendDirectChatMessage(errorMsg + '\n' + e.StackTrace.CleanupStackTrace(), client, ChatMessageType.Error);
+                    }
+                }
+#endif
             }
         }
 
-        public static void LoadGame(string filePath)
+        public static void LoadGame(CampaignDataPath path)
         {
             //ensure there's no gamesession/sub loaded because it'd lead to issues when starting a new one (e.g. trying to determine which level to load based on the placement of the sub)
             //can happen if a gamesession is interrupted ungracefully (exception during loading)
             Submarine.Unload();
             GameMain.GameSession = null;
-            DebugConsole.Log("Loading save file: " + filePath);
-            DecompressToDirectory(filePath, TempPath);
+            DebugConsole.Log("Loading save file: " + path.LoadPath);
+            DecompressToDirectory(path.LoadPath, TempPath);
 
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, GameSessionFileName));
             if (doc == null) { return; }
 
             if (!IsSaveFileCompatible(doc))
             {
-                throw new Exception($"The save file \"{filePath}\" is not compatible with this version of Barotrauma.");
+                throw new Exception($"The save file \"{path.LoadPath}\" is not compatible with this version of Barotrauma.");
             }
 
             var ownedSubmarines = LoadOwnedSubmarines(doc, out SubmarineInfo selectedSub);
-            GameMain.GameSession = new GameSession(selectedSub, ownedSubmarines, doc, filePath);
+            GameMain.GameSession = new GameSession(selectedSub, ownedSubmarines, doc, path);
         }
 
         public static List<SubmarineInfo> LoadOwnedSubmarines(XDocument saveDoc, out SubmarineInfo selectedSub)
@@ -185,7 +301,13 @@ namespace Barotrauma
         {
             try
             {
-                File.Delete(filePath);
+                File.Delete(filePath, catchUnauthorizedAccessExceptions: false);
+
+                string[] backups = GetBackupPaths(Path.GetDirectoryName(filePath) ?? "", Path.GetFileNameWithoutExtension(filePath));
+                foreach (string backup in backups)
+                {
+                    File.Delete(backup, catchUnauthorizedAccessExceptions: false);
+                }
             }
             catch (Exception e)
             {
@@ -203,7 +325,7 @@ namespace Barotrauma
                 {
                     try
                     {
-                        File.Delete(characterDataSavePath);
+                        File.Delete(characterDataSavePath, catchUnauthorizedAccessExceptions: false);
                     }
                     catch (Exception e)
                     {
@@ -229,7 +351,7 @@ namespace Barotrauma
                     DebugConsole.AddWarning($"Could not find the custom save folder \"{folder}\", creating the folder...");
                     try
                     {
-                        Directory.CreateDirectory(folder);
+                        Directory.CreateDirectory(folder, catchUnauthorizedAccessExceptions: false);
                     }
                     catch (Exception e)
                     {
@@ -253,7 +375,7 @@ namespace Barotrauma
                 DebugConsole.Log("Save folder \"" + defaultFolder + " not found! Attempting to create a new folder...");
                 try
                 {
-                    Directory.CreateDirectory(defaultFolder);
+                    Directory.CreateDirectory(defaultFolder, catchUnauthorizedAccessExceptions: false);
                 }
                 catch (Exception e)
                 {
@@ -291,6 +413,7 @@ namespace Barotrauma
                         FilePath: file,
                         SaveTime: Option.None,
                         SubmarineName: "",
+                        RespawnMode: RespawnMode.None,
                         EnabledContentPackageNames: ImmutableArray<string>.Empty));
                 }
                 else
@@ -326,6 +449,7 @@ namespace Barotrauma
                         FilePath: file,
                         SaveTime: docRoot.GetAttributeDateTime("savetime"),
                         SubmarineName: docRoot.GetAttributeStringUnrestricted("submarine", ""),
+                        RespawnMode: docRoot.GetAttributeEnum("respawnmode", RespawnMode.None),
                         EnabledContentPackageNames: enabledContentPackageNames.ToImmutableArray()));
                 }
             }
@@ -347,7 +471,7 @@ namespace Barotrauma
             if (!Directory.Exists(folder))
             {
                 DebugConsole.Log("Save folder \"" + folder + "\" not found. Created new folder");
-                Directory.CreateDirectory(folder);
+                Directory.CreateDirectory(folder, catchUnauthorizedAccessExceptions: true);
             }
 
             string extension = ".save";
@@ -704,5 +828,190 @@ namespace Barotrauma
                 }
             }
         }
+
+#region Backup saves
+
+        [NetworkSerialize]
+        public readonly record struct BackupIndexData(uint Index,
+                                                      Identifier LocationNameIdentifier,
+                                                      int LocationNameFormatIndex,
+                                                      Identifier LocationType,
+                                                      LevelData.LevelType LevelType,
+                                                      SerializableDateTime SaveTime) : INetSerializableStruct;
+
+        public static string FormatBackupExtension(uint index) => string.Format(BackupExtensionFormat, index);
+        public static string FormatBackupCharacterDataExtension(uint index) => string.Format(BackupCharacterDataFormat, index);
+
+        public static void BackupSave(string savePath)
+        {
+            string path = Path.GetDirectoryName(savePath) ?? "";
+            string fileName = Path.GetFileNameWithoutExtension(savePath);
+            string characterDataSavePath = MultiPlayerCampaign.GetCharacterDataSavePath(savePath);
+            string characterDataFileName = Path.GetFileNameWithoutExtension(characterDataSavePath);
+
+            ImmutableArray<BackupIndexData> indexData = GetIndexData(path, fileName);
+
+            uint freeIndex = GetFreeIndex(indexData);
+
+            string newBackupPath = Path.Combine(path, $".{fileName}{FormatBackupExtension(freeIndex)}");
+            string newCharacterDataBackupPath = Path.Combine(path, $".{characterDataFileName}{FormatBackupCharacterDataExtension(freeIndex)}");
+
+            try
+            {
+                BackupFile(savePath, newBackupPath);
+                if (File.Exists(characterDataSavePath))
+                {
+                    BackupFile(characterDataSavePath, newCharacterDataBackupPath);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to create a backup of the save file.", e);
+            }
+
+            static uint GetFreeIndex(IEnumerable<BackupIndexData> indexData)
+            {
+                if (!indexData.Any()) { return 0; }
+
+                if (indexData.Count() < MaxBackupCount)
+                {
+                    uint highestIndex = indexData.Max(static b => b.Index);
+                    uint nextIndex = highestIndex + 1;
+
+                    if (indexData.Any(b => b.Index == nextIndex))
+                    {
+                        for (uint i = 0; i < MaxBackupCount; i++)
+                        {
+                            if (indexData.All(b => b.Index != i)) { return i; }
+                        }
+
+                        // this should theoretically never happen
+                        throw new InvalidOperationException("Failed to find a free index for the backup.");
+                    }
+
+                    return nextIndex;
+                }
+
+                BackupIndexData oldestBackup = indexData.OrderBy(static b => b.SaveTime).First();
+                return oldestBackup.Index;
+            }
+
+            static void BackupFile(string sourcePath, string destPath)
+            {
+                // Overwriting a file that is marked as hidden will cause an exception.
+                DeleteIfExists(destPath);
+                System.IO.File.Copy(sourcePath, destPath, overwrite: true);
+                SetHidden(destPath);
+            }
+        }
+
+        public static void DeleteIfExists(string filePath)
+        {
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+        }
+
+        public static ImmutableArray<BackupIndexData> GetIndexData(string fullPath)
+        {
+            string path = Path.GetDirectoryName(fullPath) ?? "";
+            string fileName = Path.GetFileNameWithoutExtension(fullPath);
+            return GetIndexData(path, fileName);
+        }
+
+        private static readonly System.IO.EnumerationOptions BackupEnumerationOptions = new System.IO.EnumerationOptions
+        {
+            MatchType = System.IO.MatchType.Win32,
+            AttributesToSkip = System.IO.FileAttributes.System,
+            IgnoreInaccessible = true
+        };
+
+        private static string[] GetBackupPaths(string path, string baseName)
+        {
+            try
+            {
+                return System.IO.Directory.GetFiles(path, $".{baseName}{FullBackupExtension}*", BackupEnumerationOptions);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to get backup paths.", e);
+            }
+            return Array.Empty<string>();
+        }
+
+        public static bool TryGetBackupIndexFromFileName(string filePath, out uint index)
+        {
+            string extension = Path.GetExtension(filePath);
+            if (extension.Length < BackupExtension.Length)
+            {
+                DebugConsole.ThrowError($"The file name \"{filePath}\" does not have a valid backup extension.");
+                index = 0;
+                return false;
+            }
+
+            string indexStr = extension[BackupExtension.Length..];
+            bool result = uint.TryParse(indexStr, out index);
+            if (!result)
+            {
+                DebugConsole.ThrowError($"Failed to parse the backup index from the file name \"{filePath}\".");
+            }
+
+            return result;
+        }
+
+        private static ImmutableArray<BackupIndexData> GetIndexData(string path, string baseName)
+        {
+            var builder = ImmutableArray.CreateBuilder<BackupIndexData>();
+
+            string[] foundBackups = GetBackupPaths(path, baseName);
+
+            foreach (string backupPath in foundBackups)
+            {
+                if (!TryGetBackupIndexFromFileName(backupPath, out uint index)) { continue; }
+
+                var gameSession = ExtractGameSessionRootElementFromSaveFile(backupPath, logLoadErrors: false);
+
+                if (gameSession is null)
+                {
+                    DebugConsole.AddWarning($"Failed to load gamesession root from \"{backupPath}\". Skipping this backup.");
+                    continue;
+                }
+
+                SerializableDateTime saveTime =
+                    gameSession.GetAttributeDateTime("savetime")
+                               .Fallback(SerializableDateTime.FromUtcUnixTime(0L));
+
+                Identifier locationNameIdentifier = gameSession.GetAttributeIdentifier("currentlocation", Identifier.Empty);
+                int locationNameFormatIndex = gameSession.GetAttributeInt("currentlocationnameformatindex", -1);
+                Identifier locationType = gameSession.GetAttributeIdentifier("locationtype", Identifier.Empty);
+
+                LevelData.LevelType levelType = gameSession.GetAttributeEnum("nextleveltype", LevelData.LevelType.LocationConnection);
+
+                builder.Add(new BackupIndexData(index, locationNameIdentifier, locationNameFormatIndex, locationType, levelType, saveTime));
+            }
+
+            return builder.ToImmutable();
+        }
+
+        public static string GetBackupPath(string savePath, uint index)
+        {
+            string path = Path.GetDirectoryName(savePath) ?? "";
+            string fileName = Path.GetFileNameWithoutExtension(savePath);
+            return Path.Combine(path, $".{fileName}{FormatBackupExtension(index)}");
+        }
+
+        private static void SetHidden(string filePath)
+        {
+            try
+            {
+                System.IO.File.SetAttributes(filePath, System.IO.File.GetAttributes(filePath) | System.IO.FileAttributes.Hidden);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to set the backup file as hidden.", e);
+            }
+        }
+#endregion
     }
 }

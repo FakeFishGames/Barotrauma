@@ -169,9 +169,9 @@ namespace Barotrauma
             return doc;
         }
 
-        public void Save(string path)
+        public void Save(string path, bool catchUnauthorizedAccessExceptions = true)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!, catchUnauthorizedAccessExceptions);
             ToXDocument().SaveSafe(path);
         }
     }

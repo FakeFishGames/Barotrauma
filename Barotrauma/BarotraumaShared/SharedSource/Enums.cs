@@ -12,6 +12,13 @@ namespace Barotrauma
         Exponential
     }
 
+    public enum SelectedSubType
+    {
+        Shuttle,
+        Sub,
+        EnemySub
+    }
+
     /// <summary>
     /// ActionTypes define when a <see cref="StatusEffect"/> is executed.
     /// </summary>
@@ -115,6 +122,14 @@ namespace Barotrauma
         /// Executes when an Ability (an effect from a talent) triggers the status effect. Only valid in Abilities, the target can be either a character or an item depending on the type of Ability.
         /// </summary>
         OnAbility = 23,
+        /// <summary>
+        /// Executes once when a specific Containable is placed inside an ItemContainer. Only valid for Containables defined in an ItemContainer component.
+        /// </summary>
+        OnInserted = 24,
+        /// <summary>
+        /// Executes once when a specific Containable is removed from an ItemContainer. Only valid for Containables defined in an ItemContainer component.
+        /// </summary>
+        OnRemoved = 25,
         /// <summary>
         /// Executes when the character dies. Only valid for characters.
         /// </summary>
@@ -295,6 +310,11 @@ namespace Barotrauma
         /// Decreases the reload time of ranged weapons held by the character by a percentage.
         /// </summary>
         RangedAttackSpeed,
+
+        /// <summary>
+        /// Increases the damage dealt by ranged weapons held by the character by a percentage.
+        /// </summary>
+        RangedAttackMultiplier,
 
         /// <summary>
         /// Decreases the reload time of submarine turrets operated by the character by a percentage.
@@ -588,7 +608,17 @@ namespace Barotrauma
         /// <summary>
         /// Reduces the dual wielding penalty by a percentage.
         /// </summary>
-        DualWieldingPenaltyReduction
+        DualWieldingPenaltyReduction,
+        
+        /// <summary>
+        /// Multiplier bonus to melee attacks coming from a natural weapon (limb).
+        /// </summary>
+        NaturalMeleeAttackMultiplier,
+        
+        /// <summary>
+        /// Multiplier bonus to ranged attacks coming from a natural weapon (limb).
+        /// </summary>
+        NaturalRangedAttackMultiplier
     }
 
     internal enum ItemTalentStats
@@ -599,12 +629,13 @@ namespace Barotrauma
         EngineSpeed,
         EngineMaxSpeed,
         PumpSpeed,
-        PumpMaxFlow,
         ReactorMaxOutput,
         ReactorFuelConsumption,
         DeconstructorSpeed,
         FabricationSpeed,
-        ExtraStackSize
+        ExtraStackSize,
+        [Obsolete("Use PumpSpeed instead.")]
+        PumpMaxFlow = PumpSpeed,
     }
 
     /// <summary>
@@ -722,5 +753,19 @@ namespace Barotrauma
         None,
         Local,
         Radio
+    }
+    
+    public enum PvpTeamSelectionMode
+    {
+        PlayerPreference,
+        PlayerChoice,
+    }
+    
+    public enum BotStatus
+    {
+        PendingHireToActiveService,
+        PendingHireToReserveBench,
+        ActiveService,
+        ReserveBench
     }
 }

@@ -11,6 +11,9 @@ namespace Barotrauma
     {
         public readonly static PrefabCollection<LevelGenerationParams> LevelParams = new PrefabCollection<LevelGenerationParams>();
 
+        public LocalizedString DisplayName { get; private set; }
+        public LocalizedString Description { get; private set; }
+
         public string Name => Identifier.Value;
 
         public Identifier OldIdentifier { get; }
@@ -68,12 +71,18 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.Yes, "If the given level is only used in PvP modes"), Editable]
+        public bool IsPvPLevel { get; set; }
+
         [Serialize(100.0f, IsPropertySaveable.Yes, "If there are multiple level generation parameters available for a level in a given biome, their commonness determines how likely it is for one to get selected."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float Commonness
         {
             get;
             set;
         }
+        
+        [Serialize(false, IsPropertySaveable.Yes, "If the level is a transition from the previous biome to this one."), Editable]
+        public bool TransitionFromPreviousBiome { get; set; }
 
         [Serialize(0.0f, IsPropertySaveable.Yes, "The difficulty of the level has to be above or equal to this for these parameters to get chosen for the level."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float MinLevelDifficulty
@@ -227,7 +236,7 @@ namespace Barotrauma
         }
 
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.5f, IsPropertySaveable.Yes, description: "How much the individual wall cells are rounded. "
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.5f, IsPropertySaveable.Yes, description: "How much the individual wall cells are rounded. "
             + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellRoundingAmount
         {
@@ -238,7 +247,7 @@ namespace Barotrauma
             }
         }
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.1f, IsPropertySaveable.Yes, description: "How much random variance is applied to the edges of the cells. "
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.1f, IsPropertySaveable.Yes, description: "How much random variance is applied to the edges of the cells. "
             + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellIrregularity
         {
@@ -497,6 +506,9 @@ namespace Barotrauma
 
         [Serialize(0, IsPropertySaveable.Yes, description: "The maximum number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int MaxRuinCount { get; set; }
+        
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The probability of spawning a ruin in the level. If the level can have multiple ruins, the probability is evaluated separately for each."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2)]
+        public float RuinSpawnProbability { get; set; }
 
         // TODO: Move the wreck parameters under a separate class?
 #region Wreck parameters
@@ -512,17 +524,20 @@ namespace Barotrauma
 
         [Serialize(5, IsPropertySaveable.Yes, description: "The maximum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MaxCorpseCount { get; set; }
+        
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a character set to be spawned as a corpse spawns as a human husk instead? Percentage from 0 to 1 per character."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
+        public float HuskProbability { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float ThalamusProbability { get; set; }
 
-        [Serialize(0.5f, IsPropertySaveable.Yes, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float WreckHullFloodingChance { get; set; }
 
-        [Serialize(0.1f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float WreckFloodingHullMinWaterPercentage { get; set; }
 
-        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float WreckFloodingHullMaxWaterPercentage { get; set; }
         #endregion
 
@@ -582,6 +597,13 @@ namespace Barotrauma
 
         [Serialize(1000.0f, IsPropertySaveable.Yes, description: "How far inside the level walls the edge texture continues."), Editable(minValue: 0.0f, maxValue: 10000.0f)]
         public float WallEdgeExpandInwardsAmount
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1000.0f, IsPropertySaveable.Yes, description: "How deep inside the walls the wall texture extends to before fading to black."), Editable(minValue: 0.0f, maxValue: 10000.0f)]
+        public float WallTextureExpandInwardsAmount
         {
             get;
             private set;
@@ -673,7 +695,7 @@ namespace Barotrauma
             }
         }
 
-        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, float difficulty, Identifier biomeId = default)
+        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, float difficulty, Identifier biomeId = default, bool pvpOnly = false, bool biomeTransition = false)
         {
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
@@ -688,7 +710,41 @@ namespace Barotrauma
                 lp.Type == type &&
                 (lp.AnyBiomeAllowed || lp.AllowedBiomeIdentifiers.Any()) &&
                 !lp.AllowedBiomeIdentifiers.Contains("None".ToIdentifier()));
-            if (biomeId.IsEmpty)
+
+            if (biomeTransition)
+            {
+                var biomeTransitionParams = matchingLevelParams.Where(lp =>
+                    lp.TransitionFromPreviousBiome && lp.AllowedBiomeIdentifiers.Contains(biomeId));
+
+                if (biomeTransitionParams.Any())
+                {
+                    return ToolBox.SelectWeightedRandom(biomeTransitionParams, p => p.Commonness, Rand.RandSync.ServerAndClient);
+                }
+            }
+            else
+            {
+                matchingLevelParams = matchingLevelParams.Where(lp => !lp.TransitionFromPreviousBiome);
+            }
+            
+            if (pvpOnly)
+            {
+                var pvpOnlyLevels = matchingLevelParams.Where(static lp => lp.IsPvPLevel);
+
+                if (pvpOnlyLevels.Any())
+                {
+                    matchingLevelParams = pvpOnlyLevels;
+                }
+                else
+                {
+                    DebugConsole.AddWarning("No PvP specific level generation presets found - using all level generation presets instead.");
+                }
+            }
+            else
+            {
+                matchingLevelParams = matchingLevelParams.Where(static lp => !lp.IsPvPLevel);
+            }
+
+            if (biomeId.IsEmpty || biomeId == "Random")
             {
                 //we don't want end levels when generating a completely random level (e.g. in mission mode)
                 matchingLevelParams = matchingLevelParams.Where(lp => lp.AnyBiomeAllowed || !lp.AllowedBiomeIdentifiers.All(b => Biome.Prefabs[b].IsEndBiome));
@@ -745,6 +801,20 @@ namespace Barotrauma
             AnyBiomeAllowed = allowedBiomeIdentifiers.Contains("any".ToIdentifier());
             allowedBiomeIdentifiers.Remove("any".ToIdentifier());
             AllowedBiomeIdentifiers = allowedBiomeIdentifiers.ToImmutableHashSet();
+
+            DisplayName = TextManager.Get($"levelname.{Identifier}");
+            Description = TextManager.Get($"leveldescription.{Identifier}");
+
+            var nameIdentifier = element.GetAttributeIdentifier("nameidentifier", Identifier.Empty);
+            var descriptionIdentifier = element.GetAttributeIdentifier("descriptionidentifier", Identifier.Empty);
+            if (!nameIdentifier.IsEmpty)
+            {
+                DisplayName = TextManager.Get(nameIdentifier);
+            }
+            if (!descriptionIdentifier.IsEmpty)
+            {
+                Description = TextManager.Get(descriptionIdentifier);
+            }
 
             foreach (var subElement in element.Elements())
             {

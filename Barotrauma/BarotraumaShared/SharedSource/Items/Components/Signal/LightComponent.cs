@@ -94,9 +94,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (isOn == value && IsActive == value) { return; }
-
                 IsActive = isOn = value;
-                SetLightSourceState(value, value ? lightBrightness : 0.0f);
+                bool isLightOn = isOn && item.Condition > 0;
+                SetLightSourceState(isLightOn, isLightOn ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
@@ -198,6 +198,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize("0,0", IsPropertySaveable.No, description: "Offset of the light from the position of the item (in pixels).")]
+        public Vector2 LightOffset
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Returns true if the red component of the light is twice as bright as the blue and green. Can be used by StatusEffects.
         /// </summary>
@@ -259,7 +266,6 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
-            item.AddTag("light");
         }
 
         public override void OnItemLoaded()
@@ -305,16 +311,17 @@ namespace Barotrauma.Items.Components
                 (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
-                if (item.body == null || item.body.Enabled || 
-                    (item.ParentInventory is ItemInventory itemInventory && !itemInventory.Container.HideItems))
-                {
-                    lightBrightness = 1.0f;
-                    SetLightSourceState(true, lightBrightness);
-                }
-                else
+                PhysicsBody body = ParentBody ?? item.body;
+                if ((body == null || !body.Enabled) &&
+                    (item.FindParentInventory(static it => it is ItemInventory { Container.HideItems: true }) != null))
                 {
                     lightBrightness = 0.0f;
                     SetLightSourceState(false, 0.0f);
+                }
+                else
+                {
+                    lightBrightness = 1.0f;
+                    SetLightSourceState(true, lightBrightness);
                 }
                 isOn = true;
                 SetLightSourceTransformProjSpecific();
@@ -367,7 +374,7 @@ namespace Barotrauma.Items.Components
             SetLightSourceTransformProjSpecific();
 
             PhysicsBody body = ParentBody ?? item.body;
-            if (body != null && !body.Enabled && !visibleInContainer)
+            if ((body == null || !body.Enabled) && !visibleInContainer)
             {
                 lightBrightness = 0.0f;
                 SetLightSourceState(false, 0.0f);

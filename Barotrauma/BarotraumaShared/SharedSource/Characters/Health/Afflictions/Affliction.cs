@@ -54,6 +54,11 @@ namespace Barotrauma
                 activeEffectDirty = true;
             }
         }
+        
+        /// <summary>
+        /// Armor penetration for status effects. Normally defined per attack, but that doesn't work on status effects.
+        /// </summary>
+        public float Penetration { get; set; }
 
         private float _nonClampedStrength = -1;
         public float NonClampedStrength => _nonClampedStrength > 0 ? _nonClampedStrength : _strength;
@@ -64,7 +69,7 @@ namespace Barotrauma
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
         public float Probability { get; set; } = 1.0f;
 
-        [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects explosions."), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects status effects and explosions."), Editable]
         public bool DivideByLimbCount { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Is the damage relative to the max vitality (percentage) or absolute (normal)"), Editable]
@@ -120,6 +125,7 @@ namespace Barotrauma
             Probability = source.Probability;
             DivideByLimbCount = source.DivideByLimbCount;
             MultiplyByMaxVitality = source.MultiplyByMaxVitality;
+            Penetration = source.Penetration;
         }
 
         public void Serialize(XElement element)
@@ -337,18 +343,24 @@ namespace Barotrauma
             }
         }
 
-        public float GetResistance(Identifier afflictionId)
+        /// <summary>
+        /// How much resistance to the specified affliction does this affliction currently give?
+        /// </summary>
+        public float GetResistance(Identifier afflictionId, LimbType limbType)
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
             var affliction = AfflictionPrefab.Prefabs[afflictionId];
             AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
-            if (!currentEffect.ResistanceFor.Any(r =>
-                r == affliction.Identifier ||
-                r == affliction.AfflictionType))
-            {
-                return 0.0f;
-            }
+
+            bool hasResistanceForAffliction = currentEffect.ResistanceFor.Any(identifier =>
+                identifier == affliction.Identifier ||
+                identifier == affliction.AfflictionType);
+            if (!hasResistanceForAffliction) { return 0.0f; }
+            
+            bool hasResistanceForLimb = limbType == LimbType.None || currentEffect.ResistanceLimbs.None() || currentEffect.ResistanceLimbs.Contains(limbType);
+            if (!hasResistanceForLimb) { return 0.0f; }
+            
             return MathHelper.Lerp(
                 currentEffect.MinResistance,
                 currentEffect.MaxResistance,
@@ -402,6 +414,8 @@ namespace Barotrauma
                     }
                     else
                     {
+                        //force an update when a periodic effect triggers to get it to trigger client-side
+                        characterHealth.Character.healthUpdateTimer = 0.0f;
                         foreach (StatusEffect statusEffect in periodicEffect.StatusEffects)
                         {
                             ApplyStatusEffect(ActionType.OnActive, statusEffect, 1.0f, characterHealth, targetLimb);
@@ -430,7 +444,7 @@ namespace Barotrauma
             }
             else if (currentEffect.StrengthChange > 0) // Reduce strengthening of afflictions if resistant
             {
-                _strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab));
+                _strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab, targetLimb?.type ?? LimbType.None));
             }
             // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
@@ -439,6 +453,17 @@ namespace Barotrauma
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
                 ApplyStatusEffect(ActionType.OnActive, statusEffect, deltaTime, characterHealth, targetLimb);
+            }
+
+            if (currentEffect.ConvulseAmount > 0f)
+            {
+                foreach (Limb limb in characterHealth.Character.AnimController.Limbs)
+                {
+                    if (limb.IsSevered) { continue; }
+                    if (limb.Hidden) { continue; }
+                    float force = Rand.Value() * limb.Mass * currentEffect.ConvulseAmount;
+                    limb.body.ApplyLinearImpulse(Rand.Vector(force), maxVelocity: Networking.NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                }
             }
 
             float amount = deltaTime;

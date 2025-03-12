@@ -110,9 +110,13 @@ namespace Barotrauma
             deathChoiceInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), parent: topLeftButtonGroup.RectTransform)
                 { MaxSize = new Point(HUDLayoutSettings.ButtonAreaTop.Width / 3, int.MaxValue) }, style: null)
             {
+                CanBeFocused = false,
                 Visible = false
             };
-            respawnInfoText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), deathChoiceInfoFrame.RectTransform), "", wrap: true);
+            respawnInfoText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), deathChoiceInfoFrame.RectTransform), "", wrap: true)
+            {
+                CanBeFocused = false
+            };
             deathChoiceButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), deathChoiceInfoFrame.RectTransform, Anchor.CenterRight), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 AbsoluteSpacing = HUDLayoutSettings.Padding,
@@ -189,7 +193,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null)
             {
                 GameMain.NetLobbyScreen.CharacterAppearanceCustomizationMenu?.AddToGUIUpdateList();
-                GameMain.NetLobbyScreen?.JobSelectionFrame?.AddToGUIUpdateList();
+                GameMain.NetLobbyScreen?.JobSelectionFrame?.AddToGUIUpdateList(order: 1);
             }
 
             DeathPrompt?.AddToGUIUpdateList();
@@ -282,10 +286,10 @@ namespace Barotrauma
         public void SetRespawnInfo(string text, Color textColor, bool waitForNextRoundRespawn, bool hideButtons = false)
         {
             if (topLeftButtonGroup == null) { return; }
-            
+
             bool permadeathMode = GameMain.NetworkMember?.ServerSettings is { RespawnMode: RespawnMode.Permadeath };
-            bool ironmanMode = GameMain.NetworkMember is { ServerSettings: { RespawnMode: RespawnMode.Permadeath, IronmanMode: true } };
-            
+            bool ironmanMode = GameMain.NetworkMember?.ServerSettings is { IronmanModeActive: true };
+
             bool hasRespawnOptions;
             if (permadeathMode)
             {
@@ -334,6 +338,20 @@ namespace Barotrauma
                     deathChoiceTickBox.Selected = !waitForNextRoundRespawn;    
                 }
             }
+        }
+        
+        /// <summary>
+        /// If there are any menu panels etc. open that contain information about the current player character, refresh it.
+        /// Useful when the player character changes, e.g. at permadeath, and subsequent taking over of a bot character.
+        /// </summary>
+        public void RefreshAnyOpenPlayerInfo()
+        {
+            DebugConsole.NewMessage($"Refreshing any open player info");
+            if (IsTabMenuOpen && TabMenu.SelectedTab == TabMenu.InfoFrameTab.Talents)
+            {
+                TabMenuInstance.SelectInfoFrameTab(TabMenu.InfoFrameTab.Talents);
+            }
+            // TODO: This can be expanded as need arises
         }
 
         public void Draw(SpriteBatch spriteBatch)

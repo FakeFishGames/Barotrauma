@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using FarseerPhysics;
+using FarseerPhysics.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,7 +11,7 @@ namespace Barotrauma.Particles
     class Particle
     {
         private ParticlePrefab prefab;
-
+        
         private string debugName = "Particle (uninitialized)";
 
         public delegate void OnChangeHullHandler(Vector2 position, Hull currentHull);
@@ -72,7 +73,7 @@ namespace Barotrauma.Particles
 
         public float VelocityChangeMultiplier;
 
-        public bool DrawOnTop { get; private set; }
+        public ParticleDrawOrder DrawOrder { get; private set; }
 
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -110,9 +111,12 @@ namespace Barotrauma.Particles
         {
             return debugName;
         }
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public void Init(ParticlePrefab prefab, Vector2 spawnPosition, Vector2 speed, float spawnRotation, Hull hullGuess = null, ParticleDrawOrder drawOrder = ParticleDrawOrder.Default, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
+
+            System.Diagnostics.Debug.Assert(position.IsValid(), "Attempted to spawn a particle at an invalid position.");
+
 #if DEBUG
             debugName = $"Particle ({prefab.Name})";
 #else
@@ -124,14 +128,14 @@ namespace Barotrauma.Particles
             animState = 0;
             animFrame = 0;
 
-            currentHull = prefab.CanEnterSubs ? Hull.FindHull(position, hullGuess) : null;
+            currentHull = prefab.CanEnterSubs ? Hull.FindHull(spawnPosition, hullGuess) : null;
 
             size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 
             if (tracerPoints != null)
             {
                 size = new Vector2(Vector2.Distance(tracerPoints.Item1, tracerPoints.Item2), size.Y);
-                position = (tracerPoints.Item1 + tracerPoints.Item2) / 2;
+                spawnPosition = (tracerPoints.Item1 + tracerPoints.Item2) / 2;
             }
 
             RefreshColliderSize();
@@ -139,23 +143,19 @@ namespace Barotrauma.Particles
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
             changesSize = !sizeChange.NearlyEquals(Vector2.Zero);
 
-            this.position = position;
-            prevPosition = position;
-            
-            drawPosition = position;
-            
-            velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
-
             if (currentHull?.Submarine != null)
             {
-                velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+                //convert to the sub's coordinate space
+                spawnPosition -= currentHull.Submarine.Position;
             }
+            
+            position = prevPosition = drawPosition = spawnPosition;
+            velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
 
-            this.rotation = rotation + Rand.Range(prefab.StartRotationMinRad, prefab.StartRotationMaxRad);    
-            prevRotation = rotation;
+            rotation = spawnRotation + Rand.Range(prefab.StartRotationMinRad, prefab.StartRotationMaxRad);    
+            prevRotation = spawnRotation;
 
             angularVelocity = Rand.Range(prefab.AngularVelocityMinRad, prefab.AngularVelocityMaxRad);
-
           
             if (prefab.LifeTimeMin <= 0.0f)
             {
@@ -202,10 +202,10 @@ namespace Barotrauma.Particles
             {
                 this.rotation = MathUtils.VectorToAngle(new Vector2(velocity.X, -velocity.Y));
 
-                prevRotation = rotation;
+                prevRotation = spawnRotation;
             }
 
-            DrawOnTop = drawOnTop;
+            DrawOrder = drawOrder;
 
             this.collisionIgnoreTimer = collisionIgnoreTimer;
         }
@@ -248,7 +248,7 @@ namespace Barotrauma.Particles
                 rotation += angularVelocity * deltaTime;
             }
 
-            bool inWater = (currentHull == null || (currentHull.Submarine != null && position.Y - currentHull.Submarine.DrawPosition.Y < currentHull.Surface));
+            bool inWater = (currentHull == null || (currentHull.Submarine != null && position.Y < currentHull.Surface));
             if (inWater)
             {
                 velocity.X += velocityChangeWater.X * VelocityChangeMultiplier * deltaTime;
@@ -323,7 +323,7 @@ namespace Barotrauma.Particles
             if (collisionIgnoreTimer > 0f)
             {
                 collisionIgnoreTimer -= deltaTime;
-                if (collisionIgnoreTimer <= 0f) { currentHull ??= Hull.FindHull(position); }
+                if (collisionIgnoreTimer <= 0f) { currentHull ??= Hull.FindHull(position, guess: currentHull, useWorldCoordinates: false); }
                 return UpdateResult.Normal;
             }
             if (!prefab.UseCollision) { return UpdateResult.Normal; }
@@ -350,7 +350,7 @@ namespace Barotrauma.Particles
         {
             if (currentHull == null)
             {
-                Hull collidedHull = Hull.FindHull(position);
+                Hull collidedHull = Hull.FindHull(position, useWorldCoordinates: true);
                 if (collidedHull != null)
                 {
                     if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
@@ -359,7 +359,7 @@ namespace Barotrauma.Particles
             }
             else
             {
-                Rectangle hullRect = currentHull.WorldRect;
+                Rectangle hullRect = currentHull.Rect;
                 Vector2 collisionNormal = Vector2.Zero;
                 if (velocity.Y < 0.0f && position.Y - colliderRadius.Y < hullRect.Y - hullRect.Height)
                 {
@@ -377,9 +377,9 @@ namespace Barotrauma.Particles
                     {
                         if (gap.Open <= 0.9f || gap.IsHorizontal) { continue; }
 
-                        if (gap.WorldRect.X > position.X || gap.WorldRect.Right < position.X) { continue; }
-                        float hullCenterY = currentHull.WorldRect.Y - currentHull.WorldRect.Height / 2;
-                        int gapDir = Math.Sign(gap.WorldRect.Y - hullCenterY);
+                        if (gap.Rect.X > position.X || gap.Rect.Right < position.X) { continue; }
+                        float hullCenterY = currentHull.Rect.Y - currentHull.Rect.Height / 2;
+                        int gapDir = Math.Sign(gap.Rect.Y - hullCenterY);
                         if (Math.Sign(velocity.Y) != gapDir || Math.Sign(position.Y - hullCenterY) != gapDir) { continue; }
 
                         gapFound = true;
@@ -411,9 +411,9 @@ namespace Barotrauma.Particles
                     {
                         if (gap.Open <= 0.9f || !gap.IsHorizontal) { continue; }
 
-                        if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) { continue; }
-                        int gapDir = Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X);
-                        if (Math.Sign(velocity.X) != gapDir || Math.Sign(position.X - currentHull.WorldRect.Center.X) != gapDir) { continue; }
+                        if (gap.Rect.Y < position.Y || gap.WorldRect.Y - gap.Rect.Height > position.Y) { continue; }
+                        int gapDir = Math.Sign(gap.Rect.Center.X - currentHull.Rect.Center.X);
+                        if (Math.Sign(velocity.X) != gapDir || Math.Sign(position.X - currentHull.Rect.Center.X) != gapDir) { continue; }
 
                         gapFound = true;
                         break;
@@ -434,7 +434,7 @@ namespace Barotrauma.Particles
                     }
                     else
                     {
-                        Hull newHull = Hull.FindHull(position, currentHull);
+                        Hull newHull = Hull.FindHull(position, currentHull, useWorldCoordinates: false);
                         if (newHull != currentHull)
                         {
                             currentHull = newHull;
@@ -457,32 +457,25 @@ namespace Barotrauma.Particles
 
         private void ApplyDrag(float dragCoefficient, float deltaTime)
         {
-            Vector2 relativeVel = velocity;
-            if (currentHull?.Submarine != null)
-            {
-                relativeVel = velocity - ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
-            }
+            Vector2 newVel = velocity;
+            float speed = velocity.Length();
 
-            float speed = relativeVel.Length();
-
-            relativeVel /= speed;
+            if (speed < 0.01f) { return; }
+            
+            newVel /= speed;
 
             float drag = speed * speed * dragCoefficient * 0.01f * deltaTime;
             if (drag > speed)
             {
-                relativeVel = Vector2.Zero;
+                newVel = Vector2.Zero;
             }
             else
             {
                 speed -= drag;
-                relativeVel *= speed;
+                newVel *= speed;
             }
 
-            velocity = relativeVel;
-            if (currentHull?.Submarine != null)
-            {
-                velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
-            }
+            velocity = newVel;        
         }
 
 
@@ -490,10 +483,7 @@ namespace Barotrauma.Particles
         {
             if (prevHull == null) { return; }
 
-            Rectangle prevHullRect = prevHull.WorldRect;
-
-            Vector2 subVel = prevHull?.Submarine != null ? ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity) : Vector2.Zero;
-            velocity -= subVel;
+            Rectangle prevHullRect = prevHull.Rect;
 
             if (Math.Abs(collisionNormal.X) > Math.Abs(collisionNormal.Y))
             {
@@ -524,14 +514,12 @@ namespace Barotrauma.Particles
             }
 
             OnCollision?.Invoke(position, currentHull);
-
-            velocity += subVel;
         }
 
 
         private void OnWallCollisionOutside(Hull collisionHull)
         {
-            Rectangle hullRect = collisionHull.WorldRect;
+            Rectangle hullRect = collisionHull.Rect;
 
             Vector2 center = new Vector2(hullRect.X + hullRect.Width / 2, hullRect.Y - hullRect.Height / 2);
 
@@ -584,7 +572,13 @@ namespace Barotrauma.Particles
 
             Color currColor = new Color(color.ToVector4() * ColorMultiplier);
 
-            Vector2 drawPos = new Vector2(drawPosition.X, -drawPosition.Y);
+            Vector2 drawPos = drawPosition;
+            if (currentHull?.Submarine is Submarine sub)
+            {
+                drawPos += sub.DrawPosition;
+            }
+
+            drawPos = new Vector2(drawPos.X, -drawPos.Y);
             if (prefab.Sprites[spriteIndex] is SpriteSheet sheet)
             {
                 sheet.Draw(

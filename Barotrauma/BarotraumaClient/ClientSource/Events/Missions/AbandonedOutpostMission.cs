@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -21,7 +21,12 @@ namespace Barotrauma
             }
         }
 
-        public override bool DisplayAsCompleted => State > 0 && requireRescue.None();
+        public override bool DisplayAsCompleted => 
+            !DisplayAsFailed &&
+            State > 0 && 
+            //don't display as completed mid-round if there's NPCs to rescue (mission isn't guaranteed to complete yet)
+            requireRescue.None();
+
         public override bool DisplayAsFailed => State == HostagesKilledState;
 
         public override void ClientReadInitial(IReadMessage msg)
@@ -47,7 +52,7 @@ namespace Barotrauma
 #if CLIENT
                     if (allowOrderingRescuees)
                     {
-                        GameMain.GameSession.CrewManager.AddCharacterToCrewList(character);
+                        GameMain.GameSession.CrewManager?.AddCharacterToCrewList(character);
                     }
 #endif
                 }
@@ -59,10 +64,13 @@ namespace Barotrauma
                 if (character.Submarine != null && character.AIController is EnemyAIController enemyAi)
                 {
                     enemyAi.UnattackableSubmarines.Add(character.Submarine);
-                    enemyAi.UnattackableSubmarines.Add(Submarine.MainSub);
-                    foreach (Submarine sub in Submarine.MainSub.DockedTo)
+                    if (Submarine.MainSub != null)
                     {
-                        enemyAi.UnattackableSubmarines.Add(sub);
+                        enemyAi.UnattackableSubmarines.Add(Submarine.MainSub);
+                        foreach (Submarine sub in Submarine.MainSub.DockedTo)
+                        {
+                            enemyAi.UnattackableSubmarines.Add(sub);
+                        }
                     }
                 }
             }

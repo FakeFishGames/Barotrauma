@@ -205,7 +205,7 @@ namespace Barotrauma
 
             if (Character.Controlled.SelectedItem.GetComponent<Reactor>() is Reactor reactor && reactor.PowerOn &&
                 Character.Controlled.SelectedItem.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
-                containedItems.Count(i => i.HasTag(Tags.Fuel)) > 1)
+                containedItems.Count(i => i.HasTag(Tags.ReactorFuel)) > 1)
             {
                 if (DisplayHint("onisinteracting.reactorwithextrarods".ToIdentifier())) { return; }
             }
@@ -316,7 +316,7 @@ namespace Barotrauma
                 if (affliction?.Prefab == null) { continue; }
                 if (affliction.Prefab.IsBuff) { continue; }
                 if (affliction.Prefab == AfflictionPrefab.OxygenLow) { continue; }
-                if (affliction.Prefab == AfflictionPrefab.RadiationSickness && (GameMain.GameSession.Map?.Radiation?.IsEntityRadiated(character) ?? false)) { continue; }
+                if (affliction.Prefab == AfflictionPrefab.RadiationSickness && (GameMain.GameSession.Map?.Radiation?.DepthInRadiation(character) ?? 0) > 0) { continue; }
                 if (affliction.Strength < affliction.Prefab.ShowIconThreshold) { continue; }
                 DisplayHint("onafflictiondisplayed".ToIdentifier(),
                     variables: new[] { ("[key]".ToIdentifier(), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Health)) },

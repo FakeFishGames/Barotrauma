@@ -1,4 +1,4 @@
-/* Original source Farseer Physics Engine:
+﻿/* Original source Farseer Physics Engine:
  * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
  * Microsoft Permissive License (Ms-PL) v1.1
  */
@@ -243,7 +243,7 @@ namespace FarseerPhysics.Dynamics.Joints
             Enabled = false;
 
             if (Broke != null)
-                Broke(this, (float)Math.Sqrt(jointErrorSquared));
+                Broke(this, MathF.Sqrt(jointErrorSquared));
         }
 
         internal abstract void SolveVelocityConstraints(ref SolverData data);

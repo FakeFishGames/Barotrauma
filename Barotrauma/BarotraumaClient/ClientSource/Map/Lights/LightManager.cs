@@ -174,7 +174,7 @@ namespace Barotrauma.Lights
         }
 
         private readonly List<LightSource> activeLights = new List<LightSource>(capacity: 100);
-        private readonly List<LightSource> activeLightsWithLightVolume = new List<LightSource>(capacity: 100);
+        private readonly List<LightSource> activeShadowCastingLights = new List<LightSource>(capacity: 100);
 
         public static int ActiveLightCount { get; private set; }
 
@@ -243,6 +243,7 @@ namespace Barotrauma.Lights
             }
         }
 
+        /// <param name="backgroundObstructor">A render target that contains the structures that should obstruct lights in the background. If not given, damageable walls and hulls are rendered to obstruct the background lights.</param>
         public void RenderLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             if (!LightingEnabled) { return; }
@@ -273,13 +274,13 @@ namespace Barotrauma.Lights
                 {
                     light.ParentBody.UpdateDrawPosition();
 
-                    Vector2 pos =  light.ParentBody.DrawPosition;
+                    Vector2 pos =  light.ParentBody.DrawPosition + light.OffsetFromBody;
                     if (light.ParentSub != null) { pos -= light.ParentSub.DrawPosition; }
                     light.Position = pos;
                 }
 
                 //above the top boundary of the level (in an inactive respawn shuttle?)
-                if (Level.Loaded != null && light.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                if (Level.IsPositionAboveLevel(light.WorldPosition)) { continue; }
 
                 float range = light.LightSourceParams.TextureRange;
                 if (light.LightSprite != null)
@@ -315,19 +316,20 @@ namespace Barotrauma.Lights
             }
 
             //find the lights with an active light volume
-            activeLightsWithLightVolume.Clear();
+            activeShadowCastingLights.Clear();
             foreach (var activeLight in activeLights)
             {
+                if (!activeLight.CastShadows) { continue; }
                 if (activeLight.Range < 1.0f || activeLight.Color.A < 1 || activeLight.CurrentBrightness <= 0.0f) { continue; }
-                activeLightsWithLightVolume.Add(activeLight);
+                activeShadowCastingLights.Add(activeLight);
             }
 
             //remove some lights with a light volume if there's too many of them
-            if (activeLightsWithLightVolume.Count > GameSettings.CurrentConfig.Graphics.VisibleLightLimit && Screen.Selected is { IsEditor: false })
+            if (activeShadowCastingLights.Count > GameSettings.CurrentConfig.Graphics.VisibleLightLimit && Screen.Selected is { IsEditor: false })
             {
-                for (int i = GameSettings.CurrentConfig.Graphics.VisibleLightLimit; i < activeLightsWithLightVolume.Count; i++)
+                for (int i = GameSettings.CurrentConfig.Graphics.VisibleLightLimit; i < activeShadowCastingLights.Count; i++)
                 {
-                    activeLights.Remove(activeLightsWithLightVolume[i]);
+                    activeLights.Remove(activeShadowCastingLights[i]);
                 }
             }
             activeLights.Sort((l1, l2) => l1.LastRecalculationTime.CompareTo(l2.LastRecalculationTime));
@@ -410,11 +412,21 @@ namespace Barotrauma.Lights
             }
             spriteBatch.End();
 
-            GameMain.GameScreen.DamageEffect.CurrentTechnique = GameMain.GameScreen.DamageEffect.Techniques["StencilShaderSolidColor"];
-            GameMain.GameScreen.DamageEffect.Parameters["solidColor"].SetValue(Color.Black.ToVector4());
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.LinearWrap, transformMatrix: spriteBatchTransform, effect: GameMain.GameScreen.DamageEffect);
-            Submarine.DrawDamageable(spriteBatch, GameMain.GameScreen.DamageEffect);
-            spriteBatch.End();
+            if (backgroundObstructor != null)
+            {
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.LinearWrap, transformMatrix: Matrix.Identity, effect: GameMain.GameScreen.DamageEffect);
+                spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
+                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
+                spriteBatch.End();
+            }
+            else
+            {
+                GameMain.GameScreen.DamageEffect.CurrentTechnique = GameMain.GameScreen.DamageEffect.Techniques["StencilShaderSolidColor"];
+                GameMain.GameScreen.DamageEffect.Parameters["solidColor"].SetValue(Color.Black.ToVector4());
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.LinearWrap, transformMatrix: spriteBatchTransform, effect: GameMain.GameScreen.DamageEffect);
+                Submarine.DrawDamageable(spriteBatch, GameMain.GameScreen.DamageEffect);
+                spriteBatch.End();
+            }
 
             graphics.BlendState = BlendState.Additive;
 
@@ -679,11 +691,14 @@ namespace Barotrauma.Lights
             }
             return visibleHulls;
         }
+        
+        private static readonly List<VertexPositionColor> ShadowVertices = new List<VertexPositionColor>(500);
+        private static readonly List<VertexPositionTexture> PenumbraVertices = new List<VertexPositionTexture>(500);
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
             if ((!LosEnabled || LosMode == LosMode.None) && ObstructVisionAmount <= 0.0f) { return; }
-            if (ViewTarget == null) return;
+            if (ViewTarget == null) { return; }
 
             graphics.SetRenderTarget(LosTexture);
 
@@ -766,11 +781,11 @@ namespace Barotrauma.Lights
 
                 if (convexHulls != null)
                 {
-                    List<VertexPositionColor> shadowVerts = new List<VertexPositionColor>();
-                    List<VertexPositionTexture> penumbraVerts = new List<VertexPositionTexture>();
+                    ShadowVertices.Clear();
+                    PenumbraVertices.Clear();
                     foreach (ConvexHull convexHull in convexHulls)
                     {
-                        if (!convexHull.Enabled || !convexHull.Intersects(camView)) { continue; }
+                        if (!convexHull.Intersects(camView)) { continue; }
 
                         Vector2 relativeViewPos = pos;
                         if (convexHull.ParentEntity?.Submarine != null) 
@@ -782,26 +797,26 @@ namespace Barotrauma.Lights
 
                         for (int i = 0; i < convexHull.ShadowVertexCount; i++)
                         {
-                            shadowVerts.Add(convexHull.ShadowVertices[i]);
+                            ShadowVertices.Add(convexHull.ShadowVertices[i]);
                         }
 
                         for (int i = 0; i < convexHull.PenumbraVertexCount; i++)
                         {
-                            penumbraVerts.Add(convexHull.PenumbraVertices[i]);
+                            PenumbraVertices.Add(convexHull.PenumbraVertices[i]);
                         }
                     }
 
-                    if (shadowVerts.Count > 0)
+                    if (ShadowVertices.Count > 0)
                     {
                         ConvexHull.shadowEffect.World = shadowTransform;
                         ConvexHull.shadowEffect.CurrentTechnique.Passes[0].Apply();
-                        graphics.DrawUserPrimitives(PrimitiveType.TriangleList, shadowVerts.ToArray(), 0, shadowVerts.Count / 3, VertexPositionColor.VertexDeclaration);
+                        graphics.DrawUserPrimitives(PrimitiveType.TriangleList, ShadowVertices.ToArray(), 0, ShadowVertices.Count / 3, VertexPositionColor.VertexDeclaration);
 
-                        if (penumbraVerts.Count > 0)
+                        if (PenumbraVertices.Count > 0)
                         {
                             ConvexHull.penumbraEffect.World = shadowTransform;
                             ConvexHull.penumbraEffect.CurrentTechnique.Passes[0].Apply();
-                            graphics.DrawUserPrimitives(PrimitiveType.TriangleList, penumbraVerts.ToArray(), 0, penumbraVerts.Count / 3, VertexPositionTexture.VertexDeclaration);
+                            graphics.DrawUserPrimitives(PrimitiveType.TriangleList, PenumbraVertices.ToArray(), 0, PenumbraVertices.Count / 3, VertexPositionTexture.VertexDeclaration);
                         }
                     }
                 }
@@ -827,7 +842,7 @@ namespace Barotrauma.Lights
         public void ClearLights()
         {
             activeLights.Clear();
-            activeLightsWithLightVolume.Clear();
+            activeShadowCastingLights.Clear();
             lights.Clear();
         }
     }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -94,7 +95,7 @@ namespace Barotrauma
             try
             {
                 ToolBox.IsProperFilenameCase(filePath);
-                using FileStream stream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                using FileStream stream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, catchUnauthorizedAccessExceptions: false);
                 using XmlReader reader = CreateReader(stream, Path.GetFullPath(filePath));
                 doc = XDocument.Load(reader, LoadOptions.SetBaseUri);
             }
@@ -511,23 +512,54 @@ namespace Barotrauma
 
             return ushortValue;
         }
+        
+        public static T ParseEnumValue<T>(string value, T defaultValue, XAttribute attribute) where T : struct, Enum
+        {
+            if (Enum.TryParse(value, true, out T result))
+            {
+                return result;
+            }
+            else if (int.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
+            {
+                return Unsafe.As<int, T>(ref resultInt);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Error in {attribute}! \"{value}\" is not a valid {typeof(T).Name} value");
+                return defaultValue;
+            }
+        }
 
         public static T GetAttributeEnum<T>(this XElement element, string name, T defaultValue) where T : struct, Enum
         {
             var attr = element?.GetAttribute(name);
             if (attr == null) { return defaultValue; }
+            return ParseEnumValue<T>(attr.Value, defaultValue, attr);
+        }
 
-            if (Enum.TryParse(attr.Value, true, out T result))
+        [return: NotNullIfNotNull("defaultValue")]
+        public static T[] GetAttributeEnumArray<T>(this XElement element, string name, T[] defaultValue) where T : struct, Enum
+        {
+            string[] stringArray = element.GetAttributeStringArray(name, null);
+            if (stringArray == null) { return defaultValue; }
+            else if (stringArray.Length == 0) { return new T[0]; }
+
+            T[] enumArray = new T[stringArray.Length];
+            var attribute = element.GetAttribute(name);
+
+            for (int i = 0; i < stringArray.Length; i++)
             {
-                return result;
+                try
+                {
+                    enumArray[i] = ParseEnumValue<T>(stringArray[i].Trim(), default(T), attribute); 
+                }
+                catch (Exception e)
+                {
+                    LogAttributeError(attribute, element, e);
+                }
             }
-            else if (int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
-            {
-                return Unsafe.As<int, T>(ref resultInt);
-            }
-            DebugConsole.ThrowError($"Error in {attr}! \"{attr}\" is not a valid {typeof(T).Name} value");
-            return default;
-            
+
+            return enumArray;
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
@@ -704,9 +736,9 @@ namespace Barotrauma
         public static string ElementInnerText(this XElement el)
         {
             StringBuilder str = new StringBuilder();
-            foreach (XNode element in el.DescendantNodes().Where(x => x.NodeType == XmlNodeType.Text))
+            foreach (XText textNode in el.DescendantNodes().OfType<XText>())
             {
-                str.Append(element.ToString());
+                str.Append(textNode.Value);
             }
             return str.ToString();
         }
@@ -1029,16 +1061,6 @@ namespace Barotrauma
         public static Identifier VariantOf(this XElement element) =>
             element.GetAttributeIdentifier("inherit", element.GetAttributeIdentifier("variantof", ""));
 
-        public static string[] ParseStringArray(string stringArrayValues)
-        {
-            return string.IsNullOrEmpty(stringArrayValues) ? Array.Empty<string>() : stringArrayValues.Split(';');
-        }
-        
-        public static Identifier[] ParseIdentifierArray(string stringArrayValues)
-        {
-            return ParseStringArray(stringArrayValues).ToIdentifiers().ToArray();
-        }
-
         public static bool IsOverride(this XElement element) => element.NameAsIdentifier() == "override";
 
         /// <summary>
@@ -1051,7 +1073,21 @@ namespace Barotrauma
 
         public static XAttribute GetAttribute(this XElement element, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => element.GetAttribute(a => a.Name.ToString().Equals(name, comparisonMethod));
 
-        public static void SetAttributeValue(this XElement element, string name, object value, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => GetAttribute(element, name, comparisonMethod)?.SetValue(value);
+        public static bool TrySetAttributeValue(this XElement element, string name, object value, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase)
+        {
+            var attribute = GetAttribute(element, name, comparisonMethod);
+            if (attribute == null) { return false; }
+            attribute.SetValue(value);
+            return true;
+        }
+        
+        public static void SetAttribute(this XElement element, string name, object value)
+        {
+            if (!TrySetAttributeValue(element, name, value))
+            {
+                element.SetAttributeValue(name, value);
+            }
+        }
 
         public static XAttribute GetAttribute(this XElement element, Identifier name) => element.GetAttribute(name.Value, StringComparison.OrdinalIgnoreCase);
 

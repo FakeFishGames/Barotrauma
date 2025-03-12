@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -231,7 +232,7 @@ namespace Barotrauma.Items.Components
 
             float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
 
-            Overload = Voltage > maxOverVoltage;
+            Overload = Voltage > maxOverVoltage && GameMain.GameSession is not { RoundDuration: < 5 };
 
             if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
@@ -378,14 +379,30 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in item.Connections)
             {
                 connectionDirty[c] = true;
+                if (c.IsPower)
+                {
+                    ChangedConnections.Add(c);
+                    if (connectedRecipients.TryGetValue(c, out var recipients))
+                    {
+                        recipients.Where(c => c.IsPower).ForEach(c => ChangedConnections.Add(c));
+                    }
+                }
             }
         }
 
         public void SetConnectionDirty(Connection connection)
         {
             var connections = item.Connections;
-            if (connections == null || !connections.Contains(connection)) return;
+            if (connections == null || !connections.Contains(connection)) { return; }
             connectionDirty[connection] = true;
+            if (connection.IsPower)
+            {
+                ChangedConnections.Add(connection);
+                if (connectedRecipients.TryGetValue(connection, out var recipients))
+                {
+                    recipients.Where(c => c.IsPower).ForEach(c => ChangedConnections.Add(c));
+                }
+            }
         }
 
         public override void OnItemLoaded()

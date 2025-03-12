@@ -475,11 +475,8 @@ namespace Barotrauma.Items.Components
                 if (sound != null)
                 {
                     SoundPlayer.PlaySound(
-                        sound.Sound,
+                        sound,
                         item.WorldPosition,
-                        sound.Volume,
-                        sound.Range,
-                        freqMult: sound.GetRandomFrequencyMultiplier(),
                         hullGuess: item.CurrentHull);
                 }
             }

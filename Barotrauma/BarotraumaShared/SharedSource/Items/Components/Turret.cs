@@ -14,6 +14,7 @@ namespace Barotrauma.Items.Components
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
         private Sprite barrelSprite, railSprite;
+        private Sprite barrelSpriteBroken, railSpriteBroken;
         private readonly List<(Sprite sprite, Vector2 position)> chargeSprites = new List<(Sprite sprite, Vector2 position)>();
         private readonly List<Sprite> spinningBarrelSprites = new List<Sprite>();
 
@@ -88,6 +89,8 @@ namespace Barotrauma.Items.Components
         private float resetActiveUserTimer;
 
         private List<LightComponent> lightComponents;
+
+        private Projectile lastProjectile;
 
         private readonly bool isSlowTurret;
 
@@ -320,9 +323,22 @@ namespace Barotrauma.Items.Components
         [Serialize("", IsPropertySaveable.Yes, description: "[Auto Operate] Group or SpeciesName that the AI ignores when the turret is operated automatically."), 
          Editable(TransferToSwappedItem = true)]
         public Identifier FriendlyTag { get; private set; }
-        
+
+        [Serialize("OwnSub", IsPropertySaveable.Yes, description: "[Auto Operate] Team that the turret considers friendly."),
+         Editable(TransferToSwappedItem = true)]
+        public TeamType FriendlyTeamType { get; private set; }
+
+        public enum TeamType
+        {
+            OwnSub,
+            Team1,
+            Team2,
+            FriendlyNPC,
+            NoneTeam
+        }
+
         #endregion
-        
+
         private const string SetAutoOperateConnection = "set_auto_operate";
         private const string ToggleAutoOperateConnection = "toggle_auto_operate";
 
@@ -330,7 +346,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-            
+                        
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -340,6 +356,12 @@ namespace Barotrauma.Items.Components
                         break;
                     case "railsprite":
                         railSprite = new Sprite(subElement);
+                        break;
+                    case "barrelspritebroken":
+                        barrelSpriteBroken = new Sprite(subElement);
+                        break;
+                    case "railspritebroken":
+                        railSpriteBroken = new Sprite(subElement);
                         break;
                     case "chargesprite":
                         chargeSprites.Add((new Sprite(subElement), subElement.GetAttributeVector2("chargetarget", Vector2.Zero)));
@@ -376,6 +398,7 @@ namespace Barotrauma.Items.Components
             base.OnMapLoaded();
             if (loadedRotationLimits.HasValue) { RotationLimits = loadedRotationLimits.Value; }
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
+            if (loadedFriendlyTeamType.HasValue) { FriendlyTeamType = loadedFriendlyTeamType.Value; }
             targetRotation = Rotation;
             UpdateTransformedBarrelPos();
             if (!AllowAutoOperateWithWiring && 
@@ -779,6 +802,12 @@ namespace Barotrauma.Items.Components
 
                 if (launchedProjectile != null || LaunchWithoutProjectile)
                 {
+                    if (launchedProjectile?.Item.GetComponent<Rope>() != null &&
+                        lastProjectile?.Item.GetComponent<Rope>() is { SnapWhenWeaponFiredAgain: true } rope)
+                    {
+                        rope.Snap();
+                    }
+
                     if (projectiles.Any())
                     {
                         foreach (Projectile projectile in projectiles)
@@ -805,6 +834,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            lastProjectile = launchedProjectile;
 
 #if SERVER
             if (character != null && launchedProjectile != null)
@@ -900,6 +931,10 @@ namespace Barotrauma.Items.Components
                         projectileComponent.Attack.DamageMultiplier = (1f * DamageMultiplier) + (TinkeringDamageIncrease * tinkeringStrength);
                     }
                     projectileComponent.Use(null, LaunchImpulse);
+                    if (item.GetComponent<TriggerComponent>() is { } trigger)
+                    {
+                        projectileComponent.IgnoredBodies.Add(trigger.PhysicsBody.FarseerBody);
+                    }
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);
                     projectileComponent.User = user;
 
@@ -1027,7 +1062,7 @@ namespace Barotrauma.Items.Components
             }
             if (TargetItems)
             {
-                foreach (Item targetItem in Item.ItemList)
+                foreach (Item targetItem in Item.TurretTargetItems)
                 {
                     if (!IsValidTarget(targetItem)) { continue; }
                     float priority = isSlowTurret ? targetItem.Prefab.AISlowTurretPriority : targetItem.Prefab.AITurretPriority;
@@ -1117,7 +1152,7 @@ namespace Barotrauma.Items.Components
             if (target is Hull targetHull)
             {
                 Vector2 barrelDir = GetBarrelDir();
-                if (!MathUtils.GetLineRectangleIntersection(item.WorldPosition, item.WorldPosition + barrelDir * AIRange, targetHull.WorldRect, out _))
+                if (!MathUtils.GetLineWorldRectangleIntersection(item.WorldPosition, item.WorldPosition + barrelDir * AIRange, targetHull.WorldRect, out _))
                 {
                     return;
                 }
@@ -1351,7 +1386,7 @@ namespace Barotrauma.Items.Components
                     }
                     // Don't aim monsters that are inside any submarine.
                     if (!enemy.IsHuman && enemy.CurrentHull != null) { continue; }
-                    if (HumanAIController.IsFriendly(character, enemy)) { continue; }
+                    if (HumanAIController.IsFriendly(character, enemy, ignoreHuskDisguising: true)) { continue; }
                     // Don't shoot at captured enemies.
                     if (enemy.LockHands) { continue; }
                     float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
@@ -1371,7 +1406,7 @@ namespace Barotrauma.Items.Components
                     closestDistance = dist / priority;
                     currentTarget = closestEnemy;
                 }
-                foreach (Item targetItem in Item.ItemList)
+                foreach (Item targetItem in Item.TurretTargetItems)
                 {
                     if (!IsValidTarget(targetItem)) { continue; }
                     float priority = isSlowTurret ? targetItem.Prefab.AISlowTurretPriority : targetItem.Prefab.AITurretPriority;
@@ -1675,22 +1710,34 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        private CharacterTeamType GetFriendlyTeam()
+        {
+            return FriendlyTeamType switch
+            {
+                TeamType.Team1 => CharacterTeamType.Team1,
+                TeamType.Team2 => CharacterTeamType.Team2,
+                TeamType.FriendlyNPC => CharacterTeamType.FriendlyNPC,
+                TeamType.NoneTeam => CharacterTeamType.None,
+                TeamType.OwnSub => item.Submarine?.TeamID ?? CharacterTeamType.None,
+                _ => throw new NotImplementedException(),
+            };
+        }
+
         private bool IsValidTargetForAutoOperate(Character target, Identifier friendlyTag)
         {
             if (!friendlyTag.IsEmpty)
             {
                 if (target.SpeciesName.Equals(friendlyTag) || target.Group.Equals(friendlyTag)) { return false; }
             }
+
+            CharacterTeamType friendlyTeam = GetFriendlyTeam();
+
+            if (target.TeamID == friendlyTeam) { return false; }
+            
             bool isHuman = target.IsHuman || target.Group == CharacterPrefab.HumanSpeciesName;
             if (isHuman)
             {
-                if (item.Submarine != null)
-                {
-                    if (item.Submarine.Info.IsOutpost) { return false; }
-                    // Check that the target is not in the friendly team, e.g. pirate or a hostile player sub (PvP).
-                    return !target.IsOnFriendlyTeam(item.Submarine.TeamID) && TargetHumans;
-                }
-                return TargetHumans;
+                return !target.IsOnFriendlyTeam(friendlyTeam) && TargetHumans;
             }
             else
             {
@@ -1719,7 +1766,7 @@ namespace Barotrauma.Items.Components
             {
                 if (user != null)
                 {
-                    if (HumanAIController.IsFriendly(user, targetCharacter))
+                    if (HumanAIController.IsFriendly(user, targetCharacter, ignoreHuskDisguising: true))
                     {
                         return false;
                     }
@@ -1739,8 +1786,15 @@ namespace Barotrauma.Items.Components
                     Submarine sub = e.Submarine ?? e as Submarine;
                     if (sub == null) { return true; }
                     if (sub == Item.Submarine) { return false; }
-                    if (sub.Info.IsOutpost || sub.Info.IsWreck || sub.Info.IsBeacon) { return false; }
-                    if (sub.TeamID == Item.Submarine.TeamID) { return false; }
+                    if (sub.Info.IsOutpost || sub.Info.IsWreck || sub.Info.IsBeacon || sub.Info.IsRuin) { return false; }
+                    if (item.Submarine == null)
+                    {
+                        if (sub.TeamID == GetFriendlyTeam()) { return false; }
+                    }
+                    else
+                    {
+                        if (sub.TeamID == Item.Submarine.TeamID) { return false; }
+                    }
                 }
                 else if (targetBody.UserData is not Voronoi2.VoronoiCell { IsDestructible: true })
                 {
@@ -1758,6 +1812,8 @@ namespace Barotrauma.Items.Components
                customPredicate: (Fixture f) =>
                {
                    if (f.UserData is Item i && i.GetComponent<Turret>() != null) { return false; }
+                   if (f.CollidesWith == Physics.CollisionNone) { return false; }
+                   if (f.Body.UserData  == item) { return false; }
                    if (f.UserData is Hull) { return false; }
                    return !item.StaticFixtures.Contains(f);
                });
@@ -1792,6 +1848,8 @@ namespace Barotrauma.Items.Components
 
             barrelSprite?.Remove(); barrelSprite = null;
             railSprite?.Remove(); railSprite = null;
+            barrelSpriteBroken?.Remove(); barrelSpriteBroken = null;
+            railSpriteBroken?.Remove(); railSpriteBroken = null;
 
 #if CLIENT
             crosshairSprite?.Remove(); crosshairSprite = null;
@@ -1974,11 +2032,27 @@ namespace Barotrauma.Items.Components
 
         private Vector2? loadedRotationLimits;
         private float? loadedBaseRotation;
+        private TeamType? loadedFriendlyTeamType;
+
         public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
             base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             loadedRotationLimits = componentElement.GetAttributeVector2("rotationlimits", RotationLimits);
             loadedBaseRotation = componentElement.GetAttributeFloat("baserotation", componentElement.Parent.GetAttributeFloat("rotation", BaseRotation));
+
+            //backwards compatibility: previously None made the turret consider the team the submarine/outpost belongs as the friendly team
+            if (componentElement.GetAttribute("FriendlyTeam") is { } friendlyTeamAttribute)
+            {
+                CharacterTeamType friendlyTeam = XMLExtensions.ParseEnumValue(friendlyTeamAttribute.Value, defaultValue: CharacterTeamType.None, friendlyTeamAttribute);
+                loadedFriendlyTeamType = friendlyTeam switch
+                {
+                    CharacterTeamType.None => TeamType.OwnSub,
+                    CharacterTeamType.Team1 => TeamType.Team1,
+                    CharacterTeamType.Team2 => TeamType.Team2,
+                    CharacterTeamType.FriendlyNPC => TeamType.FriendlyNPC,
+                    _ => throw new NotImplementedException()
+                };
+            }
         }
 
         public override void OnItemLoaded()
@@ -1991,6 +2065,8 @@ namespace Barotrauma.Items.Components
                 if (item.FlippedX) { FlipX(relativeToSub: false); }
                 if (item.FlippedY) { FlipY(relativeToSub: false); }
             }
+            UpdateTransformedBarrelPos();
+            UpdateLightComponents();
         }
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)

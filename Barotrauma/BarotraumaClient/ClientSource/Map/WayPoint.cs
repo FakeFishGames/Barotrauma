@@ -15,7 +15,8 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
-            return Screen.Selected == GameMain.SubEditorScreen || GameMain.DebugDraw;
+            if (Screen.Selected != GameMain.SubEditorScreen && !GameMain.DebugDraw) { return false; }
+            return base.IsVisible(worldView);
         }
 
         public override bool SelectableInEditor
@@ -44,6 +45,10 @@ namespace Barotrauma
                 clr = Color.Black;
             }
             if (IsHighlighted || IsHighlighted) { clr = Color.Lerp(clr, Color.White, 0.8f); }
+
+            if (Stairs is { Removed: true }) { Stairs = null; }
+            if (Ladders is { Item.Removed: true }) { Ladders = null; }
+            if (ConnectedGap is { Removed: true }) { ConnectedGap = null; }
 
             int iconSize = spawnType == SpawnType.Path ? WaypointSize : SpawnPointSize;
             if (ConnectedDoor != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path)
@@ -92,6 +97,11 @@ namespace Barotrauma
             if (sprite != null)
             {
                 float spriteScale = iconSize / (float)sprite.SourceRect.Width;
+                if (Ladders == null && ConnectedDoor == null && ConnectedGap != null)
+                {
+                    clr = Color.White;
+                    spriteScale *= 1.5f;
+                }
                 sprite.Draw(spriteBatch, drawPos, clr, origin: sprite.size / 2, scale: spriteScale, depth: 0.001f);
                 sprite2?.Draw(spriteBatch, drawPos + sprite.size * spriteScale * 0.5f, clr, origin: sprite2.size / 2, scale: spriteScale, depth: 0.001f);
             }
@@ -100,27 +110,39 @@ namespace Barotrauma
             {
                 AssignedJob.Icon.Draw(spriteBatch, drawPos, AssignedJob.UIColor, scale: iconSize / (float)AssignedJob.Icon.SourceRect.Width * 0.8f, depth: 0.0f);
             }
-
-            foreach (MapEntity e in linkedTo)
+            
+            // alternate line drawing for when cloning the waypoint: line goes from current position to original position, where moving started
+            if (StartMovingPos != Vector2.Zero && SelectedList.Contains(this) && PlayerInput.IsCtrlDown())
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
-                    new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
+                    new Vector2(StartMovingPos.X, -StartMovingPos.Y),
                     (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: 5, depth: 0.002f);
             }
+            else
+            {
+                foreach (MapEntity e in linkedTo)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        drawPos,
+                        new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
+                        (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: 5, depth: 0.002f);
+                }
+            }
+            
             if (ConnectedGap != null)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(ConnectedGap.DrawPosition.X, -ConnectedGap.DrawPosition.Y),
-                    GUIStyle.Green * 0.5f, width: 1);
+                    Color.White, width: 1);
             }
             if (Ladders != null)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(Ladders.Item.DrawPosition.X, -Ladders.Item.DrawPosition.Y),
-                    GUIStyle.Green * 0.5f, width: 1);
+                    Color.White, width: 1);
             }
 
             var color = Color.WhiteSmoke;
@@ -419,6 +441,7 @@ namespace Barotrauma
                 jobDropDown.AddItem(TextManager.Get("Any"), null);
                 foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
                 {
+                    if (jobPrefab.Name.IsNullOrWhiteSpace()) { continue; }
                     jobDropDown.AddItem(jobPrefab.Name, jobPrefab);
                 }
                 jobDropDown.SelectItem(AssignedJob);
@@ -432,7 +455,7 @@ namespace Barotrauma
                 };
                 propertyBox.OnTextChanged += (textBox, text) =>
                 {
-                    tags = text.Split(',').ToIdentifiers().ToHashSet();
+                    tags = text.ToIdentifiers().ToHashSet();
                     return true;
                 };
                 propertyBox.OnEnterPressed += (textBox, text) =>

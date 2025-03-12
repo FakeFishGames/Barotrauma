@@ -113,7 +113,7 @@ namespace Barotrauma
 
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool CanWalk { get; set; }
-
+        
         [Serialize(true, IsPropertySaveable.Yes, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
 
@@ -137,15 +137,14 @@ namespace Barotrauma
                 .Concat(Joints);
 
         public static string GetDefaultFileName(Identifier speciesName) => $"{speciesName.Value.CapitaliseFirstInvariant()}DefaultRagdoll";
-        public static string GetDefaultFile(Identifier speciesName, ContentPackage contentPackage = null)
-            => IO.Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
-
-        public static string GetFolder(Identifier speciesName, ContentPackage contentPackage = null)
+        public static string GetDefaultFile(Identifier speciesName) => IO.Path.Combine(GetFolder(speciesName), $"{GetDefaultFileName(speciesName)}.xml");
+        
+        public static string GetFolder(Identifier speciesName)
         {
-            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier == speciesName && (contentPackage == null || p.ContentFile.ContentPackage == contentPackage));
+            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
             if (prefab?.ConfigElement == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'", contentPackage: contentPackage);
+                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'");
                 return string.Empty;
             }
             return GetFolder(prefab.ConfigElement, prefab.ContentFile.Path.Value);
@@ -199,10 +198,10 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (!variantOf.IsEmpty && CharacterPrefab.FindBySpeciesName(variantOf) is CharacterPrefab prefab)
+            else if (!variantOf.IsEmpty && CharacterPrefab.FindBySpeciesName(variantOf) is CharacterPrefab parentPrefab)
             {
-                // Ragdoll element not defined -> use the ragdoll defined in the base definition file.
-                ragdollSpecies = prefab.GetBaseCharacterSpeciesName(variantOf);
+                //get the params from the parent prefab if this one doesn't re-define them
+                return GetDefaultRagdollParams<T>(variantOf, parentPrefab.ConfigElement, parentPrefab.ContentPackage);
             }
             // Using a null file definition means we use the default animations found in the Ragdolls folder.
             return GetRagdollParams<T>(speciesName, ragdollSpecies, file: null, contentPackage);
@@ -245,7 +244,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {ragdollInstance} from {contentPath.Value} for the character {speciesName}. Using the default ragdoll.", contentPackage: contentPackage);
+                    DebugConsole.ThrowError($"[RagdollParams] Failed to load a ragdoll {ragdollInstance} from {contentPath.Value} for the character {speciesName}. Using the default ragdoll.", contentPackage: contentPackage);
                 }
             }
             // Seek the default ragdoll from the character's ragdoll folder.
@@ -294,8 +293,30 @@ namespace Barotrauma
             }
             else
             {
-                // Failing to create a ragdoll causes so many issues that cannot be handled. Dummy ragdoll just seems to make things harder to debug. It's better to fail early.
-                throw new Exception($"[RagdollParams] Failed to load ragdoll {r.Name} from {selectedFile} for the character {speciesName}.");
+                string error = $"[RagdollParams] Failed to load ragdoll {r.Name} from {selectedFile} for the character {speciesName}.";
+                if (contentPackage == GameMain.VanillaContent)
+                {
+                    // Check if the base character content package is vanilla too.
+                    CharacterPrefab characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+                    if (characterPrefab?.ParentPrefab == null || characterPrefab.ParentPrefab.ContentPackage == GameMain.VanillaContent)
+                    {
+                        // If the error is in the vanilla content, it's just better to crash early.
+                        // If dodging with the solution below fails, we'll also get here.
+                        throw new Exception(error);
+                    }
+                }
+                // Try to dodge crashing on modded content.
+                DebugConsole.ThrowError(error, contentPackage: contentPackage);
+                if (typeof(T) == typeof(HumanRagdollParams))
+                {
+                    Identifier fallbackSpecies = CharacterPrefab.HumanSpeciesName;
+                    r = GetRagdollParams<T>(fallbackSpecies, fallbackSpecies, file: ContentPath.FromRaw(contentPackage, "Content/Characters/Human/Ragdolls/HumanDefaultRagdoll.xml"), contentPackage: GameMain.VanillaContent);
+                }
+                else
+                {
+                    Identifier fallbackSpecies = "crawler".ToIdentifier();
+                    r = GetRagdollParams<T>(fallbackSpecies, fallbackSpecies, file: ContentPath.FromRaw(contentPackage, "Content/Characters/Crawler/Ragdolls/CrawlerDefaultRagdoll.xml"), contentPackage: GameMain.VanillaContent);
+                } 
             }
             return r;
         }
@@ -654,7 +675,7 @@ namespace Barotrauma
             [Serialize(0.25f, IsPropertySaveable.Yes), Editable]
             public float Stiffness { get; set; }
 
-            [Serialize(1f, IsPropertySaveable.Yes, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable]
+            [Serialize(1f, IsPropertySaveable.Yes, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable(DecimalCount = 2)]
             public float Scale { get; set; }
 
             [Serialize(false, IsPropertySaveable.No), Editable(ReadOnly = true)]
@@ -705,6 +726,9 @@ namespace Barotrauma
 
             [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
             public LimbType Type { get; set; }
+            
+            [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "Secondary limb type to be used for generic purposes. Currently only used in climbing animations."), Editable()]
+            public LimbType SecondaryType { get; set; }
 
             /// <summary>
             /// The orientation of the sprite as drawn on the sprite sheet (in radians).
@@ -775,6 +799,12 @@ namespace Barotrauma
 
             [Serialize("0, 0", IsPropertySaveable.Yes, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -10f, MaxValueFloat = 10f)]
             public Vector2 MouthPos { get; set; }
+            
+            [Serialize(50f, IsPropertySaveable.Yes, description: "How much torque is applied on the head while updating the eating animations?"), Editable]
+            public float EatTorque { get; set; }
+            
+            [Serialize(2f, IsPropertySaveable.Yes, description: "How strong a linear impulse is applied on the head while updating the eating animations?"), Editable]
+            public float EatImpulse { get; set; }
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float ConstantTorque { get; set; }
@@ -795,8 +825,11 @@ namespace Barotrauma
             [Serialize(10f, IsPropertySaveable.Yes, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
             public float SeveredFadeOutTime { get; set; } = 10.0f;
 
-            [Serialize(false, IsPropertySaveable.Yes, description: "Only applied when the limb is of type Tail. If none of the tails have been defined to use the angle and an angle is defined in the animation parameters, the first tail limb is used."), Editable]
+            [Serialize(false, IsPropertySaveable.Yes, description: "Should the tail angle be applied on this limb? If none of the limbs have been defined to use the angle and an angle is defined in the animation parameters, the first tail limb is used."), Editable]
             public bool ApplyTailAngle { get; set; }
+            
+            [Serialize(false, IsPropertySaveable.Yes, description: "Should this limb be moved like a tail when swimming? Always true for tail limbs. On tails, disable by setting SineFrequencyMultiplier to 0."), Editable]
+            public bool ApplySineMovement { get; set; }
 
             [Serialize(1f, IsPropertySaveable.Yes), Editable(ValueStep = 0.1f, DecimalCount = 2)]
             public float SineFrequencyMultiplier { get; set; }
@@ -856,6 +889,9 @@ namespace Barotrauma
 
             [Serialize(true, IsPropertySaveable.Yes, description: "Can the limb enter submarines? Only valid if the ragdoll's CanEnterSubmarine is set to Partial, otherwise the limb can enter if the ragdoll can."), Editable]
             public bool CanEnterSubmarine { get; private set; }
+
+            [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "When set to something else than None, this limb will be hidden if the limb of the specified type is hidden."), Editable]
+            public LimbType InheritHiding { get; set; }
 
             public LimbParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {

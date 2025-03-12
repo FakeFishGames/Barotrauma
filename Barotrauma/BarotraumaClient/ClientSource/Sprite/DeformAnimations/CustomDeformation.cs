@@ -23,7 +23,9 @@ namespace Barotrauma.SpriteDeformations
 
     class CustomDeformation : SpriteDeformation
     {
-        private List<Vector2[]> deformRows = new List<Vector2[]>();
+        private readonly List<Vector2[]> deformRows = new List<Vector2[]>();
+
+        private readonly Vector2[,] flippedDeformation;
 
         private CustomDeformationParams CustomDeformationParams => Params as CustomDeformationParams;
 
@@ -81,40 +83,25 @@ namespace Barotrauma.SpriteDeformations
             //construct an array for the desired resolution, 
             //interpolating values if the resolution configured in the xml is smaller
             //deformation = new Vector2[Resolution.X, Resolution.Y];
-            float divX = 1.0f / Resolution.X, divY = 1.0f / Resolution.Y;            
+            int newWidth = Resolution.X, newHeight = Resolution.Y;
+            Deformation = MathUtils.ResizeVector2Array(configDeformation, newWidth, newHeight);
+
+            flippedDeformation = new Vector2[Resolution.X, Resolution.Y];
             for (int x = 0; x < Resolution.X; x++)
             {
-                float normalizedX = x / (float)(Resolution.X - 1);
                 for (int y = 0; y < Resolution.Y; y++)
                 {
-                    float normalizedY = y / (float)(Resolution.Y - 1);
-
-                    Point indexTopLeft = new Point(
-                        Math.Min((int)Math.Floor(normalizedX * (configDeformation.GetLength(0) - 1)), configDeformation.GetLength(0) - 1),
-                        Math.Min((int)Math.Floor(normalizedY * (configDeformation.GetLength(1) - 1)), configDeformation.GetLength(1) - 1));
-                    Point indexBottomRight = new Point(
-                        Math.Min(indexTopLeft.X + 1, configDeformation.GetLength(0) - 1),
-                        Math.Min(indexTopLeft.Y + 1, configDeformation.GetLength(1) - 1));
-
-                    Vector2 deformTopLeft = configDeformation[indexTopLeft.X, indexTopLeft.Y];
-                    Vector2 deformTopRight = configDeformation[indexBottomRight.X, indexTopLeft.Y];
-                    Vector2 deformBottomLeft = configDeformation[indexTopLeft.X, indexBottomRight.Y];
-                    Vector2 deformBottomRight = configDeformation[indexBottomRight.X, indexBottomRight.Y];
-
-                    Deformation[x, y] = Vector2.Lerp(
-                        Vector2.Lerp(deformTopLeft, deformTopRight, (normalizedX % divX) / divX),
-                        Vector2.Lerp(deformBottomLeft, deformBottomRight, (normalizedX % divX) / divX),
-                        (normalizedY % divY) / divY);
+                    flippedDeformation[x, y] = Deformation[Resolution.X - x - 1, y]; // read the rows from right to left
                 }
             }
         }
 
-        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse)
+        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool flippedHorizontally, bool inverseY)
         {
-            deformation = Deformation;
+            deformation = flippedHorizontally ? flippedDeformation : Deformation;
             multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
                 CustomDeformationParams.Amplitude : 
-                (float)Math.Sin(inverse ? -phase : phase) * CustomDeformationParams.Amplitude;
+                (float)Math.Sin(inverseY ? -phase : phase) * CustomDeformationParams.Amplitude;
             multiplier *= Params.Strength;
         }
 

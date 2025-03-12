@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics;
@@ -15,6 +16,84 @@ namespace Barotrauma
 
     static class AchievementManager
     {
+        private static readonly ImmutableHashSet<Identifier> SupportedAchievements = ImmutableHashSet.Create(
+            "killmoloch".ToIdentifier(),
+            "killhammerhead".ToIdentifier(),
+            "killendworm".ToIdentifier(),
+            "artifactmission".ToIdentifier(),
+            "combatmission1".ToIdentifier(),
+            "combatmission2".ToIdentifier(),
+            "healcrit".ToIdentifier(),
+            "repairdevice".ToIdentifier(),
+            "traitorwin".ToIdentifier(),
+            "killtraitor".ToIdentifier(),
+            "killclown".ToIdentifier(),
+            "healopiateaddiction".ToIdentifier(),
+            "survivecrushdepth".ToIdentifier(),
+            "survivereactormeltdown".ToIdentifier(),
+            "healhusk".ToIdentifier(),
+            "killpoison".ToIdentifier(),
+            "killnuke".ToIdentifier(),
+            "killtool".ToIdentifier(),
+            "clowncostume".ToIdentifier(),
+            "lastmanstanding".ToIdentifier(),
+            "lonesailor".ToIdentifier(),
+            "subhighvelocity".ToIdentifier(),
+            "nodamagerun".ToIdentifier(),
+            "subdeep".ToIdentifier(),
+            "maxintensity".ToIdentifier(),
+            "discovercoldcaverns".ToIdentifier(),
+            "discovereuropanridge".ToIdentifier(),
+            "discoverhydrothermalwastes".ToIdentifier(),
+            "discovertheaphoticplateau".ToIdentifier(),
+            "discoverthegreatsea".ToIdentifier(),
+            "travel10".ToIdentifier(),
+            "travel100".ToIdentifier(),
+            "xenocide".ToIdentifier(),
+            "genocide".ToIdentifier(),
+            "cargomission".ToIdentifier(),
+            "subeditor24h".ToIdentifier(),
+            "crewaway".ToIdentifier(),
+            "captainround".ToIdentifier(),
+            "securityofficerround".ToIdentifier(),
+            "engineerround".ToIdentifier(),
+            "mechanicround".ToIdentifier(),
+            "medicaldoctorround".ToIdentifier(),
+            "assistantround".ToIdentifier(),
+            "campaigncompleted".ToIdentifier(),
+            "salvagewreckmission".ToIdentifier(),
+            "escortmission".ToIdentifier(),
+            "killcharybdis".ToIdentifier(),
+            "killlatcher".ToIdentifier(),
+            "killspineling_giant".ToIdentifier(),
+            "killcrawlerbroodmother".ToIdentifier(),
+            "ascension".ToIdentifier(),
+            "campaignmetadata_pathofthebikehorn_7".ToIdentifier(),
+            "campaignmetadata_coalitionspecialhire1_hired_true".ToIdentifier(),
+            "campaignmetadata_coalitionspecialhire2_hired_true".ToIdentifier(),
+            "campaignmetadata_separatistspecialhire1_hired_true".ToIdentifier(),
+            "campaignmetadata_separatistspecialhire2_hired_true".ToIdentifier(),
+            "campaignmetadata_huskcultspecialhire1_hired_true".ToIdentifier(),
+            "campaignmetadata_clownspecialhire1_hired_true".ToIdentifier(),
+            "scanruin".ToIdentifier(),
+            "clearruin".ToIdentifier(),
+            "beaconmission".ToIdentifier(),
+            "abandonedoutpostrescue".ToIdentifier(),
+            "abandonedoutpostassassinate".ToIdentifier(),
+            "abandonedoutpostdestroyhumans".ToIdentifier(),
+            "abandonedoutpostdestroymonsters".ToIdentifier(),
+            "nestmission".ToIdentifier(),
+            "miningmission".ToIdentifier(),
+            "combatmissionseparatistsvscoalition".ToIdentifier(),
+            "combatmissioncoalitionvsseparatists".ToIdentifier(),
+            "getoutalive".ToIdentifier(),
+            "abyssbeckons".ToIdentifier(),
+            "europasfinest".ToIdentifier(),
+            "kingofthehull".ToIdentifier(),
+            "killmantis".ToIdentifier(),
+            "ancientnovelty".ToIdentifier(),
+            "whatsmirksbelow".ToIdentifier());
+
         private const float UpdateInterval = 1.0f;
 
         private static readonly HashSet<Identifier> unlockedAchievements = new HashSet<Identifier>();
@@ -42,7 +121,30 @@ namespace Barotrauma
         private static PathFinder pathFinder;
         private static readonly Dictionary<Character, CachedDistance> cachedDistances = new Dictionary<Character, CachedDistance>();
 
-        public static void OnStartRound()
+        static AchievementManager()
+        {
+#if DEBUG
+            if (SteamManager.IsInitialized && SteamManager.TryGetAllAvailableAchievements(out var achievements) && achievements.Any())
+            {
+                foreach (var achievement in achievements)
+                {
+                    if (!SupportedAchievements.Contains(achievement.Identifier.ToIdentifier()))
+                    {
+                        DebugConsole.ThrowError($"Achievement \"{achievement.Identifier}\" is present on Steam's backend but not in achievements supported by {nameof(AchievementManager)}.");
+                    }
+                }
+                foreach (Identifier achievementId in SupportedAchievements)
+                {
+                    if (achievements.None(a => a.Identifier.ToIdentifier() == achievementId))
+                    {
+                        DebugConsole.ThrowError($"Could not find achievement \"{achievementId}\" on Steam's backend.");
+                    }
+                }
+            }
+#endif
+        }
+
+        public static void OnStartRound(Biome biome = null)
         {
             roundData = new RoundData();
             foreach (Item item in Item.ItemList)
@@ -53,12 +155,32 @@ namespace Barotrauma
             }
             pathFinder = new PathFinder(WayPoint.WayPointList, false);
             cachedDistances.Clear();
+            
+#if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
+            if (GameMain.Client != null) { return; }
+#endif
+            
+            if (biome != null && GameMain.GameSession?.GameMode is CampaignMode)
+            {
+                string shortBiomeIdentifier = biome.Identifier.Value.Replace(" ", "");
+                UnlockAchievement($"discover{shortBiomeIdentifier}".ToIdentifier(), unlockClients: true);
+                
+                // Just got out of Cold Caverns
+                if (shortBiomeIdentifier == "europanridge".ToIdentifier() &&
+                    GameMain.NetworkMember?.ServerSettings?.RespawnMode == RespawnMode.Permadeath)
+                {
+                    UnlockAchievement("getoutalive".ToIdentifier(), unlockClients: true,
+                        clientConditions: static client => GameMain.GameSession.PermadeathCountForAccount(client.AccountId) <= 0);
+                }
+            }
         }
 
         public static void Update(float deltaTime)
         {
             if (GameMain.GameSession == null) { return; }
 #if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null) { return; }
 #endif
 
@@ -73,7 +195,7 @@ namespace Barotrauma
                     UnlockAchievement(
                         identifier: "maxintensity".ToIdentifier(),
                         unlockClients: true,
-                        conditions: static c => c is { IsDead: false, IsUnconscious: false });
+                        characterConditions: static c => c is { IsDead: false, IsUnconscious: false });
                 }
 
                 foreach (Character c in Character.CharacterList)
@@ -221,11 +343,6 @@ namespace Barotrauma
             return false;
         }
 
-        public static void OnBiomeDiscovered(Biome biome)
-        {
-            UnlockAchievement($"discover{biome.Identifier.Value.Replace(" ", "")}".ToIdentifier());
-        }
-
         public static void OnCampaignMetadataSet(Identifier identifier, object value, bool unlockClients = false)
         {
             if (identifier.IsEmpty || value is null) { return; }
@@ -235,6 +352,7 @@ namespace Barotrauma
         public static void OnItemRepaired(Item item, Character fixer)
         {
 #if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null) { return; }
 #endif
             if (fixer == null) { return; }
@@ -242,11 +360,27 @@ namespace Barotrauma
             UnlockAchievement(fixer, "repairdevice".ToIdentifier());
             UnlockAchievement(fixer, $"repair{item.Prefab.Identifier}".ToIdentifier());
         }
+        
+        public static void OnButtonTerminalSignal(Item item, Character user)
+        {
+            if (item == null || user == null) { return; }
+            
+#if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
+            if (GameMain.Client != null) { return; }
+#endif
+            if ((item.Prefab.Identifier == "alienterminal" || item.Prefab.Identifier == "alienterminal_new") && 
+                item.Condition <= 0)
+            {
+                UnlockAchievement(user, "ancientnovelty".ToIdentifier());    
+            }
+        }
 
         public static void OnAfflictionReceived(Affliction affliction, Character character)
         {
             if (affliction.Prefab.AchievementOnReceived.IsEmpty) { return; }
 #if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null) { return; }
 #endif
             UnlockAchievement(character, affliction.Prefab.AchievementOnReceived);
@@ -257,6 +391,7 @@ namespace Barotrauma
             if (affliction.Prefab.AchievementOnRemoved.IsEmpty) { return; }
 
 #if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null) { return; }
 #endif
             UnlockAchievement(character, affliction.Prefab.AchievementOnRemoved);
@@ -265,6 +400,7 @@ namespace Barotrauma
         public static void OnCharacterRevived(Character character, Character reviver)
         {
 #if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null) { return; }
 #endif
             if (reviver == null) { return; }
@@ -274,6 +410,7 @@ namespace Barotrauma
         public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
 #if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null || GameMain.GameSession == null) { return; }
 
             if (character != Character.Controlled &&
@@ -310,12 +447,29 @@ namespace Barotrauma
                     UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("_m", "")}indoors".ToIdentifier());
                 }
             }
+#if SERVER
+            if (character.SpeciesName == "Jove" &&
+                GameMain.GameSession.Campaign is MultiPlayerCampaign &&
+                GameMain.Server?.ServerSettings is { IronmanModeActive: true })
+            {
+                UnlockAchievement(
+                    identifier: "europasfinest".ToIdentifier(),
+                    unlockClients: true,
+                    characterConditions: static c => c is { IsDead: false });
+            }
+#endif
 
             if (character.HasEquippedItem("clownmask".ToIdentifier()) && 
                 character.HasEquippedItem("clowncostume".ToIdentifier()) &&
                 causeOfDeath.Killer != character)
             {
                 UnlockAchievement(causeOfDeath.Killer, "killclown".ToIdentifier());
+            }
+            
+            if (character.CharacterHealth?.GetAffliction("psychoclown") != null &&
+                character.CurrentHull?.Submarine.Info is { Type: SubmarineType.BeaconStation })
+            {
+                UnlockAchievement(causeOfDeath.Killer, "whatsmirksbelow".ToIdentifier());
             }
 
             // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
@@ -344,8 +498,14 @@ namespace Barotrauma
                     }
                 }
             }
-
+            
 #if SERVER
+            if (GameMain.Server?.ServerSettings?.RespawnMode == RespawnMode.Permadeath &&
+                causeOfDeath.Type != CauseOfDeathType.Disconnected)
+            {
+                UnlockAchievement(character, "abyssbeckons".ToIdentifier());
+            }
+
             if (GameMain.Server?.TraitorManager != null)
             {
                 if (GameMain.Server.TraitorManager.IsTraitor(character))
@@ -359,6 +519,7 @@ namespace Barotrauma
         public static void OnTraitorWin(Character character)
         {
 #if CLIENT
+            // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null || GameMain.GameSession == null) { return; }
 #endif
             UnlockAchievement(character, "traitorwin".ToIdentifier());
@@ -400,16 +561,21 @@ namespace Barotrauma
 
             foreach (Mission mission in gameSession.Missions)
             {
-                if (mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
+                // For PvP missions, all characters on the winning team that are still alive get achievements (if available)
+                if (mission is CombatMission && GameMain.GameSession.WinningTeam.HasValue)
                 {
-                    //all characters that are alive and in the winning team get an achievement
+                    // Attempt unlocking team-specific achievement (if one has been set in the achievement backend)
                     var achvIdentifier =
                         $"{mission.Prefab.AchievementIdentifier}{(int) GameMain.GameSession.WinningTeam}"
                             .ToIdentifier();
                     UnlockAchievement(achvIdentifier, true,
-                        c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
+                        c => c != null && !c.IsDead && !c.IsUnconscious && CombatMission.IsInWinningTeam(c));
+                    
+                    // Attempt unlocking mission-specific achievement (if one has been set in the achievement backend)
+                    UnlockAchievement(mission.Prefab.AchievementIdentifier, true,
+                        c => c != null && !c.IsDead && !c.IsUnconscious && CombatMission.IsInWinningTeam(c));
                 }
-                else if (mission.Completed)
+                else if (mission is not CombatMission && mission.Completed)
                 {
                     //all characters get an achievement
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
@@ -424,7 +590,7 @@ namespace Barotrauma
             }
             
             //made it to the destination
-            if (gameSession.Submarine.AtEndExit)
+            if (gameSession.Submarine != null && gameSession.Submarine.AtEndExit)
             {
                 bool noDamageRun = !roundData.SubWasDamaged && !gameSession.Casualties.Any();
 
@@ -454,7 +620,7 @@ namespace Barotrauma
 
                 if (charactersInSub.Count == 1)
                 {
-                    //there must be some casualties to get the last mant standing achievement
+                    //there must be some casualties to get the last man standing achievement
                     if (gameSession.Casualties.Any())
                     {
                         UnlockAchievement(charactersInSub[0], "lastmanstanding".ToIdentifier());
@@ -517,26 +683,28 @@ namespace Barotrauma
 #endif
         }
 
-        public static void UnlockAchievement(Identifier identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
+        public static void UnlockAchievement(Identifier identifier, bool unlockClients = false, Func<Character, bool> characterConditions = null, Func<Client, bool> clientConditions = null)
         {
             if (CheatsEnabled) { return; }
             if (Screen.Selected is { IsEditor: true }) { return; }
+            if (!SupportedAchievements.Contains(identifier)) { return; }
 #if CLIENT
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
 #endif
 #if SERVER
             if (unlockClients && GameMain.Server != null)
             {
-                foreach (Client c in GameMain.Server.ConnectedClients)
+                foreach (Client client in GameMain.Server.ConnectedClients)
                 {
-                    if (conditions != null && !conditions(c.Character)) { continue; }
-                    GameMain.Server.GiveAchievement(c, identifier);
+                    if (clientConditions != null && !clientConditions(client)) { continue; }
+                    if (characterConditions != null && !characterConditions(client.Character)) { continue; }
+                    GameMain.Server.GiveAchievement(client, identifier);
                 }
             }
 #endif
 
 #if CLIENT
-            if (conditions != null && !conditions(Character.Controlled)) { return; }
+            if (characterConditions != null && !characterConditions(Character.Controlled)) { return; }
 #endif
 
             UnlockAchievementsOnPlatforms(identifier);

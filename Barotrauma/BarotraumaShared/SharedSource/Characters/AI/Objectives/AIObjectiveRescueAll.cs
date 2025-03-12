@@ -47,9 +47,9 @@ namespace Barotrauma
                         if (objectiveManager.GetFirstActiveObjective<AIObjectiveRescue>() == null)
                         {
                             charactersWithMinorInjuries.Add(target);
-                            character.Speak(TextManager.GetWithVariable("dialogignoreminorinjuries", "[targetname]", target.Name).Value,
+                            character.Speak(TextManager.GetWithVariable("dialogignoreminorinjuries", "[targetname]", target.DisplayName).Value,
                                 delay: 1.0f,
-                                identifier: $"notreatableafflictions{target.Name}".ToIdentifier(),
+                                identifier: $"notreatableafflictions{target.DisplayName}".ToIdentifier(),
                                 minDurationBetweenSimilar: 10.0f);
                         }
                     }
@@ -96,13 +96,20 @@ namespace Barotrauma
             {
                 float strength = character.CharacterHealth.GetPredictedStrength(affliction, predictFutureDuration: 10.0f);
                 vitality -= affliction.GetVitalityDecrease(character.CharacterHealth, strength) / character.MaxVitality * 100;
-                if (affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                if (affliction.Strength > affliction.Prefab.TreatmentThreshold)
                 {
-                    vitality -= affliction.Strength;
-                }
-                else if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType)
-                {
-                    vitality -= affliction.Strength;
+                    if (affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                    {
+                        vitality -= affliction.Strength;
+                    }
+                    else if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType)
+                    {
+                        vitality -= affliction.Strength;
+                    }
+                    else if (affliction.Prefab == AfflictionPrefab.HuskInfection)
+                    {
+                        vitality -= affliction.Strength;
+                    }   
                 }
             }
             return Math.Clamp(vitality, 0, 100);

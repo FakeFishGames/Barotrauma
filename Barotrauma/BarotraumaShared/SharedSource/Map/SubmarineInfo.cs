@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -123,15 +123,29 @@ namespace Barotrauma
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
         public BeaconStationInfo BeaconStationInfo { get; set; }
         public WreckInfo WreckInfo { get; set; }
+        public EnemySubmarineInfo EnemySubmarineInfo { get; set; }
 
         public ExtraSubmarineInfo GetExtraSubmarineInfo => BeaconStationInfo ?? WreckInfo as ExtraSubmarineInfo;
 
-        public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
+        public ImmutableHashSet<Identifier> OutpostTags { get; set; } = ImmutableHashSet<Identifier>.Empty;
+
+        public ImmutableHashSet<Identifier> TriggerOutpostMissionEvents { get; set; } = ImmutableHashSet<Identifier>.Empty;
+
+        public bool IsOutpost => Type is SubmarineType.Outpost or SubmarineType.OutpostModule;
 
         public bool IsWreck => Type == SubmarineType.Wreck;
         public bool IsBeacon => Type == SubmarineType.BeaconStation;
+        public bool IsEnemySubmarine => Type == SubmarineType.EnemySubmarine;
         public bool IsPlayer => Type == SubmarineType.Player;
         public bool IsRuin => Type == SubmarineType.Ruin;
+
+        /// <summary>
+        /// Ruin modules are of type SubmarineType.OutpostModule, until the ruin generator (or the test game mode) sets them as ruins.
+        /// This is a helper workaround check intended to be used only in the context of the sub editor and the test game mode, where ruins aren't generated.
+        /// </summary>
+        public bool ShouldBeRuin => 
+            Type is SubmarineType.Ruin or SubmarineType.OutpostModule &&
+            OutpostModuleInfo.ModuleFlags.Any(f => f.StartsWith("ruin"));
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
@@ -325,6 +339,8 @@ namespace Barotrauma
             Tags = original.Tags;
             OutpostGenerationParams = original.OutpostGenerationParams;
             LayersHiddenByDefault = original.LayersHiddenByDefault;
+            OutpostTags = original.OutpostTags;
+            TriggerOutpostMissionEvents = original.TriggerOutpostMissionEvents;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
@@ -332,6 +348,10 @@ namespace Barotrauma
             else if (original.BeaconStationInfo != null)
             {
                 BeaconStationInfo = new BeaconStationInfo(original.BeaconStationInfo);
+            }
+            else if (original.EnemySubmarineInfo != null)
+            {
+                EnemySubmarineInfo = new EnemySubmarineInfo(original.EnemySubmarineInfo);
             }
             else if (original.WreckInfo != null)
             {
@@ -416,6 +436,16 @@ namespace Barotrauma
             }
             Tier = SubmarineElement.GetAttributeInt("tier", GetDefaultTier(Price));
 
+            OutpostTags = SubmarineElement.GetAttributeIdentifierImmutableHashSet(nameof(OutpostTags), ImmutableHashSet<Identifier>.Empty);
+
+            TriggerOutpostMissionEvents = SubmarineElement.GetAttributeIdentifierImmutableHashSet(nameof(TriggerOutpostMissionEvents), ImmutableHashSet<Identifier>.Empty);
+            //backwards compatibility: previously the outpost deathmatch mission always triggered an event with the tag "deathmatchweapondrop"
+            //now that's configured in the outpost itself, so let's make older outposts trigger it automatically
+            if (GameVersion < new Version(1, 8, 0, 0) && OutpostTags.Contains("PvPOutpost"))
+            {
+                TriggerOutpostMissionEvents = TriggerOutpostMissionEvents.Add("deathmatchweapondrop".ToIdentifier());
+            }
+
             if (SubmarineElement?.Attribute("type") != null)
             {
                 if (Enum.TryParse(SubmarineElement.GetAttributeString("type", ""), out SubmarineType type))
@@ -428,6 +458,10 @@ namespace Barotrauma
                     else if (Type == SubmarineType.BeaconStation)
                     {
                         BeaconStationInfo = new BeaconStationInfo(this, SubmarineElement);
+                    }
+                    else if (Type == SubmarineType.EnemySubmarine)
+                    {
+                        EnemySubmarineInfo = new EnemySubmarineInfo(this, SubmarineElement);
                     }
                     else if (Type == SubmarineType.Wreck)
                     {
@@ -611,6 +645,11 @@ namespace Barotrauma
             {
                 BeaconStationInfo.Save(newElement);
                 BeaconStationInfo = new BeaconStationInfo(this, newElement);
+            }
+            else if (Type == SubmarineType.EnemySubmarine)
+            {
+                EnemySubmarineInfo.Save(newElement);
+                EnemySubmarineInfo = new EnemySubmarineInfo(this, newElement);
             }
             else if (Type == SubmarineType.Wreck)
             {

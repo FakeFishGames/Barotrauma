@@ -1,12 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
     class MultiPlayerCampaignSetupUI : CampaignSetupUI
     {
+        private GUIButton rollbackSaveButton;
         private GUIButton deleteMpSaveButton;
 
         private int prevInitialMoney;
@@ -232,33 +236,139 @@ namespace Barotrauma
                 {
                     if (saveList.SelectedData is not CampaignMode.SaveInfo saveInfo) { return false; }
                     if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
-                    LoadGame?.Invoke(saveInfo.FilePath);
                     
-                    CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                    if (saveInfo.RespawnMode != RespawnMode.None && saveInfo.RespawnMode != GameMain.NetworkMember?.ServerSettings?.RespawnMode)
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("Warning"),
+                            TextManager.GetWithVariables("RespawnModeMismatch",
+                                    ("[currentrespawnmode]", TextManager.Get($"respawnmode.{GameMain.NetworkMember?.ServerSettings?.RespawnMode}")),
+                                    ("[savedrespawnmode]", TextManager.Get($"respawnmode.{saveInfo.RespawnMode}"))),
+                            new LocalizedString[] { TextManager.Get("RespawnModeMismatch.GoBack"), TextManager.Get("RespawnModeMismatch.LoadAnyway") });
+                        msgBox.Buttons[0].OnClicked = (button, obj) =>
+                        {
+                            msgBox.Close();
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked = (button, obj) =>
+                        {
+                            msgBox.Close();
+                            LoadSaveGame();
+                            return true;
+                        };
+                        return false;
+                    }
+                    
+                    LoadSaveGame();
                     return true;
+                    
+                    void LoadSaveGame()
+                    {
+                        LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None);
+                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                    }
                 },
                 Enabled = false
             };
-            deleteMpSaveButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomLeft), 
-                TextManager.Get("Delete"), style: "GUIButtonSmall")
+
+            GUILayoutGroup leftButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.15f), loadGameContainer.RectTransform, Anchor.BottomLeft))
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+
+            rollbackSaveButton = new GUIButton(new RectTransform(new Vector2(1f, 0.5f), leftButtonContainer.RectTransform), TextManager.Get("rollbackbutton"), style: "GUIButtonSmallFreeScale")
+            {
+                Visible = false,
+                ToolTip = TextManager.Get("backuptooltip"),
+                OnClicked = ViewBackupSaveMenu
+            };
+            deleteMpSaveButton = new GUIButton(new RectTransform(new Vector2(1f, 0.5f), leftButtonContainer.RectTransform),
+                TextManager.Get("Delete"), style: "GUIButtonSmallFreeScale")
             {
                 OnClicked = DeleteSave,
                 Visible = false
             };
-        }       
-        
-        
+        }
+
+        private bool ViewBackupSaveMenu(GUIButton button, object obj)
+        {
+            if (obj is not CampaignMode.SaveInfo saveInfo) { return false; }
+            if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
+
+            if (GameMain.Client.IsServerOwner)
+            {
+                CreateBackupMenu(SaveUtil.GetIndexData(saveInfo.FilePath), index =>
+                {
+                    LoadGame(saveInfo.FilePath, backupIndex: Option.Some(index.Index));
+                });
+            }
+            else
+            {
+                RequestBackupIndexData(saveInfo.FilePath);
+            }
+            return true;
+        }
+
+        private const string PleaseWaitUserData = "PleaseWaitPopup";
+
+        private void RequestBackupIndexData(string savePath)
+        {
+            if (GameMain.Client == null) { return; }
+
+            GUI.SetCursorWaiting();
+            var msgBox = new GUIMessageBox(TextManager.Get("CampaignStartingPleaseWait"), TextManager.Get("CampaignStarting"), new[] { TextManager.Get("Cancel") })
+            {
+                UserData = PleaseWaitUserData
+            };
+            msgBox.Buttons[0].OnClicked = (btn, obj) =>
+            {
+                GUI.ClearCursorWait();
+                return true;
+            };
+
+
+            IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.REQUEST_BACKUP_INDICES);
+            msg.WriteString(savePath);
+            GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        public void OnBackupIndicesReceived(IReadMessage message)
+        {
+            GUI.ClearCursorWait();
+
+            foreach (GUIComponent component in GUIMessageBox.MessageBoxes.Where(static mb => mb.UserData is PleaseWaitUserData).ToArray())
+            {
+                if (component is GUIMessageBox msgBox)
+                {
+                    msgBox.Close();
+                }
+            }
+
+            string path = message.ReadString();
+            var indexData = INetSerializableStruct.Read<NetCollection<SaveUtil.BackupIndexData>>(message);
+            CreateBackupMenu(indexData, selectedIndex =>
+            {
+                LoadGame?.Invoke(path, backupIndex: Option.Some(selectedIndex.Index));
+            });
+        }
+
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
             if (obj is not CampaignMode.SaveInfo saveInfo) { return true; }
             string fileName = saveInfo.FilePath;
 
             loadGameButton.Enabled = true;
+            rollbackSaveButton.Visible = true;
             deleteMpSaveButton.Visible = deleteMpSaveButton.Enabled = GameMain.Client.IsServerOwner;
-            deleteMpSaveButton.Enabled = GameMain.GameSession?.SavePath != fileName;
+            rollbackSaveButton.Enabled = deleteMpSaveButton.Enabled = GameMain.GameSession?.DataPath.LoadPath != fileName;
             if (deleteMpSaveButton.Visible)
             {
                 deleteMpSaveButton.UserData = saveInfo;
+            }
+
+            if (rollbackSaveButton.Visible)
+            {
+                rollbackSaveButton.UserData = saveInfo;
             }
             return true;
         }

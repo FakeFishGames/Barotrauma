@@ -50,7 +50,7 @@ namespace Barotrauma
                 {
                     if (!AllowSameEntity && entity == target) { continue; }
                     if (Vector2.DistanceSquared(target.WorldPosition, entity.WorldPosition) > MaxDistance * MaxDistance) { continue; }
-                    if (Character.IsTargetVisible(target, entity, seeThroughWindows: true, CheckFacing)) 
+                    if (ISpatialEntity.IsTargetVisible(target, entity, seeThroughWindows: true, CheckFacing)) 
                     {
                         if (!ApplyTagToEntity.IsEmpty)
                         {

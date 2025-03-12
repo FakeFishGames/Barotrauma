@@ -160,7 +160,9 @@ namespace Barotrauma
             }
             else
             {
-                name = doc.Root.GetAttributeString(nameof(ServerSettings.Name), "Server");
+                name = doc.Root.GetAttributeString(nameof(ServerSettings.ServerName),
+                    //backwards compatibility
+                    doc.Root.GetAttributeString("name", "Server"));
                 port = doc.Root.GetAttributeInt(nameof(ServerSettings.Port), NetConfig.DefaultPort);
                 queryPort = doc.Root.GetAttributeInt(nameof(ServerSettings.QueryPort), NetConfig.DefaultQueryPort);
                 publiclyVisible = doc.Root.GetAttributeBool(nameof(ServerSettings.IsPublic), false);
@@ -241,7 +243,7 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 ownerEndpoint);
-            Server.StartServer();
+            Server.StartServer(registerToServerList: true);
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
@@ -273,6 +275,12 @@ namespace Barotrauma
                         {
                             Server.ServerSettings.Language = language;
                         }
+                        i++;
+                        break;
+                    case "-multiclienttestmode":
+#if DEBUG
+                        CharacterCampaignData.RequireClientNameMatch = true;
+#endif
                         i++;
                         break;
                 }

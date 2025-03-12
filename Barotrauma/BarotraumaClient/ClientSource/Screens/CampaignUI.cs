@@ -259,7 +259,7 @@ namespace Barotrauma
             {
                 AutoScaleHorizontal = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.GetLocationTypeToDisplay().Name, font: GUIStyle.SubHeadingFont);
 
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             portrait.EnsureLazyLoaded();
@@ -443,20 +443,22 @@ namespace Barotrauma
                         GUILayoutGroup difficultyIndicatorGroup = null;
                         if (mission.Difficulty.HasValue)
                         {
-                            difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.Z, 0) },
+                            difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.9f), missionName.RectTransform, anchor: Anchor.CenterRight) { AbsoluteOffset = new Point((int)missionName.Padding.Z, 0) },
                                 isHorizontal: true, childAnchor: Anchor.CenterRight)
                             {
                                 AbsoluteSpacing = 1,
-                                UserData = "difficulty"
+                                UserData = "difficulty",
                             };
+                            difficultyIndicatorGroup.SetAsFirstChild();
                             var difficultyColor = mission.GetDifficultyColor();
                             for (int i = 0; i < mission.Difficulty; i++)
                             {
-                                new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest) { IsFixedSize = true }, "DifficultyIndicator", scaleToFit: true)
+                                new GUIImage(new RectTransform(Vector2.One * 0.9f, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest) { IsFixedSize = true }, "DifficultyIndicator", scaleToFit: true)
                                 {
                                     Color = difficultyColor,
                                     SelectedColor = difficultyColor,
-                                    HoverColor = difficultyColor
+                                    HoverColor = difficultyColor,
+                                    ToolTip = mission.GetDifficultyToolTipText()
                                 };
                             }
                         }

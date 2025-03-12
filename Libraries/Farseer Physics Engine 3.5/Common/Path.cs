@@ -315,7 +315,7 @@ namespace FarseerPhysics.Common
             for (int i = 1; i < divisions; i++)
             {
                 Vector2 normal = GetPositionNormal(t);
-                float angle = (float)Math.Atan2(normal.Y, normal.X);
+                float angle = MathF.Atan2(normal.Y, normal.X);
 
                 verts.Add(new Vector3(end, angle));
 

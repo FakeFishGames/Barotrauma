@@ -24,7 +24,14 @@ sealed class ConditionallyEditable : Editable
         IsSwappableItem,
         AllowRotating,
         Attachable,
+        /// <summary>
+        /// Does the entity currently have a physics body?
+        /// </summary>
         HasBody,
+        /// <summary>
+        /// Does the entity normally have a physics body? Can be used if a property should be enabled on a wall whose collisions have been disabled.
+        /// </summary>
+        HasBodyByDefault,
         Pickable,
         OnlyByStatusEffectsAndNetwork,
         HasIntegratedButtons,
@@ -44,12 +51,14 @@ sealed class ConditionallyEditable : Editable
             ConditionType.IsSwappableItem
                 => entity is Item item && item.Prefab.SwappableItem != null,
             ConditionType.AllowRotating
-                => (entity is Item { body: null } item && item.Prefab.AllowRotatingInEditor)
+                => (entity is Item item && (item.body == null || item.body.BodyType == FarseerPhysics.BodyType.Static) && item.Prefab.AllowRotatingInEditor)
                    || (entity is Structure structure && structure.Prefab.AllowRotatingInEditor),
             ConditionType.Attachable
                 => GetComponent<Holdable>(entity) is Holdable { Attachable: true },
             ConditionType.HasBody
                 => entity is Structure { HasBody: true } or Item { body: not null },
+            ConditionType.HasBodyByDefault
+                => entity is Structure { Prefab.Body: true } or Item { body: not null },
             ConditionType.Pickable
                 => entity is Item item && item.GetComponent<Pickable>() != null,
             ConditionType.OnlyByStatusEffectsAndNetwork

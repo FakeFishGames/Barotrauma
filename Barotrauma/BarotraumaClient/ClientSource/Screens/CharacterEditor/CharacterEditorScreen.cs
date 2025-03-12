@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Sounds;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 #if DEBUG
@@ -115,7 +116,7 @@ namespace Barotrauma.CharacterEditor
         {
             base.Select();
 
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
+            GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryWaterAmbience, 0.0f, 0);
 
             GUI.ForceMouseOn(null);
             if (Submarine.MainSub == null)
@@ -236,7 +237,7 @@ namespace Barotrauma.CharacterEditor
         protected override void DeselectEditorSpecific()
         {
             SoundPlayer.OverrideMusicType = Identifier.Empty;
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryWaterAmbience, GameSettings.CurrentConfig.Audio.SoundVolume, 0);
             GUI.ForceMouseOn(null);
             if (isEndlessRunner)
             {
@@ -746,6 +747,12 @@ namespace Barotrauma.CharacterEditor
             minorModesToggle?.UpdateOpenState((float)deltaTime, new Vector2(-minorModesPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), minorModesPanel.RectTransform);
             modesToggle?.UpdateOpenState((float)deltaTime, new Vector2(-modesPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), modesPanel.RectTransform);
             buttonsPanelToggle?.UpdateOpenState((float)deltaTime, new Vector2(-buttonsPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), buttonsPanel.RectTransform);
+            totalMassText.Text = GetTotalMassText();
+        }
+        
+        private LocalizedString GetTotalMassText()
+        {
+            return TextManager.GetWithVariable($"{screenTextTag}totalmass", "[mass]", character?.AnimController?.Mass.FormatZeroDecimal() ?? "0");
         }
 
         public CursorState GetMouseCursorState()
@@ -1089,9 +1096,12 @@ namespace Barotrauma.CharacterEditor
                         }
                         else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
-                            jointStartLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => selectedLimbs.Contains(l) && !l.Hidden);
-                            anchor1Pos = GetLimbSpritesheetRect(jointStartLimb).Center.ToVector2() - PlayerInput.MousePosition;
-                            jointCreationMode = JointCreationMode.Create;
+                            jointStartLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => selectedLimbs.Contains(l));
+                            if (jointStartLimb != null)
+                            {
+                                anchor1Pos = GetLimbSpritesheetRect(jointStartLimb).Center.ToVector2() - PlayerInput.MousePosition;
+                                jointCreationMode = JointCreationMode.Create;
+                            }
                         }
                     }
                     else
@@ -1110,8 +1120,11 @@ namespace Barotrauma.CharacterEditor
                         else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             jointStartLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => selectedLimbs.Contains(l) && !l.Hidden);
-                            anchor1Pos = ConvertUnits.ToDisplayUnits(jointStartLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
-                            jointCreationMode = JointCreationMode.Create;
+                            if (jointStartLimb != null)
+                            {
+                                anchor1Pos = ConvertUnits.ToDisplayUnits(jointStartLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
+                                jointCreationMode = JointCreationMode.Create;
+                            }
                         }
                     }
                 }
@@ -1494,10 +1507,10 @@ namespace Barotrauma.CharacterEditor
         {
             DebugConsole.NewMessage(GetCharacterEditorTranslation("TryingToSpawnCharacter").Replace("[config]", speciesName.ToString()), Color.HotPink);
             OnPreSpawn();
-            bool dontFollowCursor = true;
+            bool followCursor = false;
             if (character != null)
             {
-                dontFollowCursor = character.dontFollowCursor;
+                followCursor = character.FollowCursor;
                 RagdollParams.ClearHistory();
                 CurrentAnimation.ClearHistory();
                 if (!character.Removed)
@@ -1510,7 +1523,7 @@ namespace Barotrauma.CharacterEditor
             {
                 var characterInfo = new CharacterInfo(speciesName, jobOrJobPrefab: JobPrefab.Prefabs[selectedJob.Value]);
                 character = Character.Create(speciesName, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
-                character.GiveJobItems();
+                character.GiveJobItems(isPvPMode: false);
                 HideWearables();
                 if (displayWearables)
                 {
@@ -1525,7 +1538,7 @@ namespace Barotrauma.CharacterEditor
             }
             if (character != null)
             {
-                character.dontFollowCursor = dontFollowCursor;
+                character.FollowCursor = followCursor;
             }
             if (character == null)
             {
@@ -1693,8 +1706,8 @@ namespace Barotrauma.CharacterEditor
             }
             else
             {
-                config.SetAttributeValue("speciesname", name, StringComparison.OrdinalIgnoreCase);
-                config.SetAttributeValue("humanoid", isHumanoid, StringComparison.OrdinalIgnoreCase);
+                config.TrySetAttributeValue("speciesname", name);
+                config.TrySetAttributeValue("humanoid", isHumanoid);
                 var ragdollElement = config.GetChildElement("ragdolls");
                 if (ragdollElement == null)
                 {
@@ -1758,7 +1771,7 @@ namespace Barotrauma.CharacterEditor
 
             // Ragdoll
             RagdollParams.ClearCache();
-            string ragdollPath = RagdollParams.GetDefaultFile(name, contentPackage);
+            string ragdollPath = RagdollParams.GetDefaultFile(name);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, name, ragdoll)
                 : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, name, ragdoll);
@@ -1777,7 +1790,7 @@ namespace Barotrauma.CharacterEditor
                     XElement element = animation.MainElement;
                     if (element == null) { continue; }
                     element.SetAttributeValue("type", name);
-                    string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType);
+                    string fullPath = AnimationParams.GetDefaultFilePath(name, animation.AnimationType);
                     element.Name = AnimationParams.GetDefaultFileName(name, animation.AnimationType);
 #if DEBUG
                     element.Save(fullPath);
@@ -1805,7 +1818,7 @@ namespace Barotrauma.CharacterEditor
                         default: continue;
                     }
                     Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
-                    string fullPath = AnimationParams.GetDefaultFile(name, animType);
+                    string fullPath = AnimationParams.GetDefaultFilePath(name, animType);
                     AnimationParams.Create(fullPath, name, animType, type);
                 }
             }
@@ -1845,6 +1858,7 @@ namespace Barotrauma.CharacterEditor
         private GUILayoutGroup rightArea, leftArea;
         private GUIFrame centerArea;
 
+        private GUITextBlock totalMassText;
         private GUIFrame characterSelectionPanel;
         private GUIFrame fileEditPanel;
         private GUIFrame modesPanel;
@@ -1920,16 +1934,13 @@ namespace Barotrauma.CharacterEditor
             centerArea = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
             {
                 AbsoluteOffset = new Point((int)(rightArea.RectTransform.ScaledSize.X + rightArea.RectTransform.RelativeOffset.X * rightArea.RectTransform.Parent.ScaledSize.X + (int)(20 * GUI.xScale)), (int)(20 * GUI.yScale))
-
             }, style: null)
             { CanBeFocused = false };
             leftArea = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft), childAnchor: Anchor.BottomLeft)
             {
                 RelativeSpacing = 0.02f
             };
-
             Vector2 toggleSize = new Vector2(1.0f, 0.03f);
-
             CreateFileEditPanel();
             CreateOptionsPanel(toggleSize);
             CreateCharacterSelectionPanel();
@@ -1941,12 +1952,11 @@ namespace Barotrauma.CharacterEditor
                 optionsPanel.RectTransform.MinSize = new Point(0, (int)(optionsPanel.GetChild<GUILayoutGroup>().RectTransform.Children.Sum(c => c.Rect.Height) / innerScale.Y));
                 rightArea.Recalculate();
             }
-
             CreateButtonsPanel();
             CreateModesPanel(toggleSize);
             CreateMinorModesPanel(toggleSize);
-
             CreateContextualControls();
+            totalMassText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.01f), rightArea.RectTransform), GetTotalMassText());
         }
 
         private void CreateMinorModesPanel(Vector2 toggleSize)
@@ -2209,10 +2219,10 @@ namespace Barotrauma.CharacterEditor
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("FollowCursor"))
             {
-                Selected = !character.dontFollowCursor,
+                Selected = character.FollowCursor,
                 OnSelected = box =>
                 {
-                    character.dontFollowCursor = !box.Selected;
+                    character.FollowCursor = box.Selected;
                     return true;
                 }
             };
@@ -2710,7 +2720,7 @@ namespace Barotrauma.CharacterEditor
                 }, elementCount: 8, style: null);
                 jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
                 jobDropDown.AddItem("None");
-                JobPrefab.Prefabs.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
+                JobPrefab.Prefabs.Where(j => !j.HiddenJob).ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
                 jobDropDown.SelectItem(selectedJob);
                 jobDropDown.OnSelected = (component, data) =>
                 {
@@ -3112,7 +3122,7 @@ namespace Barotrauma.CharacterEditor
             {
                 CharacterParams.Reset(true);
                 AnimParams.ForEach(p => p.Reset(true));
-                character.AnimController.ResetRagdoll(forceReload: true);
+                character.AnimController.ResetRagdoll();
                 RecreateRagdoll();
                 jointCreationMode = JointCreationMode.None;
                 isDrawingLimb = false;
@@ -3566,20 +3576,23 @@ namespace Barotrauma.CharacterEditor
             int offsetX = spriteSheetOffsetX;
             int offsetY = spriteSheetOffsetY;
             Rectangle rect = Rectangle.Empty;
-            for (int i = 0; i < Textures.Count; i++)
+            if (Textures != null)
             {
-                if (limb.ActiveSprite.FilePath != texturePaths[i])
+                for (int i = 0; i < Textures.Count; i++)
                 {
-                    offsetY += (int)(Textures[i].Height * spriteSheetZoom);
-                }
-                else
-                {
-                    rect = limb.ActiveSprite.SourceRect;
-                    rect.Size = rect.MultiplySize(spriteSheetZoom);
-                    rect.Location = rect.Location.Multiply(spriteSheetZoom);
-                    rect.X += offsetX;
-                    rect.Y += offsetY;
-                    break;
+                    if (limb.ActiveSprite.FilePath != texturePaths[i])
+                    {
+                        offsetY += (int)(Textures[i].Height * spriteSheetZoom);
+                    }
+                    else
+                    {
+                        rect = limb.ActiveSprite.SourceRect;
+                        rect.Size = rect.MultiplySize(spriteSheetZoom);
+                        rect.Location = rect.Location.Multiply(spriteSheetZoom);
+                        rect.X += offsetX;
+                        rect.Y += offsetY;
+                        break;
+                    }
                 }
             }
             return rect;

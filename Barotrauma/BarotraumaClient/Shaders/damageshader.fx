@@ -1,4 +1,4 @@
-
+﻿
 Texture2D xTexture;
 sampler TextureSampler : register (s0) = sampler_state { Texture = <xTexture>; };
 
@@ -6,8 +6,6 @@ Texture2D xStencil;
 sampler StencilSampler = sampler_state { Texture = <xStencil>; };
 
 float4 solidColor;
-
-float4 inColor;
 
 float aCutoff;
 float aMultiplier;
@@ -33,7 +31,7 @@ float4 main(float4 position : POSITION0, float4 color : COLOR0, float2 texCoord 
 
 float4 solidColorStencil(float4 position : POSITION0, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
-	float4 c = xTexture.Sample(TextureSampler, texCoord) * inColor;
+	float4 c = xTexture.Sample(TextureSampler, texCoord) * color;
 	float4 stencilColor = xStencil.Sample(StencilSampler, texCoord);
 
 	float aDiff = stencilColor.a - aCutoff;

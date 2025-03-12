@@ -140,7 +140,7 @@ namespace Barotrauma.Abilities
             string type = conditionElement.Name.ToString().ToLowerInvariant();
             try
             {
-                conditionType = ReflectionUtils.GetTypeWithBackwardsCompatibility("Barotrauma.Abilities", type, false, true);
+                conditionType = ReflectionUtils.GetTypeWithBackwardsCompatibility(ToolBox.BarotraumaAssembly, "Barotrauma.Abilities", type, false, true);
                 if (conditionType == null)
                 {
                     if (errorMessages)

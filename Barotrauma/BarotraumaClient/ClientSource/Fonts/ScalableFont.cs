@@ -419,8 +419,7 @@ namespace Barotrauma
                 if (anyChanges) { textures[^1].SetData<uint>(currentDynamicPixelBuffer); }
             }
         }
-
-        // TODO: refactor this further
+        
         private void HandleNewLineAndAlignment(
             string text,
             in Vector2 advanceUnit,
@@ -435,23 +434,29 @@ namespace Barotrauma
             out uint charIndex,
             out bool shouldContinue)
         {
-            if ((alignment.HasFlag(Alignment.CenterX) || alignment.HasFlag(Alignment.Right)) && (lineWidth < 0.0f || text[i] == '\n'))
+            if (lineWidth < 0.0f || text[i] == '\n')
             {
-                int startIndex = lineWidth < 0.0f ? i : (i + 1);
-                lineWidth = 0.0f;
-                for (int j = startIndex; j < text.Length; j++)
+                // Use bitwise operations instead of HasFlag or HasAnyFlag to avoid boxing, as this is performance-sensitive code.
+                bool isHorizontallyCentered = (alignment & Alignment.CenterX) == Alignment.CenterX;
+                bool isAlignedToRight = (alignment & Alignment.Right) == Alignment.Right;
+                if (isHorizontallyCentered || isAlignedToRight)
                 {
-                    if (text[j] == '\n') { break; }
-                    uint chrIndex = text[j];
+                    int startIndex = lineWidth < 0.0f ? i : (i + 1);
+                    lineWidth = 0.0f;
+                    for (int j = startIndex; j < text.Length; j++)
+                    {
+                        if (text[j] == '\n') { break; }
+                        uint chrIndex = text[j];
 
-                    var gd2 = GetGlyphData(chrIndex);
-                    lineWidth += gd2.Advance;
+                        var gd2 = GetGlyphData(chrIndex);
+                        lineWidth += gd2.Advance;
+                    }
+                    currentLineOffset = -lineWidth * advanceUnit * scale.X;
+                    if (isHorizontallyCentered) { currentLineOffset *= 0.5f; }
+
+                    currentLineOffset.X = MathF.Round(currentLineOffset.X);
+                    currentLineOffset.Y = MathF.Round(currentLineOffset.Y);
                 }
-                currentLineOffset = -lineWidth * advanceUnit * scale.X;
-                if (alignment.HasFlag(Alignment.CenterX)) { currentLineOffset *= 0.5f; }
-
-                currentLineOffset.X = MathF.Round(currentLineOffset.X);
-                currentLineOffset.Y = MathF.Round(currentLineOffset.Y);
             }
             if (text[i] == '\n')
             {
@@ -493,7 +498,7 @@ namespace Barotrauma
             
             int lineNum = 0;
             Vector2 currentPos = position;
-            Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+            Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
             for (int i = 0; i < text.Length; i++)
             {
                 HandleNewLineAndAlignment(text, advanceUnit, position, scale, alignment, i,
@@ -504,7 +509,7 @@ namespace Barotrauma
                 GlyphData gd = GetGlyphData(charIndex);
                 if (gd.TexIndex >= 0)
                 {
-                    if (gd.TexIndex < 0 || gd.TexIndex >= textures.Count)
+                    if (gd.TexIndex >= textures.Count)
                     {
                         throw new ArgumentOutOfRangeException($"Error while rendering text. Texture index was out of range. Text: {text}, char: {charIndex} index: {gd.TexIndex}, texture count: {textures.Count}");
                     }
@@ -542,6 +547,11 @@ namespace Barotrauma
                 DynamicRenderAtlas(graphicsDevice, text);
             }
 
+            quadVertices[0].Color = color;
+            quadVertices[1].Color = color;
+            quadVertices[2].Color = color;
+            quadVertices[3].Color = color;
+
             Vector2 currentPos = position;
             for (int i = 0; i < text.Length; i++)
             {
@@ -558,26 +568,33 @@ namespace Barotrauma
                 if (gd.TexIndex >= 0)
                 {
                     float halfCharHeight = gd.TexCoords.Height * 0.5f;
-                    float slantStrength = 0.35f;
-                    float topItalicOffset = italics ? ((halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f : 0.0f;
-                    float bottomItalicOffset = italics ? ((-halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f : 0.0f;
-                    
+                    const float slantStrength = 0.35f;
+                    float topItalicOffset = 0.0f;
+                    float bottomItalicOffset = 0.0f;
+                    if (italics)
+                    {
+                        topItalicOffset = ((halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f;
+                        bottomItalicOffset = ((-halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f;
+                    }
+
                     Texture2D tex = textures[gd.TexIndex];
+
+                    float left = (float)gd.TexCoords.Left / tex.Width;
+                    float bottom = (float)gd.TexCoords.Bottom / tex.Height;
+                    float top = (float)gd.TexCoords.Top / tex.Height;
+                    float right = (float)gd.TexCoords.Right / tex.Width;
+
                     quadVertices[0].Position = new Vector3(currentPos + gd.DrawOffset + (bottomItalicOffset, gd.TexCoords.Height), 0.0f);
-                    quadVertices[0].TextureCoordinate = ((float)gd.TexCoords.Left / tex.Width, (float)gd.TexCoords.Bottom / tex.Height);
-                    quadVertices[0].Color = color;
+                    quadVertices[0].TextureCoordinate = new Vector2(left, bottom);
 
                     quadVertices[1].Position = new Vector3(currentPos + gd.DrawOffset + (topItalicOffset, 0.0f), 0.0f);
-                    quadVertices[1].TextureCoordinate = ((float)gd.TexCoords.Left / tex.Width, (float)gd.TexCoords.Top / tex.Height);
-                    quadVertices[1].Color = color;
+                    quadVertices[1].TextureCoordinate = new Vector2(left, top);
 
                     quadVertices[2].Position = new Vector3(currentPos + gd.DrawOffset + (gd.TexCoords.Width + bottomItalicOffset, gd.TexCoords.Height), 0.0f);
-                    quadVertices[2].TextureCoordinate = ((float)gd.TexCoords.Right / tex.Width, (float)gd.TexCoords.Bottom / tex.Height);
-                    quadVertices[2].Color = color;
+                    quadVertices[2].TextureCoordinate = new Vector2(right, bottom);
 
                     quadVertices[3].Position = new Vector3(currentPos + gd.DrawOffset + (gd.TexCoords.Width + topItalicOffset, 0.0f), 0.0f);
-                    quadVertices[3].TextureCoordinate = ((float)gd.TexCoords.Right / tex.Width, (float)gd.TexCoords.Top / tex.Height);
-                    quadVertices[3].Color = color;
+                    quadVertices[3].TextureCoordinate = new Vector2(right, top);
 
                     sb.Draw(tex, quadVertices, 0.0f);
                 }

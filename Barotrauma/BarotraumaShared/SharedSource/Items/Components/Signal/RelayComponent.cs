@@ -80,7 +80,6 @@ namespace Barotrauma.Items.Components
             set
             {
                 isOn = value;
-                CanTransfer = value;
                 if (!isOn)
                 {
                     currPowerConsumption = 0.0f;

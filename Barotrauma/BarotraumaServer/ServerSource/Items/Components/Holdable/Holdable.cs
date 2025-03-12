@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace Barotrauma.Items.Components
 {
@@ -13,10 +14,18 @@ namespace Barotrauma.Items.Components
             msg.WriteBoolean(writeAttachData);
             if (!writeAttachData) { return; }
 
+            UInt16 attacherId = Entity.NullEntityID;
+            if (TryExtractEventData(extraData, out AttachEventData attachEventData) &&
+                attachEventData.Attacher != null)
+            {
+                attacherId = attachEventData.Attacher.ID;
+            }
+
             msg.WriteBoolean(Attached);
             msg.WriteSingle(body.SimPosition.X);
             msg.WriteSingle(body.SimPosition.Y);
             msg.WriteUInt16(item.Submarine?.ID ?? Entity.NullEntityID);
+            msg.WriteUInt16(attacherId);
         }
 
         public void ServerEventRead(IReadMessage msg, Client c)
@@ -34,7 +43,7 @@ namespace Barotrauma.Items.Components
             AttachToWall();
             OnUsed.Invoke(new ItemUseInfo(item, c.Character));
 
-            item.CreateServerEvent(this);
+            item.CreateServerEvent(this, new AttachEventData(simPosition, c.Character));
             c.Character.Inventory?.CreateNetworkEvent();
 
             GameServer.Log(GameServer.CharacterLogName(c.Character) + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);

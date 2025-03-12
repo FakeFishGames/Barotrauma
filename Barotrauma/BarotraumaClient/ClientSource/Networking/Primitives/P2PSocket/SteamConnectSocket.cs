@@ -74,7 +74,16 @@ sealed class SteamConnectSocket : P2PSocket
     {
         if (!SteamManager.IsInitialized) { return Result.Failure(new Error(ErrorCode.SteamNotInitialized)); }
 
-        var connectionManager = Steamworks.SteamNetworkingSockets.ConnectRelay<ConnectionManager>(endpoint.SteamId.Value);
+        ConnectionManager connectionManager;
+        try
+        {
+            connectionManager = Steamworks.SteamNetworkingSockets.ConnectRelay<ConnectionManager>(endpoint.SteamId.Value);
+        }
+        catch (ArgumentException e)
+        {
+            DebugConsole.ThrowError("Failed to connect via SteamP2P. Are you logged in to Steam, is the same Steam account already connected to the server?", e);
+            return Result.Failure(new Error(ErrorCode.FailedToCreateSteamP2PSocket));
+        }
         if (connectionManager is null) { return Result.Failure(new Error(ErrorCode.FailedToCreateSteamP2PSocket)); }
         connectionManager.SetEndpointAndCallbacks(endpoint, callbacks);
 

@@ -258,11 +258,11 @@ namespace OpenAL
 
         public static void GetInteger(IntPtr device, int param, out int data)
         {
-            int[] dataArr = new int[1];
-            GCHandle handle = GCHandle.Alloc(dataArr,GCHandleType.Pinned);
+            data = 0; // (Optimization: let's pin an integer on the stack instead of an array on the heap, which previously allocated almost a GB of memory)
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
             GetIntegerv(device, param, 1, handle.AddrOfPinnedObject());
+            data = Marshal.ReadInt32(handle.AddrOfPinnedObject());
             handle.Free();
-            data = dataArr[0];
         }
 
 #endregion

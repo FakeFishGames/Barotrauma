@@ -33,6 +33,11 @@ namespace Barotrauma
 
         public readonly CharacterTeamType OutpostTeam;
 
+        /// <summary>
+        /// Is this location type considered valid for e.g. events and missions that are should be available in "any outpost"
+        /// </summary>
+        public bool IsAnyOutpost;
+
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
 
         public readonly ImmutableArray<Identifier> MissionIdentifiers;
@@ -86,6 +91,8 @@ namespace Barotrauma
 
         public Identifier ReplaceInRadiation { get; }
 
+        public Identifier DescriptionInRadiation { get; }
+
         /// <summary>
         /// If set, forces the location to be assigned to this faction. Set to "None" if you don't want the location to be assigned to any faction.
         /// </summary>
@@ -113,9 +120,12 @@ namespace Barotrauma
         }
 
         public float StoreMaxReputationModifier { get; } = 0.1f;
+        public float StoreMinReputationModifier { get; } = 1.0f;
         public float StoreSellPriceModifier { get; } = 0.3f;
+        public float StoreBuyPriceModifier { get; } = 1f;
         public float DailySpecialPriceModifier { get; } = 0.5f;
         public float RequestGoodPriceModifier { get; } = 2f;
+        public float RequestGoodBuyPriceModifier { get; } = 5f;
         public int StoreInitialBalance { get; } = 5000;
         /// <summary>
         /// In percentages
@@ -155,10 +165,13 @@ namespace Barotrauma
             HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", Array.Empty<string>()).ToList();
 
             ReplaceInRadiation = element.GetAttributeIdentifier(nameof(ReplaceInRadiation), Identifier.Empty);
+            DescriptionInRadiation = element.GetAttributeIdentifier(nameof(DescriptionInRadiation), "locationdescription.abandonedirradiated");
 
             forceOutpostGenerationParamsIdentifier = element.GetAttributeIdentifier("forceoutpostgenerationparams", Identifier.Empty);
 
             IgnoreGenericEvents = element.GetAttributeBool(nameof(IgnoreGenericEvents), false);
+
+            IsAnyOutpost = element.GetAttributeBool(nameof(IsAnyOutpost), def: HasOutpost);
 
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
@@ -179,7 +192,7 @@ namespace Barotrauma
                         try
                         {
                             var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
-                            names.AddRange(File.ReadAllLines(path.Value).ToList());
+                            names.AddRange(File.ReadAllLines(path.Value, catchUnauthorizedAccessExceptions: false).ToList());
                         }
                         catch (Exception e)
                         {
@@ -257,9 +270,12 @@ namespace Barotrauma
                         break;
                     case "store":
                         StoreMaxReputationModifier = subElement.GetAttributeFloat("maxreputationmodifier", StoreMaxReputationModifier);
+                        StoreBuyPriceModifier = subElement.GetAttributeFloat("buypricemodifier", StoreBuyPriceModifier);
+                        StoreMinReputationModifier = subElement.GetAttributeFloat("minreputationmodifier", StoreMaxReputationModifier);
                         StoreSellPriceModifier = subElement.GetAttributeFloat("sellpricemodifier", StoreSellPriceModifier);
                         DailySpecialPriceModifier = subElement.GetAttributeFloat("dailyspecialpricemodifier", DailySpecialPriceModifier);
                         RequestGoodPriceModifier = subElement.GetAttributeFloat("requestgoodpricemodifier", RequestGoodPriceModifier);
+                        RequestGoodBuyPriceModifier = subElement.GetAttributeFloat("requestgoodbuypricemodifier", RequestGoodBuyPriceModifier);
                         StoreInitialBalance = subElement.GetAttributeInt("initialbalance", StoreInitialBalance);
                         StorePriceModifierRange = subElement.GetAttributeInt("pricemodifierrange", StorePriceModifierRange);
                         DailySpecialsCount = subElement.GetAttributeInt("dailyspecialscount", DailySpecialsCount);

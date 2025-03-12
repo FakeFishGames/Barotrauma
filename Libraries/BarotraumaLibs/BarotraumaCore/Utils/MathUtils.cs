@@ -375,7 +375,19 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Get the point where the line segment between a1 and a2 intersects the rectangle. Note that the rectangle's y-coordinate is handled so that up is lower and bottom is higher (the way rectangles work by default in XNA).
+        /// </summary>
         public static bool GetLineRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect, out Vector2 intersection)
+        {
+            rect.Y += rect.Height;
+            return GetLineWorldRectangleIntersection(a1, a2, rect, out intersection);
+        }
+
+        /// <summary>
+        /// Get the point where the line segment between a1 and a2 intersects the rectangle. Note that the rectangle's y-coordinate is handled so that up is greater and down is lower (the way e.g. MapEntity rects are defined).
+        /// </summary>
+        public static bool GetLineWorldRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect, out Vector2 intersection)
         {
             if (GetAxisAlignedLineIntersection(a1, a2,
                 new Vector2(rect.X, rect.Y),
@@ -678,7 +690,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// divide a convex hull into triangles
+        /// Divide a convex hull into triangles
         /// </summary>
         /// <returns>List of triangle vertices (sorted counter-clockwise)</returns>
         public static List<Vector2[]> TriangulateConvexHull(List<Vector2> vertices, Vector2 center)
@@ -1100,6 +1112,52 @@ namespace Barotrauma
             while (val > po2) { po2 <<= 1; }
             return po2;
         }
+
+        /// <summary>
+        /// Resizes an array of vectors to a different size. Uses bilinear interpolation to "scale" the values to the size of the new array: 
+        /// for instance, an array such as "1, 0" would become "1, 0.5, 0" when the width is scaled from 2 to 3.
+        /// </summary>
+        public static Vector2[,] ResizeVector2Array(Vector2[,] sourceArray, int newWidth, int newHeight)
+        {
+            if (newWidth < 1)
+            {
+                throw new ArgumentException("Width must be larger than zero.", nameof(newWidth));
+            }
+            if (newHeight < 1)
+            {
+                throw new ArgumentException("Height must be larger than zero.", nameof(newHeight));
+            }
+
+            var destinationArray = new Vector2[newWidth, newHeight];
+            int oldWidth = sourceArray.GetLength(0), oldHeight = sourceArray.GetLength(1);
+
+            for (int x = 0; x < newWidth; x++)
+            {
+                for (int y = 0; y < newHeight; y++)
+                {
+                    // Calculate the position in the original array
+                    float sourceX = oldWidth == 1 ? 0 : (x / (float)(newWidth - 1)) * (oldWidth - 1);
+                    float sourceY = oldHeight == 1 ? 0 : (y / (float)(newHeight - 1)) * (oldHeight - 1);
+
+                    // Find the indices of the surrounding points
+                    int startIndexX = (int)Math.Floor(sourceX);
+                    int endIndexX = Math.Min(startIndexX + 1, oldWidth - 1);
+                    int startIndexY = (int)Math.Floor(sourceY);
+                    int endIndexY = Math.Min(startIndexY + 1, oldHeight - 1);
+
+                    // Calculate interpolation weights
+                    float tx = sourceX - startIndexX;
+                    float ty = sourceY - startIndexY;
+
+                    // Perform bilinear interpolation
+                    Vector2 top = Vector2.Lerp(sourceArray[startIndexX, startIndexY], sourceArray[endIndexX, startIndexY], tx);
+                    Vector2 bottom = Vector2.Lerp(sourceArray[startIndexX, endIndexY], sourceArray[endIndexX, endIndexY], tx);
+                    destinationArray[x, y] = Vector2.Lerp(top, bottom, ty);
+                }
+            }
+
+            return destinationArray;
+        }
     }
 
     public class CompareCW : IComparer<Vector2>
@@ -1156,4 +1214,5 @@ namespace Barotrauma
             return -CompareCW.Compare(a, b, center);
         }
     }
+
 }

@@ -18,6 +18,7 @@ namespace Barotrauma
             string FilePath,
             Option<SerializableDateTime> SaveTime,
             string SubmarineName,
+            RespawnMode RespawnMode,
             ImmutableArray<string> EnabledContentPackageNames) : INetSerializableStruct;
 
         public const int MaxMoney = int.MaxValue / 2; //about 1 billion
@@ -32,6 +33,20 @@ namespace Barotrauma
         public int TotalPassedLevels;
 
         public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Upgrade, PurchaseSub, MedicalClinic, Cargo }
+
+        /// <summary>
+        /// Should the interaction be disabled if the character's faction is hostile towards the players?
+        /// </summary>
+        public static bool HostileFactionDisablesInteraction(InteractionType interactionType)
+        {
+            return 
+                interactionType != InteractionType.None && 
+                //allow interacting with stores, otherwise you could get softlocked
+                //(no way to get enough resources from a hostile outpost to make it to the next one?)
+                interactionType != InteractionType.Store &&
+                //examining is triggered by events, and there may be events that are intended to allow interaction with a hostile NPC.
+                interactionType != InteractionType.Examine;
+        }
 
         public static bool BlocksInteraction(InteractionType interactionType)
         {
@@ -103,6 +118,9 @@ namespace Barotrauma
             get { return map; }
         }
 
+        /// <summary>
+        /// Which missions have been selected for the current round?
+        /// </summary>
         public override IEnumerable<Mission> Missions
         {
             get
@@ -112,10 +130,13 @@ namespace Barotrauma
                 {
                     if (Map.CurrentLocation != null)
                     {
+                        var currentLevelData = Level.Loaded?.LevelData ?? GameMain.GameSession?.LevelData;
                         foreach (Mission mission in map.CurrentLocation.SelectedMissions)
                         {
-                            if (mission.Locations[0] == mission.Locations[1] ||
-                                mission.Locations.Contains(Map.SelectedLocation))
+                            if (//mission takes place in current location
+                                mission.Locations[0] == mission.Locations[1] ||
+                                //mission takes place between two locations, and we're in the level between those locations
+                                mission.Locations.Contains(Map.SelectedLocation) && currentLevelData is { Type: LevelData.LevelType.LocationConnection })
                             {
                                 yield return mission;
                             }
@@ -156,10 +177,28 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember.GameStarted)
             {
-                //allow managing if no-one with permissions is alive and in-game
-                return GameMain.NetworkMember.ConnectedClients.None(c =>
-                    c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } &&
-                    (IsOwner(c) || c.HasPermission(permissions)));
+                bool someOneHasPermissions = GameMain.NetworkMember.ConnectedClients.Any(c => IsOwner(c) || c.HasPermission(permissions));
+                if (someOneHasPermissions)
+                {
+                    if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration < 60.0f)
+                    {
+                        //round has been going on for less than a minute, don't allow anyone to manage just yet,
+                        //the people with permissions might still be loading or doing something in the lobby
+                        return false;
+                    }
+                    else
+                    {
+                        //allow managing if the round has been going on for a while, and no-one with permissions is alive and in-game
+                        return GameMain.NetworkMember.ConnectedClients.None(c =>
+                            c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } &&
+                            (IsOwner(c) || c.HasPermission(permissions)));
+                    }
+                }
+                else
+                {
+                    //no-one in the server with permissions, allow anyone to manage
+                    return true;
+                }
             }
             else
             {
@@ -170,6 +209,7 @@ namespace Barotrauma
         protected CampaignMode(GameModePreset preset, CampaignSettings settings)
             : base(preset)
         {
+            Settings = settings;
             Bank = new Wallet(Option<Character>.None())
             {
                 Balance = settings.InitialMoney
@@ -246,7 +286,7 @@ namespace Barotrauma
                 sub != leavingSub &&
                 !leavingSub.DockedTo.Contains(sub) &&
                 sub.Info.Type == SubmarineType.Player && sub.TeamID == CharacterTeamType.Team1 && // pirate subs are currently tagged as player subs as well
-                sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                !sub.IsRespawnShuttle &&
                 (sub.AtEndExit != leavingSub.AtEndExit || sub.AtStartExit != leavingSub.AtStartExit));
         }
 
@@ -401,9 +441,9 @@ namespace Barotrauma
                         currentLocation.DeselectMission(mission);
                     }
                 }
-                if (levelData.HasBeaconStation && !levelData.IsBeaconActive && Missions.None(m => m.Prefab.Type == MissionType.Beacon))
+                if (levelData.HasBeaconStation && !levelData.IsBeaconActive && Missions.None(m => m.Prefab.Type == Tags.MissionTypeBeacon))
                 {
-                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.IsSideObjective && m.Type == MissionType.Beacon);
+                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.IsSideObjective && m.Type == Tags.MissionTypeBeacon);
                     if (beaconMissionPrefabs.Any())
                     {
                         var filteredMissions = beaconMissionPrefabs.Where(m => levelData.Difficulty >= m.MinLevelDifficulty && levelData.Difficulty <= m.MaxLevelDifficulty);
@@ -490,7 +530,7 @@ namespace Barotrauma
                             if (missionPrefabs.Any())
                             {
                                 var missionPrefab = ToolBox.SelectWeightedRandom(missionPrefabs, p => p.Commonness, rand);
-                                if (missionPrefab.Type == MissionType.Pirate && Missions.Any(m => m.Prefab.Type == MissionType.Pirate))
+                                if (missionPrefab.Type == Tags.MissionTypePirate && Missions.Any(m => m.Prefab.Type == Tags.MissionTypePirate))
                                 {
                                     continue;                                    
                                 }
@@ -769,7 +809,7 @@ namespace Barotrauma
                     {
                         foreach (var dockedSub in Level.Loaded.StartOutpost.DockedTo)
                         {
-                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            if (dockedSub.IsRespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
                             return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                         }
                     }
@@ -809,7 +849,7 @@ namespace Barotrauma
                     {
                         foreach (var dockedSub in Level.Loaded.EndOutpost.DockedTo)
                         {
-                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            if (dockedSub.IsRespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
                             return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                         }
                     }
@@ -941,7 +981,9 @@ namespace Barotrauma
             {
                 UpdateStoreStock();
             }
-            GameMain.GameSession.EventManager?.RegisterEventHistory(registerFinishedOnly: true);
+
+            GameMain.GameSession.EndMissions();
+            GameMain.GameSession.EventManager?.StoreEventDataAtRoundEnd(registerFinishedOnly: true);
         }
 
         /// <summary>
@@ -1067,13 +1109,24 @@ namespace Barotrauma
                     return false;
                 }
             }
-            var price = buyingNewCharacter ? NewCharacterCost(characterInfo) : HireManager.GetSalaryFor(characterInfo);
+            int price = buyingNewCharacter ? NewCharacterCost(characterInfo) : HireManager.GetSalaryFor(characterInfo);
             if (takeMoney && !TryPurchase(client, price)) { return false; }
 
             characterInfo.IsNewHire = true;
             characterInfo.Title = null;
             location.RemoveHireableCharacter(characterInfo);
-            CrewManager.AddCharacterInfo(characterInfo);
+
+            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign)
+            {
+#if SERVER
+                CrewManager.ToggleReserveBenchStatus(characterInfo, client, pendingHire: true, confirmPendingHire: true, sendUpdate: false);
+#endif
+            }
+            else
+            {
+                CrewManager.AddCharacterInfo(characterInfo);
+            }
+
             GameAnalyticsManager.AddMoneySpentEvent(characterInfo.Salary, GameAnalyticsManager.MoneySink.Crew, characterInfo.Job?.Prefab.Identifier.Value ?? "unknown");
             return true;
         }
@@ -1092,6 +1145,7 @@ namespace Barotrauma
         private void NPCInteract(Character npc, Character interactor)
         {
             if (!npc.AllowCustomInteract) { return; }
+            if (npc.AIController is HumanAIController humanAi && !humanAi.AllowCampaignInteraction()) { return; }
             NPCInteractProjSpecific(npc, interactor);
             string coroutineName = "DoCharacterWait." + (npc?.ID ?? Entity.NullEntityID);
             if (!CoroutineManager.IsCoroutineRunning(coroutineName))
@@ -1287,7 +1341,7 @@ namespace Barotrauma
             return Faction.GetPlayerAffiliationStatus(faction);
         }
 
-        public abstract void Save(XElement element);
+        public abstract void Save(XElement element, bool isSavingOnLoading);
 
         protected void LoadStats(XElement element)
         {

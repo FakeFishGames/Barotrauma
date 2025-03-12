@@ -49,7 +49,8 @@ namespace Barotrauma
             {
                 return hudIconColor ?? IconColor;
             }
-        } 
+        }
+        public Color ProgressBarColor { get; private set; }
 
         private Sprite hudIcon;
         private Color? hudIconColor;
@@ -90,6 +91,7 @@ namespace Barotrauma
             }
             this.portraits = portraits.ToImmutableArray();
             overrideMusicOnState = overrideMusic.ToImmutableDictionary();
+            ProgressBarColor = element.GetAttributeColor(nameof(ProgressBarColor), GUIStyle.Blue);
         }
 
         public Identifier GetOverrideMusicType(int state)

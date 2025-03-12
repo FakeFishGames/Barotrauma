@@ -168,6 +168,16 @@ namespace Barotrauma
             }
         }
 
+        public bool CanVoteToStartRound(Client client)
+        {
+            return !client.AFK || !GameMain.Server.ServerSettings.AllowAFK;
+        }
+
+        public bool CanVoteToEndRound(Client client)
+        {
+            return client.HasSpawned && client.InGame;
+        }
+
         private bool ShouldRejectVote(Client sender, VoteType voteType)
         {
             if (rejectedVoteTimes.ContainsKey(sender))
@@ -374,12 +384,31 @@ namespace Barotrauma
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowSubVoting);
             if (GameMain.Server.ServerSettings.AllowSubVoting)
             {
-                IReadOnlyDictionary<SubmarineInfo, int> voteList = GetVoteCounts<SubmarineInfo>(VoteType.Sub, GameMain.Server.ConnectedClients);
+                bool isMultiSub = GameMain.NetLobbyScreen.SelectedMode == GameModePreset.PvP;
+                msg.WriteBoolean(isMultiSub);
+
+                var subVoters = isMultiSub ?
+                                    GameMain.Server.ConnectedClients.Where(static c => c.PreferredTeam is CharacterTeamType.Team1) :
+                                    GameMain.Server.ConnectedClients;
+
+                IReadOnlyDictionary<SubmarineInfo, int> voteList = GetVoteCounts<SubmarineInfo>(VoteType.Sub, subVoters);
                 msg.WriteByte((byte)voteList.Count);
                 foreach (KeyValuePair<SubmarineInfo, int> vote in voteList)
                 {
                     msg.WriteByte((byte)vote.Value);
                     msg.WriteString(vote.Key.Name);
+                }
+
+                if (isMultiSub)
+                {
+                    var separatistsVotes = GetVoteCounts<SubmarineInfo>(VoteType.Sub, GameMain.Server.ConnectedClients.Where(static c => c.PreferredTeam is CharacterTeamType.Team2));
+                    msg.WriteByte((byte)separatistsVotes.Count);
+
+                    foreach (var (info, amount) in separatistsVotes)
+                    {
+                        msg.WriteByte((byte)amount);
+                        msg.WriteString(info.Name);
+                    }
                 }
             }
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowModeVoting);
@@ -396,8 +425,8 @@ namespace Barotrauma
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowEndVoting);
             if (GameMain.Server.ServerSettings.AllowEndVoting)
             {
-                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound)));
-                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned));
+                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => CanVoteToEndRound(c) && c.GetVote<bool>(VoteType.EndRound)));
+                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => CanVoteToEndRound(c)));
             }
 
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowVoteKick);

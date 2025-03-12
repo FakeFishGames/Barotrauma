@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class WifiComponent : ItemComponent, IServerSerializable
+    partial class WifiComponent : ItemComponent, IServerSerializable, IClientSerializable
     {
         private static readonly List<WifiComponent> list = new List<WifiComponent>();
 
@@ -55,7 +55,6 @@ namespace Barotrauma.Items.Components
                 channel = MathHelper.Clamp(value, MinChannel, MaxChannel);
             }
         }
-
 
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Can the component communicate with wifi components in another team's submarine (e.g. enemy sub in Combat missions, respawn shuttle). Needs to be enabled on both the component transmitting the signal and the component receiving it.", alwaysUseInstanceValues: true)]
         public bool AllowCrossTeamCommunication
@@ -229,14 +228,20 @@ namespace Barotrauma.Items.Components
 
         public void TransmitSignal(Signal signal, bool sentFromChat)
         {
-            if (sentFromChat)
-            {
-                item.LastSentSignalRecipients.Clear();
-            }
-
             bool chatMsgSent = false;
 
             var receivers = GetReceiversInRange();
+            if (sentFromChat)
+            {
+                //if sent from chat, we need to reset the "signal chain" at this point
+                //so we can correctly detect which components the signal has already passed through to avoid infinite loops
+                //only relevant for signals originating from the chat - normally this is handled in Item.SendSignal
+                item.LastSentSignalRecipients.Clear();
+                foreach (WifiComponent receiver in receivers)
+                {
+                    receiver.item.LastSentSignalRecipients.Clear();
+                }
+            }
             foreach (WifiComponent wifiComp in receivers)
             {
                 if (sentFromChat && !wifiComp.LinkToChat) { continue; }
@@ -365,6 +370,26 @@ namespace Barotrauma.Items.Components
             var element = base.Save(parentElement);
             element.Add(new XAttribute("channelmemory", string.Join(',', channelMemory)));
             return element;
+        }
+
+        protected void SharedEventWrite(IWriteMessage msg)
+        {
+            msg.WriteRangedInteger(Channel, MinChannel, MaxChannel);
+            
+            for (int i = 0; i < ChannelMemorySize; i++)
+            {
+                msg.WriteRangedInteger(channelMemory[i], MinChannel, MaxChannel);
+            }
+        }
+
+        protected void SharedEventRead(IReadMessage msg)
+        {
+            Channel = msg.ReadRangedInteger(MinChannel, MaxChannel);
+
+            for (int i = 0; i < ChannelMemorySize; i++)
+            {
+                channelMemory[i] = msg.ReadRangedInteger(MinChannel, MaxChannel);
+            }
         }
     }
 }

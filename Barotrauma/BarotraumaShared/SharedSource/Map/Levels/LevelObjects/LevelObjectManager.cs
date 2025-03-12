@@ -20,7 +20,7 @@ namespace Barotrauma
         private List<LevelObject> updateableObjects;
         private List<LevelObject>[,] objectGrid;
 
-        const float ParallaxStrength = 0.0001f;
+        public const float ParallaxStrength = 0.0001f;
 
         public float GlobalForceDecreaseTimer
         {
@@ -178,12 +178,21 @@ namespace Barotrauma
                 {
                     float minDistance = level.Size.X * 0.2f;
 
+                    bool allowAtStart = prefab.AllowAtStart;
+                    bool allowAtEnd = prefab.AllowAtEnd;
+                    if (GameMain.GameSession?.GameMode is PvPMode)
+                    {
+                        //in PvP mode, the object must be allowed at both the start and end to be placed at either end
+                        //since the 2nd team starts at the end of the level, it'd be unfair to allow e.g. ballast flora to spawn at the end of the level but not the start
+                        allowAtEnd = allowAtStart = allowAtEnd && allowAtStart;
+                    }
+
                     suitableSpawnPositions.Add(prefab, 
                         availableSpawnPositions.Where(sp =>
                             sp.SpawnPosTypes.Any(type => prefab.SpawnPos.HasFlag(type)) && 
                             sp.Length >= prefab.MinSurfaceWidth &&
-                            (prefab.AllowAtStart || !level.IsCloseToStart(sp.GraphEdge.Center, minDistance)) &&
-                            (prefab.AllowAtEnd || !level.IsCloseToEnd(sp.GraphEdge.Center, minDistance)) &&
+                            (allowAtStart || !level.IsCloseToStart(sp.GraphEdge.Center, minDistance)) &&
+                            (allowAtEnd || !level.IsCloseToEnd(sp.GraphEdge.Center, minDistance)) &&
                             (sp.Alignment == Alignment.Any || prefab.Alignment.HasFlag(sp.Alignment))).ToList());
 
                     spawnPositionWeights.Add(prefab,
@@ -407,11 +416,11 @@ namespace Barotrauma
                 }
             }
 
-            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z * ParallaxStrength;
-            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z * ParallaxStrength;
+            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z;
+            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z;
 
-            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z * ParallaxStrength - level.BottomPos;
-            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z * ParallaxStrength - level.BottomPos;
+            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z - level.BottomPos;
+            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z - level.BottomPos;
 
             if (newObject.Triggers != null)
             {
@@ -446,6 +455,8 @@ namespace Barotrauma
 #endif
             objects.Add(newObject);
             if (newObject.NeedsUpdate) { updateableObjects.Add(newObject); }
+            //add some variance to the Z position to prevent z-fighting
+            //(based on the x and y position of the object, scaled to be visually insignificant)
             newObject.Position.Z += (minX + minY) % 100.0f * 0.00001f;
 
             int xStart = (int)Math.Floor(minX / GridSize);
@@ -557,7 +568,7 @@ namespace Barotrauma
             return availableSpawnPositions;
         }
 
-        public void Update(float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
             GlobalForceDecreaseTimer += deltaTime;
             if (GlobalForceDecreaseTimer > 1000000.0f)
@@ -603,10 +614,10 @@ namespace Barotrauma
                 }
             }
 
-            UpdateProjSpecific(deltaTime);            
+            UpdateProjSpecific(deltaTime, cam);            
         }
 
-        partial void UpdateProjSpecific(float deltaTime);
+        partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
         private void OnObjectTriggered(LevelObject triggeredObject, LevelTrigger trigger, Entity triggerer)
         {

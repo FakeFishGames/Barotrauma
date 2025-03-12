@@ -1,0 +1,68 @@
+﻿<override>
+  <Character speciesname="Mudraptor" humanoid="False" group="mudraptor" husk="False" needsair="False" canspeak="False" noise="200" visibility="100" blooddecal="blood" eatingspeed="10" speciestranslationoverride="" displayname="" hasinfo="False" usehuskappendage="False" needswater="False" bleedparticleair="blooddrop" bleedparticlewater="waterblood" pathfinderpriority="1" hideinsonar="False" sonardisruption="0">
+    <ragdolls file="Content/Characters/Human/Bugdolls.xml"/>
+    <animations />
+    <health vitality="150" doesbleed="True" crushdepth="Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="1">
+      <Limb name="Torso" />
+      <Limb name="Head" />
+      <Limb name="LeftLeg" />
+      <Limb name="RightLeg" />
+      <!--Tail-->
+      <Limb/>
+    </health>
+    <damageemitter particle="gib" particleamount="10" velocitymin="200" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.15" scalemax="0.2" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+    <bloodemitter particle="blood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+    <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+    <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="0.25" scalemax="0.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" state="Attack" range="3000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" state="Attack" range="3000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" state="Attack" range="3000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage1.ogg" state="Damage" range="3000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage2.ogg" state="Damage" range="3000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage3.ogg" state="Damage" range="3000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle1.ogg" state="Idle" range="2000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle2.ogg" state="Idle" range="2000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle3.ogg" state="Idle" range="2000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle4.ogg" state="Idle" range="2000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death1.ogg" state="Die" range="3000" volume="1" />
+    <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death2.ogg" state="Die" range="3000" volume="1" />
+    <Inventory slots="Any, Any, Any, Any" accessiblewhenalive="False" commonness="15">
+      <Item identifier="hydroxyapatite" />
+    </Inventory>
+    <Inventory slots="Any, Any, Any, Any" accessiblewhenalive="False" commonness="5">
+      <Item identifier="hydroxyapatite" />
+      <Item identifier="diversremains" />
+    </Inventory>
+    <Inventory slots="Any, Any, Any, Any" accessiblewhenalive="False" commonness="1">
+      <Item identifier="hydroxyapatite" />
+      <Item identifier="mudraptorshell" forcetoslot="true"/>
+    </Inventory>
+    <Inventory slots="Any, Any, Any, Any" accessiblewhenalive="False" commonness="1">
+      <Item identifier="hydroxyapatite" />
+      <Item identifier="smallmudraptoregg" />
+    </Inventory>
+    <ai combatstrength="240" sight="1" hearing="1" aggressiveboarding="True" fleehealththreshold="0" aggressiongreed="20" aggressionhurt="300" attackwhenprovoked="True" avoidgunfire="False" enforceaggressivebehaviorformissions="True" targetouterwalls="True" randomattack="True">
+      <latchonto attachtowalls="true" attachtosub="false" attachlimb="HeadArmor" />
+      <target tag="decoy" state="Attack" priority="100" ignoreifnotinsamesub="True" />
+      <target tag="provocative" state="Attack" priority="100" ignoreifnotinsamesub="True"/>
+      <target tag="weapon" state="Attack" priority="100" ignoreifnotinsamesub="True"/>
+      <target tag="nasonov" state="Attack" priority="100" ignoreinside="True"/>
+      <target tag="stronger" state="Avoid" priority="100" reactdistance="2000" attackdistance="0" />
+      <target tag="tigerthresher" state="Avoid" priority="100" reactdistance="2000" />
+      <target tag="human" state="Attack" priority="90" reactdistance="0" attackdistance="0" />
+      <target tag="tool" state="Aggressive" priority="80" reactdistance="1000" attackdistance="0" ignoreifnotinsamesub="True"/>
+      <target tag="weaker" state="Attack" priority="60" reactdistance="0" attackdistance="0" />
+      <target tag="door" state="Attack" priority="30" reactdistance="0" attackdistance="0" />
+      <target tag="dead" state="Eat" priority="10" reactdistance="0" attackdistance="0" />
+      <target tag="wall" state="Attack" priority="10" reactdistance="0" attackdistance="0" />
+      <target tag="room" state="Attack" priority="10" reactdistance="0" attackdistance="0" />
+      <target tag="sonar" state="Attack" priority="10" reactdistance="0" attackdistance="0" ignoreinside="true"/>
+      <target tag="turret" state="Attack" priority="1" ignoreinside="true"/>
+      <target tag="searchlight" state="Attack" priority="1" ignoreinside="true"/>
+      <target tag="watcher" state="Protect" priority="1" ignoreinside="true"/>
+      <target tag="mudraptor_veteran" state="Follow" priority="1" ignoreinside="true" reactdistance="750"/>
+      <target tag="monsterfood" state="Eat" priority="1" />
+      <SwarmBehavior mindistfromclosest="300" maxdistfromcenter="1000" cohesion="0.25" />
+    </ai>
+  </Character>
+</override>

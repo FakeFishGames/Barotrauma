@@ -173,7 +173,7 @@ namespace Barotrauma.Steam
                 }
 
                 DeletePublishStagingCopy();
-                Directory.CreateDirectory(PublishStagingDir);
+                Directory.CreateDirectory(PublishStagingDir, catchUnauthorizedAccessExceptions: false);
                 await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir, ShouldCorrectPaths.No);
 
                 var stagingFileListPath = Path.Combine(PublishStagingDir, ContentPackage.FileListFileName);

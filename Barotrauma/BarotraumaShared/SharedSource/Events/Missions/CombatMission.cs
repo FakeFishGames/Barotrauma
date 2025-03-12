@@ -1,5 +1,6 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -10,12 +11,59 @@ namespace Barotrauma
         private readonly LocalizedString[] descriptions;
         private static LocalizedString[] teamNames = { "Team A", "Team B" };
 
-        public override bool AllowRespawn
+        private readonly bool allowRespawning;
+
+        enum WinCondition
         {
-            get { return false; }
+            /// <summary>
+            /// The winner is the team with the last living player(s)
+            /// </summary>
+            LastManStanding,
+            /// <summary>
+            /// The team who reaches a specific number of kills (determined by WinScore) is the winner
+            /// </summary>
+            KillCount,
+            /// <summary>
+            /// The team who controls a specific submarine (can be a ruin, outpost or a beacon station too) for some time (determined by WinScore) is the winner
+            /// </summary>
+            ControlSubmarine
         }
 
-        private CharacterTeamType Winner
+        private readonly WinCondition winCondition;
+
+        public override bool AllowRespawning
+        {
+            get => allowRespawning;
+        }
+
+        private Submarine targetSubmarine;
+
+        private LocalizedString targetSubmarineSonarLabel;
+
+        /// <summary>
+        /// Which type of submarine the team needs to stay in control of to win
+        /// </summary>
+        public TagAction.SubType TargetSubmarineType { get; set; }
+
+        public readonly int PointsPerKill;
+
+        /// <summary>
+        /// The score required to win the mission.
+        /// </summary>
+        public int WinScore => GameMain.NetworkMember?.ServerSettings.WinScorePvP ?? 10;
+
+        /// <summary>
+        /// Is the winner determined by some kind of a scoring mechanism?
+        /// </summary>
+        public bool HasWinScore => 
+            winCondition != WinCondition.LastManStanding || PointsPerKill != 0;
+
+        /// <summary>
+        /// Scores of both teams. What the scoring represents depends on how the mission is configured (kills, time in control of a beacon station?)
+        /// </summary>
+        public readonly int[] Scores = new int[2];
+
+        public static CharacterTeamType Winner
         {
             get
             {
@@ -46,6 +94,27 @@ namespace Barotrauma
         public CombatMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
+            allowRespawning = prefab.ConfigElement.GetAttributeBool(nameof(AllowRespawning), false);
+
+            winCondition = prefab.ConfigElement.GetAttributeEnum(nameof(WinCondition),
+                allowRespawning ? WinCondition.KillCount : WinCondition.LastManStanding);
+
+            PointsPerKill = prefab.ConfigElement.GetAttributeInt(nameof(PointsPerKill), 0);
+
+            TargetSubmarineType = prefab.ConfigElement.GetAttributeEnum(nameof(TargetSubmarineType), TagAction.SubType.Any);
+
+            string sonarTag = prefab.ConfigElement.GetAttributeString(nameof(targetSubmarineSonarLabel), string.Empty);
+            if (!sonarTag.IsNullOrEmpty())
+            {
+                targetSubmarineSonarLabel = TextManager.Get(sonarTag);
+            }
+
+            if (allowRespawning && winCondition == WinCondition.LastManStanding)
+            {
+                DebugConsole.ThrowError($"Error in mission {prefab.Identifier}: win condition cannot be \"last man standing\" when respawning is enabled.",
+                    contentPackage: prefab.ContentPackage);
+            }
+
             descriptions = new LocalizedString[]
             {
                 TextManager.Get("MissionDescriptionNeutral." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("descriptionneutral", "")),
@@ -57,15 +126,23 @@ namespace Barotrauma
             {
                 for (int n = 0; n < 2; n++)
                 {
-                    descriptions[i] = descriptions[i].Replace("[location" + (n + 1) + "]", locations[n].DisplayName);
+                    descriptions[i] = 
+                        descriptions[i]
+                            .Replace($"[location{n + 1}]", locations[n].DisplayName)
+                            .Replace("[winscore]", WinScore.ToString());
                 }
             }
 
             teamNames = new LocalizedString[]
             {
-                TextManager.Get("MissionTeam1." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("teamname1", "Team A")),
-                TextManager.Get("MissionTeam2." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("teamname2", "Team B"))
+                TextManager.Get("MissionTeam1." + prefab.TextIdentifier).Fallback(TextManager.Get(prefab.ConfigElement.GetAttributeString("teamname1", "missionteam1.pvpmission"))),
+                TextManager.Get("MissionTeam2." + prefab.TextIdentifier).Fallback(TextManager.Get(prefab.ConfigElement.GetAttributeString("teamname2", "missionteam2.pvpmission"))),
             };
+
+            if (winCondition == WinCondition.KillCount && PointsPerKill == 0)
+            {
+                DebugConsole.AddWarning($"Potential error in mission {Prefab.Identifier}: win condition is kill count, but {nameof(PointsPerKill)} is set to 0.");
+            }
         }
 
         public static LocalizedString GetTeamName(CharacterTeamType teamID)
@@ -82,9 +159,9 @@ namespace Barotrauma
             return "Invalid Team";
         }
 
-        public bool IsInWinningTeam(Character character)
+        public static bool IsInWinningTeam(Character character)
         {
-            return character != null && 
+            return character != null &&
                 Winner != CharacterTeamType.None &&
                 Winner == character.TeamID;
         }
@@ -99,19 +176,32 @@ namespace Barotrauma
             
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
 
-            subs[0].NeutralizeBallast(); 
-            subs[0].TeamID = CharacterTeamType.Team1;
-            subs[0].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team1);
+            if (Prefab.LoadSubmarines)
+            {
+                subs[0].NeutralizeBallast(); 
+                subs[0].TeamID = CharacterTeamType.Team1;
+                subs[0].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team1);
 
-            subs[1].NeutralizeBallast();
-            subs[1].TeamID = CharacterTeamType.Team2;
-            subs[1].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team2);
-            subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
-            subs[1].FlipX();
+                subs[1].NeutralizeBallast();
+                subs[1].TeamID = CharacterTeamType.Team2;
+                subs[1].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team2);
+                GameSession.PlaceSubAtInitialPosition(subs[1], level, placeAtStart: false);
+                subs[1].FlipX();
+            }
 #if SERVER
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
             roundEndTimer = RoundEndDuration;
 #endif
+
+            if (TargetSubmarineType != TagAction.SubType.Any)
+            {
+                targetSubmarine = Submarine.Loaded.FirstOrDefault(s => TagAction.SubmarineTypeMatches(s, TargetSubmarineType));
+                if (targetSubmarine == null)
+                {
+                    DebugConsole.ThrowError($"Error in mission {Prefab.Identifier}: could not find a submarine of the type {TargetSubmarineType}.",
+                        contentPackage: Prefab.ContentPackage);
+                }
+            }
         }
 
         protected override bool DetermineCompleted()

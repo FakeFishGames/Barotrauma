@@ -54,6 +54,13 @@ namespace Barotrauma
 
     static partial class ToolBox
     {
+        /// <summary>
+        /// Returns the Barotrauma.dll assembly.
+        /// Used with <see cref="ReflectionUtils.GetTypeWithBackwardsCompatibility"/>
+        /// </summary>
+        public static Assembly BarotraumaAssembly
+            => Assembly.GetAssembly(typeof(GameMain));
+
         public static bool IsProperFilenameCase(string filename)
         {
             //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.
@@ -67,6 +74,8 @@ namespace Barotrauma
 
             return !corrected;
         }
+
+        private static readonly Dictionary<string, string> cachedFileNames = new Dictionary<string, string>();
 
         public static string CorrectFilenameCase(string filename, out bool corrected, string directory = "")
         {
@@ -82,7 +91,12 @@ namespace Barotrauma
                 return originalFilename;
             }
 #endif
-
+            if (cachedFileNames.TryGetValue(originalFilename, out string existingName))
+            {
+                // Already processed and cached.
+                return existingName;
+            }
+            
             string startPath = directory ?? "";
 
             string saveFolder = SaveUtil.DefaultSaveFolder.Replace('\\', '/');
@@ -139,6 +153,7 @@ namespace Barotrauma
                 if (i < subDirs.Length - 1) { filename += "/"; }
             }
 
+            cachedFileNames.Add(originalFilename, filename);
             return filename;
         }
 
@@ -172,20 +187,26 @@ namespace Barotrauma
 
         public static int IdentifierToInt(Identifier id) => StringToInt(id.Value.ToLowerInvariant());
 
+        /// <summary>
+        /// Convert the specified string to an integer using a deterministic formula. The same string always provides the same number, and different strings should generally provide a different number.
+        /// </summary>
         public static int StringToInt(string str)
         {
-            str = str.Substring(0, Math.Min(str.Length, 32));
-
-            str = str.PadLeft(4, 'a');
-
-            byte[] asciiBytes = Encoding.ASCII.GetBytes(str);
-
-            for (int i = 4; i < asciiBytes.Length; i++)
+            //deterministic hash function based on https://andrewlock.net/why-is-string-gethashcode-different-each-time-i-run-my-program-in-net-core/
+            unchecked
             {
-                asciiBytes[i % 4] ^= asciiBytes[i];
-            }
+                int hash1 = (5381 << 16) + 5381;
+                int hash2 = hash1;
 
-            return BitConverter.ToInt32(asciiBytes, 0);
+                for (int i = 0; i < str.Length; i += 2)
+                {
+                    hash1 = ((hash1 << 5) + hash1) ^ str[i];
+                    if (i == str.Length - 1) { break; }
+                    hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+                }
+
+                return hash1 + (hash2 * 1566083941);
+            }
         }
 
         /// <summary>
@@ -346,7 +367,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    lines = File.ReadAllLines(filePath).ToList();
+                    lines = File.ReadAllLines(filePath, catchUnauthorizedAccessExceptions: false).ToList();
                     cachedLines.Add(filePath, lines);
                     if (lines.Count == 0)
                     {
@@ -414,17 +435,23 @@ namespace Barotrauma
             }
 
             float totalWeight = weights.Sum();
-
             float randomNum = (float)(random.NextDouble() * totalWeight);
+            T objectWithNonZeroWeight = default;
             for (int i = 0; i < objects.Count; i++)
             {
+                if (weights[i] > 0)
+                {
+                    objectWithNonZeroWeight = objects[i];
+                }
                 if (randomNum <= weights[i])
                 {
                     return objects[i];
                 }
                 randomNum -= weights[i];
             }
-            return default;
+            //it's possible for rounding errors to cause an element to not get selected if we pick a random number very close to 1
+            //to work around that, always return some object with a non-zero weight if none gets returned in the loop above
+            return objectWithNonZeroWeight;
         }
 
         /// <summary>
@@ -839,6 +866,24 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Converts a byte array to a string of hex values.
+        /// </summary>
+        /// <example>
+        /// { 4, 3, 75, 80 } -> "04034B50"
+        /// </example>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static string BytesToHexString(byte[] bytes)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in bytes)
+            {
+                sb.Append(b.ToString("X2"));
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Returns closest point on a rectangle to a given point.
         /// If the point is inside the rectangle, the point itself is returned.
         /// </summary>
@@ -870,6 +915,27 @@ namespace Barotrauma
             }
 
             return closest;
+        }
+
+        public static ImmutableArray<uint> PrefabCollectionToUintIdentifierArray(IEnumerable<PrefabWithUintIdentifier> prefabs)
+            => prefabs.Select(static p => p.UintIdentifier).ToImmutableArray();
+
+        public static ImmutableArray<T> UintIdentifierArrayToPrefabCollection<T>(PrefabCollection<T> Prefabs, IEnumerable<uint> uintIdentifiers) where T : PrefabWithUintIdentifier
+        {
+            var builder = ImmutableArray.CreateBuilder<T>();
+
+            foreach (uint uintIdentifier in uintIdentifiers)
+            {
+                var matchingPrefab = Prefabs.Find(p => p.UintIdentifier == uintIdentifier);
+                if (matchingPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Unable to find prefab with uint identifier {uintIdentifier}");
+                    continue;
+                }
+                builder.Add(matchingPrefab);
+            }
+
+            return builder.ToImmutable();
         }
     }
 }

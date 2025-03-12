@@ -52,7 +52,11 @@ namespace Barotrauma.Items.Components
                 {
                     if (holdable.Attached)
                     {
-                        GameAnalyticsManager.AddDesignEvent("ResourceCollected:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + item.Prefab.Identifier);
+                        //we don't need info of every collected resource, we can get a good sample size just by logging a small sample
+                        if (GameAnalyticsManager.ShouldLogRandomSample())
+                        {
+                            GameAnalyticsManager.AddDesignEvent("ResourceCollected:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + item.Prefab.Identifier);
+                        }
                         holdable.DeattachFromWall();
                     }
                     trigger.Enabled = false;

@@ -287,8 +287,8 @@ namespace FarseerPhysics.Common
         {
             Debug.Assert(!AttachedToBody, "Rotating vertices that are used by a Body can result in unstable behavior.");
 
-            float num1 = (float)Math.Cos(value);
-            float num2 = (float)Math.Sin(value);
+            float num1 = MathF.Cos(value);
+            float num2 = MathF.Sin(value);
 
             for (int i = 0; i < Count; i++)
             {

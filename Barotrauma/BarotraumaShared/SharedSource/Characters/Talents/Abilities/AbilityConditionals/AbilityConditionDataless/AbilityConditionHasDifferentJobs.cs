@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -14,8 +13,8 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            IEnumerable<Character> crewmembers = Character.GetFriendlyCrew(character);
-            int differentCrewAmount = crewmembers.Select(c => c.Info?.Job?.Prefab.Identifier).Distinct().Count();
+            IEnumerable<Character> crewMembers = Character.GetFriendlyCrew(character);
+            int differentCrewAmount = crewMembers.Select(c => c.Info.Job?.Prefab.Identifier).Distinct().Count();
             return differentCrewAmount >= amount;
         }
     }

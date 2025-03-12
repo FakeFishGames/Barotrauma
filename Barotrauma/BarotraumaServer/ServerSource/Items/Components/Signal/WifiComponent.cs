@@ -6,7 +6,15 @@ namespace Barotrauma.Items.Components
     {
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.WriteRangedInteger(Channel, MinChannel, MaxChannel);
+            SharedEventWrite(msg);
+        }
+
+        public void ServerEventRead(IReadMessage msg, Client c)
+        {
+            SharedEventRead(msg);
+            
+            // Create an event to notify other clients about the changes
+            item.CreateServerEvent(this);
         }
     }
 }

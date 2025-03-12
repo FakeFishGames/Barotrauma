@@ -70,7 +70,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
                     float forcePercent = GetPercent(distance, radius);
 
                     Vector2 forceVector = pos - overlappingBody.Position;
-                    forceVector *= 1f / (float)Math.Sqrt(forceVector.X * forceVector.X + forceVector.Y * forceVector.Y);
+                    forceVector *= 1f / MathF.Sqrt(forceVector.X * forceVector.X + forceVector.Y * forceVector.Y);
                     forceVector *= MathHelper.Min(force * forcePercent, maxForce);
                     forceVector *= -1;
 
@@ -85,7 +85,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
         private float GetPercent(float distance, float radius)
         {
             //(1-(distance/radius))^power-1
-            float percent = (float)Math.Pow(1 - ((distance - radius) / radius), Power) - 1;
+            float percent = MathF.Pow(1 - ((distance - radius) / radius), Power) - 1;
 
             if (float.IsNaN(percent))
                 return 0f;

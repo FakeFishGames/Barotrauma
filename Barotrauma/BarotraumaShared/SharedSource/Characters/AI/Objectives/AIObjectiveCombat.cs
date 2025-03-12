@@ -4,15 +4,18 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FarseerPhysics.Dynamics;
 using static Barotrauma.AIObjectiveFindSafety;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
     class AIObjectiveCombat : AIObjective
     {
         public override Identifier Identifier { get; set; } = "combat".ToIdentifier();
+        
+        public override string DebugTag => $"{Identifier} ({Mode})";
 
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
@@ -35,10 +38,9 @@ namespace Barotrauma
         private bool allowCooldown;
 
         public Character Enemy { get; private set; }
-        public bool HoldPosition { get; set; }
-
+        
         private Item _weapon;
-        private Item Weapon
+        public Item Weapon
         {
             get { return _weapon; }
             set
@@ -48,6 +50,7 @@ namespace Barotrauma
             }
         }
         private ItemComponent _weaponComponent;
+        private bool hasValidRangedWeapon;
         private ItemComponent WeaponComponent
         {
             get
@@ -74,7 +77,6 @@ namespace Barotrauma
         private float pathBackTimer;
         private const float DefaultCoolDown = 10.0f;
         private const float PathBackCheckTime = 1.0f;
-        private IEnumerable<Body> myBodies;
         private float aimTimer;
         private float reloadTimer;
         private float spreadTimer;
@@ -88,7 +90,9 @@ namespace Barotrauma
         private const float DistanceCheckInterval = 0.2f;
         private float distanceTimer;
         
-        private const float CloseDistanceThreshold = 300;
+        private const float CloseDistance = 300;
+        private const float MeleeDistance = 125;
+        private const float TooCloseToShoot = 100;
         private const float FloorHeightApproximate = 100;
 
         public bool AllowHoldFire;
@@ -169,13 +173,7 @@ namespace Barotrauma
         public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1, float coolDown = DefaultCoolDown) 
             : base(character, objectiveManager, priorityModifier)
         {
-            if (mode == CombatMode.None)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("Combat mode == None");
-#endif
-                return;
-            }
+            Debug.Assert(mode != CombatMode.None);
             Enemy = enemy;
             coolDownTimer = coolDown;
             findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
@@ -230,6 +228,7 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
+            isAimBlocked = false;
             ignoreWeaponTimer -= deltaTime;
             checkWeaponsTimer -= deltaTime;
             if (reloadTimer > 0)
@@ -257,7 +256,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
             if (character.Submarine is { TeamID: CharacterTeamType.FriendlyNPC } && character.Submarine == Enemy.Submarine)
             {
@@ -332,68 +331,155 @@ namespace Barotrauma
                     pathBackTimer -= deltaTime;
                 }
             }
+            if (standUpTimer > 0)
+            {
+                standUpTimer -= deltaTime;
+            }
+            else
+            {
+                // Crouch by default so that others can shoot from behind. Disabled when the line of sight is blocked and while moving.
+                allowCrouching = true;
+            }
+            if (HumanAIController.DebugAI)
+            {
+                BlockedPositions ??= new List<Vector2>();
+                BlockedPositions.Clear();
+            }
             if (seekAmmunitionObjective == null && seekWeaponObjective == null)
             {
                 if (Mode != CombatMode.Retreat && TryArm())
                 {
                     OperateWeapon(deltaTime);
                 }
-                if (HoldPosition)
-                {
-                    SteeringManager.Reset();
-                }
-                else if (seekAmmunitionObjective == null && seekWeaponObjective == null)
+                isMoving = false;
+                if (seekAmmunitionObjective == null && seekWeaponObjective == null)
                 {
                     Move(deltaTime);
                 }
             }
         }
-
+        
+        private bool isMoving;
         private void Move(float deltaTime)
         {
-            switch (Mode)
+            if (Mode == CombatMode.Retreat)
             {
-                case CombatMode.Offensive:
-                case CombatMode.Arrest:
+                Retreat(deltaTime);
+            }
+            else if (character.IsOnPlayerTeam && !Enemy.IsPlayer && objectiveManager.CurrentOrder is AIObjectiveGoTo gotoObjective)
+            {
+                if (gotoObjective.IsWaitOrder && WeaponComponent is MeleeWeapon && IsEnemyClose(CloseDistance))
+                {
+                    // Ordered to wait near the enemy with a melee weapon -> engage.
                     Engage(deltaTime);
-                    break;
-                case CombatMode.Defensive:
-                    if (character.IsOnPlayerTeam && !Enemy.IsPlayer && objectiveManager.IsCurrentOrder<AIObjectiveGoTo>())
+                }
+                else
+                {
+                    // Ordered to follow -> keep following.
+                    if (!gotoObjective.IsCloseEnough)
                     {
-                        if ((character.CurrentHull == null || character.CurrentHull == Enemy.CurrentHull) && sqrDistance < 200 * 200)
+                        isMoving = true;
+                    }
+                    gotoObjective.FaceTargetOnCompleted = false;
+                    gotoObjective.ForceAct(deltaTime);
+                    if (!character.AnimController.InWater && IsEnemyClose(CloseDistance))
+                    {
+                        // If close to the enemy, face it, so that we can attack it.
+                        HumanAIController.FaceTarget(Enemy);
+                        HumanAIController.AutoFaceMovement = false;
+                        if (!gotoObjective.ShouldRun(true))
                         {
-                            Engage(deltaTime);
+                            ForceWalk = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                switch (Mode)
+                {
+                    case CombatMode.Defensive:
+                        Retreat(deltaTime);
+                        break;
+                    case CombatMode.Offensive when hasValidRangedWeapon && IsEnemyClose(CloseDistance):
+                        // Too close to the enemy -> try to back off.
+                        Hull currentHull = character.CurrentHull;
+                        bool backOff = currentHull != null;
+                        Vector2 escapeVel = Vector2.Zero;
+                        if (backOff)
+                        {
+                            int previousEnemyDir = 0;
+                            foreach (Character enemy in Character.CharacterList)
+                            {
+                                if (!HumanAIController.IsActive(enemy) || HumanAIController.IsFriendly(enemy) || enemy.IsHandcuffed) { continue; }
+                                if (enemy.CurrentHull == null) { continue; }
+                                if (currentHull != enemy.CurrentHull && !currentHull.linkedTo.Contains(enemy.CurrentHull)) { continue; }
+                                Vector2 dir = character.Position - enemy.Position;
+                                int enemyDir = Math.Sign(dir.X);
+                                if (enemyDir == 0)
+                                {
+                                    // Exactly at the same pos.
+                                    if (previousEnemyDir != 0)
+                                    {
+                                        // Another enemy at either side -> Ignore this enemy.
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        // Just choose either direction.
+                                        enemyDir = Rand.Value() > 0.5f ? 1 : -1;
+                                    }
+                                }
+                                if (previousEnemyDir != 0 && enemyDir != previousEnemyDir)
+                                {
+                                    // Don't back off when there are enemies in different directions, because that's doomed.
+                                    backOff = false;
+                                    break;
+                                }
+                                previousEnemyDir = enemyDir;
+                                // This formula is slightly modified from AIObjectiveFindSafety.UpdateSimpleEscape().
+                                float distMultiplier = MathHelper.Clamp(MeleeDistance / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
+                                escapeVel += new Vector2(enemyDir * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                            }
+                            if (escapeVel == Vector2.Zero)
+                            {
+                                backOff = false;
+                            }
+                            if (backOff)
+                            {
+                                // Only move if we haven't reached the edge of the room.
+                                float left = currentHull.Rect.X + 50;
+                                float right = currentHull.Rect.Right - 50;
+                                backOff = escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right;
+                            }
+                        }
+                        if (backOff)
+                        {
+                            BackOff();
                         }
                         else
                         {
-                            // Keep following the goto target
-                            var gotoObjective = objectiveManager.GetOrder<AIObjectiveGoTo>();
-                            if (gotoObjective != null)
-                            {
-                                gotoObjective.ForceAct(deltaTime);
-                                if (!character.AnimController.InWater)
-                                {
-                                    HumanAIController.FaceTarget(Enemy);
-                                    ForceWalk = true;
-                                    HumanAIController.AutoFaceMovement = false;
-                                }
-                            }
-                            else
-                            {
-                                SteeringManager.Reset();
-                            }
+                            Engage(deltaTime);
                         }
-                    }
-                    else
-                    {
-                        Retreat(deltaTime);
-                    }
-                    break;
-                case CombatMode.Retreat:
-                    Retreat(deltaTime);
-                    break;
-                default:
-                    throw new NotImplementedException();
+                        
+                        void BackOff()
+                        {
+                            RemoveFollowTarget();
+                            isMoving = true;
+                            if (!IsEnemyClose(MeleeDistance))
+                            {
+                                ForceWalk = true;
+                            }
+                            HumanAIController.FaceTarget(Enemy);
+                            HumanAIController.AutoFaceMovement = false;
+                            character.ReleaseSecondaryItem();
+                            character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                        }
+                        break;
+                    default:
+                        Engage(deltaTime);
+                        break;
+                }
             }
         }
 
@@ -408,7 +494,8 @@ namespace Barotrauma
             bool isAllowedToSeekWeapons = character.IsHostileEscortee || character.IsPrisoner || // Prisoners and terrorists etc are always allowed to seek new weapons.
                                           (character.IsInFriendlySub // Other characters need to be on a friendly sub in order to "know" where the weapons are. This also prevents NPCs "stealing" player items.
                                             && IsOffensiveOrArrest // = Defensive or retreating AI shouldn't seek new weapons.
-                                            && !character.IsInstigator); // Instigators (= aggressive NPCs spawned with events) shouldn't seek new weapons, because we don't want them to grab e.g. an smg, if they spawn with a wrench or something.
+                                            && !character.IsInstigator // Instigators (= aggressive NPCs spawned with events) shouldn't seek new weapons, because we don't want them to grab e.g. an smg, if they spawn with a wrench or something.
+                                            && objectiveManager.CurrentOrder is not AIObjectiveGoTo); // if ordered to wait/follow, shouldn't go seeking new weapons.
             if (checkWeaponsTimer < 0)
             {
                 checkWeaponsTimer = CheckWeaponsInterval;
@@ -434,7 +521,12 @@ namespace Barotrauma
                         // All good, the weapon is loaded
                         break;
                     }
-                    bool seekAmmo = isAllowedToSeekWeapons && seekAmmunitionObjective == null && !IsEnemyClose(CloseDistanceThreshold);
+                    bool seekAmmo = isAllowedToSeekWeapons && seekAmmunitionObjective == null;
+                    if (seekAmmo)
+                    {
+                        // Bots set to arrest the target are always allowed to seek (or spawn) more ammo, because otherwise they might not be able to stun the target and need to use lethal weapons.
+                        seekAmmo = Mode == CombatMode.Arrest || !IsEnemyClose(CloseDistance);
+                    }
                     if (Reload(seekAmmo: seekAmmo))
                     {
                         // All good, we can use the weapon.
@@ -480,7 +572,7 @@ namespace Barotrauma
                         Mode = CombatMode.Retreat;
                     }
                 }
-                else if (seekAmmunitionObjective == null && (WeaponComponent == null || (WeaponComponent.CombatPriority < GoodWeaponPriority && !IsEnemyClose(CloseDistanceThreshold))))
+                else if (seekAmmunitionObjective == null && (WeaponComponent == null || (WeaponComponent.CombatPriority < GoodWeaponPriority && !IsEnemyClose(CloseDistance))))
                 {
                     // No weapon or only a poor weapon equipped -> try to find better.
                     RemoveSubObjective(ref retreatObjective);
@@ -489,7 +581,7 @@ namespace Barotrauma
                         constructor: () => new AIObjectiveGetItem(character, "weapon".ToIdentifier(), objectiveManager, equip: true, checkInventory: false)
                         {
                             AllowStealing = HumanAIController.IsMentallyUnstable,
-                            AbortCondition = obj => IsEnemyClose(200),
+                            AbortCondition = _ => IsEnemyClose(CloseDistance / 2),
                             EvaluateCombatPriority = false,  // Use a custom formula instead
                             GetItemPriority = i =>
                             {
@@ -582,6 +674,12 @@ namespace Barotrauma
 
         private void OperateWeapon(float deltaTime)
         {
+            if (isMoving && character.IsClimbing)
+            {
+                // Don't climb and shoot at the same time, because it messes up the aiming.
+                ClearInputs();
+                return;
+            }
             switch (Mode)
             {
                 case CombatMode.Offensive:
@@ -790,17 +888,22 @@ namespace Barotrauma
             return containers.None() || containers.Any(container =>
                 (container as ItemContainer)?.Inventory.AllItems.Any(i => i != null && i.HasTag(mobileBatteryTag) && i.Condition > 0.0f) ?? false);
         }
-
+        
         private Item GetWeapon(IEnumerable<ItemComponent> weaponList, out ItemComponent weaponComponent)
         {
+            hasValidRangedWeapon = false;
             weaponComponent = null;
             float bestPriority = 0;
             float lethalDmg = -1;
-            bool prioritizeMelee = IsEnemyClose(50) || EnemyAIController.IsLatchedTo(Enemy, character);
-            bool isCloseToEnemy = prioritizeMelee || IsEnemyClose(CloseDistanceThreshold);
-            foreach (var weapon in weaponList)
+            bool prioritizeMelee = IsEnemyClose(TooCloseToShoot) || EnemyAIController.IsLatchedTo(Enemy, character);
+            bool isCloseToEnemy = prioritizeMelee || IsEnemyClose(CloseDistance);
+            foreach (ItemComponent weapon in weaponList)
             {
                 float priority = GetWeaponPriority(weapon, prioritizeMelee, canSeekAmmo: !isCloseToEnemy, out lethalDmg);
+                if (priority >= GoodWeaponPriority && weapon is RangedWeapon or RepairTool)
+                {
+                    hasValidRangedWeapon = true;
+                }
                 if (priority > bestPriority)
                 {
                     weaponComponent = weapon;
@@ -898,23 +1001,13 @@ namespace Barotrauma
                 }
             }
         }
-
-        private void Unequip()
+        
+        private void UnequipWeapon()
         {
-            if (!character.LockHands && character.HeldItems.Contains(Weapon))
-            {
-                if (!Weapon.AllowedSlots.Contains(InvSlotType.Any) || !character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Any }))
-                {
-                    if (Weapon.AllowedSlots.Contains(InvSlotType.Bag))
-                    {
-                        if (character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Bag }))
-                        {
-                            return;
-                        }
-                    }
-                    Weapon.Drop(character);
-                }
-            }
+            if (Weapon == null) { return; }
+            if (character.LockHands) { return; }
+            if (character.HeldItems.Contains(Weapon)) { return; }
+            character.Unequip(Weapon);
         }
 
         private bool Equip()
@@ -929,7 +1022,15 @@ namespace Barotrauma
                 ClearInputs();
                 Weapon.TryInteract(character, forceSelectKey: true);
                 var slots = Weapon.AllowedSlots.Where(CharacterInventory.IsHandSlotType);
-                if (character.Inventory.TryPutItem(Weapon, character, slots))
+                bool successfullyEquipped = character.TryPutItem(Weapon, slots);
+                if (!successfullyEquipped && character.HasHandsFull(out (Item leftHandItem, Item rightHandItem) items))
+                {
+                    // Unequip and try again.
+                    character.Unequip(items.leftHandItem);
+                    character.Unequip(items.rightHandItem);
+                    successfullyEquipped = character.TryPutItem(Weapon, slots);
+                }
+                if (successfullyEquipped)
                 {
                     SetAimTimer(Rand.Range(0.2f, 0.4f) / AimSpeed);
                     SetReloadTime(WeaponComponent);
@@ -950,6 +1051,7 @@ namespace Barotrauma
 
         private void Retreat(float deltaTime)
         {
+            isMoving = true;
             if (!Enemy.IsHuman && !character.IsInFriendlySub)
             {
                 // Only relevant when we are retreating from monsters and are not inside a friendly sub.
@@ -1047,6 +1149,7 @@ namespace Barotrauma
             {
                 if (sqrDistance > MathUtils.Pow2(meleeWeapon.Range))
                 {
+                    isMoving = true;
                     character.ReleaseSecondaryItem();
                     // Swim towards the target
                     SteeringManager.Reset();
@@ -1097,7 +1200,7 @@ namespace Barotrauma
                     }
                 });
             if (followTargetObjective == null) { return; }
-            if (Mode == CombatMode.Arrest && Enemy.IsKnockedDown && !arrestingRegistered)
+            if (Mode == CombatMode.Arrest && Enemy.IsKnockedDownOrRagdolled && !arrestingRegistered)
             {
                 bool hasHandCuffs = HumanAIController.HasItem(character, Tags.HandLockerItem, out _);
                 if (!hasHandCuffs && character.TeamID == CharacterTeamType.FriendlyNPC)
@@ -1122,11 +1225,19 @@ namespace Barotrauma
                 followTargetObjective.CloseEnough =
                     WeaponComponent switch
                     {
-                        RangedWeapon => 1000,
+                        RangedWeapon => isAimBlocked ? BlockedDistance : 1000,
                         MeleeWeapon mw => mw.Range,
                         RepairTool rt => rt.Range,
                         _ => 50
                     };
+            }
+            if (isAimBlocked)
+            {
+                ForceWalk = true;
+            }
+            if (!followTargetObjective.IsCloseEnough)
+            {
+                isMoving = true;
             }
         }
 
@@ -1145,19 +1256,23 @@ namespace Barotrauma
 
         private void OnArrestTargetReached()
         {
-            if (!Enemy.IsKnockedDown)
+            if (!Enemy.IsKnockedDownOrRagdolled)
             {
                 RemoveFollowTarget();
                 return;
             }
             if (character.TeamID == CharacterTeamType.FriendlyNPC)
             {
-                // Confiscate stolen goods and all weapons
                 foreach (var item in Enemy.Inventory.AllItemsMod)
                 {
-                    // Ignore handcuffs already on the target.
-                    if (item.HasTag(Tags.HandLockerItem) && Enemy.HasEquippedItem(item)) { continue; }
-                    if (item.Illegitimate || item.HasTag(Tags.Weapon) || item.HasTag(Tags.Poison) || GetWeaponComponent(item) is { CombatPriority: > 0 })
+                    AIObjectiveFindThieves.MarkTargetAsInspected(character);
+                    bool confiscateItem = AIObjectiveCheckStolenItems.IsItemIllegitimate(Enemy, item);
+                    if (!confiscateItem && Enemy.IsActingOffensively)
+                    {
+                        // Confiscate any weapons or items that can be used offensively.
+                        confiscateItem = item.HasTag(Tags.Weapon) || item.HasTag(Tags.Poison) || GetWeaponComponent(item) is { CombatPriority: > 0 };   
+                    }
+                    if (confiscateItem)
                     {
                         item.Drop(character);
                         character.Inventory.TryPutItem(item, character, CharacterInventory.AnySlot);
@@ -1172,7 +1287,7 @@ namespace Barotrauma
             }
 
             if (matchingItems.Any() && 
-                !Enemy.IsUnconscious && Enemy.IsKnockedDown && character.CanInteractWith(Enemy) && !Enemy.LockHands)
+                !Enemy.IsUnconscious && Enemy.IsKnockedDownOrRagdolled && character.CanInteractWith(Enemy) && !Enemy.LockHands)
             {
                 var handCuffs = matchingItems.First();
                 if (!HumanAIController.TakeItem(handCuffs, Enemy.Inventory, equip: true, wear: true))
@@ -1205,7 +1320,8 @@ namespace Barotrauma
             RemoveFollowTarget();
             var itemContainer = Weapon.GetComponent<ItemContainer>();
             TryAddSubObjective(ref seekAmmunitionObjective,
-                constructor: () => new AIObjectiveContainItem(character, ammunitionIdentifiers, itemContainer, objectiveManager)
+                constructor: () => new AIObjectiveContainItem(character, ammunitionIdentifiers, itemContainer, objectiveManager, 
+                    spawnItemIfNotFound: !character.IsOnPlayerTeam && character.AIController.HasInfiniteItemSpawns(ammunitionIdentifiers))
                 {
                     ItemCount = itemContainer.MainContainerCapacity * itemContainer.MaxStackSize,
                     checkInventory = false,
@@ -1227,10 +1343,9 @@ namespace Barotrauma
         /// </summary>
         private bool Reload(bool seekAmmo)
         {
-            if (WeaponComponent == null) { return false; }        
+            if (WeaponComponent == null) { return false; }
             if (Weapon.OwnInventory == null) { return true; }
-            // Eject empty ammo
-            HumanAIController.UnequipEmptyItems(Weapon);
+            HumanAIController.UnequipEmptyItems(Weapon, allowDestroying: !character.IsOnPlayerTeam);
             ImmutableHashSet<Identifier> ammunitionIdentifiers = null;
             if (WeaponComponent.RequiredItems.ContainsKey(RelatedItem.RelationType.Contained))
             {
@@ -1270,7 +1385,7 @@ namespace Barotrauma
             {
                 return true;
             }
-            else if (!HoldPosition && IsOffensiveOrArrest && seekAmmo && ammunitionIdentifiers != null)
+            else if (IsOffensiveOrArrest && seekAmmo && ammunitionIdentifiers != null)
             {
                 // Inventory not drawn = it's not interactable
                 // If the weapon is empty and the inventory is inaccessible, it can't be reloaded
@@ -1280,6 +1395,20 @@ namespace Barotrauma
             return false;
         }
 
+        private bool isAimBlocked;
+        private float _blockedDistance;
+        private float BlockedDistance
+        {
+            get
+            {
+                if (_blockedDistance <= 0)
+                {
+                    _blockedDistance = CloseDistance * Rand.Range(1.0f, 1.3f);
+                }
+                return _blockedDistance;
+            }
+        }
+        public List<Vector2> BlockedPositions;
         private void Attack(float deltaTime)
         {
             character.CursorPosition = Enemy.WorldPosition;
@@ -1322,8 +1451,6 @@ namespace Barotrauma
                 aimTimer -= deltaTime;
                 return;
             }
-            if (reloadTimer > 0) { return; }
-            if (holdFireCondition != null && holdFireCondition()) { return; }
             sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
             distanceTimer = DistanceCheckInterval;
             if (WeaponComponent is MeleeWeapon meleeWeapon)
@@ -1353,9 +1480,11 @@ namespace Barotrauma
                     if (closeEnough && Enemy.WorldPosition.Y < character.WorldPosition.Y && yDiff > 25)
                     {
                         // The target is probably knocked down? -> try to reach it by crouching.
-                        HumanAIController.AnimController.Crouching = true;
+                        HumanAIController.AnimController.Crouch();
                     }
                 }
+                if (reloadTimer > 0) { return; }
+                if (holdFireCondition != null && holdFireCondition()) { return; }
                 if (closeEnough)
                 {
                     UseWeapon(deltaTime);
@@ -1371,36 +1500,59 @@ namespace Barotrauma
             {
                 if (WeaponComponent is RepairTool repairTool)
                 {
-                    if (sqrDistance > repairTool.Range * repairTool.Range) { return; }
+                    float reach = AIObjectiveFixLeak.CalculateReach(repairTool, character);
+                    if (sqrDistance > reach * reach) { return; }
                 }
                 float aimFactor = MathHelper.PiOver2 * (1 - AimAccuracy);
                 if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.WorldPosition - Weapon.WorldPosition) < MathHelper.PiOver4 + aimFactor)
                 {
-                    myBodies ??= character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     // Check that we don't hit friendlies. No need to check the walls, because there's a separate check for that at 1096 (which intentionally has a small delay)
-                    var pickedBodies = Submarine.PickBodies(Weapon.SimPosition, Submarine.GetRelativeSimPosition(from: Weapon, to: Enemy), myBodies, Physics.CollisionCharacter);
+                    var pickedBodies = Submarine.PickBodies(Weapon.SimPosition, Submarine.GetRelativeSimPosition(from: Weapon, to: Enemy), 
+                        ignoredBodies: character.AnimController.LimbBodies, 
+                        Physics.CollisionCharacter);
+                    
                     foreach (var body in pickedBodies)
                     {
-                        Character target = body.UserData switch
+                        if (body.UserData is Limb limb)
                         {
-                            Character c => c,
-                            Limb limb => limb.character,
-                            _ => null
-                        };
-                        if (target != null && target != Enemy && HumanAIController.IsFriendly(target))
-                        {
-                            return;
+                            Character target = limb.character;
+                            if (target != null && target != Enemy && HumanAIController.IsFriendly(target))
+                            {
+                                // Blocked by a friendly target.
+                                isAimBlocked = true;
+                                if (HumanAIController.DebugAI)
+                                {
+                                    BlockedPositions.Add(ConvertUnits.ToDisplayUnits(body.Position));
+                                }
+                                // Stand up, so that we might shoot past the friendlies that are crouching.
+                                allowCrouching = false;
+                                standUpTimer = StandUpCooldown;
+                                return;
+                            }
                         }
+
                     }
                     UseWeapon(deltaTime);
                 }
             }
         }
 
+        private bool allowCrouching;
+        private float standUpTimer;
+        private const float StandUpCooldown = 5;
         private void UseWeapon(float deltaTime)
         {
-            // Never allow friendly crew (bots) to attack with deadly weapons.
-            if (Mode == CombatMode.Arrest && isLethalWeapon && character.IsOnPlayerTeam && Enemy.IsOnPlayerTeam) { return; }
+            // Enable this to debug intentional friendly fire.
+            // if (isLethalWeapon && character.TeamID == Enemy.TeamID && character.IsOnPlayerTeam)
+            // {
+            //     // Never allow friendly crew (bots) to attack with deadly weapons (this check should be redundant)
+            //     Debugger.Break();
+            //     return;
+            // }
+            if (allowCrouching && !isMoving && !character.AnimController.InWater && WeaponComponent is not MeleeWeapon)
+            {
+                HumanAIController.AnimController.Crouch();
+            }
             character.SetInput(InputType.Shoot, hit: false, held: true);
             Weapon.Use(deltaTime, user: character);
             SetReloadTime(WeaponComponent);
@@ -1420,11 +1572,8 @@ namespace Barotrauma
                     break;
                 }
                 case MeleeWeapon mw:
-                {
-                    if (character.AnimController is HumanoidAnimController { Crouching: false })
-                    {
-                        reloadTime = mw.Reload;
-                    }
+                { 
+                    reloadTime = mw.Reload;
                     break;
                 }
             }
@@ -1485,7 +1634,7 @@ namespace Barotrauma
             }
             if (ShouldUnequipWeapon)
             {
-                Unequip();
+                UnequipWeapon();
             }
             SteeringManager?.Reset();
         }
@@ -1495,7 +1644,7 @@ namespace Barotrauma
             base.OnAbandon();
             if (ShouldUnequipWeapon)
             {
-                Unequip();
+                UnequipWeapon();
             }
             SteeringManager?.Reset();
         }
@@ -1516,6 +1665,7 @@ namespace Barotrauma
             hasAimed = false;
             holdFireTimer = 0;
             pathBackTimer = 0;
+            standUpTimer = 0;
             isLethalWeapon = false;
             canSeeTarget = false;
             seekWeaponObjective = null;

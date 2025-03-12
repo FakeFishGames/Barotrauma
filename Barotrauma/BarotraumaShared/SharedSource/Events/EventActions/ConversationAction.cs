@@ -84,6 +84,8 @@ namespace Barotrauma
         //an identifier the server uses to identify which ConversationAction a client is responding to
         public readonly UInt16 Identifier;
 
+        private float startDelay;
+
         private int selectedOption = -1;
         private bool dialogOpened = false;
 
@@ -113,13 +115,15 @@ namespace Barotrauma
                     Text = elem.GetAttributeString("tag", string.Empty);
                     textElement = elem;
                 }
-            }
-            if (element.GetChildElement("Replace") != null)
-            {
-                DebugConsole.ThrowError(
-                    $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\"" +
-                    $" - unrecognized child element \"Replace\".",
-                    contentPackage: element.ContentPackage);
+                else
+                {
+                    string thisName = nameof(ConversationAction);
+                    DebugConsole.ThrowError(
+                        $"Error in {thisName} in the event \"{parentEvent.Prefab.Identifier}\"" +
+                        $" - unrecognized child element \"{elem.Name}\". If it's an action intended to execute after the {thisName}, " +
+                        $"it should be after the {thisName}, not inside it.",
+                        contentPackage: element.ContentPackage);
+                }
             }
         }
 
@@ -165,7 +169,11 @@ namespace Barotrauma
 #else
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
-                        if (c.InGame && c.Character != null) { ServerWrite(Speaker, c, interrupt); }
+                        if (c.InGame && c.Character != null)
+                        {
+                            DebugConsole.Log($"Conversation {ParentEvent.Prefab.Identifier} finished, communicating to clients...");
+                            ServerWrite(Speaker, c, interrupt); 
+                        }
                     }
 #endif
                     ResetSpeaker();
@@ -209,6 +217,16 @@ namespace Barotrauma
             Speaker = null;
         }
 
+        /// <summary>
+        /// Retriggers the conversation after the specified delay.
+        /// </summary>
+        public void RetriggerAfter(float delay)
+        {
+            startDelay = delay;
+            dialogOpened = false;
+            selectedOption = -1;
+        }
+
         public override bool SetGoToTarget(string goTo)
         {
             selectedOption = -1;
@@ -238,20 +256,33 @@ namespace Barotrauma
             {
                 humanAI.ClearForcedOrder();
                 if (prevIdleObjective != null) { humanAI.ObjectiveManager.AddObjective(prevIdleObjective); }
-                if (prevGotoObjective != null) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
+                if (prevGotoObjective != null && !prevGotoObjective.Abandon) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
                 humanAI.ObjectiveManager.SortObjectives();
             }
         }
 
         public int[] GetEndingOptions()
         {
-            List<int> endings = Options.Where(group => !group.Actions.Any() || group.EndConversation).Select(group => Options.IndexOf(group)).ToList();
+            List<int> endings = Options
+                .Where(group =>  
+                    group.EndConversation || 
+                    //no actions = safe to assume this must end the conversation
+                    !group.Actions.Any() ||
+                    //no follow-up conversation and a goto makes the event jump somewhere else
+                    //we cannot easily determine whether that goto will lead to a follow-up conversation,
+                    //so it's safest to close this conversation to prevent it from getting stuck (the potential follow-up will open a new one)
+                    (group.Actions.None(a => a is ConversationAction) && group.Actions.Any(a => a is GoTo { EndConversation: true })))
+                .Select(group => Options.IndexOf(group))
+                .ToList();
             if (!ContinueConversation) { endings.Add(-1); }
             return endings.ToArray();
         }
 
         public override void Update(float deltaTime)
         {
+            startDelay -= deltaTime;
+            if (startDelay > 0) { return; }
+
             if (interrupt)
             {
                 Interrupted?.Update(deltaTime);
@@ -388,9 +419,22 @@ namespace Barotrauma
             {
                 targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e));
                 if (!targets.Any() || IsBlockedByAnotherConversation(targets, BlockOtherConversationsDuration)) { return; }
+                //some specific character tried to start the convo, but not included in the targets for this conversation -> disallow
+                if (targetCharacter != null && !targets.Contains(targetCharacter)) { return; }
+            }
+            else 
+            {
+#if SERVER
+                if (GameMain.NetworkMember != null)
+                {
+                    //conversation targeted to everyone, but no-one present yet who could potentially hear it -> don't start yet
+                    UpdateIgnoredClients();
+                    if (GameMain.NetworkMember.ConnectedClients.None(c => CanClientReceive(c))) { return; }
+                }
+#endif
+                if (IsBlockedByAnotherConversation(targetCharacter?.ToEnumerable(), BlockOtherConversationsDuration)) { return; }
             }
 
-            if (targetCharacter != null && IsBlockedByAnotherConversation(targetCharacter.ToEnumerable(), 0.1f)) { return; }
 
             if (speaker?.AIController is HumanAIController humanAI)
             {

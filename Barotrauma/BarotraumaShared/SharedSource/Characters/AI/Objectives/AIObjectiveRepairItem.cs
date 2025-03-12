@@ -50,7 +50,7 @@ namespace Barotrauma
                 }
                 return Priority;
             }
-            if (HumanAIController.IsItemRepairedByAnother(Item, out _))
+            if (AIObjectiveRepairItems.IsItemRepairedByAnother(character, Item))
             {
                 Priority = 0;
                 IsCompleted = true;
@@ -91,7 +91,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
             IsCompleted = Item.IsFullCondition;
             if (character.IsOnPlayerTeam && IsCompleted && IsRepairing())
@@ -234,6 +234,7 @@ namespace Barotrauma
                     {
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
+                            DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachTarget,
                             TargetName = Item.Name,
                             SpeakCannotReachCondition = () => isPriority
                         };

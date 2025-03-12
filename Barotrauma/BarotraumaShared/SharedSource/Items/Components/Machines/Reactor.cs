@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
             private set
             {
                 if (lastUser == value) { return; }
+                if (Screen.Selected.IsEditor) { return; }
                 lastUser = value;
                 if (lastUser == null)
                 {
@@ -246,6 +247,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            //rapidly adjust the reactor in the first few seconds of the round to prevent overvoltages if the load changed between rounds
+            //(unless the reactor is being operated by a player)
+            if (GameMain.GameSession is { RoundDuration: <5 } && lastUser is not { IsPlayer: true })
+            {
+                UpdateAutoTemp(100.0f, (float)(Timing.Step * 10.0f));
+            }
+
 #if CLIENT
             if (PowerOn && AvailableFuel < 1)
             {
@@ -340,7 +348,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Item item in containedItems)
                 {
-                    if (!item.HasTag(Tags.Fuel)) { continue; }
+                    if (!item.HasTag(Tags.ReactorFuel)) { continue; }
                     if (fissionRate > 0.0f)
                     {
                         bool isConnectedToFriendlyOutpost = Level.IsLoadedOutpost && 
@@ -707,13 +715,13 @@ namespace Barotrauma.Items.Components
                             var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount: 1, equip: true, removeEmpty: true, spawnItemIfNotFound: !character.IsOnPlayerTeam, dropItemOnDeselected: true);
                             containObjective.Completed += ReportFuelRodCount;
                             containObjective.Abandoned += ReportFuelRodCount;
-                            character.Speak(TextManager.Get("DialogReactorFuel").Value, null, 0.0f, Tags.Fuel, 30.0f);
+                            character.Speak(TextManager.Get("DialogReactorFuel").Value, null, 0.0f, Tags.ReactorFuel, 30.0f);
 
                             void ReportFuelRodCount()
                             {
                                 if (!character.IsOnPlayerTeam) { return; }
                                 if (character.Submarine != Submarine.MainSub) { return; }
-                                int remainingFuelRods = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(Tags.Fuel) && i.Condition > 1);
+                                int remainingFuelRods = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(Tags.ReactorFuel) && i.Condition > 1);
                                 if (remainingFuelRods == 0)
                                 {
                                     character.Speak(TextManager.Get("DialogOutOfFuelRods").Value, null, 0.0f, "outoffuelrods".ToIdentifier(), 30.0f);

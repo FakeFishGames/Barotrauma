@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -56,7 +56,16 @@ namespace Barotrauma
 
         private float distance;
 
-        public TriggerAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
+        public TriggerAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
+        {
+            if (element.GetAttribute(nameof(TagAction.IgnoreIncapacitatedCharacters)) != null)
+            {
+                DebugConsole.AddWarning(
+                    $"Potential error in {nameof(TriggerAction)}, event \"{parentEvent.Prefab.Identifier}\": "+
+                    $"{nameof(TagAction.IgnoreIncapacitatedCharacters)} is a property of {nameof(TagAction)}, did you mean {nameof(DisableIfTargetIncapacitated)}?",
+                    contentPackage: element.ContentPackage);
+            }
+        }
 
         private bool isFinished = false;
         public override bool IsFinished(ref string goTo)
@@ -157,13 +166,13 @@ namespace Barotrauma
                         Item item = null;
                         if (e1 is Character char1)
                         {
-                            if (char1.IsBot) 
-                            { 
-                                npc ??= char1; 
+                            if (char1.IsPlayer)
+                            {
+                                player = char1;
                             }
-                            else 
-                            { 
-                                player = char1; 
+                            else
+                            {
+                                npc ??= char1;
                             }
                         }
                         else
@@ -172,13 +181,13 @@ namespace Barotrauma
                         }
                         if (e2 is Character char2)
                         {
-                            if (char2.IsBot) 
-                            { 
-                                npc ??= char2; 
-                            }
-                            else 
+                            if (char2.IsPlayer)
                             {
-                                player = char2; 
+                                player = char2;
+                            }
+                            else
+                            {
+                                npc ??= char2;
                             }
                         }
                         else
@@ -190,6 +199,10 @@ namespace Barotrauma
                         {
                             if (npc != null)
                             {
+                                if (!npcsOrItems.Any(n => n.TryGet(out Character npc2) && npc2 == npc)) 
+                                {
+                                    npcsOrItems.Add(npc);
+                                } 
                                 if (npc.CampaignInteractionType == CampaignMode.InteractionType.Talk)
                                 {
                                     //if the NPC has a conversation available, don't assign the trigger until the conversation is done
@@ -197,19 +210,26 @@ namespace Barotrauma
                                 }
                                 else if (npc.CampaignInteractionType != CampaignMode.InteractionType.Examine)
                                 {
-                                    if (!npcsOrItems.Any(n => n.TryGet(out Character npc2) && npc2 == npc)) 
-                                    {
-                                        npcsOrItems.Add(npc);
-                                    } 
                                     npc.CampaignInteractionType = CampaignMode.InteractionType.Examine;
                                     npc.RequireConsciousnessForCustomInteract = DisableIfTargetIncapacitated;
-#if CLIENT
                                     npc.SetCustomInteract(
-                                        (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } },
+                                        (Character npc, Character interactor) => 
+                                        { 
+                                            //the first character in the CustomInteract callback is always the NPC and the 2nd the character who interacted with it
+                                            //but the TriggerAction can configure the 1st and 2nd entity in either order,
+                                            //let's make sure we pass the NPC and the interactor in the intended order
+                                            if (e1 == npc && targets2.Contains(interactor)) 
+                                            { 
+                                                Trigger(npc, interactor); 
+                                            } 
+                                            else if (targets1.Contains(interactor) && e2 == npc)
+                                            { 
+                                                Trigger(interactor, npc); 
+                                            } 
+                                        },
+#if CLIENT
                                         TextManager.GetWithVariable("CampaignInteraction.Examine", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)));
 #else
-                                    npc.SetCustomInteract(
-                                        (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } }, 
                                         TextManager.Get("CampaignInteraction.Talk"));
                                     GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AssignCampaignInteractionEventData());
 #endif
@@ -339,7 +359,7 @@ namespace Barotrauma
                         return true;
                     }
                 }
-                else if (c.AIController is EnemyAIController enemyAI && (enemyAI.State == AIState.Aggressive || enemyAI.State == AIState.Attack))
+                else if (c.AIController is EnemyAIController { State: AIState.Aggressive or AIState.Attack } enemyAI)
                 {
                     if (enemyAI.SelectedAiTarget?.Entity == character || c.CurrentHull == character.CurrentHull)
                     {
@@ -401,10 +421,18 @@ namespace Barotrauma
         {
             if (TargetModuleType.IsEmpty)
             {
+                string targetStr = "none";
+                if (npcsOrItems.Any())
+                {
+                    targetStr = string.Join(", ", 
+                        npcsOrItems.Select(npcOrItem => 
+                            npcOrItem.TryGet(out Character character) ? character.Name : (npcOrItem.TryGet(out Item item) ? item.Name : "none")));
+                }
+
                 return
                     $"{ToolBox.GetDebugSymbol(isFinished, isRunning)} {nameof(TriggerAction)} -> (" +
                     (WaitForInteraction ?
-                        $"Selected non-player target: {(npcsOrItems?.ToString() ?? "<null>").ColorizeObject()}, " :
+                        $"Selected non-player target: {targetStr.ColorizeObject()}, " :
                         $"Distance: {((int)distance).ColorizeObject()}, ") +
                     $"Radius: {Radius.ColorizeObject()}, " +
                     $"TargetTags: {Target1Tag.ColorizeObject()}, " +

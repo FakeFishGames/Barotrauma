@@ -6,7 +6,9 @@ using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -55,6 +57,8 @@ namespace Barotrauma
         private readonly HashSet<Entity> triggerers = new HashSet<Entity>();
 
         private readonly TriggererType triggeredBy;
+        private readonly Identifier triggerSpeciesOrGroup;
+        private readonly PropertyConditional.LogicalComparison conditionals;
         
         private readonly float randomTriggerInterval;
         private readonly float randomTriggerProbability;
@@ -255,7 +259,16 @@ namespace Barotrauma
             string triggeredByStr = element.GetAttributeString("triggeredby", "Character");
             if (!Enum.TryParse(triggeredByStr, out triggeredBy))
             {
-                DebugConsole.ThrowError("Error in LevelTrigger config: \"" + triggeredByStr + "\" is not a valid triggerer type.");
+                Identifier speciesOrGroup = triggeredByStr.ToIdentifier();
+                if (CharacterPrefab.Prefabs.Any(p => p.MatchesSpeciesNameOrGroup(speciesOrGroup)))
+                {
+                    triggerSpeciesOrGroup = speciesOrGroup;
+                    triggeredBy = TriggererType.Character;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Error in LevelTrigger config: \"" + triggeredByStr + "\" is not a valid triggerer type.");   
+                }
             }
             if (PhysicsBody != null)
             {
@@ -293,6 +306,8 @@ namespace Barotrauma
                         break;
                 }
             }
+            
+            conditionals = PropertyConditional.LoadConditionals(element);
 
             forceFluctuationTimer = Rand.Range(0.0f, ForceFluctuationInterval);
             randomTriggerTimer = Rand.Range(0.0f, randomTriggerInterval);
@@ -341,7 +356,7 @@ namespace Barotrauma
         {
             Entity entity = GetEntity(fixtureB);
             if (entity == null) { return false; }
-            if (!IsTriggeredByEntity(entity, triggeredBy, mustBeOutside: true)) { return false; }
+            if (!IsTriggeredByEntity(entity, triggeredBy, triggerSpeciesOrGroup: triggerSpeciesOrGroup, conditionals: conditionals, mustBeOutside: true)) { return false; }
             if (!triggerers.Contains(entity))
             {
                 if (!IsTriggered)
@@ -354,12 +369,22 @@ namespace Barotrauma
             return true;
         }
 
-        public static bool IsTriggeredByEntity(Entity entity, TriggererType triggeredBy, bool mustBeOutside = false, (bool mustBe, Submarine sub) mustBeOnSpecificSub = default)
+        public static bool IsTriggeredByEntity(
+            Entity entity, 
+            TriggererType triggeredBy, 
+            Identifier triggerSpeciesOrGroup, 
+            PropertyConditional.LogicalComparison conditionals,
+            (bool mustBe, Submarine sub) mustBeOnSpecificSub = default,
+            bool mustBeOutside = false)
         {
             if (entity is Character character)
             {
                 if (mustBeOutside && character.CurrentHull != null) { return false; }
                 if (mustBeOnSpecificSub.mustBe && character.Submarine != mustBeOnSpecificSub.sub) { return false; }
+                if (!triggerSpeciesOrGroup.IsEmpty)
+                {
+                    if (character.SpeciesName != triggerSpeciesOrGroup && character.Group != triggerSpeciesOrGroup) { return false; }
+                }
                 if (character.IsHuman)
                 {
                     if (!triggeredBy.HasFlag(TriggererType.Human)) { return false; }
@@ -378,6 +403,10 @@ namespace Barotrauma
             else if (entity is Submarine)
             {
                 if (!triggeredBy.HasFlag(TriggererType.Submarine)) { return false; }
+            }
+            if (conditionals != null && entity is ISerializableEntity serializableEntity)
+            {
+                if (!PropertyConditional.CheckConditionals(serializableEntity, conditionals.Conditionals, conditionals.LogicalOperator)) { return false; }
             }
             return true;
         }
@@ -497,7 +526,7 @@ namespace Barotrauma
                 triggeredTimer = stayTriggeredDelay;
                 if (!wasAlreadyTriggered)
                 {
-                    if (!IsTriggeredByEntity(triggerer, triggeredBy, mustBeOutside: true)) { return; }
+                    if (!IsTriggeredByEntity(triggerer, triggeredBy, triggerSpeciesOrGroup, conditionals, mustBeOutside: true)) { return; }
                     if (!triggerers.Contains(triggerer))
                     {
                         if (!IsTriggered)
@@ -580,6 +609,21 @@ namespace Barotrauma
                 return;
             }
 
+            if (PhysicsBody != null)
+            {
+                if (currentForceFluctuation <= 0.0f && statusEffects.None() && attacks.None())
+                {
+                    //no force atm, and no status effects or attacks the trigger could apply
+                    //    -> we can disable the collider and get a minor physics performance improvement
+                    PhysicsBody.Enabled = false;
+                    return;
+                }
+                else
+                {
+                    PhysicsBody.Enabled = true;
+                }
+            }
+
             foreach (Entity triggerer in triggerers)
             {
                 if (triggerer.Removed) { continue; }
@@ -652,13 +696,20 @@ namespace Barotrauma
             }
         }
 
-        public static void ApplyStatusEffects(List<StatusEffect> statusEffects, Vector2 worldPosition, Entity triggerer, float deltaTime, List<ISerializableEntity> targets)
+        public static void ApplyStatusEffects(List<StatusEffect> statusEffects, Vector2 worldPosition, Entity triggerer, float deltaTime, List<ISerializableEntity> targets, Item targetItem = null)
         {
             foreach (StatusEffect effect in statusEffects)
             {
                 if (effect.type == ActionType.OnBroken) { return; }
                 Vector2? position = null;
-                if (effect.HasTargetType(StatusEffect.TargetType.This)) { position = worldPosition; }
+                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                {
+                    position = worldPosition;
+                    if (targetItem != null)
+                    {
+                        effect.Apply(effect.type, deltaTime, triggerer, targetItem.AllPropertyObjects, position);
+                    }
+                }
                 if (triggerer is Character character)
                 {
                     effect.Apply(effect.type, deltaTime, triggerer, character, position);
@@ -727,6 +778,8 @@ namespace Barotrauma
                 distFactor = GetDistanceFactor(body, PhysicsBody, ColliderRadius);
                 if (distFactor < 0.0f) return;
             }
+
+            if (MathUtils.NearlyEqual(currentForceFluctuation, 0.0f)) { return; }
 
             switch (ForceMode)
             {

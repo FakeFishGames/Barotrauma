@@ -214,10 +214,10 @@ namespace Barotrauma
                         PropertyInfo.SetValue(parentObject, new RawLString(value));
                         break;
                     case "stringarray":
-                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
+                        PropertyInfo.SetValue(parentObject, ParseStringArray(value));
                         break;
                     case "identifierarray":
-                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray(value));
+                        PropertyInfo.SetValue(parentObject, ParseIdentifierArray(value));
                         break;
                 }
             }
@@ -227,6 +227,17 @@ namespace Barotrauma
                 return false;
             }
             return true;
+        }
+
+
+        private static string[] ParseStringArray(string stringArrayValues)
+        {
+            return string.IsNullOrEmpty(stringArrayValues) ? Array.Empty<string>() : stringArrayValues.Split(';');
+        }
+
+        private static Identifier[] ParseIdentifierArray(string stringArrayValues)
+        {
+            return ParseStringArray(stringArrayValues).ToIdentifiers();
         }
 
         public bool TrySetValue(object parentObject, object value)
@@ -298,10 +309,10 @@ namespace Barotrauma
                                 PropertyInfo.SetValue(parentObject, new RawLString((string)value));
                                 return true;
                             case "stringarray":
-                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
+                                PropertyInfo.SetValue(parentObject, ParseStringArray((string)value));
                                 return true;
                             case "identifierarray":
-                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray((string)value));
+                                PropertyInfo.SetValue(parentObject, ParseIdentifierArray((string)value));
                                 return true;
                             default:
                                 DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
@@ -562,6 +573,11 @@ namespace Barotrauma
                         if (parentObject is PowerContainer powerContainer) { value = powerContainer.Charge; return true; }
                     }
                     break;
+                case nameof(Repairable.StressDeteriorationMultiplier):
+                    {
+                        if (parentObject is Repairable repairable) { value = repairable.StressDeteriorationMultiplier; return true; }
+                    }
+                    break;
                 case nameof(PowerContainer.ChargePercentage):
                     {
                         if (parentObject is PowerContainer powerContainer) { value = powerContainer.ChargePercentage; return true; }
@@ -570,6 +586,11 @@ namespace Barotrauma
                 case nameof(PowerContainer.RechargeRatio):
                     {
                         if (parentObject is PowerContainer powerContainer) { value = powerContainer.RechargeRatio; return true; }
+                    }
+                    break;
+                case nameof(ItemContainer.ContainedNonBrokenItemCount):
+                    {
+                        if (parentObject is ItemContainer itemContainer) { value = itemContainer.ContainedNonBrokenItemCount; return true; }
                     }
                     break;
                 case nameof(Reactor.AvailableFuel):
@@ -611,6 +632,15 @@ namespace Barotrauma
                 case nameof(Item.Condition):
                     { if (parentObject is Item item) { value = item.Condition; return true; } }
                     break;
+                case nameof(Item.ConditionPercentage):
+                    { if (parentObject is Item item) { value = item.ConditionPercentage; return true; } }
+                    break;
+                case nameof(Item.SightRange):
+                    { if (parentObject is Item item) { value = item.SightRange; return true; } }
+                    break;
+                case nameof(Item.SoundRange):
+                    { if (parentObject is Item item) { value = item.SoundRange; return true; } }
+                    break;
                 case nameof(Character.SpeedMultiplier):
                     { if (parentObject is Character character) { value = character.SpeedMultiplier; return true; } }
                     break;
@@ -619,6 +649,9 @@ namespace Barotrauma
                     break;
                 case nameof(Character.LowPassMultiplier):
                     { if (parentObject is Character character) { value = character.LowPassMultiplier; return true; } }
+                    break;
+                case nameof(Character.ObstructVisionAmount):
+                    { if (parentObject is Character character) { value = character.ObstructVisionAmount; return true; } }
                     break;
                 case nameof(Character.HullOxygenPercentage):
                     {
@@ -655,11 +688,20 @@ namespace Barotrauma
                 case nameof(PowerTransfer.Overload):
                     if (parentObject is PowerTransfer powerTransfer) { value = powerTransfer.Overload; return true; }
                     break;
+                case nameof(PowerContainer.OutputDisabled):
+                    if (parentObject is PowerContainer powerContainer) { value = powerContainer.OutputDisabled; return true; }
+                    break;
                 case nameof(MotionSensor.MotionDetected):
                     if (parentObject is MotionSensor motionSensor) { value = motionSensor.MotionDetected; return true; }
                     break;
                 case nameof(Character.IsDead):
                     { if (parentObject is Character character) { value = character.IsDead; return true; } }
+                    break;
+                case nameof(Character.NeedsAir):
+                    { if (parentObject is Character character) { value = character.NeedsAir; return true; } }
+                    break;
+                case nameof(Character.NeedsOxygen):
+                    { if (parentObject is Character character) { value = character.NeedsOxygen; return true; } }
                     break;
                 case nameof(Character.IsHuman):
                     { if (parentObject is Character character) { value = character.IsHuman; return true; } }
@@ -683,6 +725,9 @@ namespace Barotrauma
                     break;
                 case nameof(Controller.State):
                     if (parentObject is Controller controller) { value = controller.State; return true; }
+                    break;
+                case nameof(Holdable.Attached):
+                    if (parentObject is Holdable holdable) { value = holdable.Attached; return true; }
                     break;
                 case nameof(Character.InWater):
                     {
@@ -767,6 +812,12 @@ namespace Barotrauma
                     break;
                 case nameof(Item.Scale):
                     { if (parentObject is Item item) { item.Scale = value; return true; } }
+                    break;
+                case nameof(Item.SightRange):
+                    { if (parentObject is Item item) { item.SightRange = value; return true; } }
+                    break;
+                case nameof(Item.SoundRange):
+                    { if (parentObject is Item item) { item.SoundRange = value; return true; } }
                     break;
             }
             return false;
@@ -1082,7 +1133,7 @@ namespace Barotrauma
                 {
                     var componentElement = subElement.FirstElement();
                     if (componentElement == null) { continue; }
-                    ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
+                    ItemComponent itemComponent = item2.Components.FirstOrDefault(c => c.Name == componentElement.Name.ToString());
                     if (itemComponent == null) { continue; }
                     foreach (XAttribute attribute in componentElement.Attributes())
                     {

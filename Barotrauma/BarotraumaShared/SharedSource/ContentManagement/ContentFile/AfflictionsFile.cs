@@ -1,11 +1,9 @@
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -55,18 +53,19 @@ namespace Barotrauma
                     return;
                 }
 
-                if (AfflictionPrefab.Prefabs.ContainsKey(identifier))
+                if (AfflictionPrefab.Prefabs.TryGet(identifier, out var existingAffliction))
                 {
                     if (overriding)
                     {
                         DebugConsole.NewMessage(
-                            $"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{Path}'",
+                            $"Overriding an affliction or a buff with the identifier '{identifier}' using the version in '{element.ContentPackage.Name}'",
                             Color.MediumPurple);
                     }
                     else
                     {
                         DebugConsole.ThrowError(
-                            $"Duplicate affliction: '{identifier}' defined in {elementName} of '{Path}'", 
+                            $"Duplicate affliction: '{identifier}' defined in {element.ContentPackage.Name} is already defined in the previously loaded content package {existingAffliction.ContentPackage.Name}."+
+                            $" You may need to adjust the mod load order to make sure {element.ContentPackage.Name} is loaded first.", 
                             contentPackage: element?.ContentPackage);
                         return;
                     }

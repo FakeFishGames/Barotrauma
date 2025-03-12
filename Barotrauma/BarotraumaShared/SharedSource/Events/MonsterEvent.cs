@@ -72,7 +72,9 @@ namespace Barotrauma
         /// Maximum number of the specific type of monster in the entire level. Can be used to prevent the event from spawning more monsters if there's
         /// already enough of that type of monster, e.g. spawned by another event or by a mission.
         /// </summary>
-        public readonly int MaxAmountPerLevel = int.MaxValue;
+        public readonly int MaxAmountPerLevel;
+        
+        private readonly float? overridePlayDeadProbability;
 
         public IReadOnlyList<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
@@ -137,6 +139,11 @@ namespace Barotrauma
             scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
             delayBetweenSpawns = prefab.ConfigElement.GetAttributeFloat("delaybetweenspawns", 0.1f);
             resetTime = prefab.ConfigElement.GetAttributeFloat("resettime", 0);
+            float playDeadProbability = prefab.ConfigElement.GetAttributeFloat("playdeadprobability", -1f);
+            if (playDeadProbability >= 0)
+            {
+                overridePlayDeadProbability = playDeadProbability;
+            }
 
             if (GameMain.NetworkMember != null)
             {
@@ -153,9 +160,9 @@ namespace Barotrauma
             }
         }
 
-        private static Submarine GetReferenceSub()
+        private static Submarine GetReferenceSub(bool acceptRemoteControlledSubs)
         {
-            return EventManager.GetRefEntity() as Submarine ?? Submarine.MainSub;
+            return EventManager.GetRefEntity(acceptRemoteControlledSubs) as Submarine ?? Submarine.MainSub;
         }
 
         public override IEnumerable<ContentFile> GetFilesToPreload()
@@ -175,6 +182,18 @@ namespace Barotrauma
 
         protected override void InitEventSpecific(EventSet parentSet)
         {
+            // apply pvp stun resistance (reduce stun amount via resist multiplier)
+            if (GameMain.NetworkMember is { } networkMember && GameMain.GameSession?.GameMode is PvPMode && !networkMember.ServerSettings.PvPSpawnMonsters)
+            {
+                if (GameSettings.CurrentConfig.VerboseLogging)
+                {
+                    DebugConsole.NewMessage($"PvP setting: disabling monster event ({SpeciesName})", Color.Yellow);
+                }
+                
+                disallowed = true;
+                return;
+            }
+            
             if (parentSet != null && resetTime == 0)
             {
                 // Use the parent reset time only if there's no reset time defined for the event.
@@ -200,13 +219,9 @@ namespace Barotrauma
                     disallowed = true;
                     continue;
                 }
-                if (GameMain.GameSession.IsCurrentLocationRadiated())
+                if (overridePlayDeadProbability.HasValue)
                 {
-                    AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
-                    Affliction affliction = new Affliction(radiationPrefab, radiationPrefab.MaxStrength);
-                    createdCharacter?.CharacterHealth.ApplyAffliction(null, affliction);
-                    // TODO test multiplayer
-                    createdCharacter?.Kill(CauseOfDeathType.Affliction, affliction, log: false);
+                    createdCharacter.EvaluatePlayDeadProbability(overridePlayDeadProbability);
                 }
                 createdCharacter.DisabledByEvent = true;
                 monsters.Add(createdCharacter);
@@ -284,10 +299,17 @@ namespace Barotrauma
                     disallowed = true;
                     return;
                 }
-                Submarine refSub = GetReferenceSub();
+                Submarine refSub = GetReferenceSub(acceptRemoteControlledSubs: true);
                 if (Submarine.MainSubs.Length == 2 && Submarine.MainSubs[1] != null)
                 {
                     refSub = Submarine.MainSubs.GetRandom(Rand.RandSync.Unsynced);
+                }
+                //if the reference sub is not the main sub, e.g. a remotely controlled drone, 
+                //there's a 50% chance that the monsters will spawn near the main sub instead
+                //so you can't abuse the remotely controlled subs to make monsters only spawn somewhere far away from the main sub
+                if (refSub != Submarine.MainSub && Rand.Range(0.0f, 1.0f) < 0.5f)
+                {
+                    refSub ??= GetReferenceSub(acceptRemoteControlledSubs: false);
                 }
                 float closestDist = float.PositiveInfinity;
                 //find the closest spawnposition that isn't too close to any of the subs
@@ -299,7 +321,7 @@ namespace Barotrauma
                     {
                         if (sub.Info.Type != SubmarineType.Player &&
                             sub.Info.Type != SubmarineType.EnemySubmarine &&
-                            sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) 
+                            !sub.IsRespawnShuttle) 
                         { 
                             continue; 
                         }
@@ -606,7 +628,7 @@ namespace Barotrauma
                     bool anyInAbyss = false;
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
-                        if (submarine.Info.Type != SubmarineType.Player || submarine == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
+                        if (submarine.Info.Type != SubmarineType.Player || submarine.IsRespawnShuttle) { continue; }
                         if (submarine.WorldPosition.Y < 0)
                         {
                             anyInAbyss = true;
@@ -722,7 +744,9 @@ namespace Barotrauma
                             DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI?.CombatStrength ?? 0))}.", Color.LightBlue, debugOnly: true);
                         }
 
-                        if (GameMain.GameSession != null)
+                        if (GameMain.GameSession != null && 
+                            monster.ContentPackage == ContentPackageManager.VanillaCorePackage &&
+                            GameAnalyticsManager.ShouldLogRandomSample())
                         {
                             GameAnalyticsManager.AddDesignEvent(
                                 $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier.Value ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"}:{SpawnPosType}:{SpeciesName}",

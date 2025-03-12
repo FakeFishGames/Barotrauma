@@ -53,6 +53,8 @@ namespace Barotrauma
         const float LeakThreshold = 0.1f;
         const float BigGapThreshold = 0.7f;
 
+        public override ContentPackage ContentPackage => Prefab?.ContentPackage;
+
 #if CLIENT
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 #endif
@@ -96,10 +98,19 @@ namespace Barotrauma
         {
             get { return base.Prefab.Name.Value; }
         }
-
         public bool HasBody
         {
-            get { return Prefab.Body; }
+            get { return Prefab.Body && !DisableCollision; }
+        }
+
+        [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBodyByDefault)]
+        /// <summary>
+        /// Note that changing the value mid-round will not have an effect: this is only intended for disabling the collisions on a structure in the sub editor.
+        /// </summary>
+        public bool DisableCollision
+        {
+            get;
+            set;
         }
 
         public List<Body> Bodies { get; private set; }
@@ -252,7 +263,7 @@ namespace Barotrauma
                 {
                     CreateStairBodies();
                 }
-                else if (Prefab.Body)
+                else if (HasBody)
                 {
                     CreateSections();
                     UpdateSections();
@@ -323,7 +334,7 @@ namespace Barotrauma
             {
                 Rectangle oldRect = Rect;
                 base.Rect = value;
-                if (Prefab.Body)
+                if (HasBody)
                 {
                     CreateSections();
                     UpdateSections();
@@ -499,11 +510,21 @@ namespace Barotrauma
             {
                 CastShadow = Prefab.CastShadow;
             }
+            if (element?.GetAttribute(nameof(Indestructible)) == null)
+            {
+                Indestructible = Prefab.ConfigElement.GetAttributeBool(nameof(Indestructible), false);
+            }
 
+            //if the prefab normally has a body, but it has been disabled by DisableCollision,
+            //we still want the item in the wall list to render it correctly
             if (Prefab.Body)
             {
-                Bodies = new List<Body>();
                 WallList.Add(this);
+            }
+
+            if (HasBody)
+            {
+                Bodies = new List<Body>();
                 CreateSections();
                 UpdateSections();
             }
@@ -583,7 +604,7 @@ namespace Barotrauma
             };
             foreach (KeyValuePair<Identifier, SerializableProperty> property in SerializableProperties)
             {
-                if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
+                if (!property.Value.Attributes.OfType<Serialize>().Any()) { continue; }
                 clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
             if (FlippedX) clone.FlipX(false);
@@ -963,7 +984,7 @@ namespace Barotrauma
 
         public void AddDamage(int sectionIndex, float damage, Character attacker = null, bool emitParticles = true, bool createWallDamageProjectiles = false)
         {
-            if (!Prefab.Body || Prefab.Platform || Indestructible) { return; }
+            if (!HasBody || Prefab.Platform || Indestructible) { return; }
 
             if (sectionIndex < 0 || sectionIndex > Sections.Length - 1) { return; }
 
@@ -1109,7 +1130,7 @@ namespace Barotrauma
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) { return new AttackResult(0.0f, null); }
-            if (!Prefab.Body || Prefab.Platform || Indestructible) { return new AttackResult(0.0f, null); }
+            if (!HasBody || Prefab.Platform || Indestructible) { return new AttackResult(0.0f, null); }
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) { transformedPos -= Submarine.Position; }
@@ -1171,7 +1192,7 @@ namespace Barotrauma
             bool createWallDamageProjectiles = false)
         {
             if (Submarine != null && Submarine.GodMode || (Indestructible && !isNetworkEvent)) { return; }
-            if (!Prefab.Body) { return; }
+            if (!HasBody) { return; }
             if (!MathUtils.IsValid(damage)) { return; }
 
             damage = MathHelper.Clamp(damage, 0.0f, MaxHealth - Prefab.MinHealth);
@@ -1213,7 +1234,9 @@ namespace Barotrauma
                     Sections[sectionIndex].gap = null;
                 }
             }
-            else
+            //do not create gaps on damaged walls in editors,
+            //they're created at the start of a round and "pre-creating" them in the editors causes issues (see #12998)
+            else if (Screen.Selected is not { IsEditor: true })
             {
                 float prevGapOpenState = Sections[sectionIndex].gap?.Open ?? 0.0f;
                 if (Sections[sectionIndex].gap == null)
@@ -1721,7 +1744,7 @@ namespace Barotrauma
             //structures with a body drop a shadow by default
             if (element.GetAttribute(nameof(UseDropShadow)) == null)
             {
-                s.UseDropShadow = prefab.Body;
+                s.UseDropShadow = s.HasBody;
             }
 
             if (element.GetAttribute(nameof(NoAITarget)) == null)

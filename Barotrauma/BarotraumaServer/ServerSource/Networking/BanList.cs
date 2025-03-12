@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
             string[] lines;
             try
             {
-                lines = File.ReadAllLines(LegacySavePath);
+                lines = File.ReadAllLines(LegacySavePath, catchUnauthorizedAccessExceptions: false);
             }
             catch (Exception e)
             {

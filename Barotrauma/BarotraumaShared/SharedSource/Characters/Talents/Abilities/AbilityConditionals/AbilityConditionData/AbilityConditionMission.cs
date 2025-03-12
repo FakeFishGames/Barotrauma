@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -7,31 +6,13 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionMission : AbilityConditionData
     {
-        private readonly ImmutableHashSet<MissionType> missionType;
+        private readonly ImmutableHashSet<Identifier> missionType;
         private readonly bool isAffiliated;
 
         public AbilityConditionMission(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            string[] missionTypeStrings = conditionElement.GetAttributeStringArray("missiontype", new []{ "None" })!;
-            HashSet<MissionType> missionTypes = new HashSet<MissionType>();
+            missionType = conditionElement.GetAttributeIdentifierImmutableHashSet("missiontype", ImmutableHashSet<Identifier>.Empty)!;
             isAffiliated = conditionElement.GetAttributeBool("isaffiliated", false);
-
-            foreach (string missionTypeString in missionTypeStrings)
-            {
-                if (!Enum.TryParse(missionTypeString, out MissionType parsedMission) || parsedMission is MissionType.None)
-                {
-                    if (!isAffiliated)
-                    {
-                        DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.",
-                            contentPackage: conditionElement.ContentPackage);
-                    }
-                    continue;
-                }
-
-                missionTypes.Add(parsedMission);
-            }
-
-            missionType = missionTypes.ToImmutableHashSet();
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)

@@ -175,6 +175,10 @@ namespace Barotrauma
                         }
                     }
                     break;
+                case SwapItemEventData swapItemEventData:
+                    msg.WriteUInt16(swapItemEventData.NewId);
+                    msg.WriteUInt32(swapItemEventData.NewItem.UintIdentifier);
+                    break;
                 default:
                     throw error($"Unsupported event type {itemEventData.GetType().Name}");
             }
@@ -317,7 +321,7 @@ namespace Barotrauma
             msg.WriteBoolean(tagsChanged);
             if (tagsChanged)
             {
-                IEnumerable<Identifier> splitTags = Tags.Split(',').ToIdentifiers();
+                IEnumerable<Identifier> splitTags = Tags.ToIdentifiers();
                 msg.WriteString(string.Join(',', splitTags.Where(t => !base.Prefab.Tags.Contains(t))));
                 msg.WriteString(string.Join(',', base.Prefab.Tags.Where(t => !splitTags.Contains(t))));
             }
@@ -420,7 +424,14 @@ namespace Barotrauma
             if (!components.Contains(ic)) { return; }
 
             var eventData = new ComponentStateEventData(ic, extraData);
-            if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation for the item \"{Prefab.Identifier}\" failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false."); }
+            if (!ic.ValidateEventData(eventData)) 
+            {
+                string errorMsg =
+                    $"Server-side component event creation for the item \"{Prefab.Identifier}\" failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false. " +
+                    $"Data: {extraData?.GetType().ToString() ?? "null"}";
+                GameAnalyticsManager.AddErrorEventOnce($"Item.CreateServerEvent:ValidateEventData:{Prefab.Identifier}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                throw new Exception(errorMsg);
+            }
             GameMain.Server.CreateEntityEvent(this, eventData);
         }
 
@@ -431,10 +442,12 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (!(ic is IServerSerializable)) { continue; }
-                var eventData = new ComponentStateEventData(ic, ic.ServerGetEventData());
-                if (!ic.ValidateEventData(eventData)) { continue; }
-                GameMain.Server.CreateEntityEvent(this, eventData);
+                if (ic is not IServerSerializable) { continue; }
+                var eventData = ic.ServerGetEventData();
+                if (eventData == null) { continue; }
+                var componentData = new ComponentStateEventData(ic, eventData);
+                if (!ic.ValidateEventData(componentData)) { continue; }
+                GameMain.Server.CreateEntityEvent(this, componentData);
             }
         }
 #endif

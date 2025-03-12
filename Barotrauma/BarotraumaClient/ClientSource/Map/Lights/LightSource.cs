@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -245,7 +245,7 @@ namespace Barotrauma.Lights
             }
             set
             {
-                if (!needsRecalculation && value)
+                if (value)
                 {
                     foreach (ConvexHullList chList in convexHullsInRange)
                     {
@@ -450,6 +450,8 @@ namespace Barotrauma.Lights
             set;
         }
 
+        public Vector2 OffsetFromBody;
+
         public DeformableSprite DeformableLightSprite
         {
             get;
@@ -550,7 +552,6 @@ namespace Barotrauma.Lights
             chList.List.Clear();
             foreach (var convexHull in fullChList.List)
             {
-                if (!convexHull.Enabled) { continue; }
                 if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, convexHull.BoundingBox)) { continue; }
                 if (lightSourceParams.Directional)
                 {
@@ -562,9 +563,9 @@ namespace Barotrauma.Lights
                     //  center is in the opposite direction from the ray (cheapest check first)
                     if (Vector2.Dot(ray, convexHull.BoundingBox.Center.ToVector2() - lightPos) <= 0 &&
                         /*ray doesn't hit the convex hull*/
-                        !MathUtils.GetLineRectangleIntersection(lightPos, lightPos + ray, bounds, out _) &&
+                        !MathUtils.GetLineWorldRectangleIntersection(lightPos, lightPos + ray, bounds, out _) &&
                         /*normal vectors of the ray don't hit the convex hull */
-                        !MathUtils.GetLineRectangleIntersection(lightPos + normal, lightPos - normal, bounds, out _))
+                        !MathUtils.GetLineWorldRectangleIntersection(lightPos + normal, lightPos - normal, bounds, out _))
                     {
                         continue;
                     }
@@ -572,6 +573,7 @@ namespace Barotrauma.Lights
                 chList.List.Add(convexHull);
             }
             chList.IsHidden.RemoveWhere(ch => !chList.List.Contains(ch));
+            chList.HasBeenVisible.RemoveWhere(ch => !chList.List.Contains(ch));
             HullsUpToDate.Add(sub);    
         }
 
@@ -592,7 +594,17 @@ namespace Barotrauma.Lights
         private void CheckHullsInRange(Submarine sub)
         {
             //find the list of convexhulls that belong to the sub
-            ConvexHullList chList = convexHullsInRange.FirstOrDefault(chList => chList.Submarine == sub);
+            
+            // Performance-sensitive code, hence implemented without Linq.
+            ConvexHullList chList = null;
+            foreach (var chl in convexHullsInRange)
+            {
+                if (chl.Submarine == sub)
+                {
+                    chList = chl;
+                    break;
+                }
+            }
             
             //not found -> create one
             if (chList == null)
@@ -604,7 +616,8 @@ namespace Barotrauma.Lights
 
             foreach (var ch in chList.List)
             {
-                if (ch.LastVertexChangeTime > LastRecalculationTime && !chList.IsHidden.Contains(ch))
+                if (ch.LastVertexChangeTime > LastRecalculationTime && 
+                    (!chList.IsHidden.Contains(ch) || chList.HasBeenVisible.Contains(ch)))
                 {
                     NeedsRecalculation = true;
                     break;
@@ -712,8 +725,8 @@ namespace Barotrauma.Lights
             {
                 foreach (ConvexHull hull in chList.List)
                 {
-                    if (hull.IsInvalid) { continue; }
-                    if (!chList.IsHidden.Contains(hull)) 
+                    if (hull.IsInvalid || !hull.Enabled) { continue; }
+                    if (!chList.IsHidden.Contains(hull) || chList.HasBeenVisible.Contains(hull)) 
                     {
                         //find convexhull segments that are close enough and facing towards the light source
                         lock (mutex)
@@ -732,7 +745,17 @@ namespace Barotrauma.Lights
                 }
                 foreach (ConvexHull hull in chList.List)
                 {
-                    chList.IsHidden.Add(hull);
+                    if (!hull.Enabled)
+                    {
+                        //if the hull is not enabled, we cannot determine if it's visible or hidden from the point of view of the light source
+                        //so let's not mark it as hidden, but instead consider it as something that has been visible, so we know to recalculate if/when it becomes enabled again
+                        chList.IsHidden.Remove(hull);
+                        chList.HasBeenVisible.Add(hull);
+                        continue; 
+                    }
+
+                    //mark convex hulls as hidden at this point, they're removed if we find any of the segments to be visible
+                    chList.IsHidden.Add(hull);                    
                 }
             }
 
@@ -1411,14 +1434,7 @@ namespace Barotrauma.Lights
         {
             if (conditionals.None()) { return; }
             if (conditionalTarget == null) { return; }
-            if (logicalOperator == PropertyConditional.LogicalOperatorType.And)
-            {
-                Enabled = conditionals.All(c => c.Matches(conditionalTarget));
-            }
-            else
-            {
-                Enabled = conditionals.Any(c => c.Matches(conditionalTarget));
-            }
+            Enabled = PropertyConditional.CheckConditionals(conditionalTarget, conditionals, logicalOperator);
         }
 
         public void DebugDrawVertices(SpriteBatch spriteBatch)
@@ -1501,6 +1517,7 @@ namespace Barotrauma.Lights
                         foreach (var convexHullList in convexHullsInRange)
                         {
                             convexHullList.IsHidden.Remove(visibleConvexHull);
+                            convexHullList.HasBeenVisible.Add(visibleConvexHull);
                         }
                     }
 

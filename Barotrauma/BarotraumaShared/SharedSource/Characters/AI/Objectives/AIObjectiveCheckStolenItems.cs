@@ -45,22 +45,25 @@ namespace Barotrauma
             InitTimers();
         }
         
-        protected override bool CheckObjectiveSpecific() => false;
+        protected override bool CheckObjectiveState() => false;
 
         protected override float GetPriority()
-        {
-            if (character.IsClimbing)
-            {
-                // Target is climbing -> stop following the objective (soft abandon, without ignoring the target).
-                Priority = 0;
-            }
-            else if (!Abandon && !IsCompleted && objectiveManager.IsOrder(this))
+        { 
+            if (!Abandon && !IsCompleted && objectiveManager.IsOrder(this))
             {
                 Priority = objectiveManager.GetOrderPriority(this);
             }
             else
             {
-                Priority = AIObjectiveManager.LowestOrderPriority - 1;
+                if (HumanAIController.CurrentHullSafety < HumanAIController.HULL_SAFETY_THRESHOLD || HumanAIController.CalculateObjectiveHullSafety(Target) < HumanAIController.HULL_SAFETY_THRESHOLD)
+                {
+                    // Don't do inspections in unsafe hulls, because under a threat, bots are allowed to wear diving gear or hold fire extinguishers etc. Even if they are "stolen".
+                    Priority = 0;
+                }
+                else
+                {
+                    Priority = AIObjectiveManager.LowestOrderPriority - 1;
+                }
             }
             return Priority;
         }
@@ -86,18 +89,18 @@ namespace Barotrauma
                     onCompleted: () =>
                     {
                         RemoveSubObjective(ref goToObjective);
-                        if (character.IsClimbing)
+                        if (character.IsClimbing || HumanAIController.CurrentHullSafety < HumanAIController.HULL_SAFETY_THRESHOLD || HumanAIController.CalculateObjectiveHullSafety(Target) < HumanAIController.HULL_SAFETY_THRESHOLD)
                         {
-                            // Shouldn't start inspecting characters when they climb, nor get here, because the priority should be 0,
-                            // but if this still happens, we'll have to abandon the objective
-                            // because it's not currently possible to hold to characters and ladders at the same time.
+                            // Don't do inspections in unsafe hulls, because under a threat, bots are allowed to wear diving gear or hold fire extinguishers etc. Even if they are "stolen".
+                            // Shouldn't start inspecting characters when they climb, but we can still get here, if they start climbing while we are moving at them.
+                            // If that happens, let's abandon the objective, because it's not currently possible to hold to characters and ladders at the same time.
                             Abandon = true;
                         }
                         else
                         {
                             currentState = State.Inspect;
                             stolenItems.Clear();
-                            Target.Inventory.FindAllItems(it => it.Illegitimate, recursive: true, stolenItems);
+                            Target.Inventory.FindAllItems(it => IsItemIllegitimate(Target, it), recursive: true, stolenItems);
                             character.Speak(TextManager.Get(Target.IsCriminal ? "dialogcheckstolenitems.criminal" : "dialogcheckstolenitems").Value);
                         }
                     },
@@ -190,11 +193,23 @@ namespace Barotrauma
             var stolenItemsOnCharacter = stolenItems.Where(it => it.GetRootInventoryOwner() == Target);
             if (stolenItemsOnCharacter.Any())
             {
-                character.Speak(TextManager.Get(character.IsCriminal ? "dialogcheckstolenitems.arrest.criminal" : "dialogcheckstolenitems.arrest").Value);
-                Arrest(abortWhenItemsDropped: true, allowHoldFire: true);
-                foreach (var stolenItem in stolenItemsOnCharacter)
+                if (Target.IsBot)
                 {
-                    HumanAIController.ApplyStealingReputationLoss(stolenItem);
+                    // Bots automatically comply and drop stolen items when being inspected.
+                    foreach (Item item in stolenItemsOnCharacter)
+                    {
+                        item.Drop(Target);
+                    }
+                    character.Speak(TextManager.Get("dialogcheckstolenitems.comply").Value);
+                }
+                else
+                {
+                    character.Speak(TextManager.Get(character.IsCriminal ? "dialogcheckstolenitems.arrest.criminal" : "dialogcheckstolenitems.arrest").Value);
+                    Arrest(abortWhenItemsDropped: true, allowHoldFire: true);
+                    foreach (var stolenItem in stolenItemsOnCharacter)
+                    {
+                        HumanAIController.ApplyStealingReputationLoss(stolenItem);
+                    }   
                 }
             }
             else
@@ -242,5 +257,10 @@ namespace Barotrauma
             currentWarnDelay = Target.IsCriminal ? CriminalWarnDelay : NormalWarnDelay;
             warnTimer = currentWarnDelay;
         }
+        
+        /// <summary>
+        /// Checks for illegitimate item, ignoring handcuffs equipped on the owner.
+        /// </summary>
+        public static bool IsItemIllegitimate(Character owner, Item item) => item.Illegitimate && (!item.HasTag(Tags.HandLockerItem) || !owner.HasEquippedItem(item));
     }
 }

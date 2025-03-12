@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         {
             UpdateOnActiveEffects(deltaTime);
 
-            if (Voltage >= MinVoltage)
+            if (HasPower)
             {
                 sendSignalTimer += deltaTime;
                 if (sendSignalTimer > SendSignalInterval)

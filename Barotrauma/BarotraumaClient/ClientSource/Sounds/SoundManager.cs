@@ -11,7 +11,12 @@ namespace Barotrauma.Sounds
 {
     class SoundManager : IDisposable
     {
-        public const int SOURCE_COUNT = 32;
+        public const int SourceCount = 32;
+        public static readonly Identifier SoundCategoryDefault = "default".ToIdentifier();
+        public static readonly Identifier SoundCategoryUi = "ui".ToIdentifier();
+        public static readonly Identifier SoundCategoryWaterAmbience = "waterambience".ToIdentifier();
+        public static readonly Identifier SoundCategoryMusic = "music".ToIdentifier();
+        public static readonly Identifier SoundCategoryVoip = "voip".ToIdentifier();
 
         public bool Disabled
         {
@@ -196,7 +201,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private readonly Dictionary<string, CategoryModifier> categoryModifiers = new Dictionary<string, CategoryModifier>();
+        private readonly Dictionary<Identifier, CategoryModifier> categoryModifiers = new Dictionary<Identifier, CategoryModifier>();
 
         public SoundManager()
         {
@@ -204,7 +209,7 @@ namespace Barotrauma.Sounds
             updateChannelsThread = null;
 
             sourcePools = new SoundSourcePool[2];
-            playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
+            playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SourceCount];
             playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
             string deviceName = GameSettings.CurrentConfig.Audio.AudioOutputDevice;
@@ -334,7 +339,7 @@ namespace Barotrauma.Sounds
                 return false;
             }
 
-            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
+            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SourceCount);
             sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
 
             ReloadSounds();
@@ -353,11 +358,19 @@ namespace Barotrauma.Sounds
                 throw new System.IO.FileNotFoundException("Sound file \"" + filename + "\" doesn't exist!");
             }
 
+#if DEBUG
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
             Sound newSound = new OggSound(this, filename, stream, null);
             lock (loadedSounds)
             {
                 loadedSounds.Add(newSound);
             }
+#if DEBUG
+            sw.Stop();
+            System.Diagnostics.Debug.WriteLine($"Loaded sound \"{filename}\" ({sw.ElapsedMilliseconds} ms).");
+#endif
             return newSound;
         }
 
@@ -535,10 +548,9 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryGainMultiplier(string category, float gain, int index=0)
+        public void SetCategoryGainMultiplier(Identifier category, float gain, int index=0)
         {
             if (Disabled) { return; }
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (!categoryModifiers.ContainsKey(category))
@@ -566,10 +578,9 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public float GetCategoryGainMultiplier(string category, int index = -1)
+        public float GetCategoryGainMultiplier(Identifier category, int index = -1)
         {
             if (Disabled) { return 0.0f; }
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return 1.0f; }
@@ -589,11 +600,10 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryMuffle(string category, bool muffle)
+        public void SetCategoryMuffle(Identifier category, bool muffle)
         {
             if (Disabled) { return; }
 
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (!categoryModifiers.ContainsKey(category))
@@ -614,18 +624,17 @@ namespace Barotrauma.Sounds
                     {
                         if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
                         {
-                            if (playingChannels[i][j]?.Category.ToLower() == category) { playingChannels[i][j].Muffled = muffle; }
+                            if (playingChannels[i][j]?.Category == category) { playingChannels[i][j].Muffled = muffle; }
                         }
                     }
                 }
             }
         }
 
-        public bool GetCategoryMuffle(string category)
+        public bool GetCategoryMuffle(Identifier category)
         {
             if (Disabled) { return false; }
 
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return false; }
@@ -657,6 +666,7 @@ namespace Barotrauma.Sounds
                     DebugConsole.ThrowError("Playback device has been disconnected. You can select another available device in the settings.");
                     SetAudioOutputDevice("<disconnected>");
                     Disconnected = true;
+                    TryRefreshDevice();
                     return;
                 }
             }
@@ -672,10 +682,10 @@ namespace Barotrauma.Sounds
             {
                 voipAttenuatedGain = 1.0f;
             }
-            SetCategoryGainMultiplier("default", VoipAttenuatedGain, 1);
-            SetCategoryGainMultiplier("ui", VoipAttenuatedGain, 1);
-            SetCategoryGainMultiplier("waterambience", VoipAttenuatedGain, 1);
-            SetCategoryGainMultiplier("music", VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryDefault, VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryUi, VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryWaterAmbience, VoipAttenuatedGain, 1);
+            SetCategoryGainMultiplier(SoundCategoryMusic, VoipAttenuatedGain, 1);
 
             if (GameSettings.CurrentConfig.Audio.DynamicRangeCompressionEnabled)
             {
@@ -721,11 +731,11 @@ namespace Barotrauma.Sounds
 
         public void ApplySettings()
         {
-            SetCategoryGainMultiplier("default", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
-            SetCategoryGainMultiplier("ui", GameSettings.CurrentConfig.Audio.UiVolume, 0);
-            SetCategoryGainMultiplier("waterambience", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
-            SetCategoryGainMultiplier("music", GameSettings.CurrentConfig.Audio.MusicVolume, 0);
-            SetCategoryGainMultiplier("voip", Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);
+            SetCategoryGainMultiplier(SoundCategoryDefault, GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryUi, GameSettings.CurrentConfig.Audio.UiVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryWaterAmbience, GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryMusic, GameSettings.CurrentConfig.Audio.MusicVolume, 0);
+            SetCategoryGainMultiplier(SoundCategoryVoip, Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);
         }
 
         /// <summary>
@@ -870,6 +880,53 @@ namespace Barotrauma.Sounds
             if (!Alc.CloseDevice(alcDevice) && !GameMain.IsExiting)
             {
                 throw new Exception("Failed to close ALC device!");
+            }
+        }
+        
+        public static void TryRefreshDevice()
+        {
+            DebugConsole.NewMessage("Refreshing audio playback device");
+            
+            List<string> deviceList = Alc.GetStringList(IntPtr.Zero, Alc.OutputDevicesSpecifier).ToList();
+            int alcError = Alc.GetError(IntPtr.Zero);
+            if (alcError != Alc.NoError)
+            {
+                DebugConsole.ThrowError("Failed to list available audio playback devices: " + alcError.ToString());
+                return;
+            }
+            
+            if (deviceList.Any())
+            {
+                string device;
+                
+                if (deviceList.Find(n => n.Equals(GameSettings.CurrentConfig.Audio.AudioOutputDevice, StringComparison.OrdinalIgnoreCase))
+                    is string availablePreviousDevice)
+                {
+                    DebugConsole.NewMessage($" Previous device choice available: {availablePreviousDevice}");
+                    device = availablePreviousDevice;
+                }
+                else
+                {
+                    device = Alc.GetString(IntPtr.Zero, Alc.DefaultDeviceSpecifier);
+                    DebugConsole.NewMessage($" Reverting to default device: {device}");
+                }
+                
+                if (string.IsNullOrEmpty(device))
+                {
+                    device = deviceList[0];
+                    DebugConsole.NewMessage($" No default device found, resorting to first available device: {device}");
+                }
+                
+                // Save the new device choice and initialize it
+                var currentConfig = GameSettings.CurrentConfig;
+                currentConfig.Audio.AudioOutputDevice = device;
+                GameSettings.SetCurrentConfig(currentConfig);
+                GameMain.SoundManager.InitializeAlcDevice(device);
+            }
+            
+            if (GUI.SettingsMenuOpen)
+            {
+                SettingsMenu.Instance?.CreateAudioAndVCTab(true);
             }
         }
     }

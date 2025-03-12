@@ -184,6 +184,13 @@ namespace Barotrauma.Items.Components
             {
                 shakePos = Vector2.Zero;
             }
+            if (Character.Controlled is Character character && character.FocusedItem == item)
+            {
+                if ((IsFullyOpen || IsFullyClosed) && MathF.Abs(openState - lastOpenState) > 0)
+                {
+                    CharacterHUD.RecreateHudTexts = true;
+                }
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)

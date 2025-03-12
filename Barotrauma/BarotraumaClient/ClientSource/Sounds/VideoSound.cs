@@ -76,7 +76,7 @@ namespace Barotrauma.Sounds
                     soundChannel = null;
                 }
             }
-            chn = new SoundChannel(this, gain, null, 1.0f, 1.0f, 3.0f, "video", false);
+            chn = new SoundChannel(this, gain, null, 1.0f, 1.0f, 3.0f, "video".ToIdentifier(), false);
             lock (mutex)
             {
                 soundChannel = chn;

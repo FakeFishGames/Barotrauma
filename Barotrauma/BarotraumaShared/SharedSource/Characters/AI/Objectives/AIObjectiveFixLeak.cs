@@ -31,7 +31,7 @@ namespace Barotrauma
             this.isPriority = isPriority;
         }
 
-        protected override bool CheckObjectiveSpecific() => Leak.Open <= 0 || Leak.Removed;
+        protected override bool CheckObjectiveState() => Leak.Open <= 0 || Leak.Removed;
 
         protected override float GetPriority()
         {
@@ -166,7 +166,7 @@ namespace Barotrauma
             // TODO: use the collider size/reach?
             if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
             {
-                HumanAIController.AnimController.Crouching = true;
+                HumanAIController.AnimController.Crouch();
             }
             float reach = CalculateReach(repairTool, character);
             bool canOperate = toLeak.LengthSquared() < reach * reach;
@@ -180,7 +180,7 @@ namespace Barotrauma
                 onAbandon: () => Abandon = true,
                 onCompleted: () =>
                 {
-                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    if (CheckObjectiveState()) { IsCompleted = true; }
                     else
                     {
                         // Failed to operate. Probably too far.
@@ -194,7 +194,7 @@ namespace Barotrauma
                 {
                     UseDistanceRelativeToAimSourcePos = true,
                     CloseEnough = reach,
-                    DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak".ToIdentifier() : Identifier.Empty,
+                    DialogueIdentifier = Leak.FlowTargetHull != null ? AIObjectiveGoTo.DialogCannotReachLeak : Identifier.Empty,
                     TargetName = Leak.FlowTargetHull?.DisplayName,
                     requiredCondition = () => 
                         Leak.Submarine == character.Submarine &&
@@ -202,11 +202,11 @@ namespace Barotrauma
                     endNodeFilter = IsSuitableEndNode,
                     // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
                     // Only report about contextual targets.
-                    SpeakCannotReachCondition = () => isPriority && !CheckObjectiveSpecific()
+                    SpeakCannotReachCondition = () => isPriority && !CheckObjectiveState()
                 },
                 onAbandon: () =>
                 {
-                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    if (CheckObjectiveState()) { IsCompleted = true; }
                     else if ((Leak.WorldPosition - character.AnimController.AimSourceWorldPos).LengthSquared() > MathUtils.Pow(reach * 2, 2))
                     {
                         // Too far

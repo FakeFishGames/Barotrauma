@@ -165,10 +165,11 @@ namespace Barotrauma
         {
             if (element.DoesAttributeReferenceFileNameAlone("texture"))
             {
+                var basePrefab = WearableComponent.Item.Prefab.ParentPrefab ?? WearableComponent.Item.Prefab;
                 string textureName = element.GetAttributeString("texture", "");
                 return ContentPath.FromRaw(
                     element.ContentPackage,
-                    $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{textureName}");
+                    $"{Path.GetDirectoryName(basePrefab.FilePath)}/{textureName}");
             }
             else
             {
@@ -269,6 +270,13 @@ namespace Barotrauma
 
             IsInitialized = true;
         }
+
+        public void Remove()
+        {
+            Sprite?.Remove();
+            //don't use the Picker setter, because it causes the sprite to be re-initialized for "no character"
+            _picker = null;
+        }
     }
 }
 
@@ -350,7 +358,7 @@ namespace Barotrauma.Items.Components
             damageModifiers = new List<DamageModifier>();
             SkillModifiers = new Dictionary<Identifier, float>();
 
-            int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
+            int spriteCount = element.Elements().Count(x => x.Name.ToString().ToLowerInvariant() == "sprite");
             Variants = element.GetAttributeInt("variants", 0);
             variant = Rand.Range(1, Variants + 1, Rand.RandSync.ServerAndClient);
             wearableSprites = new WearableSprite[spriteCount];
@@ -569,8 +577,7 @@ namespace Barotrauma.Items.Components
 
             foreach (WearableSprite wearableSprite in wearableSprites)
             {
-                wearableSprite?.Sprite?.Remove();
-                wearableSprite.Picker = null;
+                wearableSprite.Remove();
             }
         }
 

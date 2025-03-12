@@ -1,6 +1,7 @@
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -9,6 +10,13 @@ namespace Barotrauma
     /// </summary>
     class UnlockPathAction : EventAction
     {
+        private static readonly HashSet<LocationConnection> pathsUnlockedThisRound = new HashSet<LocationConnection>();
+
+        public static void ResetPathsUnlockedThisRound()
+        {
+            pathsUnlockedThisRound.Clear();
+        }
+
         public UnlockPathAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private bool isFinished = false;
@@ -32,6 +40,7 @@ namespace Barotrauma
                 {
                     if (!connection.Locked) { continue; }
                     connection.Locked = false;
+                    pathsUnlockedThisRound.Add(connection);
 #if SERVER
                     NotifyUnlock(connection);
 #else
@@ -50,16 +59,29 @@ namespace Barotrauma
         }
 
 #if SERVER
-        private void NotifyUnlock(LocationConnection connection)
+        public static void NotifyPathsUnlockedThisRound(Client client)
+        {
+            foreach (LocationConnection connection in pathsUnlockedThisRound)
+            {
+                NotifyUnlock(connection, client);
+            }
+        }
+        
+        private static void NotifyUnlock(LocationConnection connection)
         {
             foreach (Client client in GameMain.Server.ConnectedClients)
             {
-                IWriteMessage outmsg = new WriteOnlyMessage();
-                outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
-                outmsg.WriteByte((byte)EventManager.NetworkEventType.UNLOCKPATH);
-                outmsg.WriteUInt16((UInt16)GameMain.GameSession.Map.Connections.IndexOf(connection));
-                GameMain.Server.ServerPeer.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
+                NotifyUnlock(connection, client);
             }
+        }
+
+        private static void NotifyUnlock(LocationConnection connection, Client client)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)EventManager.NetworkEventType.UNLOCKPATH);
+            outmsg.WriteUInt16((UInt16)GameMain.GameSession.Map.Connections.IndexOf(connection));
+            GameMain.Server.ServerPeer.Send(outmsg, client.Connection, DeliveryMethod.Reliable);            
         }
 #endif
     }

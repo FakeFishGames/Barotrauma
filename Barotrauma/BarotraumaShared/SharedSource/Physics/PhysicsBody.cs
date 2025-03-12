@@ -39,6 +39,7 @@ namespace Barotrauma
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
+
         public PosInfo(Vector2 pos, float? rotation, Vector2 linearVelocity, float? angularVelocity, float time)
             : this(pos, rotation, linearVelocity, angularVelocity, 0, time)
         {
@@ -453,7 +454,8 @@ namespace Barotrauma
             }
             CreateBody(width, height, radius, density, bodyType, _collisionCategories, _collidesWith, findNewContacts);
             FarseerBody.Friction = element.GetAttributeFloat("friction", 0.5f);
-            FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
+            FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);
+            FarseerBody.GravityScale = element.GetAttributeFloat("gravityscale", 1.0f);
             FarseerBody.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;      
@@ -585,9 +587,6 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-#if CLIENT
-            bodyShapeTexture = null;
-#endif
         }
         
         public bool IsValidValue(float value, string valueName, float minValue = float.MinValue, float maxValue = float.MaxValue)
@@ -714,16 +713,31 @@ namespace Barotrauma
         {
             if (!IsValidValue(maxVelocity, "max velocity")) { return; }
 
+            if (force.LengthSquared() < 0.01f) { return; }
+
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
             Vector2 newVelocity = FarseerBody.LinearVelocity + velocityAddition;
 
             float newSpeedSqr = newVelocity.LengthSquared();
-            if (newSpeedSqr > maxVelocity * maxVelocity && Vector2.Dot(FarseerBody.LinearVelocity, force) > 0.0f)
+            if (newSpeedSqr > maxVelocity * maxVelocity)            
             {
-                float newSpeed = (float)Math.Sqrt(newSpeedSqr);
-                float maxVelAddition = maxVelocity - newSpeed;
-                if (maxVelAddition <= 0.0f) { return; }
-                force = velocityAddition.ClampLength(maxVelAddition) * Mass / (float)Timing.Step;
+                float currSpeed = FarseerBody.LinearVelocity.Length();
+                //limit velocity if the force is increasing the velocity in the current or new direction of travel
+                // = we don't want to limit it if the force is slowing down the movement: if a projectile is moving at 50 m/s
+                //   and we apply a force that can only impart a maximum velocity of 1 m/s, we don't want to clamp that projectile to 1 m/s!
+
+                //force is acting in the same direction as the current velocity
+                // -> the maximum allowed change is the difference from current to max speed
+                if (Vector2.Dot(FarseerBody.LinearVelocity, force) > 0.0f)
+                {
+                    force = velocityAddition.ClampLength(Math.Max(maxVelocity - currSpeed, 0)) * Mass / (float)Timing.Step;
+                }
+                //the new velocity will be in the direction of the force
+                // -> make sure it's not too much, maximum allowed change is current speed plus the max speed
+                else if (Vector2.Dot(newVelocity, force) > 0.0f)
+                {
+                    force = velocityAddition.ClampLength(maxVelocity + currSpeed) * Mass / (float)Timing.Step;
+                }
             }
 
             if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) { return; }
@@ -884,10 +898,11 @@ namespace Barotrauma
             }
             else
             {
-                drawPosition = prevPosition = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
+                prevPosition = FarseerBody.Position;
+                drawPosition = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
                 drawRotation = prevRotation = FarseerBody.Rotation;
                 drawOffset = Vector2.Zero;
-                drawRotation = 0.0f;
+                rotationOffset = 0.0f;
             }
         }
         

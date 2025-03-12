@@ -99,7 +99,7 @@ namespace FarseerPhysics.Controllers
 
                     if (result > dt * _maxLinearSqared)
                     {
-                        float sq = (float)Math.Sqrt(result);
+                        float sq = MathF.Sqrt(result);
 
                         float ratio = _maxLinearVelocity / sq;
                         body._linearVelocity.X *= ratio;

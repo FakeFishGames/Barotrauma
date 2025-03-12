@@ -76,6 +76,12 @@ namespace Barotrauma
             }
         }
 
+
+        public void CreateStatusEvent()
+        {
+            GameMain.NetworkMember?.CreateEntityEvent(this, new StatusEventData());
+        }
+
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             if (!(extraData is IEventData eventData)) { throw new Exception($"Malformed hull event: expected {nameof(Hull)}.{nameof(IEventData)}"); }

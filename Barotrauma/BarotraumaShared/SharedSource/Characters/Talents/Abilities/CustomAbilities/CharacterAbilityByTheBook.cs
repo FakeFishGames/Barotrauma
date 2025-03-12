@@ -24,14 +24,18 @@ namespace Barotrauma.Abilities
             foreach (Character enemyCharacter in enemyCharacters)
             {
                 if (!enemyCharacter.IsHuman) { continue; }
-                if (enemyCharacter.Submarine == null || enemyCharacter.Submarine != Submarine.MainSub) { continue; }
+                if (enemyCharacter.Submarine == null || 
+                    (Submarine.MainSub != null && enemyCharacter.Submarine != Submarine.MainSub)) 
+                {
+                    continue;
+                }
                 if (enemyCharacter.IsDead) { continue; }
                 if (!enemyCharacter.LockHands) { continue; }
                 Character.GiveMoney(moneyAmount);
                 GameAnalyticsManager.AddMoneyGainedEvent(moneyAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
-                    character.Info?.GiveExperience(experienceAmount);
+                    character.Info.GiveExperience(experienceAmount);
                 }
                 timesGiven++;
                 if (max > 0 && timesGiven >= max) { break; }

@@ -512,6 +512,22 @@ namespace Barotrauma
                     return true;
                 }
             };
+            
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 230) },
+                "Local MP Quickstart", style: "GUIButtonLarge", color: GUIStyle.Red)
+            {
+                IgnoreLayoutGroups = true,
+                UserData = Tab.Empty,
+                ToolTip = "Starts a server and another client and connects both to localhost, using names 'client1' and 'client2'.",
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    
+                    DebugConsole.StartLocalMPSession(numClients: 2);
+
+                    return true;
+                }
+            };
 #endif
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(480, 80);
@@ -906,6 +922,7 @@ namespace Barotrauma
             }
             var gamesession = new GameSession(
                 selectedSub,
+                Option.None,
                 GameModePreset.DevSandbox,
                 missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
@@ -928,6 +945,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Failed to find the job \"" + job + "\"!");
                 }
                 gamesession.CrewManager.AddCharacterInfo(characterInfo);
+                characterInfo.SetNameBasedOnJob();
             }
             gamesession.CrewManager.InitSinglePlayerRound();
         }
@@ -1251,12 +1269,12 @@ namespace Barotrauma
 
             if (!Directory.Exists(SaveUtil.TempPath))
             {
-                Directory.CreateDirectory(SaveUtil.TempPath);
+                Directory.CreateDirectory(SaveUtil.TempPath, catchUnauthorizedAccessExceptions: true);
             }
 
             try
             {
-                File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
+                File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), overwrite: true, catchUnauthorizedAccessExceptions: false);
             }
             catch (System.IO.IOException e)
             {
@@ -1270,7 +1288,7 @@ namespace Barotrauma
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
-            GameMain.GameSession = new GameSession(selectedSub, savePath, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
+            GameMain.GameSession = new GameSession(selectedSub, Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.SinglePlayerCampaign, settings, mapSeed);
             GameMain.GameSession.CrewManager.ClearCharacterInfos();
             foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
             {
@@ -1279,22 +1297,25 @@ namespace Barotrauma
             ((SinglePlayerCampaign)GameMain.GameSession.GameMode).LoadNewLevel();
         }
 
-        private void LoadGame(string saveFile)
+        private void LoadGame(string path, Option<uint> backupIndex)
         {
-            if (string.IsNullOrWhiteSpace(saveFile)) return;
+            if (string.IsNullOrWhiteSpace(path)) return;
 
             try
             {
-                SaveUtil.LoadGame(saveFile);
+                CampaignDataPath dataPath =
+                    backupIndex.TryUnwrap(out uint index)
+                        ? new CampaignDataPath(loadPath: SaveUtil.GetBackupPath(path, index), path)
+                        : CampaignDataPath.CreateRegular(path);
+
+                SaveUtil.LoadGame(dataPath);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading save \"" + saveFile + "\" failed", e);
+                DebugConsole.ThrowError("Loading save \"" + path + "\" failed", e);
+                GameMain.GameSession = null;
                 return;
             }
-
-            //TODO
-            //GameMain.LobbyScreen.Select();
         }
 
 #region UI Methods
@@ -1327,7 +1348,7 @@ namespace Barotrauma
 
             var serverSettings = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile, out _)?.Root ?? new XElement("serversettings");
 
-            var name = serverSettings.GetAttributeString("name", "");
+            var name = serverSettings.GetAttributeString(nameof(ServerSettings.ServerName), "");
             var password = serverSettings.GetAttributeString("password", "");
             var isPublic = serverSettings.GetAttributeBool("IsPublic", true);
             var banAfterWrongPassword = serverSettings.GetAttributeBool("banafterwrongpassword", false);

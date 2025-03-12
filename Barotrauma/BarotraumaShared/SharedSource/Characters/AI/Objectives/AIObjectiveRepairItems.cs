@@ -76,7 +76,7 @@ namespace Barotrauma
             {
                 if (item.Repairables.None(r => r.RequiredSkills.Any(s => s.Identifier == RelevantSkill))) { return false; }
             }
-            return !HumanAIController.IsItemRepairedByAnother(item, out _);
+            return !IsItemRepairedByAnother(character, item);
         }
 
         public static bool ViableForRepair(Item item, Character character, HumanAIController humanAIController)
@@ -160,6 +160,58 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(item.Repairables.Any(), "Invalid target in AIObjectiveRepairItems - the objective should only be checking items that have a Repairable component (Item.RepairableItems)");
 
             return true;
+        }
+        
+        public static bool IsItemRepairedByAnother(Character character, Item target)
+        {
+            if (target == null) { return false; }
+            bool isOrder = IsOrderedToPrioritizeTarget(character.AIController as HumanAIController);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (!HumanAIController.IsActive(c)) { continue; }
+                if (c == character) { continue; }
+                if (c.TeamID != character.TeamID) { continue; }
+                if (c.IsPlayer)
+                {
+                    if (target.Repairables.Any(r => r.CurrentFixer == c))
+                    {
+                        // If the other character is player, don't try to repair
+                        return true;
+                    }
+                }
+                else if (c.AIController is HumanAIController otherAI)
+                {
+                    var repairItemsObjective = otherAI.ObjectiveManager.GetObjective<AIObjectiveRepairItems>();
+                    if (repairItemsObjective == null) { continue; }
+                    if (repairItemsObjective.SubObjectives.FirstOrDefault(o => o is AIObjectiveRepairItem) is not AIObjectiveRepairItem activeObjective || activeObjective.Item != target)
+                    {
+                        // Not targeting the same item.
+                        continue;
+                    }
+                    bool isTargetOrdered = IsOrderedToPrioritizeTarget(otherAI);
+                    switch (isOrder)
+                    {
+                        case false when isTargetOrdered:
+                            // We are not ordered and the target is ordered -> let the other character repair the target.
+                            return true;
+                        case true when !isTargetOrdered:
+                            // We are ordered and the target is not -> allow us to repair the target.
+                            continue;
+                        default:
+                        {
+                            // Neither or both are ordered to repair this item.
+                            if (otherAI.ObjectiveManager.CurrentObjective is not AIObjectiveRepairItems)
+                            {
+                                // The other bot is doing something else -> stick to the target.
+                                continue;
+                            }
+                            return target.Repairables.Max(r => r.DegreeOfSuccess(character)) <= target.Repairables.Max(r => r.DegreeOfSuccess(c));
+                        }
+                    }
+                }
+            }
+            return false;
+            bool IsOrderedToPrioritizeTarget(HumanAIController ai) => ai.ObjectiveManager.CurrentOrder is AIObjectiveRepairItems repairOrder && repairOrder.PrioritizedItem == target;
         }
     }
 }

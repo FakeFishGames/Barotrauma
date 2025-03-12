@@ -8,6 +8,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        public static List<Sonar> SonarList = new List<Sonar>();
+
         public enum Mode
         {
             Active,
@@ -167,6 +169,7 @@ namespace Barotrauma.Items.Components
             IsActive = true;
             InitProjSpecific(element);
             CurrentMode = Mode.Passive;
+            SonarList.Add(this);
         }
 
         partial void InitProjSpecific(ContentXElement element);
@@ -191,8 +194,7 @@ namespace Barotrauma.Items.Components
 
             if (currentMode == Mode.Active)
             {
-                if ((Voltage >= MinVoltage) &&
-                    (!UseTransducers || connectedTransducers.Count > 0))
+                if (HasPower && (!UseTransducers || connectedTransducers.Count > 0))
                 {
                     if (currentPingIndex != -1)
                     {
@@ -379,6 +381,29 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+#if CLIENT
+            sonarBlip?.Remove();
+            pingCircle?.Remove();
+            directionalPingCircle?.Remove();
+            screenOverlay?.Remove();
+            screenBackground?.Remove();
+            lineSprite?.Remove();
+
+            foreach (var t in targetIcons.Values)
+            {
+                t.Item1.Remove();
+            }
+            targetIcons.Clear();
+
+            MineralClusters = null;
+#endif
+            SonarList.Remove(this);
+        }
+
 
         public void ServerEventRead(IReadMessage msg, Client c)
         {

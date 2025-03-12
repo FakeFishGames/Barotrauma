@@ -121,21 +121,21 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(savePath)) { return; }
 
-            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath), savePath, GameModePreset.MultiPlayerCampaign, startingSettings, seed);
+            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath), Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.MultiPlayerCampaign, startingSettings, seed);
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-            SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+            SaveUtil.SaveGame(GameMain.GameSession.DataPath);
 
             DebugConsole.NewMessage("Campaign started!", Color.Cyan);
             DebugConsole.NewMessage("Current location: " + GameMain.GameSession.Map.CurrentLocation.DisplayName, Color.Cyan);
             ((MultiPlayerCampaign)GameMain.GameSession.GameMode).LoadInitialLevel();
         }
 
-        public static void LoadCampaign(string selectedSave, Client client)
+        public static void LoadCampaign(CampaignDataPath path, Client client)
         {
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             try
             {
-                SaveUtil.LoadGame(selectedSave);
+                SaveUtil.LoadGame(path);
                 if (GameMain.GameSession.GameMode is MultiPlayerCampaign mpCampaign)
                 {
                     mpCampaign.LastSaveID++;
@@ -148,7 +148,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                string errorMsg = $"Error while loading the save {selectedSave}";
+                string errorMsg = $"Error while loading the save {path.LoadPath}";
                 if (client != null)
                 {
                     GameMain.Server?.SendDirectChatMessage($"{errorMsg}: {e.Message}\n{e.StackTrace}", client, ChatMessageType.Error);
@@ -209,7 +209,7 @@ namespace Barotrauma
                         {
                             try
                             {
-                                LoadCampaign(saveFiles[saveIndex].FilePath, client: null);
+                                LoadCampaign(CampaignDataPath.CreateRegular(saveFiles[saveIndex].FilePath), client: null);
                             }
                             catch (Exception ex)
                             {
@@ -241,6 +241,12 @@ namespace Barotrauma
         public void ClearSavedExperiencePoints(Client client)
         {
             savedExperiencePoints.RemoveAll(s => client.AccountId == s.AccountId || client.Connection.Endpoint.Address == s.Address);
+        }
+
+        public void RefreshCharacterCampaignData(Character character, bool refreshHealthData)
+        {
+            var matchingData = characterData.FirstOrDefault(c => c.CharacterInfo == character.Info);
+            matchingData?.Refresh(character, refreshHealthData: refreshHealthData);
         }
 
         public void SavePlayers()
@@ -289,7 +295,8 @@ namespace Barotrauma
                         data.Refresh(character, refreshHealthData: character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected);
                         characterData.Add(data);
                     }
-                    else
+                    //check the cause of death in the CharacterInfo too (the character instance may have despawned, so we can't just rely on that)
+                    else if (data.CharacterInfo.CauseOfDeath is not { Type: CauseOfDeathType.Disconnected })
                     {
                         //character dead or removed -> reduce skills, remove items, health data, etc
                         data.CharacterInfo.ApplyDeathEffects();
@@ -389,7 +396,7 @@ namespace Barotrauma
                     }
                 }
                 // Event history must be registered before ending the round or it will be cleared
-                GameMain.GameSession.EventManager.RegisterEventHistory();
+                GameMain.GameSession.EventManager.StoreEventDataAtRoundEnd();
             }
 
             //store the currently active missions at this point so we can communicate their states to clients, they're cleared in EndRound
@@ -406,13 +413,13 @@ namespace Barotrauma
                 LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                SaveUtil.SaveGame(GameMain.GameSession.DataPath);
             }
             else
             {
                 PendingSubmarineSwitch = null;
                 GameMain.Server.EndGame(TransitionType.None, wasSaved: false);
-                LoadCampaign(GameMain.GameSession.SavePath, client: null);
+                LoadCampaign(GameMain.GameSession.DataPath, client: null);
                 LastSaveID++;
                 IncrementAllLastUpdateIds();
                 yield return CoroutineStatus.Success;
@@ -638,6 +645,7 @@ namespace Barotrauma
 
             msg.WriteBoolean(IsFirstRound);
             msg.WriteByte(CampaignID);
+            msg.WriteByte(RoundID);
             msg.WriteUInt16(lastSaveID);
             msg.WriteString(map.Seed);
 
@@ -1208,18 +1216,22 @@ namespace Barotrauma
         public void ServerReadCrew(IReadMessage msg, Client sender)
         {
             UInt16[] pendingHires = null;
+            bool[] pendingToReserveBench = null;
+            Dictionary<int, BotStatus> existingBotsClient = null;
 
             bool updatePending = msg.ReadBoolean();
             if (updatePending)
             {
                 ushort pendingHireLength = msg.ReadUInt16();
                 pendingHires = new UInt16[pendingHireLength];
+                pendingToReserveBench = new bool[pendingHireLength];
                 for (int i = 0; i < pendingHireLength; i++)
                 {
                     pendingHires[i] = msg.ReadUInt16();
+                    pendingToReserveBench[i] = msg.ReadBoolean();
                 }
             }
-
+            
             bool validateHires = msg.ReadBoolean();
 
             bool renameCharacter = msg.ReadBoolean();
@@ -1229,9 +1241,9 @@ namespace Barotrauma
             if (renameCharacter)
             {
                 renamedIdentifier = msg.ReadUInt16();
-                newName = msg.ReadString();
+                newName = Client.SanitizeName(msg.ReadString());
                 existingCrewMember = msg.ReadBoolean();
-                if (!GameMain.Server.IsNameValid(sender, newName))
+                if (!GameMain.Server.IsNameValid(sender, newName, clientRenamingSelf: renamedIdentifier == sender.CharacterInfo?.ID))
                 {
                     renameCharacter = false;
                 }
@@ -1249,7 +1261,7 @@ namespace Barotrauma
             {
                 if (fireCharacter && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
                 {
-                    firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == firedIdentifier);
+                    firedCharacter = CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(info => info.ID == firedIdentifier);
                     if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
                     {
                         CrewManager.FireCharacter(firedCharacter);
@@ -1267,7 +1279,7 @@ namespace Barotrauma
                     {
                         if (existingCrewMember && CrewManager != null)
                         {
-                            characterInfo = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                            characterInfo = CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(info => info.ID == renamedIdentifier);
                         }
                         else if (!existingCrewMember && location.HireManager != null)
                         {
@@ -1318,6 +1330,7 @@ namespace Barotrauma
                     if (updatePending)
                     {
                         List<CharacterInfo> pendingHireInfos = new List<CharacterInfo>();
+                        int i = 0;
                         foreach (UInt16 identifier in pendingHires)
                         {
                             CharacterInfo match = location.GetHireableCharacters().FirstOrDefault(info => info.ID == identifier);
@@ -1326,9 +1339,11 @@ namespace Barotrauma
                                 DebugConsole.ThrowError($"Tried to add a character that doesn't exist ({identifier}) to pending hires");
                                 continue;
                             }
+                            
+                            match.BotStatus = pendingToReserveBench[i++] ? BotStatus.PendingHireToReserveBench : BotStatus.PendingHireToActiveService;
 
                             pendingHireInfos.Add(match);
-                            if (pendingHireInfos.Count + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
+                            if (pendingHireInfos.Count(ci => ci.BotStatus == BotStatus.PendingHireToActiveService) + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
                             {
                                 break;
                             }
@@ -1396,14 +1411,21 @@ namespace Barotrauma
                 foreach (CharacterInfo pendingHire in pendingHires)
                 {
                     msg.WriteUInt16(pendingHire.ID);
+                    msg.WriteBoolean(pendingHire.BotStatus == BotStatus.PendingHireToReserveBench);
                 }
 
-                var hiredCharacters = CrewManager.GetCharacterInfos().Where(ci => ci.IsNewHire);
-                msg.WriteUInt16((ushort)hiredCharacters.Count());
-                foreach (CharacterInfo info in hiredCharacters)
+                var crewManager = CrewManager.GetCharacterInfos();
+                msg.WriteUInt16((ushort)crewManager.Count());
+                foreach (CharacterInfo info in crewManager)
                 {
                     info.ServerWrite(msg);
-                    msg.WriteInt32(info.Salary);
+                }
+                
+                var reserveBench = CrewManager.GetReserveBenchInfos();
+                msg.WriteUInt16((ushort)reserveBench.Count());
+                foreach (CharacterInfo info in reserveBench)
+                {
+                    info.ServerWrite(msg);
                 }
 
                 bool validRenaming = renamedCrewMember.id > 0 && !string.IsNullOrEmpty(renamedCrewMember.newName);
@@ -1466,7 +1488,16 @@ namespace Barotrauma
             return wallet.Balance + Bank.Balance;
         }
 
-        public override void Save(XElement element)
+        /// <summary>
+        /// Serializes the campaign and character data to XML.
+        /// </summary>
+        /// <param name="element">Game session element to save the campaign data to.</param>
+        /// <param name="isSavingOnLoading">
+        /// Whether the save is being done during loading to ensure the campaign ID matches the one in the save file.
+        /// Used to work around some quirks with the backup save system.
+        /// See: <see cref="SaveUtil.SaveGame(CampaignDataPath,bool)"/>
+        /// </param>
+        public override void Save(XElement element, bool isSavingOnLoading)
         {
             element.Add(new XAttribute("campaignid", CampaignID));
             XElement modeElement = new XElement("MultiPlayerCampaign",
@@ -1516,8 +1547,16 @@ namespace Barotrauma
 
             element.Add(modeElement);
 
-            //save character data to a separate file
-            string characterDataPath = GetCharacterDataSavePath();
+            // save character data to a separate file
+
+            // When loading a campaign in multiplayer, we save the campaign to ensure the campaign ID that gets assigned
+            // matches the one in the save file, this is a problem with the backup save system since this causes the
+            // character data to save too, and we don't want to overwrite the main save file's character data.
+            // So we instead save over the load path in this case, which in backup saves is the backup file
+            // which we don't mind getting overriden since the data should be the same
+            string characterDataPath = isSavingOnLoading
+                                           ? GetCharacterDataPathForLoading()
+                                           : GetCharacterDataPathForSaving();
             XDocument characterDataDoc = new XDocument(new XElement("CharacterData"));
             foreach (CharacterCampaignData cd in characterData)
             {
@@ -1525,6 +1564,7 @@ namespace Barotrauma
             }
             try
             {
+                SaveUtil.DeleteIfExists(characterDataPath);
                 characterDataDoc.SaveSafe(characterDataPath);
             }
             catch (Exception e)
@@ -1544,7 +1584,7 @@ namespace Barotrauma
         /// eg. when using this method to save a character itself restored from the backup.</param>
         public void SaveSingleCharacter(CharacterCampaignData newData, bool skipBackup = false)
         {
-            string characterDataPath = GetCharacterDataSavePath();
+            string characterDataPath = GetCharacterDataPathForSaving();
             if (!File.Exists(characterDataPath))
             {
                 DebugConsole.ThrowError($"Failed to load the character data for the campaign. Could not find the file \"{characterDataPath}\".");

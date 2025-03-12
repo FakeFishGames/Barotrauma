@@ -465,32 +465,37 @@ namespace Barotrauma
 
                         bool noneSelected = langTickboxes.All(tb => !tb.Selected);
                         bool allSelected = langTickboxes.All(tb => tb.Selected);
-
                         if (allSelected != allTickbox.Selected)
                         {
                             allTickbox.Selected = allSelected;
                         }
 
-                        if (allSelected)
-                        {
-                            languageDropdown.Text = TextManager.Get(allLanguagesKey);
-                        }
-                        else if (noneSelected)
-                        {
-                            languageDropdown.Text = TextManager.Get("None");
-                        }
-
-                        var languages = languageDropdown.SelectedDataMultiple.OfType<LanguageIdentifier>();
-
-                        ServerListFilters.Instance.SetAttribute(languageKey, string.Join(", ", languages));
-                        GameSettings.SaveCurrentConfig();
                         return true;
                     }
                     finally
                     {
                         inSelectedCall = false;
-                        FilterServers();
                     }
+                };
+                languageDropdown.AfterSelected = (_, userData) =>
+                {
+                    bool noneSelected = langTickboxes.All(tb => !tb.Selected);
+                    bool allSelected = langTickboxes.All(tb => tb.Selected);
+                    if (allSelected)
+                    {
+                        languageDropdown.Text = TextManager.Get(allLanguagesKey);
+                    }
+                    else if (noneSelected)
+                    {
+                        languageDropdown.Text = TextManager.Get("None");
+                    }
+
+                    var languages = languageDropdown.SelectedDataMultiple.OfType<LanguageIdentifier>();
+
+                    ServerListFilters.Instance.SetAttribute(languageKey, string.Join(", ", languages));
+                    GameSettings.SaveCurrentConfig();
+                    FilterServers();
+                    return true;
                 };
             }
             
@@ -998,6 +1003,8 @@ namespace Barotrauma
         
         private bool ShouldShowServer(ServerInfo serverInfo)
         {
+            if (serverInfo == null) { return false; }
+
 #if !DEBUG
             //never show newer versions
             //(ignore revision number, it doesn't affect compatibility)

@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string text;
-        [Serialize("", IsPropertySaveable.Yes, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(100)]
+        [Serialize("", IsPropertySaveable.Yes, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(MaxLength = 100)]
         public string Text
         {
             get { return text; }

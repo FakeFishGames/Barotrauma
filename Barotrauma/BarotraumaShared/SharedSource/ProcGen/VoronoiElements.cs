@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Created by SharpDevelop.
  * User: Burhan
  * Date: 17/06/2014
@@ -212,16 +212,41 @@ namespace Voronoi2
 
         public bool IsPointInsideAABB(Vector2 point2, float margin)
         {
+            // Note: Previously used Linq.All() queries, which were simpler and more readable, but based on DPA, this caused major memory allocations due to captured variables in the lambdas, as the method is used a lot when generating levels.
+            // So the code was refactored to use a custom local implementation instead.
             Vector2 transformedPoint = point2 - Translation;
             Vector2 max = transformedPoint + Vector2.One * margin;
             Vector2 min = transformedPoint - Vector2.One * margin;
-
-            if (Edges.All(e => e.Point1.X < min.X && e.Point2.X < min.X)) { return false; }
-            if (Edges.All(e => e.Point1.Y < min.Y && e.Point2.Y < min.Y)) { return false; }
-            if (Edges.All(e => e.Point1.X > max.X && e.Point2.X > max.X)) { return false; }
-            if (Edges.All(e => e.Point1.Y > max.Y && e.Point2.Y > max.Y)) { return false; }
-
+            if (AllOutsideBounds(static (e, t) => e.Point1.X < t && e.Point2.X < t, bounds: min.X)) { return false; }
+            if (AllOutsideBounds(static (e, t) => e.Point1.Y < t && e.Point2.Y < t, bounds: min.Y)) { return false; }
+            if (AllOutsideBounds(static (e, t) => e.Point1.X > t && e.Point2.X > t, bounds: max.X)) { return false; }
+            if (AllOutsideBounds(static (e, t) => e.Point1.Y > t && e.Point2.Y > t, bounds: max.Y)) { return false; }
             return true;
+            
+            bool AllOutsideBounds(Func<GraphEdge, float, bool> predicate, float bounds)
+            {
+                foreach (GraphEdge edge in Edges)
+                {
+                    if (!predicate(edge, bounds))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        public void GetBounds(out Vector2 min, out Vector2 max)
+        {
+            min = Center;
+            max = Center;
+            foreach (GraphEdge edge in Edges)
+            {
+                min = new Vector2(Math.Min(edge.Point1.X, min.X), Math.Min(edge.Point1.Y, min.Y));
+                min = new Vector2(Math.Min(edge.Point2.X, min.X), Math.Min(edge.Point2.Y, min.Y));
+                max = new Vector2(Math.Max(edge.Point1.X, max.X), Math.Max(edge.Point1.Y, max.Y));
+                max = new Vector2(Math.Max(edge.Point2.X, max.X), Math.Max(edge.Point2.Y, max.Y));
+            }
         }
     }
     
@@ -239,6 +264,8 @@ namespace Voronoi2
         {
             get { return (Point1 + Point2) / 2.0f; }
         }
+
+        public float Length => Vector2.Distance(Point1, Point2);
 
         public GraphEdge(Vector2 point1, Vector2 point2)
         {
@@ -265,9 +292,18 @@ namespace Voronoi2
         /// </summary>
         public Vector2 GetNormal(VoronoiCell cell)
         {
-            Vector2 dir = Vector2.Normalize(Point1 - Point2);
+            return GetNormal(cell, Point1, Point2);
+        }
+
+        /// <summary>
+        /// Returns the normal of the edge between point1 to point2 that points outwards from the specified cell
+        /// </summary>
+        public static Vector2 GetNormal(VoronoiCell cell, Vector2 point1, Vector2 point2)
+        {
+            Vector2 center = (point1 + point2) / 2; 
+            Vector2 dir = Vector2.Normalize(point1 - point2);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
-            if (cell != null && Vector2.Dot(normal, Vector2.Normalize(Center - (cell.Center - cell.Translation))) < 0)
+            if (cell != null && Vector2.Dot(normal, Vector2.Normalize(center - (cell.Center - cell.Translation))) < 0)
             {
                 normal = -normal;
             }

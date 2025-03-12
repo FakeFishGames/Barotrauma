@@ -7,8 +7,13 @@ namespace Barotrauma.Extensions
         public static Color Multiply(this Color color, float value, bool onlyAlpha = false)
         {
             return onlyAlpha ?
-                new Color(color.R, color.G,  color.B, (byte)(color.A * value)) :            
-                new Color((byte)(color.R * value), (byte)(color.G * value), (byte)(color.B * value), (byte)(color.A * value));
+                new Color(color.R, color.G,  color.B, MultiplyComponent(color.A, value)) :            
+                new Color(MultiplyComponent(color.R, value), MultiplyComponent(color.G, value), MultiplyComponent(color.B, value), MultiplyComponent(color.A, value));
+
+            static byte MultiplyComponent(float colorComponent, float multiplier)
+            {
+                return (byte)MathHelper.Clamp(colorComponent * multiplier, 0.0f, 255.0f);
+            }
         }
 
         public static Color Multiply(this Color thisColor, Color color)

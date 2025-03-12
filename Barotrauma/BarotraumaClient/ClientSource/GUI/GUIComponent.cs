@@ -9,6 +9,7 @@ using Barotrauma.IO;
 using RestSharp;
 using System.Net;
 using Barotrauma.Steam;
+using Steamworks;
 
 namespace Barotrauma
 {
@@ -158,6 +159,12 @@ namespace Barotrauma
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
 
+        /// <summary>
+        /// Triggers when a tooltip should be draw on the component. 
+        /// Note that the callback triggers even if the item has no tooltip (which can be useful for e.g. only contructing the tooltip when needed).
+        /// </summary>
+        public Action<GUIComponent> OnDrawToolTip;
+
         public enum ComponentState { None, Hover, Pressed, Selected, HoverSelected };
 
         protected Alignment alignment;
@@ -245,6 +252,57 @@ namespace Barotrauma
         public Vector2 Center
         {
             get { return new Vector2(Rect.Center.X, Rect.Center.Y); }
+        }
+        
+        /// <summary>
+        /// Clamps the component's rect position to the specified area. Does not resize the component.
+        /// </summary>
+        /// <param name="clampArea">Area to contain the Rect of this component to</param>
+        public void ClampToArea(Rectangle clampArea)
+        {
+            Rectangle componentRect = Rect;
+
+            int x = componentRect.X;
+            int y = componentRect.Y;
+
+            // Adjust the X position
+            if (componentRect.Width <= clampArea.Width)
+            {
+                if (componentRect.Left < clampArea.Left)
+                {
+                    x = clampArea.Left;
+                }
+                else if (componentRect.Right > clampArea.Right)
+                {
+                    x = clampArea.Right - componentRect.Width;
+                }
+            }
+            else
+            {
+                // Component is wider than clamp area, osition it to overlap as much as possible
+                x = clampArea.Left - (componentRect.Width - clampArea.Width) / 2;
+            }
+
+            // Adjust the Y position
+            if (componentRect.Height <= clampArea.Height)
+            {
+                if (componentRect.Top < clampArea.Top)
+                {
+                    y = clampArea.Top;
+                }
+                else if (componentRect.Bottom > clampArea.Bottom)
+                {
+                    y = clampArea.Bottom - componentRect.Height;
+                }
+            }
+            else
+            {
+                // Component is taller than clamp area, osition it to overlap as much as possible
+                y = clampArea.Top - (componentRect.Height - clampArea.Height) / 2;
+            }
+            
+            Point moveAmount = new Point(x - componentRect.X, y - componentRect.Y);
+            RectTransform.ScreenSpaceOffset += moveAmount;
         }
 
         protected Rectangle ClampRect(Rectangle r)
@@ -1087,6 +1145,8 @@ namespace Barotrauma
                     FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
                 }
 
+                component.toolTip = element.GetAttributeString("tooltip", string.Empty);
+
                 if (element.GetAttributeBool("resizetofitchildren", false))
                 {
                     Vector2 relativeResizeScale = element.GetAttributeVector2("relativeresizescale", Vector2.One);
@@ -1129,7 +1189,8 @@ namespace Barotrauma
         {
             foreach (XAttribute attribute in element.Attributes())
             {
-                switch (attribute.Name.ToString().ToLowerInvariant())
+                string conditionName = attribute.Name.ToString().ToLowerInvariant();
+                switch (conditionName)
                 {
                     case "language":
                         var languages = element.GetAttributeIdentifierArray(attribute.Name.ToString(), Array.Empty<Identifier>())
@@ -1169,6 +1230,20 @@ namespace Barotrauma
 #else
                                 break;
 #endif
+                        }
+                        return false;
+                    case "mingamelaunches":
+                        if (int.TryParse(attribute.Value, out int minLaunches))
+                        {
+                            return SteamManager.GetStatInt(AchievementStat.GameLaunchCount) > minLaunches;
+                        }
+                        return false;
+                    case "appsubscribed":
+                    case "appnotsubscribed":
+                        if (SteamManager.IsInitialized && 
+                            int.TryParse(attribute.Value, out int appId))
+                        {
+                            return SteamApps.IsSubscribedToApp(appId) == (conditionName == "appsubscribed");
                         }
                         return false;
                 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -94,7 +95,35 @@ namespace Barotrauma
         protected override bool AllowOutsideSubmarine => AllowGoingOutside;
         protected override bool AllowInAnySub => true;
 
-        public Identifier DialogueIdentifier { get; set; } = "dialogcannotreachtarget".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a target. 
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the target.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachTarget = "dialogcannotreachtarget".ToIdentifier();
+        /// <summary>
+        /// Generic NPC line for when the NPC fails to find a path to some place/target.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachPlace = "dialogcannotreachplace".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a patient they're trying to treat. 
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the target.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachPatient = "dialogcannotreachpatient".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a fire they're trying to extinguish.
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the room the NPC is trying to get to.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachFire = "dialogcannotreachfire".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a leak they're trying to fix.
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the room the NPC is trying to get to.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachLeak = "dialogcannotreachleak".ToIdentifier();
+
+        public Identifier DialogueIdentifier { get; set; } = DialogCannotReachPlace;
+        private readonly Identifier ExoSuitRefuel = "dialog.exosuit.refuel".ToIdentifier();
+        private readonly Identifier ExoSuitOutOfFuel = "dialog.exosuit.outoffuel".ToIdentifier();
+            
         public LocalizedString TargetName { get; set; }
 
         public ISpatialEntity Target { get; private set; }
@@ -112,12 +141,12 @@ namespace Barotrauma
                 Abandon = !isOrder;
                 return Priority;
             }
-            if (Target == null || Target is Entity e && e.Removed)
+            if (Target is null or Entity { Removed: true })
             {
                 Priority = 0;
                 Abandon = !isOrder;
             }
-            if (IgnoreIfTargetDead && Target is Character character && character.IsDead)
+            if (IgnoreIfTargetDead && Target is Character { IsDead: true })
             {
                 Priority = 0;
                 Abandon = !isOrder;
@@ -178,6 +207,17 @@ namespace Barotrauma
             if (DialogueIdentifier == null) { return; }
             if (!SpeakIfFails) { return; }
             if (SpeakCannotReachCondition != null && !SpeakCannotReachCondition()) { return; }
+
+            if (TargetName == null && DialogueIdentifier == DialogCannotReachTarget)
+            {
+#if DEBUG
+                DebugConsole.ThrowError(
+                    $"Error in {nameof(SpeakCannotReach)}: "+
+                    $"attempted to use a dialog line that mentions the target (dialogue identifier: {DialogueIdentifier}), but the name of the target ({(Target?.ToString() ?? "null")}) isn't set.");
+#endif
+                DialogueIdentifier = DialogCannotReachPlace;
+            }
+
             LocalizedString msg = TargetName == null ?
                 TextManager.Get(DialogueIdentifier) :
                 TextManager.GetWithVariable(DialogueIdentifier, "[name]".ToIdentifier(), TargetName, formatCapitals: Target is Character ? FormatCapitals.No : FormatCapitals.Yes);
@@ -193,6 +233,43 @@ namespace Barotrauma
             {
                 Abandon = true;
                 return;
+            }
+            if (checkExoSuitTimer <= 0)
+            {
+                checkExoSuitTimer = CheckExoSuitTime * Rand.Range(0.9f, 1.1f);
+                if (character.GetEquippedItem(Tags.PoweredDivingSuit, InvSlotType.OuterClothes) is { OwnInventory: Inventory exoSuitInventory } exoSuit &&
+                    exoSuit.GetComponent<Powered>() is not { HasPower: true })
+                {
+                    if (HumanAIController.HasItem(character, Tags.DivingSuitFuel, out IEnumerable<Item> fuelRods, conditionPercentage: 1, recursive: true))
+                    {
+                        // Try to switch the fuel sources
+                        if (character.IsOnPlayerTeam)
+                        {
+                            character.Speak(TextManager.Get(ExoSuitRefuel).Value, minDurationBetweenSimilar: 10f, identifier: ExoSuitRefuel);
+                        }
+                        // Have to copy the list, because it's modified when we unequip the item.
+                        foreach (Item containedItem in exoSuit.ContainedItems.ToList())
+                        {
+                            if (containedItem.HasTag(Tags.DivingSuitFuel) && containedItem.Condition <= 0)
+                            {
+                                character.Unequip(containedItem);
+                            }
+                        }
+                        // Refuel
+                        // The information about the target slot is defined in a status effect. We could parse it, but let's keep it simple and just presume that the target slot is the second slot, as it the case with the vanilla exosuits.
+                        const int targetSlot = 1;
+                        Item fuelRod = fuelRods.MaxBy(b => b.Condition);
+                        exoSuitInventory.TryPutItem(fuelRod, targetSlot, allowSwapping: true, allowCombine: true, user: character);
+                    }
+                    else if (character.IsOnPlayerTeam)
+                    {
+                        character.Speak(TextManager.Get(ExoSuitOutOfFuel).Value, minDurationBetweenSimilar: 30.0f, identifier: ExoSuitOutOfFuel);
+                    }
+                }
+            }
+            else
+            {
+                checkExoSuitTimer -= deltaTime;
             }
             if (Target == character || character.SelectedBy != null && HumanAIController.IsFriendly(character.SelectedBy))
             {
@@ -301,34 +378,43 @@ namespace Barotrauma
                 }
             }
             if (Abandon) { return; }
-            if (getDivingGearIfNeeded)
+            bool needsDivingSuit = (!isInside || hasOutdoorNodes) && !character.IsImmuneToPressure;
+            bool tryToGetDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
+            bool tryToGetDivingSuit = needsDivingSuit;
+            Character followTarget = Target as Character;
+            if (Mimic && !character.IsImmuneToPressure)
             {
-                Character followTarget = Target as Character;
-                bool needsDivingSuit = (!isInside || hasOutdoorNodes) && !character.IsImmuneToPressure;
-                bool tryToGetDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
-                bool tryToGetDivingSuit = needsDivingSuit;
-                if (Mimic && !character.IsImmuneToPressure)
+                if (HumanAIController.HasDivingSuit(followTarget))
                 {
-                    if (HumanAIController.HasDivingSuit(followTarget))
-                    {
-                        tryToGetDivingGear = true;
-                        tryToGetDivingSuit = true;
-                    }
-                    else if (HumanAIController.HasDivingMask(followTarget) && character.CharacterHealth.OxygenLowResistance < 1)
-                    {
-                        tryToGetDivingGear = true;
-                    }
+                    tryToGetDivingGear = true;
+                    tryToGetDivingSuit = true;
                 }
-                bool needsEquipment = false;
-                float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
-                if (tryToGetDivingSuit)
+                else if (HumanAIController.HasDivingMask(followTarget) && character.CharacterHealth.OxygenLowResistance < 1)
                 {
-                    needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen, requireSuitablePressureProtection: !objectiveManager.FailedToFindDivingGearForDepth);
+                    tryToGetDivingGear = true;
                 }
-                else if (tryToGetDivingGear)
+            }
+            bool needsEquipment = false;
+            float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
+            if (tryToGetDivingSuit)
+            {
+                needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen, requireSuitablePressureProtection: !objectiveManager.FailedToFindDivingGearForDepth);
+            }
+            else if (tryToGetDivingGear)
+            {
+                needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
+            }
+            if (!getDivingGearIfNeeded)
+            {
+                if (needsEquipment)
                 {
-                    needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
+                    // Don't try to reach the target without proper equipment.
+                    Abandon = true;
+                    return;
                 }
+            }
+            else
+            {
                 if (character.LockHands)
                 {
                     cantFindDivingGear = true;
@@ -353,9 +439,9 @@ namespace Barotrauma
                             }
                             else
                             {
-                                // Try again without requiring the diving suit
+                                // Try again without requiring the diving suit (or mask)
                                 RemoveSubObjective(ref findDivingGear);
-                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
+                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: !tryToGetDivingSuit, objectiveManager),
                                     onAbandon: () =>
                                     {
                                         Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
@@ -442,7 +528,7 @@ namespace Barotrauma
                 if (checkScooterTimer <= 0)
                 {
                     useScooter = false;
-                    checkScooterTimer = checkScooterTime * Rand.Range(0.75f, 1.25f);
+                    checkScooterTimer = CheckScooterTime * Rand.Range(0.9f, 1.1f);
                     Item scooter = null;
                     bool shouldUseScooter = Mimic && targetCharacter != null && targetCharacter.HasEquippedItem(Tags.Scooter, allowBroken: false);
                     if (!shouldUseScooter)
@@ -465,24 +551,25 @@ namespace Barotrauma
                     }
                     else if (shouldUseScooter)
                     {
-                        var leftHandItem = character.GetEquippedItem(slotType: InvSlotType.LeftHand);
-                        var rightHandItem = character.GetEquippedItem(slotType: InvSlotType.RightHand);
-                        bool handsFull = 
-                            (leftHandItem != null && !character.Inventory.IsAnySlotAvailable(leftHandItem) && !character.Inventory.TryPutItem(leftHandItem, character, InvSlotType.Bag.ToEnumerable())) ||
-                            (rightHandItem != null && !character.Inventory.IsAnySlotAvailable(rightHandItem) && !character.Inventory.TryPutItem(rightHandItem, character, InvSlotType.Bag.ToEnumerable()));
-                        if (!handsFull)
+                        bool hasHandsFull = character.HasHandsFull(out (Item leftHandItem, Item rightHandItem) items);
+                        if (hasHandsFull)
+                        {
+                            hasHandsFull = !character.TryPutItemInAnySlot(items.leftHandItem) && 
+                                           !character.TryPutItemInAnySlot(items.rightHandItem) &&
+                                           !character.TryPutItemInBag(items.leftHandItem) && 
+                                           !character.TryPutItemInBag(items.rightHandItem);
+                        }
+                        if (!hasHandsFull)
                         {
                             bool hasBattery = false;
-                            if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> nonEquippedScooters, containedTag: Tags.MobileBattery, conditionPercentage: 1, requireEquipped: false))
+                            if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> nonEquippedScootersWithBattery, containedTag: Tags.MobileBattery, conditionPercentage: 1, requireEquipped: false))
                             {
-                                // Non-equipped scooter with a battery
-                                scooter = nonEquippedScooters.FirstOrDefault();
+                                scooter = nonEquippedScootersWithBattery.FirstOrDefault();
                                 hasBattery = true;
                             }
-                            else if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> _nonEquippedScooters, requireEquipped: false))
+                            else if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> nonEquippedScootersWithoutBattery, requireEquipped: false))
                             {
-                                // Non-equipped scooter without a battery
-                                scooter = _nonEquippedScooters.FirstOrDefault();
+                                scooter = nonEquippedScootersWithoutBattery.FirstOrDefault();
                                 // Non-recursive so that the bots won't take batteries from other items. Also means that they can't find batteries inside containers. Not sure how to solve this.
                                 hasBattery = HumanAIController.HasItem(character, Tags.MobileBattery, out _, requireEquipped: false, conditionPercentage: 1, recursive: false);
                             }
@@ -518,8 +605,7 @@ namespace Barotrauma
                         }
                         if (!useScooter)
                         {
-                            // Unequip
-                            character.Inventory.TryPutItem(scooter, character, CharacterInventory.AnySlot);
+                            character.TryPutItemInAnySlot(scooter);
                         }
                     }
                 }
@@ -663,7 +749,10 @@ namespace Barotrauma
 
         private bool useScooter;
         private float checkScooterTimer;
-        private readonly float checkScooterTime = 0.5f;
+        private const float CheckScooterTime = 0.5f;
+        
+        private float checkExoSuitTimer;
+        private const float CheckExoSuitTime = 2.0f;
 
         public Hull GetTargetHull() => GetTargetHull(Target);
 
@@ -750,6 +839,11 @@ namespace Barotrauma
                             // Going through a hatch
                             return false;
                         }
+                        if (Target is Item targetItem && targetItem.GetComponent<Pickable>() == null)
+                        {
+                            // Targeting a static item, such as a reactor or a controller -> Don't complete, until we are no longer climbing.
+                            return false;
+                        }
                     }
                 }
                 if (!AlwaysUseEuclideanDistance && !character.AnimController.InWater)
@@ -764,9 +858,8 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific()
+        protected override bool CheckObjectiveState()
         {
-            if (IsCompleted) { return true; }
             // First check the distance and then if can interact (heaviest)
             if (Target == null)
             {
@@ -849,6 +942,36 @@ namespace Barotrauma
             {
                 pathSteering.ResetPath();
             }
+        }
+        
+        public bool ShouldRun(bool run)
+        {
+            if (run && objectiveManager.ForcedOrder == this && IsWaitOrder && !character.IsOnPlayerTeam)
+            {
+                // NPCs with a wait order don't run.
+                run = false;
+            }
+            else if (Target != null)
+            {
+                if (character.CurrentHull == null)
+                {
+                    run = Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition) > 300 * 300;
+                }
+                else
+                {
+                    float yDiff = Target.WorldPosition.Y - character.WorldPosition.Y;
+                    if (Math.Abs(yDiff) > 100)
+                    {
+                        run = true;
+                    }
+                    else
+                    {
+                        float xDiff = Target.WorldPosition.X - character.WorldPosition.X;
+                        run = Math.Abs(xDiff) > 500;
+                    }
+                }
+            }
+            return run;
         }
     }
 }

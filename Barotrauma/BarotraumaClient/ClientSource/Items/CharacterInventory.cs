@@ -84,7 +84,7 @@ namespace Barotrauma
             get { return layout; }
             set
             {
-                if (layout == value) return;
+                if (layout == value) { return; }
                 layout = value;
                 SetSlotPositions(layout);
             }
@@ -259,8 +259,8 @@ namespace Barotrauma
             int spacing = GUI.IntScale(5);
 
             SlotSize = (SlotSpriteSmall.size * UIScale * GUI.AspectRatioAdjustment).ToPoint();
-            int bottomOffset = SlotSize.Y + spacing * 2 + ContainedIndicatorHeight;
-            int personalSlotY = GameMain.GraphicsHeight - bottomOffset * 2 - spacing * 2 - (int)(UnequippedIndicator.size.Y * UIScale);
+            int bottomOffset = GetBottomOffset(multiplier: 2);
+            int personalSlotY = GetVerticalOffsetFromBottom(multiplier: 2);
 
             if (visualSlots == null) { CreateSlots(); }
             if (visualSlots.None()) { return; }
@@ -353,7 +353,15 @@ namespace Barotrauma
                 case Layout.Left:
                     {
                         int x = HUDLayoutSettings.InventoryAreaLower.X;
+                        if (!GUI.IsUltrawide && GUI.IsHUDScaled)
+                        {
+                            // On non-ultra-wide aspect ratios, the inventories can easily overlap with each other, if there's any scaling.
+                            // So let's offset the other inventory to the left.
+                            const float margin = 100;
+                            x -= HUDLayoutSettings.ChatBoxArea.Width - (int)margin;
+                        }
                         int personalSlotX = x;
+                        float y = GameMain.GraphicsHeight - bottomOffset;
 
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
@@ -366,7 +374,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                                SlotPositions[i] = new Vector2(x, y);
                                 x += visualSlots[i].Rect.Width + spacing;
                             }
                         }
@@ -380,7 +388,7 @@ namespace Barotrauma
                                 continue;
                             }
                             if (!HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
-                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                            SlotPositions[i] = new Vector2(x, y);
                             x += visualSlots[i].Rect.Width + spacing;
                         }
                     }
@@ -446,6 +454,9 @@ namespace Barotrauma
                     visualSlots[i].DrawOffset = Vector2.Zero;
                 }
             }
+            
+            int GetBottomOffset(int multiplier) => SlotSize.Y + spacing * multiplier + ContainedIndicatorHeight;
+            int GetVerticalOffsetFromBottom(int multiplier) => GameMain.GraphicsHeight - (GetBottomOffset(multiplier) + spacing) * multiplier - (int)(UnequippedIndicator.size.Y * UIScale);
         }
 
         protected override void ControlInput(Camera cam)

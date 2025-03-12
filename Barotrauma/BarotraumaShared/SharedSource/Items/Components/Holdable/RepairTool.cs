@@ -248,7 +248,7 @@ namespace Barotrauma.Items.Components
                 var barrelHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(rayStartWorld), item.CurrentHull, useWorldCoordinates: true);
                 if (barrelHull != null && barrelHull != item.CurrentHull)
                 {
-                    if (MathUtils.GetLineRectangleIntersection(ConvertUnits.ToDisplayUnits(sourcePos), ConvertUnits.ToDisplayUnits(rayStart), item.CurrentHull.Rect, out Vector2 hullIntersection))
+                    if (MathUtils.GetLineWorldRectangleIntersection(ConvertUnits.ToDisplayUnits(sourcePos), ConvertUnits.ToDisplayUnits(rayStart), item.CurrentHull.Rect, out Vector2 hullIntersection))
                     {
                         if (!item.CurrentHull.ConnectedGaps.Any(g => g.Open > 0.0f && Submarine.RectContains(g.Rect, hullIntersection))) 
                         { 
@@ -320,7 +320,7 @@ namespace Barotrauma.Items.Components
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepairableWall;
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepairableWall | Physics.CollisionItemBlocking;
             if (!IgnoreCharacters)
             {
                 collisionCategories |= Physics.CollisionCharacter;
@@ -654,8 +654,9 @@ namespace Barotrauma.Items.Components
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
                 return true;
             }
-            else if (targetBody.UserData is Item targetItem)
+            else if (targetBody.UserData is Barotrauma.Item or Holdable)
             {
+                Item targetItem = targetBody.UserData is Holdable holdable ? holdable.Item : (Item)targetBody.UserData;
                 if (!HitItems || !targetItem.IsInteractable(user)) { return false; }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
@@ -764,7 +765,7 @@ namespace Barotrauma.Items.Components
                 if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController humanAnim &&
                     Math.Abs(fromCharacterToLeak.X) < 100.0f && fromCharacterToLeak.Y < 0.0f && fromCharacterToLeak.Y > -150.0f)
                 {
-                    humanAnim.Crouching = true;
+                    humanAnim.Crouch();
                 }
             }
             if (!character.IsClimbing)

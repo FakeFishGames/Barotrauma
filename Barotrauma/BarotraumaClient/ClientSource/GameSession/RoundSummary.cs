@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,13 @@ namespace Barotrauma
         private float crewListAnimDelay = 0.25f;
         private float missionIconAnimDelay;
 
-        private const float jobColumnWidthPercentage = 0.11f;
-        private const float characterColumnWidthPercentage = 0.44f;
-        private const float statusColumnWidthPercentage = 0.45f;
+        private const float JobColumnWidthPercentage = 0.05f;
+        private const float CharacterColumnWidthPercentage = 0.35f;
+        private const float StatusColumnWidthPercentage = 0.25f;
+        private const float KillColumnWidthPercentage = 0.05f;
+        private const float DeathColumnWidthPercentage = 0.05f;
 
-        private int jobColumnWidth, characterColumnWidth, statusColumnWidth;
+        private int jobColumnWidth, characterColumnWidth, statusColumnWidth, killColumnWidth, deathColumnWidth;
 
         private readonly List<Mission> selectedMissions;
         private readonly Location startLocation, endLocation;
@@ -109,6 +112,16 @@ namespace Barotrauma
                     CombatMission.GetTeamName(CharacterTeamType.Team2), textAlignment: Alignment.TopLeft, font: GUIStyle.SubHeadingFont);
                 crewHeader2.RectTransform.MinSize = new Point(0, GUI.IntScale(crewHeader2.Rect.Height * 2.0f));
                 CreateCrewList(crewContent2, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID == CharacterTeamType.Team2), traitorResults);
+
+                if (CombatMission.Winner != CharacterTeamType.None)
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), crewHeader.RectTransform),
+                        TextManager.Get(CombatMission.Winner == CharacterTeamType.Team1 ? "pvpmode.victory" : "pvpmode.defeat"), textAlignment: Alignment.TopRight, font: GUIStyle.SubHeadingFont,
+                        textColor: CombatMission.Winner == CharacterTeamType.Team1 ? GUIStyle.Green : GUIStyle.Red);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), crewHeader2.RectTransform),
+                        TextManager.Get(CombatMission.Winner == CharacterTeamType.Team2 ? "pvpmode.victory" : "pvpmode.defeat"), textAlignment: Alignment.TopRight, font: GUIStyle.SubHeadingFont,
+                        textColor: CombatMission.Winner == CharacterTeamType.Team2 ? GUIStyle.Green : GUIStyle.Red);
+                }
             }
 
             //header -------------------------------------------------------------------------------
@@ -238,11 +251,12 @@ namespace Barotrauma
                     textContent,
                     mission.Difficulty ?? 0,
                     mission.Prefab.Icon, mission.Prefab.IconColor,
+                    mission.GetDifficultyToolTipText(),
                     out GUIImage missionIcon);
 
                 if (selectedMissions.Contains(mission))
                 {
-                    UpdateMissionStateIcon(mission.Completed, missionIcon, animDelay);
+                    UpdateMissionStateIcon(mission is CombatMission combatMission ? CombatMission.IsInWinningTeam(GameMain.Client?.Character) : mission.Completed, missionIcon, animDelay);
                     animDelay += 0.25f;
                 }
             }
@@ -429,13 +443,14 @@ namespace Barotrauma
                 textContent,
                 difficultyIconCount: 0,
                 icon, GUIStyle.Red,
+                difficultyTooltipText: null,
                 out GUIImage missionIcon);
             UpdateMissionStateIcon(traitorResults.VotedCorrectTraitor, missionIcon, iconAnimDelay);
             return content;
         }
 
         public static GUIComponent CreateMissionEntry(GUIComponent parent, LocalizedString header, List<LocalizedString> textContent, int difficultyIconCount, 
-            Sprite icon, Color iconColor, out GUIImage missionIcon)
+            Sprite icon, Color iconColor, RichString difficultyTooltipText, out GUIImage missionIcon)
         {
             int spacing = GUI.IntScale(5);
 
@@ -486,7 +501,8 @@ namespace Barotrauma
             {
                 difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(new Point(missionTextGroup.Rect.Width, defaultLineHeight), parent: missionTextGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
                 {
-                    AbsoluteSpacing = 1
+                    AbsoluteSpacing = 1,
+                    CanBeFocused = true
                 };
                 difficultyIndicatorGroup.RectTransform.MinSize = new Point(0, defaultLineHeight);
                 var difficultyColor = Mission.GetDifficultyColor(difficultyIconCount);
@@ -494,8 +510,8 @@ namespace Barotrauma
                 {
                     new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest), "DifficultyIndicator", scaleToFit: true)
                     {
-                        CanBeFocused = false,
-                        Color = difficultyColor
+                        Color = difficultyColor,
+                        ToolTip = difficultyTooltipText
                     };
                 }
             }
@@ -567,7 +583,11 @@ namespace Barotrauma
             LocalizedString locationName = Submarine.MainSub is { AtEndExit: true } ? endLocation?.DisplayName : startLocation?.DisplayName;
 
             string textTag;
-            if (gameOver)
+            if (gameMode is PvPMode)
+            {
+                textTag = "RoundSummaryRoundHasEnded";
+            }
+            else if (gameOver)
             {
                 textTag = "RoundSummaryGameOver";
             }
@@ -596,7 +616,14 @@ namespace Barotrauma
                         textTag = "RoundSummaryReturnToEmptyLocation";
                         break;
                     default:
-                        textTag = Submarine.MainSub.AtEndExit ? "RoundSummaryProgress" : "RoundSummaryReturn";
+                        if (Submarine.MainSub == null)
+                        {
+                            textTag = "RoundSummaryRoundHasEnded";
+                        }
+                        else
+                        {
+                            textTag = Submarine.MainSub.AtEndExit ? "RoundSummaryProgress" : "RoundSummaryReturn";
+                        }
                         break;
                 }
             }
@@ -628,26 +655,34 @@ namespace Barotrauma
         {
             var headerFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform, Anchor.TopCenter, minSize: new Point(0, (int)(30 * GUI.Scale))) { }, isHorizontal: true)
             {
-                AbsoluteSpacing = 2
+                AbsoluteSpacing = 2,
+                Stretch = true
             };
-            GUIButton jobButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform), TextManager.Get("tabmenu.job"), style: "GUIButtonSmallFreeScale");
-            GUIButton characterButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale");
-            GUIButton statusButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform), TextManager.Get("label.statuslabel"), style: "GUIButtonSmallFreeScale");
+            GUIButton jobButton = new GUIButton(new RectTransform(new Vector2(JobColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("tabmenu.job"), style: "GUIButtonSmallFreeScale");
+            GUIButton characterButton = new GUIButton(new RectTransform(new Vector2(CharacterColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale");
 
-            float sizeMultiplier = 1.0f;
-            //sizeMultiplier = (headerFrame.Rect.Width - headerFrame.AbsoluteSpacing * (headerFrame.CountChildren - 1)) / (float)headerFrame.Rect.Width;
+            if (gameMode is PvPMode && GameMain.NetworkMember?.RespawnManager != null)
+            {
+                var killButton = new GUIButton(new RectTransform(new Vector2(KillColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("killcount"), style: "GUIButtonSmallFreeScale");
+                killColumnWidth = killButton.Rect.Width;
+                var deathButton = new GUIButton(new RectTransform(new Vector2(DeathColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("deathcount"), style: "GUIButtonSmallFreeScale");
+                deathColumnWidth = deathButton.Rect.Width;
+            }
+            else
+            {
+                GUIButton statusButton = new GUIButton(new RectTransform(new Vector2(StatusColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("label.statuslabel"), style: "GUIButtonSmallFreeScale");
+                statusColumnWidth = statusButton.Rect.Width;
+            }
 
-            jobButton.RectTransform.RelativeSize = new Vector2(jobColumnWidthPercentage * sizeMultiplier, 1f);
-            characterButton.RectTransform.RelativeSize = new Vector2(characterColumnWidthPercentage * sizeMultiplier, 1f);
-            statusButton.RectTransform.RelativeSize = new Vector2(statusColumnWidthPercentage * sizeMultiplier, 1f);
-
-            jobButton.TextBlock.Font = characterButton.TextBlock.Font = statusButton.TextBlock.Font = GUIStyle.HotkeyFont;
-            jobButton.CanBeFocused = characterButton.CanBeFocused = statusButton.CanBeFocused = false;
-            jobButton.TextBlock.ForceUpperCase = characterButton.TextBlock.ForceUpperCase = statusButton.ForceUpperCase = ForceUpperCase.Yes;
+            foreach (var btn in headerFrame.GetAllChildren<GUIButton>())
+            {
+                btn.TextBlock.Font = GUIStyle.HotkeyFont;
+                btn.ForceUpperCase = ForceUpperCase.Yes;
+                btn.CanBeFocused = false;
+            }
 
             jobColumnWidth = jobButton.Rect.Width;
             characterColumnWidth = characterButton.Rect.Width;
-            statusColumnWidth = statusButton.Rect.Width;
 
             GUIListBox crewList = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform))
             {
@@ -658,8 +693,28 @@ namespace Barotrauma
 
             headerFrame.RectTransform.RelativeSize -= new Vector2(crewList.ScrollBar.RectTransform.RelativeSize.X, 0.0f);
 
+            killCounts.Clear();
+            if (GameMain.NetworkMember != null)
+            {
+                foreach (CharacterInfo characterInfo in characterInfos)
+                {
+                    if (characterInfo == null) { continue; }
+                    Character character = characterInfo.Character;
+                    Client ownerClient = GameMain.NetworkMember.ConnectedClients.FirstOrDefault(c => c.Character == character);
+                    int killCount = 0, deathCount = 0;
+                    foreach (var mission in selectedMissions)
+                    {
+                        if (mission is not CombatMission combatMission) { continue; }
+                        killCount += ownerClient == null ? combatMission.GetBotKillCount(characterInfo) : combatMission.GetClientKillCount(ownerClient);
+                        deathCount += ownerClient == null ? combatMission.GetBotDeathCount(characterInfo) : combatMission.GetClientDeathCount(ownerClient);
+                    }
+                    killCounts[characterInfo] = killCount;
+                    deathCounts[characterInfo] = deathCount;
+                }
+            }
+
             float delay = crewListAnimDelay;
-            foreach (CharacterInfo characterInfo in characterInfos)
+            foreach (CharacterInfo characterInfo in characterInfos.OrderByDescending(ci => killCounts.GetValueOrDefault(ci)))
             {
                 if (characterInfo == null) { continue; }
                 CreateCharacterElement(characterInfo, crewList, traitorResults, delay);
@@ -669,6 +724,10 @@ namespace Barotrauma
 
             return crewList;
         }
+
+        private readonly Dictionary<CharacterInfo, int> killCounts = new();
+        private readonly Dictionary<CharacterInfo, int> deathCounts = new();
+
 
         private void CreateCharacterElement(CharacterInfo characterInfo, GUIListBox listBox, TraitorManager.TraitorResults? traitorResults, float animDelay)
         {
@@ -701,7 +760,7 @@ namespace Barotrauma
             Character character = characterInfo.Character;
             if (character == null || character.IsDead)
             {
-                if (character == null && characterInfo.IsNewHire && characterInfo.CauseOfDeath == null)
+                if (character == null && (characterInfo.IsNewHire || characterInfo.BotStatus == BotStatus.ActiveService) && characterInfo.CauseOfDeath == null)
                 {
                     statusText = TextManager.Get("CampaignCrew.NewHire");
                     statusColor = GUIStyle.Blue;
@@ -741,8 +800,21 @@ namespace Barotrauma
                 }
             }
 
-            GUITextBlock statusBlock = new GUITextBlock(new RectTransform(new Point(statusColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                ToolBox.LimitString(statusText.Value, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: statusColor);
+            if (gameMode is PvPMode && GameMain.NetworkMember?.RespawnManager != null)
+            {
+                new GUITextBlock(new RectTransform(new Point(killColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
+                    killCounts.GetValueOrDefault(characterInfo).ToString(), textAlignment: Alignment.Center);
+                new GUITextBlock(new RectTransform(new Point(deathColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
+                    deathCounts.GetValueOrDefault(characterInfo).ToString(), textAlignment: Alignment.Center);
+            }
+            else
+            {
+                GUITextBlock statusBlock = new GUITextBlock(new RectTransform(new Point(statusColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
+                    ToolBox.LimitString(statusText.Value, GUIStyle.SmallFont, statusColumnWidth), textAlignment: Alignment.Center, textColor: statusColor, font: GUIStyle.SmallFont)
+                {
+                    ToolTip = statusText.Value
+                };
+            }
 
             frame.FadeIn(animDelay, 0.15f);
             foreach (var child in frame.GetAllChildren())

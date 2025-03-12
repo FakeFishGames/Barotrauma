@@ -1,0 +1,2 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CrawlerSwimFast footangle="0" UseSineMovement="False" Flip="True" FlipCooldown="1" FlipDelay="0.2" Mirror="False" MirrorLerp="True" WaveAmplitude="17.957405" WaveLength="36.39117" RotateTowardsMovement="True" TailTorque="250" TailTorqueMultiplier="1" FootAngles="10: 1.580441,15: 0,11: 0" TailAngle="NaN" SteerTorque="10" LegTorque="25" MovementSpeed="8" CycleSpeed="5" HeadAngle="151" TorsoAngle="59" HeadTorque="25" TorsoTorque="25" FootTorque="10" AnimationType="SwimFast" ArmIKStrength="1" HandIKStrength="1" type="Crawler" />

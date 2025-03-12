@@ -1,5 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -13,6 +12,7 @@ namespace Barotrauma.Lights
 
         public readonly Submarine Submarine;
         public HashSet<ConvexHull> IsHidden = new HashSet<ConvexHull>();
+        public HashSet<ConvexHull> HasBeenVisible = new HashSet<ConvexHull>();
         public readonly List<ConvexHull> List = new List<ConvexHull>();
 
         public ConvexHullList(Submarine submarine)
@@ -443,10 +443,10 @@ namespace Barotrauma.Lights
 
         public bool Intersects(Rectangle rect)
         {
-            if (!Enabled) return false;
+            if (!Enabled) { return false; }
 
             Rectangle transformedBounds = BoundingBox;
-            if (ParentEntity != null && ParentEntity.Submarine != null)
+            if (ParentEntity is { Submarine: not null })
             {
                 transformedBounds.X += (int)ParentEntity.Submarine.Position.X;
                 transformedBounds.Y += (int)ParentEntity.Submarine.Position.Y;

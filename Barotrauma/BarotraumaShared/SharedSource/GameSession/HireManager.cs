@@ -58,7 +58,8 @@ namespace Barotrauma
             void AddCharacter(JobPrefab job)
             {
                 if (job == null) { return; }
-                int variant = Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient);
+                //no need for synced rand, these only generate ones and are then included in the campaign save
+                int variant = Rand.Range(0, job.Variants, Rand.RandSync.Unsynced);
                 AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant));
             }
         }
@@ -73,7 +74,8 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Couldn't create a hireable for the location: character prefab \"{character.NPCIdentifier}\" not found in the NPC set \"{character.NPCSetIdentifier}\".");
                     continue;
                 }
-                var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
+                //no need for synced rand, these only generate ones and are then included in the campaign save
+                var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.Unsynced);
                 characterInfo.MinReputationToHire = (faction.Identifier, character.MinReputation);
                 AvailableCharacters.Add(characterInfo);
             }

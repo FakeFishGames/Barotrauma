@@ -18,7 +18,7 @@ namespace FarseerPhysics.Common.Maths
 
         public float Phase
         {
-            get { return (float)Math.Atan2(Imaginary, Real); }
+            get { return MathF.Atan2(Imaginary, Real); }
             set 
             {
                 if (value == 0)
@@ -26,14 +26,14 @@ namespace FarseerPhysics.Common.Maths
                     this = Complex.One;
                     return;
                 }
-                this.Real      = (float)Math.Cos(value);
-                this.Imaginary = (float)Math.Sin(value);
+                this.Real      = MathF.Cos(value);
+                this.Imaginary = MathF.Sin(value);
             }
         }
 
         public float Magnitude
         {
-            get { return (float)Math.Round(Math.Sqrt(MagnitudeSquared())); }
+            get { return MathF.Round(MathF.Sqrt(MagnitudeSquared())); }
         }
 
 
@@ -49,8 +49,8 @@ namespace FarseerPhysics.Common.Maths
                 return Complex.One;
 
             return new Complex(
-                (float)Math.Cos(angle),
-                (float)Math.Sin(angle));
+                MathF.Cos(angle),
+                MathF.Sin(angle));
         }        
 
         public void Conjugate()

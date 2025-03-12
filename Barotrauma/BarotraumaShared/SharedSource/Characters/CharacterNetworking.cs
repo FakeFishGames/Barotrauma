@@ -14,24 +14,29 @@ namespace Barotrauma
 
         public readonly AnimController.Animation Animation;
 
-        public CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, float time, Direction dir, Character selectedCharacter, Item selectedItem, Item selectedSecondaryItem, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, rotation, velocity, angularVelocity, 0, time, dir, selectedCharacter, selectedItem, selectedSecondaryItem, animation)
+        public bool IgnorePlatforms;
+
+        public readonly Vector2 TargetMovement;
+
+        public CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, float time, Direction dir, Character selectedCharacter, Item selectedItem, Item selectedSecondaryItem, Vector2 targetMovement, AnimController.Animation animation = AnimController.Animation.None, bool ignorePlatforms = false)
+            : this(pos, rotation, velocity, angularVelocity, 0, time, dir, selectedCharacter, selectedItem, selectedSecondaryItem, targetMovement, animation, ignorePlatforms)
         {
         }
 
-        public CharacterStateInfo(Vector2 pos, float? rotation, UInt16 ID, Direction dir, Character selectedCharacter, Item selectedItem, Item selectedSecondaryItem, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, rotation, Vector2.Zero, 0.0f, ID, 0.0f, dir, selectedCharacter, selectedItem, selectedSecondaryItem, animation)
+        public CharacterStateInfo(Vector2 pos, float? rotation, UInt16 ID, Direction dir, Character selectedCharacter, Item selectedItem, Item selectedSecondaryItem, Vector2 targetMovement, AnimController.Animation animation = AnimController.Animation.None, bool ignorePlatforms = false)
+            : this(pos, rotation, Vector2.Zero, 0.0f, ID, 0.0f, dir, selectedCharacter, selectedItem, selectedSecondaryItem, targetMovement, animation, ignorePlatforms)
         {
         }
 
-        protected CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, UInt16 ID, float time, Direction dir, Character selectedCharacter, Item selectedItem, Item selectedSecondaryItem, AnimController.Animation animation = AnimController.Animation.None)
+        protected CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, UInt16 ID, float time, Direction dir, Character selectedCharacter, Item selectedItem, Item selectedSecondaryItem, Vector2 targetMovement, AnimController.Animation animation = AnimController.Animation.None, bool ignorePlatforms = false)
             : base(pos, rotation, velocity, angularVelocity, ID, time)
         {
             Direction = dir;
             SelectedCharacter = selectedCharacter;
             SelectedItem = selectedItem;
             SelectedSecondaryItem = selectedSecondaryItem;
-
+            IgnorePlatforms = ignorePlatforms;
+            TargetMovement = targetMovement;
             Animation = animation;
         }
     }

@@ -73,6 +73,8 @@ namespace Barotrauma
         public Level.Tunnel Tunnel;
         public RuinGeneration.Ruin Ruin;
 
+        public Level.Cave Cave;
+
         public SpawnType SpawnType
         {
             get { return spawnType; }
@@ -226,7 +228,7 @@ namespace Barotrauma
                     door.Body.Enabled = true;
                 }
             }
-            bool isFlooded = submarine.Info.IsRuin || submarine.Info.Type == SubmarineType.OutpostModule && submarine.Info.OutpostModuleInfo.ModuleFlags.Contains("ruin".ToIdentifier());
+            bool isRuin = submarine.Info.ShouldBeRuin;
             float diffFromHullEdge = 50;
             float minDist = 100.0f;
             float heightFromFloor = 110.0f;
@@ -235,7 +237,7 @@ namespace Barotrauma
             var removals = new HashSet<WayPoint>();
             foreach (Hull hull in Hull.HullList)
             {
-                if (isFlooded)
+                if (isRuin)
                 {
                     diffFromHullEdge = 75;
                     var hullWaypoints = new List<WayPoint>();
@@ -405,7 +407,7 @@ namespace Barotrauma
             }
 
             float outSideWaypointInterval = 100.0f;
-            if (!isFlooded && submarine.Info.Type != SubmarineType.OutpostModule)
+            if (!isRuin && submarine.Info.Type != SubmarineType.OutpostModule)
             {
                 List<(WayPoint, int)> outsideWaypoints = new List<(WayPoint, int)>();
 
@@ -732,7 +734,7 @@ namespace Barotrauma
             {
                 if (gap.IsHorizontal)
                 {
-                    if ( isFlooded)
+                    if ( isRuin)
                     {
                         // Too small to swim through
                         if (gap.Rect.Height < 50) { continue; }
@@ -744,13 +746,13 @@ namespace Barotrauma
                     }
 
                     Vector2 pos = new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height + heightFromFloor);
-                    if (isFlooded)
+                    if (isRuin)
                     {
                         pos.Y = gap.Rect.Y - gap.Rect.Height / 2;
                     }
                     var wayPoint = new WayPoint(pos, SpawnType.Path, submarine, gap);
                     // The closest waypoint can be quite far if the gap is at an exterior door.
-                    Vector2 tolerance = gap.IsRoomToRoom && !isFlooded ? new Vector2(150, 70) : new Vector2(1000, 1000);
+                    Vector2 tolerance = gap.IsRoomToRoom && !isRuin ? new Vector2(150, 70) : new Vector2(1000, 1000);
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
                         WayPoint closest = wayPoint.FindClosest(dir, horizontalSearch: true, tolerance, gap.ConnectedDoor?.Body.FarseerBody);
@@ -763,7 +765,7 @@ namespace Barotrauma
                 else
                 {
                     // Create waypoints on vertical gaps on the outer walls, also hatches.
-                    if (!isFlooded && (gap.IsRoomToRoom || gap.linkedTo.None(l => l is Hull))) { continue; }
+                    if (!isRuin && (gap.IsRoomToRoom || gap.linkedTo.None(l => l is Hull))) { continue; }
                     // Too small to swim through
                     if (gap.Rect.Width < 50.0f) { continue; }
                     Vector2 pos = new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height / 2);
@@ -772,14 +774,14 @@ namespace Barotrauma
                     var wayPoint = new WayPoint(pos, SpawnType.Path, submarine, gap);
                     Hull connectedHull = (Hull)gap.linkedTo.First(l => l is Hull);
                     int dir = Math.Sign(connectedHull.Position.Y - gap.Position.Y);
-                    WayPoint closest = wayPoint.FindClosest(dir, horizontalSearch: false, isFlooded ? new Vector2(500, 500) : new Vector2(50, 100));
+                    WayPoint closest = wayPoint.FindClosest(dir, horizontalSearch: false, isRuin ? new Vector2(500, 500) : new Vector2(50, 100));
                     if (closest != null)
                     {
                         wayPoint.ConnectTo(closest);
                     }
-                    if (isFlooded)
+                    if (isRuin)
                     {
-                        closest = wayPoint.FindClosest(-dir, horizontalSearch: false, isFlooded ? new Vector2(500, 500) : new Vector2(50, 100));
+                        closest = wayPoint.FindClosest(-dir, horizontalSearch: false, isRuin ? new Vector2(500, 500) : new Vector2(50, 100));
                         if (closest != null)
                         {
                             wayPoint.ConnectTo(closest);
@@ -944,7 +946,13 @@ namespace Barotrauma
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
         {
             List<WayPoint> subWayPoints = WayPointList.FindAll(wp => wp.Submarine == submarine);
-            subWayPoints.Shuffle();
+            if (submarine.ForcedOutpostModuleWayPoints != null && submarine.ForcedOutpostModuleWayPoints.Any())
+            {
+                // narrow selection of spawn points to within the module
+                subWayPoints = new List<WayPoint>(submarine.ForcedOutpostModuleWayPoints);
+                submarine.ForcedOutpostModuleWayPoints.Clear();
+            }
+            subWayPoints.Shuffle(Rand.RandSync.Unsynced);
 
             List<WayPoint> unassignedWayPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human);
 
@@ -1001,6 +1009,54 @@ namespace Barotrauma
             }
 
             return assignedWayPoints;
+        }
+
+        /// <summary>
+        /// Find appropriate spawnpoints in the outpost for the player crew (preferring job-specific spawnpoints in the initial/airlock module normally, and job and team -specific spawnpoints in the PvP mode).
+        /// </summary>
+        public static WayPoint[] SelectOutpostSpawnPoints(List<CharacterInfo> crew, CharacterTeamType teamID)
+        {
+            List<WayPoint> potentialSpawnPoints = WayPointList.FindAll(wp =>
+                wp.SpawnType == SpawnType.Human &&
+                wp.Submarine == Level.Loaded.StartOutpost);
+            if (GameMain.GameSession.GameMode is PvPMode)
+            {
+                Identifier teamSpawnTag = ("deathmatch" + teamID).ToIdentifier();
+                if (potentialSpawnPoints.Any(wp => wp.Tags.Contains(teamSpawnTag)))
+                {
+                    potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.Tags.Contains(teamSpawnTag));
+                }
+            }
+            else
+            {
+                potentialSpawnPoints = potentialSpawnPoints.FindAll(wp =>
+                    wp.CurrentHull?.OutpostModuleTags != null &&
+                    wp.CurrentHull.OutpostModuleTags.Contains(Barotrauma.Tags.Airlock));
+            }
+            if (potentialSpawnPoints.None()) { return potentialSpawnPoints.ToArray(); }
+
+            List<WayPoint> spawnPoints = new List<WayPoint>();
+            for (int i = 0; i < crew.Count; i++)
+            {
+                var spawnPointsForJob = potentialSpawnPoints.Where(wp => wp.AssignedJob == crew[i].Job.Prefab);
+                var spawnPointsForAnyJob = potentialSpawnPoints.Where(wp => wp.AssignedJob == null);
+                if (spawnPointsForJob.Any())
+                {
+                    //prefer job-specific spawnpoints
+                    spawnPoints.Add(spawnPointsForJob.GetRandomUnsynced());
+                }
+                else if (spawnPointsForAnyJob.Any())
+                {
+                    //2nd option: a non-job-specific spawnpoint 
+                    spawnPoints.Add(spawnPointsForAnyJob.GetRandomUnsynced());
+                }
+                else
+                {
+                    //last option: whatever spawnpoint (no matter if it's not for this job)
+                    spawnPoints.Add(potentialSpawnPoints.GetRandomUnsynced());
+                }
+            }
+            return spawnPoints.ToArray();
         }
 
         public void FindHull()

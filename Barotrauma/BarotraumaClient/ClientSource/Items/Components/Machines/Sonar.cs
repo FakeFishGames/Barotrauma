@@ -144,6 +144,7 @@ namespace Barotrauma.Items.Components
         private bool isConnectedToSteering;
 
         private static LocalizedString caveLabel;
+        private static LocalizedString enemyLabel;
 
 
         [Serialize(false, IsPropertySaveable.Yes)]
@@ -163,6 +164,8 @@ namespace Barotrauma.Items.Components
             caveLabel =
                 TextManager.Get("cave").Fallback( 
                 TextManager.Get("missiontype.nest"));
+
+            enemyLabel = TextManager.Get("enemysubmarine");
 
             foreach (var subElement in element.Elements())
             {
@@ -216,8 +219,9 @@ namespace Barotrauma.Items.Components
             Vector2 size = isConnectedToSteering ? controlBoxSize : new Vector2(0.46f, 0.4f);
 
             controlContainer = new GUIFrame(new RectTransform(size, GuiFrame.RectTransform, Anchor.BottomLeft), "ItemUI");
-            if (!isConnectedToSteering && !GUI.IsFourByThree())
+            if (!isConnectedToSteering && GUI.AspectRatioDifference <= 0)
             {
+                // In wider than 4:3 aspect ratio, we'll limit the max size.
                 controlContainer.RectTransform.MaxSize = new Point((int)(380 * GUI.xScale), (int)(300 * GUI.yScale));
             }
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
@@ -1019,6 +1023,38 @@ namespace Barotrauma.Items.Components
                         cave.StartPos.ToVector2(), transducerCenter,
                         DisplayScale, center, DisplayRadius);
                 }
+
+                if (GameMain.NetworkMember is { } networkMember && GameMain.GameSession?.GameMode is PvPMode)
+                {
+                    if (networkMember.ServerSettings.TrackOpponentInPvP
+                        && Submarine.MainSubs[0] is { } coalitionSub
+                        && Submarine.MainSubs[1] is { } separatistSub
+                        && Character.Controlled is { } player)
+                    {
+                        Submarine whichSubToDraw = player.TeamID switch
+                        {
+                            CharacterTeamType.Team1 => separatistSub,
+                            CharacterTeamType.Team2 => coalitionSub,
+                            _                       => null
+                        };
+
+                        if (whichSubToDraw != null)
+                        {
+                            DrawOffsetMarker(spriteBatch,
+                                       enemyLabel.Value,
+                                       Tags.Submarine,
+                                       Tags.Enemy,
+                                       whichSubToDraw.WorldPosition,
+                                       transducerCenter,
+                                       distanceThresholds: new Range<float>(start: MetersToUnits(150), end: MetersToUnits(1600)),
+                                       offset: new Range<float>(start: MetersToUnits(100), end: MetersToUnits(400)),
+                                       minOffset: MetersToUnits(10));
+
+                            static float MetersToUnits(float m)
+                                => m / Physics.DisplayToRealWorldRatio;
+                        }
+                    }
+                }
             }
 
             int missionIndex = 0;
@@ -1042,7 +1078,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (HasMineralScanner && UseMineralScanner && CurrentMode == Mode.Active && MineralClusters != null &&
-                (item.CurrentHull == null || !DetectSubmarineWalls))
+                (item.CurrentHull == null || !DetectSubmarineWalls) &&
+                HasPower)
             {
                 foreach (var c in MineralClusters)
                 {
@@ -1076,7 +1113,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!sub.ShowSonarMarker) { continue; }
                 if (connectedSubs.Contains(sub)) { continue; }
-                if (Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                if (sub.IsAboveLevel) { continue; }
 
                 if (item.Submarine != null || Character.Controlled != null)
                 {
@@ -1185,7 +1222,7 @@ namespace Barotrauma.Items.Components
 
             foreach (DockingPort dockingPort in DockingPort.List)
             {
-                if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                if (dockingPort.Item.Submarine.IsAboveLevel) { continue; }
                 if (dockingPort.Item.IsHidden) { continue; }
                 if (dockingPort.Item.Submarine == null) { continue; }
                 if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
@@ -1198,8 +1235,8 @@ namespace Barotrauma.Items.Components
 
                 //don't show the docking ports of the opposing team on the sonar
                 if (item.Submarine != null && 
-                    item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
-                    dockingPort.Item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                    !item.Submarine.IsRespawnShuttle &&
+                    !dockingPort.Item.Submarine.IsRespawnShuttle &&
                     !dockingPort.Item.Submarine.Info.IsOutpost &&
                     !dockingPort.Item.Submarine.Info.IsBeacon)
                 {
@@ -1792,8 +1829,47 @@ namespace Barotrauma.Items.Components
             sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f * blip.Alpha, sonarBlip.Origin, 0, scale, SpriteEffects.None, 0);
         }
 
+        /// <summary>
+        /// Used in DrawOffsetMarker to cache the randomized location of the marker
+        /// </summary>
+        private readonly Dictionary<Identifier, CachedLocation> cachedLocations = new Dictionary<Identifier, CachedLocation>();
+
+        private void DrawOffsetMarker(SpriteBatch spriteBatch, string label, Identifier iconIdentifier, Identifier targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, Range<float> distanceThresholds, Range<float> offset, float minOffset)
+        {
+            Vector2 pos;
+
+            if (!cachedLocations.TryGetValue(targetIdentifier, out CachedLocation cachedLocation))
+            {
+                cachedLocation = CreateCachedLocation();
+                cachedLocations.Add(targetIdentifier, cachedLocation);
+                pos = cachedLocation.Location;
+            }
+            else
+            {
+                if (Timing.TotalTime > cachedLocation.RecalculationTime)
+                {
+                    cachedLocation = CreateCachedLocation();
+                    cachedLocations[targetIdentifier] = cachedLocation;
+                }
+
+                pos = cachedLocation.Location;
+            }
+
+            DrawMarker(spriteBatch, label, iconIdentifier, targetIdentifier, pos, transducerPosition, DisplayScale, center, DisplayRadius);
+
+            CachedLocation CreateCachedLocation()
+            {
+                float distance = Vector2.Distance(worldPosition, transducerPosition);
+
+                float maxOffset = MathHelper.Lerp(offset.Start, offset.End, MathHelper.Clamp((distance - distanceThresholds.Start) / (distanceThresholds.End - distanceThresholds.Start), 0.0f, 1.0f));
+
+                Vector2 randomPos = Rand.Vector(Rand.Range(minOffset, maxOffset));
+                return new CachedLocation(worldPosition + randomPos, Timing.TotalTime + Rand.Range(10.0f, 30.0f));
+            }
+        }
+
         private void DrawMarker(SpriteBatch spriteBatch, string label, Identifier iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius,
-            bool onlyShowTextOnMouseOver = false)
+                                bool onlyShowTextOnMouseOver = false)
         {
             float linearDist = Vector2.Distance(worldPosition, transducerPosition);
             float dist = linearDist;
@@ -1901,25 +1977,6 @@ namespace Barotrauma.Items.Components
                 wrappedLabel,
                 Color.LightBlue * textAlpha * alpha, Color.Black * textAlpha * 0.8f * alpha,
                 2, GUIStyle.SmallFont);
-        }
-
-        protected override void RemoveComponentSpecific()
-        {
-            base.RemoveComponentSpecific();
-            sonarBlip?.Remove();
-            pingCircle?.Remove();
-            directionalPingCircle?.Remove();
-            screenOverlay?.Remove();
-            screenBackground?.Remove();
-            lineSprite?.Remove();
-
-            foreach (var t in targetIcons.Values)
-            {
-                t.Item1.Remove();
-            }
-            targetIcons.Clear();
-
-            MineralClusters = null;
         }
 
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)

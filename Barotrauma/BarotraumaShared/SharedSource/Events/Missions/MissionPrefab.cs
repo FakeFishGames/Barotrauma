@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Networking;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -7,51 +8,41 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    [Flags]
-    public enum MissionType
-    {
-        None = 0x0,
-        Salvage = 0x1,
-        Monster = 0x2,
-        Cargo = 0x4,
-        Beacon = 0x8,
-        Nest = 0x10,
-        Mineral = 0x20,
-        Combat = 0x40,
-        AbandonedOutpost = 0x80,
-        Escort = 0x100,
-        Pirate = 0x200,
-        GoTo = 0x400,
-        ScanAlienRuins = 0x800,
-        EliminateTargets = 0x1000,
-        End = 0x2000,
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | EliminateTargets | End
-    }
-
     partial class MissionPrefab : PrefabWithUintIdentifier
     {
         public static readonly PrefabCollection<MissionPrefab> Prefabs = new PrefabCollection<MissionPrefab>();
 
-        public static readonly Dictionary<MissionType, Type> CoOpMissionClasses = new Dictionary<MissionType, Type>()
+        /// <summary>
+        /// The keys here are for backwards compatibility, tying the old mission types to the appropriate class. 
+        /// Now the mission class is defined by the name of the mission element, and the type can be any arbitrary string.
+        /// </summary>
+        public static readonly Dictionary<Identifier, Type> CoOpMissionClasses = new Dictionary<Identifier, Type>()
         {
-            { MissionType.Salvage, typeof(SalvageMission) },
-            { MissionType.Monster, typeof(MonsterMission) },
-            { MissionType.Cargo, typeof(CargoMission) },
-            { MissionType.Beacon, typeof(BeaconMission) },
-            { MissionType.Nest, typeof(NestMission) },
-            { MissionType.Mineral, typeof(MineralMission) },
-            { MissionType.AbandonedOutpost, typeof(AbandonedOutpostMission) },
-            { MissionType.Escort, typeof(EscortMission) },
-            { MissionType.Pirate, typeof(PirateMission) },
-            { MissionType.GoTo, typeof(GoToMission) },
-            { MissionType.ScanAlienRuins, typeof(ScanMission) },
-            { MissionType.EliminateTargets, typeof(EliminateTargetsMission) },
-            { MissionType.End, typeof(EndMission) }
+            { "Salvage".ToIdentifier(), typeof(SalvageMission) },
+            { "Monster".ToIdentifier(), typeof(MonsterMission) },
+            { "Cargo".ToIdentifier(), typeof(CargoMission) },
+            { "Beacon".ToIdentifier(), typeof(BeaconMission) },
+            { "Nest".ToIdentifier(), typeof(NestMission) },
+            { "Mineral".ToIdentifier(), typeof(MineralMission) },
+            { "AbandonedOutpost".ToIdentifier(), typeof(AbandonedOutpostMission) },
+            { "Escort".ToIdentifier(), typeof(EscortMission) },
+            { "Pirate".ToIdentifier(), typeof(PirateMission) },
+            { "GoTo".ToIdentifier(), typeof(GoToMission) },
+            { "ScanAlienRuins".ToIdentifier(), typeof(ScanMission) },
+            { "EliminateTargets".ToIdentifier(), typeof(EliminateTargetsMission) },
+            { "End".ToIdentifier(), typeof(EndMission) }
         };
-        public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
+
+        /// <summary>
+        /// The keys here are for backwards compatibility, tying the old mission types to the appropriate class. 
+        /// Now the mission class is defined by the name of the mission element, and the type can be any arbitrary string.
+        /// </summary>
+        public static readonly Dictionary<Identifier, Type> PvPMissionClasses = new Dictionary<Identifier, Type>()
         {
-            { MissionType.Combat, typeof(CombatMission) }
+            { "Combat".ToIdentifier(), typeof(CombatMission) }
         };
+
+        public static readonly HashSet<Identifier> HiddenMissionTypes = new HashSet<Identifier>() { "GoTo".ToIdentifier(), "End".ToIdentifier() };
 
         public class ReputationReward
         {
@@ -67,11 +58,11 @@ namespace Barotrauma
             }
         }
 
-        public static readonly HashSet<MissionType> HiddenMissionClasses = new HashSet<MissionType>() { MissionType.GoTo, MissionType.End };
-
         private readonly ConstructorInfo constructor;
 
-        public readonly MissionType Type;
+        public readonly Identifier Type;
+
+        public readonly Type MissionClass;
 
         public readonly bool MultiplayerOnly, SingleplayerOnly;
 
@@ -110,6 +101,8 @@ namespace Barotrauma
 
         public readonly int Reward;
 
+        public readonly float ExperienceMultiplier;
+
         // The titles and bodies of the popup messages during the mission, shown when the state of the mission changes. The order matters.
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
@@ -122,7 +115,21 @@ namespace Barotrauma
 
         public readonly bool AllowOtherMissionsInLevel;
 
-        public readonly bool RequireWreck, RequireRuin, RequireThalamusWreck;
+        public readonly bool RequireWreck, RequireRuin, RequireBeaconStation, RequireThalamusWreck;
+        public readonly bool SpawnBeaconStationInMiddle;
+
+        public readonly bool AllowOutpostNPCs;
+
+        public readonly Identifier ForceOutpostGenerationParameters;
+
+        public readonly RespawnMode? ForceRespawnMode;
+
+        /// <summary>
+        /// If set, the players can choose which outpost is used for the mission (selected from the outposts that have this tag). Only works in multiplayer.
+        /// </summary>
+        public readonly Identifier AllowOutpostSelectionFromTag;
+
+        public readonly bool LoadSubmarines = true;
 
         /// <summary>
         /// If enabled, locations this mission takes place in cannot change their type
@@ -157,7 +164,10 @@ namespace Barotrauma
         public class TriggerEvent
         {
             [Serialize("", IsPropertySaveable.Yes)]
-            public string EventIdentifier { get; private set; }
+            public Identifier EventIdentifier { get; private set; }
+
+            [Serialize("", IsPropertySaveable.Yes)]
+            public Identifier EventTag { get; private set; }
 
             [Serialize(0, IsPropertySaveable.Yes)]
             public int State { get; private set; }
@@ -210,15 +220,20 @@ namespace Barotrauma
             }
 
             Reward      = element.GetAttributeInt("reward", 1);
+            ExperienceMultiplier = element.GetAttributeFloat("experiencemultiplier", 1.0f);
             AllowRetry  = element.GetAttributeBool("allowretry", false);
             ShowInMenus = element.GetAttributeBool("showinmenus", true);
             ShowStartMessage = element.GetAttributeBool("showstartmessage", true);
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
-            RequireWreck = element.GetAttributeBool("requirewreck", false);
-            RequireRuin = element.GetAttributeBool("requireruin", false);
-            RequireThalamusWreck = element.GetAttributeBool("requirethalamuswreck", false);
 
+            RequireWreck = element.GetAttributeBool(nameof(RequireWreck), false);
+            RequireThalamusWreck = element.GetAttributeBool(nameof(RequireThalamusWreck), false);
+            RequireRuin = element.GetAttributeBool(nameof(RequireRuin), false);
+            RequireBeaconStation = element.GetAttributeBool(nameof(RequireBeaconStation), false);
+            SpawnBeaconStationInMiddle = element.GetAttributeBool(nameof(SpawnBeaconStationInMiddle), false);
             if (RequireThalamusWreck) { RequireWreck = true; }
+
+            LoadSubmarines = element.GetAttributeBool(nameof(LoadSubmarines), true);
 
             BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
             RequiredLocationFaction = element.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
@@ -233,6 +248,15 @@ namespace Barotrauma
             MaxLevelDifficulty = element.GetAttributeInt(nameof(MaxLevelDifficulty), MaxLevelDifficulty);
             MinLevelDifficulty = Math.Clamp(MinLevelDifficulty, 0, Math.Min(MaxLevelDifficulty, 100));
             MaxLevelDifficulty = Math.Clamp(MaxLevelDifficulty, Math.Max(MinLevelDifficulty, 0), 100);
+
+            AllowOutpostNPCs = element.GetAttributeBool(nameof(AllowOutpostNPCs), true);
+            ForceOutpostGenerationParameters = element.GetAttributeIdentifier(nameof(ForceOutpostGenerationParameters), Identifier.Empty);
+            AllowOutpostSelectionFromTag = element.GetAttributeIdentifier(nameof(AllowOutpostSelectionFromTag), Identifier.Empty);
+
+            if (element.GetAttribute(nameof(ForceRespawnMode)) != null)
+            {
+                ForceRespawnMode = element.GetAttributeEnum(nameof(ForceRespawnMode), RespawnMode.MidRound);
+            }
 
             ShowProgressBar = element.GetAttributeBool(nameof(ShowProgressBar), false);
             ShowProgressInNumbers = element.GetAttributeBool(nameof(ShowProgressInNumbers), false);
@@ -362,47 +386,23 @@ namespace Barotrauma
             Messages = messages.ToImmutableArray();
             ReputationRewards = reputationRewards.ToImmutableList();
 
-            Identifier missionTypeName = element.GetAttributeIdentifier("type", Identifier.Empty);
-            //backwards compatibility
-
-            if (missionTypeName == "outpostdestroy" || missionTypeName == "outpostrescue")
-            {
-                missionTypeName = nameof(MissionType.AbandonedOutpost).ToIdentifier();
-            }
-            else if (missionTypeName == "clearalienruins")
-            {
-                missionTypeName = nameof(MissionType.EliminateTargets).ToIdentifier();
-            }
-            
-            if (!Enum.TryParse(missionTypeName.Value, true, out Type))
-            {
-                DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
-                return;
-            }
-            if (Type == MissionType.None)
-            {
-                DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
-                return;
-            }
+            MissionClass = FindMissionClass(element);
+            Type = element.GetAttributeIdentifier(nameof(Type), Identifier.Empty);
+         
 #if DEBUG
-            if (Type == MissionType.Monster && SonarLabel.IsNullOrEmpty())
+            if (MissionClass == typeof(MonsterMission) && SonarLabel.IsNullOrEmpty())
             {
                 DebugConsole.AddWarning($"Potential error in mission prefab \"{Identifier}\" - sonar label not set.");
             }
 #endif
 
-            if (CoOpMissionClasses.ContainsKey(Type))
+            if (!LoadSubmarines && MissionClass != typeof(CombatMission))
             {
-                constructor = CoOpMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]), typeof(Submarine) });
+                DebugConsole.AddWarning($"Potential error in mission {Identifier}: Disabling submarines is only intended for combat missions taking place in an outpost, and may lead to issues in other types of missions.",
+                    contentPackage: element.ContentPackage);
             }
-            else if (PvPMissionClasses.ContainsKey(Type))
-            {
-                constructor = PvPMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]), typeof(Submarine) });
-            }
-            else
-            {
-                DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - unsupported mission type \"" + Type.ToString() + "\"");
-            }
+
+            constructor = FindMissionConstructor(element, MissionClass);
             if (constructor == null)
             {
                 DebugConsole.ThrowError($"Failed to find a constructor for the mission type \"{Type}\"!",
@@ -410,6 +410,67 @@ namespace Barotrauma
             }
 
             InitProjSpecific(element);
+        }
+
+        private Type FindMissionClass(ContentXElement element)
+        {
+            Type type;
+            Identifier typeName = element.NameAsIdentifier();
+            type = TryGetClass(typeName.RemoveFromEnd("Mission"));
+
+            if (type == null)
+            {
+                //backwards compatibility: the actual mission class used to be defined by the "type" attribute,
+                //Now the mission class is defined by the name of the mission element, and the type can be any arbitrary string,
+                //but if we failed to find the class based on the name, let's try the type attribute.
+                Identifier typeNameLegacy = (element.GetAttributeIdentifier("type", Identifier.Empty)).ToIdentifier();
+                if (typeNameLegacy == "OutpostDestroy" || typeNameLegacy == "OutpostRescue")
+                {
+                    typeNameLegacy = "AbandonedOutpost".ToIdentifier();
+                }
+                else if (typeNameLegacy == "clearalienruins")
+                {
+                    typeNameLegacy = "EliminateTargets".ToIdentifier();
+                }
+                type = TryGetClass(typeNameLegacy) ?? TryGetClass(typeNameLegacy.AppendIfMissing("Mission"));
+                if (type == null)
+                {
+                    DebugConsole.ThrowError($"Failed to find the mission type \"{typeNameLegacy}\" for the mission {Identifier}.",
+                        contentPackage: element.ContentPackage);
+                    return null;
+                }
+            }
+
+            static Type TryGetClass(Identifier typeName)
+            {
+                if (CoOpMissionClasses.TryGetValue(typeName, out Type coOpMissionClass))
+                {
+                    return coOpMissionClass;
+                }
+                else if (PvPMissionClasses.TryGetValue(typeName, out Type pvpMissionClass))
+                {
+                    return pvpMissionClass;
+                }
+                return null;
+            }
+
+            return type;
+        }
+
+        private ConstructorInfo FindMissionConstructor(ContentXElement element, Type missionClass)
+        {
+            ConstructorInfo constructor;
+            if (missionClass == null) { return null; }
+            if (missionClass != typeof(Mission) && !missionClass.IsSubclassOf(typeof(Mission))) { return null; }
+            constructor = missionClass.GetConstructor(new Type[] { typeof(MissionPrefab), typeof(Location[]), typeof(Submarine) });
+            if (constructor == null)
+            {
+                DebugConsole.ThrowError(
+                    $"Could not find the constructor of the mission type \"{missionClass}\" for the mission {Identifier}",
+                    contentPackage: element.ContentPackage);
+                return null;
+            }
+            return constructor;
         }
         
         partial void InitProjSpecific(ContentXElement element);
@@ -424,7 +485,7 @@ namespace Barotrauma
                 }
                 return
                     AllowedLocationTypes.Any(lt => lt == "any") ||
-                    AllowedLocationTypes.Any(lt => lt == "anyoutpost" && from.HasOutpost()) ||
+                    AllowedLocationTypes.Any(lt => lt == Barotrauma.Tags.AnyOutpost && from.HasOutpost() && from.Type.IsAnyOutpost) ||
                     AllowedLocationTypes.Any(lt => lt == from.Type.Identifier);
             }
 
@@ -432,11 +493,11 @@ namespace Barotrauma
             {
                 if (fromType == "any" ||
                     fromType == from.Type.Identifier ||
-                    (fromType == "anyoutpost" && from.HasOutpost() && from.Type.Identifier != "abandoned"))
+                    (fromType == Barotrauma.Tags.AnyOutpost && from.HasOutpost() && from.Type.IsAnyOutpost && from.Type.Identifier != "abandoned"))
                 {
                     if (toType == "any" ||
                         toType == to.Type.Identifier ||
-                        (toType == "anyoutpost" && to.HasOutpost() && to.Type.Identifier != "abandoned"))
+                        (toType == Barotrauma.Tags.AnyOutpost && to.HasOutpost() && to.Type.IsAnyOutpost && to.Type.Identifier != "abandoned"))
                     {
                         return true;
                     }
@@ -460,6 +521,29 @@ namespace Barotrauma
         public override void Dispose()
         {
             DisposeProjectSpecific();
+        }
+
+        /// <summary>
+        /// Returns all mission types that can be selected e.g. in the server lobby, excluding any special, hidden ones like EndMission 
+        /// (the mission at the end of the campaign)
+        /// </summary>
+        public static IEnumerable<Identifier> GetAllMultiplayerSelectableMissionTypes()
+        {
+            List<Identifier> missionTypes = new List<Identifier>();
+            foreach (var missionPrefab in Prefabs)
+            {
+                if (missionPrefab.Commonness <= 0.0f) { continue; }
+                if (missionPrefab.SingleplayerOnly) { continue; }
+                if (HiddenMissionTypes.Contains(missionPrefab.Type))
+                {
+                    continue;
+                }
+                if (!missionTypes.Contains(missionPrefab.Type)) 
+                {
+                    missionTypes.Add(missionPrefab.Type);
+                }
+            }
+            return missionTypes.OrderBy(t => t.Value);
         }
     }
 }

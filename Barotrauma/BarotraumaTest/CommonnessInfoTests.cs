@@ -1,8 +1,10 @@
-﻿using Barotrauma;
+﻿extern alias Client;
 using FluentAssertions;
 using FsCheck;
 using Xunit;
-using static Barotrauma.ItemPrefab;
+
+using Level = Client::Barotrauma.Level;
+using CommonnessInfo = Client::Barotrauma.ItemPrefab.CommonnessInfo;
 
 namespace TestProject
 {

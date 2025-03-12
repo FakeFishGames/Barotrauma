@@ -1,0 +1,2 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TesthumanSwimSlow footrotatestrength="15" LegMoveAmount="0.37411213" LegCycleLength="8.197446" FootAngle="65" HandMoveAmount="0.53,0.06247859" HandCycleSpeed="2.1006122" HandMoveOffset="0,0" ArmMoveStrength="2" HandMoveStrength="0.5" FixedHeadAngle="False" SteerTorque="2" LegTorque="12" AnimationType="SwimSlow" MovementSpeed="1.5" CycleSpeed="3.640148" HeadAngle="20" TorsoAngle="0" HeadTorque="10" TorsoTorque="20" FootTorque="1" ArmIKStrength="3" HandIKStrength="10" type="Testhuman" />

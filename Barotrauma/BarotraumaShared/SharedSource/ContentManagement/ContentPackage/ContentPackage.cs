@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using System;
@@ -9,6 +9,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Xml;
+using Barotrauma.IO;
+using Steamworks.Data;
 
 namespace Barotrauma
 {
@@ -34,14 +37,35 @@ namespace Barotrauma
         public const string FileListFileName = "filelist.xml";
         public const string DefaultModVersion = "1.0.0";
 
-        public readonly string Name;
+        public string Name { get; private set; }
         public readonly ImmutableArray<string> AltNames;
-        public readonly string Path;
+        public string Path { get; private set; }
         public string Dir => Barotrauma.IO.Path.GetDirectoryName(Path) ?? "";
         public readonly Option<ContentPackageId> UgcId;
 
         public readonly Version GameVersion;
         public readonly string ModVersion;
+
+        public enum UgcStatus
+        {
+            NotFetched = 0,
+            Fetching = 1,
+            Fetched = 2,
+            Unavailable = 3
+        }
+
+        public UgcStatus UgcItemStatus { get; private set; }
+
+        /// <summary>
+        /// Ugc item (workshop item) data that this content package corresponds to. Needs to be fetched with <see cref="TryFetchUgcItem(Action)"/>.
+        /// You can also check <see cref="UgcItemStatus"/> to see if the item is available or not.
+        /// </summary>
+        public Option<Steamworks.Ugc.Item> UgcItem
+        {
+            get;
+            private set;
+        }
+
         public Md5Hash Hash { get; private set; }
         public readonly Option<SerializableDateTime> InstallTime;
 
@@ -63,8 +87,15 @@ namespace Barotrauma
         /// </summary>
         public Option<ContentPackageManager.LoadProgress.Error> EnableError { get; private set; }
             = Option.None;
-        
-        public bool HasAnyErrors => FatalLoadErrors.Length > 0 || EnableError.IsSome();
+
+        private readonly HashSet<PublishedFileId> missingDependencies = new HashSet<PublishedFileId>();
+        /// <summary>
+        /// An error caused by missing dependencies (Workshop items required by the package).
+        /// Can be safe to ignore.
+        /// </summary>
+        public IEnumerable<PublishedFileId> MissingDependencies => missingDependencies;
+
+        public bool HasAnyErrors => FatalLoadErrors.Length > 0 || EnableError.IsSome() || missingDependencies.Any();
 
         public async Task<bool> IsUpToDate()
         {
@@ -230,6 +261,16 @@ namespace Barotrauma
             }
         }
 
+        public void AddMissingDependency(PublishedFileId missingItemID)
+        {
+            missingDependencies.Add(missingItemID);
+        }
+
+        public void ClearMissingDependencies()
+        {
+            missingDependencies.Clear();
+        }
+
         public void LoadFilesOfType<T>() where T : ContentFile
         {
             Files.Where(f => f is T).ForEach(f => f.LoadFile());
@@ -265,7 +306,7 @@ namespace Barotrauma
                         //The game should be able to work just fine with a completely arbitrary file load order.
                         //To make sure we don't mess this up, debug builds randomize it so it has a higher chance
                         //of breaking anything that's not implemented correctly.
-                        .Randomize()
+                        .Randomize(Rand.RandSync.Unsynced)
 #endif
                     ;
 
@@ -324,6 +365,76 @@ namespace Barotrauma
                 yield return p;
             }
             errorCatcher.Dispose();
+        }
+
+        public void TryFetchUgcDescription(Action<string?> onFinished)
+        {
+            TryFetchUgcItem((Steamworks.Ugc.Item? item) =>
+            {
+                onFinished?.Invoke(item?.Description ?? string.Empty);
+            });
+        }
+
+        public void TryFetchUgcChildren(Action<PublishedFileId[]?> onFinished)
+        {
+            TryFetchUgcItem((Steamworks.Ugc.Item? item) =>
+            {
+                onFinished?.Invoke(item?.Children ?? Array.Empty<PublishedFileId>());
+            });
+        }
+
+        private void TryFetchUgcItem(Action<Steamworks.Ugc.Item?> onFinished)
+        {
+            switch (UgcItemStatus)
+            {
+                case UgcStatus.NotFetched:
+                    TryFetchUgcItem(onFinished: () =>
+                    {
+                        if (UgcItemStatus == UgcStatus.Fetched &&
+                            UgcItem.TryUnwrap(out var cachedItem))
+                        {
+                            onFinished?.Invoke(cachedItem);
+                        }
+                    });
+                    break;
+                case UgcStatus.Fetched when UgcItem.TryUnwrap(out var cachedItem):
+                    onFinished?.Invoke(cachedItem);
+                    break;
+                default:
+                    onFinished?.Invoke(null);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to fetch the UgcItem (workshop item) data from Steamworks, and if successful, caches it in <see cref="UgcItem"/>.
+        /// </summary>
+        /// <param name="onFinished">Triggers when the query finishes or fails (or immediately if the item has been already cached)</param>
+        public void TryFetchUgcItem(Action onFinished)
+        {
+            if (UgcItemStatus != UgcStatus.NotFetched)
+            {
+                onFinished?.Invoke();
+            }
+            if (!UgcId.TryUnwrap(out var ugcId) || ugcId is not SteamWorkshopId workshopId) 
+            {
+                UgcItemStatus = UgcStatus.Unavailable;
+                return;
+            }
+            
+            UgcItemStatus = UgcStatus.Fetching;
+            TaskPool.Add($"PrepareToShow{UgcId}Info", SteamManager.Workshop.GetItem(workshopId.Value),
+                task =>
+                {
+                    if (!task.TryGetResult(out Option<Steamworks.Ugc.Item> itemOption) || !itemOption.TryUnwrap(out var item))
+                    {
+                        UgcItemStatus = UgcStatus.Unavailable;
+                        return;
+                    }
+                    UgcItem = Option<Steamworks.Ugc.Item>.Some(item);
+                    UgcItemStatus = UgcStatus.Fetched;
+                    onFinished?.Invoke();
+                });
         }
 
         public void UnloadContent()
@@ -396,6 +507,52 @@ namespace Barotrauma
 
             static string errorToStr(LoadError error)
                 => error.ToString();
+        }
+
+        public bool TryRenameLocal(string newName)
+        {
+            if (!ContentPackageManager.LocalPackages.Contains(this)) { return false; }
+
+            if (newName.IsNullOrWhiteSpace())
+            {
+                DebugConsole.ThrowError($"New name is blank!");
+                return false;
+            }
+
+            string newDir = IO.Path.Combine(IO.Path.GetFullPath(LocalModsDir), File.SanitizeName(newName));
+            if (ContentPackageManager.LocalPackages.Any(lp => lp.NameMatches(newName)) || Directory.Exists(newDir))
+            {
+                DebugConsole.ThrowError($"A local package with the name or directory \"{newName}\" already exists!");
+                return false;
+            }
+
+            XDocument doc = XMLExtensions.TryLoadXml(Path);
+            doc.Root!.SetAttributeValue("name", newName);
+            using (IO.XmlWriter writer = IO.XmlWriter.Create(Path, new XmlWriterSettings { Indent = true }))
+            {
+                doc.WriteTo(writer);
+                writer.Flush();
+            }
+
+            Directory.Move(Dir, newDir);
+            return true;
+        }
+
+        public bool TryDeleteLocal() => ContentPackageManager.LocalPackages.Contains(this) && Directory.TryDelete(Dir);
+
+        public bool TryCreateLocalFromWorkshop()
+        {
+            if (!ContentPackageManager.WorkshopPackages.Contains(this)) { return false; }
+
+            string newDir = IO.Path.Combine(IO.Path.GetFullPath(LocalModsDir), File.SanitizeName(Name));
+            if (ContentPackageManager.LocalPackages.Any(lp => lp.NameMatches(Name)) || Directory.Exists(newDir))
+            {
+                DebugConsole.ThrowError($"A local package with the name or directory \"{Name}\" already exists!");
+                return false;
+            }
+
+            Directory.Copy(Dir, newDir);
+            return true;
         }
     }
 }

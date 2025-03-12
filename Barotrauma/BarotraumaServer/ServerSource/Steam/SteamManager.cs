@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Barotrauma.Networking;
 
 namespace Barotrauma.Steam
@@ -63,9 +65,24 @@ namespace Barotrauma.Steam
                 case bool hasPassword when key == "HasPassword":
                     Steamworks.SteamServer.Passworded = hasPassword;
                     return;
+                case string serverMessage when key == "message":
+                    int maxValueLength = 255;
+                    int totalMaxLength = 2000;
+                    int chunkIndex = 0;
+                    for (int charIndex = 0; charIndex < serverMessage.Length && charIndex < totalMaxLength; charIndex += maxValueLength)
+                    {
+                        Steamworks.SteamServer.SetKey(
+                            $"message{chunkIndex}", 
+                            serverMessage.Substring(charIndex, Math.Min(maxValueLength, serverMessage.Length - charIndex)));
+                        chunkIndex++;
+                    }
+                    return;
                 case IEnumerable<ContentPackage> contentPackages:
+                    //a2s seems to break if too much data is added (seems to be related to MTU?)
+                    //let's restrict the number of packages to 10, clients can use packagecount to tell when the list has been truncated
+                    const int MaxPackagesToList = 10;
                     int index = 0;
-                    foreach (var contentPackage in contentPackages)
+                    foreach (var contentPackage in contentPackages.Take(MaxPackagesToList))
                     {
                         Steamworks.SteamServer.SetKey(
                             $"contentpackage{index}",

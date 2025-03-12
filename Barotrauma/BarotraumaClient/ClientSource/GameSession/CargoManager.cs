@@ -166,7 +166,7 @@ namespace Barotrauma
                 // check if the store can afford the item
                 if (store.Balance < itemValue) { continue; }
                 // TODO: Write logic for prioritizing certain items over others (e.g. lone Battery Cell should be preferred over one inside a Stun Baton)
-                var matchingItems = sellableItems.Where(i => i.Prefab == item.ItemPrefab);
+                var matchingItems = sellableItems.Where(i => i.Prefab.Identifier == item.ItemPrefabIdentifier);
                 int count = Math.Min(item.Quantity, matchingItems.Count());
                 SoldItem.SellOrigin origin = sellingMode == Store.StoreTab.Sell ? SoldItem.SellOrigin.Character : SoldItem.SellOrigin.Submarine;
                 if (origin == SoldItem.SellOrigin.Character || GameMain.IsSingleplayer)

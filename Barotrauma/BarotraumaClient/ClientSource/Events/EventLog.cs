@@ -48,6 +48,7 @@ partial class EventLog
                 textContent,
                 difficultyIconCount,
                 icon, GUIStyle.Red,
+                difficultyTooltipText: null,
                 out GUIImage missionIcon);
 
             if (traitorResults != null && 

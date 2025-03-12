@@ -14,11 +14,15 @@ namespace Barotrauma.Items.Components
                 DockingButtonClicked = dockingButtonClicked;
             }
         }
-        
-        // TODO: an enumeration would be much cleaner
-        public bool MaintainPos;
-        public bool LevelStartSelected;
-        public bool LevelEndSelected;
+
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
+        public bool MaintainPos { get; set; }
+
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
+        public bool LevelStartSelected { get; set; }
+
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
+        public bool LevelEndSelected { get; set; }
 
         public bool UnsentChanges
         {
@@ -74,7 +78,7 @@ namespace Barotrauma.Items.Components
             if (!AutoPilot)
             {
                 steeringInput = newSteeringInput;
-                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("helm") / 100.0f);
+                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel(Tags.HelmSkill) / 100.0f);
             }
             else
             {

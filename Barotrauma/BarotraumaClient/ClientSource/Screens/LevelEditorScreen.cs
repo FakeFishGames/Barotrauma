@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework.Input;
 #if DEBUG
 using System.IO;
 using System.Xml;
@@ -20,23 +21,29 @@ namespace Barotrauma
     {
         public override Camera Cam { get; }
 
-        private readonly GUIFrame leftPanel, rightPanel, bottomPanel, topPanel;
+        private GUIFrame leftPanel, rightPanel, bottomPanel, topPanel;
+
+        private Point prevResolution;
         
         private LevelGenerationParams selectedParams;
+        private RuinGenerationParams selectedRuinGenerationParams;
+        private OutpostGenerationParams selectedOutpostGenerationParams;
         private LevelObjectPrefab selectedLevelObject;
+        private BackgroundCreaturePrefab selectedBackgroundCreature;
 
-        private readonly GUIListBox paramsList, ruinParamsList, caveParamsList, outpostParamsList, levelObjectList;
-        private readonly GUIListBox editorContainer;
+        private GUIListBox paramsList, ruinParamsList, caveParamsList, outpostParamsList, levelObjectList, backgroundCreatureList;
+        private GUIListBox editorContainer;
 
-        private readonly GUIButton spriteEditDoneButton;
+        private GUIButton spriteEditDoneButton;
 
-        private readonly GUITextBox seedBox;
+        private GUITextBox seedBox;
 
-        private readonly GUITickBox lightingEnabled, cursorLightEnabled, allowInvalidOutpost, mirrorLevel;
+        private GUITickBox lightingEnabled, cursorLightEnabled, allowInvalidOutpost, mirrorLevel;
 
-        private readonly GUIDropDown selectedSubDropDown;
-        private readonly GUIDropDown selectedBeaconStationDropdown;
-        private readonly GUIDropDown selectedWreckDropdown;
+        private GUIDropDown selectedSubDropDown;
+        private GUIDropDown selectedBeaconStationDropdown;
+        private GUIDropDown selectedWreckDropdown;
+        private GUINumberInput forceDifficultyInput;
 
         private Sprite editingSprite;
 
@@ -45,15 +52,34 @@ namespace Barotrauma
         private readonly Color[] tunnelDebugColors = new Color[] { Color.White, Color.Cyan, Color.LightGreen, Color.Red, Color.LightYellow, Color.LightSeaGreen };
 
         private LevelData currentLevelData;
-
-        public LevelEditorScreen()
+        
+        private void RefreshUI(bool forceCreate = false)
         {
-            Cam = new Camera()
+            if (forceCreate)
             {
-                MinZoom = 0.01f,
-                MaxZoom = 1.0f
-            };
-
+                CreateUI();
+            }
+            
+            GUI.PreventPauseMenuToggle = false;
+            pointerLightSource = new LightSource(Vector2.Zero, 1000.0f, Color.White, submarine: null);
+            GameMain.LightManager.AddLight(pointerLightSource);
+            topPanel.ClearChildren();
+            new SerializableEntityEditor(topPanel.RectTransform, pointerLightSource.LightSourceParams, false, true);
+            
+            editingSprite = null;
+            UpdateParamsList();
+            UpdateRuinParamsList();
+            UpdateCaveParamsList();
+            UpdateOutpostParamsList();
+            UpdateLevelObjectsList();
+            UpdateBackgroundCreatureList();
+        }
+        
+        private void CreateUI()
+        {
+            Frame.ClearChildren();
+            leftPanel?.ClearChildren();
+            rightPanel?.ClearChildren();
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 0.8f), Frame.RectTransform) { MinSize = new Point(150, 0) });
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
@@ -71,7 +97,9 @@ namespace Barotrauma
                 currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                 editorContainer.ClearChildren();
                 SortLevelObjectsList(currentLevelData);
+                SortBackgroundCreaturesList(currentLevelData);
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, inGame: false, showName: true, elementHeight: 20, titleFont: GUIStyle.LargeFont);
+                forceDifficultyInput.FloatValue = (selectedParams.MinLevelDifficulty + selectedParams.MaxLevelDifficulty) / 2f;
                 return true;
             };
 
@@ -83,7 +111,30 @@ namespace Barotrauma
             };
             ruinParamsList.OnSelected += (GUIComponent component, object obj) =>
             {
-                CreateOutpostGenerationParamsEditor(obj as OutpostGenerationParams);
+                if (selectedRuinGenerationParams == obj)
+                {
+                    // need to wait a frame before deselecting or the highlight on the list item gets left on
+                    CoroutineManager.StartCoroutine(DeselectRuinParams());
+                    
+                    IEnumerable<CoroutineStatus> DeselectRuinParams()
+                    {
+                        if (Screen.Selected != this)
+                        {
+                            yield break;
+                        }
+                            
+                        yield return null;
+                        selectedRuinGenerationParams = null;
+                        CreateOutpostGenerationParamsEditor(null);
+                        ruinParamsList.Deselect();
+                    }
+                }
+                else
+                {
+                    selectedRuinGenerationParams = obj as RuinGenerationParams;
+                    CreateOutpostGenerationParamsEditor(selectedRuinGenerationParams);
+                }
+                
                 return true;
             };
 
@@ -108,7 +159,8 @@ namespace Barotrauma
             };
             outpostParamsList.OnSelected += (GUIComponent component, object obj) =>
             {
-                CreateOutpostGenerationParamsEditor(obj as OutpostGenerationParams);
+                selectedOutpostGenerationParams = obj as OutpostGenerationParams;
+                CreateOutpostGenerationParamsEditor(selectedOutpostGenerationParams);
                 return true;
             };
 
@@ -218,15 +270,31 @@ namespace Barotrauma
                 selectedWreckDropdown.AddItem(wreck.DisplayName, userData: wreck);
             }
             wreckDropDownContainer.RectTransform.MinSize = new Point(0, selectedWreckDropdown.RectTransform.MinSize.Y);
+            
+            var forceDifficultyContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), forceDifficultyContainer.RectTransform), TextManager.Get("leveldifficulty"));
+            forceDifficultyInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), forceDifficultyContainer.RectTransform), NumberType.Float)
+            {
+                MinValueFloat = 0,
+                MaxValueFloat = 100,
+                FloatValue = Level.ForcedDifficulty ?? selectedParams?.MinLevelDifficulty ?? 0f,
+                OnValueChanged = (numberInput) =>
+                {
+                    if (Level.ForcedDifficulty == null) { return; }
+                    Level.ForcedDifficulty = numberInput.FloatValue;
+                }
+            };
+            forceDifficultyContainer.RectTransform.MinSize = new Point(0, forceDifficultyInput.RectTransform.MinSize.Y);
+            
+            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), paddedRightPanel.RectTransform), isHorizontal: true);
+            mirrorLevel = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.02f), tickBoxContainer.RectTransform), TextManager.Get("mirrorentityx"));
 
-            mirrorLevel = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), TextManager.Get("mirrorentityx"));
-
-            allowInvalidOutpost = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedRightPanel.RectTransform),
+            allowInvalidOutpost = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.025f), tickBoxContainer.RectTransform),
                 TextManager.Get("leveleditor.allowinvalidoutpost"))
             {
                 ToolTip = TextManager.Get("leveleditor.allowinvalidoutpost.tooltip")
             };
-
+            
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform),
                 TextManager.Get("leveleditor.generate"))
             {
@@ -240,13 +308,15 @@ namespace Barotrauma
                         Submarine.MainSub = new Submarine(subInfo);
                     }
                     GameMain.LightManager.ClearLights();
-                    currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
+                    currentLevelData = LevelData.CreateRandom(seedBox.Text, difficulty: forceDifficultyInput.FloatValue, generationParams: selectedParams);
                     currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
                     currentLevelData.ForceBeaconStation = selectedBeaconStationDropdown.SelectedData as SubmarineInfo;
                     currentLevelData.ForceWreck = selectedWreckDropdown.SelectedData as SubmarineInfo;
+                    currentLevelData.ForceRuinGenerationParams = selectedRuinGenerationParams;
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
                     var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
                     Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
+                    UpdateBackgroundCreatureList();
 
                     if (Submarine.MainSub != null)
                     {
@@ -271,7 +341,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform),
                 TextManager.Get("leveleditor.test"))
@@ -300,8 +369,8 @@ namespace Barotrauma
                     subInfo ??= SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s =>
                         s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&
                         !nonPlayerFiles.Any(f => f.Path == s.FilePath));
-                    GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
-                    gameSession.StartRound(Level.Loaded.LevelData);
+                    GameSession gameSession = new GameSession(subInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
+                    gameSession.StartRound(Level.Loaded.LevelData, mirrorLevel.Selected);
                     (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
                     {
                         GameMain.LevelEditorScreen.Select();
@@ -323,9 +392,42 @@ namespace Barotrauma
             };
 
             bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.22f), Frame.RectTransform, Anchor.BottomLeft)
-            { MaxSize = new Point(GameMain.GraphicsWidth - rightPanel.Rect.Width, 1000) }, style: "GUIFrameBottom");
+                { MaxSize = new Point(GameMain.GraphicsWidth - rightPanel.Rect.Width, 1000) }, style: "GUIFrameBottom");
 
-            levelObjectList = new GUIListBox(new RectTransform(new Vector2(0.99f, 0.85f), bottomPanel.RectTransform, Anchor.Center))
+            var bottomPanelContents = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.9f), bottomPanel.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            var bottomPanelButtons = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), bottomPanelContents.RectTransform), isHorizontal: true);
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), bottomPanelButtons.RectTransform), TextManager.Get("leveleditor.levelobjects"), style: "GUITabButton")
+            {
+                Selected = true,
+                OnClicked = (btn, __) =>
+                {
+                    bottomPanelButtons.Children.ForEach(c => c.Selected = c == btn);
+                    levelObjectList.Visible = true;
+                    levelObjectList.IgnoreLayoutGroups = false;
+                    backgroundCreatureList.Visible = false;
+                    backgroundCreatureList.IgnoreLayoutGroups = true;
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), bottomPanelButtons.RectTransform), TextManager.Get("leveleditor.backgroundcreatures"), style: "GUITabButton")
+            {
+                OnClicked = (btn, __) =>
+                {
+                    bottomPanelButtons.Children.ForEach(c => c.Selected = c == btn);
+                    backgroundCreatureList.Visible = true;
+                    backgroundCreatureList.IgnoreLayoutGroups = false;
+                    levelObjectList.Visible = false;
+                    levelObjectList.IgnoreLayoutGroups = true;
+                    return true;
+                }
+            };
+            bottomPanelButtons.RectTransform.NonScaledSize = new Point(bottomPanelButtons.Rect.Width, bottomPanelButtons.Children.First().Rect.Height);
+
+            levelObjectList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), bottomPanelContents.RectTransform))
             {
                 PlaySoundOnSelect = true,
                 UseGridLayout = true
@@ -334,6 +436,20 @@ namespace Barotrauma
             {
                 selectedLevelObject = obj as LevelObjectPrefab;
                 CreateLevelObjectEditor(selectedLevelObject);
+                return true;
+            };
+
+            backgroundCreatureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), bottomPanelContents.RectTransform))
+            {
+                PlaySoundOnSelect = true,
+                UseGridLayout = true,
+                Visible = false,
+                IgnoreLayoutGroups = true
+            };
+            backgroundCreatureList.OnSelected += (GUIComponent component, object obj) =>
+            {
+                selectedBackgroundCreature = obj as BackgroundCreaturePrefab;
+                CreateBackgroundCreatureEditor(selectedBackgroundCreature);
                 return true;
             };
 
@@ -349,6 +465,19 @@ namespace Barotrauma
 
             topPanel = new GUIFrame(new RectTransform(new Point(400, 100), GUI.Canvas)
             { RelativeOffset = new Vector2(leftPanel.RectTransform.RelativeSize.X * 2, 0.0f) }, style: "GUIFrameTop");
+
+            prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+        }
+        
+        public LevelEditorScreen()
+        {
+            Cam = new Camera()
+            {
+                MinZoom = 0.01f,
+                MaxZoom = 1.0f
+            };
+
+            RefreshUI(forceCreate: true);
         }
 
         public void TestLevelGenerationForErrors(int amountOfLevelsToGenerate)
@@ -394,28 +523,13 @@ namespace Barotrauma
                     yield return CoroutineStatus.Running;
                 }
             }
-
-
         }
-
-
-
+        
         public override void Select()
         {
             base.Select();
-
-            GUI.PreventPauseMenuToggle = false;
-            pointerLightSource = new LightSource(Vector2.Zero, 1000.0f, Color.White, submarine: null);
-            GameMain.LightManager.AddLight(pointerLightSource);
-            topPanel.ClearChildren();
-            new SerializableEntityEditor(topPanel.RectTransform, pointerLightSource.LightSourceParams, false, true);
-
-            editingSprite = null;
-            UpdateParamsList();
-            UpdateRuinParamsList();
-            UpdateCaveParamsList();
-            UpdateOutpostParamsList();
-            UpdateLevelObjectsList();
+            
+            RefreshUI(forceCreate: false);
         }
 
         protected override void DeselectEditorSpecific()
@@ -464,7 +578,7 @@ namespace Barotrauma
             foreach (RuinGenerationParams genParams in RuinGenerationParams.RuinParams.OrderBy(p => p.Identifier))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), ruinParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    genParams.Name)
+                    genParams.Identifier.Value)
                 {
                     Padding = Vector4.Zero,
                     UserData = genParams
@@ -502,9 +616,13 @@ namespace Barotrauma
                     new Vector2(relWidth, relWidth * ((float)levelObjectList.Content.Rect.Width / levelObjectList.Content.Rect.Height)), 
                     levelObjectList.Content.RectTransform) { MinSize = new Point(0, 60) }, style: "ListBoxElementSquare")
                 {
-                    UserData = levelObjPrefab
+                    UserData = levelObjPrefab,
+                    ToolTip = levelObjPrefab.Name
                 };
-                var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
+                var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null)
+                {
+                    CanBeFocused = false
+                };
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
                     text: ToolBox.LimitString(levelObjPrefab.Name, GUIStyle.SmallFont, paddedFrame.Rect.Width), textAlignment: Alignment.Center, font: GUIStyle.SmallFont)
@@ -521,6 +639,44 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
             }
+        }
+
+        private void UpdateBackgroundCreatureList()
+        {
+            editorContainer.ClearChildren();
+            backgroundCreatureList.Content.ClearChildren();
+
+            int objectsPerRow = (int)Math.Ceiling(backgroundCreatureList.Content.Rect.Width / Math.Max(100 * GUI.Scale, 100));
+            float relWidth = 1.0f / objectsPerRow;
+
+            foreach (BackgroundCreaturePrefab backgroundCreaturePrefab in BackgroundCreaturePrefab.Prefabs)
+            {
+                var frame = new GUIFrame(new RectTransform(
+                    new Vector2(relWidth, relWidth * ((float)backgroundCreatureList.Content.Rect.Width / backgroundCreatureList.Content.Rect.Height)),
+                    backgroundCreatureList.Content.RectTransform)
+                { MinSize = new Point(0, 60) }, style: "ListBoxElementSquare")
+                {
+                    UserData = backgroundCreaturePrefab
+                };
+                var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
+
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
+                    text: ToolBox.LimitString(backgroundCreaturePrefab.Name, GUIStyle.SmallFont, paddedFrame.Rect.Width), textAlignment: Alignment.Center, font: GUIStyle.SmallFont)
+                {
+                    CanBeFocused = false,
+                    ToolTip = backgroundCreaturePrefab.Name
+                };
+
+                Sprite sprite = backgroundCreaturePrefab.Sprite ?? backgroundCreaturePrefab.DeformableSprite?.Sprite;
+                new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
+                    paddedFrame.RectTransform, Anchor.TopCenter), sprite, scaleToFit: true)
+                {
+                    LoadAsynchronously = true,
+                    CanBeFocused = false
+                };
+            }
+
+            SortBackgroundCreaturesList(currentLevelData);
         }
 
         private void CreateCaveParamsEditor(CaveGenerationParams caveGenerationParams)
@@ -556,6 +712,7 @@ namespace Barotrauma
         private void CreateOutpostGenerationParamsEditor(OutpostGenerationParams outpostGenerationParams)
         {
             editorContainer.ClearChildren();
+            if (outpostGenerationParams == null) { return; }
             var outpostParamsEditor = new SerializableEntityEditor(editorContainer.Content.RectTransform, outpostGenerationParams, false, true, elementHeight: 20);
 
             // location type -------------------------
@@ -584,7 +741,7 @@ namespace Barotrauma
                 locationTypeDropDown.SelectItem("any");
             }
 
-            locationTypeDropDown.OnSelected += (_, __) =>
+            locationTypeDropDown.AfterSelected += (_, __) =>
             {
                 outpostGenerationParams.SetAllowedLocationTypes(locationTypeDropDown.SelectedDataMultiple.Cast<Identifier>());
                 locationTypeDropDown.Text = ToolBox.LimitString(locationTypeDropDown.Text, locationTypeDropDown.Font, locationTypeDropDown.Rect.Width);
@@ -596,29 +753,29 @@ namespace Barotrauma
 
             // module count -------------------------
 
-            var moduleLabel = new GUITextBlock(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(70 * GUI.Scale))), TextManager.Get("submarinetype.outpostmodules"), font: GUIStyle.SubHeadingFont);
-            outpostParamsEditor.AddCustomContent(moduleLabel, 100);
-
             foreach (var moduleCount in outpostGenerationParams.ModuleCounts)
             {
-                var moduleCountGroup = new GUILayoutGroup(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(25 * GUI.Scale))), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), TextManager.Capitalize(moduleCount.Identifier.Value), textAlignment: Alignment.CenterLeft);
-                new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), NumberType.Int)
+                var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, moduleCount, inGame: false, showName: true, elementHeight: 20, titleFont: GUIStyle.Font);
+                foreach (var componentList in editor.Fields.Values)
                 {
-                    MinValueInt = 0,
-                    MaxValueInt = 100,
-                    IntValue = moduleCount.Count,
-                    OnValueChanged = (numInput) =>
+                    foreach (var component in componentList)
                     {
-                        outpostGenerationParams.SetModuleCount(moduleCount.Identifier, numInput.IntValue);
-                        if (numInput.IntValue == 0)
+                        if (component is GUINumberInput numberInput)
                         {
-                            outpostParamsList.Select(outpostParamsList.SelectedData);
+                            numberInput.OnValueChanged += (numInput) =>
+                            {
+                                if (moduleCount.Count == 0)
+                                {
+                                    //refresh to remove this module count from the editor
+                                    outpostParamsList.Select(outpostParamsList.SelectedData);
+                                }
+                            };
                         }
                     }
-                };
-                moduleCountGroup.RectTransform.MinSize = new Point(moduleCountGroup.Rect.Width, moduleCountGroup.RectTransform.Children.Max(c => c.MinSize.Y));
-                outpostParamsEditor.AddCustomContent(moduleCountGroup, 100);
+                }
+                editor.RectTransform.MaxSize = new Point(int.MaxValue, editor.Rect.Height);
+                outpostParamsEditor.AddCustomContent(editor, 100);
+                editor.Recalculate();
             }
 
             // add module count -------------------------
@@ -648,7 +805,7 @@ namespace Barotrauma
             };
             addModuleCountGroup.RectTransform.MinSize = new Point(addModuleCountGroup.Rect.Width, addModuleCountGroup.RectTransform.Children.Max(c => c.MinSize.Y));
             outpostParamsEditor.AddCustomContent(addModuleCountGroup, 100);
-
+            outpostParamsEditor.Recalculate();
         }
 
         private void CreateLevelObjectEditor(LevelObjectPrefab levelObjectPrefab)
@@ -736,7 +893,7 @@ namespace Barotrauma
                     dropdown.AddItem(objPrefab.Name, objPrefab);
                     if (childObj.AllowedNames.Contains(objPrefab.Name)) { dropdown.SelectItem(objPrefab); }
                 }
-                dropdown.OnSelected = (selected, obj) =>
+                dropdown.AfterSelected = (selected, obj) =>
                 {
                     childObj.AllowedNames = dropdown.SelectedDataMultiple.Select(d => ((LevelObjectPrefab)d).Name).ToList();
                     return true;
@@ -817,9 +974,22 @@ namespace Barotrauma
             {
                 var levelObj = levelObjFrame.UserData as LevelObjectPrefab;
                 float commonness = levelObj.GetCommonness(levelData);
-                levelObjFrame.Color = commonness > 0.0f ? GUIStyle.Green * 0.4f : Color.Transparent;
-                levelObjFrame.SelectedColor = commonness > 0.0f ? GUIStyle.Green * 0.6f : Color.White * 0.5f;
-                levelObjFrame.HoverColor = commonness > 0.0f ? GUIStyle.Green * 0.7f : Color.White * 0.6f;
+
+                Color color = GUIStyle.Green;
+
+                if (commonness > 0.0f && levelData?.GenerationParams != null)
+                {
+                    if (levelObj.MinSurfaceWidth > levelData.GenerationParams.CellSubdivisionLength &&
+                        levelObj.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.Wall))
+                    {
+                        color = Color.Orange;
+                        levelObjFrame.ToolTip = $"Potential issue: the level walls in \"{levelData.GenerationParams.Identifier}\" are set to be subdivided every {levelData.GenerationParams.CellSubdivisionLength} pixels, but the level object requires wall segments of at least {levelObj.MinSurfaceWidth} px. The object may be rarer than intended (or fail to spawn at all) in the level.";
+                    }
+                }
+
+                levelObjFrame.Color = commonness > 0.0f ? color * 0.4f : Color.Transparent;
+                levelObjFrame.SelectedColor = commonness > 0.0f ? color * 0.6f : Color.White * 0.5f;
+                levelObjFrame.HoverColor = commonness > 0.0f ? color * 0.7f : Color.White * 0.6f;
 
                 levelObjFrame.GetAnyChild<GUIImage>().Color = commonness > 0.0f ? Color.White : Color.DarkGray;
                 if (commonness <= 0.0f)
@@ -835,6 +1005,99 @@ namespace Barotrauma
                 var levelObj2 = c2.GUIComponent.UserData as LevelObjectPrefab;
                 return Math.Sign(levelObj2.GetCommonness(levelData) - levelObj1.GetCommonness(levelData));
             });
+        }
+
+        private void SortBackgroundCreaturesList(LevelData levelData)
+        {
+            if (levelData == null) { return; }
+            //fade out levelobjects that don't spawn in this type of level
+            foreach (GUIComponent child in backgroundCreatureList.Content.Children)
+            {
+                if (child.UserData is not BackgroundCreaturePrefab creature) { continue; }
+                SetElementColorBasedOnCommonness(child, creature.GetCommonness(levelData));
+            }
+
+            //sort the levelobjects according to commonness in this level
+            backgroundCreatureList.Content.RectTransform.SortChildren((c1, c2) =>
+            {
+                var creature1 = c1.GUIComponent.UserData as BackgroundCreaturePrefab;
+                var creature2 = c2.GUIComponent.UserData as BackgroundCreaturePrefab;
+                return Math.Sign(creature2.GetCommonness(levelData) - creature1.GetCommonness(levelData));
+            });
+        }
+
+        private static void SetElementColorBasedOnCommonness(GUIComponent element, float commonness)
+        {
+            element.Color = commonness > 0.0f ? GUIStyle.Green * 0.4f : Color.Transparent;
+            element.SelectedColor = commonness > 0.0f ? GUIStyle.Green * 0.6f : Color.White * 0.5f;
+            element.HoverColor = commonness > 0.0f ? GUIStyle.Green * 0.7f : Color.White * 0.6f;
+
+            element.GetAnyChild<GUIImage>().Color = commonness > 0.0f ? Color.White : Color.DarkGray;
+            if (commonness <= 0.0f)
+            {
+                element.GetAnyChild<GUITextBlock>().TextColor = Color.DarkGray;
+            }
+        }
+
+        private void CreateBackgroundCreatureEditor(BackgroundCreaturePrefab backgroundCreaturePrefab)
+        {
+            editorContainer.ClearChildren();
+
+            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, backgroundCreaturePrefab, false, true, elementHeight: 20, titleFont: GUIStyle.LargeFont);
+
+            if (selectedParams != null)
+            {
+                List<Identifier> availableIdentifiers = new List<Identifier>() { selectedParams.Identifier };
+                foreach (Identifier paramsId in availableIdentifiers)
+                {
+                    var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)) { IsFixedSize = true },
+                        isHorizontal: false, childAnchor: Anchor.TopCenter)
+                    {
+                        AbsoluteSpacing = 5,
+                        Stretch = true
+                    };
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
+                        TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", paramsId.Value), textAlignment: Alignment.Center);
+                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), NumberType.Float)
+                    {
+                        MinValueFloat = 0,
+                        MaxValueFloat = 100,
+                        FloatValue = backgroundCreaturePrefab.GetCommonness(currentLevelData),
+                        OnValueChanged = (numberInput) =>
+                        {
+                            backgroundCreaturePrefab.OverrideCommonness[paramsId] = numberInput.FloatValue;
+                        }
+                    };
+                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
+                    editor.AddCustomContent(commonnessContainer, 1);
+                }
+            }
+
+            Sprite sprite = backgroundCreaturePrefab.Sprite ?? backgroundCreaturePrefab.DeformableSprite?.Sprite;
+            if (sprite != null)
+            {
+                editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, (int)(25 * GUI.Scale))) { IsFixedSize = true },
+                    TextManager.Get("leveleditor.editsprite"))
+                {
+                    OnClicked = (btn, userdata) =>
+                    {
+                        editingSprite = sprite;
+                        GameMain.SpriteEditorScreen.SelectSprite(editingSprite);
+                        return true;
+                    }
+                }, 1);
+            }
+
+            if (backgroundCreaturePrefab.DeformableSprite != null)
+            {
+                var deformEditor = backgroundCreaturePrefab.DeformableSprite.CreateEditor(editor, backgroundCreaturePrefab.SpriteDeformations, backgroundCreaturePrefab.Name);
+                deformEditor.GetChild<GUIDropDown>().OnSelected += (selected, userdata) =>
+                {
+                    CreateBackgroundCreatureEditor(backgroundCreaturePrefab);
+                    return true;
+                };
+                editor.AddCustomContent(deformEditor, editor.ContentCount);
+            }
         }
 
         public override void AddToGUIUpdateList()
@@ -965,11 +1228,17 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             if (Level.Loaded != null)
             {
-                float crushDepthScreen = Cam.WorldToScreen(new Vector2(0.0f, -Level.Loaded.CrushDepth)).Y;
-                if (crushDepthScreen > 0.0f && crushDepthScreen < GameMain.GraphicsHeight)
+                float hullUpgradePrcIncrease = UpgradePrefab.CrushDepthUpgradePrc / 100f;
+                for (int upgradeLevel = 0; upgradeLevel <= UpgradePrefab.IncreaseWallHealthMaxLevel; upgradeLevel++)
                 {
-                    GUI.DrawLine(spriteBatch, new Vector2(0, crushDepthScreen), new Vector2(GameMain.GraphicsWidth, crushDepthScreen), GUIStyle.Red * 0.25f, width: 5);
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, crushDepthScreen), "Crush depth", GUIStyle.Red, backgroundColor: Color.Black);
+                    float upgradeLevelCrushDepth = Level.DefaultRealWorldCrushDepth + (Level.DefaultRealWorldCrushDepth * upgradeLevel * hullUpgradePrcIncrease);
+                    float subCrushDepth = (upgradeLevelCrushDepth / Physics.DisplayToRealWorldRatio) - Level.Loaded.LevelData.InitialDepth;
+                    string labelText = $"Crush depth (upgrade level {upgradeLevel})";
+                    if (upgradeLevel == 0)
+                    {
+                        labelText = $"Crush depth (no upgrade)";
+                    }
+                    DrawCrushDepth(subCrushDepth, labelText, Color.Red);
                 }
 
                 float abyssStartScreen = Cam.WorldToScreen(new Vector2(0.0f, Level.Loaded.AbyssArea.Bottom)).Y;
@@ -987,11 +1256,25 @@ namespace Barotrauma
             }
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
+            
+            void DrawCrushDepth(float crushDepth, string labelText, Color color)
+            {
+                float crushDepthScreen = Cam.WorldToScreen(new Vector2(0.0f, -crushDepth)).Y;
+                if (crushDepthScreen > 0.0f && crushDepthScreen < GameMain.GraphicsHeight)
+                {
+                    GUI.DrawLine(spriteBatch, new Vector2(0, crushDepthScreen), new Vector2(GameMain.GraphicsWidth, crushDepthScreen), color * 0.25f, width: 5);
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, crushDepthScreen), labelText, GUIStyle.Red, backgroundColor: Color.Black);
+                }
+            }
         }
-
 
         public override void Update(double deltaTime)
         {
+            if (GameMain.GraphicsWidth != prevResolution.X || GameMain.GraphicsHeight != prevResolution.Y)
+            {
+                RefreshUI(forceCreate: true);
+            }
+
             if (lightingEnabled.Selected)
             {
                 foreach (Item item in Item.ItemList)
@@ -1016,6 +1299,19 @@ namespace Barotrauma
             {
                 GameMain.SpriteEditorScreen.Update(deltaTime);
             }
+            
+            // in case forced difficulty was changed by console command or such
+            if (Level.ForcedDifficulty != null && MathHelper.Distance((float)Level.ForcedDifficulty, forceDifficultyInput.FloatValue) > 0.001f)
+            {
+                forceDifficultyInput.FloatValue = (float)Level.ForcedDifficulty;
+            }
+            
+#if DEBUG
+            if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.R))
+            {
+                RefreshUI(forceCreate: true);
+            }
+#endif
         }
 
         private void SerializeAll()

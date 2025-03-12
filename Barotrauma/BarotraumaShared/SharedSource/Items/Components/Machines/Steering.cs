@@ -61,6 +61,7 @@ namespace Barotrauma.Items.Components
         private Sonar sonar;
 
         private Submarine controlledSub;
+        public Submarine ControlledSub => controlledSub;
 
         // AI interfacing
         public Vector2 AITacticalTarget { get; set; }
@@ -75,6 +76,7 @@ namespace Barotrauma.Items.Components
 
         private double lastReceivedSteeringSignalTime;
 
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool AutoPilot
         {
             get { return autoPilot; }
@@ -298,7 +300,7 @@ namespace Barotrauma.Items.Components
                 controlledSub = sonar.ConnectedTransducers.Any() ? sonar.ConnectedTransducers.First().Item.Submarine : null;
             }
 
-            if (Voltage < MinVoltage) { return; }
+            if (!HasPower) { return; }
 
             if (user != null && user.Removed)
             {
@@ -311,7 +313,7 @@ namespace Barotrauma.Items.Components
             if (user != null && controlledSub != null &&
                 (user.SelectedItem == item || item.linkedTo.Contains(user.SelectedItem)))
             {
-                userSkill = user.GetSkillLevel("helm") / 100.0f;
+                userSkill = user.GetSkillLevel(Tags.HelmSkill) / 100.0f;
             }
 
             // override autopilot pathing while the AI rams, and go full speed ahead

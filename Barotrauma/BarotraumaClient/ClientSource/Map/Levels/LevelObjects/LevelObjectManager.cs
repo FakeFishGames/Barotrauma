@@ -10,9 +10,11 @@ namespace Barotrauma
 {
     partial class LevelObjectManager
     {
-        private readonly List<LevelObject> visibleObjectsBack = new List<LevelObject>();
-        private readonly List<LevelObject> visibleObjectsMid = new List<LevelObject>();
-        private readonly List<LevelObject> visibleObjectsFront = new List<LevelObject>();
+        // Pre-initialized to the max size, so that we don't have to resize the lists at runtime. TODO: Could the capacity (of some collections?) be lower?
+        private readonly List<LevelObject> visibleObjectsBack = new List<LevelObject>(MaxVisibleObjects);
+        private readonly List<LevelObject> visibleObjectsMid = new List<LevelObject>(MaxVisibleObjects);
+        private readonly List<LevelObject> visibleObjectsFront = new List<LevelObject>(MaxVisibleObjects);
+        private readonly HashSet<LevelObject> allVisibleObjects = new HashSet<LevelObject>(MaxVisibleObjects);
 
         private double NextRefreshTime;
 
@@ -31,25 +33,41 @@ namespace Barotrauma
             visibleObjectsFront.Clear();
         }
 
-        partial void UpdateProjSpecific(float deltaTime)
+        partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
             foreach (LevelObject obj in visibleObjectsBack)
             {
-                obj.Update(deltaTime);
+                obj.Update(deltaTime, cam);
             }
             foreach (LevelObject obj in visibleObjectsMid)
             {
-                obj.Update(deltaTime);
+                obj.Update(deltaTime, cam);
             }
             foreach (LevelObject obj in visibleObjectsFront)
             {
-                obj.Update(deltaTime);
+                obj.Update(deltaTime, cam);
             }
         }
         
-        public IEnumerable<LevelObject> GetVisibleObjects()
+        /// <summary>
+        /// Returns all visible objects, but not in order, because internally uses a HashSet.
+        /// </summary>
+        public IEnumerable<LevelObject> GetAllVisibleObjects()
         {
-            return visibleObjectsBack.Union(visibleObjectsMid).Union(visibleObjectsFront);
+            allVisibleObjects.Clear();
+            foreach (LevelObject obj in visibleObjectsBack)
+            {
+                allVisibleObjects.Add(obj);
+            }
+            foreach (LevelObject obj in visibleObjectsMid)
+            {
+                allVisibleObjects.Add(obj);
+            }
+            foreach (LevelObject obj in visibleObjectsFront)
+            {
+                allVisibleObjects.Add(obj);
+            }
+            return allVisibleObjects;
         }
 
         /// <summary>
@@ -207,7 +225,7 @@ namespace Barotrauma
                 activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z * ParallaxStrength,
-                    Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 3000.0f),
+                    Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / obj.Prefab.FadeOutDepth),
                     activeSprite.Origin,
                     obj.CurrentRotation,
                     obj.CurrentScale,

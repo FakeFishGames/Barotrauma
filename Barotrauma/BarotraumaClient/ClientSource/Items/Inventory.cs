@@ -1359,7 +1359,7 @@ namespace Barotrauma
                         if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container &&
                             container.Inventory.CanBePut(item))
                         {
-                            if (!container.AllowDragAndDrop || !container.AllowAccess)
+                            if (!container.AllowDragAndDrop || !container.IsAccessible())
                             {
                                 allowCombine = false;
                             }
@@ -1603,7 +1603,8 @@ namespace Barotrauma
                         shadowSprite.Draw(spriteBatch,
                             new Rectangle(itemPos.ToPoint() - new Point((iconSize / 2 - shadowPadding.X) * textDir - shadowSize.X * textOffset, iconSize / 2 + shadowPadding.Y), shadowSize), Color.Black * 0.8f);
 
-                        GUI.DrawString(spriteBatch, textPos + new Vector2(nameSize.X * textOffset, -iconSize / 2), DraggingItems.First().Name, Color.White);
+                        var richString = RichString.Rich(DraggingItems.First().Name);
+                        GUI.DrawStringWithColors(spriteBatch, textPos + new Vector2(nameSize.X * textOffset, -iconSize / 2), richString.SanitizedValue, Color.White, richString.RichTextData);
                         GUI.DrawString(spriteBatch, textPos + new Vector2(toolTipSize.X * textOffset, 0), toolTip,
                             color: toolTipColor,
                             font: GUIStyle.SmallFont);

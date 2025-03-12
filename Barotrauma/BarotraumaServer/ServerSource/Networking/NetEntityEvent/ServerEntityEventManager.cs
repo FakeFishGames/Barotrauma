@@ -229,7 +229,9 @@ namespace Barotrauma.Networking
                     GameMain.GameSession.RoundDuration > NetConfig.RoundStartSyncDuration)
                 {
                     lastWarningTime = Timing.TotalTime;
-                    GameServer.Log("WARNING: ServerEntityEventManager is lagging behind! Last sent id: " + lastSentToAnyone.ToString() + ", latest create id: " + ID.ToString(), ServerLog.MessageType.ServerMessage);
+                    string warningMsg = $"WARNING: ServerEntityEventManager is lagging behind! Last sent id: {lastSentToAnyone}, latest create id: {ID}";
+                    warningMsg += "\n" + GetHighEventCountsWarning(events, maxEventsToList: 3);
+                    GameServer.Log(warningMsg, ServerLog.MessageType.ServerMessage);
                     events.ForEach(e => e.ResetCreateTime());
                     //TODO: reset clients if this happens, maybe do it if a majority are behind rather than all of them?
                 }
@@ -323,30 +325,20 @@ namespace Barotrauma.Networking
             }
 
             //too many events for one packet
-            //(normal right after a round has just started, don't show a warning if it's been less than 10 seconds)
-            if (eventsToSync.Count > 200 && GameMain.GameSession != null && GameMain.GameSession.RoundDuration > 10.0)
+            //(normal right after a round has just started, don't show a warning if it's been less than 30 seconds)
+            if (eventsToSync.Count > 200 && GameMain.GameSession != null && GameMain.GameSession.RoundDuration > 30.0)
             {
                 if (eventsToSync.Count > 200 && !client.NeedsMidRoundSync && Timing.TotalTime > lastEventCountHighWarning + 2.0)
                 {
                     Color color = eventsToSync.Count > 500 ? Color.Red : Color.Orange;
                     if (eventsToSync.Count < 300) { color = Color.Yellow; }
                     string warningMsg = "WARNING: event count very high: " + eventsToSync.Count;
-
-                    var sortedEvents = eventsToSync.GroupBy(e => e.Entity.ToString())
-                        .Select(e => new { Value = e.Key, Count = e.Count() })
-                        .OrderByDescending(e => e.Count);
-
-                    int count = 1;
-                    foreach (var sortedEvent in sortedEvents)
-                    {
-                        warningMsg += "\n" + count + ". " + (sortedEvent.Value?.ToString() ?? "null") + " x" + sortedEvent.Count;
-                        count++;
-                        if (count > 3) { break; }
-                    }
+                    warningMsg += "\n" + GetHighEventCountsWarning(eventsToSync, maxEventsToList: 3);
                     if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         GameServer.Log(warningMsg, ServerLog.MessageType.Error);
                     }
+                    server.SendConsoleMessage(warningMsg, client, color);
                     DebugConsole.NewMessage(warningMsg, color);
                     lastEventCountHighWarning = Timing.TotalTime;
                 }
@@ -371,6 +363,31 @@ namespace Barotrauma.Networking
                 (entityEvent as ServerEntityEvent).Sent = true;
                 client.EntityEventLastSent[entityEvent.ID] = Lidgren.Network.NetTime.Now;
             }
+        }
+
+        private string GetHighEventCountsWarning(IEnumerable<NetEntityEvent> events, int maxEventsToList)
+        {
+            string warningMsg = string.Empty;
+
+            var sortedEvents = events.GroupBy(e => e.Entity.ToString())
+                .Select(e => new { Value = e.First(), Count = e.Count() })
+                .OrderByDescending(e => e.Count);
+
+            int count = 1;
+            foreach (var sortedEvent in sortedEvents)
+            {
+                Entity targetEntity = sortedEvent.Value.Entity;
+                if (!warningMsg.IsNullOrEmpty()) { warningMsg += "\n"; }
+                warningMsg += count + ". " + (targetEntity?.ToString() ?? "null") + " x" + sortedEvent.Count;
+                if (targetEntity != null && targetEntity.ContentPackage != ContentPackageManager.VanillaCorePackage)
+                {
+                    warningMsg += $" (content package: {targetEntity.ContentPackage.Name})";
+                }
+                count++;
+                if (count > maxEventsToList) { break; }
+            }
+
+            return warningMsg;
         }
 
         /// <summary>

@@ -14,13 +14,15 @@ namespace Barotrauma.Items.Components
 {
     partial class Holdable : Pickable, IServerSerializable, IClientSerializable
     {
-        private readonly struct EventData : IEventData
+        private readonly struct AttachEventData : IEventData
         {
             public readonly Vector2 AttachPos;
-            
-            public EventData(Vector2 attachPos)
+            public readonly Character Attacher;
+
+            public AttachEventData(Vector2 attachPos, Character attacher)
             {
                 AttachPos = attachPos;
+                Attacher = attacher;
             }
         }
 
@@ -225,6 +227,51 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize("", IsPropertySaveable.Yes, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's been dropped on the floor (not attached to a wall).")]
+        public string MsgWhenDropped
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// For setting the handle positions using status effects
+        /// </summary>
+        public Vector2 Handle1
+        {
+            get { return ConvertUnits.ToDisplayUnits(handlePos[0]); }
+            set 
+            { 
+                handlePos[0] = ConvertUnits.ToSimUnits(value); 
+                if (item.FlippedX)
+                {
+                    handlePos[0].X = -handlePos[0].X;
+                }
+                if (!secondHandlePosDefined)
+                {
+                    Handle2 = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// For setting the handle positions using status effects
+        /// </summary>
+        public Vector2 Handle2
+        {
+            get { return ConvertUnits.ToDisplayUnits(handlePos[1]); }
+            set 
+            { 
+                handlePos[1] = ConvertUnits.ToSimUnits(value);
+                if (item.FlippedX)
+                {
+                    handlePos[1].X = -handlePos[1].X;
+                }
+            }
+        }
+
+        private bool secondHandlePosDefined;
+
         public Holdable(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -254,9 +301,14 @@ namespace Barotrauma.Items.Components
             {
                 int index = i - 1;
                 string attributeName = "handle" + i;
-                var attribute = element.GetAttribute(attributeName);
                 // If no value is defind for handle2, use the value of handle1.
-                var value = attribute != null ? ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(attribute.Value)) : previousValue;
+                Vector2 value = previousValue;
+                var attribute = element.GetAttribute(attributeName);
+                if (attribute != null)
+                {
+                    secondHandlePosDefined = i > 1;
+                    value = ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(attribute.Value));
+                }
                 handlePos[index] = value;
                 previousValue = value;
             }
@@ -688,7 +740,19 @@ namespace Barotrauma.Items.Components
 #endif
             //make the item pickable with the default pick key and with no specific tools/items when it's deattached
             RequiredItems.Clear();
-            DisplayMsg = "";
+            if (MsgWhenDropped.IsNullOrEmpty())
+            {
+                DisplayMsg = "";
+            }
+            else
+            {
+                DisplayMsg = TextManager.Get(MsgWhenDropped);
+                DisplayMsg =
+                    DisplayMsg.Loaded ?
+                    TextManager.ParseInputTypes(DisplayMsg) :
+                    MsgWhenDropped;
+            }
+
             PickKey = InputType.Select;
 #if CLIENT
             item.DrawDepthOffset = SpriteDepthWhenDropped - item.SpriteDepth;
@@ -755,21 +819,14 @@ namespace Barotrauma.Items.Components
 
                 if (GameMain.NetworkMember != null)
                 {
-                    if (character != Character.Controlled)
-                    {
-                        return false;
-                    }
-                    else if (GameMain.NetworkMember.IsServer)
-                    {
-                        return false;
-                    }
-                    else
-                    {
 #if CLIENT
+                    if (character == Character.Controlled)
+                    {
                         Vector2 attachPos = ConvertUnits.ToSimUnits(GetAttachPosition(character));
-                        item.CreateClientEvent(this, new EventData(attachPos));
-#endif
+                        item.CreateClientEvent(this, new AttachEventData(attachPos, character));
                     }
+#endif
+                    //don't attach at this point in MP: instead rely on the network events created above
                     return false;
                 }
                 else
@@ -824,9 +881,13 @@ namespace Barotrauma.Items.Components
 
             if (user.Submarine != null)
             {
+                //we must add some "padding" to the raycast to ensure it reaches all the way to a wall
+                //otherwise the cursor might be outside a wall, but the grid cell it's in might be partially inside
+                Vector2 padding =  Submarine.GridSize * new Vector2(Math.Sign(mouseDiff.X), Math.Sign(mouseDiff.Y));
+
                 if (Submarine.PickBody(
                     ConvertUnits.ToSimUnits(user.Position), 
-                    ConvertUnits.ToSimUnits(user.Position + mouseDiff), collisionCategory: Physics.CollisionWall) != null)
+                    ConvertUnits.ToSimUnits(user.Position + mouseDiff + padding), collisionCategory: Physics.CollisionWall) != null)
                 {
                     attachPos = userPos + mouseDiff * Submarine.LastPickedFraction + offset;
 

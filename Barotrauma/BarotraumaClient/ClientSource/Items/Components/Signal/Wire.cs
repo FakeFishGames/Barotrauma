@@ -106,13 +106,6 @@ namespace Barotrauma.Items.Components
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
 
-        [Serialize(0.3f, IsPropertySaveable.No)]
-        public float Width
-        {
-            get;
-            set;
-        }
-
         public Vector2 DrawSize
         {
             get { return sectionExtents; }
@@ -198,6 +191,8 @@ namespace Barotrauma.Items.Components
                 Drawable = false;
                 return;
             }
+
+            if (Width * wireSprite.size.Y * Screen.Selected.Cam.Zoom < 1.0f) { return; }
 
             Vector2 drawOffset = GetDrawOffset() + offset;
 

@@ -63,9 +63,12 @@ namespace Barotrauma
             OutConditionMax = element.GetAttributeFloat("outconditionmax", element.GetAttributeFloat("outcondition", 1.0f));
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
+
+            Identifier[] defaultRequiredDeconstructor = new Identifier[] { "deconstructor".ToIdentifier() };
             RequiredDeconstructor = element.GetAttributeIdentifierArray("requireddeconstructor", 
-                element.Parent?.GetAttributeIdentifierArray("requireddeconstructor", Array.Empty<Identifier>()) ?? Array.Empty<Identifier>());
+                element.Parent?.GetAttributeIdentifierArray("requireddeconstructor", null) ?? defaultRequiredDeconstructor);
             RequiredOtherItem = element.GetAttributeIdentifierArray("requiredotheritem", Array.Empty<Identifier>());
+
             ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
             InfoText = element.GetAttributeString("infotext", string.Empty);
             InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
@@ -197,7 +200,8 @@ namespace Barotrauma
             {
                 Tag = tag;
                 using MD5 md5 = MD5.Create();
-                UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(tag, md5);
+                //add "tag:" to the hash, so we don't get a hash collision between recipes configured as identifier="smth" and tag="smth"
+                UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(("tag:" + tag).ToIdentifier(), md5);
             }
 
             public override string ToString()
@@ -216,13 +220,15 @@ namespace Barotrauma
         public readonly ImmutableArray<Identifier> SuitableFabricatorIdentifiers;
         public readonly float RequiredTime;
         public readonly int RequiredMoney;
-        public readonly bool RequiresRecipe;
+        public readonly bool RequiresRecipe; 
+        public readonly bool HideIfNoRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly ImmutableArray<Skill> RequiredSkills;
         public readonly uint RecipeHash;
         public readonly int Amount;
         public readonly int? Quality;
         public readonly bool HideForNonTraitors;
+        public readonly InvSlotType MoveToSlot;
 
         /// <summary>
         /// How many of this item the fabricator can create (< 0 = unlimited)
@@ -250,6 +256,7 @@ namespace Barotrauma
             }
             var requiredItems = new List<RequiredItem>();
             RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
+            HideIfNoRecipe = element.GetAttributeBool("hideifnorecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
 
             int limitDefault = element.GetAttributeInt("fabricationlimit", -1);
@@ -257,6 +264,7 @@ namespace Barotrauma
             FabricationLimitMax = element.GetAttributeInt(nameof(FabricationLimitMax), limitDefault);
 
             HideForNonTraitors = element.GetAttributeBool(nameof(HideForNonTraitors), false);
+            MoveToSlot = element.GetAttributeEnum(nameof(MoveToSlot), InvSlotType.None);
 
             if (element.GetAttribute(nameof(Quality)) != null)
             {
@@ -382,6 +390,7 @@ namespace Barotrauma
         public readonly int Amount;
         public readonly bool CampaignOnly;
         public readonly bool NotCampaign;
+        public readonly bool NotPvP;
         public readonly bool TransferOnlyOnePerContainer;
         public readonly bool AllowTransfersHere = true;
 
@@ -399,6 +408,7 @@ namespace Barotrauma
             MinCondition = element.GetAttributeFloat("mincondition", 0f);
             CampaignOnly = element.GetAttributeBool("campaignonly", CampaignOnly);
             NotCampaign = element.GetAttributeBool("notcampaign", NotCampaign);
+            NotPvP = element.GetAttributeBool("notpvp", NotPvP);
             TransferOnlyOnePerContainer = element.GetAttributeBool("TransferOnlyOnePerContainer", TransferOnlyOnePerContainer);
             AllowTransfersHere = element.GetAttributeBool("AllowTransfersHere", AllowTransfersHere);
 
@@ -508,7 +518,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsOverride => Prefabs.IsOverride(this);
 
-        private readonly XElement originalElement;
+        private readonly ContentXElement originalElement;
         public ContentXElement ConfigElement { get; private set; }
 
         public ImmutableArray<DeconstructItem> DeconstructItems { get; private set; }
@@ -729,6 +739,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.No, description: "Should the character who's selected the item grab it (hold their hand on it, the same way as they do when repairing)? Defaults to true on items that have an ItemContainer component.")]
         public bool GrabWhenSelected { get; set; }
 
+        [Serialize(true, IsPropertySaveable.No, description: "Are AI characters allowed to deselect the item when they're idling (and wander off?).")]
+        public bool AllowDeselectWhenIdling { get; private set; }
+
         private float health;
 
         [Serialize(100.0f, IsPropertySaveable.No)]
@@ -754,6 +767,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool DamagedByExplosions { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool DamagedByContainedItemExplosions { get; private set; }
 
         [Serialize(1f, IsPropertySaveable.No)]
         public float ExplosionDamageMultiplier { get; private set; }
@@ -882,7 +898,8 @@ namespace Barotrauma
             int extraStackSize = inventory switch
             {
                 ItemInventory { Owner: Item it } i => (int)it.StatManager.GetAdjustedValueAdditive(ItemTalentStats.ExtraStackSize, i.ExtraStackSize),
-                CharacterInventory { Owner: Character { Info: { } info } } i => i.ExtraStackSize + (int)info.GetSavedStatValueWithAll(StatTypes.InventoryExtraStackSize, Category.ToIdentifier()),
+                CharacterInventory { Owner: Character { Info: { } info } } i => 
+                    i.ExtraStackSize + EnumExtensions.GetIndividualFlags(Category).Sum(c => (int)info.GetSavedStatValueWithAll(StatTypes.InventoryExtraStackSize, c.ToIdentifier())),
                 not null => inventory.ExtraStackSize,
                 null => 0
             };
@@ -991,7 +1008,7 @@ namespace Barotrauma
             ParseConfigElement(variantOf: null);
         }
 
-        private string GetTexturePath(ContentXElement subElement, ItemPrefab variantOf)
+        public string GetTexturePath(ContentXElement subElement, ItemPrefab variantOf)
             => subElement.DoesAttributeReferenceFileNameAlone("texture")
                 ? Path.GetDirectoryName(variantOf?.ContentFile.Path ?? ContentFile.Path)
                 : "";
@@ -1044,11 +1061,13 @@ namespace Barotrauma
                 AllowAsExtraCargo = ConfigElement.GetAttributeBool("allowasextracargo", false);
             }
 
-            this.tags = ConfigElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet();
-            if (!Tags.Any())
+            List<Identifier> tags = ConfigElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToList();
+            //this was previously handled in ItemComponent, moved here to make it part of the immutable tags of the item
+            if (ConfigElement.Descendants().Any(e => e.NameAsIdentifier() == "lightcomponent")) 
             {
-                this.tags = ConfigElement.GetAttributeIdentifierArray("Tags", Array.Empty<Identifier>()).ToImmutableHashSet();
+                tags.Add("light".ToIdentifier());
             }
+            this.tags = tags.ToImmutableHashSet();
 
             if (ConfigElement.GetAttribute("cargocontainername") != null)
             {
@@ -1390,10 +1409,14 @@ namespace Barotrauma
         public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
             priceInfo = GetPriceInfo(store);
+            Identifier? faction = store?.Location.Faction?.Prefab.Identifier;
+            Identifier? secondaryFaction = store?.Location.SecondaryFaction?.Prefab.Identifier;
+
             return
                 priceInfo is { CanBeBought: true } &&
                 (store?.Location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty &&
-                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => store?.Location.Faction?.Prefab.Identifier == p.Key || store?.Location.SecondaryFaction?.Prefab.Identifier == p.Key));
+                (priceInfo.RequiredFaction.IsEmpty || faction == priceInfo.RequiredFaction || secondaryFaction == priceInfo.RequiredFaction) &&
+                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => faction == p.Key || secondaryFaction == p.Key));
         }
 
         public bool CanBeBoughtFrom(Location location)
@@ -1574,7 +1597,7 @@ namespace Barotrauma
 
         public void InheritFrom(ItemPrefab parent)
         {
-            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement, CheckXML).FromPackage(ConfigElement.ContentPackage);
+            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement, CheckXML);
             ParseConfigElement(parent);
 
             void CheckXML(XElement originalElement, XElement variantElement, XElement result)

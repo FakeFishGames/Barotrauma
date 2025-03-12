@@ -2,10 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
-using Barotrauma.IO;
 using Voronoi2;
 
 namespace Barotrauma
@@ -51,16 +48,9 @@ namespace Barotrauma
         public static int ThreadId = 0;
         private static void CheckRandThreadSafety(RandSync sync)
         {
-            if (ThreadId != 0 && sync == RandSync.Unsynced)
-            {
-                if (System.Threading.Thread.CurrentThread.ManagedThreadId != ThreadId)
-                {
-                    Debug.WriteLine($"Unsynced rand used in synced thread! {Environment.StackTrace}");
-                }
-            }
             if (ThreadId != 0 && sync == RandSync.ServerAndClient)
             {
-                if (System.Threading.Thread.CurrentThread.ManagedThreadId != ThreadId)
+                if (Environment.CurrentManagedThreadId != ThreadId)
                 {
 #if DEBUG
                     throw new Exception("Unauthorized multithreaded access to RandSync.ServerAndClient");
@@ -71,7 +61,7 @@ namespace Barotrauma
             }
         }
 
-        public static float Range(float minimum, float maximum, RandSync sync=RandSync.Unsynced)
+        public static float Range(float minimum, float maximum, RandSync sync = RandSync.Unsynced)
             => GetRNG(sync).Range(minimum, maximum);
 
         public static double Range(double minimum, double maximum, RandSync sync = RandSync.Unsynced)

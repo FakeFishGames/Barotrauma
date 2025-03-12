@@ -239,6 +239,8 @@ namespace Barotrauma
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
 
+            DistanceFalloff = element.GetAttributeBool(nameof(DistanceFalloff), true);
+
             flash           = element.GetAttributeBool("flash", showEffects);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
             if (element.GetAttribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
@@ -315,9 +317,9 @@ namespace Barotrauma
                 Color flashColor = Color.Lerp(Color.Transparent, screenColor, Math.Max((screenColorRange - cameraDist) / screenColorRange, 0.0f));
                 Screen.Selected.ColorFade(flashColor, Color.Transparent, screenColorDuration);
             }
-            foreach (Item item in Item.ItemList)
+            foreach (Sonar sonar in Sonar.SonarList)
             {
-                item.GetComponent<Sonar>()?.RegisterExplosion(this, worldPosition);
+                sonar.RegisterExplosion(this, worldPosition);
             }
 #endif
 
@@ -436,19 +438,23 @@ namespace Barotrauma
                         }                        
                     }
 
-                    if (item.Prefab.DamagedByExplosions && !item.Indestructible)
+                    if (!item.Indestructible)
                     {
-                        float distFactor = 
-                            DistanceFalloff ? 
-                            1.0f - dist / displayRange : 
-                            1.0f;
-                        float damageAmount = Attack.GetItemDamage(1.0f, item.Prefab.ExplosionDamageMultiplier);
+                        if (item.Prefab.DamagedByExplosions ||
+                            (item.Prefab.DamagedByContainedItemExplosions && item.ContainedItems.Contains(damageSource)))
+                        {
+                            float distFactor = 
+                                DistanceFalloff ? 
+                                1.0f - dist / displayRange : 
+                                1.0f;
+                            float damageAmount = Attack.GetItemDamage(1.0f, item.Prefab.ExplosionDamageMultiplier);
 
-                        Vector2 explosionPos = worldPosition;
-                        if (item.Submarine != null) { explosionPos -= item.Submarine.Position; }
+                            Vector2 explosionPos = worldPosition;
+                            if (item.Submarine != null) { explosionPos -= item.Submarine.Position; }
 
-                        damageAmount *= GetObstacleDamageMultiplier(ConvertUnits.ToSimUnits(explosionPos), worldPosition, item.SimPosition, IgnoredCover);
-                        item.Condition -= damageAmount * distFactor;
+                            damageAmount *= GetObstacleDamageMultiplier(ConvertUnits.ToSimUnits(explosionPos), worldPosition, item.SimPosition, IgnoredCover);
+                            item.Condition -= damageAmount * distFactor;
+                        }
                     }
                 }
             }

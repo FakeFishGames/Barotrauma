@@ -303,7 +303,11 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) { return; }
                 waterVolume = MathHelper.Clamp(value, 0.0f, Volume * MaxCompress);
-                if (waterVolume < Volume) { Pressure = rect.Y - rect.Height + waterVolume / rect.Width; }
+                if (waterVolume <= Volume)
+                { 
+                    //recalculate pressure, but only if there's less water than the volume, above that point the "overpressure" logic kicks in
+                    Pressure = rect.Y - rect.Height + waterVolume / rect.Width; 
+                }
                 if (waterVolume > 0.0f)
                 {
                     update = true;
@@ -542,7 +546,7 @@ namespace Barotrauma
             var clone = new Hull(rect, Submarine);
             foreach (KeyValuePair<Identifier, SerializableProperty> property in SerializableProperties)
             {
-                if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
+                if (!property.Value.Attributes.OfType<Serialize>().Any()) { continue; }
                 clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
 #if CLIENT

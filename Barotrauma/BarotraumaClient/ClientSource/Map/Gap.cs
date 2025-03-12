@@ -20,7 +20,8 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
-            return Screen.Selected == GameMain.SubEditorScreen || GameMain.DebugDraw;
+            if (Screen.Selected != GameMain.SubEditorScreen && !GameMain.DebugDraw) { return false; }
+            return base.IsVisible(worldView);
         }
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
@@ -95,9 +96,13 @@ namespace Barotrauma
                     new Vector2(Math.Sign(targetHull.Rect.Center.X - rect.Center.X), 0.0f)
                     : new Vector2(0.0f, Math.Sign((rect.Y - rect.Height / 2.0f) - (targetHull.Rect.Y - targetHull.Rect.Height / 2.0f)));
 
-                Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
+                Vector2 arrowPos = new Vector2(WorldRect.Center.X, WorldRect.Y - WorldRect.Height / 2);
+                if (Submarine != null)
+                {
+                    arrowPos += (Submarine.DrawPosition - Submarine.Position);
+                }
+                arrowPos.Y = -arrowPos.Y;
                 arrowPos += new Vector2(dir.X * (WorldRect.Width / 2), dir.Y * (WorldRect.Height / 2));
-
                 bool invalidDir = false;
                 if (dir == Vector2.Zero)
                 {

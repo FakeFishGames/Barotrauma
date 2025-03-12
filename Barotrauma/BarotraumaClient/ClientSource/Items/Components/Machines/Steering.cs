@@ -57,24 +57,42 @@ namespace Barotrauma.Items.Components
         private GUIMessageBox enterOutpostPrompt, exitOutpostPrompt;
 
         private bool levelStartSelected;
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool LevelStartSelected
         {
-            get { return levelStartTickBox.Selected; }
-            set { levelStartTickBox.Selected = value; }
+            get 
+            { 
+                return levelStartTickBox?.Selected ?? levelStartSelected; 
+            }
+            set
+            {
+                TrySetTickBoxSelected(levelStartTickBox, ref levelStartSelected, value);
+            }
         }
 
         private bool levelEndSelected;
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool LevelEndSelected
         {
-            get { return levelEndTickBox.Selected; }
-            set { levelEndTickBox.Selected = value; }
+            get { return levelEndTickBox?.Selected ?? levelEndSelected; }
+            set
+            {
+                TrySetTickBoxSelected(levelEndTickBox, ref levelEndSelected, value);
+            }
         }
 
         private bool maintainPos;
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool MaintainPos
         {
-            get { return maintainPosTickBox.Selected; }
-            set { maintainPosTickBox.Selected = value; }
+            get 
+            { 
+                return maintainPosTickBox?.Selected ?? maintainPos; 
+            }
+            set
+            {
+                TrySetTickBoxSelected(maintainPosTickBox, ref maintainPos, value);
+            }
         }
 
         private float steerRadius;
@@ -554,7 +572,7 @@ namespace Barotrauma.Items.Components
             int x = rect.X;
             int y = rect.Y;
 
-            if (Voltage < MinVoltage) { return; }
+            if (!HasPower) { return; }
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             Vector2 steeringOrigin = steerArea.Rect.Center.ToVector2();
@@ -759,7 +777,7 @@ namespace Barotrauma.Items.Components
                 dockingButton.Text = dockText;
             }
 
-            if (Voltage < MinVoltage)
+            if (!HasPower)
             {
                 tipContainer.Visible = true;
                 tipContainer.Text = noPowerTip;
@@ -829,7 +847,7 @@ namespace Barotrauma.Items.Components
             }
             if (!AutoPilot && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                steeringAdjustSpeed = character == null ? DefaultSteeringAdjustSpeed : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                steeringAdjustSpeed = character == null ? DefaultSteeringAdjustSpeed : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel(Tags.HelmSkill) / 100.0f);
                 Vector2 input = Vector2.Zero;
                 if (PlayerInput.KeyDown(InputType.Left)) { input -= Vector2.UnitX; }
                 if (PlayerInput.KeyDown(InputType.Right)) { input += Vector2.UnitX; }
@@ -909,7 +927,7 @@ namespace Barotrauma.Items.Components
                     if (targetPort.Docked || targetPort.Item.Submarine == null) { continue; }
                     if (targetPort.Item.Submarine == controlledSub || targetPort.IsHorizontal != sourcePort.IsHorizontal) { continue; }
                     if (targetPort.Item.Submarine.DockedTo?.Contains(sourcePort.Item.Submarine) ?? false) { continue; }
-                    if (Level.Loaded != null && targetPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                    if (targetPort.Item.Submarine.IsAboveLevel) { continue; }
                     if (sourceDir == targetPort.GetDir()) { continue; }
 
                     float dist = Vector2.DistanceSquared(sourcePort.Item.WorldPosition, targetPort.Item.WorldPosition);
@@ -921,6 +939,21 @@ namespace Barotrauma.Items.Components
                         DockingTarget = targetPort;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sets the value of the specified tickbox, or if it hasn't been instantiated (yet?), just the value of the backing field.
+        /// </summary>
+        private void TrySetTickBoxSelected(GUITickBox tickBox, ref bool backingValue, bool newValue)
+        {
+            if (tickBox == null)
+            {
+                backingValue = newValue;
+            }
+            else
+            {
+                tickBox.Selected = newValue;
             }
         }
 
