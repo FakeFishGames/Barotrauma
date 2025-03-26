@@ -3,6 +3,7 @@
     class CharacterAbilityPsychoClown : CharacterAbility
     {
         private readonly StatTypes statType;
+        private readonly float minValue;
         private readonly float maxValue;
         private readonly string afflictionIdentifier;
         private float lastValue = 0f;
@@ -12,6 +13,7 @@
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", 0f);
+            minValue = abilityElement.GetAttributeFloat("minvalue", 0f);
             afflictionIdentifier = abilityElement.GetAttributeString("afflictionidentifier", "");
         }
 
@@ -31,7 +33,7 @@
                     afflictionStrength = affliction.Strength / affliction.Prefab.MaxStrength;
                 }
 
-                lastValue = afflictionStrength * maxValue;
+                lastValue = minValue + afflictionStrength * (maxValue - minValue);
                 Character.ChangeStat(statType, lastValue);
             }
             else
