@@ -497,236 +497,409 @@
     <Upgrade gameversion="0.1500.5.0" scale="0.5" />
     <Upgrade gameversion="1.0.13.0" Tags="alien,mediumitem,weapon,mountableweapon,cuttingequipment" />
   </Item>
-  <Item name="" identifier="alienhatch" category="Alien" subcategory="doorsandhatches" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5" health="3000">
-    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="528,417,432,143" depth="0.8" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="528,417,432,143" depth="0.799" origin="0.5,0.5" scale="true" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="528,417,432,143" depth="0.04" origin="0.5,0.5" />
-    <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="60.0">
-      <Upgrade gameversion="1.6.2.0" PickingTime="60.0" />
-      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
-      <Requireditem items="guardiankey" type="Picked" optional="true"/>
-      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,577,431,40" depth="0.05" origin="0.0,0.5" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,431,40" depth="0.6" origin="0.0,0.5" scale="true" />
-      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
-      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
-      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
-      <StatusEffect type="OnPicked" target="this" IgnoreSignals="true" />
-      <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="0.1" setvalue="true" delay="5" />
-      <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="3" setvalue="true" delay="9" />
-    </Door>
-    <ConnectionPanel canbeselected="true" hudpriority="10">
-      <RequiredItem items="screwdriver" type="Equipped" />
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <input name="toggle" displayname="connection.togglestate" />
-      <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
-    </ConnectionPanel>
-  </Item>
-  <Item name="" identifier="aliendoor" category="Alien" subcategory="doorsandhatches" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5" health="3000">
+  
+  
+  <!-- 
+  the sprite itself is below everything else, it's only here to appear in sub editor
+  the decorativesprite is the doorframe, rendered in front of characters but behind structures (otherwise only sprite at depth="0.04" would suffice) 
+  Brokensprite does NOT work: depth mismatches, doesn't support fadein for some reason, so I'm using condition="lte 0" to display the broken sprite at a proper depth 
+  a conditional is required otherwise the decorative sprite doesnt disappear -->
+  <Item name="" identifier="aliendoor" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" scale="0.5" health="3000">
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="355,223,140,435" depth="0.8" origin="0.5,0.5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="355,223,140,435" depth="0.04" origin="0.5,0.5" />
-    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="60.0">
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="355,223,140,435" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="355,223,140,435" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="60.0" hasintegratedbuttons="true">
       <Upgrade gameversion="1.6.2.0" PickingTime="60.0" />
       <RequiredItem items="crowbar" type="Equipped" optional="true"/>
       <Requireditem items="guardiankey" type="Picked" optional="true"/>
       <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="496,232,32,417" depth="0.05" origin="0.5,0.0" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,417" depth="0.6" origin="0.5,0.0" scale="true" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,417" depth="0.81" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="true" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="0.1" setvalue="true" delay="5" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="3" setvalue="true" delay="9" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-50" distancemax="50" particleamount="5" anglemin="90" anglemax="90" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
-      <requireditem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
     </ConnectionPanel>
   </Item>
-  <Item name="" identifier="aliendoorsmall" nameidentifier="aliendoor" category="Alien" subcategory="doorsandhatches" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5" health="1000">
+  
+  <Item name="" identifier="alienhatch" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" scale="0.5" health="3000">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="528,417,432,143" depth="0.8" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="528,417,432,143" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="528,417,432,143" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="60.0" hasintegratedbuttons="true">
+      <Upgrade gameversion="1.6.2.0" PickingTime="60.0" />
+      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <Requireditem items="guardiankey" type="Picked" optional="true"/>
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,577,431,40" depth="0.05" origin="0.0,0.5" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,431,40" depth="0.81" origin="0.0,0.5" scale="true" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+      <StatusEffect type="OnPicked" target="this" IgnoreSignals="true" />
+      <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="0.1" setvalue="true" delay="5" />
+      <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="3" setvalue="true" delay="9" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-50" distancemax="50" particleamount="5" anglemin="0" anglemax="0" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
+    </ConnectionPanel>
+  </Item>
+
+  <Item name="" identifier="aliendoorsmall" nameidentifier="aliendoor" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" scale="0.5" health="1000">
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="899,1234,107,173" depth="0.8" origin="0.5,0.5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="899,1234,107,173" depth="0.04" origin="0.5,0.5" />
-    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="45.0">
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="899,1234,107,173" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="898,1426,107,173" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="45.0" hasintegratedbuttons="true">
       <Upgrade gameversion="1.6.2.0" PickingTime="45.0" />
-      <RequiredItem items="crowbar" type="Equipped" />
+      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <Requireditem items="guardiankey" type="Picked" optional="true"/>
       <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="641,1634,30,173" depth="0.05" origin="0.5,0.0" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="609,1634,30,173" depth="0.6" origin="0.5,0.0" scale="true" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,173" depth="0.81" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="true" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="0.1" setvalue="true" delay="5" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="3" setvalue="true" delay="9" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-25" distancemax="25" particleamount="5" anglemin="90" anglemax="90" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
-      <requireditem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
     </ConnectionPanel>
   </Item>
-  <Item name="" identifier="alienhatchsmall" nameidentifier="alienhatch" category="Alien" subcategory="doorsandhatches" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5" health="1000">
+  
+  <Item name="" identifier="alienhatchsmall" nameidentifier="alienhatch" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" scale="0.5" health="1000">
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1427,173,107" depth="0.8" origin="0.5,0.5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1427,173,107" depth="0.04" origin="0.5,0.5" />
-    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="45.0">
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1427,173,107" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1537,173,107" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="45.0" hasintegratedbuttons="true">
       <Upgrade gameversion="1.6.2.0" PickingTime="45.0" />
-      <RequiredItem items="crowbar" type="Equipped" />
+      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
+      <Requireditem items="guardiankey" type="Picked" optional="true"/>
       <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1889,173,30" depth="0.05" origin="0.0,0.5" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1921,173,30" depth="0.6" origin="0.0,0.5" scale="true" />
+      <Brokensprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,173,30" depth="0.81" origin="0.0,0.5" scale="true" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="true" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="0.1" setvalue="true" delay="5" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="3" setvalue="true" delay="9" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-25" distancemax="25" particleamount="5" anglemin="0" anglemax="0" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
-      <requireditem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
     </ConnectionPanel>
   </Item>
-  <Item name="" identifier="aliendoorsmallwbuttons" nameidentifier="aliendoorwbuttons" descriptionidentifier="aliendoor" category="Alien" subcategory="doorsandhatches" tags="alien,door,aliendoor,weldable" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" linkable="true" scale="0.5" health="1000">
-    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="898,1602,109,173" depth="0.8" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="898,1778,109,173" depth="0.8" origin="0.5,0.5" scale="true" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="899,1234,107,173" depth="0.04" origin="0.5,0.5" />
-    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="45.0" shadowscale="0.7,1" hasintegratedbuttons="true">
-      <Upgrade gameversion="1.6.2.0" PickingTime="45.0" />
-      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="641,1634,30,173" depth="0.05" origin="0.5,0.0" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="609,1634,30,173" depth="0.6" origin="0.5,0.0" scale="true" />
-      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
-      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
-      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
-    </Door>
-    <trigger x="0" y="-50" width="109" height="72" />
-    <AiTarget sightrange="2000.0" static="True" />
-    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
-      <input name="toggle" displayname="connection.togglestate" />
-      <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
-    </ConnectionPanel>
-  </Item>
-  <Item name="" identifier="alienhatchsmallwbuttons" nameidentifier="alienhatchwbuttons" descriptionidentifier="alienhatch" category="Alien" subcategory="doorsandhatches" allowedlinks="gap,hull,structure,item" linkable="true" tags="alien,door,aliendoor,weldable" scale="0.5" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" health="1000">
-    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1650,173,107" depth="0.8" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1764,173,107" depth="0.8" origin="0.5,0.5" scale="true" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1427,173,107" depth="0.04" origin="0.5,0.5" />
-    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="45.0" shadowscale="1,0.8" hasintegratedbuttons="true">
-      <Upgrade gameversion="1.6.2.0" PickingTime="45.0" />
-      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1889,173,30" depth="0.05" origin="0.0,0.5" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1921,173,30" depth="0.6" origin="0.0,0.5" scale="true" />
-      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
-      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
-      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
-    </Door>
-    <trigger x="50" y="0" width="72" height="109" />
-    <AiTarget sightrange="2000.0" static="True" />
-    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
-      <input name="toggle" displayname="connection.togglestate" />
-      <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
-    </ConnectionPanel>
-  </Item>
-  <Item name="" identifier="aliendoorheavy" nameidentifier="aliendoor" category="Alien" subcategory="doorsandhatches" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5" health="10000">
+
+  <Item name="" identifier="aliendoorheavy" nameidentifier="aliendoor" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" scale="0.5" health="10000">
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="196,223,152,435" depth="0.8" origin="0.5,0.5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="196,223,152,435" depth="0.04" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="196,223,152,435" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="196,223,152,435" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="120.0">
       <Upgrade gameversion="1.6.2.0" PickingTime="120.0" />
-      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
-      <Requireditem items="guardiankey" type="Picked" optional="true"/>
+      <RequiredItem items="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="496,232,32,417" depth="0.05" origin="0.5,0.0" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,417" depth="0.6" origin="0.5,0.0" scale="true" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,417" depth="0.81" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="true" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="0.1" setvalue="true" delay="5" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="3" setvalue="true" delay="9" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-50" distancemax="50" particleamount="5" anglemin="90" anglemax="90" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="" identifier="alienhatchheavy" nameidentifier="alienhatch" category="Alien" subcategory="doorsandhatches" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5" health="10000">
+  
+  <Item name="" identifier="alienhatchheavy" nameidentifier="alienhatch" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" scale="0.5" health="10000">
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,631,433,149" depth="0.8" origin="0.5,0.5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,631,433,149" depth="0.04" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,631,433,149" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,631,433,149" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="120.0">
       <Upgrade gameversion="1.6.2.0" PickingTime="120.0" />
-      <RequiredItem items="crowbar" type="Equipped" optional="true"/>
-      <Requireditem items="guardiankey" type="Picked" optional="true"/>
+      <RequiredItem items="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,577,431,40" depth="0.05" origin="0.0,0.5" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,431,40" depth="0.6" origin="0.0,0.5" scale="true" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,431,40" depth="0.81" origin="0.0,0.5" scale="true" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="true" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="0.1" setvalue="true" delay="5" />
       <StatusEffect type="OnPicked" target="this" IgnoreSignals="false" ClosingSpeed="3" setvalue="true" delay="9" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-50" distancemax="50" particleamount="5" anglemin="0" anglemax="0" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="" identifier="aliendoorwbuttons" descriptionidentifier="aliendoor" category="Alien" subcategory="doorsandhatches" tags="alien,door,aliendoor,weldable" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" linkable="true" scale="0.5" health="3000">
+  
+  
+  <!-- doors with buttons: decorativesprite is used to overlay the normal and broken door sprites in front, and buttons in the back -->
+  <Item name="" identifier="aliendoorwbuttons" descriptionidentifier="aliendoor" category="Alien" tags="alien,door,aliendoor,weldable" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="gap,hull,structure,item" linkable="true" scale="0.5" health="3000">
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="0,223,189,435" depth="0.8" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="0,223,189,435" depth="0.8" origin="0.5,0.5" scale="true" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="355,223,140,435" depth="0.04" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="355,223,140,435" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="355,223,140,435" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="0,223,189,435" depth="0.79" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="60.0" shadowscale="0.7,1" hasintegratedbuttons="true">
       <Upgrade gameversion="1.6.2.0" PickingTime="60.0" />
       <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="497,223,30,435" depth="0.05" origin="0.5,0.0" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,417" depth="0.6" origin="0.5,0.0" scale="true" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,417" depth="0.81" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-50" distancemax="50" particleamount="5" anglemin="90" anglemax="90" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
     </Door>
     <trigger x="0" y="-166" width="188" height="72" />
     <AiTarget sightrange="2000.0" static="True" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
     </ConnectionPanel>
   </Item>
-  <Item name="" identifier="alienhatchwbuttons" descriptionidentifier="alienhatch" allowedlinks="gap,hull,structure,item" linkable="true" category="Alien" subcategory="doorsandhatches" tags="alien,door,aliendoor,weldable" scale="0.5" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" health="3000">
+  
+  <Item name="" identifier="alienhatchwbuttons" descriptionidentifier="alienhatch" category="Alien" tags="alien,door,aliendoor,weldable" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="gap,hull,structure,item" linkable="true" scale="0.5" health="3000">
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,225,432,190" depth="0.8" origin="0.5,0.5" />
-    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,225,432,190" depth="0.8" origin="0.5,0.5" scale="true" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="528,417,432,143" depth="0.04" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="528,417,432,143" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="528,415,432,145" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,225,432,190" depth="0.79" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="60.0" shadowscale="1,0.8" hasintegratedbuttons="true">
       <Upgrade gameversion="1.6.2.0" PickingTime="60.0" />
       <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,576,431,40" depth="0.05" origin="0.0,0.5" />
-      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,431,40" depth="0.6" origin="0.0,0.5" scale="true" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,431,40" depth="0.81" origin="0.0,0.5" scale="true" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-50" distancemax="50" particleamount="5" anglemin="0" anglemax="0" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
     </Door>
     <trigger x="78" y="-106" width="73" height="83" />
     <trigger x="288" y="0" width="73" height="83" />
     <AiTarget sightrange="2000.0" static="True" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
+    </ConnectionPanel>
+  </Item>
+  
+  <Item name="" identifier="aliendoorsmallwbuttons" nameidentifier="aliendoorwbuttons"  category="Alien" tags="alien,door,aliendoor,weldable" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="gap,hull,structure,item" linkable="true" scale="0.5" health="1000">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="898,1602,109,173" depth="0.8" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="899,1234,107,173" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="897,1426,107,173" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="898,1778,109,173" depth="0.79" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="45.0" shadowscale="0.7,1" hasintegratedbuttons="true">
+      <Upgrade gameversion="1.6.2.0" PickingTime="45.0" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="641,1634,30,173" depth="0.05" origin="0.5,0.0" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="496,232,32,173" depth="0.81" origin="0.5,0.0" scale="true" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-25" distancemax="25" particleamount="5" anglemin="90" anglemax="90" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
+    </Door>
+    <trigger x="0" y="-50" width="109" height="72" />
+    <AiTarget sightrange="2000.0" static="True" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
+    </ConnectionPanel>
+  </Item>
+  
+  <Item name="" identifier="alienhatchsmallwbuttons" nameidentifier="alienhatchwbuttons"  category="Alien" tags="alien,door,aliendoor,weldable" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="gap,hull,structure,item" linkable="true" scale="0.5" health="1000">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1650,173,107" depth="0.8" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1427,173,107" depth="0.04" origin="0.5,0.5" >
+      <Conditional condition="gt 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1537,173,107" depth="0.03" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1764,173,107" depth="0.79" origin="0.5,0.5" >
+      <Conditional condition="lte 0" />
+    </DecorativeSprite>
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="45.0" shadowscale="1,0.8" hasintegratedbuttons="true">
+      <Upgrade gameversion="1.6.2.0" PickingTime="45.0" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1889,173,30" depth="0.05" origin="0.0,0.5" />
+      <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,577,173,30" depth="0.81" origin="0.0,0.5" scale="true" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/DoorBreak2.ogg" range="2000" />
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="5" scalemin="0.5" scalemax="1" anglemin="90" anglemax="90" velocitymin="50" velocitymax="100" />
+        <ParticleEmitter particle="ElectricShock" drawontop="true" distancemin="-25" distancemax="25" particleamount="5" anglemin="0" anglemax="0" scalemin="0.1" scalemax="0.25" lifetimemultiplier="1" />
+        <ParticleEmitter particle="spark" drawontop="false" particleamount="15" scalemin="0.5" scalemax="0.75" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
+    </Door>
+    <trigger x="50" y="0" width="72" height="109" />
+    <AiTarget sightrange="2000.0" static="True" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true"/>
+      </input>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <output name="activate_out" displayname="connection.activateout" />
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="alienmotionsensor" category="Alien" subcategory="devices" Tags="alien,alienmotionsensor" scale="0.5" damagedbyexplosions="true" damagedbymeleeweapons="true" damagedbyprojectiles="true" damagedbyrepairtools="true" health="100" >
@@ -743,7 +916,7 @@
     </DecorativeSprite>
     <MotionSensor range="75" output="0" onlyhumans="true" ignoredead="true" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
       <input name="toggle" displayname="connection.togglestate"/>
@@ -808,7 +981,7 @@
     </LightComponent>
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="false" hudpriority="10">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <output name="power_out" displayname="connection.powerout" />
     </ConnectionPanel>
     <!--<DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="884,1231,136,136" depth="0.8" offset="0,300" origin="0.5,0.5"/>-->
@@ -836,7 +1009,7 @@
     <PowerContainer capacity="1000" canbeselected="true" maxrechargespeed="1000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False" >
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <!-- break the item when a shutdown signal is received -->
       <input name="shutdown" displayname="connection.shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
@@ -938,7 +1111,7 @@
     </Pump>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_active" displayname="connection.setstate" />
@@ -957,7 +1130,7 @@
       <sound file="Content/Items/Alien/AlienButton.ogg" type="OnUse" range="500.0" />
     </Controller>
     <ConnectionPanel canbeselected="true">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
@@ -1069,18 +1242,18 @@
   </Item>
   <!--END RUIN ITEMS-->
   <Item name="" identifier="endruinheavydoorvertical" nameidentifier="endruinheavydoor" tags="alien,door,aliendoor" category="alien" subcategory="doorsandhatches" scale="1.0" health="1000" damagedbyrepairtools="false" damagedbymonsters="false" damagedbyexplosions="true" explosiondamagemultiplier="0" allowrotatingineditor="true" allowedlinks="structure,item" ondamagedthreshold="10" linkable="true">
-    <Sprite texture="EndRuin_Items.png" sourcerect="256,0,128,1024" depth="0.51" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="256,0,128,1024" depth="0.51" origin="0.5,0.5" />
     <!-- hack: hide the normal sprite (implemented as a separate structure) -->
-    <BrokenSprite texture="EndRuin_Items.png" sourcerect="0,0,1,1" origin="0.5,0.5" fadein="false" maxcondition="100" />
+    <BrokenSprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="0,0,1,1" origin="0.5,0.5" fadein="false" maxcondition="100" />
     <Door canbeselected="true" canbepicked="false" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="0.7,1">
       <RequiredItem items="crowbar" type="Equipped" />
-      <Sprite texture="EndRuin_Items.png" sourcerect="0,0,256,1024" depth="0.05" origin="0.5,0.0" />
+      <Sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="0,0,256,1024" depth="0.05" origin="0.5,0.0" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
-      <requireditem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -1088,19 +1261,19 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="endruinheavydoorhorizontal" nameidentifier="endruinheavydoor" allowedlinks="gap,hull,structure,item" linkable="true" tags="alien,door,aliendoor" category="alien" subcategory="doorsandhatches" scale="1.0" health="1000" damagedbyrepairtools="false" damagedbymonsters="false" damagedbyexplosions="true" explosiondamagemultiplier="0.1" ondamagedthreshold="10" allowrotatingineditor="false">
-    <Sprite texture="EndRuin_Items.png" sourcerect="384,256,1024,128" depth="0.51" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="384,256,1024,128" depth="0.51" origin="0.5,0.5" />
     <!-- hack: hide the normal sprite (implemented as a separate structure) -->
-    <BrokenSprite texture="EndRuin_Items.png" sourcerect="0,0,1,1" origin="0.5,0.5" fadein="false" maxcondition="100" />
+    <BrokenSprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="0,0,1,1" origin="0.5,0.5" fadein="false" maxcondition="100" />
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="1,0.8">
       <RequiredItem items="crowbar" type="Equipped" />
-      <Sprite texture="EndRuin_Items.png" sourcerect="384,0,1024,256" depth="0.05" origin="0.0,0.5" />
+      <Sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="384,0,1024,256" depth="0.05" origin="0.0,0.5" />
       <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
       <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
     <AiTarget sightrange="1500.0" static="True" />
     <ConnectionPanel canbeselected="true" hudpriority="10">
-      <requireditem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -1136,7 +1309,7 @@
       </StatusEffect>
     </Turret>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
@@ -1295,7 +1468,7 @@
     <!-- Triggercomponent allows making alien coil damageable while allowing them to be rotated -->
     <TriggerComponent width="160" height="300" triggeredby="Item" sensor="false"/>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="activate" displayname="connection.turrettriggerin" />
       <input name="toggle" displayname="connection.togglestate"/>
@@ -1343,7 +1516,7 @@
     </LightComponent>
     <Vent/>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate"/>
       <input name="set_state" displayname="connection.setstate"/>
@@ -1384,7 +1557,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" displayname="connection.setcolor" />
@@ -1445,7 +1618,7 @@
       </StatusEffect>
     </TriggerComponent>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -1482,7 +1655,7 @@
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />
       <output name="signal_out2" displayname="connection.signaloutx~[num]=2">
         <StatusEffect type="OnUse" target="this" Condition="-1000" setvalue="true" />
@@ -1593,7 +1766,7 @@
       <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1704,504,338,658" origin="0.5,0.5" size="1,1" alpha="1.0" />
     </LightComponent>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False" >
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -1674,7 +1847,7 @@
       <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1704,504,338,658" origin="0.5,0.5" size="1,1" alpha="1.0" />
     </LightComponent>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -2455,7 +2628,7 @@
     <TriggerComponent triggeredby="Human,Item" force="-75" width="2500" height="400" bodyoffset="1250,0" forcefluctuationstrength="0.25" forcefluctuationinterval="10" >
     </TriggerComponent>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <input name="toggle" displayname="connection.togglestate"/>
       <input name="set_state" displayname="connection.setstate" />
@@ -2508,7 +2681,7 @@
       <Sprite texture="Content/Items/Alien/AlienRuins_Items_02.png" sourcerect="1348,15,475,414" origin="0.5,0.5" alpha="0.5" />
     </LightComponent>
     <ConnectionPanel canbeselected="true" hudpriority="10" locked="True" allowingameediting="False">
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <input name="toggle" displayname="connection.togglestate"/>
       <input name="set_state" displayname="connection.setstate" />
@@ -2702,7 +2875,7 @@
     <PowerContainer capacity="10.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem items="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]" ignoreineditor="true" type="Equipped" />
       <!-- break the item when a shutdown signal is received -->
       <input name="shutdown" displayname="connection.shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
@@ -2747,7 +2920,7 @@
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="[Locked]"  ignoreineditor="true" type="Equipped" />
       <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />
       <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
     </ConnectionPanel>
@@ -2755,6 +2928,5 @@
       <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="532,878,160,79" depth="0.1" origin="0.5,0.5" alpha="1.0" />
     </LightComponent>
   </Item>
-
 
 </Items>
