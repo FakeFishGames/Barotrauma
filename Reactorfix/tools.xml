@@ -1151,10 +1151,7 @@
     <Sprite texture="Content/Items/Tools/tools.png" depth="0.55" sourcerect="410,1,19,68" />
     <Body radius="6" height="55" density="20" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" >
-      <!--Status effect to cause radiation whenever handling fuel rods. Disabled for now because effect doesn't stop when no longer in contact with fuel rods.-->
-      <!--<StatusEffect type="Always" target="Character">
-        <Affliction identifier="radiationsickness" strength="0.25" />
-      </StatusEffect>-->
+      <StatusEffect type="OnContained" target="Parent" AvailableFuel="80.0" disabledeltatime="true" />
     </Holdable>
     <ItemContainer hideitems="true" capacity="1" itemrotation="90" drawinventory="false" canbeselected="false" SpawnWithId="nucleargunbolt" removecontaineditemsondeconstruct="true" showcontainedstateindicator="false">
       <Containable items="nucleargunbolt" />
@@ -1199,7 +1196,9 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,64,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools.png" depth="0.55" sourcerect="431,1,19,68" />
     <Body radius="6" height="55" density="20" />
-    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
+    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" >
+      <StatusEffect type="OnContained" target="Parent" AvailableFuel="150.0" disabledeltatime="true" />
+    </Holdable>
     <ItemContainer hideitems="true" capacity="1" itemrotation="90" drawinventory="false" canbeselected="false" SpawnWithId="nucleargunbolt" removecontaineditemsondeconstruct="true" showcontainedstateindicator="false">
       <Containable items="nucleargunbolt" />
       <StatusEffect type="OnUse" target="This" condition="-12.5" disabledeltatime="true">
@@ -1243,11 +1242,8 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,64,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools.png" depth="0.55" sourcerect="452,1,19,68" />
     <Body radius="6" width="21" height="71" density="20" />
-    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect">
-      <!--Status effect to cause radiation whenever handling fuel rods. Disabled for now because effect doesn't stop when no longer in contact with fuel rods.-->
-      <!--<StatusEffect type="Always" target="Character">
-        <Affliction identifier="radiationsickness" strength="0.5" />
-      </StatusEffect>-->
+    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" >
+      <StatusEffect type="OnContained" target="Parent" AvailableFuel="100.0" disabledeltatime="true" />
     </Holdable>
     <ItemContainer hideitems="true" capacity="1" itemrotation="90" drawinventory="false" canbeselected="false" SpawnWithId="nucleargunbolt" removecontaineditemsondeconstruct="true" showcontainedstateindicator="false">
       <Containable items="nucleargunbolt" />

@@ -717,6 +717,7 @@
     </ItemContainer>
     <aitarget maxsightrange="1500" />
   </Item>
+  
   <Item name="" identifier="fulguriumfuelrodvolatile" category="Fuel" Tags="smallitem,reactorfuel" maxstacksize="8" allowasextracargo="true" cargocontaineridentifier="metalcrate" health="400" scale="0.5">
     <PreferredContainer primary="reactorcab"/>
     <Price baseprice="400" sold="false" displaynonempty="true">
@@ -750,6 +751,7 @@
     <Body radius="6" height="55" density="30" />
     <LightComponent allowingameediting="false" lightcolor="60,200,150,150" canbeselected="false" range="300.0" ison="true" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnContained" target="Parent" AvailableFuel="150.0" disabledeltatime="true" />
       <StatusEffect type="Always" target="NearbyCharacters" range="125" interval="1" disabledeltatime="true">
         <Affliction identifier="radiationsickness" strength="1" />
       </StatusEffect>
@@ -763,7 +765,7 @@
     <Quality>
       <QualityStat stattype="Condition" value="0.1" />
     </Quality>
-  </Item>
+  </Item>  
 
   <Item name="" identifier="arcemitter" tags="mediumitem,weapon,gun,mountableweapon,provocativetohumanai" category="Weapon" isshootable="true" Scale="0.5">
     <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="207,430,131,61" depth="0.55" origin="0.5,0.5" />

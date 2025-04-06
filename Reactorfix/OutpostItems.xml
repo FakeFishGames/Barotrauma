@@ -984,22 +984,8 @@
       <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
       <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
       <SlotIcon slotindex="3" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
-      <RequiredItem items="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />
-      <Containable items="fuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="fulguriumfuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="thoriumfuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="fulguriumfuelrodvolatile">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="huskfigurine">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="0" disabledeltatime="true" />
-      </Containable>
+      <RequiredItem items="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />      
+      <Containable items="reactorfuel,reactoritem" />      
     </ItemContainer>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" minsabotagecondition="10" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />

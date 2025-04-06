@@ -46,7 +46,7 @@
     </Projectile>
   </Item>
 
-  <Item name="" identifier="huskfigurine" category="Misc" maxstacksize="2" Tags="smallitem,traitormissionitem" scale="0.5" health="10" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="" identifier="huskfigurine" category="Misc" maxstacksize="2" Tags="smallitem,traitormissionitem,reactoritem" scale="0.5" health="10" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" isshootable="true">
     <Price baseprice="50" sold="false" canbespecial="false">
       <Price storeidentifier="merchantoutpost"/>
       <Price storeidentifier="merchantcity"/>

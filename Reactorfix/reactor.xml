@@ -1,12 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="reactor1" tags="reactor" type="Reactor" scale="0.5" linkable="true" category="Machine" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
-    <Upgrade gameversion="0.10.0.0" scale="*0.5" />
     <trigger />
-    <Sprite texture="reactor.png" sourcerect="0,0,528,336" origin="0.5,0.45" depth="0.8" />
+    <Sprite texture="Content/Items/Reactor/reactor.png" sourcerect="0,0,528,336" origin="0.5,0.45" depth="0.8" />
     <UpgradePreviewSprite scale="3.0" texture="Content/UI/WeaponUI.png" sourcerect="0,960,64,64" origin="0.5,0.45" />
-    <BrokenSprite texture="reactor.png" sourcerect="0,338,528,336" depth="0.8" origin="0.5,0.45" maxcondition="40" />
-    <BrokenSprite texture="reactor.png" sourcerect="0,676,528,336" depth="0.8" origin="0.5,0.45" maxcondition="0" />
+    <BrokenSprite texture="Content/Items/Reactor/reactor.png" sourcerect="0,338,528,336" depth="0.8" origin="0.5,0.45" maxcondition="40" />
+    <BrokenSprite texture="Content/Items/Reactor/reactor.png" sourcerect="0,676,528,336" depth="0.8" origin="0.5,0.45" maxcondition="0" />
     <aitarget sightrange="500" soundrange="4000" />
     <Reactor canbeselected="true" firedelay="20" meltdowndelay="120" maxpoweroutput="5000" fuelconsumptionrate="0.2" vulnerabletoemp="false" msg="ItemMsgInteractSelect">
       <StatusEffect type="InWater" target="This" condition="-0.5">
@@ -108,22 +107,8 @@
       <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
       <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
       <SlotIcon slotindex="2" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
-      <SlotIcon slotindex="3" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
-      <Containable items="fuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="fulguriumfuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="thoriumfuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="fulguriumfuelrodvolatile">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true" />
-      </Containable>
-      <Containable items="huskfigurine">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="0" disabledeltatime="true" />
-      </Containable>
+      <SlotIcon slotindex="3" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />       
+      <Containable items="reactorfuel,reactoritem" />
     </ItemContainer>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" minsabotagecondition="10" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
@@ -141,10 +126,5 @@
         <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12" />
       </StatusEffect>
     </Repairable>
-    <Upgrade gameversion="0.1500.6.0">
-      <Repairable header="electricalrepairsheader" msg="ItemMsgRepairScrewdriver">
-        <RequiredItem items="screwdriver" type="equipped" />
-      </Repairable>
-    </Upgrade>
   </Item>
 </Items>
