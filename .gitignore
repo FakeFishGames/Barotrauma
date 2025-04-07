@@ -53,7 +53,7 @@ temp.txt
 # Private assets
 Barotrauma/BarotraumaShared/Content/*
 Barotrauma/**/GameAnalyticsKeys.cs
-Deploy/DeployAll/PrivateKey.xml
+Deploy/DeployAll/PrivateKey.*
 .github/ISSUE_TEMPLATE/release-checklist.md
 
 #Rider
