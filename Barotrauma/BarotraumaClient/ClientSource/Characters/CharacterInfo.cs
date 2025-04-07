@@ -410,7 +410,7 @@ namespace Barotrauma
                     foreach (var attachment in attachmentsToDraw)
                     {
                         SetAttachmentEffect(spriteBatch, attachment);
-                        DrawAttachmentSprite(spriteBatch, attachment, portraitToDraw, sheetIndex, screenPos + offset, scale, depthStep, GetAttachmentColor(attachment, hairColor, facialHairColor), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                        DrawProtraitAttachmentSprite(spriteBatch, attachment, portraitToDraw, sheetIndex, screenPos + offset, scale, depthStep, GetAttachmentColor(attachment, hairColor, facialHairColor), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
                         depthStep += depthStep;
                     }
                 }
@@ -536,7 +536,60 @@ namespace Barotrauma
                 }
                 //the portrait's origin is forced to 0,0 (presumably for easier drawing on the UI?), see LoadHeadElement
                 //we need to take that into account here and draw the attachment at where the origin of the "actual" head sprite would be
-                drawPos += HeadSprite.Origin * scale;
+                // drawPos += HeadSprite.Origin * scale;
+            }
+            float depth = attachment.Sprite.Depth;
+            if (attachment.InheritLimbDepth)
+            {
+                depth = head.Depth - depthStep;
+            }
+            attachment.Sprite.Draw(spriteBatch, drawPos, color ?? Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
+        }
+
+        private void DrawProtraitAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2? sheetIndex, Vector2 drawPos, float scale, float depthStep, Color? color = null, SpriteEffects spriteEffects = SpriteEffects.None)
+        {
+            if (attachment.InheritSourceRect)
+            {
+                if (attachment.SheetIndex.HasValue)
+                {
+                    attachment.Sprite.SourceRect = new Rectangle(CalculateOffset(head, attachment.SheetIndex.Value), head.SourceRect.Size);
+                }
+                else if (sheetIndex.HasValue)
+                {
+                    attachment.Sprite.SourceRect = new Rectangle(CalculateOffset(head, sheetIndex.Value.ToPoint()), head.SourceRect.Size);
+                }
+                else
+                {
+                    attachment.Sprite.SourceRect = head.SourceRect;
+                }
+            }
+            Vector2 origin;
+            if (attachment.InheritOrigin)
+            {
+                origin = head.Origin;
+                attachment.Sprite.Origin = origin;
+            }
+            else
+            {
+                //origin = attachment.Sprite.Origin;
+                origin = Vector2.Zero;
+                drawPos.Y += (-attachment.Sprite.Origin.Y + HeadSprite.Origin.Y) * scale;
+                if (spriteEffects.HasFlag(SpriteEffects.FlipHorizontally))
+                {
+                    //origin.X = attachment.Sprite.size.X - HeadSprite.Origin.X;
+                    drawPos.X -= (( attachment.Sprite.size.X - attachment.Sprite.Origin.X) - ( HeadSprite.size.X - HeadSprite.Origin.X)) * scale;
+                }
+                else
+                {
+                    drawPos.X += (-attachment.Sprite.Origin.X + HeadSprite.Origin.X) * scale;
+                }
+                // Portrait will never flip vertically
+                //if (spriteEffects.HasFlag(SpriteEffects.FlipVertically))
+                //{
+                //    origin.Y = attachment.Sprite.size.Y - origin.Y;
+                //}
+                //the portrait's origin is forced to 0,0 (presumably for easier drawing on the UI?), see LoadHeadElement
+                //we need to take that into account here and draw the attachment at where the origin of the "actual" head sprite would be
             }
             float depth = attachment.Sprite.Depth;
             if (attachment.InheritLimbDepth)
