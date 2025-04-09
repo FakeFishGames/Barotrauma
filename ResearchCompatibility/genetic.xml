@@ -8,16 +8,16 @@
     <LightComponent range="0.0" powerconsumption="5" lightcolor="255,255,255,111" IsOn="true" castshadows="false" allowingameediting="false">
       <sprite texture="Content/Map/Outposts/Art/MedicalItemResearchLights.png" sourcerect="417,6,494,297" depth="0.1" origin="0.5,0.5" alpha="1.0" />
     </LightComponent>
-    <Deconstructor canbeselected="true" showoutput="false" powerconsumption="500.0" deconstructitemssimultaneously="true" msg="ItemMsgInteractSelect" activatebuttontext="researchstation.invalidinput" infotext="researchstation.empty.infotext" infoareawidth="0.7">
-      <GuiFrame relativesize="0.25,0.3" style="ItemUI" anchor="Center" />
+    <Deconstructor canbeselected="true" showoutput="false" powerconsumption="500.0" deconstructitemssimultaneously="true" msg="ItemMsgInteractSelect" activatebuttontext="researchstation.invalidinput" infotext="researchstation.empty.infotext" infoareawidth="0.5">
+      <GuiFrame relativesize="0.3,0.3" style="ItemUI" anchor="Center" />
       <sound file="Content/Items/Fabricators/Deconstructor.ogg" type="OnActive" range="1000.0" loop="true" />
       <poweronsound file="Content/Items/PowerOnLight3.ogg" range="600" loop="false" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
     </Deconstructor>
     <ItemContainer capacity="2" maxstacksize="1" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="3" uilabel="" allowuioverlap="true">
-      <Containable items="geneticmaterial,stabilozine,unidentifiedgeneticmaterial,researchmaterial" />
+      <Containable items="geneticmaterial,stabilozine,unidentifiedgeneticmaterial,researchmaterial,smallitem,mediumitem" />
     </ItemContainer>
-    <ItemContainer capacity="1" maxstacksize="1" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5" uilabel="" allowuioverlap="true">
+    <ItemContainer capacity="3" maxstacksize="1" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5" uilabel="" allowuioverlap="true">
       <Containable items="geneticmaterial,stabilozine,unidentifiedgeneticmaterial,researchmaterial,smallitem,mediumitem" />
     </ItemContainer>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.0" canbeselected="true" RepairThreshold="80" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
