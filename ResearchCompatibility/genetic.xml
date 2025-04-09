@@ -1,0 +1,259 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="op_researchterminal" tags="geneticresearchstation" width="494" height="297" texturescale="1.0,1.0" scale="0.5" category="Machine">
+    <sprite texture="Content/Map/Outposts/Art/MedicalItemResearch.png" sourcerect="417,6,494,297" depth="0.8" premultiplyalpha="false" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Map/Outposts/Art/MedicalItemResearch.png" sourcerect="440,564,494,224" depth="0.79" maxcondition="50" origin="0.5,1.0" fadein="true" />
+    <BrokenSprite texture="Content/Map/Outposts/Art/MedicalItemResearch.png" sourcerect="440,798,494,224" depth="0.79" maxcondition="10" origin="0.5,1.0" fadein="true" />
+    <UpgradePreviewSprite texture="Content/UI/WeaponUI.png" sourcerect="134,969,54,45" origin="0.5,0.45" />
+    <LightComponent range="0.0" powerconsumption="5" lightcolor="255,255,255,111" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Map/Outposts/Art/MedicalItemResearchLights.png" sourcerect="417,6,494,297" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+    <Deconstructor canbeselected="true" showoutput="false" powerconsumption="500.0" deconstructitemssimultaneously="true" msg="ItemMsgInteractSelect" activatebuttontext="researchstation.invalidinput" infotext="researchstation.empty.infotext" infoareawidth="0.7">
+      <GuiFrame relativesize="0.25,0.3" style="ItemUI" anchor="Center" />
+      <sound file="Content/Items/Fabricators/Deconstructor.ogg" type="OnActive" range="1000.0" loop="true" />
+      <poweronsound file="Content/Items/PowerOnLight3.ogg" range="600" loop="false" />
+      <StatusEffect type="InWater" target="This" condition="-0.5" />
+    </Deconstructor>
+    <ItemContainer capacity="2" maxstacksize="1" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="3" uilabel="" allowuioverlap="true">
+      <Containable items="geneticmaterial,stabilozine,unidentifiedgeneticmaterial,researchmaterial" />
+    </ItemContainer>
+    <ItemContainer capacity="1" maxstacksize="1" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5" uilabel="" allowuioverlap="true">
+      <Containable items="geneticmaterial,stabilozine,unidentifiedgeneticmaterial,researchmaterial,smallitem,mediumitem" />
+    </ItemContainer>
+    <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.0" canbeselected="true" RepairThreshold="80" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="electrical" level="80" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <ParticleEmitter particle="spark" particleamount="5" emitinterval="2" particlespersecond="5" anglemax="360" distancemax="30" velocitymin="100" velocitymax="500" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
+    </Repairable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10" msg="ItemMsgRewireScrewdriver">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredSkill identifier="electrical" level="55" />
+      <StatusEffect type="OnFailure" target="Character" targetlimbs="LeftHand,RightHand" AllowWhenBroken="true">
+        <Sound file="Content/Sounds/Damage/Electrocution1.ogg" range="1000" />
+        <Explosion range="100.0" force="1.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Affliction identifier="stun" strength="4" probability="0.5" />
+        <Affliction identifier="electricshock" strength="60"/>
+        <Affliction identifier="burn" strength="5" />
+        <ParticleEmitter particle="ElectricShock" DistanceMin="10" DistanceMax="25" ParticleAmount="5" ScaleMin="0.1" ScaleMax="0.12" />
+      </StatusEffect>
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="power_in" displayname="connection.powerin" />
+      <output name="condition_out" displayname="connection.conditionout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="genesplicer" scale="0.4" category="Equipment" tags="smallitem,geneticdevice" description="" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="medcab" secondary="medcab"/>
+    <PreferredContainer secondary="abandonedmedcab,piratemedcab,wreckmedcab,outpostmedcab,researchcontainer" spawnprobability="0.02"/>
+    <Price baseprice="500" minleveldifficulty="15">
+      <Price storeidentifier="merchantresearch" />
+      <Price storeidentifier="merchantcity" sold="false"/>
+      <Price storeidentifier="merchantmedical" />
+      <Price storeidentifier="merchanthusk" minavailable="0" maxavailable="50">
+        <Reputation faction="huskcult" min="70"/>
+      </Price>
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="plastic" amount="2" />
+      <Item identifier="copper" amount="2" />
+      <Item identifier="rubber" />
+      <Item identifier="silicon" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredSkill identifier="medical" level="50" />
+      <RequiredItem identifier="plastic" />
+      <RequiredItem identifier="fpgacircuit" amount="2" />
+      <RequiredItem identifier="rubber" amount="2" />
+      <RequiredItem identifier="silicon" amount="2" />
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sourcerect="244,62,76,65" origin="0.5,0.5" />
+    <Sprite name="Headset" texture="Content/Items/Genetic/Genetic.png" depth="0.6" sourcerect="67,85,73,35" origin="0.5,0.5" />
+    <Body radius="15" width="45" density="25" />
+    <ItemContainer capacity="1" maxstacksize="1" autoinject="true" autoinjectthreshold="Infinity" allowswappingcontaineditems="false">
+      <Containable items="geneticmaterial" />
+    </ItemContainer>
+    <Wearable limbtype="Head" slots="Any,HealthInterface" msg="ItemMsgPickUpSelect" displaycontainedstatus="true">
+      <sprite name="Gene Splicer Wearable" texture="Content/Items/Genetic/Genetic.png" limb="Head" hidelimb="false" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.5" hideotherwearables="false" sourcerect="258,131,64,54" origin="0.6,0.0" />
+    </Wearable>
+  </Item>
+  <Item name="" identifier="geneticmaterial_unresearched" nameidentifier="unidentifiedgeneticmaterial" 
+        aliases="geneticmaterialcrawler_unresearched,geneticmaterialcrawler_unresearched2,geneticmaterialcrawler_unresearched3,geneticmaterialmudraptor_unresearched,geneticmaterialmudraptor_unresearched2,geneticmaterialmudraptor_unresearched3,geneticmaterialmoloch_unresearched,geneticmaterialmoloch_unresearched2,geneticmaterialmoloch_unresearched3,geneticmaterialmantis_unresearched,geneticmaterialmantis_unresearched2,geneticmaterialmantis_unresearched3,geneticmaterialthresher_unresearched,geneticmaterialthresher_unresearched2,geneticmaterialthresher_unresearched3,geneticmaterialhammerhead_unresearched,geneticmaterialhammerhead_unresearched2,geneticmaterialhammerhead_unresearched3,geneticmaterialhammerheadmatriarch_unresearched,geneticmaterialhammerheadmatriarch_unresearched2,geneticmaterialhammerheadmatriarch_unresearched3,geneticmaterialspineling_unresearched,geneticmaterialspineling_unresearched2,geneticmaterialspineling_unresearched3,geneticmaterialhusk_unresearched,geneticmaterialhusk_unresearched2,geneticmaterialhusk_unresearched3,geneticmaterialmollusc_unresearched,geneticmaterialmollusc_unresearched2,geneticmaterialmollusc_unresearched3,geneticmaterialskitter_unresearched,geneticmaterialskitter_unresearched2,geneticmaterialskitter_unresearched3,geneticmaterialhunter_unresearched,geneticmaterialhunter_unresearched2,geneticmaterialhunter_unresearched3" 
+        category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" tags="smallitem,unidentifiedgeneticmaterial,blackmarketgenes" cargocontaineridentifier="mediccrate" description="" scale="0.5" impactsoundtag="impact_soft" hideinmenus="true">
+    <PreferredContainer primary="medfabcab" spawnprobability="0"/>
+    <PreferredContainer secondary="abandonedmedcab,piratemedcab,wreckmedcab,outpostmedcab,researchcontainer" spawnprobability="0.3"/>
+    <PreferredContainer secondary="geneticstorage" minamount="1" maxamount="2" spawnprobability="1.0" />
+    <PreferredContainer secondary="ruinstoragelarge" minamount="2" maxamount="3" spawnprobability="0.2" />
+    <Price baseprice="300" sold="false" requiresunlock="true">
+      <Price storeidentifier="merchantcity" sold="true" minavailable="5" maxavailable="10"/>
+      <Price storeidentifier="merchantresearch" sold="true" multiplier="1.2" minavailable="10" maxavailable="15" />
+    </Price>
+    <Deconstruct time="5" chooserandom="true" amount="1" requireddeconstructor="geneticresearchstation">
+      <Item identifier="geneticmaterialcrawler" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialcrawler" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialcrawler" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmudraptor" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmudraptor" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmudraptor" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmoloch" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmoloch" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmoloch" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmantis" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmantis" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmantis" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialthresher" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialthresher" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialthresher" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhammerhead" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhammerhead" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhammerhead" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhammerheadmatriarch" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhammerheadmatriarch" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhammerheadmatriarch" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialspineling" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialspineling" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialspineling" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhusk" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhusk" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhusk" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmollusc" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmollusc" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialmollusc" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialskitter" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialskitter" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialskitter" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhunter" commonness="3" requiredotheritem="stabilozine" outconditionmin="0.1" outconditionmax="0.2" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhunter" commonness="2" requiredotheritem="stabilozine" outconditionmin="0.2" outconditionmax="0.4" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+      <Item identifier="geneticmaterialhunter" commonness="1" requiredotheritem="stabilozine" outconditionmin="0.4" outconditionmax="0.6" activatebuttontext="researchstation.research" infotext="researchstation.research.infotext" infotextonotheritemmissing="researchstation.combine.missingitem" />
+    </Deconstruct>
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sourcerect="0,79,58,40" depth="0.6" origin="0.5,0.5" />
+    <Body width="15" radius="15" density="20" />
+    <Pickable slots="Any" />
+  </Item>
+  <Item name="" identifier="geneticmaterialcrawler" nameidentifier="geneticmaterial" category="Material" maxstacksize="1" tags="smallitem,geneticmaterial" cargocontaineridentifier="mediccrate" description="" scale="0.5" impactsoundtag="impact_metal_light" hideconditionbar="true" hideconditionintooltip="false" allowsellingwhenbroken="true">
+    <PreferredContainer primary="medfabcab" />
+    <Price baseprice="750" sold="false">
+      <Price storeidentifier="merchantcity"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.2" />
+    </Price>
+    <Deconstruct time="5" requireddeconstructor="geneticresearchstation">
+      <Item identifier="geneticmaterialcrawler" requiredotheritem="geneticmaterial" activatebuttontext="researchstation.combine" infotext="researchstation.combine.infotext" infotextonotheritemmissing="researchstation.refine.missingitem" />
+    </Deconstruct>
+    <GeneticMaterial nameidentifier="character.crawler" effect="increasedswimmingspeed" conditionincreaseoncombinemin="0.0" conditionincreaseoncombinemax="0.0" ConditionIncreaseOnLowQualityCombine="3.0" ConditionIncreaseOnHighQualityCombine="25.0" tooltipvaluemin="10" tooltipvaluemax="50" SetTaintedOnDeath="true" CanBeUntainted="true">
+      <RequiredSkill identifier="medical" level="30" />
+      <StatusEffect type="OnWearing" target="Character" duration="0.0">
+        <Sound file="Content/Sounds/Damage/Gore1.ogg" type="OnUse" range="500" />
+        <Sound file="Content/Sounds/Damage/Gore2.ogg" type="OnUse" range="500" />
+        <Sound file="Content/Sounds/Damage/Gore3.ogg" type="OnUse" range="500" />
+        <ParticleEmitter particle="bloodsplash" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="0" scalemin="0.3" scalemax="0.75" />
+      </StatusEffect>
+      <StatusEffect type="OnSevered" target="Character" duration="0.0">
+        <Sound file="Content/Sounds/Damage/Gore1.ogg" type="OnUse" range="500" />
+        <Sound file="Content/Sounds/Damage/Gore2.ogg" type="OnUse" range="500" />
+        <Sound file="Content/Sounds/Damage/Gore3.ogg" type="OnUse" range="500" />
+        <ParticleEmitter particle="bloodsplash" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="0" scalemin="0.5" scalemax="1.0" />
+        <Affliction identifier="organdamage" amount="10" />
+        <Affliction identifier="stun" amount="0.5" />
+      </StatusEffect>
+    </GeneticMaterial>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="0,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="11,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <Body width="23" height="31" density="20" />
+    <Holdable handle1="0,0" slots="Any"></Holdable>
+    <ItemContainer capacity="1" canbeselected="false" hideitems="true" allowaccess="false" showcontainedstateindicator="false">
+      <Containable items="geneticmaterial" />
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="geneticmaterialmudraptor" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialmudraptor" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="1,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="10,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.mudraptor" effect="naturalmeleeweapon" tooltipvaluemin="20" tooltipvaluemax="60" />
+  </Item>
+  <Item name="" identifier="geneticmaterialmoloch" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialmoloch" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="2,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="9,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.moloch" effect="damageresistance" tooltipvaluemin="10" tooltipvaluemax="25" />
+  </Item>
+  <Item name="" identifier="geneticmaterialthresher" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialthresher" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="3,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="8,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.tigerthresher" effect="decreasedoxygenconsumption" tooltipvaluemin="20" tooltipvaluemax="100" />
+  </Item>
+  <Item name="" identifier="geneticmaterialmantis" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialmantis" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="4,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="7,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.mantis" effect="increasedwalkingspeed" tooltipvaluemin="10" tooltipvaluemax="25" />
+  </Item>
+  <Item name="" identifier="geneticmaterialhammerhead" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialhammerhead" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="6,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="5,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.hammerhead" effect="increasedmeleedamage" tooltipvaluemin="20" tooltipvaluemax="100" />
+  </Item>
+  <Item name="" identifier="geneticmaterialhammerheadmatriarch" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialhammerheadmatriarch" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="3,2" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="1,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.hammerheadmatriarch" effect="healdamage" tooltipvaluemin="6" tooltipvaluemax="45" />
+  </Item>
+  <Item name="" identifier="geneticmaterialspineling" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialspineling" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="5,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="6,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.spineling" effect="naturalrangedweapon" tooltipvaluemin="0" tooltipvaluemax="100" />
+  </Item>
+  <Item name="" identifier="geneticmaterialhusk" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialhusk" multiplier="5" />
+    </Deconstruct>
+    <Price>
+      <Price storeidentifier="merchanthusk" minavailable="1" maxavailable="4" sold="true">
+        <Reputation faction="huskcult" min="70"/>
+      </Price>
+    </Price>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="7,3" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="0,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.husk" effect="husktransformimmunity" tooltipvaluemin="60" tooltipvaluemax="100" />
+  </Item>
+  <Item name="" identifier="geneticmaterialmollusc" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialmollusc" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="0,2" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="4,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.mollusc" effect="vigorondamage" tooltipvaluemin="10" tooltipvaluemax="60" />
+  </Item>
+  <Item name="" identifier="geneticmaterialskitter" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialskitter" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="1,2" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="3,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.skitter" effect="hyperactivityondamage" tooltipvaluemin="10" tooltipvaluemax="60" />
+  </Item>
+  <Item name="" identifier="geneticmaterialhunter" variantof="geneticmaterialcrawler" nameidentifier="geneticmaterial">
+    <Deconstruct>
+      <Item identifier="geneticmaterialhunter" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sheetindex="2,2" sheetelementsize="64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Genetic/Genetic.png" sheetindex="2,0" sheetelementsize="32,32" depth="0.6" origin="0.5,0.5"/>
+    <GeneticMaterial nameidentifier="character.hunter" effect="increasedmeleedamageondamage" tooltipvaluemin="75" tooltipvaluemax="150" />
+  </Item>
+</Items>
