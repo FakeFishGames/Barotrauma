@@ -22,13 +22,16 @@ namespace Barotrauma
         public override Camera Cam { get; }
 
         private GUIFrame leftPanel, rightPanel, bottomPanel, topPanel;
+
+        private Point prevResolution;
         
         private LevelGenerationParams selectedParams;
         private RuinGenerationParams selectedRuinGenerationParams;
         private OutpostGenerationParams selectedOutpostGenerationParams;
         private LevelObjectPrefab selectedLevelObject;
+        private BackgroundCreaturePrefab selectedBackgroundCreature;
 
-        private GUIListBox paramsList, ruinParamsList, caveParamsList, outpostParamsList, levelObjectList;
+        private GUIListBox paramsList, ruinParamsList, caveParamsList, outpostParamsList, levelObjectList, backgroundCreatureList;
         private GUIListBox editorContainer;
 
         private GUIButton spriteEditDoneButton;
@@ -69,10 +72,12 @@ namespace Barotrauma
             UpdateCaveParamsList();
             UpdateOutpostParamsList();
             UpdateLevelObjectsList();
+            UpdateBackgroundCreatureList();
         }
         
         private void CreateUI()
         {
+            Frame.ClearChildren();
             leftPanel?.ClearChildren();
             rightPanel?.ClearChildren();
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 0.8f), Frame.RectTransform) { MinSize = new Point(150, 0) });
@@ -92,6 +97,7 @@ namespace Barotrauma
                 currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                 editorContainer.ClearChildren();
                 SortLevelObjectsList(currentLevelData);
+                SortBackgroundCreaturesList(currentLevelData);
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, inGame: false, showName: true, elementHeight: 20, titleFont: GUIStyle.LargeFont);
                 forceDifficultyInput.FloatValue = (selectedParams.MinLevelDifficulty + selectedParams.MaxLevelDifficulty) / 2f;
                 return true;
@@ -310,6 +316,7 @@ namespace Barotrauma
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
                     var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
                     Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
+                    UpdateBackgroundCreatureList();
 
                     if (Submarine.MainSub != null)
                     {
@@ -385,9 +392,42 @@ namespace Barotrauma
             };
 
             bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.22f), Frame.RectTransform, Anchor.BottomLeft)
-            { MaxSize = new Point(GameMain.GraphicsWidth - rightPanel.Rect.Width, 1000) }, style: "GUIFrameBottom");
+                { MaxSize = new Point(GameMain.GraphicsWidth - rightPanel.Rect.Width, 1000) }, style: "GUIFrameBottom");
 
-            levelObjectList = new GUIListBox(new RectTransform(new Vector2(0.99f, 0.85f), bottomPanel.RectTransform, Anchor.Center))
+            var bottomPanelContents = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.9f), bottomPanel.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            var bottomPanelButtons = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), bottomPanelContents.RectTransform), isHorizontal: true);
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), bottomPanelButtons.RectTransform), TextManager.Get("leveleditor.levelobjects"), style: "GUITabButton")
+            {
+                Selected = true,
+                OnClicked = (btn, __) =>
+                {
+                    bottomPanelButtons.Children.ForEach(c => c.Selected = c == btn);
+                    levelObjectList.Visible = true;
+                    levelObjectList.IgnoreLayoutGroups = false;
+                    backgroundCreatureList.Visible = false;
+                    backgroundCreatureList.IgnoreLayoutGroups = true;
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), bottomPanelButtons.RectTransform), TextManager.Get("leveleditor.backgroundcreatures"), style: "GUITabButton")
+            {
+                OnClicked = (btn, __) =>
+                {
+                    bottomPanelButtons.Children.ForEach(c => c.Selected = c == btn);
+                    backgroundCreatureList.Visible = true;
+                    backgroundCreatureList.IgnoreLayoutGroups = false;
+                    levelObjectList.Visible = false;
+                    levelObjectList.IgnoreLayoutGroups = true;
+                    return true;
+                }
+            };
+            bottomPanelButtons.RectTransform.NonScaledSize = new Point(bottomPanelButtons.Rect.Width, bottomPanelButtons.Children.First().Rect.Height);
+
+            levelObjectList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), bottomPanelContents.RectTransform))
             {
                 PlaySoundOnSelect = true,
                 UseGridLayout = true
@@ -396,6 +436,20 @@ namespace Barotrauma
             {
                 selectedLevelObject = obj as LevelObjectPrefab;
                 CreateLevelObjectEditor(selectedLevelObject);
+                return true;
+            };
+
+            backgroundCreatureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), bottomPanelContents.RectTransform))
+            {
+                PlaySoundOnSelect = true,
+                UseGridLayout = true,
+                Visible = false,
+                IgnoreLayoutGroups = true
+            };
+            backgroundCreatureList.OnSelected += (GUIComponent component, object obj) =>
+            {
+                selectedBackgroundCreature = obj as BackgroundCreaturePrefab;
+                CreateBackgroundCreatureEditor(selectedBackgroundCreature);
                 return true;
             };
 
@@ -411,6 +465,8 @@ namespace Barotrauma
 
             topPanel = new GUIFrame(new RectTransform(new Point(400, 100), GUI.Canvas)
             { RelativeOffset = new Vector2(leftPanel.RectTransform.RelativeSize.X * 2, 0.0f) }, style: "GUIFrameTop");
+
+            prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
         
         public LevelEditorScreen()
@@ -583,6 +639,44 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
             }
+        }
+
+        private void UpdateBackgroundCreatureList()
+        {
+            editorContainer.ClearChildren();
+            backgroundCreatureList.Content.ClearChildren();
+
+            int objectsPerRow = (int)Math.Ceiling(backgroundCreatureList.Content.Rect.Width / Math.Max(100 * GUI.Scale, 100));
+            float relWidth = 1.0f / objectsPerRow;
+
+            foreach (BackgroundCreaturePrefab backgroundCreaturePrefab in BackgroundCreaturePrefab.Prefabs)
+            {
+                var frame = new GUIFrame(new RectTransform(
+                    new Vector2(relWidth, relWidth * ((float)backgroundCreatureList.Content.Rect.Width / backgroundCreatureList.Content.Rect.Height)),
+                    backgroundCreatureList.Content.RectTransform)
+                { MinSize = new Point(0, 60) }, style: "ListBoxElementSquare")
+                {
+                    UserData = backgroundCreaturePrefab
+                };
+                var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
+
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
+                    text: ToolBox.LimitString(backgroundCreaturePrefab.Name, GUIStyle.SmallFont, paddedFrame.Rect.Width), textAlignment: Alignment.Center, font: GUIStyle.SmallFont)
+                {
+                    CanBeFocused = false,
+                    ToolTip = backgroundCreaturePrefab.Name
+                };
+
+                Sprite sprite = backgroundCreaturePrefab.Sprite ?? backgroundCreaturePrefab.DeformableSprite?.Sprite;
+                new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
+                    paddedFrame.RectTransform, Anchor.TopCenter), sprite, scaleToFit: true)
+                {
+                    LoadAsynchronously = true,
+                    CanBeFocused = false
+                };
+            }
+
+            SortBackgroundCreaturesList(currentLevelData);
         }
 
         private void CreateCaveParamsEditor(CaveGenerationParams caveGenerationParams)
@@ -913,6 +1007,99 @@ namespace Barotrauma
             });
         }
 
+        private void SortBackgroundCreaturesList(LevelData levelData)
+        {
+            if (levelData == null) { return; }
+            //fade out levelobjects that don't spawn in this type of level
+            foreach (GUIComponent child in backgroundCreatureList.Content.Children)
+            {
+                if (child.UserData is not BackgroundCreaturePrefab creature) { continue; }
+                SetElementColorBasedOnCommonness(child, creature.GetCommonness(levelData));
+            }
+
+            //sort the levelobjects according to commonness in this level
+            backgroundCreatureList.Content.RectTransform.SortChildren((c1, c2) =>
+            {
+                var creature1 = c1.GUIComponent.UserData as BackgroundCreaturePrefab;
+                var creature2 = c2.GUIComponent.UserData as BackgroundCreaturePrefab;
+                return Math.Sign(creature2.GetCommonness(levelData) - creature1.GetCommonness(levelData));
+            });
+        }
+
+        private static void SetElementColorBasedOnCommonness(GUIComponent element, float commonness)
+        {
+            element.Color = commonness > 0.0f ? GUIStyle.Green * 0.4f : Color.Transparent;
+            element.SelectedColor = commonness > 0.0f ? GUIStyle.Green * 0.6f : Color.White * 0.5f;
+            element.HoverColor = commonness > 0.0f ? GUIStyle.Green * 0.7f : Color.White * 0.6f;
+
+            element.GetAnyChild<GUIImage>().Color = commonness > 0.0f ? Color.White : Color.DarkGray;
+            if (commonness <= 0.0f)
+            {
+                element.GetAnyChild<GUITextBlock>().TextColor = Color.DarkGray;
+            }
+        }
+
+        private void CreateBackgroundCreatureEditor(BackgroundCreaturePrefab backgroundCreaturePrefab)
+        {
+            editorContainer.ClearChildren();
+
+            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, backgroundCreaturePrefab, false, true, elementHeight: 20, titleFont: GUIStyle.LargeFont);
+
+            if (selectedParams != null)
+            {
+                List<Identifier> availableIdentifiers = new List<Identifier>() { selectedParams.Identifier };
+                foreach (Identifier paramsId in availableIdentifiers)
+                {
+                    var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)) { IsFixedSize = true },
+                        isHorizontal: false, childAnchor: Anchor.TopCenter)
+                    {
+                        AbsoluteSpacing = 5,
+                        Stretch = true
+                    };
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
+                        TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", paramsId.Value), textAlignment: Alignment.Center);
+                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), NumberType.Float)
+                    {
+                        MinValueFloat = 0,
+                        MaxValueFloat = 100,
+                        FloatValue = backgroundCreaturePrefab.GetCommonness(currentLevelData),
+                        OnValueChanged = (numberInput) =>
+                        {
+                            backgroundCreaturePrefab.OverrideCommonness[paramsId] = numberInput.FloatValue;
+                        }
+                    };
+                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
+                    editor.AddCustomContent(commonnessContainer, 1);
+                }
+            }
+
+            Sprite sprite = backgroundCreaturePrefab.Sprite ?? backgroundCreaturePrefab.DeformableSprite?.Sprite;
+            if (sprite != null)
+            {
+                editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, (int)(25 * GUI.Scale))) { IsFixedSize = true },
+                    TextManager.Get("leveleditor.editsprite"))
+                {
+                    OnClicked = (btn, userdata) =>
+                    {
+                        editingSprite = sprite;
+                        GameMain.SpriteEditorScreen.SelectSprite(editingSprite);
+                        return true;
+                    }
+                }, 1);
+            }
+
+            if (backgroundCreaturePrefab.DeformableSprite != null)
+            {
+                var deformEditor = backgroundCreaturePrefab.DeformableSprite.CreateEditor(editor, backgroundCreaturePrefab.SpriteDeformations, backgroundCreaturePrefab.Name);
+                deformEditor.GetChild<GUIDropDown>().OnSelected += (selected, userdata) =>
+                {
+                    CreateBackgroundCreatureEditor(backgroundCreaturePrefab);
+                    return true;
+                };
+                editor.AddCustomContent(deformEditor, editor.ContentCount);
+            }
+        }
+
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
@@ -1083,6 +1270,11 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
+            if (GameMain.GraphicsWidth != prevResolution.X || GameMain.GraphicsHeight != prevResolution.Y)
+            {
+                RefreshUI(forceCreate: true);
+            }
+
             if (lightingEnabled.Selected)
             {
                 foreach (Item item in Item.ItemList)

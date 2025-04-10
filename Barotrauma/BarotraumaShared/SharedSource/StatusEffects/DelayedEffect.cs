@@ -74,7 +74,7 @@ namespace Barotrauma
             switch (delayType)
             {
                 case DelayTypes.Timer:
-                    DelayList.Add(new DelayedListElement(this, entity, currentTargets, delay, worldPosition, null));
+                    DelayList.Add(new DelayedListElement(this, entity, currentTargets, delay, worldPosition ?? GetPosition(entity, currentTargets, worldPosition), startPosition: null));
                     break;
                 case DelayTypes.ReachCursor:
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();

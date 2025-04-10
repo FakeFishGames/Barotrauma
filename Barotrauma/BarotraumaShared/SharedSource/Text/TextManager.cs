@@ -33,6 +33,8 @@ namespace Barotrauma
 
         public static int LanguageVersion { get; private set; } = 0;
 
+        private readonly static object mutex = new object();
+
         private static ImmutableArray<Range<int>> UnicodeToIntRanges(params UnicodeRange[] ranges)
             => ranges
                 .Select(r => new Range<int>(r.FirstCodePoint, r.FirstCodePoint + r.Length - 1))
@@ -109,10 +111,13 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(text)) { return SpeciallyHandledCharCategory.None; }
 
-            if (SpeciallyHandledCategoriesCache.TryGetValue(text, out var cachedCategory))
+            lock (mutex)
             {
-                SpeciallyHandledCategoriesCache[text] = new CachedCategory(cachedCategory.Category);
-                return cachedCategory.Category;
+                if (SpeciallyHandledCategoriesCache.TryGetValue(text, out var cachedCategory))
+                {
+                    SpeciallyHandledCategoriesCache[text] = new CachedCategory(cachedCategory.Category);
+                    return cachedCategory.Category;
+                }
             }
 
             var retVal = SpeciallyHandledCharCategory.None;
@@ -150,8 +155,13 @@ namespace Barotrauma
                     break;
                 }
             }
-            SpeciallyHandledCategoriesCache[text] = new CachedCategory(retVal);
-            TrimSpeciallyHandledCategoriesCache();
+
+            lock (mutex)
+            {
+                SpeciallyHandledCategoriesCache[text] = new CachedCategory(retVal);
+                TrimSpeciallyHandledCategoriesCache();
+            }
+
             return retVal;
         }
 

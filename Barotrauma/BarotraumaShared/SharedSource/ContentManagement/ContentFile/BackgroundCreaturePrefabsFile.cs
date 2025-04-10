@@ -1,9 +1,28 @@
-namespace Barotrauma
+﻿namespace Barotrauma
 {
-    sealed class BackgroundCreaturePrefabsFile : OtherFile
+#if CLIENT
+    [NotSyncedInMultiplayer]
+    sealed class BackgroundCreaturePrefabsFile : GenericPrefabFile<BackgroundCreaturePrefab>
     {
         public BackgroundCreaturePrefabsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 
-        //this content type only comes into play when a level is generated, so LoadFile and UnloadFile don't have anything to do
+        protected override bool MatchesSingular(Identifier identifier) => !MatchesPlural(identifier);
+        protected override bool MatchesPlural(Identifier identifier) => identifier == "backgroundcreatures";
+        protected override PrefabCollection<BackgroundCreaturePrefab> Prefabs => BackgroundCreaturePrefab.Prefabs;
+        protected override BackgroundCreaturePrefab CreatePrefab(ContentXElement element)
+        {
+            return new BackgroundCreaturePrefab(element, this);
+        }
+
+        public sealed override Md5Hash CalculateHash() => Md5Hash.Blank;
     }
+#else
+    [NotSyncedInMultiplayer]
+    sealed class BackgroundCreaturePrefabsFile : OtherFile
+    {
+        public BackgroundCreaturePrefabsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path)
+        {
+        }
+    }
+#endif
 }

@@ -18,11 +18,11 @@ namespace Barotrauma
         public bool IsPriority { get; set; }
 
         private readonly List<Item> ignoredContainers = new List<Item>();
-        private AIObjectiveDecontainItem decontainObjective;
+        private AIObjectiveMoveItem moveItemObjective;
         private int itemIndex = 0;
 
         /// <summary>
-        /// Allows decontainObjective to be interrupted if this objective gets abandoned (e.g. due to the item no longer being eligible for cleanup)
+        /// Allows <see cref="moveItemObjective"/> to be interrupted if this objective gets abandoned (e.g. due to the item no longer being eligible for cleanup)
         /// </summary>
         protected override bool ConcurrentObjectives => true;
 
@@ -53,9 +53,9 @@ namespace Barotrauma
                 float reduction = IsPriority ? 1 : isSelected ? 2 : 3;
                 float max = AIObjectiveManager.LowestOrderPriority - reduction;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (distanceFactor * PriorityModifier), 0, 1));
-                if (decontainObjective == null)
+                if (moveItemObjective == null)
                 {
-                    // Halve the priority until there's a decontain objective (a valid container was found).
+                    // Halve the priority until there's a moveItemObjective (a valid container was found).
                     Priority /= 2;
                 }
             }
@@ -79,7 +79,7 @@ namespace Barotrauma
                             s == InvSlotType.OuterClothes ||
                             s == InvSlotType.HealthInterface);
 
-                    TryAddSubObjective(ref decontainObjective, () => new AIObjectiveDecontainItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
+                    TryAddSubObjective(ref moveItemObjective, () => new AIObjectiveMoveItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
                     {
                         Equip = equip,
                         TakeWholeStack = true,
@@ -99,7 +99,7 @@ namespace Barotrauma
                         {
                             HumanAIController.ReequipUnequipped();
                         }
-                        if (decontainObjective != null && decontainObjective.ContainObjective != null && decontainObjective.ContainObjective.CanBeCompleted)
+                        if (moveItemObjective is { ContainObjective.CanBeCompleted: true })
                         {
                             ignoredContainers.Add(suitableContainer);
                         }
@@ -144,7 +144,7 @@ namespace Barotrauma
             base.Reset();
             ignoredContainers.Clear();
             itemIndex = 0;
-            decontainObjective = null;
+            moveItemObjective = null;
         }
 
         public void DropTarget()

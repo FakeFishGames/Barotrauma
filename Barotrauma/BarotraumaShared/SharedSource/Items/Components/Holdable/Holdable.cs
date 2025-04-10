@@ -227,6 +227,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize("", IsPropertySaveable.Yes, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's been dropped on the floor (not attached to a wall).")]
+        public string MsgWhenDropped
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// For setting the handle positions using status effects
         /// </summary>
@@ -733,7 +740,19 @@ namespace Barotrauma.Items.Components
 #endif
             //make the item pickable with the default pick key and with no specific tools/items when it's deattached
             RequiredItems.Clear();
-            DisplayMsg = "";
+            if (MsgWhenDropped.IsNullOrEmpty())
+            {
+                DisplayMsg = "";
+            }
+            else
+            {
+                DisplayMsg = TextManager.Get(MsgWhenDropped);
+                DisplayMsg =
+                    DisplayMsg.Loaded ?
+                    TextManager.ParseInputTypes(DisplayMsg) :
+                    MsgWhenDropped;
+            }
+
             PickKey = InputType.Select;
 #if CLIENT
             item.DrawDepthOffset = SpriteDepthWhenDropped - item.SpriteDepth;

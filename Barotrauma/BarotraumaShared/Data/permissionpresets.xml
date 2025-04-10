@@ -1,4 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- NOTE: these are the default permission presets used by the game, and this file may get overwritten when game updates are released -->
+<!-- If you want to add custom permission presets, please use the file permissionpresets_player.xml -->
 <PermissionPresets>
   <Preset 
     name="None" 

@@ -74,7 +74,7 @@ namespace Barotrauma
                     {
                         return null;
                     }
-                    spawnedItem = new Item(Prefab, Vector2.Zero, null);
+                    spawnedItem = new Item(Prefab, Inventory.Owner.Position, Inventory.Owner.Submarine);
                     //this needs to be done before attempting to put the item in the inventory,
                     //because the quality and condition may affect whether it can go in the inventory (into an existing stack)
                     SetItemProperties(spawnedItem);
@@ -93,7 +93,6 @@ namespace Barotrauma
                                 }
                             }
                         }
-                        spawnedItem.SetTransform(FarseerPhysics.ConvertUnits.ToSimUnits(Inventory.Owner?.WorldPosition ?? Vector2.Zero), spawnedItem.body?.Rotation ?? 0.0f, findNewHull: false);
                     }
                 }
                 else

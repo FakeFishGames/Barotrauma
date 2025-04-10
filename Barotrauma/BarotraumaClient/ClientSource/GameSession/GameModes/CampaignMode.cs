@@ -366,7 +366,7 @@ namespace Barotrauma
                 default:
                     ShowCampaignUI = true;
                     CampaignUI.SelectTab(npc.CampaignInteractionType, npc);
-                    CampaignUI.UpgradeStore?.RequestRefresh();
+                    CampaignUI.UpgradeStore?.RequestRefresh(refreshUpgrades: true);
                     break;
             }
 

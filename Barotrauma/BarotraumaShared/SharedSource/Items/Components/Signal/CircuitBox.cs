@@ -640,6 +640,18 @@ namespace Barotrauma.Items.Components
             OnViewUpdateProjSpecific();
         }
 
+        public void RemoveWire(Wire wireItem)
+        {
+            foreach (CircuitBoxWire wire in Wires.ToImmutableArray())
+            {
+                if (wire.BackingWire.TryUnwrap(out var backingWire) && backingWire == wireItem.Item) 
+                { 
+                    RemoveWireCollectionUnsafe(wire);
+                }
+            }
+            OnViewUpdateProjSpecific();
+        }
+
         private void RemoveWireCollectionUnsafe(CircuitBoxWire wire)
         {
             foreach (CircuitBoxOutputConnection output in Outputs)

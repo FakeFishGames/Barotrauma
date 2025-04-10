@@ -1,0 +1,15 @@
+﻿<Override>
+  <Charactervariant inherit="Crawler" speciesname="Crawler_hatchling" speciestranslationoverride="Crawler" texture="Content/Characters/Variants/Crawler_hatchling/crawlerhatchling.png" eatingspeed="1">
+    <health vitality="40"/>
+    <ragdoll scalemultiplier="0.5" texturescale="1.0" sourcerectscale="0.5"/>
+    <attack damagemultiplier="0.5" rangemultiplier="0.5" impactmultiplier="0.5" />
+    <animations folder="Content/Characters/Variants/Crawler_hatchling/Animations/"/>
+    <ai combatstrength="50">
+      <target tag="crawlerbroodmother" state="Protect" priority="10" reactdistance="500" ignoreinside="true"/>
+      <target tag="crawler_large" state="Protect" priority="5" reactdistance="500" ignoreinside="true"/>
+      <target tag="crawler" state="Protect" priority="2" reactdistance="500" ignoreinside="true"/>
+      <target tag="dead" state="Eat" priority="1" />
+    </ai>
+    <inventory/>
+  </Charactervariant>
+</Override>

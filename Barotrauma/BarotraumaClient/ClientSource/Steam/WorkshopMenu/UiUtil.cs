@@ -159,6 +159,16 @@ namespace Barotrauma.Steam
                 uiElement.ToolTip += TextManager.GetWithVariable(
                     "ContentPackageEnableError", "[packagename]", mod.Name);
             }
+
+            if (mod.MissingDependencies.Any())
+            {
+                nameText.TextColor = GUIStyle.Orange;
+                if (!uiElement.ToolTip.IsNullOrWhiteSpace()) { uiElement.ToolTip += "\n"; }
+                uiElement.ToolTip += 
+                    TextManager.GetWithVariables("workshop.dependencynotfound",
+                        ("[name]", mod.Name),
+                        ("[required]", string.Join(", ", mod.MissingDependencies.Select(c => c.ToString())))) + '\n' + TextManager.Get("workshop.dependencynotfound.moreinfo");
+            }
         }
     }
 }

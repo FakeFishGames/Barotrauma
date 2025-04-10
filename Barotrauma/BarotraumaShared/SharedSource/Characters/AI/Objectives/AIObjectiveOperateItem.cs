@@ -1,5 +1,5 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -89,6 +89,17 @@ namespace Barotrauma
                     Priority = 0;
                     return Priority;
                 }
+                Hull targetHull = targetItem.CurrentHull;
+                if (HumanAIController.UnsafeHulls.Contains(targetHull))
+                {
+                    // Ignore the objective, if the target hull is dangerous.
+                    Priority = 0;
+                    if (isOrder && this == objectiveManager.CurrentObjective && character.IsOnPlayerTeam)
+                    {
+                        character.Speak(TextManager.GetWithVariable("dialogoperatetargetroomisunsafe", "[item]", targetItem.Name).Value, delay: 1.0f, identifier: "dialogoperatetargetroomisunsafe".ToIdentifier(), minDurationBetweenSimilar: 5.0f);
+                    }
+                    return Priority;
+                }
                 var reactor = component.Item.GetComponent<Reactor>();
                 if (reactor != null)
                 {
@@ -137,10 +148,8 @@ namespace Barotrauma
                 }
                 if (targetItem.CurrentHull == null ||
                     targetItem.Submarine != character.Submarine && !isOrder ||
-                    targetItem.CurrentHull.FireSources.Any() ||
                     IsItemOperatedByAnother(target) ||
-                    Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))
-                    || component.Item.IgnoreByAI(character) || useController && controller.Item.IgnoreByAI(character))
+                    component.Item.IgnoreByAI(character) || useController && controller.Item.IgnoreByAI(character))
                 {
                     Priority = 0;
                 }
@@ -246,6 +255,7 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
                     {
+                        DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachTarget,
                         TargetName = target.Item.Name,
                         endNodeFilter = EndNodeFilter ?? AIObjectiveGetItem.CreateEndNodeFilter(target.Item)
                     },

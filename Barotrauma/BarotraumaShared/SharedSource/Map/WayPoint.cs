@@ -1011,26 +1011,52 @@ namespace Barotrauma
             return assignedWayPoints;
         }
 
-        public static List<WayPoint> GetOutpostSpawnPoints(CharacterTeamType teamID)
+        /// <summary>
+        /// Find appropriate spawnpoints in the outpost for the player crew (preferring job-specific spawnpoints in the initial/airlock module normally, and job and team -specific spawnpoints in the PvP mode).
+        /// </summary>
+        public static WayPoint[] SelectOutpostSpawnPoints(List<CharacterInfo> crew, CharacterTeamType teamID)
         {
-            List<WayPoint>  spawnWaypoints = WayPointList.FindAll(wp =>
+            List<WayPoint> potentialSpawnPoints = WayPointList.FindAll(wp =>
                 wp.SpawnType == SpawnType.Human &&
                 wp.Submarine == Level.Loaded.StartOutpost);
             if (GameMain.GameSession.GameMode is PvPMode)
             {
                 Identifier teamSpawnTag = ("deathmatch" + teamID).ToIdentifier();
-                if (spawnWaypoints.Any(wp => wp.Tags.Contains(teamSpawnTag)))
+                if (potentialSpawnPoints.Any(wp => wp.Tags.Contains(teamSpawnTag)))
                 {
-                    spawnWaypoints = spawnWaypoints.FindAll(wp => wp.Tags.Contains(teamSpawnTag));
+                    potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.Tags.Contains(teamSpawnTag));
                 }
             }
             else
             {
-                spawnWaypoints = spawnWaypoints.FindAll(wp =>
+                potentialSpawnPoints = potentialSpawnPoints.FindAll(wp =>
                     wp.CurrentHull?.OutpostModuleTags != null &&
                     wp.CurrentHull.OutpostModuleTags.Contains(Barotrauma.Tags.Airlock));
             }
-            return spawnWaypoints;
+            if (potentialSpawnPoints.None()) { return potentialSpawnPoints.ToArray(); }
+
+            List<WayPoint> spawnPoints = new List<WayPoint>();
+            for (int i = 0; i < crew.Count; i++)
+            {
+                var spawnPointsForJob = potentialSpawnPoints.Where(wp => wp.AssignedJob == crew[i].Job.Prefab);
+                var spawnPointsForAnyJob = potentialSpawnPoints.Where(wp => wp.AssignedJob == null);
+                if (spawnPointsForJob.Any())
+                {
+                    //prefer job-specific spawnpoints
+                    spawnPoints.Add(spawnPointsForJob.GetRandomUnsynced());
+                }
+                else if (spawnPointsForAnyJob.Any())
+                {
+                    //2nd option: a non-job-specific spawnpoint 
+                    spawnPoints.Add(spawnPointsForAnyJob.GetRandomUnsynced());
+                }
+                else
+                {
+                    //last option: whatever spawnpoint (no matter if it's not for this job)
+                    spawnPoints.Add(potentialSpawnPoints.GetRandomUnsynced());
+                }
+            }
+            return spawnPoints.ToArray();
         }
 
         public void FindHull()

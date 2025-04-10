@@ -21,7 +21,7 @@ namespace Barotrauma
         private Item targetItem;
         private int? oxygenSourceSlotIndex;
 
-        public const float MIN_OXYGEN = 10;
+        private const float MinOxygen = 10;
 
         protected override bool CheckObjectiveState() => 
             targetItem != null && character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head);
@@ -154,9 +154,10 @@ namespace Barotrauma
                         {
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
-                            ConditionLevel = MIN_OXYGEN,
+                            ConditionLevel = MinOxygen,
                             RemoveExistingWhenNecessary = true,
-                            TargetSlot = oxygenSourceSlotIndex
+                            TargetSlot = oxygenSourceSlotIndex,
+                            AllowStealing = HumanAIController.NeedsDivingGear(character.CurrentHull, out _)
                         };
                         if (container.HasSubContainers)
                         {
@@ -199,7 +200,7 @@ namespace Barotrauma
                     int ReportOxygenTankCount()
                     {
                         if (character.Submarine != Submarine.MainSub) { return 1; }
-                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(Tags.OxygenSource) && i.Condition > 1);
+                        int remainingOxygenTanks = Submarine.MainSub?.GetItems(false).Count(i => i.HasTag(Tags.OxygenSource) && i.Condition > 1) ?? 0;
                         if (remainingOxygenTanks == 0)
                         {
                             character.Speak(TextManager.Get("DialogOutOfOxygenTanks").Value, null, 0.0f, "outofoxygentanks".ToIdentifier(), 30.0f);
@@ -226,7 +227,6 @@ namespace Barotrauma
             }
             return true;
         }
-
 
         private bool IsSuitableContainedOxygenSource(Item item)
         {
@@ -259,7 +259,7 @@ namespace Barotrauma
             // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
             // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
             float min = 0.01f;
-            float minOxygen = character.IsInFriendlySub ? MIN_OXYGEN : min;
+            float minOxygen = character.IsInFriendlySub ? MinOxygen : min;
             if (minOxygen > min && character.Inventory.AllItems.Any(i => i.HasTag(Tags.OxygenSource) && i.ConditionPercentage >= minOxygen))
             {
                 // There's a valid oxygen tank in the inventory -> no need to swap the tank too early.

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- Custom permission presets, feel free to modify this file to add your own custom presets. -->
+<PermissionPresets>
+<!-- 
+  <Preset 
+    name="Example" 
+    description="Allowed to do e.g. manage round settings, kick players and access server logs." 
+    permissions="ManageRound,Kick,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog,ManageSettings,ManageMoney,ManageBotTalents,SpamImmunity">
+    <Command name="clientlist"/>
+    <Command name="readycheck"/>
+    <Command name="autorestart"/>
+    <Command name="autorestartinterval"/>
+    <Command name="autorestarttimer"/>
+    <Command name="botcount"/>
+    <Command name="botspawnmode"/>
+    <Command name="gamemode"/>
+    <Command name="sub"/>
+    <Command name="shuttle"/>
+    <Command name="water"/>
+    <Command name="fire"/>
+    <Command name="difficulty"/>
+    <Command name="kick"/>
+    <Command name="kickid"/>
+    <Command name="campaigninfo"/>
+    <Command name="campaigndestination"/>
+    <Command name="togglekarma"/>
+    <Command name="setkarma"/>
+    <Command name="resetkarma"/>
+    <Command name="showkarma"/>
+    <Command name="togglekarmatestmode"/>
+    <Command name="respawnnow"/>
+    <Command name="traitorlist"/>
+    <Command name="setsalary"/>
+  </Preset>
+ -->
+</PermissionPresets>

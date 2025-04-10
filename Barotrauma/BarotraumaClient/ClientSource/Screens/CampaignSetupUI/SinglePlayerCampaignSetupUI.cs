@@ -632,7 +632,7 @@ namespace Barotrauma
                     saveFrame.GetChild<GUITextBlock>().TextColor = GUIStyle.Red;
                     continue;
                 }
-                if (docRoot.GetChildElement("multiplayercampaign") != null)
+                if (docRoot.GetAttributeBool("ismultiplayer", false))
                 {
                     //multiplayer campaign save in the wrong folder -> don't show the save
                     saveList.Content.RemoveChild(saveFrame);

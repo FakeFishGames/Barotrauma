@@ -515,7 +515,7 @@ namespace Barotrauma
 
                     //cast a line from the position of the character to the same direction as the translation of the sub
                     //and see where it intersects with the bounding box
-                    if (!MathUtils.GetLineRectangleIntersection(limb.WorldPosition,
+                    if (!MathUtils.GetLineWorldRectangleIntersection(limb.WorldPosition,
                         limb.WorldPosition + translateDir * 100000.0f, worldBorders, out Vector2 intersection))
                     {
                         //should never happen when casting a line out from inside the bounding box

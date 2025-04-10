@@ -35,8 +35,9 @@ namespace Barotrauma.Networking
                     continue;
                 }
                 
-                // Respawning might also be needed in permadeath mode for disconnected characters, but never for permanently dead ones
+                // Respawning can still happen in permadeath mode (disconnected characters, reserve bench...), but never for permanently dead ones
                 if (GameMain.NetworkMember?.ServerSettings is { RespawnMode: RespawnMode.Permadeath } &&
+                    matchingData is not { ChosenNewBotViaShuttle: true } && // respawning as a bot that should respawn the usual way via shuttle
                     (matchingData?.CharacterInfo is { PermanentlyDead: true } || c.Character is { IsDead: true }))
                 {
                     continue;
@@ -44,7 +45,7 @@ namespace Barotrauma.Networking
                 
                 if (campaign != null)
                 {
-                    if (matchingData != null && matchingData.HasSpawned)
+                    if (matchingData != null && matchingData.HasSpawned && !matchingData.ChosenNewBotViaShuttle)
                     {
                         //in the campaign mode, wait for the client to choose whether they want to spawn 
                         if (!c.WaitForNextRoundRespawn.HasValue || c.WaitForNextRoundRespawn.Value) { continue; }
@@ -63,7 +64,7 @@ namespace Barotrauma.Networking
             if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { return false; }
             if (c.Character != null && !c.Character.IsDead) { return false; }
 
-            var matchingData = campaign.GetClientCharacterData(c);
+            CharacterCampaignData matchingData = campaign.GetClientCharacterData(c);
             if (matchingData != null && matchingData.HasSpawned)
             {
                 if (Character.CharacterList.Any(c => 
@@ -76,6 +77,16 @@ namespace Barotrauma.Networking
                 {
                     return true;
                 }
+            }
+            return false;
+        }
+
+        private static bool ClientHasChosenNewBotViaShuttle(Client c)
+        {
+            if (GameMain.GameSession.GameMode is MultiPlayerCampaign mpCampaign &&
+                mpCampaign.GetClientCharacterData(c) is CharacterCampaignData matchingData)
+            {
+                return matchingData.ChosenNewBotViaShuttle;
             }
             return false;
         }
@@ -149,7 +160,8 @@ namespace Barotrauma.Networking
 
         private static int GetMinCharactersToRespawn()
         {
-            return Math.Max((int)(GameMain.Server.ConnectedClients.Count * GameMain.Server.ServerSettings.MinRespawnRatio), 1);
+            int respawnableClientCount = GameMain.Server.ConnectedClients.Count(c => c.InGame && (!c.AFK || !GameMain.Server.ServerSettings.AllowAFK));
+            return Math.Max((int)(respawnableClientCount * GameMain.Server.ServerSettings.MinRespawnRatio), 1);
         }
 
         private bool ShouldStartRespawnCountdown(int characterToRespawnCount)
@@ -223,6 +235,7 @@ namespace Barotrauma.Networking
                 ResetShuttle(teamSpecificState);
                 teamSpecificState.CurrentState = State.Transporting;
                 GameMain.Server.CreateEntityEvent(this);
+                SetShuttleBodyType(teamSpecificState.TeamID, FarseerPhysics.BodyType.Dynamic);
             }
             else
             {
@@ -415,15 +428,10 @@ namespace Barotrauma.Networking
             ItemPrefab batteryPrefab = ItemPrefab.Find(null, "batterycell".ToIdentifier());
 
             //the spawnpoints where the characters will spawn
-            var selectedSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnSub);
-            if (isPvPMode && Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost())
-            {
-                var spawnWaypoints = WayPoint.GetOutpostSpawnPoints(teamID);
-                for (int i = 0; i < characterInfos.Count; i++)
-                {
-                    selectedSpawnPoints[i] = spawnWaypoints.GetRandomUnsynced();
-                }
-            }
+            var selectedSpawnPoints =
+                isPvPMode && Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost() ? 
+                WayPoint.SelectOutpostSpawnPoints(characterInfos, teamID) :
+                WayPoint.SelectCrewSpawnPoints(characterInfos, respawnSub);
 
             //the spawnpoints where they would spawn if they were spawned inside the main sub
             //(in order to give them appropriate ID card tags)
@@ -445,7 +453,7 @@ namespace Barotrauma.Networking
                     //when the character spawns, set the client's name to match
                     if (clients[i].PendingName == characterInfo.Name)
                     {
-                        GameMain.Server?.TryChangeClientName(clients[i], clients[i].PendingName);
+                        GameMain.Server?.TryChangeClientName(clients[i], clients[i].PendingName, clientRenamingSelf: true);
                         clients[i].PendingName = null;
                     }
 
@@ -664,6 +672,7 @@ namespace Barotrauma.Networking
                         msg.WriteUInt16((ushort)teamSpecificState.PendingRespawnCount);
                         msg.WriteUInt16((ushort)teamSpecificState.RequiredRespawnCount);
                         msg.WriteBoolean(IsRespawnDecisionPendingForClient(c));
+                        msg.WriteBoolean(ClientHasChosenNewBotViaShuttle(c));
                         msg.WriteBoolean(teamSpecificState.RespawnCountdownStarted);
                         msg.WriteSingle((float)(teamSpecificState.RespawnTime - DateTime.Now).TotalSeconds);
                         break;

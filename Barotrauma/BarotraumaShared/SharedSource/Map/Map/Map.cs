@@ -328,7 +328,7 @@ namespace Barotrauma
                 {
                     if (LocationType.Prefabs.TryGet("outpost".ToIdentifier(), out LocationType outpostLocationType))
                     {
-                        otherLocation.ChangeType(campaign, outpostLocationType);
+                        otherLocation.ChangeType(campaign, outpostLocationType, createStores: false);
                     }
                 }
 
@@ -732,7 +732,6 @@ namespace Barotrauma
                         location.SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.ServerAndClient);
                     }
                 }
-                location.CreateStores(force: true);
             }
 
             foreach (LocationConnection connection in Connections) 
@@ -1020,11 +1019,11 @@ namespace Barotrauma
             }
 
             CurrentLocation = SelectedLocation;
+            CurrentLocation.CreateStores();
             Discover(CurrentLocation);
             Visit(CurrentLocation);
             SelectedLocation = null;
 
-            CurrentLocation.CreateStores();
             OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
 
             if (GameMain.GameSession is { Campaign.CampaignMetadata: { } metadata })
@@ -1212,7 +1211,19 @@ namespace Barotrauma
         {
             foreach (Location location in Locations)
             {
-                location.LevelData.EventsExhausted = false;
+                if (location.Visited)
+                {
+                    location.WorldStepsSinceVisited++;
+                    if (location.WorldStepsSinceVisited > Location.ClearStoresDelay)
+                    {
+                        location.ClearStores();
+                    }
+                }
+                else
+                {
+                    location.ClearStores();
+                }
+                location.LevelData.ResetExhaustedEventSets();
                 if (location.Discovered)
                 {
                     if (furthestDiscoveredLocation == null ||
@@ -1224,7 +1235,7 @@ namespace Barotrauma
             }
             foreach (LocationConnection connection in Connections)
             {
-                connection.LevelData.EventsExhausted = false;
+                connection.LevelData.ResetExhaustedEventSets();
             }
 
             foreach (Location location in Locations)
@@ -1234,12 +1245,27 @@ namespace Barotrauma
                     continue;
                 }
 
-                if (location == CurrentLocation || location == SelectedLocation || location.IsGateBetweenBiomes) { continue; }
-
-                if (!ProgressLocationTypeChanges(campaign, location) && location.Discovered)
+                bool shouldUpdateStores = location.Discovered;
+                //don't allow the type of the current location or the destination to change (it'd be weird to arrive at a different type of location than the one you were travelling to)
+                //biome gates should also remain unchanged
+                bool shouldProcessLocationTypeChanges = location != CurrentLocation && location != SelectedLocation && !location.IsGateBetweenBiomes;
+                if (shouldProcessLocationTypeChanges &&
+                    ProgressLocationTypeChanges(campaign, location)) 
                 {
-                    location.UpdateStores();
+                    //don't update stores if the location type changed (that recreates the stores anyway)
+                    shouldUpdateStores = false;
                 }
+
+                if (shouldUpdateStores)
+                {
+                    location.UpdateStores(createStoresIfNotCreated: false);
+                }
+            }
+
+            if (CurrentLocation != null)
+            {
+                CurrentLocation.UpdateStores(createStoresIfNotCreated: true);
+                CurrentLocation.WorldStepsSinceVisited = 0;
             }
         }
 
@@ -1338,7 +1364,7 @@ namespace Barotrauma
             {
                 location.ClearMissions();
             }
-            location.ChangeType(campaign, newType);
+            location.ChangeType(campaign, newType, createStores: false);
             ChangeLocationTypeProjSpecific(location, prevName, change);
             foreach (var requirement in change.Requirements)
             {
@@ -1409,9 +1435,13 @@ namespace Barotrauma
             }
         }
 
-        public void Visit(Location location)
+        public void Visit(Location location, bool resetTimeSinceVisited = true)
         {
             if (location is null) { return; }
+            if (resetTimeSinceVisited)
+            {
+                location.WorldStepsSinceVisited = 0;
+            }
             if (locationsVisited.Contains(location)) { return; }
             locationsVisited.Add(location);
             RemoveFogOfWarProjSpecific(location);
@@ -1510,12 +1540,14 @@ namespace Barotrauma
                         }
                         location.LoadLocationTypeChange(subElement);
 
+                        location.LoadChangingProperties(subElement, campaign);
+
                         // Backwards compatibility: if the discovery status is defined in the location element,
                         // the game was saved using when the discovery order still wasn't being tracked
                         if (subElement.GetAttributeBool("discovered", false))
                         {
                             Discover(location);
-                            Visit(location);
+                            Visit(location, resetTimeSinceVisited: false);
                             trackedLocationDiscoveryAndVisitOrder = false;
                         }
 
@@ -1524,9 +1556,6 @@ namespace Barotrauma
                         LocationType prevLocationType = location.Type;
                         LocationType newLocationType = LocationType.Prefabs.Find(lt => lt.Identifier == locationType) ?? LocationType.Prefabs.First();
                         location.ChangeType(campaign, newLocationType);
-
-                        var factionIdentifier = subElement.GetAttributeIdentifier("faction", Identifier.Empty);
-                        location.Faction = factionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == factionIdentifier);
 
                         if (showNotifications && prevLocationType != location.Type)
                         {
@@ -1537,9 +1566,6 @@ namespace Barotrauma
                                 location.TimeSinceLastTypeChange = 0;
                             }
                         }
-
-                        var secondaryFactionIdentifier = subElement.GetAttributeIdentifier("secondaryfaction", Identifier.Empty);
-                        location.SecondaryFaction = secondaryFactionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == secondaryFactionIdentifier);
 
                         location.LoadStores(subElement);
                         location.LoadMissions(subElement);
@@ -1563,16 +1589,24 @@ namespace Barotrauma
                         break;
                     case "discovered":
                         bool trackedVisitedEmptyLocations = subElement.GetAttributeBool("trackedvisitedemptylocations", false);
+                        int[] discoveredIndices = subElement.GetAttributeIntArray("indices", Array.Empty<int>());
+                        foreach (int discoveredIndex in discoveredIndices)
+                        {
+                            Discover(Locations[discoveredIndex]);
+                        }
+                        //backwards compatibility
                         foreach (var childElement in subElement.GetChildElements("location"))
                         {
                             if (GetLocation(childElement) is Location l)
                             {
                                 Discover(l);
+                                //even older backwards compatibility: previously we didn't track whether you've "visited" empty locations,
+                                //nor the order in which locations are visited - we need to handle that here
                                 if (!trackedVisitedEmptyLocations)
                                 {
                                     if (!l.HasOutpost())
                                     {
-                                        Visit(l);
+                                        Visit(l, resetTimeSinceVisited: false);
                                     }
                                     trackedLocationDiscoveryAndVisitOrder = false;
                                 }
@@ -1580,11 +1614,17 @@ namespace Barotrauma
                         }
                         break;
                     case "visited":
+                        int[] visitedIndices = subElement.GetAttributeIntArray("indices", Array.Empty<int>());
+                        foreach (int visitedIndex in visitedIndices)
+                        {
+                            Visit(Locations[visitedIndex], resetTimeSinceVisited: false);
+                        }
+                        //backwards compatibility
                         foreach (var childElement in subElement.GetChildElements("location"))
                         {
                             if (GetLocation(childElement) is Location l)
                             {
-                                Visit(l);
+                                Visit(l, resetTimeSinceVisited: false);
                             }
                         }
                         break;
@@ -1708,25 +1748,15 @@ namespace Barotrauma
             if (locationsDiscovered.Any())
             {
                 var discoveryElement = new XElement("discovered",
-                    new XAttribute("trackedvisitedemptylocations", true));
-                foreach (Location location in locationsDiscovered)
-                {
-                    int index = Locations.IndexOf(location);
-                    var locationElement = new XElement("location", new XAttribute("i", index));
-                    discoveryElement.Add(locationElement);
-                }
+                    new XAttribute("trackedvisitedemptylocations", true),
+                    new XAttribute("indices", string.Join(',', locationsDiscovered.Select(l => Locations.IndexOf(l)))));
                 mapElement.Add(discoveryElement);
             }
 
             if (locationsVisited.Any())
             {
-                var visitElement = new XElement("visited");
-                foreach (Location location in locationsVisited)
-                {
-                    int index = Locations.IndexOf(location);
-                    var locationElement = new XElement("location", new XAttribute("i", index));
-                    visitElement.Add(locationElement);
-                }
+                var visitElement = new XElement("visited",
+                    new XAttribute("indices", string.Join(',', locationsVisited.Select(l => Locations.IndexOf(l)))));
                 mapElement.Add(visitElement);
             }
 

@@ -108,6 +108,9 @@ namespace Barotrauma.Items.Components
         [Serialize(100, IsPropertySaveable.No, description: "How many items are placed in a row before starting a new row.")]
         public int ItemsPerRow { get; set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Should items be drawn based on their position within the inventory?")]
+        public bool ItemsUseInventoryPlacement { get; set; }
+
         [Serialize(true, IsPropertySaveable.No, description: "Should the inventory of this item be visible when the item is selected. Note that this does not prevent dragging and dropping items to the item.")]
         public bool DrawInventory
         {
@@ -1013,6 +1016,11 @@ namespace Barotrauma.Items.Components
                 contained.Item.CurrentHull = item.CurrentHull;
                 contained.Item.SetContainedItemPositions();
 
+                foreach (var lightComponent in contained.Item.GetComponents<LightComponent>())
+                {
+                    lightComponent.SetLightSourceTransform();
+                }
+
                 i++;
                 if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
                 {
@@ -1040,8 +1048,8 @@ namespace Barotrauma.Items.Components
             transformedItemIntervalHorizontal = new Vector2(transformedItemInterval.X, 0.0f);
             transformedItemIntervalVertical = new Vector2(0.0f, transformedItemInterval.Y);
 
-            flippedX = item.RootContainer?.FlippedX ?? item.FlippedX;
-            flippedY = item.RootContainer?.FlippedY ?? item.FlippedY;
+            flippedX = item.RootContainer?.FlippedX ?? (item.FlippedX && item.Prefab.CanSpriteFlipX);
+            flippedY = item.RootContainer?.FlippedY ?? (item.FlippedY && item.Prefab.CanSpriteFlipY);
             var rootBody = item.RootContainer?.body ?? item.body;
             bool bodyFlipped = rootBody is { Dir: -1 };
 

@@ -527,6 +527,10 @@ namespace Barotrauma
 
         public static void Init()
         {
+            // Ensure the save folder exists early. Otherwise the game will crash on macOS,
+            // attempting to read the non-existent folder in SafeIO.CanWrite() when saving initial user config.
+            SaveUtil.EnsureSaveFolderExists();
+            
             XDocument? currentConfigDoc = null;
 
             if (File.Exists(PlayerConfigPath))
@@ -538,6 +542,7 @@ namespace Barotrauma
             {
                 currentConfig = Config.FromElement(currentConfigDoc.Root ?? throw new NullReferenceException("Config XML element is invalid: document is null."));
 #if CLIENT
+                MainMenuScreen.DismissedNotifications = currentConfigDoc.Root.GetAttributeIdentifierArray(nameof(MainMenuScreen.DismissedNotifications), defaultValue: Array.Empty<Identifier>()).ToHashSet();
                 ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
                 MultiplayerPreferences.Init(
                     currentConfigDoc.Root.GetChildElement("player"),
@@ -656,6 +661,8 @@ namespace Barotrauma
             }
 
 #if CLIENT
+            root.Add(new XAttribute(nameof(MainMenuScreen.DismissedNotifications), string.Join(',', MainMenuScreen.DismissedNotifications.Select(n => n.Value))));
+
             XElement serverFiltersElement = new XElement("serverfilters"); root.Add(serverFiltersElement);
             ServerListFilters.Instance.SaveTo(serverFiltersElement);
 

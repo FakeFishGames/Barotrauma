@@ -88,16 +88,16 @@ namespace Barotrauma
         private StartAnimation? startAnimation;
         private GUIComponent? talentMainArea;
 
-        public void CreateGUI(GUIFrame parent, Character? targetCharacter)
+        public void CreateGUI(GUIFrame parent, CharacterInfo? characterInfo)
         {
+            this.characterInfo = characterInfo;
+            character = characterInfo?.Character;
+
             parent.ClearChildren();
             talentButtons.Clear();
             talentShowCaseButtons.Clear();
             talentCornerIcons.Clear();
             showCaseTalentFrames.Clear();
-
-            character = targetCharacter;
-            characterInfo = targetCharacter?.Info;
 
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = GUI.IntScale(15);
@@ -999,8 +999,8 @@ namespace Barotrauma
             if (characterInfo is null || talentResetButton is null || talentApplyButton is null) { return; }
 
             int talentCount = selectedTalents.Count - characterInfo.GetUnlockedTalentsInTree().Count();
-            talentApplyButton.Enabled = talentCount > 0;
-            talentResetButton.Enabled = talentCount > 0 || characterInfo.TalentRefundPoints > 0;
+            talentApplyButton.Enabled = character != null && talentCount > 0;
+            talentResetButton.Enabled = character != null && (talentCount > 0 || characterInfo.TalentRefundPoints > 0);
 
             if (talentCount == 0 && characterInfo.TalentRefundPoints > 0)
             {

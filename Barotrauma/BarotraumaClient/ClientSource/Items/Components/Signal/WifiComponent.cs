@@ -21,9 +21,14 @@ namespace Barotrauma.Items.Components
             ShapeExtensions.DrawCircle(spriteBatch, pos, range, 32, Color.Cyan * 0.5f, 3);
         }
 
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
+        {
+            SharedEventWrite(msg);
+        }
+
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            Channel = msg.ReadRangedInteger(MinChannel, MaxChannel);
+            SharedEventRead(msg);
         }
     }
 }

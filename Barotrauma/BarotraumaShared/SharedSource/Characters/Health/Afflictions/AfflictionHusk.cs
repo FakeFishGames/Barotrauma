@@ -321,6 +321,10 @@ namespace Barotrauma
             }
 
             var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), huskCharacterInfo, isRemotePlayer: false, hasAi: true);
+            if (character.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI))
+            {
+                husk.AddAbilityFlag(AbilityFlags.IgnoredByEnemyAI);
+            }
             if (husk.Info != null)
             {
                 husk.Info.Character = husk;
@@ -394,13 +398,13 @@ namespace Barotrauma
 
         public static List<Limb> AttachHuskAppendage(Character character, AfflictionPrefabHusk matchingAffliction, Identifier huskedSpeciesName, ContentXElement appendageDefinition = null, Ragdoll ragdoll = null)
         {
-            var appendage = new List<Limb>();
+            var appendageLimbs = new List<Limb>();
             CharacterPrefab huskPrefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
             if (huskPrefab?.ConfigElement == null)
             {
                 DebugConsole.ThrowError($"Failed to find the config file for the husk infected species with the species name '{huskedSpeciesName}'!",
                     contentPackage: matchingAffliction.ContentPackage);
-                return appendage;
+                return appendageLimbs;
             }
             var mainElement = huskPrefab.ConfigElement;
             var element = appendageDefinition;
@@ -412,11 +416,11 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Error in '{huskPrefab.FilePath}': Failed to find a huskappendage that matches the affliction with an identifier '{matchingAffliction.Identifier}'!",
                     contentPackage: matchingAffliction.ContentPackage);
-                return appendage;
+                return appendageLimbs;
             }
             ContentPath pathToAppendage = element.GetAttributeContentPath("path") ?? ContentPath.Empty;
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
-            if (doc == null) { return appendage; }
+            if (doc == null) { return appendageLimbs; }
             ragdoll ??= character.AnimController;
             if (ragdoll.Dir < 1.0f)
             {
@@ -424,13 +428,13 @@ namespace Barotrauma
             }
 
             var root = doc.Root.FromPackage(pathToAppendage.ContentPackage);
-            var limbElements = root.GetChildElements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
+            var limbElements = root.GetChildElements("limb").ToDictionary(e => e.GetAttributeInt("id", -1), e => e);
             //the IDs may need to be offset if the character has other extra appendages (e.g. from gene splicing)
             //that take up the IDs of this appendage
-            int idOffset = 0;
+            int? idOffset = null;
             foreach (var jointElement in root.GetChildElements("joint"))
             {
-                if (!limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out ContentXElement limbElement)) { continue; }
+                if (!limbElements.TryGetValue(jointElement.GetAttributeInt("limb2", -1), out ContentXElement limbElement)) { continue; }
                 
                 var jointParams = new RagdollParams.JointParams(jointElement, ragdoll.RagdollParams);
                 Limb attachLimb = null;
@@ -452,28 +456,32 @@ namespace Barotrauma
                 }
                 if (attachLimb != null)
                 {
-                    jointParams.Limb1 = attachLimb.Params.ID;
-                    //the joint attaches to a limb outside the character's normal limb count = to another part of the appendage
-                    // -> if the appendage's IDs have been offset, we need to take that into account to attach to the correct limb
-                    if (jointParams.Limb1 >= ragdoll.RagdollParams.Limbs.Count)
-                    {
-                        jointParams.Limb1 += idOffset;
-                    }
                     var appendageLimbParams = new RagdollParams.LimbParams(limbElement, ragdoll.RagdollParams);
-                    if (idOffset == 0)
+                    idOffset ??= ragdoll.Limbs.Length - appendageLimbParams.ID;
+                    jointParams.Limb1 = attachLimb.Params.ID;
+                    //the joint attaches to one of the limbs we're creating = to another part of the appendage
+                    // -> if the appendage's IDs have been offset, we need to take that into account to attach to the correct limb
+                    if (limbElements.ContainsKey(jointParams.Limb1))
                     {
-                        idOffset = ragdoll.Limbs.Length - appendageLimbParams.ID;
+                        jointParams.Limb1 += idOffset.Value;
                     }
-                    jointParams.Limb2 = appendageLimbParams.ID = ragdoll.Limbs.Length;
-                    Limb huskAppendage = new Limb(ragdoll, character, appendageLimbParams);
+                    if (limbElements.ContainsKey(jointParams.Limb2))
+                    {
+                        jointParams.Limb2 += idOffset.Value;
+                    }
+                    Limb huskAppendage =
+                        //check if this joint is supposed to attach to a limb we already created
+                        appendageLimbs.Find(limb => limb.Params.ID == appendageLimbParams.ID) ??
+                        //if not, create a new limb
+                        new Limb(ragdoll, character, appendageLimbParams);
                     huskAppendage.body.Submarine = character.Submarine;
                     huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
                     ragdoll.AddLimb(huskAppendage);
                     ragdoll.AddJoint(jointParams);
-                    appendage.Add(huskAppendage);
+                    appendageLimbs.Add(huskAppendage);
                 }
             }
-            return appendage;
+            return appendageLimbs;
         }
 
         public static Identifier GetHuskedSpeciesName(CharacterParams character, AfflictionPrefabHusk prefab)

@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="[DebugOnlyTest]Testhuman" modversion="1.0.3" corepackage="False" gameversion="1.7.4.0">
+  <Character file="%ModDir%/Characters/Testhuman/Testhuman.xml" />
+</contentpackage>

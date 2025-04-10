@@ -513,7 +513,7 @@ namespace Barotrauma
             return ushortValue;
         }
         
-        private static T ParseEnumValue<T>(string value, T defaultValue, XAttribute attribute) where T : struct, Enum
+        public static T ParseEnumValue<T>(string value, T defaultValue, XAttribute attribute) where T : struct, Enum
         {
             if (Enum.TryParse(value, true, out T result))
             {

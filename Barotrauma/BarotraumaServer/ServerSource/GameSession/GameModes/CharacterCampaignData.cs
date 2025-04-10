@@ -15,6 +15,12 @@ namespace Barotrauma
 #endif
 
         public bool HasSpawned;
+        
+        /// <summary>
+        /// Respawning via shuttle has been blocked from permanently dead characters, but it should be possible when the player
+        /// chooses a bot from the reserve bench and shuttles are enabled in the campaign.
+        /// </summary>
+        public bool ChosenNewBotViaShuttle;
 
         public bool HasItemData
         {
@@ -77,6 +83,7 @@ namespace Barotrauma
             string accountIdStr = element.GetAttributeString("accountid", null)
                                ?? element.GetAttributeString("steamid", "");
             AccountId = Networking.AccountId.Parse(accountIdStr);
+            ChosenNewBotViaShuttle = element.GetAttributeBool("waitingforshuttle", false);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -180,7 +187,8 @@ namespace Barotrauma
             XElement element = new XElement("CharacterCampaignData",
                 new XAttribute("name", Name),
                 new XAttribute("address", ClientAddress),
-                new XAttribute("accountid", AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : ""));
+                new XAttribute("accountid", AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : ""),
+                new XAttribute("waitingforshuttle", ChosenNewBotViaShuttle));
             CharacterInfo?.Save(element);
             if (itemData != null) { element.Add(itemData); }
             if (healthData != null) { element.Add(healthData); }

@@ -109,7 +109,9 @@ namespace Barotrauma
                 lastSecondMark = currentSecond;
             }
 
-            if (currentTime - lastMinuteMark >= 60 * 1000)
+            if (currentTime - lastMinuteMark >= 60 * 1000 &&
+                /* we don't need info of the FPS every minute, we can get a good sample size just by logging a small sample */
+                GameAnalyticsManager.ShouldLogRandomSample())
             {
                 //the FPS could be even higher than this on a high-end monitor, but let's restrict it to 144 to reduce the number of distinct event IDs
                 const int MaxFPS = 144;

@@ -589,7 +589,7 @@ namespace Barotrauma
         /// <summary>
         /// Can be used in conditionals to check if a StatusEffect with a specific tag is currently running. Only relevant for effects with a non-zero duration.
         /// </summary>
-        private readonly HashSet<Identifier> tags;
+        private readonly HashSet<Identifier> statusEffectTags;
 
         /// <summary>
         /// How long _can_ the event run (in seconds). The difference to <see cref="duration"/> is that 
@@ -620,12 +620,17 @@ namespace Barotrauma
         /// <summary>
         /// Only valid if the effect has a duration or delay. Can the effect be applied on the same target(s) if the effect is already being applied?
         /// </summary>
-        public readonly bool Stackable = true;
+        public readonly bool Stackable;
+
+        /// <summary>
+        /// Only valid if the effect is non-stackable and has a duration. If the effect is reapplied while it's already running, should it reset the duration of the existing effect (i.e. keep the existing effect running)?
+        /// </summary>
+        public readonly bool ResetDurationWhenReapplied;
 
         /// <summary>
         /// The interval at which the effect is executed. The difference between delay and interval is that effects with a delay find the targets, check the conditions, etc
         /// immediately when Apply is called, but don't apply the effects until the delay has passed. Effects with an interval check if the interval has passed when Apply is
-        /// called and apply the effects if it has, otherwise they do nothing.
+        /// called and apply the effects if it has, otherwise they do nothing. Using this is preferred for performance reasons.
         /// </summary>
         public readonly float Interval;
 
@@ -815,19 +820,25 @@ namespace Barotrauma
         /// </summary>
         public Vector2 Offset { get; private set; }
 
+        /// <summary>
+        /// An random offset (in a random direction) added to the position of the effect is executed at. Only relevant if the effect does something where position matters,
+        /// for example emitting particles or explosions, spawning something or playing sounds.
+        /// </summary>
+        public float RandomOffset { get; private set; }
+
         public string Tags
         {
-            get { return string.Join(",", tags); }
+            get { return string.Join(",", statusEffectTags); }
             set
             {
-                tags.Clear();
+                statusEffectTags.Clear();
                 if (value == null) return;
 
                 string[] newTags = value.Split(',');
                 foreach (string tag in newTags)
                 {
                     Identifier newTag = tag.Trim().ToIdentifier();
-                    if (!tags.Contains(newTag)) { tags.Add(newTag); };
+                    if (!statusEffectTags.Contains(newTag)) { statusEffectTags.Add(newTag); };
                 }
             }
         }
@@ -846,7 +857,7 @@ namespace Barotrauma
 
         protected StatusEffect(ContentXElement element, string parentDebugName)
         {
-            tags = new HashSet<Identifier>(element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()));
+            statusEffectTags = new HashSet<Identifier>(element.GetAttributeIdentifierArray("statuseffecttags", element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>())));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
             OnlyWhenDamagedByPlayer = element.GetAttributeBool("onlyplayertriggered", element.GetAttributeBool("onlywhendamagedbyplayer", false));
@@ -857,6 +868,7 @@ namespace Barotrauma
             disableDeltaTime = element.GetAttributeBool("disabledeltatime", false);
             setValue = element.GetAttributeBool("setvalue", false);
             Stackable = element.GetAttributeBool("stackable", true);
+            ResetDurationWhenReapplied = element.GetAttributeBool("resetdurationwhenreapplied", true);
             lifeTime = lifeTimer = element.GetAttributeFloat("lifetime", 0.0f);
             CheckConditionalAlways = element.GetAttributeBool("checkconditionalalways", false);
 
@@ -865,6 +877,7 @@ namespace Barotrauma
 
             Range = element.GetAttributeFloat("range", 0.0f);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
+            RandomOffset = element.GetAttributeFloat("randomoffset", 0.0f);
             string[] targetLimbNames = element.GetAttributeStringArray("targetlimb", null) ?? element.GetAttributeStringArray("targetlimbs", null);
             if (targetLimbNames != null)
             {
@@ -969,7 +982,30 @@ namespace Barotrauma
                             //a workaround to "tags" possibly meaning either an item's tags or this status effect's tags:
                             //if the status effect doesn't have a duration, assume tags mean an item's tags, not this status effect's tags
                             propertyAttributes.Add(attribute);
+                            if (targetTypes.HasFlag(TargetType.UseTarget))
+                            {
+                                DebugConsole.AddWarning(
+                                    $"Potential error in StatusEffect ({parentDebugName}). " +
+                                    "The effect is configured to set the tags of the use target, which will not work on most kinds of targets (only if the target is an item). "+
+                                    "If you meant to configure the tags for the StatusEffect itself, please use the attribute 'statuseffecttags'. If you are sure you want to set the tags of the target, use the attribute 'settags'.",
+                                    contentPackage: element.ContentPackage);
+                            }
                         }
+                        else
+                        {
+#if DEBUG
+                            //it would be nice to warn modders about this too, but since the effects have always been configured like this before,
+                            //it'd lead to an avalanche of console warnings
+                            DebugConsole.AddWarning(
+                                $"StatusEffect tags defined using the attribute 'tags' in StatusEffect ({parentDebugName}). "+
+                                "Please use the attribute 'statuseffecttags' or 'settags' instead to make it more explicit whether the 'tags' attribute means the status effect's tags, or tags the effect is supposed to set. " +
+                                "The game now assumes it means the status effect's tags.", 
+                                contentPackage: element.ContentPackage);
+#endif
+                        }
+                        break;
+                    case "settags":
+                        propertyAttributes.Add(attribute);
                         break;
                     case "oneshot":
                         oneShot = attribute.GetAttributeBool(false);
@@ -991,7 +1027,9 @@ namespace Barotrauma
             List<(Identifier propertyName, object value)> propertyEffects = new List<(Identifier propertyName, object value)>();
             foreach (XAttribute attribute in propertyAttributes)
             {
-                propertyEffects.Add((attribute.NameAsIdentifier(), XMLExtensions.GetAttributeObject(attribute)));
+                Identifier attributeName = attribute.NameAsIdentifier();
+                if (attributeName == "settags") { attributeName = "tags".ToIdentifier(); }
+                propertyEffects.Add((attributeName, XMLExtensions.GetAttributeObject(attribute)));
             }
             PropertyEffects = propertyEffects.ToImmutableArray();
 
@@ -1085,6 +1123,8 @@ namespace Barotrauma
                         // Could probably be solved by using the NonClampedStrength or by bypassing the clamping, but ran out of time and played it safe here.
                         afflictionInstance.Probability = subElement.GetAttributeFloat(1.0f, nameof(afflictionInstance.Probability));
                         afflictionInstance.MultiplyByMaxVitality = subElement.GetAttributeBool(nameof(afflictionInstance.MultiplyByMaxVitality), false);
+                        afflictionInstance.DivideByLimbCount = subElement.GetAttributeBool(nameof(afflictionInstance.DivideByLimbCount), false);
+                        afflictionInstance.Penetration = subElement.GetAttributeFloat(0.0f, nameof(Attack.Penetration));
                         Afflictions.Add(afflictionInstance);
                         break;
                     case "reduceaffliction":
@@ -1559,7 +1599,10 @@ namespace Barotrauma
                 DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.FirstOrDefault() == target);
                 if (existingEffect != null)
                 {
-                    existingEffect.Reset(Math.Max(existingEffect.Timer, Duration), user);
+                    if (ResetDurationWhenReapplied)
+                    {
+                        existingEffect.Reset(Math.Max(existingEffect.Timer, Duration), user);
+                    }
                     return;
                 }
             }
@@ -1626,7 +1669,7 @@ namespace Barotrauma
             return hull;
         }
 
-        private Vector2 GetPosition(Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
+        protected Vector2 GetPosition(Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             Vector2 position = worldPosition ?? (entity == null || entity.Removed ? Vector2.Zero : entity.WorldPosition);
             if (worldPosition == null)
@@ -1668,6 +1711,7 @@ namespace Barotrauma
                 
             }
             position += Offset;
+            position += Rand.Vector(Rand.Range(0.0f, RandomOffset));
             return position;
         }
 
@@ -1849,10 +1893,8 @@ namespace Barotrauma
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
-                            if (limb.Removed) { continue; }
-                            if (limb.IsSevered) { continue; }
-                            if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
-                            AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, allowStacking: !setValue);
+                            if (!IsValidTargetLimb(limb)) { continue; }
+                            AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, penetration: newAffliction.Penetration, allowStacking: !setValue);
                             limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
                             RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                             //only apply non-limb-specific afflictions to the first limb
@@ -1861,11 +1903,9 @@ namespace Barotrauma
                     }
                     else if (target is Limb limb)
                     {
-                        if (limb.IsSevered) { continue; }
-                        if (limb.character.Removed || limb.Removed) { continue; }
-                        if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
+                        if (!IsValidTargetLimb(limb)) { continue; }
                         newAffliction = GetMultipliedAffliction(affliction, entity, limb.character, deltaTime, multiplyAfflictionsByMaxVitality);
-                        AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, allowStacking: !setValue);
+                        AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, penetration: newAffliction.Penetration, allowStacking: !setValue);
                         limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
                         RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                     }
@@ -1977,8 +2017,12 @@ namespace Barotrauma
 #if SERVER
                         GameMain.Server?.SendChatMessage(messageToSay.Value, messageType, senderClient: null, targetCharacter);
 #elif CLIENT
-                        AIChatMessage message = new AIChatMessage(messageToSay.Value, messageType);
-                        targetCharacter.SendSinglePlayerMessage(message, canUseRadio, radio);
+                        //no need to create the message when playing as a client, the server will send it to us
+                        if (isNotClient)
+                        {                            
+                            AIChatMessage message = new AIChatMessage(messageToSay.Value, messageType);
+                            targetCharacter.SendSinglePlayerMessage(message, canUseRadio, radio);
+                        }
 #endif
                     }
                 }
@@ -2205,7 +2249,11 @@ namespace Barotrauma
                                                 //ApplyAffliction modified the strength based on max vitality, let's undo that before transferring the affliction
                                                 //(otherwise e.g. a character with 1000 vitality would only get a tenth of the strength)
                                                 float afflictionStrength = affliction.Strength * (newCharacter.MaxVitality / 100.0f);
-                                                newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(afflictionStrength));
+
+                                                Limb afflictionLimb = character.CharacterHealth.GetAfflictionLimb(affliction) ?? character.AnimController.MainLimb;
+                                                Limb newAfflictionLimb = newCharacter.AnimController.GetLimb(afflictionLimb.type) ?? newCharacter.AnimController.MainLimb;
+
+                                                newCharacter.CharacterHealth.ApplyAffliction(newAfflictionLimb, affliction.Prefab.Instantiate(afflictionStrength));
                                             }
                                         }
                                         if (i == characterSpawnInfo.Count) // Only perform the below actions if this is the last character being spawned.
@@ -2307,6 +2355,14 @@ namespace Barotrauma
                 intervalTimers[entity] = Interval;
             }
         }
+
+        private bool IsValidTargetLimb(Limb limb)
+        {
+            if (limb == null || limb.Removed) { return false; }
+            if (limb.IsSevered) { return false; }
+            if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { return false; }
+            return true;
+        }
         private static Character GetCharacterFromTarget(ISerializableEntity target)
         {
             Character targetCharacter = target as Character;
@@ -2401,7 +2457,7 @@ namespace Barotrauma
                             }
                             float spread = Rand.Range(-chosenItemSpawnInfo.AimSpreadRad, chosenItemSpawnInfo.AimSpreadRad);
                             float rotation = chosenItemSpawnInfo.RotationRad;
-                            Vector2 worldPos;
+                            Vector2 worldPos = position;
                             if (sourceBody != null)
                             {
                                 worldPos = sourceBody.Position;
@@ -2410,7 +2466,7 @@ namespace Barotrauma
                                     worldPos += user.Submarine.Position;
                                 }
                             }
-                            else
+                            else if (!entity.Removed)
                             {
                                 worldPos = entity.WorldPosition;
                             }
@@ -2430,7 +2486,10 @@ namespace Barotrauma
                                     }
                                     break;
                                 case ItemSpawnInfo.SpawnRotationType.Target:
-                                    rotation = MathUtils.VectorToAngle(entity.WorldPosition - worldPos);
+                                    if (!entity.Removed)
+                                    {
+                                        rotation = MathUtils.VectorToAngle(entity.WorldPosition - worldPos);
+                                    }
                                     break;
                                 case ItemSpawnInfo.SpawnRotationType.Limb:
                                     if (sourceBody != null)
@@ -2476,6 +2535,7 @@ namespace Barotrauma
                             {
                                 var sourceEntity = (sourceBody?.UserData as ISpatialEntity) ?? entity;
                                 Vector2 spawnPos = sourceEntity.SimPosition;
+                                projectile.Item.Submarine = sourceEntity?.Submarine;
                                 List<Body> ignoredBodies = null;
                                 if (!projectile.DamageUser)
                                 {
@@ -2830,6 +2890,15 @@ namespace Barotrauma
                     afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.PoisonMultiplier);
                 }
             }
+
+            if (affliction.DivideByLimbCount)
+            {
+                int limbCount = targetCharacter.AnimController.Limbs.Count(limb => IsValidTargetLimb(limb));
+                if (limbCount > 0)
+                {
+                    afflictionMultiplier *= 1.0f / limbCount;
+                }
+            }
             if (!MathUtils.NearlyEqual(afflictionMultiplier, 1.0f))
             {
                 return affliction.CreateMultiplied(afflictionMultiplier, affliction);
@@ -2875,14 +2944,14 @@ namespace Barotrauma
 
         public void AddTag(Identifier tag)
         {
-            if (tags.Contains(tag)) { return; }
-            tags.Add(tag);
+            if (statusEffectTags.Contains(tag)) { return; }
+            statusEffectTags.Add(tag);
         }
 
         public bool HasTag(Identifier tag)
         {
             if (tag == null) { return true; }
-            return tags.Contains(tag);
+            return statusEffectTags.Contains(tag);
         }
     }
 }

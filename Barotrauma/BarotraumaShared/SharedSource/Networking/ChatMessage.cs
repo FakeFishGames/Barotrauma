@@ -230,15 +230,17 @@ namespace Barotrauma.Networking
 
         public static string ApplyDistanceEffect(string text, float garbleAmount)
         {
-            if (garbleAmount < 0.3f) return text;
-            if (garbleAmount >= 1.0f) return "";
+            if (garbleAmount < 0.3f) { return text; }
+            if (garbleAmount >= 1.0f) { return ""; }
 
-            int startIndex = Math.Max(text.IndexOf(':') + 1, 1);
+            string textWithoutColorTags = RichString.Rich(text).SanitizedValue;
+
+            int startIndex = Math.Max(textWithoutColorTags.IndexOf(':') + 1, 1);
 
             StringBuilder sb = new StringBuilder(text.Length);
-            for (int i = 0; i < text.Length; i++)
+            for (int i = 0; i < textWithoutColorTags.Length; i++)
             {
-                sb.Append((i > startIndex && Rand.Range(0.0f, 1.0f) < garbleAmount) ? '-' : text[i]);
+                sb.Append((i > startIndex && Rand.Range(0.0f, 1.0f) < garbleAmount) ? '-' : textWithoutColorTags[i]);
             }
 
             return sb.ToString();

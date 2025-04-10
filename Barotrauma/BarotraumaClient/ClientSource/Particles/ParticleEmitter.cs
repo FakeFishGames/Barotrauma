@@ -99,6 +99,9 @@ namespace Barotrauma.Particles
         [Editable, Serialize(1f, IsPropertySaveable.Yes)]
         public float LifeTimeMultiplier { get; set; }
 
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Should the particle be drawn as a tracer (a line from a weapon to the point it hit)? Only supported on hitscan projectiles and repair tools. Defaults to true on hitscan projectiles.")]
+        public bool UseTracerPoints { get; set; }
+
         [Editable, Serialize(ParticleDrawOrder.Default, IsPropertySaveable.Yes)]
         public ParticleDrawOrder DrawOrder { get; set; }
 
@@ -224,7 +227,7 @@ namespace Barotrauma.Particles
 
             var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess,
                 particlePrefab.DrawOrder != ParticleDrawOrder.Default ? particlePrefab.DrawOrder : Prefab.DrawOrder,
-                lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
+                lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: Prefab.Properties.UseTracerPoints ? tracerPoints : null);
 
             if (particle != null)
             {

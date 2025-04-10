@@ -92,6 +92,11 @@ namespace Barotrauma
             get; set;
         }
 
+        public byte RoundID
+        {
+            get; set;
+        }
+
         private MultiPlayerCampaign(CampaignSettings settings) : base(GameModePreset.MultiPlayerCampaign, settings)
         {
             currentCampaignID++;

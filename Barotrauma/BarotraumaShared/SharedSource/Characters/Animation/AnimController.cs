@@ -608,7 +608,7 @@ namespace Barotrauma
                 {
                     if (!character.Inventory.IsInLimbSlot(item, i == 0 ? InvSlotType.RightHand : InvSlotType.LeftHand)) { continue; }
 #if DEBUG
-                    if (handlePos[i].LengthSquared() > ArmLength)
+                    if (ArmLength > 0 && handlePos[i].LengthSquared() > ArmLength)
                     {
                         DebugConsole.AddWarning($"Aim position for the item {item.Name} may be incorrect (further than the length of the character's arm)",
                             item.Prefab.ContentPackage);
@@ -1041,8 +1041,16 @@ namespace Barotrauma
             Limb rightHand = GetLimb(LimbType.RightHand);
             if (rightHand == null) { return; }
 
-            rightShoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm) ?? GetJointBetweenLimbs(LimbType.Head, LimbType.RightArm) ?? GetJoint(LimbType.RightArm, new LimbType[] { LimbType.RightHand, LimbType.RightForearm });
-            leftShoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.LeftArm) ?? GetJointBetweenLimbs(LimbType.Head, LimbType.LeftArm) ?? GetJoint(LimbType.LeftArm, new LimbType[] { LimbType.LeftHand, LimbType.LeftForearm });
+            rightShoulder = 
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm) ?? 
+                GetJointBetweenLimbs(LimbType.Head, LimbType.RightArm) ?? 
+                GetJoint(LimbType.RightArm, new LimbType[] { LimbType.RightHand, LimbType.RightForearm }) ??
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.RightHand);
+            leftShoulder = 
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.LeftArm) ?? 
+                GetJointBetweenLimbs(LimbType.Head, LimbType.LeftArm) ?? 
+                GetJoint(LimbType.LeftArm, new LimbType[] { LimbType.LeftHand, LimbType.LeftForearm }) ??
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.LeftHand);
 
             Vector2 localAnchorShoulder = Vector2.Zero;
             Vector2 localAnchorElbow = Vector2.Zero;

@@ -9,6 +9,7 @@ using Barotrauma.IO;
 using RestSharp;
 using System.Net;
 using Barotrauma.Steam;
+using Steamworks;
 
 namespace Barotrauma
 {
@@ -157,6 +158,12 @@ namespace Barotrauma
         private bool bounceDown;
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
+
+        /// <summary>
+        /// Triggers when a tooltip should be draw on the component. 
+        /// Note that the callback triggers even if the item has no tooltip (which can be useful for e.g. only contructing the tooltip when needed).
+        /// </summary>
+        public Action<GUIComponent> OnDrawToolTip;
 
         public enum ComponentState { None, Hover, Pressed, Selected, HoverSelected };
 
@@ -1120,7 +1127,7 @@ namespace Barotrauma
                     component = LoadGUIImage(element, parent);
                     break;
                 case "accordion":
-                    return LoadAccordion(element, parent);
+                    return LoadAccordion(element, parent, openOnTop: element.GetAttributeBool("openontop", false));
                 case "gridtext":
                     LoadGridText(element, parent);
                     return null;
@@ -1136,6 +1143,21 @@ namespace Barotrauma
                 {
                     if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase)) { continue; }
                     FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
+                }
+
+                component.toolTip = element.GetAttributeString("tooltip", string.Empty);
+
+                GUITextBlock textBlock = component as GUITextBlock ?? (component as GUIButton)?.TextBlock;
+                if (textBlock != null)
+                {
+                    if (element.GetAttributeBool("autoscalevertical", false))
+                    {
+                        textBlock.AutoScaleVertical = true;
+                    }
+                    if (element.GetAttributeBool("autoscalehorizontal", false))
+                    {
+                        textBlock.AutoScaleHorizontal = true;
+                    }
                 }
 
                 if (element.GetAttributeBool("resizetofitchildren", false))
@@ -1180,7 +1202,8 @@ namespace Barotrauma
         {
             foreach (XAttribute attribute in element.Attributes())
             {
-                switch (attribute.Name.ToString().ToLowerInvariant())
+                string conditionName = attribute.Name.ToString().ToLowerInvariant();
+                switch (conditionName)
                 {
                     case "language":
                         var languages = element.GetAttributeIdentifierArray(attribute.Name.ToString(), Array.Empty<Identifier>())
@@ -1198,6 +1221,10 @@ namespace Barotrauma
                     case "maxgameversion":
                         var maxVersion = new Version(attribute.Value);
                         if (GameMain.Version > maxVersion) { return false; }
+                        break;
+                    case "identifierdismissed":
+                        Identifier identifier = element.GetAttributeIdentifier(attribute.Name.ToString(), Identifier.Empty);
+                        if (MainMenuScreen.DismissedNotifications.Contains(identifier)) { return false; }
                         break;
                     case "buildconfiguration":
                         switch (attribute.Value.ToString().ToLowerInvariant())
@@ -1220,6 +1247,20 @@ namespace Barotrauma
 #else
                                 break;
 #endif
+                        }
+                        return false;
+                    case "mingamelaunches":
+                        if (int.TryParse(attribute.Value, out int minLaunches))
+                        {
+                            return SteamManager.GetStatInt(AchievementStat.GameLaunchCount) > minLaunches;
+                        }
+                        return false;
+                    case "appsubscribed":
+                    case "appnotsubscribed":
+                        if (SteamManager.IsInitialized && 
+                            int.TryParse(attribute.Value, out int appId))
+                        {
+                            return SteamApps.IsSubscribedToApp(appId) == (conditionName == "appsubscribed");
                         }
                         return false;
                 }
@@ -1262,12 +1303,18 @@ namespace Barotrauma
 
         private static GUIButton LoadLink(XElement element, RectTransform parent)
         {
+            Identifier identifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+
             var button = LoadGUIButton(element, parent);
             string url = element.GetAttributeString("url", "");
             button.OnClicked = (btn, userdata) =>
             {
                 try
                 {
+                    if (!identifier.IsEmpty)
+                    {
+                        MainMenuScreen.AddDismissedNotification(identifier);
+                    }
                     if (SteamManager.IsInitialized)
                     {
                         SteamManager.OverlayCustomUrl(url);
@@ -1324,6 +1371,8 @@ namespace Barotrauma
 
         private static GUIButton LoadGUIButton(XElement element, RectTransform parent)
         {
+            Identifier identifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+
             string style = element.GetAttributeString("style", "");
             if (style == "null") { style = null; }
 
@@ -1335,10 +1384,19 @@ namespace Barotrauma
                 element.GetAttributeString("text", "");
             text = text.Replace(@"\n", "\n");
 
-            return new GUIButton(RectTransform.Load(element, parent),
+            var button = new GUIButton(RectTransform.Load(element, parent),
                 text: text,
                 textAlignment: textAlignment,
                 style: style);
+            button.OnClicked = (btn, userdata) =>
+            {
+                if (!identifier.IsEmpty)
+                {
+                    MainMenuScreen.AddDismissedNotification(identifier);
+                }
+                return true;
+            };
+            return button;
         }
 
         private static GUIListBox LoadGUIListBox(XElement element, RectTransform parent)
@@ -1391,11 +1449,14 @@ namespace Barotrauma
             {
                 sprite = new Sprite(element);
             }
-
-            return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: true);
+            var scaleToFit = element.GetAttributeEnum("scaletofit", GUIImage.ScalingMode.ScaleToFitSmallestExtent);
+            return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: scaleToFit);
         }
 
-        private static GUIButton LoadAccordion(ContentXElement element, RectTransform parent)
+        public static readonly List<GUIComponent> OpenAccordionPopups = new List<GUIComponent>();
+
+        /// <param name="openOnTop">Should the contents of the accordion be forced to open on top of other UI elements?</param>
+        private static GUIButton LoadAccordion(ContentXElement element, RectTransform parent, bool openOnTop)
         {
             var button = LoadGUIButton(element, parent);
             List<GUIComponent> content = new List<GUIComponent>();
@@ -1407,6 +1468,7 @@ namespace Barotrauma
                     contentElement.Visible = false;
                     contentElement.IgnoreLayoutGroups = true;
                     content.Add(contentElement);
+                    contentElement.UserData = (contentElement.RectTransform.Anchor, contentElement.RectTransform.Pivot);
                 }
             }
             button.OnClicked = (btn, userdata) =>
@@ -1414,8 +1476,32 @@ namespace Barotrauma
                 bool visible = content.FirstOrDefault()?.Visible ?? true;
                 foreach (GUIComponent contentElement in content)
                 {
-                    contentElement.Visible = !visible;
-                    contentElement.IgnoreLayoutGroups = !contentElement.Visible;
+                    if (openOnTop)
+                    {
+                        contentElement.rectTransform.Parent = null;
+                        //the element is drawn in screen space over anything (no longer a child of the original parent),
+                        //we need to calculate the screen space position manually
+                        contentElement.rectTransform.SetPosition(Anchor.TopLeft);
+                        (Anchor anchor, Pivot pivot) = ((Anchor anchor, Pivot pivot))contentElement.UserData;
+                        contentElement.rectTransform.ScreenSpaceOffset =
+                            RectTransform.CalculateAnchorPoint(anchor, button.Rect) +
+                            RectTransform.CalculatePivotOffset(pivot, contentElement.Rect.Size);
+                        contentElement.Visible = true;
+                        if (OpenAccordionPopups.Contains(contentElement))
+                        {
+                            OpenAccordionPopups.Remove(contentElement);
+                        }
+                        else
+                        {
+                            OpenAccordionPopups.Clear();
+                            OpenAccordionPopups.Add(contentElement);
+                        }
+                    }
+                    else
+                    {
+                        contentElement.Visible = !visible;
+                        contentElement.IgnoreLayoutGroups = !contentElement.Visible;
+                    }
                 }
                 if (button.Parent is GUILayoutGroup layoutGroup)
                 {

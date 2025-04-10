@@ -167,7 +167,7 @@ namespace Barotrauma
                 Prefab.OverrideProperties.Any(p => p != null && (p.Sprites.Any() || p.DeformableSprite != null));
         }
 
-        public void Update(float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
             CurrentRotation = Rotation;
             if (ActivePrefab.SwingFrequency > 0.0f)
@@ -190,20 +190,24 @@ namespace Barotrauma
                 ScaleOscillateTimer += deltaTime * ActivePrefab.ScaleOscillationFrequency;
                 ScaleOscillateTimer = ScaleOscillateTimer % MathHelper.TwoPi;
                 CurrentScaleOscillation = Vector2.Lerp(CurrentScaleOscillation, ActivePrefab.ScaleOscillation, deltaTime * 10.0f);
-                
+
                 float sin = (float)Math.Sin(ScaleOscillateTimer);
                 CurrentScale *= new Vector2(
                     1.0f + sin * CurrentScaleOscillation.X,
-                    1.0f + sin * CurrentScaleOscillation.Y);                
+                    1.0f + sin * CurrentScaleOscillation.Y);
             }
 
             if (LightSources != null)
             {
+                Vector2 position2D = new Vector2(Position.X, Position.Y);
+                Vector2 camDiff = position2D - cam.WorldViewCenter;
                 for (int i = 0; i < LightSources.Length; i++)
                 {
-                    if (LightSourceTriggers[i] != null) LightSources[i].Enabled = LightSourceTriggers[i].IsTriggered;
+                    if (LightSourceTriggers[i] != null) { LightSources[i].Enabled = LightSourceTriggers[i].IsTriggered; }
                     LightSources[i].Rotation = -CurrentRotation;
                     LightSources[i].SpriteScale = CurrentScale;
+                    LightSources[i].Position =
+                        position2D - camDiff * Position.Z * LevelObjectManager.ParallaxStrength;
                 }
             }
 
@@ -237,7 +241,10 @@ namespace Barotrauma
                         {
                             SoundChannels[i] = roundSound.Sound.Play(roundSound.Volume, roundSound.Range, roundSound.GetRandomFrequencyMultiplier(), soundPos);
                         }
-                        SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
+                        if (SoundChannels[i] != null)
+                        {
+                            SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
+                        }
                     }
                 }
                 else if (SoundChannels[i] != null && SoundChannels[i].IsPlaying)
@@ -259,7 +266,7 @@ namespace Barotrauma
                 }
                 deformation.Update(deltaTime);
             }
-            CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
+            CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size, flippedHorizontally: false);
             if (LightSources != null)
             {
                 foreach (LightSource lightSource in LightSources)

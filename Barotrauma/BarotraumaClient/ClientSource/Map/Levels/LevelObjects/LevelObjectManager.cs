@@ -33,19 +33,19 @@ namespace Barotrauma
             visibleObjectsFront.Clear();
         }
 
-        partial void UpdateProjSpecific(float deltaTime)
+        partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
             foreach (LevelObject obj in visibleObjectsBack)
             {
-                obj.Update(deltaTime);
+                obj.Update(deltaTime, cam);
             }
             foreach (LevelObject obj in visibleObjectsMid)
             {
-                obj.Update(deltaTime);
+                obj.Update(deltaTime, cam);
             }
             foreach (LevelObject obj in visibleObjectsFront)
             {
-                obj.Update(deltaTime);
+                obj.Update(deltaTime, cam);
             }
         }
         
@@ -225,7 +225,7 @@ namespace Barotrauma
                 activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z * ParallaxStrength,
-                    Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 3000.0f),
+                    Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / obj.Prefab.FadeOutDepth),
                     activeSprite.Origin,
                     obj.CurrentRotation,
                     obj.CurrentScale,

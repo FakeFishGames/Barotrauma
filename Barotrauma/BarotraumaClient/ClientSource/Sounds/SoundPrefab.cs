@@ -248,6 +248,10 @@ namespace Barotrauma
         public readonly bool StartFromRandomTime;
         public readonly bool ContinueFromPreviousTime;
         public int PreviousTime;
+        /// <summary>
+        /// The music is forced to play at least for this long when it triggers, even if the situation changes and makes the music no longer suitable.
+        /// </summary>
+        public readonly float MinimumPlayDuration;
 
         public BackgroundMusic(ContentXElement element, SoundsFile file) : base(element, file, stream: true)
         {
@@ -260,7 +264,8 @@ namespace Barotrauma
                 ForceIntensityTrack = element.GetAttributeFloat(nameof(ForceIntensityTrack), 0.0f);
             }
             StartFromRandomTime = element.GetAttributeBool(nameof(StartFromRandomTime), false);
-            ContinueFromPreviousTime = element.GetAttributeBool(nameof(ContinueFromPreviousTime), false);
+            ContinueFromPreviousTime = element.GetAttributeBool(nameof(ContinueFromPreviousTime), false); 
+            MinimumPlayDuration = element.GetAttributeFloat(nameof(MinimumPlayDuration), 0.0f);
         }
     }
 

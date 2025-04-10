@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
 
             SuitablePlantItem plantItem = GetSuitableItem(character);
 
-            if (!plantItem.IsNull())
+            if (!plantItem.IsNull() && item.GetComponent<Holdable>() is not { Attachable: true, Attached: false })
             {
                 Msg = plantItem.Type switch
                 {
@@ -159,7 +159,6 @@ namespace Barotrauma.Items.Components
         {
             SuitablePlantItem plantItem = GetSuitableItem(character);
             PickingMsg = plantItem.IsNull() ? MsgUprooting : plantItem.ProgressBarMessage;
-
             return base.Pick(character);
         }
 

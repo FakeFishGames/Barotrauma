@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using FarseerPhysics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -62,6 +63,25 @@ namespace Barotrauma
                 {
                     stringDrawPos += new Vector2(0, 20);
                     GUI.DrawString(spriteBatch, stringDrawPos, $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                }
+                if (currentObjective is AIObjectiveCombat 
+                    { 
+                        Weapon: Item weapon, 
+                        BlockedPositions: List<Vector2> blockedPositions 
+                    })
+                {
+                    Vector2 weaponPos = weapon.DrawPosition;
+                    weaponPos.Y = -weaponPos.Y; 
+                    foreach (Vector2 blockedPosition in blockedPositions)
+                    {
+                        Vector2 blockedPos = blockedPosition;
+                        if (Character.Submarine != null)
+                        {
+                            blockedPos += Character.Submarine.DrawPosition;
+                        }
+                        blockedPos.Y = -blockedPos.Y;
+                        GUI.DrawLine(spriteBatch, weaponPos, blockedPos, Color.Red);
+                    }
                 }
             }
 

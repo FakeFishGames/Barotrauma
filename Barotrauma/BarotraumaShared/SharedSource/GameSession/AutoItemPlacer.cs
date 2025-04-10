@@ -199,12 +199,12 @@ namespace Barotrauma
             {
                 var itemPrefab = prefabsItemsCanSpawnIn[i];
                 if (itemPrefab == null) { continue; }
-                SpawnItems(itemPrefab);
+                SpawnItems(itemPrefab, skipItemProbability);
             }
 
             // Spawn items that nothing can spawn in last
             singlePrefabs.Shuffle(Rand.RandSync.ServerAndClient);
-            singlePrefabs.ForEach(i => SpawnItems(i));
+            singlePrefabs.ForEach(i => SpawnItems(i, skipItemProbability));
 
             if (OutputDebugInfo)
             {
@@ -251,7 +251,7 @@ namespace Barotrauma
 
             return itemsToSpawn;
 
-            void SpawnItems(ItemPrefab itemPrefab, float skipItemProbability = 0.0f)
+            void SpawnItems(ItemPrefab itemPrefab, float skipItemProbability)
             {
                 if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) < skipItemProbability) { return; }
                 if (itemPrefab == null)

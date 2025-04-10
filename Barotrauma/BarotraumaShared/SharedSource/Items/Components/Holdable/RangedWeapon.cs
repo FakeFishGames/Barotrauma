@@ -322,6 +322,7 @@ namespace Barotrauma.Items.Components
                             }
                         }
                     }
+                    projectile.Item.body.Dir = Item.body.Dir;
                     projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: ignoredBodies.ToList(), createNetworkEvent: false, damageMultiplier, LaunchImpulse);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (projectile.Item.body != null)

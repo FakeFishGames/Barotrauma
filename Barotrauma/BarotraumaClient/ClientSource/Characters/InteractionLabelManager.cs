@@ -17,13 +17,16 @@ public static class InteractionLabelManager
 
         public RectangleF TextRect { get; set; }
 
+        public RichString Text;
+
         public readonly Vector2 OriginalItemPosition;
 
         public bool OverlapPreventionDone;
 
-        public LabelData(Item item, RectangleF textRect, Camera drawCamera)
+        public LabelData(Item item, RectangleF textRect, RichString text, Camera drawCamera)
         {
             Item = item;
+            Text = text;
             TextRect = textRect;
             OriginalItemPosition = item.Position;
             this.drawCamera = drawCamera;
@@ -106,7 +109,7 @@ public static class InteractionLabelManager
 
             if (labels.None(l => l.Item == interactableInRange))
             {
-                var labelData = new LabelData(interactableInRange, textRect, cam);
+                var labelData = new LabelData(interactableInRange, textRect, RichString.Rich(interactableInRange.Prefab.Name), cam);
                 labels.Add(labelData);
             }
         }
@@ -124,7 +127,7 @@ public static class InteractionLabelManager
     private static RectangleF GetLabelRect(Item item, Camera cam)
     {
         // create rectangle for overlap prevention
-        Vector2 itemTextSizeScreen = GUIStyle.SubHeadingFont.MeasureString(item.Name) * LabelScale;
+        Vector2 itemTextSizeScreen = GUIStyle.SubHeadingFont.MeasureString(RichString.Rich(item.Prefab.Name).SanitizedValue) * LabelScale;
         Vector2 interactablePosScreen = cam.WorldToScreen(item.Position);
         RectangleF textRect = new RectangleF(interactablePosScreen.X, interactablePosScreen.Y, itemTextSizeScreen.X, itemTextSizeScreen.Y);
         // center the rectangle on the item
@@ -320,9 +323,11 @@ public static class InteractionLabelManager
         
         GUIStyle.InteractionLabelBackground.Draw(spriteBatch, backgroundRect, color * 0.7f);
 
-        GUIStyle.SubHeadingFont.DrawString(spriteBatch,
-            labelData.Item.Name, 
-            textDrawPosScreen, color, rotation: 0, origin: Vector2.Zero, scale, spriteEffects: SpriteEffects.None, layerDepth: 0.0f,
+        GUIStyle.SubHeadingFont.DrawStringWithColors(spriteBatch,
+            labelData.Text.SanitizedValue, 
+            textDrawPosScreen, color, rotation: 0, origin: Vector2.Zero, scale, spriteEffects: SpriteEffects.None,
+            layerDepth: 0.0f,
+            richTextData: labelData.Text.RichTextData,
             forceUpperCase: ForceUpperCase.No);
     }
 }

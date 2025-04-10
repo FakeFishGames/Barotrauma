@@ -545,7 +545,24 @@ namespace Barotrauma
                 return;
             }
 
+            //sort damageable walls by sprite depth:
+            //necessary because rendering the damage effect starts a new sprite batch and breaks the order otherwise
             int i = 0;
+            if (this is Structure { DrawDamageEffect: true } structure)
+            {
+                //insertion sort according to draw depth
+                float drawDepth = structure.SpriteDepth;
+                while (i < MapEntityList.Count)
+                {
+                    float otherDrawDepth = (MapEntityList[i] as Structure)?.SpriteDepth ?? 1.0f;
+                    if (otherDrawDepth < drawDepth) { break; }
+                    i++;
+                }
+                MapEntityList.Insert(i, this);
+                return;
+            }
+
+            i = 0;
             while (i < MapEntityList.Count)
             {
                 i++;

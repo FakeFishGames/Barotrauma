@@ -56,6 +56,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// How many times the generator retries generating an outpost with a different seed if it fails to generate a valid outpost with no overlaps.
+        /// </summary>
+        const int MaxOutpostGenerationRetries = 6;
+
         public static Submarine Generate(OutpostGenerationParams generationParams, LocationType locationType, bool onlyEntrance = false, bool allowInvalidOutpost = false)
         {
             return Generate(generationParams, locationType, location: null, onlyEntrance, allowInvalidOutpost);
@@ -86,7 +91,7 @@ namespace Barotrauma
                     generationParams = newParams;
                 }
 
-                locationType = location.GetLocationType();
+                locationType = location.Type;
             }
 
             Submarine sub = null;
@@ -182,8 +187,8 @@ namespace Barotrauma
 
             List<PlacedModule> selectedModules = new List<PlacedModule>();
             bool generationFailed = false;
-            int remainingTries = 5;
-            while (remainingTries > -1 && outpostModules.Any())
+            int remainingOutpostGenerationTries = MaxOutpostGenerationRetries;
+            while (remainingOutpostGenerationTries > -1 && outpostModules.Any())
             {
                 if (sub != null)
                 {
@@ -208,7 +213,7 @@ namespace Barotrauma
                     GameMain.Server.EntityEventManager.Events.RemoveRange(eventCount, GameMain.Server.EntityEventManager.Events.Count - eventCount);
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveRange(uniqueEventCount, GameMain.Server.EntityEventManager.UniqueEvents.Count - uniqueEventCount);
 #endif
-                    if (remainingTries <= 0)
+                    if (remainingOutpostGenerationTries <= 0)
                     {
                         generationFailed = true;
                         break;
@@ -269,7 +274,7 @@ namespace Barotrauma
                     if (pendingModuleFlags.Contains("initialFlag".ToIdentifier())) { pendingModuleFlags.Remove(initialFlag); }
                 }
 
-                if (remainingTries == 1)
+                if (remainingOutpostGenerationTries == 1)
                 {
                     //generation has failed and only one attempt left, try removing duplicate modules
                     pendingModuleFlags = pendingModuleFlags.Distinct().ToList();
@@ -283,13 +288,13 @@ namespace Barotrauma
                     selectedModules,
                     locationType,
                     allowExtendBelowInitialModule: generationParams is RuinGeneration.RuinGenerationParams,
-                    allowDifferentLocationType: remainingTries == 1);
+                    allowDifferentLocationType: remainingOutpostGenerationTries == 1);
 
                 if (GameMain.GameSession?.ForceOutpostModule != null)
                 {
-                    if (remainingTries > 0)
+                    if (remainingOutpostGenerationTries > 0)
                     {
-                        remainingTries--;
+                        remainingOutpostGenerationTries--;
                         continue;
                     }
                     DebugConsole.ThrowError($"Could not place force outpost module: {GameMain.GameSession.ForceOutpostModule.OutpostModuleInfo.Name}");
@@ -301,8 +306,8 @@ namespace Barotrauma
                 {
                     if (!allowInvalidOutpost)
                     {
-                        remainingTries--;
-                        if (remainingTries <= 0)
+                        remainingOutpostGenerationTries--;
+                        if (remainingOutpostGenerationTries <= 0)
                         {
                             DebugConsole.ThrowError("Could not generate an outpost with all of the required modules. Some modules may not have enough connections at the edges to generate a valid layout. Pending modules: " + string.Join(", ", pendingModuleFlags));
                         }
@@ -346,7 +351,7 @@ namespace Barotrauma
                     EnableFactionSpecificEntities(sub, location);
                     return sub;
                 }
-                remainingTries--;
+                remainingOutpostGenerationTries--;
             }
 
             DebugConsole.AddSafeError("Failed to generate an outpost without overlapping modules. Trying to use a pre-built outpost instead...");
@@ -444,9 +449,12 @@ namespace Barotrauma
                         selectedModule.Offset =
                             (selectedModule.PreviousGap.WorldPosition + selectedModule.PreviousModule.Offset) -
                             selectedModule.ThisGap.WorldPosition;
-                        if (selectedModule.PreviousGap.ConnectedDoor != null || selectedModule.ThisGap.ConnectedDoor != null)
+                        if (generationParams.AlwaysGenerateHallways)
                         {
-                            selectedModule.Offset += moveDir * generationParams.MinHallwayLength;
+                            if (selectedModule.PreviousGap.ConnectedDoor != null || selectedModule.ThisGap.ConnectedDoor != null)
+                            {
+                                selectedModule.Offset += moveDir * generationParams.MinHallwayLength;
+                            }
                         }
                     }
                     entities[selectedModule] = moduleEntities;
@@ -467,24 +475,30 @@ namespace Barotrauma
                         GetSubsequentModules(placedModule, selectedModules, ref subsequentModules);
                         List<PlacedModule> otherModules = selectedModules.Except(subsequentModules).ToList();
 
-                        int remainingTries = 10;
-                        while (FindOverlap(subsequentModules, otherModules, out var module1, out var module2) && remainingTries > 0)
+                        int remainingOverlapPreventionTries = 10;
+                        while (FindOverlap(subsequentModules, otherModules, out var module1, out var module2) && remainingOverlapPreventionTries > 0)
                         {
                             overlapsFound = true;
-                            if (FindOverlapSolution(subsequentModules, module1, module2, selectedModules, maxMoveAmount, out Dictionary<PlacedModule, Vector2> solution))
+                            if (FindOverlapSolution(subsequentModules, module1, module2, selectedModules, generationParams.MinHallwayLength, maxMoveAmount, out Dictionary<PlacedModule, Vector2> solution))
                             {
                                 foreach (KeyValuePair<PlacedModule, Vector2> kvp in solution)
                                 {
-                                    kvp.Key.Offset += kvp.Value;
+                                    kvp.Key.Offset += kvp.Value;                                    
                                 }
                             }
                             else
                             {
                                 break;
                             }
-                            remainingTries--;
+                            remainingOverlapPreventionTries--;
+                        }
+                        if (remainingOutpostGenerationTries > MaxOutpostGenerationRetries / 2 &&
+                            ModuleBelowInitialModule(placedModule, selectedModules.First()))
+                        {
+                            overlapsFound = true;
                         }
                     }
+
                     iteration++;
                     if (iteration > 10)
                     {
@@ -647,7 +661,8 @@ namespace Barotrauma
         /// <param name="selectedModules">The modules we've already selected to be used in the outpost.</param>
         /// <param name="locationType">The type of the location we're generating the outpost for.</param>
         /// <param name="tryReplacingCurrentModule">If we fail to append to the current module, should we try replacing it with something else and see if we can append to it then?</param>
-        /// <param name="allowExtendBelowInitialModule">Is the module allowed to be placed further down than the initial module (usually the airlock module)?</param>
+        /// <param name="allowExtendBelowInitialModule">Is the module allowed to be placed further down than the initial module (usually the airlock module)? 
+        /// Note that at this point we only determine which module to attach to which, but not the actual positions or bounds of the modules, so it's possible for a module to attach to the side of the airlock but still extend below the airlock if it's very tall for example.</param>
         /// <param name="allowDifferentLocationType">If we fail to find a module suitable for the location type, should we use a module that's meant for a different location type instead?</param>
         private static bool AppendToModule(PlacedModule currentModule,
             List<SubmarineInfo> availableModules,
@@ -886,7 +901,7 @@ namespace Barotrauma
                         Vector2 gapPos2 = otherModule.PreviousModule.Offset + otherModule.PreviousGap.Position + gapEdgeOffset + otherModule.PreviousModule.MoveOffset;
                         if (Submarine.RectContains(rect, gapPos1) || 
                             Submarine.RectContains(rect, gapPos2) || 
-                            MathUtils.GetLineRectangleIntersection(gapPos1, gapPos2, rect, out _))
+                            MathUtils.GetLineWorldRectangleIntersection(gapPos1, gapPos2, rect, out _))
                         {
                             return true;
                         }
@@ -905,6 +920,21 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Check if the lowest point of the module is below the lowest point of the initial (docking) module. 
+        /// This shouldn't happen, because it can cause modules to overlap with the docked sub.
+        /// </summary>
+        private static bool ModuleBelowInitialModule(PlacedModule module, PlacedModule initialModule)
+        {
+            Rectangle bounds = module.Bounds;
+            bounds.Location += (module.Offset + module.MoveOffset).ToPoint();
+
+            Rectangle initialModuleBounds = initialModule.Bounds;
+            initialModuleBounds.Location += (initialModule.Offset + initialModule.MoveOffset).ToPoint();
+
+            return bounds.Bottom < initialModuleBounds.Bottom;
+        }
+
+        /// <summary>
         /// Attempt to find a way to move the modules in a way that stops the 2 specific modules from overlapping.
         /// Done by iterating through the modules and testing how much the subsequent modules (i.e. modules that are further from the initial outpost) 
         /// would need to be moved further to solve the overlap. The solution that requires moving the modules the least is chosen.
@@ -919,6 +949,7 @@ namespace Barotrauma
             IEnumerable<PlacedModule> movableModules, 
             PlacedModule module1, PlacedModule module2, 
             IEnumerable<PlacedModule> allmodules, 
+            float minMoveAmount,
             int maxMoveAmount,
             out Dictionary<PlacedModule, Vector2> solution)
         {
@@ -934,14 +965,13 @@ namespace Barotrauma
             {
                 if (module.ThisGap.ConnectedDoor == null && module.PreviousGap.ConnectedDoor == null) { continue; }
                 Vector2 moveDir = GetMoveDir(module.ThisGapPosition);
-                Vector2 moveStep = moveDir * 50.0f;
-                Vector2 currentMove = Vector2.Zero;
+                const float moveStep = 50.0f;
+                Vector2 currentMove = moveDir * Math.Max(minMoveAmount, moveStep);
 
                 List<PlacedModule> subsequentModules2 = new List<PlacedModule>();
                 GetSubsequentModules(module, movableModules, ref subsequentModules2);
                 while (currentMove.LengthSquared() < maxMoveAmount * maxMoveAmount)
                 {
-                    currentMove += moveStep;
                     foreach (PlacedModule movedModule in subsequentModules2)
                     {
                         movedModule.MoveOffset = currentMove;
@@ -958,6 +988,7 @@ namespace Barotrauma
                         }
                         break;
                     }
+                    currentMove += moveDir * moveStep;
                 }
                 foreach (PlacedModule movedModule in allmodules)
                 {

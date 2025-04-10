@@ -379,7 +379,7 @@ namespace Barotrauma
             if (success)
             {
                 // Event history must be registered before ending the round or it will be cleared
-                GameMain.GameSession.EventManager.RegisterEventHistory();
+                GameMain.GameSession.EventManager.StoreEventDataAtRoundEnd();
             }
             GameMain.GameSession.EndRound("", transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;

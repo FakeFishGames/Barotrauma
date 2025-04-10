@@ -301,6 +301,25 @@ namespace Barotrauma
         public bool PermanentlyDead;
         public bool RenamingEnabled = false;
 
+        private BotStatus botStatus = BotStatus.ActiveService;
+        
+        public BotStatus BotStatus
+        {
+            get => botStatus;
+            set
+            {
+                botStatus = value;
+                if (botStatus == BotStatus.ActiveService && character == null)
+                {
+                    //no character yet -> spawn is pending
+                    PendingSpawnToActiveService = true;
+                }
+            }
+        }
+
+        public bool IsOnReserveBench => BotStatus == BotStatus.ReserveBench;
+        public bool PendingSpawnToActiveService;
+
         private static ushort idCounter = 1;
         private const string disguiseName = "???";
 
@@ -312,7 +331,18 @@ namespace Barotrauma
         public LocalizedString Title;
 
         public (Identifier NpcSetIdentifier, Identifier NpcIdentifier) HumanPrefabIds;
-
+        
+        private HumanPrefab _humanPrefab;
+        public HumanPrefab HumanPrefab
+        {
+            get
+            {
+                if (HumanPrefabIds == default) { return null; }
+                _humanPrefab ??= NPCSet.Get(HumanPrefabIds.NpcSetIdentifier, HumanPrefabIds.NpcIdentifier);
+                return _humanPrefab;
+            }
+        }
+        
         public string DisplayName
         {
             get
@@ -340,10 +370,24 @@ namespace Barotrauma
 
         public Identifier SpeciesName { get; }
 
+        private Character character;
         /// <summary>
         /// Note: Can be null.
         /// </summary>
-        public Character Character;
+        public Character Character
+        {
+            get => character;
+            set
+            {
+                character = value;
+                if (character != null) 
+                { 
+                    //character spawned -> spawn no longer pending
+                    PendingSpawnToActiveService = false;
+                }
+            }
+
+        }
 
         public Job Job;
 
@@ -768,6 +812,13 @@ namespace Barotrauma
             return name;
         }
 
+        public void SetNameBasedOnJob()
+        {
+            if (Job == null) { return; }
+            Name = Job.Name.Value;
+            OriginalName = Name;
+        }
+
         public static Color SelectRandomColor(in ImmutableArray<(Color Color, float Commonness)> array, Rand.RandSync randSync)
             => ToolBox.SelectWeightedRandom(array, array.Select(p => p.Commonness).ToArray(), randSync)
                 .Color;
@@ -830,6 +881,7 @@ namespace Barotrauma
             LoadTagsBackwardsCompatibility(infoElement, tags);
             SpeciesName = infoElement.GetAttributeIdentifier("speciesname", "");
             PermanentlyDead = infoElement.GetAttributeBool("permanentlydead", false);
+            BotStatus = infoElement.GetAttributeBool(nameof(IsOnReserveBench), false) ? BotStatus.ReserveBench : BotStatus.ActiveService;
             RenamingEnabled = infoElement.GetAttributeBool("renamingenabled", false);
             ContentXElement element;
             if (!SpeciesName.IsEmpty)
@@ -1570,6 +1622,7 @@ namespace Barotrauma
                 new XAttribute("refundpoints", TalentRefundPoints),
                 new XAttribute("lastrewarddistribution", LastRewardDistribution.Match(some: value => value, none: () => -1).ToString()),
                 new XAttribute("permanentlydead", PermanentlyDead),
+                new XAttribute(nameof(IsOnReserveBench), IsOnReserveBench),
                 new XAttribute("renamingenabled", RenamingEnabled)
             );
 

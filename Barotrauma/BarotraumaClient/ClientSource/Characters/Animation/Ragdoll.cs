@@ -23,13 +23,13 @@ namespace Barotrauma
 
         partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos)
         {
-            if (character != GameMain.Client.Character || !character.CanMove)
+            if (character != GameMain.Client.Character)
             {
                 //remove states without a timestamp (there may still be ID-based states 
                 //in the list when the controlled character switches to timestamp-based interpolation)
                 character.MemState.RemoveAll(m => m.Timestamp == 0.0f);
 
-                //use simple interpolation for other players' characters and characters that can't move
+                //use simple interpolation for other players' characters
                 if (character.MemState.Count > 0)
                 {
                     CharacterStateInfo serverPos = character.MemState.Last();
@@ -142,7 +142,8 @@ namespace Barotrauma
                         else
                         {
                             float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, newPosition);
-                            float mainLimbErrorTolerance = 0.1f;
+                            float mainLimbErrorTolerance = character == GameMain.Client.Character ? 0.25f : 0.1f;
+                            MainLimb.body.LinearVelocity = newVelocity;
                             //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
                             //don't attempt to correct the position.
                             if (mainLimbDistSqrd > mainLimbErrorTolerance)
@@ -151,11 +152,12 @@ namespace Barotrauma
                                 MainLimb.PullJointEnabled = true;
                                 if (!ColliderControlsMovement && newVelocity.LengthSquared() < 0.01f) { TryPlatformCorrection(newPosition); }
                             }
-                            else
-                            {
-                                MainLimb.body.LinearVelocity = newVelocity;
-                            }
                         }
+                    }
+                    else if (!ColliderControlsMovement)
+                    {
+                        //correct velocity regardless of the positional error
+                        MainLimb.body.LinearVelocity = newVelocity;
                     }
                 }
                 character.MemLocalState.Clear();
@@ -191,6 +193,8 @@ namespace Barotrauma
                 overrideTargetMovement = null;
 
                 CharacterStateInfo serverPos = character.MemState.Last();
+
+                Collider.LastServerState = serverPos;
 
                 if (!character.isSynced)
                 {
@@ -289,15 +293,30 @@ namespace Barotrauma
                         }
                         else if (errorMagnitude > 0.01f)
                         {
-                            Collider.TargetPosition = Collider.SimPosition + positionError;
-                            Collider.TargetRotation = Collider.Rotation + rotationError;
-                            Collider.MoveToTargetPosition(lerp: true);
+                            if (ColliderControlsMovement)
+                            {
+                                Collider.TargetPosition = Collider.SimPosition + positionError;
+                                Collider.TargetRotation = Collider.Rotation + rotationError;
+                                Collider.MoveToTargetPosition(lerp: true);
+                            }
+                            else
+                            {
+                                float mainLimbErrorTolerance = character == GameMain.Client.Character ? 0.25f : 0.1f;
+                                //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
+                                //don't attempt to correct the position.
+                                if (errorMagnitude > mainLimbErrorTolerance)
+                                {
+                                    MainLimb.PullJointWorldAnchorB = MainLimb.SimPosition + positionError;
+                                    MainLimb.PullJointEnabled = true;
+                                    if (serverPos.LinearVelocity.LengthSquared() < 0.01f) { TryPlatformCorrection(MainLimb.SimPosition + positionError); }
+                                }
+                            }
                         }
                     }
 
                 }
 
-                if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
+                if (character.MemLocalState.Count > 120) { character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120); }
                 character.MemState.Clear();
             }
         }
@@ -602,15 +621,19 @@ namespace Barotrauma
                 
                 void AdjustDepthOffset(Item item)
                 {
-                    if (item?.GetComponent<Controller>() is { ControlCharacterPose: true, UserInCorrectPosition: true } controller && controller.User == character)
+                    if (item == null) { return; }
+                    foreach (var controller in item.GetComponents<Controller>())
                     {
-                        if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
+                        if (controller is { ControlCharacterPose: true, UserInCorrectPosition: true } && controller.User == character)
                         {
-                            depthOffset = Math.Max(controller.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
-                        }
-                        else
-                        {
-                            depthOffset = Math.Max(controller.Item.GetDrawDepth() - 0.0001f - maxDepth, 0.0f);
+                            if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
+                            {
+                                depthOffset = Math.Max(controller.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
+                            }
+                            else
+                            {
+                                depthOffset = Math.Max(controller.Item.GetDrawDepth() - 0.0001f - maxDepth, 0.0f);
+                            }
                         }
                     }
                 }

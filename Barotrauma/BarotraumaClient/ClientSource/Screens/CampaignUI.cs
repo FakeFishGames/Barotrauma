@@ -259,7 +259,7 @@ namespace Barotrauma
             {
                 AutoScaleHorizontal = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.GetLocationTypeToDisplay().Name, font: GUIStyle.SubHeadingFont);
 
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             portrait.EnsureLazyLoaded();

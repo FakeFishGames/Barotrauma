@@ -84,7 +84,11 @@ namespace Barotrauma.Networking
             set
             {
                 if (characterInfo == value) { return; }
-                characterInfo?.Remove();
+                if (characterInfo is { Character: null })
+                {
+                    //if a character hasn't spawned for this characterInfo, we can remove the info and free the sprites and such
+                    characterInfo.Remove();
+                }
                 characterInfo = value;
             }
         }
@@ -94,6 +98,7 @@ namespace Barotrauma.Networking
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
+        public bool AFK;
         public bool? WaitForNextRoundRespawn;
 
         public int KarmaKickCount;
@@ -335,10 +340,21 @@ namespace Barotrauma.Networking
             {
                 //the bot has spawned, but the new CharacterCampaignData technically hasn't, because we just created it
                 characterData.HasSpawned = true;
+                mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.CharacterInfo);
             }
 
             SpectateOnly = false;
             return true;
+        }
+
+        public void ResetSync()
+        {
+            NeedsMidRoundSync = false;
+            PendingPositionUpdates.Clear();
+            EntityEventLastSent.Clear();
+            LastSentEntityEventID = 0;
+            LastRecvEntityEventID = 0;
+            UnreceivedEntityEventCount = 0;
         }
     }
 }

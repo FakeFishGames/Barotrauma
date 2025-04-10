@@ -268,7 +268,6 @@ namespace Barotrauma.Networking
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
 
-            doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("port", Port);
 
             if (QueryPort != 0)
@@ -279,8 +278,6 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
             doc.Root.SetAttributeValue("autorestart", autoRestart);
-
-            doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
 
             doc.Root.SetAttributeValue("HiddenSubs", string.Join(",", HiddenSubs));
 
@@ -324,6 +321,11 @@ namespace Barotrauma.Networking
             }
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
+
+            //backwards compatibility
+            if (serverName.IsNullOrEmpty()) { ServerName = doc.Root.GetAttributeString("name", ""); }
+            if (ServerName.Length > NetConfig.ServerNameMaxLength) { ServerName = ServerName.Substring(0, NetConfig.ServerNameMaxLength); }
+            if (ServerMessageText.IsNullOrEmpty()) { ServerMessageText = doc.Root.GetAttributeString("ServerMessage", ""); }
 
             if (string.IsNullOrEmpty(doc.Root.GetAttributeString("losmode", "")))
             {
@@ -408,10 +410,6 @@ namespace Barotrauma.Networking
 
             AllowedRandomMissionTypes = doc.Root.GetAttributeIdentifierArray(
                 "AllowedRandomMissionTypes", MissionPrefab.GetAllMultiplayerSelectableMissionTypes().ToArray()).ToList();
-
-            ServerName = doc.Root.GetAttributeString("name", "");
-            if (ServerName.Length > NetConfig.ServerNameMaxLength) { ServerName = ServerName.Substring(0, NetConfig.ServerNameMaxLength); }
-            ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
 
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
             if (AllowedRandomMissionTypes.Contains(Tags.MissionTypeAll))

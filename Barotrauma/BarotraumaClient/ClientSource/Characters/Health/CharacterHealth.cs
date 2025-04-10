@@ -1143,6 +1143,8 @@ namespace Barotrauma
                     if (!statusIconVisibleTime.ContainsKey(afflictionPrefab)) { statusIconVisibleTime.Add(afflictionPrefab, 0.0f); }
                     statusIconVisibleTime[afflictionPrefab] += deltaTime;
 
+                    Color color = GetAfflictionIconColor(afflictionPrefab, affliction);
+
                     var matchingIcon = 
                         afflictionIconContainer.GetChildByUserData(afflictionPrefab) ?? 
                         hiddenAfflictionIconContainer.GetChildByUserData(afflictionPrefab);
@@ -1151,9 +1153,13 @@ namespace Barotrauma
                         matchingIcon = new GUIButton(new RectTransform(new Point(afflictionIconContainer.Rect.Height), afflictionIconContainer.RectTransform), style: null)
                         {
                             UserData = afflictionPrefab,
-                            ToolTip = affliction.Prefab.Name,
+                            ToolTip = $"‖color:{color.ToStringHex()}‖{affliction.Prefab.Name}‖color:end‖",
                             CanBeSelected = false
                         };
+                        if (affliction.Prefab.ShowDescriptionInTooltip)
+                        {
+                            matchingIcon.ToolTip = matchingIcon.ToolTip + "\n" + affliction.Prefab.GetDescription(affliction.Strength, AfflictionPrefab.Description.TargetType.Self);
+                        }
                         if (affliction == pressureAffliction)
                         {
                             matchingIcon.ToolTip = TextManager.Get("PressureHUDWarning");
@@ -1162,6 +1168,8 @@ namespace Barotrauma
                         {
                             matchingIcon.ToolTip = TextManager.Get("OxygenHUDWarning");
                         }
+                        matchingIcon.ToolTip = RichString.Rich(matchingIcon.ToolTip);
+
                         new GUIImage(new RectTransform(Vector2.One, matchingIcon.RectTransform, Anchor.BottomCenter), afflictionPrefab.Icon, scaleToFit: true)
                         {
                             CanBeFocused = false                            
@@ -1172,7 +1180,7 @@ namespace Barotrauma
                         matchingIcon.RectTransform.Parent = hiddenAfflictionIconContainer.RectTransform;
                     }
                     var image = matchingIcon.GetChild<GUIImage>();
-                    image.Color = GetAfflictionIconColor(afflictionPrefab, affliction);
+                    image.Color = color;
                     image.HoverColor = Color.Lerp(image.Color, Color.White, 0.5f);
 
                     if (affliction.DamagePerSecond > 1.0f && matchingIcon.FlashTimer <= 0.0f)

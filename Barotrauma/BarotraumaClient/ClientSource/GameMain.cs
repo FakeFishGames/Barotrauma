@@ -120,6 +120,7 @@ namespace Barotrauma
         private readonly GameTime fixedTime;
 
         public Option<ConnectCommand> ConnectCommand = Option<ConnectCommand>.None();
+        private string clientName;
 
         private static SpriteBatch spriteBatch;
 
@@ -252,6 +253,16 @@ namespace Barotrauma
             try
             {
                 ConnectCommand = Barotrauma.Networking.ConnectCommand.Parse(ConsoleArguments);
+                
+                string clientNameFlagArg = args.FirstOrDefault(arg => arg.StartsWith("-username"));
+                if (clientNameFlagArg != null)
+                {
+                    int nextIndex = args.IndexOf(clientNameFlagArg) + 1;
+                    if (nextIndex < args.Length)
+                    {
+                        clientName = args[nextIndex];
+                    }
+                }
             }
             catch (IndexOutOfRangeException e)
             {
@@ -734,7 +745,7 @@ namespace Barotrauma
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
-                fixedTime.TotalGameTime.Add(addTime);
+                fixedTime.TotalGameTime = fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
 
                 PlayerInput.Update(Timing.Step);
@@ -815,19 +826,28 @@ namespace Barotrauma
                         }
                         MainMenuScreen.Select();
 
+                        string clientNameString = clientName ?? MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername());
+
                         if (connectCommand.SteamLobbyIdOption.TryUnwrap(out var lobbyId))
                         {
                             SteamManager.JoinLobby(lobbyId.Value, joinServer: true);
                         }
-                        else if (connectCommand.NameAndP2PEndpointsOption.TryUnwrap(out var nameAndEndpoint)
-                                 && nameAndEndpoint is { ServerName: var serverName, Endpoints: var endpoints })
+                        else if ((connectCommand.NameAndP2PEndpointsOption.TryUnwrap(out var nameAndEndpoint) && nameAndEndpoint is { ServerName: var serverName, Endpoints: var endpoints }))
                         {
-                            Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()),
+                            Client = new GameClient(clientNameString,
                                 endpoints.Cast<Endpoint>().ToImmutableArray(),
                                 string.IsNullOrWhiteSpace(serverName) ? endpoints.First().StringRepresentation : serverName,
                                 Option<int>.None());
                         }
-                        
+                        else if ((connectCommand.NameAndLidgrenEndpointOption.TryUnwrap(out var nameAndLidgrenEndpoint) && nameAndLidgrenEndpoint is { ServerName: var lidgrenServerName, Endpoint: var endpoint }))
+                        {
+                            Client = new GameClient(
+                                clientNameString,
+                                endpoint,
+                                string.IsNullOrWhiteSpace(lidgrenServerName) ? endpoint.StringRepresentation : lidgrenServerName,
+                                Option<int>.None());
+                        }
+
                         ConnectCommand = Option<ConnectCommand>.None();
                     }
 
@@ -1173,11 +1193,12 @@ namespace Barotrauma
                     GameSession.GameMode?.Preset.Identifier.Value ?? "none",
                     GameSession.RoundDuration);
                 string eventId = "QuitRound:" + (GameSession.GameMode?.Preset.Identifier.Value ?? "none") + ":";
-                GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
+                //disabled to reduce the amount of data we collect through GA
+                /*GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
                 foreach (var activeEvent in GameSession.EventManager.ActiveEvents)
                 {
                     GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:ActiveEvents:" + activeEvent.Prefab.Identifier);
-                }
+                }*/
                 GameSession.LogEndRoundStats(eventId);
                 if (GameSession.GameMode is TutorialMode tutorialMode)
                 {

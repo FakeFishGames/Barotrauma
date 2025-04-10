@@ -57,6 +57,8 @@ namespace Barotrauma
             msg.WriteString(Name);
             msg.WriteString(OriginalName);
             msg.WriteBoolean(RenamingEnabled);
+            msg.WriteByte((byte)BotStatus);
+            msg.WriteInt32(Salary);
             msg.WriteByte((byte)Head.Preset.TagSet.Count);
             foreach (Identifier tag in Head.Preset.TagSet)
             {

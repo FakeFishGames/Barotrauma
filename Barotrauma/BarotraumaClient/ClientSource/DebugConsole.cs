@@ -996,17 +996,11 @@ namespace Barotrauma
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
             {
                 Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                TeleportCharacter(cursorWorldPos, Character.Controlled, args);
+                TeleportCharacter(cursorWorldPos, Character.Controlled, args);                
             });
 
-            AssignOnExecute("spawn|spawncharacter", (string[] args) =>
-            {
-                SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), out string errorMsg);
-                if (!string.IsNullOrWhiteSpace(errorMsg))
-                {
-                    ThrowError(errorMsg);
-                }
-            });
+            AssignOnExecute("spawn|spawncharacter", args => SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)));
+            AssignOnExecute("spawnnpc", args => SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), true));
 
             AssignOnExecute("los", (string[] args) =>
              {
@@ -2927,33 +2921,60 @@ namespace Barotrauma
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             }));
 
-            commands.Add(new Command("dumpeventtexts", "dumpeventtexts [filepath]: gets the texts from event files and and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EventTexts.txt", (string[] args) =>
+            commands.Add(new Command("dumpeventtexts", "dumpeventtexts [sourcepath] [destinationpath]: gets the texts from event files and writes them into a file along with xml tags that can be used in translation files. If the filepath arguments are omitted, all event files are gone through and written to Content/Texts/EventTexts.txt", (string[] args) =>
             {
-                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EventTexts.txt";
+                string sourcePath = args.Length > 0 ? Path.GetFullPath(args[0]) : string.Empty;
+                string destinationPath = args.Length > 1 ? args[1] : "Content/Texts/EventTexts.txt";
                 List<string> lines = new List<string>();
                 HashSet<XDocument> docs = new HashSet<XDocument>();
                 HashSet<string> textIds = new HashSet<string>();
 
-                Dictionary<string, string> existingTexts = new Dictionary<string, string>();
-
+                Dictionary<string, string> existingTexts = new Dictionary<string, string>();             
                 foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs())
                 {
-                    if (eventPrefab.Identifier.IsEmpty) 
-                    {
-                        continue;
+                    string dir = Path.GetDirectoryName(eventPrefab.FilePath.FullPath);
+                    if (!sourcePath.IsNullOrEmpty() && 
+                        Path.GetFullPath(eventPrefab.FilePath.FullPath) != sourcePath &&
+                        Path.GetDirectoryName(eventPrefab.FilePath.FullPath) != sourcePath) 
+                    { 
+                        continue; 
                     }
+                    if (eventPrefab.Identifier.IsEmpty) { continue; }
                     docs.Add(eventPrefab.ConfigElement.Document);
                     getTextsFromElement(eventPrefab.ConfigElement, lines, eventPrefab.Identifier.Value);
+                    NewMessage($"Collecting event texts from event \"{eventPrefab.Identifier}\"...", Color.Cyan);
                 }
+
+                if (lines.None())
+                {
+                    if (sourcePath.IsNullOrEmpty())
+                    {
+                        ThrowError("Could not find any event texts. Have all the texts already been moved from the event files to the text files?");
+                    }
+                    else
+                    {
+                        ThrowError($"Could not find any event texts from \"{sourcePath}\". Are you sure the path is to a valid event xml file or a directory that contains event xml files?");
+                    }
+                    return;
+                }
+
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
-                File.WriteAllLines(filePath, lines);
                 try
                 {
-                    ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+                    File.WriteAllLines(destinationPath, lines);
                 }
                 catch (Exception e)
                 {
-                    ThrowError($"Failed to open the file \"{filePath}\".", e);
+                    ThrowError($"Failed to write to the file \"{destinationPath}\".", e);
+                }
+                try
+                {
+                    ToolBox.OpenFileWithShell(Path.GetFullPath(destinationPath));
+                    NewMessage($"Wrote the event texts to a text file in \"{destinationPath}\".", Color.Cyan);
+                }
+                catch (Exception e)
+                {
+                    ThrowError($"Failed to open the file \"{destinationPath}\".", e);
                 }
 
                 System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
@@ -2963,10 +2984,12 @@ namespace Barotrauma
                 };                
                 foreach (XDocument doc in docs)
                 {
-                    using (var writer = XmlWriter.Create(new System.Uri(doc.BaseUri).LocalPath, settings))
+                    string filePath = new System.Uri(doc.BaseUri).LocalPath;
+                    using (var writer = XmlWriter.Create(filePath, settings))
                     {
                         doc.WriteTo(writer);
                         writer.Flush();
+                        NewMessage($"Updated the event file \"{filePath}\".", Color.Cyan);
                     }
                 }
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
@@ -2984,10 +3007,6 @@ namespace Barotrauma
                             textAttribute = "tag";
                             text = subTextElement?.GetAttributeString(textAttribute, null);
                             textElement = subTextElement;
-                        }
-                        if (text == null)
-                        {
-                            AddWarning("Failed to find text from the element " + element.ToString());
                         }
                     }
 
@@ -3750,6 +3769,29 @@ namespace Barotrauma
                 string fileName = args[1];
                 character.AnimController.TryLoadAnimation(animationType, Path.GetFileNameWithoutExtension(fileName), out _, throwErrors: true);
             }, isCheat: true));
+            
+            commands.Add(new Command("startlocalmptestsession", "startlocalmptestsession [(optional) number of clients, defaults to 2]: starts a new mp test session with multiple clients connected to local dedicated server", (string[] args) =>
+            {
+                // if we are not in main menu, exit out
+                if (Screen.Selected != GameMain.MainMenuScreen)
+                {
+                    ThrowError("Must be in main menu to start.");
+                    return;
+                }
+                
+                // try to parse the number of clients
+                int numClients = 2;
+                if (args.Length > 0)
+                {
+                    if (!int.TryParse(args[0], out numClients))
+                    {
+                        ThrowError("Failed to parse the number of clients.");
+                        return;
+                    }
+                }
+                
+                StartLocalMPSession(numClients);
+            }));
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
@@ -4201,6 +4243,45 @@ namespace Barotrauma
             {
                 componentCost += itemPrefab.DefaultPrice.Price;
             }
+        }
+
+        public static void StartLocalMPSession(int numClients = 2)
+        {
+            try
+            {
+                if (Process.GetProcessesByName("DedicatedServer").Length == 0)
+                {
+#if WINDOWS
+                    Process.Start("DedicatedServer.exe", arguments: "-multiclienttestmode");
+#else
+                    Process.Start("./DedicatedServer", arguments: "-multiclienttestmode");
+#endif
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                GameMain.Client = new GameClient("client1",
+                    new LidgrenEndpoint(System.Net.IPAddress.Loopback, NetConfig.DefaultPort), "localhost", Option<int>.None());
+            
+                numClients = MathHelper.Clamp(numClients, 1, 4);
+            
+                if (numClients > 1)
+                {
+                    for (int i = 2; i <= numClients; i++)
+                    {
+                        System.Threading.Thread.Sleep(1000);
+#if WINDOWS
+                        Process.Start("Barotrauma.exe", arguments: "-connect server localhost -username client" + i);
+#else
+                        Process.Start("./Barotrauma", arguments: "-connect server localhost -username client" + i);
+#endif
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to start the local MP test session", e);
+            }
+            
         }
     }
 }

@@ -1059,7 +1059,7 @@ namespace Barotrauma
             get { return allPropertyObjects; }
         }
 
-        public bool IgnoreByAI(Character character) => HasTag(Barotrauma.Tags.ItemIgnoredByAI) || OrderedToBeIgnored && character.IsOnPlayerTeam;
+        public bool IgnoreByAI(Character character) => HasTag(Barotrauma.Tags.IgnoredByAI) || OrderedToBeIgnored && character.IsOnPlayerTeam;
         public bool OrderedToBeIgnored { get; set; }
 
         public bool HasBallastFloraInHull
@@ -1899,7 +1899,6 @@ namespace Barotrauma
 
         public void AddTag(Identifier tag)
         {
-            if (tags.Contains(tag)) { return; }
             tags.Add(tag);
         }
         
@@ -1911,19 +1910,13 @@ namespace Barotrauma
 
         public bool HasTag(Identifier tag)
         {
-            if (tag == null) { return true; }
             return tags.Contains(tag) || base.Prefab.Tags.Contains(tag);
         }
 
         public bool HasIdentifierOrTags(IEnumerable<Identifier> identifiersOrTags)
         {
-            if (identifiersOrTags == null) { return false; }
             if (identifiersOrTags.Contains(Prefab.Identifier)) { return true; }
-            foreach (Identifier tag in identifiersOrTags)
-            {
-                if (HasTag(tag)) { return true; }
-            }
-            return false;
+            return HasTag(identifiersOrTags);
         }
 
         public void ReplaceTag(string tag, string newTag)
@@ -1945,10 +1938,9 @@ namespace Barotrauma
 
         public bool HasTag(IEnumerable<Identifier> allowedTags)
         {
-            if (allowedTags == null) return true;
             foreach (Identifier tag in allowedTags)
             {
-                if (tags.Contains(tag)) return true;
+                if (HasTag(tag)) { return true; }
             }
             return false;
         }
@@ -2060,7 +2052,7 @@ namespace Barotrauma
                     }
 
                     hasTargets = true;
-                    targets.Add(containedItem);
+                    targets.AddRange(containedItem.AllPropertyObjects);
                 }
             }
 
@@ -2145,7 +2137,7 @@ namespace Barotrauma
         }
 
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack,  Vector2 impulseDirection, float deltaTime,bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack,  Vector2 impulseDirection, float deltaTime, bool playSound = true)
         {
             if (Indestructible || InvulnerableToDamage) { return new AttackResult(); }
 
@@ -3104,8 +3096,11 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
-                if (user.IsKeyDown(InputType.Aim))
+                if (ic is not Ladder && user.IsKeyDown(InputType.Aim))
                 {
+                    // Don't allow selecting items while aiming.
+                    // This was added in cdc68f30. I can't remember what was the reason for it, but it might be related to accidental shots?
+                    // However, we shouldn't disallow picking the ladders, because doing that would make the bot get stuck while trying to get on to ladders.
                     pickHit = false;
                     selectHit = false;
                 }
@@ -3650,6 +3645,9 @@ namespace Barotrauma
             var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
             SerializableProperty property = extraData.SerializableProperty;
             ISerializableEntity entity = extraData.Entity;
+
+            msg.WriteVariableUInt32((uint)allProperties.Count);
+
             if (property != null)
             {
                 if (allProperties.Count > 1)
@@ -3764,6 +3762,12 @@ namespace Barotrauma
             var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
             if (allProperties.Count == 0) { return; }
 
+            int propertyCount = (int)msg.ReadVariableUInt32();
+            if (propertyCount != allProperties.Count)
+            {
+                throw new Exception($"Error in {nameof(ReadPropertyChange)}. The number of properties on the item \"{Prefab.Identifier}\" does not match between the server and the client. Server: {propertyCount}, client: {allProperties.Count}.");
+            }
+
             int propertyIndex = 0;
             if (allProperties.Count > 1)
             {
@@ -3772,7 +3776,7 @@ namespace Barotrauma
 
             if (propertyIndex >= allProperties.Count || propertyIndex < 0)
             {
-                throw new Exception($"Error in ReadPropertyChange. Property index out of bounds (item: {Prefab.Identifier}, index: {propertyIndex}, property count: {allProperties.Count}, in-game editable only: {inGameEditableOnly})");
+                throw new Exception($"Error in {nameof(ReadPropertyChange)}. Property index out of bounds (item: {Prefab.Identifier}, index: {propertyIndex}, property count: {allProperties.Count}, in-game editable only: {inGameEditableOnly})");
             }
 
             bool allowEditing = true;
@@ -3937,7 +3941,7 @@ namespace Barotrauma
                 }
                 logPropertyChangeCoroutine = CoroutineManager.Invoke(() =>
                 {
-                    GameServer.Log($"{sender.Character?.Name ?? sender.Name} set the value \"{property.Name}\" of the item \"{Name}\" to \"{logValue}\".", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log($"{GameServer.CharacterLogName(sender.Character)} set the value \"{property.Name}\" of the item \"{Name}\" to \"{logValue}\".", ServerLog.MessageType.ItemInteraction);
                 }, delay: 1.0f);
             }
 #endif

@@ -91,18 +91,19 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                float size = Math.Max(transformedBarrelPos.X, transformedBarrelPos.Y);
-                if (barrelSprite != null)
+                float size = Math.Max(transformedBarrelPos.X, transformedBarrelPos.Y);       
+                if (railSprite != null && barrelSprite != null)
                 {
-                    if (railSprite != null)
-                    {
-                        size += Math.Max(Math.Max(barrelSprite.size.X, barrelSprite.size.Y), Math.Max(railSprite.size.X, railSprite.size.Y)) * item.Scale;
-                    }
-                    else
-                    {
-                        size += Math.Max(barrelSprite.size.X, barrelSprite.size.Y) * item.Scale;
-                    }
+                    size += Math.Max(Math.Max(barrelSprite.size.X, barrelSprite.size.Y), Math.Max(railSprite.size.X, railSprite.size.Y)) * item.Scale;
                 }
+                else if (railSprite != null)
+                {
+                    size += Math.Max(railSprite.size.X, railSprite.size.Y) * item.Scale;
+                }
+                else if (barrelSprite != null)
+                {
+                    size += Math.Max(barrelSprite.size.X, barrelSprite.size.Y) * item.Scale;
+                }                
                 return Vector2.One * size * 2;
             }
         }

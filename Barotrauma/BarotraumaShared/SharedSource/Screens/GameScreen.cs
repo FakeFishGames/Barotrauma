@@ -3,8 +3,12 @@
 using Microsoft.Xna.Framework;
 using System.Threading;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics;
+
+
 #if DEBUG && CLIENT
 using System;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework.Input;
 #endif
 
@@ -58,7 +62,9 @@ namespace Barotrauma
                 cam.Position = Submarine.MainSub.WorldPosition;
                 cam.UpdateTransform(true);
             }
-            GameMain.GameSession?.CrewManager?.AutoShowCrewList();
+            GameMain.GameSession?.CrewManager?.ResetCrewListOpenState();
+            ChatBox.ResetChatBoxOpenState();
+            
 #endif
 
             MapEntity.ClearHighlightedEntities();
@@ -82,7 +88,7 @@ namespace Barotrauma
             config.ChatOpen = ChatBox.PreferChatBoxOpen;
             GameSettings.SetCurrentConfig(config);
             GameSettings.SaveCurrentConfig();
-            GameMain.SoundManager.SetCategoryMuffle("default", false);
+            GameMain.SoundManager.SetCategoryMuffle(Sounds.SoundManager.SoundCategoryDefault, false);
             GUI.ClearMessages();
 #if !DEBUG
             if (GameMain.GameSession?.GameMode is TestGameMode)
@@ -209,21 +215,27 @@ namespace Barotrauma
                 Lights.LightManager.ViewTarget != null)
             {
                 Vector2 targetPos = Lights.LightManager.ViewTarget.WorldPosition;
-                if (Lights.LightManager.ViewTarget == Character.Controlled &&
-                    (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen || ConversationAction.IsDialogOpen))
+                if (Lights.LightManager.ViewTarget == Character.Controlled)
                 {
-                    Vector2 screenTargetPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) * 0.5f;
-                    if (CharacterHealth.OpenHealthWindow != null)
+                    //take the NetworkPositionErrorOffset into account, meaning the camera is positioned
+                    //where we've smoothed out the draw position of the character after a positional correction,
+                    //instead of where the character's collider actually is
+                    targetPos += ConvertUnits.ToDisplayUnits(Character.Controlled.AnimController.Collider.NetworkPositionErrorOffset);
+                    if (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen || ConversationAction.IsDialogOpen)
                     {
-                        screenTargetPos.X = GameMain.GraphicsWidth * (CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ? 0.6f : 0.4f);
+                        Vector2 screenTargetPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) * 0.5f;
+                        if (CharacterHealth.OpenHealthWindow != null)
+                        {
+                            screenTargetPos.X = GameMain.GraphicsWidth * (CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ? 0.6f : 0.4f);
+                        }
+                        else if (ConversationAction.IsDialogOpen)
+                        {
+                            screenTargetPos.Y = GameMain.GraphicsHeight * 0.4f;
+                        }
+                        Vector2 screenOffset = screenTargetPos - new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2);
+                        screenOffset.Y = -screenOffset.Y;
+                        targetPos -= screenOffset / cam.Zoom;
                     }
-                    else if (ConversationAction.IsDialogOpen)
-                    {
-                        screenTargetPos.Y = GameMain.GraphicsHeight * 0.4f;
-                    }
-                    Vector2 screenOffset = screenTargetPos - new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2);
-                    screenOffset.Y = -screenOffset.Y;
-                    targetPos -= screenOffset / cam.Zoom;
                 }
                 cam.TargetPos = targetPos;
             }

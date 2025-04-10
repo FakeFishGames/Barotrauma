@@ -39,6 +39,12 @@ namespace Barotrauma
             public readonly Identifier ContainerTag;
             public readonly Identifier ExistingItemTag;
             
+            /// <summary>
+            /// If true, target location indicator points to the submarine where the target is inside when the target is not yet found. Not used, if target is not inside any submarine.
+            /// When enabled, the indicator is hidden when the player is inside the target submarine.
+            /// </summary>
+            public readonly bool PointToSub;
+            
             public readonly bool RemoveItem;
 
             public readonly LocalizedString SonarLabel;
@@ -55,6 +61,8 @@ namespace Barotrauma
             public readonly RetrievalState RequiredRetrievalState;
 
             public readonly bool HideLabelAfterRetrieved;
+            public readonly bool HideLabelWhenFound;
+            public readonly bool HideLabelWhenNotFound;
 
             public bool Retrieved
             {
@@ -115,6 +123,9 @@ namespace Barotrauma
                 RequiredRetrievalState = element.GetAttributeEnum("requireretrieval", parentTarget?.RequiredRetrievalState ?? RetrievalState.RetrievedToSub);
                 AllowContinueBeforeRetrieved = element.GetAttributeBool("allowcontinuebeforeretrieved", parentTarget != null);
                 HideLabelAfterRetrieved = element.GetAttributeBool("hidelabelafterretrieved", parentTarget?.HideLabelAfterRetrieved ?? false);
+                HideLabelWhenFound = element.GetAttributeBool(nameof(HideLabelWhenFound), parentTarget?.HideLabelWhenFound ?? false);
+                HideLabelWhenNotFound = element.GetAttributeBool(nameof(HideLabelWhenNotFound), parentTarget?.HideLabelWhenNotFound ?? false);
+                PointToSub = element.GetAttributeBool(nameof(PointToSub), parentTarget?.PointToSub ?? false);
                 RequireInsideOriginalContainer = element.GetAttributeBool("requireinsideoriginalcontainer", false);
                                 
                 string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
@@ -203,6 +214,8 @@ namespace Barotrauma
         /// What percentage of targets need to be retrieved for the mission to complete (0.0 - 1.0). Defaults to 0.98.
         /// </summary>
         private readonly float requiredDeliveryAmount;
+        
+        private LocalizedString pickedUpMessage;
 
         /// <summary>
         /// Message displayed when at least one of the targets is retrieved, but the mission is not complete yet.
@@ -225,8 +238,26 @@ namespace Barotrauma
                 foreach (var target in targets)
                 {
                     if (target.Retrieved && target.HideLabelAfterRetrieved) { continue; }
-                    if (target.Item != null && !target.Item.Removed)
+                    if (target.State is Target.RetrievalState.None)
                     {
+                        if (target.HideLabelWhenNotFound) { continue; }
+                    }
+                    else if (target.HideLabelWhenFound)
+                    {
+                        continue;
+                    }
+                    if (target.Item is { Removed: false })
+                    {
+                        if (target.PointToSub && target.Item.Submarine is Submarine targetSub && target.State == Target.RetrievalState.None)
+                        {
+                            if (Character.Controlled is Character playerCharacter && playerCharacter.Submarine != targetSub)
+                            {
+                                // The target is not in the same sub as the player -> point to the target submarine (instead of the item position).
+                                // When inside the target sub, don't show anything.
+                                yield return (target.SonarLabel, targetSub.WorldPosition);
+                            }
+                            continue;
+                        }
                         if (target.Item.ParentInventory?.Owner is Item parentItem)
                         {
                             bool insideParentItem = false;
@@ -238,7 +269,7 @@ namespace Barotrauma
                                     break;
                                 }
                             }
-                            //if the item is inside another target that has it's own sonar label, no need to show one on this item
+                            //if the item is inside another target that has its own sonar label, no need to show one on this item
                             if (insideParentItem) { continue; }
                         }
 
@@ -263,6 +294,7 @@ namespace Barotrauma
 
             partiallyRetrievedMessage = GetMessage(nameof(partiallyRetrievedMessage));
             allRetrievedMessage = GetMessage(nameof(allRetrievedMessage));
+            pickedUpMessage = GetMessage(nameof(pickedUpMessage));
 
             foreach (ContentXElement subElement in prefab.ConfigElement.Elements())
             {
@@ -341,6 +373,17 @@ namespace Barotrauma
 #if SERVER
             spawnInfo.Clear();
 #endif
+            if (!IsClient)
+            {
+                // First spawn any possible characters, so that we can use their items as targets.
+                Target firstTarget = targets.First();
+                var submarine = Submarine.Loaded.Find(s => IsValidSubmarine(s, firstTarget.SpawnPositionType));
+                if (submarine != null)
+                {
+                    InitCharacters(submarine);
+                }
+            }
+            
             foreach (var target in targets)
             {
                 bool usedExistingItem = false;
@@ -380,39 +423,36 @@ namespace Barotrauma
                             case Level.PositionType.Cave:
                             case Level.PositionType.MainPath:
                             case Level.PositionType.SidePath:
+                            case Level.PositionType.AbyssCave:
                                 target.Item = suitableItems.FirstOrDefault(it => Vector2.DistanceSquared(it.WorldPosition, position) < 1000.0f);
-#if SERVER
-                                usedExistingItem = target.Item != null;
-#endif
+                                break;
+                            case Level.PositionType.Abyss:
+                                target.Item = suitableItems.FirstOrDefault(it => Level.IsPositionInAbyss(it.WorldPosition));
                                 break;
                             case Level.PositionType.Ruin:
                             case Level.PositionType.Wreck:
                             case Level.PositionType.Outpost:
+                            case Level.PositionType.BeaconStation:
                                 foreach (Item it in suitableItems)
                                 {
-                                    if (it.Submarine?.Info == null) { continue; }
-                                    if (target.SpawnPositionType == Level.PositionType.Ruin && it.Submarine.Info.Type != SubmarineType.Ruin) { continue; }
-                                    if (target.SpawnPositionType == Level.PositionType.Wreck && it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
-                                    if (target.SpawnPositionType == Level.PositionType.Outpost && it.Submarine.Info.Type != SubmarineType.Outpost) { continue; }
-                                    Rectangle worldBorders = it.Submarine.Borders;
-                                    worldBorders.Location += it.Submarine.WorldPosition.ToPoint();
+                                    if (it.Submarine is not Submarine sub) { continue; }
+                                    if (!IsValidSubmarine(sub, target.SpawnPositionType)) { continue; }
+                                    Rectangle worldBorders = sub.Borders;
+                                    worldBorders.Location += sub.WorldPosition.ToPoint();
                                     if (Submarine.RectContains(worldBorders, it.WorldPosition))
                                     {
                                         target.Item = it;
-#if SERVER
-                                        usedExistingItem = true;
-#endif
                                         break;
                                     }
                                 }
                                 break;
                             default:
                                 target.Item = suitableItems.FirstOrDefault();
-#if SERVER
-                                usedExistingItem = target.Item != null;
-#endif
                                 break;
                         }
+#if SERVER
+                        usedExistingItem = target.Item != null;
+#endif
                     }
 
                     if (target.Item == null)
@@ -464,19 +504,7 @@ namespace Barotrauma
                         {
                             if (!it.HasTag(target.ContainerTag)) { continue; }
                             if (!it.IsPlayerTeamInteractable) { continue; }
-                            switch (target.SpawnPositionType)
-                            {
-                                case Level.PositionType.Cave:
-                                case Level.PositionType.MainPath:
-                                    if (it.Submarine != null) { continue; }
-                                    break;
-                                case Level.PositionType.Ruin:
-                                    if (it.Submarine?.Info == null || !it.Submarine.Info.IsRuin) { continue; }
-                                    break;
-                                case Level.PositionType.Wreck:
-                                    if (it.Submarine?.Info == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
-                                    break;
-                            }
+                            if (!IsValidSubmarine(it.Submarine, target.SpawnPositionType)) { continue; }
                             var itemContainer = it.GetComponent<ItemContainer>();
                             if (itemContainer != null && itemContainer.Inventory.CanBePut(target.Item)) { validContainers.Add(itemContainer); }
                         }
@@ -538,6 +566,26 @@ namespace Barotrauma
                 }
             }
         }
+        
+        private static bool IsValidSubmarine(Submarine sub, Level.PositionType spawnPosType)
+        {
+            if (sub == null)
+            {
+                return spawnPosType switch
+                {
+                    Level.PositionType.Ruin or Level.PositionType.Wreck or Level.PositionType.BeaconStation or Level.PositionType.Outpost => false,
+                    _ => true
+                };
+            }
+            return spawnPosType switch
+            {
+                Level.PositionType.Ruin => sub.Info.IsRuin,
+                Level.PositionType.Wreck => sub.Info.IsWreck,
+                Level.PositionType.BeaconStation => sub.Info.IsBeacon,
+                Level.PositionType.Outpost => sub.Info.IsOutpost,
+                _ => false
+            };
+        }
 
         protected override void UpdateMissionSpecific(float deltaTime)
         {
@@ -571,47 +619,44 @@ namespace Barotrauma
                 switch (target.State)
                 {
                     case Target.RetrievalState.None:
+                        if (target.Interacted)
                         {
-                            if (target.Interacted)
-                            {
-                                TrySetRetrievalState(Target.RetrievalState.Interact);
-                            }
-                            var root = target.Item?.RootContainer ?? target.Item;
-                            if (root.ParentInventory?.Owner is Character character && character.TeamID == CharacterTeamType.Team1)
-                            {
-                                TrySetRetrievalState(Target.RetrievalState.PickedUp);
-                            }
-                            if (inPlayerSub)
-                            {
-                                TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);
-                            }
+                            TrySetRetrievalState(Target.RetrievalState.Interact);
+                        }
+                        var root = target.Item?.RootContainer ?? target.Item;
+                        if (root.ParentInventory?.Owner is Character { TeamID: CharacterTeamType.Team1 })
+                        {
+                            TrySetRetrievalState(Target.RetrievalState.PickedUp);
+#if CLIENT
+                            TryShowPickedUpMessage();
+#endif
+                        }
+                        if (inPlayerSub)
+                        {
+                            TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);
                         }
                         break;
                     case Target.RetrievalState.PickedUp:
                     case Target.RetrievalState.RetrievedToSub:
+                        bool inPlayerInventory = false;
+                        bool playerInFriendlySub = false;
+                        if (rootInventoryOwner is Character { TeamID: CharacterTeamType.Team1 } character)
                         {
-
-                            bool inPlayerInventory = false;
-                            bool playerInFriendlySub = false;
-                            if (rootInventoryOwner is Character character && character.TeamID == CharacterTeamType.Team1)
+                            inPlayerInventory = true;
+                            if (character.Submarine != null)
                             {
-                                inPlayerInventory = true;
-                                if (character.Submarine != null)
-                                {
-                                    playerInFriendlySub =
-                                        character.IsInFriendlySub ||
-                                        (character.Submarine == Level.Loaded?.StartOutpost && Level.IsLoadedFriendlyOutpost && GameMain.GameSession?.Campaign.CurrentLocation is not { IsFactionHostile: true });
-                                }
+                                playerInFriendlySub =
+                                    character.IsInFriendlySub ||
+                                    (character.Submarine == Level.Loaded?.StartOutpost && Level.IsLoadedFriendlyOutpost && GameMain.GameSession?.Campaign.CurrentLocation is not { IsFactionHostile: true });
                             }
-
-                            if (inPlayerSub || (inPlayerInventory && playerInFriendlySub))
-                            {
-                                TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);                            
-                            }
-                            else
-                            {
-                                target.State = Target.RetrievalState.PickedUp;
-                            }
+                        }
+                        if (inPlayerSub || (inPlayerInventory && playerInFriendlySub))
+                        {
+                            TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);
+                        }
+                        else
+                        {
+                            target.State = Target.RetrievalState.PickedUp;
                         }
                         break;
                 }
@@ -621,7 +666,7 @@ namespace Barotrauma
                     if (retrievalState < target.State || target.State == retrievalState) { return; }
                     bool wasRetrieved = target.Retrieved;
                     target.State = retrievalState;
-                    //increment the mission state if the target became retrieved               
+                    //increment the mission state if the target became retrieved
                     if (!wasRetrieved && target.Retrieved) 
                     { 
                         State = Math.Max(i + 1, State);
@@ -645,7 +690,7 @@ namespace Barotrauma
         {
             if (requiredDeliveryAmount < 1.0f)
             {
-                return targets.Count(t => IsTargetRetrieved(t)) / (float)targets.Count >= requiredDeliveryAmount;
+                return targets.Count(IsTargetRetrieved) / (float)targets.Count >= requiredDeliveryAmount;
             }
             else
             {
@@ -679,7 +724,7 @@ namespace Barotrauma
             }
             foreach (var target in targetsToRemove)
             {
-                if (target.Item != null && !target.Item.Removed)
+                if (target.Item is { Removed: false })
                 {
                     target.Item.Remove();
                 }

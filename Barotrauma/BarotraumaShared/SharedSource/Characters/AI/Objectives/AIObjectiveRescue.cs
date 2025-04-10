@@ -161,7 +161,7 @@ namespace Barotrauma
                                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(Target, character, objectiveManager)
                                     {
                                         CloseEnough = CloseEnoughToTreat,
-                                        DialogueIdentifier = "dialogcannotreachpatient".ToIdentifier(),
+                                        DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachPatient,
                                         TargetName = Target.DisplayName
                                     },
                                     onCompleted: () => RemoveSubObjective(ref goToObjective),
@@ -197,13 +197,16 @@ namespace Barotrauma
                                 {
                                     RemoveSubObjective(ref replaceOxygenObjective);
                                     RemoveSubObjective(ref goToObjective);
-                                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager),
-                                        onCompleted: () => RemoveSubObjective(ref goToObjective),
-                                        onAbandon: () =>
-                                        {
-                                            RemoveSubObjective(ref goToObjective);
-                                            safeHull = character.CurrentHull;
-                                        });
+                                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager)                                    
+                                    { 
+                                        DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachPlace
+                                    },                                       
+                                    onCompleted: () => RemoveSubObjective(ref goToObjective),
+                                    onAbandon: () =>
+                                    {
+                                        RemoveSubObjective(ref goToObjective);
+                                        safeHull = character.CurrentHull;
+                                    });
                                 }
                             }
                         }
@@ -221,7 +224,7 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(Target, character, objectiveManager)
                 {
                     CloseEnough = CloseEnoughToTreat,
-                    DialogueIdentifier = "dialogcannotreachpatient".ToIdentifier(),
+                    DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachPatient,
                     TargetName = Target.DisplayName
                 },
                 onCompleted: () => RemoveSubObjective(ref goToObjective),

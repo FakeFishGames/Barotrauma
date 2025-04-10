@@ -63,9 +63,12 @@ namespace Barotrauma
             OutConditionMax = element.GetAttributeFloat("outconditionmax", element.GetAttributeFloat("outcondition", 1.0f));
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
+
+            Identifier[] defaultRequiredDeconstructor = new Identifier[] { "deconstructor".ToIdentifier() };
             RequiredDeconstructor = element.GetAttributeIdentifierArray("requireddeconstructor", 
-                element.Parent?.GetAttributeIdentifierArray("requireddeconstructor", Array.Empty<Identifier>()) ?? Array.Empty<Identifier>());
+                element.Parent?.GetAttributeIdentifierArray("requireddeconstructor", null) ?? defaultRequiredDeconstructor);
             RequiredOtherItem = element.GetAttributeIdentifierArray("requiredotheritem", Array.Empty<Identifier>());
+
             ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
             InfoText = element.GetAttributeString("infotext", string.Empty);
             InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
@@ -197,7 +200,8 @@ namespace Barotrauma
             {
                 Tag = tag;
                 using MD5 md5 = MD5.Create();
-                UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(tag, md5);
+                //add "tag:" to the hash, so we don't get a hash collision between recipes configured as identifier="smth" and tag="smth"
+                UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(("tag:" + tag).ToIdentifier(), md5);
             }
 
             public override string ToString()
@@ -216,7 +220,8 @@ namespace Barotrauma
         public readonly ImmutableArray<Identifier> SuitableFabricatorIdentifiers;
         public readonly float RequiredTime;
         public readonly int RequiredMoney;
-        public readonly bool RequiresRecipe;
+        public readonly bool RequiresRecipe; 
+        public readonly bool HideIfNoRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly ImmutableArray<Skill> RequiredSkills;
         public readonly uint RecipeHash;
@@ -251,6 +256,7 @@ namespace Barotrauma
             }
             var requiredItems = new List<RequiredItem>();
             RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
+            HideIfNoRecipe = element.GetAttributeBool("hideifnorecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
 
             int limitDefault = element.GetAttributeInt("fabricationlimit", -1);

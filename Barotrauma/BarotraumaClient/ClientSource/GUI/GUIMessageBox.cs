@@ -289,7 +289,7 @@ namespace Barotrauma
                     GUIStyle.Apply(Text, "", this);
                     Content.Recalculate();
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
-                        new Point(Text.Rect.Width, Text.Rect.Height);
+                        new Point(Text.Rect.Width, Math.Min(Text.Rect.Height, GameMain.GraphicsHeight));
                     Text.RectTransform.IsFixedSize = true;
                     if (headerText.IsNullOrWhiteSpace())
                     {

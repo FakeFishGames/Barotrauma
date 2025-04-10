@@ -42,9 +42,9 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 Priority = (
-                    objectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Priority > 0) ||
+                    objectiveManager.CurrentOrder is AIObjectiveGoTo ||
                     objectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
-                    objectiveManager.Objectives.Any(o => (o is AIObjectiveCombat || o is AIObjectiveReturn) && o.Priority > 0))
+                    objectiveManager.Objectives.Any(o => o is AIObjectiveCombat or AIObjectiveReturn && o.Priority > 0))
                     && ((!character.IsLowInOxygen && character.IsImmuneToPressure)|| HumanAIController.HasDivingSuit(character)) ? 0 : AIObjectiveManager.EmergencyObjectivePriority - 10;
             }
             else
@@ -71,6 +71,11 @@ namespace Barotrauma
                         Priority = AIObjectiveManager.MaxObjectivePriority;
                     }
                 }
+                else if (objectiveManager.CurrentOrder is AIObjectiveGoTo { IsFollowOrder: true })
+                {
+                    // Ordered to follow -> Don't flee from the enemies/fires (doesn't get here if we need more oxygen).
+                    Priority = 0;
+                }
                 else if ((objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.IsCurrentOrder<AIObjectiveReturn>()) &&
                          character.Submarine != null && !character.IsOnFriendlyTeam(character.Submarine.TeamID))
                 {
@@ -83,7 +88,7 @@ namespace Barotrauma
                     Priority = 0;
                 }
                 Priority = MathHelper.Clamp(Priority, 0, AIObjectiveManager.MaxObjectivePriority);
-                if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
+                if (divingGearObjective is { IsCompleted: false, CanBeCompleted: true, Priority: > 0f })
                 {
                     // Boost the priority while seeking the diving gear
                     Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.EmergencyObjectivePriority - 1, AIObjectiveManager.MaxObjectivePriority));
@@ -149,7 +154,13 @@ namespace Barotrauma
             bool shouldActOnSuffocation = character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false);
             if (!character.LockHands && (!dangerousPressure || shouldActOnSuffocation || cannotFindSafeHull))
             {
-                bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull, out bool needsDivingSuit);
+                bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull, out bool needsDivingSuit, objectiveManager);
+                if (character.TeamID == CharacterTeamType.FriendlyNPC && character.Submarine?.Info is { IsOutpost: true })
+                {
+                    // In outposts, the NPCs don't try to use diving suits, because otherwise there's probably not enough for those trying to fix the leaks.
+                    // This is not a hard rule: the bots may still grab a suit, unless they find a diving mask.
+                    needsDivingSuit = false;
+                }
                 bool needsEquipment = shouldActOnSuffocation;
                 if (needsDivingSuit)
                 {
@@ -307,10 +318,10 @@ namespace Barotrauma
                     }
                 }
             }
-            if (escapeVel != Vector2.Zero)
+            if (escapeVel != Vector2.Zero && character.CurrentHull is Hull currentHull)
             {
-                float left = character.CurrentHull.Rect.X + 50;
-                float right = character.CurrentHull.Rect.Right - 50;
+                float left = currentHull.Rect.X + 50;
+                float right = currentHull.Rect.Right - 50;
                 //only move if we haven't reached the edge of the room
                 if (escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right)
                 {
@@ -441,7 +452,7 @@ namespace Barotrauma
                 hullSearchIndex = 0;
 #if DEBUG
                 stopWatch.Stop();
-                DebugConsole.NewMessage($"({character.DisplayName}) Sorted hulls by suitability in {stopWatch.ElapsedMilliseconds} ms", debugOnly: true);
+                DebugConsole.Log($"({character.DisplayName}) Sorted hulls by suitability in {stopWatch.ElapsedMilliseconds} ms");
 #endif
             }
 
@@ -471,12 +482,47 @@ namespace Barotrauma
                         }
                         else
                         {
-                            // Each unsafe node reduces the hull safety value.
-                            // Ignore the current hull, because otherwise we couldn't find a path out.
-                            int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
-                            hullSafety /= 1 + unsafeNodes;
+                            // Check the path safety. Each unsafe node reduces the hull safety value.
+                            Hull previousHull = null;
+                            foreach (WayPoint node in path.Nodes)
+                            {
+                                Hull hull = node.CurrentHull;
+                                if (hull == previousHull)
+                                {
+                                    // Let's evaluate each hull only once. If we'd want to make this foolproof, we'd have to add the checked hulls to a list,
+                                    // yet in practice there shouldn't be a case where the path would get back to a hull once it has exited it.
+                                    continue;
+                                }
+                                previousHull = hull;
+                                if (hull == character.CurrentHull)
+                                {
+                                    // Ignore the current hull, because otherwise we couldn't find a path out.
+                                    continue;
+                                }
+                                if (HumanAIController.UnsafeHulls.Contains(hull))
+                                {
+                                    // Compare safety of the node hull to the current hull safety.
+                                    float nodeHullSafety = HumanAIController.GetHullSafety(hull, hull.GetConnectedHulls(true, 1), character);
+                                    if (nodeHullSafety < HumanAIController.HULL_SAFETY_THRESHOLD && nodeHullSafety < HumanAIController.CurrentHullSafety)
+                                    {
+                                        // If the node hull is considered unsafe and less safe than the current hull, let's ignore the target.
+                                        hullSafety = 0;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        // Otherwise, each unsafe hull on the path reduces the safety of the target hull by 50% of their threat value.
+                                        float hullThreat = 100 - nodeHullSafety;
+                                        hullSafety -= hullThreat / 2;
+                                        if (hullSafety <= 0)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                             // If the target is not inside a friendly submarine, considerably reduce the hull safety.
-                            if (!character.Submarine.IsEntityFoundOnThisSub(potentialHull, true))
+                            if (!character.Submarine.IsEntityFoundOnThisSub(potentialHull, includingConnectedSubs: true))
                             {
                                 hullSafety /= 10;
                             }

@@ -727,6 +727,8 @@ namespace Barotrauma
             afflictionsToRemove.AddRange(afflictions.Keys.Where(a => !irremovableAfflictions.Contains(a))); 
             foreach (var affliction in afflictionsToRemove)
             {
+                //set strength to 0 in case the affliction needs to react to becoming inactive
+                affliction.Strength = 0.0f;
                 afflictions.Remove(affliction);
             }
             foreach (Affliction affliction in irremovableAfflictions)
@@ -888,6 +890,8 @@ namespace Barotrauma
                         affliction.Duration -= deltaTime;
                         if (affliction.Duration <= 0.0f)
                         {
+                            //set strength to 0 in case the affliction needs to react to becoming inactive
+                            affliction.Strength = 0.0f;
                             afflictionsToRemove.Add(affliction);
                             continue;
                         }

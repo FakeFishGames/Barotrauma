@@ -1128,9 +1128,9 @@ namespace Barotrauma
                         searchingNewHull = false;
                     }
                 }
-                if (patrolTarget != null && pathSteering.CurrentPath != null && !pathSteering.CurrentPath.Finished && !pathSteering.CurrentPath.Unreachable)
+                if (patrolTarget != null && pathSteering.CurrentPath is { Finished: false, Unreachable: false })
                 {
-                    PathSteering.SteeringSeek(Character.GetRelativeSimPosition(patrolTarget), weight: 1, minGapWidth: minGapSize * 1.5f, nodeFilter: n => PatrolNodeFilter(n));
+                    pathSteering.SteeringSeek(Character.GetRelativeSimPosition(patrolTarget), weight: 1, minGapWidth: minGapSize * 1.5f, nodeFilter: PatrolNodeFilter);
                     return;
                 }
             }
@@ -1570,22 +1570,22 @@ namespace Barotrauma
                 Vector2 toTarget = attackWorldPos - attackLimbPos;
                 Vector2 toTargetOffset = toTarget;
                 // Add a margin when the target is moving away, because otherwise it might be difficult to reach it if the attack takes some time to execute
-                if (wallTarget != null && Character.Submarine == null)
+                if (Character.Submarine == null)
                 {
-                    if (wallTarget.Structure.Submarine != null)
+                    if (wallTarget != null)
                     {
-                        Vector2 margin = CalculateMargin(wallTarget.Structure.Submarine.Velocity);
+                        if (wallTarget.Structure.Submarine != null)
+                        {
+                            Vector2 margin = CalculateMargin(wallTarget.Structure.Submarine.Velocity);
+                            toTargetOffset += margin;
+                        }
+                    }
+                    else if (targetCharacter != null)
+                    {
+                        Vector2 margin = CalculateMargin(targetCharacter.AnimController.Collider.LinearVelocity);
                         toTargetOffset += margin;
                     }
-                }
-                else if (targetCharacter != null)
-                {
-                    Vector2 margin = CalculateMargin(targetCharacter.AnimController.Collider.LinearVelocity);
-                    toTargetOffset += margin;
-                }
-                else if (SelectedAiTarget.Entity is MapEntity e)
-                {
-                    if (e.Submarine != null)
+                    else if (SelectedAiTarget.Entity is MapEntity { Submarine: not null } e)
                     {
                         Vector2 margin = CalculateMargin(e.Submarine.Velocity);
                         toTargetOffset += margin;
@@ -1666,12 +1666,15 @@ namespace Barotrauma
                 // Crouch if the target is down (only humanoids), so that we can reach it.
                 if (Character.AnimController is HumanoidAnimController humanoidAnimController && distance < AttackLimb.attack.Range * 2)
                 {
-                    if (Math.Abs(toTarget.Y) > AttackLimb.attack.Range / 2 && Math.Abs(toTarget.X) <= AttackLimb.attack.Range)
+                    if (targetCharacter?.CurrentHull is Hull targetHull && targetHull == Character.CurrentHull && toTarget.Y < 0)
                     {
-                        humanoidAnimController.Crouch();
+                        if (Math.Abs(toTarget.Y) > AttackLimb.attack.Range / 2 && Math.Abs(toTarget.X) <= AttackLimb.attack.Range)
+                        {
+                            humanoidAnimController.Crouch();
+                        }
                     }
                 }
-
+                
                 if (canAttack)
                 {
                     if (AttackLimb.attack.Ranged)
@@ -1706,6 +1709,10 @@ namespace Barotrauma
                             }
                         }
                     }
+                    else if (wallTarget == null && Character.CurrentHull != null && targetCharacter != null)
+                    {
+                        canAttack = Submarine.PickBody(SimPosition, attackSimPos, collisionCategory: Physics.CollisionWall) == null;
+                    }
                 }
             }
             Limb steeringLimb = canAttack && !AttackLimb.attack.Ranged ? AttackLimb : null;
@@ -1720,6 +1727,8 @@ namespace Barotrauma
                 State = AIState.Idle;
                 return;
             }
+            // Note that this returns null when we don't currently use IndoorsSteeringManager, even if we are able to path!
+            // -> Don't use PathSteering, because that returns the reference even if we currently don't use it.
             var pathSteering = SteeringManager as IndoorsSteeringManager;
             if (AttackLimb != null && AttackLimb.attack.Retreat)
             {
@@ -1727,58 +1736,71 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 steerPos = attackSimPos;
-                if (!Character.AnimController.SimplePhysicsEnabled)
-                {
-                    // Offset so that we don't overshoot the movement
-                    Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
-                    steerPos += offset;
-                }
                 if (pathSteering != null)
                 {
-                    if (pathSteering.CurrentPath != null)
+                    // Attack doors
+                    if (canAttackDoors && HasValidPath())
                     {
-                        // Attack doors
-                        if (canAttackDoors)
+                        // If the target is in the same hull, there shouldn't be any doors blocking the path
+                        if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
                         {
-                            // If the target is in the same hull, there shouldn't be any doors blocking the path
-                            if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
+                            var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                            if (door is { CanBeTraversed: false } && (!Character.IsInFriendlySub || !door.HasAccess(Character)))
                             {
-                                var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                                if (door is { CanBeTraversed: false } && (!Character.IsInFriendlySub || !door.HasAccess(Character)))
+                                if (door.Item.AiTarget != null && SelectedAiTarget != door.Item.AiTarget)
                                 {
-                                    if (door.Item.AiTarget != null && SelectedAiTarget != door.Item.AiTarget)
-                                    {
-                                        SelectTarget(door.Item.AiTarget, currentTargetMemory.Priority);
-                                        State = AIState.Attack;
-                                        return;
-                                    }
+                                    SelectTarget(door.Item.AiTarget, currentTargetMemory.Priority);
+                                    State = AIState.Attack;
+                                    return;
                                 }
                             }
                         }
-                        // When pursuing, we don't want to pursue too close
-                        float max = 300;
-                        float margin = AttackLimb != null ? Math.Min(AttackLimb.attack.Range * 0.9f, max) : max;
-                        if (!canAttack || distance > margin)
+                    }
+                    // When pursuing, we don't want to pursue too close
+                    float max = 300;
+                    float margin = AttackLimb != null ? Math.Min(AttackLimb.attack.Range * 0.9f, max) : max;
+                    if ((!canAttack || distance > margin) && !IsTryingToSteerThroughGap)
+                    {
+                        // Steer towards the target if in the same room and swimming
+                        // Ruins have walls/pillars inside hulls and therefore we should navigate around them using the path steering.
+                        if (Character.CurrentHull != null && 
+                            Character.Submarine != null && !Character.Submarine.Info.IsRuin &&
+                            (Character.AnimController.InWater || pursue || !Character.AnimController.CanWalk) &&
+                            targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
                         {
-                            // Steer towards the target if in the same room and swimming
-                            // Ruins have walls/pillars inside hulls and therefore we should navigate around them using the path steering.
-                            if (Character.CurrentHull != null && 
-                                Character.Submarine != null && !Character.Submarine.Info.IsRuin &&
-                                (Character.AnimController.InWater || pursue || !Character.AnimController.CanWalk) &&
-                                targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                            Vector2 myPos = Character.AnimController.SimplePhysicsEnabled ? Character.SimPosition : steeringLimb.SimPosition;
+                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - myPos));
+                        }
+                        else
+                        {
+                            Func<PathNode, bool> nodeFilter = null;
+                            float outsideNodePenalty = 0;
+                            if (Character.CurrentHull != null && Character.IsInPlayerSub)
                             {
-                                Vector2 myPos = Character.AnimController.SimplePhysicsEnabled ? Character.SimPosition : steeringLimb.SimPosition;
-                                SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(steerPos - myPos));
+                                // Prefer not to path back outside, if we are inside player sub.
+                                // Fixes monsters sometimes pathing from the airlock to another airlock on the other side of the sub, because the path is technically cheaper than the path through the interiors.
+                                outsideNodePenalty = 50;
                             }
-                            else
-                            {
-                                pathSteering.SteeringSeek(steerPos, weight: 2,
-                                    minGapWidth: minGapSize,
-                                    startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (Character.CurrentHull == null), 
-                                    checkVisiblity: true);
+                            pathSteering.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), weight: 2,
+                                minGapWidth: minGapSize,
+                                startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (Character.CurrentHull == null),
+                                nodeFilter: nodeFilter,
+                                checkVisiblity: true,
+                                outsideNodePenalty: outsideNodePenalty);
 
-                                if (!pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                            if (pathSteering.CurrentPath != null)
+                            {
+                                if (pathSteering.IsPathDirty)
+                                {
+                                    if (Character.CurrentHull is Hull hull && hull.ConnectedGaps.Any(static g => !g.IsRoomToRoom && g.Open >= 1.0f && g.ConnectedDoor != null))
+                                    {
+                                        // Reset in the airlock, because otherwise the character may be too slow to change the steering and keep moving outside. 
+                                        SteeringManager.Reset();
+                                    }
+                                    // Steer towards the target
+                                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition));
+                                }
+                                else if (pathSteering.CurrentPath.Unreachable)
                                 {
                                     State = AIState.Idle;
                                     IgnoreTarget(SelectedAiTarget);
@@ -1787,39 +1809,42 @@ namespace Barotrauma
                                 }
                             }
                         }
-                        else if (!IsTryingToSteerThroughGap)
+                    }
+                    else if (!IsTryingToSteerThroughGap)
+                    {
+                        if (AttackLimb.attack.Ranged)
                         {
-                            if (AttackLimb.attack.Ranged)
+                            float dir = Character.AnimController.Dir;
+                            if (dir > 0 && attackWorldPos.X > AttackLimb.WorldPosition.X + margin || dir < 0 && attackWorldPos.X < AttackLimb.WorldPosition.X - margin)
                             {
-                                float dir = Character.AnimController.Dir;
-                                if (dir > 0 && attackWorldPos.X > AttackLimb.WorldPosition.X + margin || dir < 0 && attackWorldPos.X < AttackLimb.WorldPosition.X - margin)
-                                {
-                                    SteeringManager.Reset();
-                                }
-                                else
-                                {
-                                    // Too close
-                                    UpdateFallBack(attackWorldPos, deltaTime, followThrough: false);
-                                }
+                                SteeringManager.Reset();
                             }
                             else
                             {
-                                // Close enough
-                                SteeringManager.Reset();
+                                // Too close
+                                UpdateFallBack(attackWorldPos, deltaTime, followThrough: false);
                             }
                         }
                         else
                         {
-                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition));
+                            // Close enough
+                            SteeringManager.Reset();
                         }
                     }
                     else
                     {
-                        pathSteering.SteeringSeek(steerPos, weight: 5, minGapWidth: minGapSize);
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition));
                     }
                 }
                 else
                 {
+                    Vector2 steerPos = attackSimPos;
+                    if (!Character.AnimController.SimplePhysicsEnabled)
+                    {
+                        // Offset so that we don't overshoot the movement
+                        Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
+                        steerPos += offset;
+                    }
                     // Sweeping and circling doesn't work well inside
                     if (Character.CurrentHull == null)
                     {
@@ -2232,7 +2257,7 @@ namespace Barotrauma
                 // Don't allow root motion attacks, if we are not on the same level with the target, because it can cause warping.
                 switch (target)
                 {
-                    case Character targetCharacter when Character.CurrentHull != targetCharacter.CurrentHull || targetCharacter.IsKnockedDown:
+                    case Character targetCharacter when Character.CurrentHull != targetCharacter.CurrentHull || targetCharacter.IsKnockedDownOrRagdolled:
                     case Item targetItem when Character.CurrentHull != targetItem.CurrentHull:
                         return false;
                 }

@@ -61,6 +61,7 @@ namespace Barotrauma.Items.Components
         private Sonar sonar;
 
         private Submarine controlledSub;
+        public Submarine ControlledSub => controlledSub;
 
         // AI interfacing
         public Vector2 AITacticalTarget { get; set; }
@@ -75,6 +76,7 @@ namespace Barotrauma.Items.Components
 
         private double lastReceivedSteeringSignalTime;
 
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool AutoPilot
         {
             get { return autoPilot; }

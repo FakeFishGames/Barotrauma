@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,6 +8,18 @@ namespace Barotrauma
 {
     partial class PhysicsBody
     {
+        /// <summary>
+        /// Last known state the server has told us about.
+        /// </summary>
+        public PosInfo LastServerState;
+
+        /// <summary>
+        /// An offset used to corrections to positional errors look smoother. When a large positional correction needs to be done in multiplayer,
+        /// the body is immediately moved to the correct position, but the draw position is interpolated to make the correction visually smoother.
+        /// This value means the offset from the "actual" corrected position of the body to the "fake", interpolated draw position.
+        /// </summary>
+        public Vector2 NetworkPositionErrorOffset => drawOffset;
+
         public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color, bool invert = false)
         {
             if (!Enabled) { return; }
@@ -69,9 +80,26 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     new Vector2(pos.X, -pos.Y),
                     new Vector2(DrawPosition.X, -DrawPosition.Y),
-                    Color.Purple * 0.75f, 0, 5);
+                    Color.Purple * 0.5f, 0, 5);
             }
             if (IsValidShape(Radius, Height, Width))
+            {
+                DrawShape(drawPosition, DrawRotation, color);
+            }
+
+            if (LastServerState != null)
+            {
+                Vector2 drawPos = ConvertUnits.ToDisplayUnits(LastServerState.Position);
+                if (Submarine != null)
+                {
+                    drawPos += Submarine.DrawPosition;
+                }
+                float rotation = LastServerState.Rotation ?? 0.0f;
+
+                DrawShape(drawPos, rotation, Color.Purple * 0.75f);
+            }
+
+            void DrawShape(Vector2 position, float rotation, Color color)
             {
                 float radius = ConvertUnits.ToDisplayUnits(Radius);
                 float height = ConvertUnits.ToDisplayUnits(Height);
@@ -80,16 +108,16 @@ namespace Barotrauma
                 switch (BodyShape)
                 {
                     case Shape.Rectangle:
-                        GUI.DrawRectangle(spriteBatch, DrawPosition.FlipY(), new Vector2(width, height), new Vector2(width, height) / 2, -DrawRotation, color);
+                        GUI.DrawRectangle(spriteBatch, position.FlipY(), new Vector2(width, height), new Vector2(width, height) / 2, -rotation, color);
                         break;
                     case Shape.Capsule:
-                        GUI.DrawCapsule(spriteBatch, DrawPosition.FlipY(), height, radius, -DrawRotation - MathHelper.PiOver2, color);
+                        GUI.DrawCapsule(spriteBatch, position.FlipY(), height, radius, -rotation - MathHelper.PiOver2, color);
                         break;
                     case Shape.HorizontalCapsule:
-                        GUI.DrawCapsule(spriteBatch, DrawPosition.FlipY(), width, radius, -DrawRotation, color);
+                        GUI.DrawCapsule(spriteBatch, position.FlipY(), width, radius, -rotation, color);
                         break;
                     case Shape.Circle:
-                        GUI.DrawDonutSection(spriteBatch, DrawPosition.FlipY(), new Range<float>(radius - 0.5f, radius + 0.5f), MathHelper.TwoPi, color, 0, -DrawRotation);
+                        GUI.DrawDonutSection(spriteBatch, position.FlipY(), new Range<float>(radius - 0.5f, radius + 0.5f), MathHelper.TwoPi, color, 0, -rotation);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -150,9 +178,10 @@ namespace Barotrauma
                 return null;
             }
 
-            return lastProcessedNetworkState > sendingTime ? 
-                null : 
-                new PosInfo(newPosition, newRotation, newVelocity, newAngularVelocity, sendingTime);            
+            if (lastProcessedNetworkState > sendingTime) { return null; }
+
+            LastServerState = new PosInfo(newPosition, newRotation, newVelocity, newAngularVelocity, sendingTime);
+            return LastServerState;            
         }
     }
 }

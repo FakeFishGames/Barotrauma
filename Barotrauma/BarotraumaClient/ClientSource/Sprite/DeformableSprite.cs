@@ -33,7 +33,10 @@ namespace Barotrauma
             get { return effect; }
         }
 
+        public Point Subdivisions => new Point(subDivX, subDivY);
+
         public bool Invert { get; set; }
+
 
         private Point spritePos;
         private Point spriteSize;
@@ -48,7 +51,7 @@ namespace Barotrauma
             Invert = invert;
             
             //use subdivisions configured in the xml if the arguments passed to the method are null
-            Vector2 subdivisionsInXml = element.GetAttributeVector2("subdivisions", Vector2.One);
+            Vector2 subdivisionsInXml = element.GetAttributeVector2("subdivisions", element.GetAttributeVector2("resolution", Vector2.One));
             subDivX = subdivisionsX ?? (int)subdivisionsInXml.X;
             subDivY = subdivisionsY ?? (int)subdivisionsInXml.Y;
 

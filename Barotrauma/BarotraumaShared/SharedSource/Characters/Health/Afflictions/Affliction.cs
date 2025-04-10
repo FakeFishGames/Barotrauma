@@ -54,6 +54,11 @@ namespace Barotrauma
                 activeEffectDirty = true;
             }
         }
+        
+        /// <summary>
+        /// Armor penetration for status effects. Normally defined per attack, but that doesn't work on status effects.
+        /// </summary>
+        public float Penetration { get; set; }
 
         private float _nonClampedStrength = -1;
         public float NonClampedStrength => _nonClampedStrength > 0 ? _nonClampedStrength : _strength;
@@ -64,7 +69,7 @@ namespace Barotrauma
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
         public float Probability { get; set; } = 1.0f;
 
-        [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects explosions."), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects status effects and explosions."), Editable]
         public bool DivideByLimbCount { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Is the damage relative to the max vitality (percentage) or absolute (normal)"), Editable]
@@ -120,6 +125,7 @@ namespace Barotrauma
             Probability = source.Probability;
             DivideByLimbCount = source.DivideByLimbCount;
             MultiplyByMaxVitality = source.MultiplyByMaxVitality;
+            Penetration = source.Penetration;
         }
 
         public void Serialize(XElement element)
@@ -408,6 +414,8 @@ namespace Barotrauma
                     }
                     else
                     {
+                        //force an update when a periodic effect triggers to get it to trigger client-side
+                        characterHealth.Character.healthUpdateTimer = 0.0f;
                         foreach (StatusEffect statusEffect in periodicEffect.StatusEffects)
                         {
                             ApplyStatusEffect(ActionType.OnActive, statusEffect, 1.0f, characterHealth, targetLimb);
@@ -445,6 +453,17 @@ namespace Barotrauma
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
                 ApplyStatusEffect(ActionType.OnActive, statusEffect, deltaTime, characterHealth, targetLimb);
+            }
+
+            if (currentEffect.ConvulseAmount > 0f)
+            {
+                foreach (Limb limb in characterHealth.Character.AnimController.Limbs)
+                {
+                    if (limb.IsSevered) { continue; }
+                    if (limb.Hidden) { continue; }
+                    float force = Rand.Value() * limb.Mass * currentEffect.ConvulseAmount;
+                    limb.body.ApplyLinearImpulse(Rand.Vector(force), maxVelocity: Networking.NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                }
             }
 
             float amount = deltaTime;

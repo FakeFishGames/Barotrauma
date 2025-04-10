@@ -243,6 +243,12 @@ namespace Barotrauma
             savedExperiencePoints.RemoveAll(s => client.AccountId == s.AccountId || client.Connection.Endpoint.Address == s.Address);
         }
 
+        public void RefreshCharacterCampaignData(Character character, bool refreshHealthData)
+        {
+            var matchingData = characterData.FirstOrDefault(c => c.CharacterInfo == character.Info);
+            matchingData?.Refresh(character, refreshHealthData: refreshHealthData);
+        }
+
         public void SavePlayers()
         {
             //refresh the character data of clients who are still in the server
@@ -390,7 +396,7 @@ namespace Barotrauma
                     }
                 }
                 // Event history must be registered before ending the round or it will be cleared
-                GameMain.GameSession.EventManager.RegisterEventHistory();
+                GameMain.GameSession.EventManager.StoreEventDataAtRoundEnd();
             }
 
             //store the currently active missions at this point so we can communicate their states to clients, they're cleared in EndRound
@@ -639,6 +645,7 @@ namespace Barotrauma
 
             msg.WriteBoolean(IsFirstRound);
             msg.WriteByte(CampaignID);
+            msg.WriteByte(RoundID);
             msg.WriteUInt16(lastSaveID);
             msg.WriteString(map.Seed);
 
@@ -1209,18 +1216,22 @@ namespace Barotrauma
         public void ServerReadCrew(IReadMessage msg, Client sender)
         {
             UInt16[] pendingHires = null;
+            bool[] pendingToReserveBench = null;
+            Dictionary<int, BotStatus> existingBotsClient = null;
 
             bool updatePending = msg.ReadBoolean();
             if (updatePending)
             {
                 ushort pendingHireLength = msg.ReadUInt16();
                 pendingHires = new UInt16[pendingHireLength];
+                pendingToReserveBench = new bool[pendingHireLength];
                 for (int i = 0; i < pendingHireLength; i++)
                 {
                     pendingHires[i] = msg.ReadUInt16();
+                    pendingToReserveBench[i] = msg.ReadBoolean();
                 }
             }
-
+            
             bool validateHires = msg.ReadBoolean();
 
             bool renameCharacter = msg.ReadBoolean();
@@ -1232,7 +1243,7 @@ namespace Barotrauma
                 renamedIdentifier = msg.ReadUInt16();
                 newName = Client.SanitizeName(msg.ReadString());
                 existingCrewMember = msg.ReadBoolean();
-                if (!GameMain.Server.IsNameValid(sender, newName))
+                if (!GameMain.Server.IsNameValid(sender, newName, clientRenamingSelf: renamedIdentifier == sender.CharacterInfo?.ID))
                 {
                     renameCharacter = false;
                 }
@@ -1250,7 +1261,7 @@ namespace Barotrauma
             {
                 if (fireCharacter && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
                 {
-                    firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == firedIdentifier);
+                    firedCharacter = CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(info => info.ID == firedIdentifier);
                     if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
                     {
                         CrewManager.FireCharacter(firedCharacter);
@@ -1268,7 +1279,7 @@ namespace Barotrauma
                     {
                         if (existingCrewMember && CrewManager != null)
                         {
-                            characterInfo = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.ID == renamedIdentifier);
+                            characterInfo = CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(info => info.ID == renamedIdentifier);
                         }
                         else if (!existingCrewMember && location.HireManager != null)
                         {
@@ -1319,6 +1330,7 @@ namespace Barotrauma
                     if (updatePending)
                     {
                         List<CharacterInfo> pendingHireInfos = new List<CharacterInfo>();
+                        int i = 0;
                         foreach (UInt16 identifier in pendingHires)
                         {
                             CharacterInfo match = location.GetHireableCharacters().FirstOrDefault(info => info.ID == identifier);
@@ -1327,12 +1339,15 @@ namespace Barotrauma
                                 DebugConsole.ThrowError($"Tried to add a character that doesn't exist ({identifier}) to pending hires");
                                 continue;
                             }
+                            
+                            match.BotStatus = pendingToReserveBench[i++] ? BotStatus.PendingHireToReserveBench : BotStatus.PendingHireToActiveService;
+                            if (match.BotStatus == BotStatus.PendingHireToActiveService)
+                            {
+                                //can't add more bots to active service is max has been reached
+                                if (pendingHireInfos.Count(ci => ci.BotStatus == BotStatus.PendingHireToActiveService) + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize) { continue; } 
+                            }
 
                             pendingHireInfos.Add(match);
-                            if (pendingHireInfos.Count + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
-                            {
-                                break;
-                            }
                         }
                         location.HireManager.PendingHires = pendingHireInfos;
                     }
@@ -1397,14 +1412,21 @@ namespace Barotrauma
                 foreach (CharacterInfo pendingHire in pendingHires)
                 {
                     msg.WriteUInt16(pendingHire.ID);
+                    msg.WriteBoolean(pendingHire.BotStatus == BotStatus.PendingHireToReserveBench);
                 }
 
-                var hiredCharacters = CrewManager.GetCharacterInfos().Where(ci => ci.IsNewHire);
-                msg.WriteUInt16((ushort)hiredCharacters.Count());
-                foreach (CharacterInfo info in hiredCharacters)
+                var crewManager = CrewManager.GetCharacterInfos();
+                msg.WriteUInt16((ushort)crewManager.Count());
+                foreach (CharacterInfo info in crewManager)
                 {
                     info.ServerWrite(msg);
-                    msg.WriteInt32(info.Salary);
+                }
+                
+                var reserveBench = CrewManager.GetReserveBenchInfos();
+                msg.WriteUInt16((ushort)reserveBench.Count());
+                foreach (CharacterInfo info in reserveBench)
+                {
+                    info.ServerWrite(msg);
                 }
 
                 bool validRenaming = renamedCrewMember.id > 0 && !string.IsNullOrEmpty(renamedCrewMember.newName);

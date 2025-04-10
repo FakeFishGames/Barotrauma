@@ -106,13 +106,6 @@ namespace Barotrauma.Items.Components
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
 
-        [Serialize(0.3f, IsPropertySaveable.No), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f, DecimalCount = 2)]
-        public float Width
-        {
-            get;
-            set;
-        }
-
         public Vector2 DrawSize
         {
             get { return sectionExtents; }

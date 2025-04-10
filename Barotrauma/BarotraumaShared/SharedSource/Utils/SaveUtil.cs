@@ -119,6 +119,20 @@ namespace Barotrauma
             get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp"); }
 #endif
         }
+        
+        public static void EnsureSaveFolderExists()
+        {
+            try
+            {
+                // Create the default save folder (only) if it doesn't exist yet.
+                // note, uses System.IO.Directory.CreateDirectory instead of Directory.CreateDirectory from Baro namespace on purpose.
+                System.IO.Directory.CreateDirectory(DefaultSaveFolder);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Failed to create the default save folder \"{DefaultSaveFolder}\"!", e);
+            }
+        }
 
         public enum SaveType
         {

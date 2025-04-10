@@ -161,6 +161,10 @@ namespace Barotrauma
         private readonly List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
 
         public Action<Mission> OnMissionStateChanged;
+        
+        protected readonly ContentXElement characterConfig;
+        protected readonly List<Character> characters = new List<Character>();
+        protected readonly Dictionary<Character, List<Item>> characterItems = new Dictionary<Character, List<Item>>();
 
         public Mission(MissionPrefab prefab, Location[] locations, Submarine sub)
         {
@@ -192,6 +196,8 @@ namespace Barotrauma
                 messages[m] = ReplaceVariablesInMissionMessage(messages[m], sub);
             }
             Messages = messages.ToImmutableArray();
+            
+            characterConfig = prefab.ConfigElement.GetChildElement("Characters");
         }
 
         public LocalizedString ReplaceVariablesInMissionMessage(LocalizedString message, Submarine sub, bool replaceReward = true)
@@ -261,6 +267,162 @@ namespace Barotrauma
                 reward *= campaign.Settings.MissionRewardMultiplier;
             }
             return (int)Math.Round(reward);
+        }
+        
+        /// <summary>
+        /// Call to load character elements to be spawned. Has to be implemented (and synced) separately per each mission.
+        /// </summary>
+        protected void InitCharacters(Submarine submarine)
+        {
+            characters.Clear();
+            characterItems.Clear();
+
+            if (characterConfig != null) 
+            { 
+                foreach (XElement element in characterConfig.Elements())
+                {
+                    if (GameMain.NetworkMember == null && element.GetAttributeBool("multiplayeronly", false)) { continue; }
+
+                    int defaultCount = element.GetAttributeInt("count", -1);
+                    if (defaultCount < 0)
+                    {
+                        defaultCount = element.GetAttributeInt("amount", 1);
+                    }
+                    int min = Math.Min(element.GetAttributeInt("min", defaultCount), 255);
+                    int max = Math.Min(Math.Max(min, element.GetAttributeInt("max", defaultCount)), 255);
+                    int count = Rand.Range(min, max + 1);
+
+                    if (element.Attribute("identifier") != null && element.Attribute("from") != null)
+                    {
+                        HumanPrefab humanPrefab = GetHumanPrefabFromElement(element); 
+                        if (humanPrefab == null)
+                        {
+                            DebugConsole.ThrowError($"Couldn't spawn a human character for a mission: human prefab \"{element.GetAttributeString("identifier", string.Empty)}\" not found",
+                                contentPackage: Prefab.ContentPackage);
+                            continue;
+                        }
+                        for (int i = 0; i < count; i++)
+                        {
+                            LoadHuman(humanPrefab, element, submarine);
+                        }
+                    }
+                    else
+                    {
+                        Identifier speciesName = element.GetAttributeIdentifier("character", element.GetAttributeIdentifier("identifier", Identifier.Empty));
+                        var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+                        if (characterPrefab == null)
+                        {
+                            DebugConsole.ThrowError($"Couldn't spawn a character for a mission: character prefab \"{speciesName}\" not found",
+                                contentPackage: Prefab.ContentPackage);
+                            continue;
+                        }
+                        for (int i = 0; i < count; i++)
+                        {
+                            LoadMonster(characterPrefab, element, submarine);
+                        }
+                    }
+                }
+            }            
+        }
+        
+        private SpawnAction.SpawnLocationType GetSpawnLocationTypeFromSubmarineType(Submarine sub)
+        {
+            return sub.Info.Type switch
+            {
+                SubmarineType.Outpost or SubmarineType.OutpostModule => SpawnAction.SpawnLocationType.Outpost,
+                SubmarineType.Wreck => SpawnAction.SpawnLocationType.Wreck,
+                SubmarineType.Ruin => SpawnAction.SpawnLocationType.Ruin,
+                SubmarineType.BeaconStation => SpawnAction.SpawnLocationType.BeaconStation,
+                SubmarineType.Player => SpawnAction.SpawnLocationType.MainSub,
+                _ => SpawnAction.SpawnLocationType.Any
+            };
+        }
+
+        protected virtual Character LoadHuman(HumanPrefab humanPrefab, XElement element, Submarine submarine)
+        {
+            Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
+            Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
+            var spawnPointType = element.GetAttributeEnum("spawnpointtype", SpawnType.Human);
+            ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(
+                GetSpawnLocationTypeFromSubmarineType(submarine), spawnPointType,
+                moduleFlags ?? humanPrefab.GetModuleFlags(),
+                spawnPointTags ?? humanPrefab.GetSpawnPointTags(),
+                element.GetAttributeBool("asfaraspossible", false));
+            spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
+            var teamId = element.GetAttributeEnum("teamid", CharacterTeamType.None);
+            var originalTeam = Level.Loaded.StartOutpost?.TeamID ?? teamId;
+            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, originalTeam, spawnPos);
+            //consider the NPC to be "originally" from the team of the outpost it spawns in, and change it to the desired (hostile) team afterwards
+            //that allows the NPC to fight intruders and otherwise function in the outpost if the mission is configured to spawn the hostile NPCs in a friendly outpost
+            if (teamId != originalTeam)
+            {
+                spawnedCharacter.SetOriginalTeamAndChangeTeam(teamId, processImmediately: true);
+            }
+            if (element.GetAttribute("color") != null)
+            {
+                spawnedCharacter.UniqueNameColor = element.GetAttributeColor("color", Color.Red);
+            }
+            if (submarine.Info is { IsOutpost: true } outPostInfo)
+            {
+                outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, humanPrefab.Identifier);
+                foreach (Identifier tag in humanPrefab.GetTags())
+                {
+                    outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, tag);
+                }
+            }
+            if (spawnPos is WayPoint wp)
+            {
+                spawnedCharacter.GiveIdCardTags(wp);
+            }
+            InitCharacter(spawnedCharacter, element);
+            return spawnedCharacter;
+        }
+
+        protected virtual Character LoadMonster(CharacterPrefab monsterPrefab, XElement element, Submarine submarine)
+        {
+            Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
+            Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
+            ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Enemy, moduleFlags, spawnPointTags, element.GetAttributeBool("asfaraspossible", false));
+            spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
+            Character spawnedCharacter = Character.Create(monsterPrefab.Identifier, spawnPos.WorldPosition, ToolBox.RandomSeed(8), createNetworkEvent: false);
+            characters.Add(spawnedCharacter);
+            if (spawnedCharacter.Inventory != null)
+            {
+                characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
+            }
+            if (submarine != null && spawnedCharacter.AIController is EnemyAIController enemyAi)
+            {
+                enemyAi.UnattackableSubmarines.Add(submarine);
+                enemyAi.UnattackableSubmarines.Add(Submarine.MainSub);
+                foreach (Submarine sub in Submarine.MainSub.DockedTo)
+                {
+                    enemyAi.UnattackableSubmarines.Add(sub);
+                }
+            }
+            InitCharacter(spawnedCharacter, element);
+            return spawnedCharacter;
+        }
+        
+        protected virtual void InitCharacter(Character character, XElement element)
+        {
+            if (element.GetAttributeBool(Tags.IgnoredByAI.Value, false))
+            {
+                character.AddAbilityFlag(AbilityFlags.IgnoredByEnemyAI);
+            }
+            float playDeadProbability = element.GetAttributeFloat("playdeadprobability", -1);
+            if (playDeadProbability >= 0)
+            {
+                character.EvaluatePlayDeadProbability(playDeadProbability);
+            }
+            float huskProbability = element.GetAttributeFloat("huskprobability", 0);
+            if (huskProbability > 0 && Rand.Value() <= huskProbability)
+            {
+                character.TurnIntoHusk();
+            }
+            else if (element.GetAttributeBool("corpse", false))
+            {
+                character.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
+            }
         }
 
         public void Start(Level level)

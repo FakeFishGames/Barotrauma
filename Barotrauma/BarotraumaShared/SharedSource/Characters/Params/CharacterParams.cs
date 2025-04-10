@@ -147,7 +147,17 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier or tag of the item the character's items are placed inside when the character despawns."), Editable]
         public Identifier DespawnContainer { get; private set; }
 
+        [Serialize("monster", IsPropertySaveable.Yes, description: "If changed, this character will try to play a custom music track with the specified identifier when encountered."), Editable]
+        public Identifier MusicType { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The commonness of this character's music when a random track will be chosen."), Editable]
+        public float MusicCommonness { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The multiplier of the minimum distance required between this character and the player/submarine before the music starts playing. The default distance is twice the length of the submarine, or a minimum of 50 meters."), Editable]
+        public float MusicRangeMultiplier { get; private set; }
+
         public readonly CharacterFile File;
+        public bool IsPet => AI?.IsPet ?? false;
 
         public XDocument VariantFile { get; private set; }
 
@@ -754,6 +764,8 @@ namespace Barotrauma
             
             [Serialize(0f, IsPropertySaveable.Yes, "How likely it is that the creature plays dead (= ragdolls) while idling? Only allowed inside a sub (not in the open waters). Evaluated once, when the creature spawns."), Editable]
             public float PlayDeadProbability { get; set; }
+            
+            public readonly bool IsPet;
 
             public IEnumerable<TargetParams> Targets => targets;
             private readonly List<TargetParams> targets = new List<TargetParams>();
@@ -763,6 +775,7 @@ namespace Barotrauma
                 if (element == null) { return; }
                 element.GetChildElements("target").ForEach(t => AddTarget(t));
                 element.GetChildElements("targetpriority").ForEach(t => AddTarget(t));
+                IsPet = element.GetChildElement("petbehavior") != null;
             }
 
             /// <summary>

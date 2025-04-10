@@ -274,9 +274,7 @@ namespace Barotrauma
             if (!fixedRotation)
             {
                 rotation = msg.ReadSingle();
-                float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
-                angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
-                angularVelocity = NetConfig.Quantize(angularVelocity.Value, -MaxAngularVel, MaxAngularVel, 8);
+                angularVelocity = msg.ReadSingle();
             }
 
             bool ignorePlatforms = msg.ReadBoolean();
@@ -318,7 +316,7 @@ namespace Barotrauma
             msg.ReadPadBits();
 
             int index = 0;
-            if (GameMain.Client.Character == this && CanMove)
+            if (GameMain.Client.Character == this)
             {
                 var posInfo = new CharacterStateInfo(
                     pos, rotation,
@@ -386,6 +384,9 @@ namespace Barotrauma
                         GameMain.Client.HasSpawned = true;
                         GameMain.Client.Character = this;
                         GameMain.LightManager.LosEnabled = true;
+#if DEBUG
+                        GameMain.LightManager.LosEnabled = !GameMain.DevMode;
+#endif
                         GameMain.LightManager.LosAlpha = 1f;
                         GameMain.Client.WaitForNextRoundRespawn = null;
                     }
@@ -408,6 +409,7 @@ namespace Barotrauma
                     break;
                 case EventType.Status:
                     ReadStatus(msg);
+                    GodMode = msg.ReadBoolean();
                     break;
                 case EventType.UpdateSkills:
                     Identifier skillIdentifier = msg.ReadIdentifier();
@@ -764,7 +766,7 @@ namespace Barotrauma
 
                 if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None)
                 {
-                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
+                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
                     if (character.isDead)
                     {
@@ -784,6 +786,9 @@ namespace Barotrauma
                     if (!character.IsDead) { Controlled = character; }
 
                     GameMain.LightManager.LosEnabled = true;
+#if DEBUG
+                    GameMain.LightManager.LosEnabled = !GameMain.DevMode;
+#endif
                     GameMain.LightManager.LosAlpha = 1f;
 
                     GameMain.NetLobbyScreen.CampaignCharacterDiscarded = false;
@@ -851,6 +856,7 @@ namespace Barotrauma
                 if (IsDead) { Revive(); }
                 CharacterHealth.ClientRead(msg);
             }
+
             byte severedLimbCount = msg.ReadByte();
             for (int i = 0; i < severedLimbCount; i++)
             {

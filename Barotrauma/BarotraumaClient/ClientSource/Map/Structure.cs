@@ -512,11 +512,8 @@ namespace Barotrauma
 
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
-
                             damageEffect.CurrentTechnique.Passes[0].Apply();
-
                             Submarine.DamageEffectCutoff = newCutoff;
-                            Submarine.DamageEffectColor = color;
                         }
                     }
                     if (!HasDamage && i == 0)

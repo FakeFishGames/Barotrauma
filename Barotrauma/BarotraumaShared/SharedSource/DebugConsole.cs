@@ -295,6 +295,19 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
+            commands.Add(new Command("spawnnpc", "spawnnpc [any/npcsetidentifier] [npcidentifier] [near/inside/outside/cursor] [team (0-3)] [add to crew (true/false)]: Spawns an pre-configured NPC at a random spawnpoint. (Use the third parameter to select a specific set of spawnpoints.)", onExecute: null,
+            getValidArgs: () =>
+            {
+                return new string[][]
+                {
+                    "any".ToEnumerable().Union(NPCSet.Sets.Select(p => p.Identifier.Value).OrderBy(s => s)).ToArray(), // NPC Sets
+                    NPCSet.Sets.SelectMany(set => set.Humans).Select(p => p.Identifier.Value).OrderBy(s => s).ToArray(), // NPCs
+                    new string[] { "near", "inside", "outside", "cursor" },
+                    Enum.GetValues<CharacterTeamType>().Select(v => v.ToString()).ToArray(),
+                    new string[] { "true", "false" }
+                };
+            }, isCheat: true));
+
             commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount] [condition]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the location parameter is omitted or \"random\".",
             (string[] args) =>
             {
@@ -569,12 +582,10 @@ namespace Barotrauma
             onExecute: null,
             getValidArgs:() =>
             {
-                var characterList = Character.Controlled != null ? new[] { "Me" } : Array.Empty<string>();
-                var subList = Submarine.MainSub != null ? new[] { "mainsub" } : Array.Empty<string>();
                 return new string[][]
                 {
-                    characterList.Concat(ListCharacterNames()).ToArray(),
-                    subList.Concat(ListAvailableLocations()).ToArray()
+                    ListCharacterNames(includeMeArgument: Character.Controlled != null, includeCrewArgument: true),
+                    ListAvailableLocations()
                 };
             }, isCheat: true));
             
@@ -646,16 +657,19 @@ namespace Barotrauma
             commands.Add(new Command("godmode", "godmode [character name]: Toggle character godmode. Makes the targeted character invulnerable to damage. If the name parameter is omitted, the controlled character will receive godmode.",
             (string[] args) =>
             {
-                Character targetCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, false);
-
-                if (targetCharacter == null) { return; }
-
-                targetCharacter.GodMode = !targetCharacter.GodMode;
-                NewMessage((targetCharacter.GodMode ? "Enabled godmode on " : "Disabled godmode on ") + targetCharacter.Name, Color.White);
+                bool? godmodeStateOnFirstCharacter = null;
+                HandleCommandForCrewOrSingleCharacter(args, ToggleGodMode);
+                void ToggleGodMode(Character targetCharacter)
+                {
+                    targetCharacter.GodMode = godmodeStateOnFirstCharacter ?? !targetCharacter.GodMode;
+                    godmodeStateOnFirstCharacter = targetCharacter.GodMode;
+                    NewMessage((targetCharacter.GodMode ? "Enabled godmode on " : "Disabled godmode on ") + targetCharacter.Name,
+                       targetCharacter.GodMode ? Color.LimeGreen : Color.Gray);
+                }
             },
             () =>
             {
-                return new string[][] { ListCharacterNames() };
+                return new string[][] { ListCharacterNames(includeMeArgument: Character.Controlled != null, includeCrewArgument: true) };
             }, isCheat: true));
 
             commands.Add(new Command("godmode_mainsub", "godmode_mainsub: Toggle submarine godmode. Makes the main submarine invulnerable to damage.", (string[] args) =>
@@ -812,17 +826,13 @@ namespace Barotrauma
             commands.Add(new Command("heal", "heal [character name] [all]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed. By default only heals common afflictions such as physical damage and blood loss: use the \"all\" argument to heal everything, including poisonings/addictions/etc.", (string[] args) =>
             {
                 bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
-                Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
-                if (healedCharacter != null)
-                {
-                    HealCharacter(healedCharacter, healAll);
-                }
+                HandleCommandForCrewOrSingleCharacter(args, (Character targetCharacter) => HealCharacter(targetCharacter, healAll));
             },
             () =>
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray(),
+                    ListCharacterNames(includeMeArgument: true, includeCrewArgument: true),
                     new string[] { "all" }
                 };
             }, isCheat: true));
@@ -1857,6 +1867,15 @@ namespace Barotrauma
                 }
             }, null, isCheat: true));
 
+            commands.Add(new Command("killall", "killall: Immediately kills all characters in the level.", args =>
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    c.Kill(CauseOfDeathType.Unknown, null);
+                    NewMessage($"Killed {c.DisplayName}.");
+                }
+            }, null, isCheat: true));
+
             commands.Add(new Command("despawnnow", "despawnnow [character]: Immediately despawns the specified dead character. If the character argument is omitted, all dead characters are despawned.", (string[] args) =>
             {
                 if (args.Length == 0)
@@ -2284,7 +2303,7 @@ namespace Barotrauma
             commands.Sort((c1, c2) => c1.Names.First().CompareTo(c2.Names.First()));
         }
 
-        private static void HealCharacter(Character healedCharacter, bool healAll)
+        private static void HealCharacter(Character healedCharacter, bool healAll, Client targetClient = null)
         {
             healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
             healedCharacter.Oxygen = 100.0f;
@@ -2298,6 +2317,12 @@ namespace Barotrauma
             string characterNameText = healedCharacter == Character.Controlled ? $"{healedCharacter.Name} (you)" : healedCharacter.Name;
             string text = healAll ? $"Healed {characterNameText}: all afflictions" : $"Healed {characterNameText}: damage and common afflictions";
             NewMessage(text, Color.Yellow);
+#if SERVER
+            if (targetClient != null)
+            {
+                GameMain.Server.SendConsoleMessage(text, targetClient);
+            }
+#endif
         }
 
         public static string AutoComplete(string command, int increment = 1)
@@ -2478,7 +2503,7 @@ namespace Barotrauma
         private static string[] ListAvailableLocations()
         {
             List<string> locationNames = new();
-            foreach(var submarine in Submarine.Loaded)
+            foreach (var submarine in Submarine.Loaded)
             {
                 locationNames.Add(submarine.Info.Name);
             }
@@ -2497,7 +2522,10 @@ namespace Barotrauma
                     locationNames.Add($"{caveName}_{index}");
                 }
             }
-            
+
+            if (Submarine.MainSub != null) { locationNames.Add("mainsub"); }
+            locationNames.Add("cursor");
+
             return locationNames.ToArray();
         }
         
@@ -2662,9 +2690,17 @@ namespace Barotrauma
 
         private static IOrderedEnumerable<Character> SortSpawnedSpecies(IEnumerable<Character> characterList) => characterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).ThenBy(c => c.Name);
 
-        private static string[] ListCharacterNames() => GetCharacterNames();
+        private static string[] ListCharacterNames(bool includeMeArgument = false, bool includeCrewArgument = false) => 
+            GetCharacterNames(includeMeArgument, includeCrewArgument);
 
-        private static string[] GetCharacterNames() => SortSpawnedSpecies(Character.CharacterList).Select(c => c.Name).Distinct().ToArray();
+        private static string[] GetCharacterNames(bool includeMeArgument = false, bool includeCrewArgument = false)
+        {
+            var characterNames = new List<string>();
+            if (includeMeArgument) { characterNames.Add("/me"); }
+            if (includeCrewArgument) { characterNames.Add("/crew"); }
+            characterNames.AddRange(SortSpawnedSpecies(Character.CharacterList).Select(c => c.Name));
+            return characterNames.ToArray();
+        }
 
         private static string[] GetSpawnedSpeciesNames() => SortSpawnedSpecies(Character.CharacterList).Select(c => c.SpeciesName.Value).Distinct().ToArray();
 
@@ -2677,6 +2713,28 @@ namespace Barotrauma
         
         private static IEnumerable<Character> FindMatchingSpecies(string speciesName) => Character.CharacterList.FindAll(c => c.SpeciesName.Value.Equals(speciesName, StringComparison.OrdinalIgnoreCase));
 
+        /// <summary>
+        /// Checks if the arguments specify a specific character, or if they target the crew, and executes the specified action on them.
+        /// </summary>
+        private static void HandleCommandForCrewOrSingleCharacter(string[] args, Action<Character> action, Client targetClient = null)
+        {
+            if (args.Length > 0 && args.First() == "/crew")
+            {
+                foreach (var crewCharacter in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+                {
+                    action(crewCharacter);
+                }
+            }
+            else
+            {
+                Character targetCharacter = (args.Length == 0 || args.First() == "/me") ? 
+                    targetClient?.Character ?? Character.Controlled : 
+                    FindMatchingCharacter(args, false);
+                if (targetCharacter == null) { return; }
+                action(targetCharacter);
+            }
+        }
+
         private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null, bool botsOnly = false)
         {
             if (args.Length == 0) { return null; }
@@ -2686,7 +2744,11 @@ namespace Barotrauma
             int characterIndex = -1;
             foreach (string arg in args)
             {
-                // First try to parse the character name from all the arguments.
+                if (arg == "/me")
+                {
+                    return allowedRemotePlayer?.Character ?? Character.Controlled;
+                }
+                // try to parse the character name from all the arguments.
                 if (matchingCharacters == null || matchingCharacters.None())
                 {
                     string possibleCharacterName = arg?.ToLowerInvariant();
@@ -2752,15 +2814,14 @@ namespace Barotrauma
             Character targetCharacter = controlledCharacter;
             Vector2 worldPosition = cursorWorldPos;
             string locationNameArgument = "";
+            string firstArgument = args.FirstOrDefault()?.ToLowerInvariant() ?? string.Empty;
             if (args.Length > 0)
             {
-                string firstArgument = args.First().ToLowerInvariant();
                 string lastArgument = args.Last();
                 // First seek the matching character.
-                if (firstArgument != "me")
+                if (firstArgument is not ("/me" or "/crew"))
                 {
-                    var availableLocations = Submarine.MainSub != null ? new[] { "mainsub", "cursor" } : Array.Empty<string>(); 
-                    availableLocations = availableLocations.Concat(ListAvailableLocations()).ToArray();
+                    var availableLocations = ListAvailableLocations();
                     if (args.Length > 1 || availableLocations.None(locationName => string.Equals(locationName, lastArgument, StringComparison.OrdinalIgnoreCase)))
                     {
                         // Try to find a matching character, if there's more than one argument or if the last argument is not a valid location argument.
@@ -2769,12 +2830,31 @@ namespace Barotrauma
                     }
                 }
                 // Then seek the possible location argument.
-                if (targetCharacter == null || !targetCharacter.Name.Equals(lastArgument, StringComparison.OrdinalIgnoreCase) && !int.TryParse(lastArgument, out _))
+                if (args.Count() > 1)
                 {
-                    locationNameArgument = lastArgument;
+                    if (targetCharacter == null || !targetCharacter.Name.Equals(lastArgument, StringComparison.OrdinalIgnoreCase) && 
+                        !int.TryParse(lastArgument, out _))
+                    {
+                        locationNameArgument = lastArgument;
+                    }
                 }
             }
-            
+            if (firstArgument == "/crew")
+            {
+                foreach (var crewCharacter in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+                {
+                    TeleportSpecificCharacter(crewCharacter, locationNameArgument, worldPosition);
+                }
+            }
+            else
+            {
+                TeleportSpecificCharacter(targetCharacter, locationNameArgument, worldPosition);
+            }
+        }
+
+        private static void TeleportSpecificCharacter(Character targetCharacter, string locationNameArgument, Vector2 defaultWorldPosition)
+        {
+            Vector2 worldPosition = defaultWorldPosition;
             if (!string.IsNullOrWhiteSpace(locationNameArgument) && !string.Equals(locationNameArgument, "cursor", comparisonType: StringComparison.InvariantCultureIgnoreCase))
             {
                 if (TryFindTeleportPosition(locationNameArgument, out Vector2 teleportPosition))
@@ -2787,7 +2867,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            
+
             if (targetCharacter != null)
             {
                 targetCharacter.TeleportTo(worldPosition);
@@ -2799,133 +2879,172 @@ namespace Barotrauma
             }
         }
 
-        private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg)
+        /// <param name="usePreConfiguredNPC">Should we spawn a preconfigured NPC from an <see cref="NPCSet"/>? If so, the first 2 arguments are expected to be the identifier of the NPC set and the identifier of the NPC.</param>
+        private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, bool usePreConfiguredNPC = false)
         {
-            errorMsg = "";
-            if (args.Length == 0) { return; }
+            int characterArgumentCount = 1;
+            if (usePreConfiguredNPC)
+            {
+                //two arguments required for NPCs, identifier of the NPC set and identifier of the NPC.
+                characterArgumentCount = 2;
+            }
 
-            Character spawnedCharacter = null;
+            if (args.Length < characterArgumentCount) { return; }
+            for (int i = 0; i < characterArgumentCount; i++)
+            {
+                if (string.IsNullOrWhiteSpace(args[i])) { return; }
+            }
 
-            Vector2 spawnPosition = Vector2.Zero;
-            WayPoint spawnPoint = null;
-
-            string characterLowerCase = args[0].ToLowerInvariant();
             JobPrefab job = null;
-            if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
+            bool isHuman = true;
+            if (!usePreConfiguredNPC)
             {
-                job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(characterLowerCase, StringComparison.OrdinalIgnoreCase));
-            }
-            else
-            {
-                job = JobPrefab.Prefabs[characterLowerCase];
-            }
-            bool isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
-            if (args.Length > 1)
-            {
-                switch (args[1].ToLowerInvariant())
+                string characterLowerCase = args[0].ToLowerInvariant();
+                if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
                 {
-                    case "inside":
-                        spawnPoint = WayPoint.GetRandom(SpawnType.Human, job, Submarine.MainSub) ?? WayPoint.GetRandom(SpawnType.Human, assignedJob: null, Submarine.MainSub);
-                        break;
-                    case "outside":
-                        spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
-                        break;
-                    case "near":
-                    case "close":
-                        float closestDist = -1.0f;
-                        foreach (WayPoint wp in WayPoint.WayPointList)
-                        {
-                            if (wp.Submarine != null) continue;
-
-                            //don't spawn inside hulls
-                            if (Hull.FindHull(wp.WorldPosition, null) != null) continue;
-
-                            float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
-
-                            if (closestDist < 0.0f || dist < closestDist)
-                            {
-                                spawnPoint = wp;
-                                closestDist = dist;
-                            }
-                        }
-                        break;
-                    case "cursor":
-                        spawnPosition = cursorWorldPos;
-                        break;
-                    default:
-                        spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
-                        break;
+                    job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(characterLowerCase, StringComparison.OrdinalIgnoreCase));
                 }
-            }
-            else
-            {
-                spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
-            }
-
-            if (string.IsNullOrWhiteSpace(args[0])) { return; }
-            
-            CharacterTeamType defaultTeamType = isHuman ? CharacterTeamType.Team1 : CharacterTeamType.None;
-            CharacterTeamType teamType = defaultTeamType;
-            if (args.Length > 2)
-            {
-                string team = args[2];
-                if (!Enum.TryParse(team, ignoreCase: true, out teamType) && !string.IsNullOrWhiteSpace(team))
+                else
                 {
-                    try
-                    {
-                        teamType = (CharacterTeamType)int.Parse(team);
-                    }
-                    catch
-                    {
-                        ThrowError($"\"{team}\" is not a valid team id.");
-                    }
+                    job = JobPrefab.Prefabs[characterLowerCase];
                 }
+                isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             }
-            
-            bool addToCrew = isHuman && teamType == defaultTeamType;
-            if (args.Length > 3)
-            {
-                addToCrew = args[3].Equals("true", StringComparison.OrdinalIgnoreCase);
-            }
-            
-            if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
 
-            if (isHuman)
+            ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType teamType, out bool addToCrew);
+
+            if (usePreConfiguredNPC)
             {
-                var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
-                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
-                spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
-            }
-            else
-            {
-                CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier());
-                if (prefab != null)
+                Identifier npcSetIdentifier = args[0].ToIdentifier();
+                Identifier humanPrefabIdentifier = args[1].ToIdentifier();
+                HumanPrefab humanPrefab =
+                    npcSetIdentifier == "any" ?
+                        NPCSet.Sets.SelectMany(set => set.Humans).FirstOrDefault(human => human.Identifier == humanPrefabIdentifier) :
+                        NPCSet.Get(npcSetIdentifier, humanPrefabIdentifier);
+                if (humanPrefab != null)
                 {
-                    CharacterInfo characterInfo = null;
-                    if (prefab.HasCharacterInfo)
+                    Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
                     {
-                        characterInfo = new CharacterInfo(prefab.Identifier);
-                    }
-                    spawnedCharacter = Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8), characterInfo);
-                }
-            }
-            if (spawnedCharacter == null)
-            {
-                DebugConsole.ThrowError("Failed to spawn a character with the provided arguments!");
-                return;
-            }
-            spawnedCharacter.TeamID = teamType;
-#if CLIENT
-            if (addToCrew && GameMain.GameSession?.CrewManager is CrewManager crewManager)
-            {
-                crewManager.AddCharacter(spawnedCharacter);
-            }
+                        newCharacter.HumanPrefab = humanPrefab;
+                        AddToCrew(newCharacter);
+                        humanPrefab.GiveItems(newCharacter, newCharacter.Submarine, spawnPoint);
+                        humanPrefab.InitializeCharacter(newCharacter);
+#if SERVER
+                        newCharacter.LoadTalents();
+                        GameMain.NetworkMember.CreateEntityEvent(newCharacter, new Character.UpdateTalentsEventData());
 #endif
-            if (isHuman)
+                    });
+                }
+            }
+            else if (isHuman)
             {
-                spawnedCharacter.GiveJobItems(isPvPMode: GameMain.GameSession?.GameMode is PvPMode, spawnPoint);
-                spawnedCharacter.GiveIdCardTags(spawnPoint);
-                spawnedCharacter.Info.StartItemsGiven = true;
+                int variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
+                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
+                Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, characterInfo, onSpawn: newCharacter =>
+                {
+                    AddToCrew(newCharacter);
+                    newCharacter.GiveJobItems(isPvPMode: GameMain.GameSession?.GameMode is PvPMode, spawnPoint);
+                    newCharacter.GiveIdCardTags(spawnPoint);
+                    newCharacter.Info.StartItemsGiven = true;
+                });
+            }
+            else if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) is { } prefab)
+            {
+                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(prefab.Identifier) : null);
+            }
+
+            void AddToCrew(Character newCharacter)
+            {
+                newCharacter.TeamID = teamType;
+                if (addToCrew)
+                {
+                    GameMain.GameSession?.CrewManager.AddCharacter(newCharacter);
+                }
+            }
+
+            void ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType teamType, out bool addToCrew)
+            {
+                spawnPosition = Vector2.Zero;
+                spawnPoint = null;
+
+                int argIndex = characterArgumentCount;
+                if (args.Length > argIndex)
+                {
+                    switch (args[argIndex].ToLowerInvariant())
+                    {
+                        case "inside":
+                            spawnPoint = WayPoint.GetRandom(SpawnType.Human, job, Submarine.MainSub);
+                            break;
+                        case "outside":
+                            spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
+                            break;
+                        case "near":
+                        case "close":
+                            float closestDist = -1f;
+                            foreach (WayPoint wp in WayPoint.WayPointList)
+                            {
+                                if (wp.Submarine != null) { continue; }
+
+                                // Don't spawn inside hulls
+                                if (Hull.FindHull(wp.WorldPosition, null) != null) { continue; }
+
+                                float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
+
+                                if (closestDist < 0f || dist < closestDist)
+                                {
+                                    spawnPoint = wp;
+                                    closestDist = dist;
+                                }
+                            }
+                            break;
+                        case "cursor":
+                            spawnPosition = cursorWorldPos;
+                            break;
+                        default:
+                            spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
+                            break;
+                    }
+                }
+                else
+                {
+                    spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
+                }
+                if (spawnPoint != null)
+                {
+                    spawnPosition = spawnPoint.WorldPosition;
+                }
+
+                argIndex++;
+                if (args.Length > argIndex)
+                {
+                    if (int.TryParse(args[argIndex], out int teamID) && teamID is >= 0 and <= 3)
+                    {
+                        teamType = (CharacterTeamType)teamID;
+                    }
+                    else if (!Enum.TryParse(args[argIndex], ignoreCase: true, out teamType))
+                    {
+                        teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+                        ThrowError($"\"{args[argIndex]}\" is not a valid team id. Defaulting to {teamType}.");
+                    }
+                }
+                else
+                {
+                    teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+                }
+
+                argIndex++;
+                addToCrew = isHuman;
+                if (args.Length > argIndex)
+                {
+                    if (bool.TryParse(args[argIndex], out bool result))
+                    {
+                        addToCrew = result;
+                    }
+                    else
+                    {
+                        ThrowError($"Could not parse the \"add to crew\" argument ({args[argIndex]}). Defaulting to {addToCrew}.");
+                    }
+                }
             }
         }
 
@@ -3349,7 +3468,7 @@ namespace Barotrauma
 #if CLIENT
         private static IEnumerable<CoroutineStatus> CreateMessageBox(string errorMsg)
         {
-            new GUIMessageBox(TextManager.Get("Error"), errorMsg);
+            new GUIMessageBox(TextManager.Get("Error"), errorMsg, minSize: new Point(GUI.IntScale(700), GUI.IntScale(500)));
             yield return CoroutineStatus.Success;
         }
 #endif

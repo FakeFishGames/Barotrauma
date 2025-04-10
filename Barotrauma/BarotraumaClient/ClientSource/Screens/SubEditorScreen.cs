@@ -2566,9 +2566,34 @@ namespace Barotrauma
             {
                 outpostTagsBox.Text = MainSub.Info.OutpostTags.ConvertToString();
             }
-
             outpostTagsGroup.RectTransform.MaxSize = outpostTagsBox.RectTransform.MaxSize;
 
+            var triggerMissionTagsGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), outpostSettingsContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), triggerMissionTagsGroup.RectTransform),
+                TextManager.Get("outpost.triggeroutpostmissionevents"), textAlignment: Alignment.CenterLeft, wrap: true);
+            var triggerMissionTagsBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), triggerMissionTagsGroup.RectTransform))
+            {
+                OnEnterPressed = (GUITextBox textBox, string text) =>
+                {
+                    MainSub.Info.TriggerOutpostMissionEvents = text.ToIdentifiers().ToImmutableHashSet();
+                    return true;
+                },
+                ToolTip = TextManager.Get("outpost.triggeroutpostmissionevents.tooltip"),
+                OverflowClip = true,
+                Text = "default"
+            };
+            triggerMissionTagsBox.OnDeselected += (textbox, _) =>
+            {
+                MainSub.Info.TriggerOutpostMissionEvents = triggerMissionTagsBox.Text.ToIdentifiers().ToImmutableHashSet();
+            };
+            if (MainSub.Info.TriggerOutpostMissionEvents != null)
+            {
+                triggerMissionTagsBox.Text = MainSub.Info.TriggerOutpostMissionEvents.ConvertToString();
+            }
+            triggerMissionTagsGroup.RectTransform.MaxSize = triggerMissionTagsBox.RectTransform.MaxSize;
             //---------------------------------------
 
             var enemySubmarineSettingsContainer = new GUILayoutGroup(new RectTransform(Vector2.One, subTypeDependentSettingFrame.RectTransform))
@@ -5792,12 +5817,14 @@ namespace Barotrauma
                 {
                     foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
                     {
-                        lightComponent.Light.Color = 
-                            (item.body == null || item.body.Enabled || item.ParentInventory is ItemInventory { Container.HideItems: false }) &&
+                        bool visibleInContainer = item.FindParentInventory(static it => it is ItemInventory { Container.HideItems: true }) == null;
+                        lightComponent.Light.Color =
+                            ((item.body == null || !item.body.Enabled) && !visibleInContainer) ||
                             /*the light is only visible when worn -> can't be visible in the editor*/
-                            lightComponent.Parent is not Wearable ?
-                                lightComponent.LightColor :
-                                Color.Transparent;
+                            lightComponent.Parent is Wearable ?
+                                Color.Transparent :
+                                lightComponent.LightColor;
+
                         lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
                     }
                 }

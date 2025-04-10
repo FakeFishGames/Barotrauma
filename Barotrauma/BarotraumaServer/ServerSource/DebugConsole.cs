@@ -377,11 +377,11 @@ namespace Barotrauma
             AssignOnExecute("killdisconnectedtimer", (string[] args) =>
             {
                 if (args.Length < 1 || GameMain.Server == null) return;
-                float seconds = GameMain.Server.ServerSettings.KillDisconnectedTime;
-                if (float.TryParse(args[0], out seconds))
+                if (float.TryParse(args[0], out float seconds))
                 {
                     seconds = Math.Max(0, seconds);
                     NewMessage("Set kill disconnected timer to " + ToolBox.SecondsToReadableTime(seconds), Color.White);
+                    GameMain.Server.ServerSettings.KillDisconnectedTime = seconds;
                 }
                 else
                 {
@@ -390,13 +390,13 @@ namespace Barotrauma
             });
             AssignOnClientRequestExecute("killdisconnectedtimer", (Client client, Vector2 cursorPos, string[] args) =>
             {
-                if (args.Length < 1 || GameMain.Server == null) return;
-                float seconds = GameMain.Server.ServerSettings.KillDisconnectedTime;
-                if (float.TryParse(args[0], out seconds))
+                if (args.Length < 1 || GameMain.Server == null) { return; }
+                if (float.TryParse(args[0], out float seconds))
                 {
                     seconds = Math.Max(0, seconds);
                     GameMain.Server.SendConsoleMessage("Set kill disconnected timer to " + ToolBox.SecondsToReadableTime(seconds).Value, client);
                     NewMessage(client.Name + " set kill disconnected timer to " + ToolBox.SecondsToReadableTime(seconds), Color.White);
+                    GameMain.Server.ServerSettings.KillDisconnectedTime = seconds;
                 }
                 else
                 {
@@ -498,14 +498,10 @@ namespace Barotrauma
                 NewMessage(GameMain.Server.ServerSettings.StartWhenClientsReady ? "Enabled starting the round automatically when clients are ready." : "Disabled starting the round automatically when clients are ready.", Color.White);
             });
 
-            AssignOnExecute("spawn|spawncharacter", (string[] args) =>
-            {
-                SpawnCharacter(args, Vector2.Zero, out string errorMsg);
-                if (!string.IsNullOrWhiteSpace(errorMsg))
-                {
-                    ThrowError(errorMsg);
-                }
-            });
+            AssignOnExecute("spawn|spawncharacter", args => SpawnCharacter(args, Vector2.Zero));
+            AssignOnExecute("spawnnpc", args => SpawnCharacter(args, Vector2.Zero, true));
+            AssignOnClientRequestExecute("spawn|spawncharacter", (Client client, Vector2 cursorPos, string[] args) => SpawnCharacter(args, cursorPos));
+            AssignOnClientRequestExecute("spawnnpc", (Client client, Vector2 cursorPos, string[] args) => SpawnCharacter(args, cursorPos, true));
 
             AssignOnExecute("giveperm", (string[] args) =>
             {
@@ -1612,18 +1608,6 @@ namespace Barotrauma
 #endif
 
             AssignOnClientRequestExecute(
-                "spawn|spawncharacter",
-                (Client client, Vector2 cursorPos, string[] args) =>
-                {
-                    SpawnCharacter(args, cursorPos, out string errorMsg);
-                    if (!string.IsNullOrWhiteSpace(errorMsg))
-                    {
-                        ThrowError(errorMsg);
-                    }
-                }
-            );
-
-            AssignOnClientRequestExecute(
                 "banaddress|banip",
                 (Client client, Vector2 cursorPos, string[] args) =>
                 {
@@ -1794,11 +1778,17 @@ namespace Barotrauma
                 }
             );
 
+            AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
+            {
+                //cursor doesn't exist server-side, use to the position of the sub instead
+                TeleportCharacter(cursorWorldPos: Submarine.MainSub?.WorldPosition ?? Vector2.Zero, Character.Controlled, args);
+            });
+
             AssignOnClientRequestExecute(
                 "teleportcharacter|teleport",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    TeleportCharacter(cursorWorldPos, client.Character, args);
+                    TeleportCharacter(cursorWorldPos, client.Character, args);                    
                 }
             );
 
@@ -1856,14 +1846,16 @@ namespace Barotrauma
                 "godmode",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    Character targetCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
-
-                    if (targetCharacter == null) { return; }
-
-                    targetCharacter.GodMode = !targetCharacter.GodMode;
-
-                    NewMessage(targetCharacter.Name + (targetCharacter.GodMode ? "'s godmode turned on by \"" : "'s godmode turned off by \"") + client.Name + "\"", Color.White);
-                    GameMain.Server.SendConsoleMessage(targetCharacter.Name + (targetCharacter.GodMode ? "'s godmode on" : "'s godmode off"), client);
+                    bool? godmodeStateOnFirstCharacter = null;
+                    HandleCommandForCrewOrSingleCharacter(args, ToggleGodMode, client);
+                    void ToggleGodMode(Character targetCharacter)
+                    {
+                        targetCharacter.GodMode = godmodeStateOnFirstCharacter ?? !targetCharacter.GodMode;
+                        godmodeStateOnFirstCharacter = targetCharacter.GodMode;
+                        GameMain.NetworkMember.CreateEntityEvent(targetCharacter, new Character.CharacterStatusEventData());
+                        NewMessage(targetCharacter.Name + (targetCharacter.GodMode ? "'s godmode turned on by \"" : "'s godmode turned off by \"") + client.Name + "\"", Color.White);
+                        GameMain.Server.SendConsoleMessage(targetCharacter.Name + (targetCharacter.GodMode ? "'s godmode on" : "'s godmode off"), client);
+                    }
                 }
             );
 
@@ -1929,7 +1921,7 @@ namespace Barotrauma
                     bool healAll = args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase);
                     if (client.Character != null)
                     {
-                        HealCharacter(client.Character, healAll);
+                        HealCharacter(client.Character, healAll, client);
                     }
                 }
             );
@@ -1939,11 +1931,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
-                    Character healedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
-                    if (healedCharacter != null)
-                    {
-                        HealCharacter(healedCharacter, healAll);
-                    }
+                    HandleCommandForCrewOrSingleCharacter(args, (Character targetCharacter) => HealCharacter(targetCharacter, healAll, client), client);
                 }
             );
 

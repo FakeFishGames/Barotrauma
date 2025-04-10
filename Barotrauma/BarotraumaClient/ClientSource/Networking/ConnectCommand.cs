@@ -50,25 +50,29 @@ readonly record struct ConnectCommand(
             NameAndLidgrenEndpointOption: endpoint is LidgrenEndpoint lidgrenEndpoint
                 ? Option.Some(new NameAndLidgrenEndpoint(ServerName: serverName, lidgrenEndpoint))
                 : Option.None,
-            SteamLobbyIdOption: Option.None) { }
+            SteamLobbyIdOption: Option.None)
+    { }
 
     public ConnectCommand(string serverName, ImmutableArray<P2PEndpoint> endpoints)
         : this(
             NameAndP2PEndpointsOption: Option.Some(new NameAndP2PEndpoints(ServerName: serverName, Endpoints: endpoints)),
             NameAndLidgrenEndpointOption: Option.None,
-            SteamLobbyIdOption: Option.None) { }
+            SteamLobbyIdOption: Option.None)
+    { }
 
     public ConnectCommand(string serverName, LidgrenEndpoint endpoint)
         : this(
             NameAndP2PEndpointsOption: Option.None,
             NameAndLidgrenEndpointOption: Option.Some(new NameAndLidgrenEndpoint(ServerName: serverName, Endpoint: endpoint)),
-            SteamLobbyIdOption: Option.None) { }
+            SteamLobbyIdOption: Option.None)
+    { }
 
     public ConnectCommand(SteamLobbyId lobbyId)
         : this(
             NameAndP2PEndpointsOption: Option.None,
             NameAndLidgrenEndpointOption: Option.None,
-            SteamLobbyIdOption: Option.Some(lobbyId)) { }
+            SteamLobbyIdOption: Option.Some(lobbyId))
+    { }
 
     public static Option<ConnectCommand> Parse(string str)
         => Parse(ToolBox.SplitCommand(str));

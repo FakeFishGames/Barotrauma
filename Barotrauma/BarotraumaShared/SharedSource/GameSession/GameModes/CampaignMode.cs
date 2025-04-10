@@ -177,10 +177,28 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember.GameStarted)
             {
-                //allow managing if no-one with permissions is alive and in-game
-                return GameMain.NetworkMember.ConnectedClients.None(c =>
-                    c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } &&
-                    (IsOwner(c) || c.HasPermission(permissions)));
+                bool someOneHasPermissions = GameMain.NetworkMember.ConnectedClients.Any(c => IsOwner(c) || c.HasPermission(permissions));
+                if (someOneHasPermissions)
+                {
+                    if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration < 60.0f)
+                    {
+                        //round has been going on for less than a minute, don't allow anyone to manage just yet,
+                        //the people with permissions might still be loading or doing something in the lobby
+                        return false;
+                    }
+                    else
+                    {
+                        //allow managing if the round has been going on for a while, and no-one with permissions is alive and in-game
+                        return GameMain.NetworkMember.ConnectedClients.None(c =>
+                            c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } &&
+                            (IsOwner(c) || c.HasPermission(permissions)));
+                    }
+                }
+                else
+                {
+                    //no-one in the server with permissions, allow anyone to manage
+                    return true;
+                }
             }
             else
             {
@@ -963,7 +981,9 @@ namespace Barotrauma
             {
                 UpdateStoreStock();
             }
-            GameMain.GameSession.EventManager?.RegisterEventHistory(registerFinishedOnly: true);
+
+            GameMain.GameSession.EndMissions();
+            GameMain.GameSession.EventManager?.StoreEventDataAtRoundEnd(registerFinishedOnly: true);
         }
 
         /// <summary>
@@ -1089,13 +1109,24 @@ namespace Barotrauma
                     return false;
                 }
             }
-            var price = buyingNewCharacter ? NewCharacterCost(characterInfo) : HireManager.GetSalaryFor(characterInfo);
+            int price = buyingNewCharacter ? NewCharacterCost(characterInfo) : HireManager.GetSalaryFor(characterInfo);
             if (takeMoney && !TryPurchase(client, price)) { return false; }
 
             characterInfo.IsNewHire = true;
             characterInfo.Title = null;
             location.RemoveHireableCharacter(characterInfo);
-            CrewManager.AddCharacterInfo(characterInfo);
+
+            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign)
+            {
+#if SERVER
+                CrewManager.ToggleReserveBenchStatus(characterInfo, client, pendingHire: true, confirmPendingHire: true, sendUpdate: false);
+#endif
+            }
+            else
+            {
+                CrewManager.AddCharacterInfo(characterInfo);
+            }
+
             GameAnalyticsManager.AddMoneySpentEvent(characterInfo.Salary, GameAnalyticsManager.MoneySink.Crew, characterInfo.Job?.Prefab.Identifier.Value ?? "unknown");
             return true;
         }

@@ -234,6 +234,7 @@ namespace Barotrauma
                     {
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
+                            DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachTarget,
                             TargetName = Item.Name,
                             SpeakCannotReachCondition = () => isPriority
                         };

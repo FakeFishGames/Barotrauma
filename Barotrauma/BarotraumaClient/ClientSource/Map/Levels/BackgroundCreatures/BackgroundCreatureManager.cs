@@ -15,18 +15,19 @@ namespace Barotrauma
 
         private float checkVisibleTimer;
 
-        private readonly List<BackgroundCreaturePrefab> prefabs = new List<BackgroundCreaturePrefab>();
         private readonly List<BackgroundCreature> creatures = new List<BackgroundCreature>();
 
-        public BackgroundCreatureManager(IEnumerable<BackgroundCreaturePrefabsFile> files)
+        private readonly List<BackgroundCreature> visibleCreatures = new List<BackgroundCreature>();
+
+        public BackgroundCreatureManager()
         {
-            foreach(var file in files)
+            /*foreach(var file in files)
             {
                 LoadConfig(file.Path);
-            }
+            }*/
         }
 
-        public BackgroundCreatureManager(string path)
+        /*public BackgroundCreatureManager(string path)
         {
             DebugConsole.AddWarning($"Couldn't find any BackgroundCreaturePrefabs files, falling back to {path}");
             LoadConfig(ContentPath.FromRaw(null, path));
@@ -42,34 +43,33 @@ namespace Barotrauma
                 if (mainElement.IsOverride())
                 {
                     mainElement = mainElement.FirstElement();
-                    prefabs.Clear();
+                    Prefabs.Clear();
                     DebugConsole.NewMessage($"Overriding all background creatures with '{configPath}'", Color.MediumPurple);
                 }
-                else if (prefabs.Any())
+                else if (Prefabs.Any())
                 {
                     DebugConsole.NewMessage($"Loading additional background creatures from file '{configPath}'");
                 }
 
                 foreach (var element in mainElement.Elements())
                 {
-                    prefabs.Add(new BackgroundCreaturePrefab(element));
+                    Prefabs.Add(new BackgroundCreaturePrefab(element));
                 };
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", configPath), e);
             }
-        }
+        }*/
 
         public void SpawnCreatures(Level level, int count, Vector2? position = null)
         {
             creatures.Clear();
 
-            if (prefabs.Count == 0) { return; }
+            List<BackgroundCreaturePrefab> availablePrefabs = new List<BackgroundCreaturePrefab>(BackgroundCreaturePrefab.Prefabs.OrderBy(p => p.Identifier.Value));
+            if (availablePrefabs.Count == 0) { return; }
 
             count = Math.Min(count, MaxCreatures);
-
-            List<BackgroundCreaturePrefab> availablePrefabs = new List<BackgroundCreaturePrefab>(prefabs);
 
             for (int i = 0; i < count; i++)
             {
@@ -93,7 +93,7 @@ namespace Barotrauma
                     pos = (Vector2)position;
                 }
 
-                var prefab = ToolBox.SelectWeightedRandom(availablePrefabs, availablePrefabs.Select(p => p.GetCommonness(level.GenerationParams)).ToList(), Rand.RandSync.ClientOnly);
+                var prefab = ToolBox.SelectWeightedRandom(availablePrefabs, availablePrefabs.Select(p => p.GetCommonness(level?.LevelData)).ToList(), Rand.RandSync.ClientOnly);
                 if (prefab == null) { break; }
 
                 int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax + 1, Rand.RandSync.ClientOnly);
@@ -125,16 +125,27 @@ namespace Barotrauma
         {
             if (checkVisibleTimer < 0.0f)
             {
+                visibleCreatures.Clear();
                 int margin = 500;
                 foreach (BackgroundCreature creature in creatures)
                 {
                     Rectangle extents = creature.GetExtents(cam);
-                    bool wasVisible = creature.Visible;
                     creature.Visible =
                         extents.Right >= cam.WorldView.X - margin &&
                         extents.X <= cam.WorldView.Right + margin &&
                         extents.Bottom >= cam.WorldView.Y - cam.WorldView.Height - margin &&
                         extents.Y <= cam.WorldView.Y + margin;
+                    if (creature.Visible)
+                    {
+                        //insertion sort according to depth
+                        int i = 0;
+                        while (i < visibleCreatures.Count)
+                        {
+                            if (visibleCreatures[i].Depth < creature.Depth) { break; }
+                            i++;
+                        }
+                        visibleCreatures.Insert(i, creature);                        
+                    }
                 }
 
                 checkVisibleTimer = VisibilityCheckInterval;
@@ -144,27 +155,24 @@ namespace Barotrauma
                 checkVisibleTimer -= deltaTime;
             }
 
-            foreach (BackgroundCreature creature in creatures)
+            foreach (BackgroundCreature creature in visibleCreatures)
             {
-                if (!creature.Visible) { continue; }
                 creature.Update(deltaTime);
             }
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            foreach (BackgroundCreature creature in creatures)
+            foreach (BackgroundCreature creature in visibleCreatures)
             {
-                if (!creature.Visible) { continue; }
                 creature.Draw(spriteBatch, cam);
             }
         }
 
         public void DrawLights(SpriteBatch spriteBatch, Camera cam)
         {
-            foreach (BackgroundCreature creature in creatures)
+            foreach (BackgroundCreature creature in visibleCreatures)
             {
-                if (!creature.Visible) { continue; }
                 creature.DrawLightSprite(spriteBatch, cam);
             }
         }

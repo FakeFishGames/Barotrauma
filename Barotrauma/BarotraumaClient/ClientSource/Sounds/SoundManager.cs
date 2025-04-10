@@ -12,11 +12,11 @@ namespace Barotrauma.Sounds
     class SoundManager : IDisposable
     {
         public const int SourceCount = 32;
-        public const string SoundCategoryDefault = "default";
-        public const string SoundCategoryUi = "ui";
-        public const string SoundCategoryWaterAmbience = "waterambience";
-        public const string SoundCategoryMusic = "music";
-        public const string SoundCategoryVoip = "voip";
+        public static readonly Identifier SoundCategoryDefault = "default".ToIdentifier();
+        public static readonly Identifier SoundCategoryUi = "ui".ToIdentifier();
+        public static readonly Identifier SoundCategoryWaterAmbience = "waterambience".ToIdentifier();
+        public static readonly Identifier SoundCategoryMusic = "music".ToIdentifier();
+        public static readonly Identifier SoundCategoryVoip = "voip".ToIdentifier();
 
         public bool Disabled
         {
@@ -201,7 +201,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private readonly Dictionary<string, CategoryModifier> categoryModifiers = new Dictionary<string, CategoryModifier>();
+        private readonly Dictionary<Identifier, CategoryModifier> categoryModifiers = new Dictionary<Identifier, CategoryModifier>();
 
         public SoundManager()
         {
@@ -548,10 +548,9 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryGainMultiplier(string category, float gain, int index=0)
+        public void SetCategoryGainMultiplier(Identifier category, float gain, int index=0)
         {
             if (Disabled) { return; }
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (!categoryModifiers.ContainsKey(category))
@@ -579,10 +578,9 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public float GetCategoryGainMultiplier(string category, int index = -1)
+        public float GetCategoryGainMultiplier(Identifier category, int index = -1)
         {
             if (Disabled) { return 0.0f; }
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return 1.0f; }
@@ -602,11 +600,10 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryMuffle(string category, bool muffle)
+        public void SetCategoryMuffle(Identifier category, bool muffle)
         {
             if (Disabled) { return; }
 
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (!categoryModifiers.ContainsKey(category))
@@ -627,18 +624,17 @@ namespace Barotrauma.Sounds
                     {
                         if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
                         {
-                            if (playingChannels[i][j]?.Category.ToLower() == category) { playingChannels[i][j].Muffled = muffle; }
+                            if (playingChannels[i][j]?.Category == category) { playingChannels[i][j].Muffled = muffle; }
                         }
                     }
                 }
             }
         }
 
-        public bool GetCategoryMuffle(string category)
+        public bool GetCategoryMuffle(Identifier category)
         {
             if (Disabled) { return false; }
 
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return false; }

@@ -760,4 +760,12 @@ namespace Barotrauma
         PlayerPreference,
         PlayerChoice,
     }
+    
+    public enum BotStatus
+    {
+        PendingHireToActiveService,
+        PendingHireToReserveBench,
+        ActiveService,
+        ReserveBench
+    }
 }

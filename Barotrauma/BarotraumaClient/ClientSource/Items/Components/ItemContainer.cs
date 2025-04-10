@@ -474,11 +474,22 @@ namespace Barotrauma.Items.Components
             int i = 0;
             foreach (ContainedItem contained in containedItems)
             {
-                Vector2 itemPos = currentItemPos;
-
                 if (contained.Item?.Sprite == null) { continue; }
-
                 if (contained.Hide) { continue; }
+
+                Vector2 itemPos = transformedItemPos;
+                int targetSlotIndex = ItemsUseInventoryPlacement ? Inventory.FindIndex(contained.Item) : i;
+                //interval set on both axes -> use a grid layout
+                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
+                {
+                    itemPos += transformedItemIntervalHorizontal * (targetSlotIndex % ItemsPerRow);
+                    itemPos += transformedItemIntervalVertical * (targetSlotIndex / ItemsPerRow);                    
+                }
+                else
+                {
+                    itemPos += (transformedItemIntervalHorizontal + transformedItemIntervalVertical) * targetSlotIndex;
+                }
+
                 if (contained.ItemPos.HasValue)
                 {
                     Vector2 pos = contained.ItemPos.Value;
@@ -531,7 +542,7 @@ namespace Barotrauma.Items.Components
                     containedSpriteDepth = containedSpriteDepths[i];
                 }
                 containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
-
+                
                 SpriteEffects spriteEffects = SpriteEffects.None;
                 float spriteRotation = ItemRotation;
                 if (contained.Rotation != 0)
@@ -570,20 +581,6 @@ namespace Barotrauma.Items.Components
                 }
 
                 i++;
-                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
-                {
-                    //interval set on both axes -> use a grid layout
-                    currentItemPos += transformedItemIntervalHorizontal;
-                    if (i % ItemsPerRow == 0)
-                    {
-                        currentItemPos = transformedItemPos;
-                        currentItemPos += transformedItemIntervalVertical * (i / ItemsPerRow);
-                    }
-                }
-                else
-                {
-                    currentItemPos += transformedItemIntervalHorizontal + transformedItemIntervalVertical;
-                }
             }
         }
 

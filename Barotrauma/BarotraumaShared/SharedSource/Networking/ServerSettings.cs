@@ -68,6 +68,7 @@ namespace Barotrauma.Networking
         }
 
         public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
+        public static readonly string PermissionPresetFileCustom = "Data" + Path.DirectorySeparatorChar + "permissionpresets_player.xml";
 
         public string Name
         {
@@ -284,7 +285,9 @@ namespace Barotrauma.Networking
 
             HiddenSubs = new HashSet<string>();
 
+            PermissionPreset.List.Clear();
             PermissionPreset.LoadAll(PermissionPresetFile);
+            PermissionPreset.LoadAll(PermissionPresetFileCustom);
             InitProjSpecific();
 
             ServerName = serverName;
@@ -607,6 +610,19 @@ namespace Barotrauma.Networking
             {
                 if (allowSpectating == value) { return; }
                 allowSpectating = value;
+                ServerDetailsChanged = true;
+            }
+        }
+
+        private bool allowAFK;
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool AllowAFK
+        {
+            get { return allowAFK; }
+            private set
+            {
+                if (allowAFK == value) { return; }
+                allowAFK = value;
                 ServerDetailsChanged = true;
             }
         }
@@ -992,7 +1008,7 @@ namespace Barotrauma.Networking
         public float KillDisconnectedTime
         {
             get;
-            private set;
+            set;
         }
         
         /// <summary>

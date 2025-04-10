@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using Steamworks.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -537,6 +538,13 @@ namespace Barotrauma.Steam
         {
             if (!mod.UgcId.TryUnwrap(out var ugcId)
                 || ugcId is not SteamWorkshopId workshopId) { return; }
+
+            if (mod.UgcItem.TryUnwrap(out var cachedItem))
+            {
+                onInstalledInfoButtonHit(cachedItem);
+                return;
+            }
+
             TaskPool.Add($"PrepareToShow{mod.UgcId}Info", SteamManager.Workshop.GetItem(workshopId.Value),
                 t =>
                 {
@@ -634,7 +642,23 @@ namespace Barotrauma.Steam
                 {
                     UserData = mod
                 };
-                
+                //fetch the description in DrawToolTip, so we only need to fetch it if it's actually needed
+                modFrame.OnDrawToolTip += (GUIComponent component) =>
+                {
+                    if (modFrame.ToolTip.IsNullOrEmpty())
+                    {
+                        mod.TryFetchUgcDescription(onFinished: (string? description) =>
+                        {
+                            //check if the tooltip is empty still (in case it was changed after we started fetching the description
+                            if (modFrame.ToolTip.IsNullOrEmpty() &&
+                                !string.IsNullOrEmpty(description))
+                            {
+                                modFrame.ToolTip = description + "...";
+                            }
+                        });
+                    }
+                };
+
                 var frameContent = new GUILayoutGroup(new RectTransform((0.95f, 0.9f), modFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
                 {
                     Stretch = true,
@@ -695,6 +719,11 @@ namespace Barotrauma.Steam
                             {
                                 contextMenuOptions.Add(new("ViewWorkshopModDetails".ToIdentifier(), isEnabled: true, () => PrepareToShowModInfo(mod)));
                                 contextMenuOptions.Add(new("CopyWorkshopToLocal".ToIdentifier(), isEnabled: true, () => CopyToLocal()));
+                            }
+                            if (mod.MissingDependencies.Any())
+                            {
+                                contextMenuOptions.Add(new("workshop.dependencynotfound.showmissingdependencies".ToIdentifier(), isEnabled: true, 
+                                    () => CreateDependencyErrorMessageBox(mod, mod.MissingDependencies)));
                             }
                             if (selectedMods.All(ContentPackageManager.WorkshopPackages.Contains))
                             {
@@ -855,6 +884,81 @@ namespace Barotrauma.Steam
                 });
             
             UpdateModListItemVisibility();
+        }
+        
+        private void CreateDependencyErrorMessageBox(ContentPackage contentPackage, IEnumerable<PublishedFileId> missingDependencies)
+        {
+            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("Error"),
+                TextManager.GetWithVariable("workshop.dependencynotfoundtitle", "[name]", contentPackage.Name), new Vector2(0.25f, 0.0f), minSize: new Point(GUI.IntScale(650), GUI.IntScale(650)));
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                SettingsMenu.Instance?.ApplyInstalledModChanges();
+                msgBox.Close();
+                return true;
+            };
+            var textListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), msgBox.Content.RectTransform));
+
+            foreach (var dependency in missingDependencies)
+            {
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textListBox.Content.RectTransform),
+                    $"- {TextManager.Get("unknown")} {dependency}")
+                {
+                    CanBeFocused = false
+                };
+
+                var matchingPackage = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => 
+                    p.UgcId.TryUnwrap(out var ugcId) && 
+                    ugcId is SteamWorkshopId workshopId && 
+                    workshopId.Value == dependency.Value);
+                if (matchingPackage != null &&
+                    disabledRegularModsList.Content.GetChildByUserData(matchingPackage) is GUIComponent matchingListElement)
+                {
+                    textBlock.Text = $"- {matchingPackage.Name}";
+                    var enableButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), textBlock.RectTransform, Anchor.CenterRight), TextManager.Get("workshopitemenabled"))
+                    {
+                        OnClicked = (btn, userdata) =>
+                        {
+                            btn.Enabled = false;
+                            textBlock.Flash(GUIStyle.Green);
+                            matchingListElement.RectTransform.Parent = enabledRegularModsList.Content.RectTransform;
+                            matchingListElement.Flash(GUIStyle.Green);
+                            return true;
+                        }
+                    };
+                    textBlock.RectTransform.MinSize = new Point(0, (int)(enableButton.Rect.Height * 1.2f));
+                }
+                else
+                {
+                    var subscribeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), textBlock.RectTransform, Anchor.CenterRight), TextManager.Get("downloadbutton"))
+                    {
+                        Enabled = false
+                    };
+                    textBlock.RectTransform.MinSize = new Point(0, (int)(subscribeButton.Rect.Height * 1.2f));
+
+                    //fetch the workshop item based on the ID, update the text to show it's title and create a subscribe button
+                    TaskPool.Add($"GetMissingDependencyInfo{dependency}", SteamManager.Workshop.GetItem(dependency),
+                        t =>
+                        {
+                            if (!t.TryGetResult(out Option<Steamworks.Ugc.Item> itemOption)) { return; }
+                            if (!itemOption.TryUnwrap(out var item)) { return; }
+                            if (!item.Title.IsNullOrEmpty())
+                            {
+                                textBlock.Text = $"- {item.Title}";
+                            }
+                            if (!item.IsSubscribed)
+                            {
+                                subscribeButton.OnClicked = (btn, userdata) =>
+                                {
+                                    _ = item.Subscribe();
+                                    subscribeButton.Enabled = false;
+                                    textBlock.Flash(GUIStyle.Green);
+                                    return true;
+                                };
+                                subscribeButton.Enabled = true;
+                            }
+                        });
+                }
+            }
         }
     }
 }

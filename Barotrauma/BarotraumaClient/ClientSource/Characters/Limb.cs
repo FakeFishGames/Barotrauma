@@ -511,7 +511,7 @@ namespace Barotrauma
                     else
                     {
                         //2. check if the character file defines the texture directly
-                        texturePath = character.Params.VariantFile?.Root?.GetAttributeContentPath("texture", character.Prefab.ContentPackage);
+                        texturePath = character.Params.VariantFile?.GetRootExcludingOverride()?.GetAttributeContentPath("texture", character.Prefab.ContentPackage);
                     }
                     
                     //3. check if the base prefab defines the texture
@@ -824,11 +824,13 @@ namespace Barotrauma
                 {
                     if (ActiveDeformations.Any())
                     {
-                        var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size);
+                        var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, flippedHorizontally: IsFlipped, false);
                         deformSprite.Deform(deformation);
                         if (LightSource != null && LightSource.DeformableLightSprite != null)
                         {
-                            deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, dir == Direction.Left);
+                            //apparently inversing on the y-axis is only necessary for light sprites (see 345a65ca6)
+                            //it's a mystery why this is the case, something to do with sprite flipping being handled differently in light rendering?
+                            deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, flippedHorizontally: IsFlipped, inverseY: dir == Direction.Left);
                             LightSource.DeformableLightSprite.Deform(deformation);
                         }
                     }
@@ -879,7 +881,7 @@ namespace Barotrauma
                         var defSprite = conditionalSprite.DeformableSprite;
                         if (ActiveDeformations.Any())
                         {
-                            var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, defSprite.Size);
+                            var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, defSprite.Size, flippedHorizontally: IsFlipped);
                             defSprite.Deform(deformation);
                         }
                         else

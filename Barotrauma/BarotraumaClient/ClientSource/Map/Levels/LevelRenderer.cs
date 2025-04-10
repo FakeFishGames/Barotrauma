@@ -196,10 +196,7 @@ namespace Barotrauma
                 if (flashCooldown <= 0.0f)
                 {
                     flashTimer = 1.0f;
-                    if (level.GenerationParams.FlashSound != null)
-                    {
-                        level.GenerationParams.FlashSound.Play(1.0f, "default");
-                    }
+                    level.GenerationParams.FlashSound?.Play(1.0f, Sounds.SoundManager.SoundCategoryDefault);                    
                     flashCooldown = Rand.Range(level.GenerationParams.FlashInterval.X, level.GenerationParams.FlashInterval.Y, Rand.RandSync.Unsynced);
                 }
                 if (flashTimer > 0.0f)

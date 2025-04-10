@@ -317,9 +317,15 @@ namespace Barotrauma
 
             graphics.SetRenderTarget(renderTargetDamageable);
             graphics.Clear(Color.Transparent);
+
             DamageEffect.CurrentTechnique = DamageEffect.Techniques["StencilShader"];
+            DamageEffect.CurrentTechnique.Passes[0].Apply();
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.LinearWrap, effect: DamageEffect, transformMatrix: cam.Transform);
             Submarine.DrawDamageable(spriteBatch, DamageEffect, false);
+            DamageEffect.Parameters["aCutoff"].SetValue(0.0f);
+            DamageEffect.Parameters["cCutoff"].SetValue(0.0f);
+            Submarine.DamageEffectCutoff = 0.0f;
+            DamageEffect.CurrentTechnique.Passes[0].Apply();
             spriteBatch.End();
 
             sw.Stop();

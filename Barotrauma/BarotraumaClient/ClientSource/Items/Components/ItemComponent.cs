@@ -316,11 +316,13 @@ namespace Barotrauma.Items.Components
                         0.01f,
                         loopingSound.RoundSound.GetRandomFrequencyMultiplier(),
                         SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull));
-                    loopingSoundChannel.Looping = true;
-                    item.CheckNeedsSoundUpdate(this);
-                    //TODO: tweak
-                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
-                    loopingSoundChannel.Far = loopingSound.Range;
+                    if (loopingSoundChannel != null) 
+                    { 
+                        loopingSoundChannel.Looping = true;
+                        item.CheckNeedsSoundUpdate(this);
+                        loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                        loopingSoundChannel.Far = loopingSound.Range;
+                    }
                 }
 
                 // Looping sound with manual selection mode should be changed if value of ManuallySelectedSound has changed
@@ -397,10 +399,12 @@ namespace Barotrauma.Items.Components
                     if (volume <= 0.0001f) { return; }
                     loopingSound = itemSound;
                     loopingSoundChannel = SoundPlayer.PlaySound(loopingSound.RoundSound, position, volume: 0.01f, hullGuess: item.CurrentHull);
-                    loopingSoundChannel.Looping = true;
-                    //TODO: tweak
-                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
-                    loopingSoundChannel.Far = loopingSound.Range;
+                    if (loopingSoundChannel != null)
+                    {
+                        loopingSoundChannel.Looping = true;
+                        loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                        loopingSoundChannel.Far = loopingSound.Range;
+                    }
                 }
             }
             else
@@ -740,6 +744,9 @@ namespace Barotrauma.Items.Components
                             }),
                             new ContextMenuOption(TextManager.Get(LockGuiFramePosition ? "item.unlockuiposition" : "item.lockuiposition"), isEnabled: true, onSelected: () =>
                             {
+                                //ensure the offset is set to where the frame is now
+                                //(it may have been repositioned by the overlap prevention logic, which doesn't set this offset)
+                                GuiFrameOffset = GuiFrame.RectTransform.ScreenSpaceOffset;
                                 LockGuiFramePosition = !LockGuiFramePosition;
                                 guiFrameDragHandle.Enabled = !LockGuiFramePosition;
                                 if (SerializableProperties.TryGetValue(nameof(LockGuiFramePosition).ToIdentifier(), out var property))

@@ -733,17 +733,24 @@ namespace Barotrauma.Items.Components
 
         private readonly HashSet<Item> usedIngredients = new HashSet<Item>();
 
-        private bool CanBeFabricated(FabricationRecipe fabricableItem, IReadOnlyDictionary<Identifier, List<Item>> availableIngredients, Character character)
+        public bool MissingRequiredRecipe(FabricationRecipe fabricableItem, Character character)
         {
-            if (fabricableItem == null) { return false; }
-            if (fabricableItem.RequiresRecipe) 
+            if (fabricableItem.RequiresRecipe)
             {
                 if (character == null) { return false; }
                 if (!AnyOneHasRecipeForItem(character, fabricableItem.TargetItem))
                 {
-                    return false; 
+                    return true;
                 }
             }
+            return false;
+        }
+
+        private bool CanBeFabricated(FabricationRecipe fabricableItem, IReadOnlyDictionary<Identifier, List<Item>> availableIngredients, Character character)
+        {
+            if (fabricableItem == null) { return false; }
+
+            if (MissingRequiredRecipe(fabricableItem, character)) { return false; }
 
             if (fabricableItem.HideForNonTraitors)
             {

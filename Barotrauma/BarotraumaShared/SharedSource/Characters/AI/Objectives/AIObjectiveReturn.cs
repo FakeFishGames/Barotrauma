@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -20,7 +20,7 @@ namespace Barotrauma
             Target = GetReturnTarget(Submarine.MainSubs) ?? GetReturnTarget(Submarine.Loaded);
             if (Target == null)
             {
-                if (GameMain.GameSession.GameMode is not TestGameMode)
+                if (GameMain.GameSession?.GameMode is not TestGameMode)
                 {
                     DebugConsole.AddWarning($"({character.DisplayName}) No suitable return target found. Cannot return back to the main sub.");   
                 }

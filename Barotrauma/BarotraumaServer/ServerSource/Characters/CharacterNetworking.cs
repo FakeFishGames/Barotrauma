@@ -85,7 +85,8 @@ namespace Barotrauma
 
         partial void UpdateNetInput()
         {
-            if (!(this is AICharacter) || IsRemotePlayer)
+            //non-ai character (a character that was previously controlled by a player) or a remote player (which can be an AI character controlled by a player)
+            if (this is not AICharacter || IsRemotePlayer)
             {
                 if (!CanMove)
                 {
@@ -443,12 +444,7 @@ namespace Barotrauma
             if (!fixedRotation)
             {
                 tempBuffer.WriteSingle(AnimController.Collider.Rotation);
-                float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
-                AnimController.Collider.AngularVelocity =
-                    AnimController.Collider.PhysEnabled ?
-                    0.0f :
-                    NetConfig.Quantize(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
-                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
+                tempBuffer.WriteSingle(AnimController.Collider.AngularVelocity);
             }
 
 
@@ -493,6 +489,7 @@ namespace Barotrauma
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);
+                    msg.WriteBoolean(GodMode);
                     break;
                 case UpdateSkillsEventData updateSkillsData:
                     if (Info?.Job is { } job)
@@ -528,7 +525,14 @@ namespace Barotrauma
                     }
                     break;
                 case AssignCampaignInteractionEventData _:
-                    msg.WriteByte((byte)CampaignInteractionType);
+
+                    bool canClientInteract = true;
+                    if (CampaignInteractionType == CampaignMode.InteractionType.Talk &&
+                        ActiveConversation != null)
+                    {
+                        canClientInteract = ActiveConversation.CanClientStartConversation(c);
+                    }
+                    msg.WriteByte((byte)(canClientInteract ? CampaignInteractionType : CampaignMode.InteractionType.None));
                     msg.WriteBoolean(RequireConsciousnessForCustomInteract);
                     break;
                 case ObjectiveManagerStateEventData objectiveManagerStateEventData:
@@ -679,6 +683,7 @@ namespace Barotrauma
             {
                 CharacterHealth.ServerWrite(msg);
             }
+
             if (AnimController?.LimbJoints == null)
             {
                 //0 limbs severed
@@ -734,7 +739,7 @@ namespace Barotrauma
                 return;
             }
 
-            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this && (!c.SpectateOnly || !GameMain.Server.ServerSettings.AllowSpectating));
             if (ownerClient != null)
             {
                 msg.WriteBoolean(true);

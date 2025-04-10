@@ -372,6 +372,10 @@ namespace Barotrauma
                 description: $"Color of the \"thermal goggles overlay\" enabled by the affliction. Only has an effect if {nameof(ThermalOverlayRange)} is larger than 0.")]
             public Color ThermalOverlayColor { get; private set; }
 
+            [Serialize(0f, IsPropertySaveable.No,
+                description: "Multiplier for the convulsion/seizure effect on the character's ragdoll when this effect is active.")]
+            public float ConvulseAmount { get; private set; }
+
             /// <summary>
             /// StatType that will be applied to the affected character when the effect is active that is proportional to the effect's strength.
             /// </summary>
@@ -641,6 +645,7 @@ namespace Barotrauma
         public static AfflictionPrefab Stun => Prefabs[StunType];
         public static AfflictionPrefab RadiationSickness => Prefabs["radiationsickness"];
         public static AfflictionPrefab HuskInfection => Prefabs["huskinfection"];
+        public static AfflictionPrefab JovianRadiation => Prefabs["jovianradiation"];
 
         public static readonly PrefabCollection<AfflictionPrefab> Prefabs = new PrefabCollection<AfflictionPrefab>();
 
@@ -656,6 +661,11 @@ namespace Barotrauma
 
         private readonly LocalizedString defaultDescription;
         public readonly ImmutableList<Description> Descriptions;
+
+        /// <summary>
+        /// Should the affliction's description be included in the tooltips on the affliction icons above the health bar?
+        /// </summary>
+        public readonly bool ShowDescriptionInTooltip;
 
         /// <summary>
         /// Arbitrary string that is used to identify the type of the affliction.
@@ -902,6 +912,8 @@ namespace Barotrauma
             {
                 defaultDescription = defaultDescription.Fallback(fallbackDescription);
             }
+            ShowDescriptionInTooltip = element.GetAttributeBool(nameof(ShowDescriptionInTooltip), true);
+
             IsBuff = element.GetAttributeBool(nameof(IsBuff), false);
             AffectMachines = element.GetAttributeBool(nameof(AffectMachines), true);
 
@@ -939,6 +951,12 @@ namespace Barotrauma
             HideIconAfterDelay = element.GetAttributeBool(nameof(HideIconAfterDelay), false);
 
             ActivationThreshold = element.GetAttributeFloat(nameof(ActivationThreshold), 0.0f);
+            if (Identifier == StunType && ActivationThreshold > 0.0f)
+            {
+                ActivationThreshold = 0.0f;
+                DebugConsole.AddWarning($"Error in affliction prefab {Identifier}: activation threshold of the stun affliction must be 0, because the strength of the affliction represents the length of the stun and any amount of stun has an effect.");
+            }
+
             ShowIconThreshold   = element.GetAttributeFloat(nameof(ShowIconThreshold), Math.Max(ActivationThreshold, 0.05f));
             ShowIconToOthersThreshold   = element.GetAttributeFloat(nameof(ShowIconToOthersThreshold), ShowIconThreshold);
             MaxStrength         = element.GetAttributeFloat(nameof(MaxStrength), 100.0f);

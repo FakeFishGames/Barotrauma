@@ -28,20 +28,24 @@ namespace Barotrauma.Items.Components
             SpreadCounter = 0;
         }
 
-        struct HitscanResult
+        readonly struct HitscanResult
         {
-            public Fixture Fixture;
-            public Vector2 Point;
-            public Vector2 Normal;
-            public float Fraction;
-            public HitscanResult(Fixture fixture, Vector2 point, Vector2 normal, float fraction)
+            public readonly Fixture Fixture;
+            public readonly Vector2 Point;
+            public readonly Vector2 Normal;
+            public readonly float Fraction;
+            public readonly Submarine Submarine;
+
+            public HitscanResult(Fixture fixture, Vector2 point, Vector2 normal, float fraction, Submarine sub)
             {
                 Fixture = fixture;
                 Point = point;
                 Normal = normal;
                 Fraction = fraction;
+                Submarine = sub;
             }
         }
+
         struct Impact
         {
             public Fixture Fixture;
@@ -393,8 +397,6 @@ namespace Barotrauma.Items.Components
             if (Item.Removed) { return; }
             launchPos = simPosition;
             LaunchSub = item.Submarine;
-            //set the rotation of the projectile again because dropping the projectile resets the rotation
-            Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians), findNewHull: false);
             if (DeactivationTime > 0)
             {
                 deactivationTimer = DeactivationTime;
@@ -483,6 +485,13 @@ namespace Barotrauma.Items.Components
                 {
                     float modifiedLaunchImpulse = (LaunchImpulse + launchImpulseModifier) * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse);
+                    //needs to be set after DoLaunch, because dropping the item resets the rotation and dir
+                    float afterLaunchAngle = launchAngle + (item.body.Dir * LaunchRotationRadians);
+                    if (item.body.Dir < 0)
+                    {
+                        afterLaunchAngle -= MathHelper.Pi;
+                    }
+                    item.SetTransform(item.body.SimPosition, afterLaunchAngle, findNewHull: false);
                 }
             }
             User = character;
@@ -607,7 +616,8 @@ namespace Barotrauma.Items.Components
                             inSubHits[i].Fixture,
                             inSubHits[i].Point + submarine.SimPosition,
                             inSubHits[i].Normal,
-                            inSubHits[i].Fraction);
+                            inSubHits[i].Fraction,
+                            sub: null);
                     }
                     hits.AddRange(inSubHits);
                 }
@@ -620,6 +630,7 @@ namespace Barotrauma.Items.Components
             {
                 var h = hits[i];
                 item.SetTransform(h.Point, rotation);
+                item.Submarine = h.Submarine;
                 item.UpdateTransform();
                 if (HandleProjectileCollision(h.Fixture, h.Normal, Vector2.Zero))
                 {
@@ -717,7 +728,7 @@ namespace Barotrauma.Items.Components
                 fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
                 if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
 
-                hits.Add(new HitscanResult(fixture, rayStart, -dir, 0.0f));
+                hits.Add(new HitscanResult(fixture, rayStart, -dir, 0.0f, submarine));
                 return true;
             }, ref aabb);
 
@@ -789,7 +800,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                hits.Add(new HitscanResult(fixture, point, normal, fraction));
+                hits.Add(new HitscanResult(fixture, point, normal, fraction, submarine));
 
                 return 1;
             }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking | Physics.CollisionProjectile | Physics.CollisionLagCompensationBody);
@@ -1101,11 +1112,11 @@ namespace Barotrauma.Items.Components
             {
                 if (Attack != null) 
                 {
-                    Vector2 pos = item.WorldPosition;
                     if (item.Submarine == null && damageable is Structure structure && structure.Submarine != null && Vector2.DistanceSquared(item.WorldPosition, structure.WorldPosition) > 10000.0f * 10000.0f)
                     {
                         item.Submarine = structure.Submarine;
                     }
+                    Vector2 pos = item.WorldPosition;
                     attackResult = Attack.DoDamage(User ?? Attacker, damageable, pos, 1.0f); 
                 }
             }

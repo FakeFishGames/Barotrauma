@@ -120,9 +120,20 @@ namespace Barotrauma
             {
                 if (Client == null) { return; }
                 if (currentPing == Client.Ping) { return; }
-                currentPing = Client.Ping;
-                textBlock.Text = currentPing.ToString();
-                textBlock.TextColor = GetPingColor();
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.ConnectedClients.Contains(Client))
+                {
+                    currentPing = Client.Ping;
+                    textBlock.Text = currentPing.ToString();
+                    textBlock.TextColor = GetPingColor();
+                    textBlock.ToolTip = string.Empty;
+                }
+                else
+                {
+                    currentPing = 0;
+                    textBlock.Text = "-";
+                    textBlock.TextColor = GUIStyle.Red;
+                    textBlock.ToolTip = TextManager.Get("causeofdeathdescription.disconnected");
+                }
             }
 
             public void TryPermissionIconRefresh(Sprite icon)
@@ -461,7 +472,7 @@ namespace Barotrauma
                     CreateSubmarineInfo(infoFrameHolder, Submarine.MainSub);
                     break;
                 case InfoFrameTab.Talents:
-                    talentMenu.CreateGUI(infoFrameHolder, Character.Controlled ?? GameMain.Client?.Character);
+                    talentMenu.CreateGUI(infoFrameHolder, Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo);
                     break;
             }
         }
@@ -709,38 +720,49 @@ namespace Barotrauma
 
             var connectedClients = GameMain.Client.ConnectedClients;
 
-            for (int i = 0; i < teamIDs.Count; i++)
+            for (int teamID = 0; teamID < teamIDs.Count; teamID++)
             {
-                foreach (Character character in crew.Where(c => c.TeamID == teamIDs[i]))
+                foreach (Character character in crew.Where(c => c.TeamID == teamIDs[teamID]))
                 {
                     if (character is not AICharacter && connectedClients.Any(c => c.Character == null && c.Name == character.Name)) { continue; }
-                    CreateMultiPlayerCharacterElement(character, GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.Character == character), i);
+                    CreateMultiPlayerCharacterElement(character, GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.Character == character), teamID);
+                }
+                
+                foreach (CharacterInfo characterInfo in GameMain.GameSession.CrewManager?.GetReserveBenchInfos() ?? Enumerable.Empty<CharacterInfo>())
+                {
+                    CreateMultiPlayerCharacterElement(character: null, client: null, teamID, justCharacterInfo: characterInfo);
                 }
             }
 
             for (int j = 0; j < connectedClients.Count; j++)
             {
                 Client client = connectedClients[j];
-                if (!client.InGame || client.Character == null || client.Character.IsDead)
+                if (client.Character == null || client.Character.IsDead)
                 {
                     CreateMultiPlayerClientElement(client);
                 }
             }
         }
-
-        private void CreateMultiPlayerCharacterElement(Character character, Client client, int i)
+        
+        /// <param name="justCharacterInfo">The character element can be generated based on just a CharacterInfo, and Character and Client can be left null. Otherwise, those are required and the CharacterInfo of the Character is used.</param>
+        private void CreateMultiPlayerCharacterElement(Character character, Client client, int teamID, CharacterInfo justCharacterInfo = null)
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(crewListArray[i].Content.Rect.Width, GUI.IntScale(33f)), crewListArray[i].Content.RectTransform), style: "ListBoxElement")
+            CharacterInfo characterInfo = justCharacterInfo ?? character.Info;
+            
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(crewListArray[teamID].Content.Rect.Width, GUI.IntScale(33f)), crewListArray[teamID].Content.RectTransform), style: "ListBoxElement")
             {
-                UserData = character,
+                UserData = character != null ? character : characterInfo,
                 Color = (GameMain.NetworkMember != null && GameMain.Client.Character == character) ? OwnCharacterBGColor : Color.Transparent
             };
-
-            frame.OnSecondaryClicked += (component, data) =>
+            
+            if (client != null)
             {
-                NetLobbyScreen.CreateModerationContextMenu(client);
-                return true;
-            };
+                frame.OnSecondaryClicked += (component, data) =>
+                {
+                    NetLobbyScreen.CreateModerationContextMenu(client);
+                    return true;
+                };
+            }
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), frame.RectTransform, Anchor.Center), isHorizontal: true)
             {
@@ -748,7 +770,18 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            new GUICustomComponent(new RectTransform(new Point(jobColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center), onDraw: (sb, component) => character.Info.DrawJobIcon(sb, component.Rect))
+            new GUICustomComponent(new RectTransform(new Point(jobColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center), 
+                onDraw: (sb, component) =>
+                {
+                    if (client == null)
+                    {
+                        characterInfo?.DrawJobIcon(sb, component.Rect);
+                    }
+                    else
+                    {
+                        DrawClientJobIcon(sb, component.Rect, client);
+                    }
+                })
             {
                 CanBeFocused = false,
                 HoverColor = Color.White,
@@ -778,39 +811,60 @@ namespace Barotrauma
             else
             {
                 GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(character.Info.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: character.Info.Job.Prefab.UIColor);
+                    ToolBox.LimitString(characterInfo.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: characterInfo.Job.Prefab.UIColor);
 
                 if (GameMain.GameSession?.GameMode is PvPMode)
                 {
                     new GUITextBlock(new RectTransform(new Point(killColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), string.Empty, textAlignment: Alignment.Center)
                     {
-                        TextGetter = () => GameMain.GameSession.Missions.Sum(m => (m as CombatMission)?.GetBotKillCount(character.Info) ?? 0).ToString()
+                        TextGetter = () => GameMain.GameSession.Missions.Sum(m => (m as CombatMission)?.GetBotKillCount(characterInfo) ?? 0).ToString()
                     };
                     new GUITextBlock(new RectTransform(new Point(deathColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), string.Empty, textAlignment: Alignment.Center)
                     {
-                        TextGetter = () => GameMain.GameSession.Missions.Sum(m => (m as CombatMission)?.GetBotDeathCount(character.Info) ?? 0).ToString()
+                        TextGetter = () => GameMain.GameSession.Missions.Sum(m => (m as CombatMission)?.GetBotDeathCount(characterInfo) ?? 0).ToString()
                     };
                 }
 
                 if (character is AICharacter)
                 {
-                    linkedGUIList.Add(new LinkedGUI(character, frame, 
-                        new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), TextManager.Get("tabmenu.bot"), textAlignment: Alignment.Center) { ForceUpperCase = ForceUpperCase.Yes }));
+                    // "BOT" instead of ping (which isn't relevant for bots)
+                    linkedGUIList.Add(new LinkedGUI(character, frame,
+                            new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), TextManager.Get("tabmenu.bot"), textAlignment: Alignment.Center) { ForceUpperCase = ForceUpperCase.Yes }));
                 }
-                else
+                else if (characterInfo.IsOnReserveBench)
                 {
-                    linkedGUIList.Add(new LinkedGUI(client: null, frame, textBlock: null, permissionIcon: null));
-
-                    new GUICustomComponent(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center), onDraw: (sb, component) => DrawDisconnectedIcon(sb, component.Rect))
+                    // Reserve bench icon
+                    new GUIImage(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height - 4), paddedFrame.RectTransform), style: "CrewManagementReserveBenchIconReserve", scaleToFit: true)
                     {
-                        CanBeFocused = false,
-                        HoverColor = Color.White,
-                        SelectedColor = Color.White
+                        ToolTip = TextManager.Get("ReserveBenchStatus.Reserve")
+                    };
+                }
+
+                if (characterInfo.IsOnReserveBench)
+                {
+                    //black bar to dim out the elements (1px shorter and to the right so it won't dim the left border too)
+                    new GUIFrame(
+                        new RectTransform(new Point(paddedFrame.Rect.Width - 1, frame.Rect.Height), paddedFrame.RectTransform, Anchor.Center)
+                        {
+                            AbsoluteOffset = new Point(1, 0)
+                        },
+                        style: null, color: Color.Black * 0.7f)
+                    {
+                        IgnoreLayoutGroups = true,
+                        CanBeFocused = false
                     };
                 }
             }
-
-            CreateWalletCrewFrame(character, paddedFrame);
+            
+            if (character != null)
+            {
+                CreateWalletCrewFrame(character, paddedFrame);
+            }
+            else if (characterInfo.IsOnReserveBench)
+            {
+                // Empty column for reserve benched bots
+                new GUILayoutGroup(new RectTransform(new Point(walletColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center), childAnchor: Anchor.Center) { CanBeFocused = false };
+            }
 
             paddedFrame.Recalculate();
         }
@@ -839,7 +893,7 @@ namespace Barotrauma
             };
 
             new GUICustomComponent(new RectTransform(new Point(jobColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center),
-                onDraw: (sb, component) => DrawNotInGameIcon(sb, component.Rect, client))
+                onDraw: (sb, component) => DrawClientJobIcon(sb, component.Rect, client))
             {
                 CanBeFocused = false,
                 HoverColor = Color.White,
@@ -864,10 +918,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
                 permissionIcon));
 
-            if (client.Character is { } character)
-            {
-                CreateWalletCrewFrame(character, paddedFrame);
-            }
+            CreateWalletCrewFrame(client.Character, paddedFrame);            
 
             paddedFrame.Recalculate();
         }
@@ -925,7 +976,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("walletdescription")
             };
 
-            if (character.IsBot) { return; }
+            if (character == null || character.IsBot) { return; }
 
             Sprite walletSprite = GUIStyle.CrewWalletIconSmall.Value.Sprite;
 
@@ -1033,13 +1084,13 @@ namespace Barotrauma
             }
         }
 
-        private void DrawNotInGameIcon(SpriteBatch spriteBatch, Rectangle area, Client client)
+        private void DrawClientJobIcon(SpriteBatch spriteBatch, Rectangle area, Client client)
         {
             if (client.Spectating)
             {
                 spectateIcon.Draw(spriteBatch, area, Color.White);
             }
-            else if (client.Character != null && client.Character.IsDead)
+            else if (client.Character != null && client.InGame)
             {
                 client.Character.Info?.DrawJobIcon(spriteBatch, area);
             }
@@ -1065,7 +1116,13 @@ namespace Barotrauma
 
             GUIComponent existingPreview = infoFrameHolder.FindChild("SelectedCharacter");
             if (existingPreview != null) { infoFrameHolder.RemoveChild(existingPreview); }
-
+            
+            if (userData is CharacterInfo { IsOnReserveBench: true })
+            {
+                return true;
+            }
+            
+            // Modal info panel that pops up on the right
             GUIFrame background = new GUIFrame(new RectTransform(new Vector2(0.543f, 0.69f), infoFrameHolder.RectTransform, Anchor.TopRight, Pivot.TopLeft) { RelativeOffset = new Vector2(-0.061f, 0) })
             {
                 UserData = "SelectedCharacter"
@@ -1089,7 +1146,7 @@ namespace Barotrauma
                 {
                     talentButton.OnClicked = (button, o) =>
                     {
-                        talentMenu.CreateGUI(infoFrameHolder, character);
+                        talentMenu.CreateGUI(infoFrameHolder, character.Info);
                         return true;
                     };
                 }
@@ -1474,7 +1531,7 @@ namespace Barotrauma
                 var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.322f), paddedFrame.RectTransform), isHorizontal: true);
 
                 new GUICustomComponent(new RectTransform(new Vector2(0.425f, 1.0f), headerArea.RectTransform),
-                    onDraw: (sb, component) => DrawNotInGameIcon(sb, component.Rect, client));
+                    onDraw: (sb, component) => DrawClientJobIcon(sb, component.Rect, client));
 
                 GUIFont font = paddedFrame.Rect.Width < 280 ? GUIStyle.SmallFont : GUIStyle.Font;
 
@@ -1564,6 +1621,11 @@ namespace Barotrauma
             }
 
             linkedGUIList.Clear();
+            
+            foreach (GUIListBox crewList in crewListArray)
+            {
+                crewList.Content.ClearChildren();
+            }
         }
 
         private void AddLineToLog(string line, PlayerConnectionChangeType type)
@@ -1648,7 +1710,7 @@ namespace Barotrauma
             }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.DisplayName, font: GUIStyle.LargeFont);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.GetLocationTypeToDisplay().Name, font: GUIStyle.SubHeadingFont);
 
             if (location.Faction?.Prefab != null)
             {

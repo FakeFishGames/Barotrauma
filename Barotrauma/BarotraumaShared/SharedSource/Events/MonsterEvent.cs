@@ -160,9 +160,9 @@ namespace Barotrauma
             }
         }
 
-        private static Submarine GetReferenceSub()
+        private static Submarine GetReferenceSub(bool acceptRemoteControlledSubs)
         {
-            return EventManager.GetRefEntity() as Submarine ?? Submarine.MainSub;
+            return EventManager.GetRefEntity(acceptRemoteControlledSubs) as Submarine ?? Submarine.MainSub;
         }
 
         public override IEnumerable<ContentFile> GetFilesToPreload()
@@ -222,14 +222,6 @@ namespace Barotrauma
                 if (overridePlayDeadProbability.HasValue)
                 {
                     createdCharacter.EvaluatePlayDeadProbability(overridePlayDeadProbability);
-                }
-                if (GameMain.GameSession.IsCurrentLocationRadiated())
-                {
-                    AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
-                    Affliction affliction = new Affliction(radiationPrefab, radiationPrefab.MaxStrength);
-                    createdCharacter?.CharacterHealth.ApplyAffliction(null, affliction);
-                    // TODO test multiplayer
-                    createdCharacter?.Kill(CauseOfDeathType.Affliction, affliction, log: false);
                 }
                 createdCharacter.DisabledByEvent = true;
                 monsters.Add(createdCharacter);
@@ -307,10 +299,17 @@ namespace Barotrauma
                     disallowed = true;
                     return;
                 }
-                Submarine refSub = GetReferenceSub();
+                Submarine refSub = GetReferenceSub(acceptRemoteControlledSubs: true);
                 if (Submarine.MainSubs.Length == 2 && Submarine.MainSubs[1] != null)
                 {
                     refSub = Submarine.MainSubs.GetRandom(Rand.RandSync.Unsynced);
+                }
+                //if the reference sub is not the main sub, e.g. a remotely controlled drone, 
+                //there's a 50% chance that the monsters will spawn near the main sub instead
+                //so you can't abuse the remotely controlled subs to make monsters only spawn somewhere far away from the main sub
+                if (refSub != Submarine.MainSub && Rand.Range(0.0f, 1.0f) < 0.5f)
+                {
+                    refSub ??= GetReferenceSub(acceptRemoteControlledSubs: false);
                 }
                 float closestDist = float.PositiveInfinity;
                 //find the closest spawnposition that isn't too close to any of the subs
@@ -745,7 +744,9 @@ namespace Barotrauma
                             DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI?.CombatStrength ?? 0))}.", Color.LightBlue, debugOnly: true);
                         }
 
-                        if (GameMain.GameSession != null)
+                        if (GameMain.GameSession != null && 
+                            monster.ContentPackage == ContentPackageManager.VanillaCorePackage &&
+                            GameAnalyticsManager.ShouldLogRandomSample())
                         {
                             GameAnalyticsManager.AddDesignEvent(
                                 $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier.Value ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"}:{SpawnPosType}:{SpeciesName}",

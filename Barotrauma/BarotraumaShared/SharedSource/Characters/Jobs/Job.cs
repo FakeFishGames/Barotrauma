@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using System;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -127,6 +128,11 @@ namespace Barotrauma
                     new Skill(skillIdentifier, increase));
             }
         }
+        
+        /// <summary>
+        /// Note: Does not automatically filter items by team or by game mode. See <see cref="JobItem.GetItemIdentifier(CharacterTeamType?, JobItem.GameModeType)"/>
+        /// </summary>
+        public bool HasJobItem(Func<JobPrefab.JobItem, bool> predicate) => prefab.HasJobItem(Variant, predicate);
 
         public void GiveJobItems(Character character, bool isPvPMode, WayPoint spawnPoint = null)
         {

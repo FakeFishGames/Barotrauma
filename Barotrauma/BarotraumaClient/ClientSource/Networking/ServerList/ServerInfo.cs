@@ -180,7 +180,7 @@ namespace Barotrauma.Networking
             {
                 float playStyleBannerAspectRatio = (float)playStyleBannerSprite.SourceRect.Width / (float)playStyleBannerSprite.SourceRect.Height;
                 playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), frame.RectTransform, scaleBasis: ScaleBasis.BothWidth),
-                    playStyleBannerSprite, null, true);
+                    playStyleBannerSprite, scaleToFit: true);
                 playStyleBannerColor = playStyleBannerSprite.SourceElement.GetAttributeColor("bannercolor", Color.Black);
             }
             else
@@ -385,14 +385,24 @@ namespace Barotrauma.Networking
                             { MinSize = new Point(0, 15) },
                         package.Name)
                     {
-                        CanBeFocused = false
+                        Enabled = false
                     };
+                    packageText.Box.DisabledColor = packageText.Box.Color;
+                    packageText.TextBlock.DisabledTextColor = packageText.TextBlock.TextColor;
                     if (!string.IsNullOrEmpty(package.Hash))
                     {
-                        if (ContentPackageManager.AllPackages.Any(contentPackage => contentPackage.Hash.StringRepresentation == package.Hash))
+                        if (ContentPackageManager.AllPackages.FirstOrDefault(contentPackage => contentPackage.Hash.StringRepresentation == package.Hash) is { } matchingPackage)
                         {
                             packageText.TextColor = GUIStyle.Green;
                             packageText.Selected = true;
+                            matchingPackage.TryFetchUgcDescription(onFinished: (string? description) =>
+                            {
+                                if (packageText.ToolTip.IsNullOrEmpty() &&
+                                    !string.IsNullOrEmpty(description))
+                                {
+                                    packageText.ToolTip = description + "...";
+                                }
+                            });
                         }
                         //workshop download link found
                         else if (package.Id.TryUnwrap(out var ugcId) && ugcId is SteamWorkshopId)
@@ -437,7 +447,7 @@ namespace Barotrauma.Networking
 
         public void UpdateInfo(Func<string, string?> valueGetter)
         {
-            ServerMessage = valueGetter("message") ?? "";
+            ServerMessage = ExtractServerMessage(valueGetter);
             if (Version.TryParse(valueGetter("version"), out var version))
             {
                 GameVersion = version;
@@ -475,6 +485,22 @@ namespace Barotrauma.Networking
                 string? data = valueGetter(key);
                 return bool.TryParse(data, out var result) && result;
             }
+        }
+
+        private static string ExtractServerMessage(Func<string, string?> valueGetter)
+        {
+            string msg = valueGetter("message") ?? string.Empty;
+            if (!msg.IsNullOrEmpty()) { return msg; }
+
+            int messageIndex = 0;
+            string splitMessage;
+            do
+            {
+                splitMessage = valueGetter($"message{messageIndex}") ?? string.Empty;
+                msg += splitMessage;
+                messageIndex++;
+            } while (!splitMessage.IsNullOrEmpty());
+            return msg;
         }
 
         private static ServerListContentPackageInfo[] ExtractContentPackageInfo(string serverName, Func<string, string?> valueGetter)

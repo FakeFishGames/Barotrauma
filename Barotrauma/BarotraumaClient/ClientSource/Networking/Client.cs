@@ -120,7 +120,7 @@ namespace Barotrauma.Networking
                 if (radioNoiseChannel == null || !radioNoiseChannel.IsPlaying)
                 {
                     radioNoiseChannel = SoundPlayer.PlaySound("radiostatic");
-                    radioNoiseChannel.Category = "voip";
+                    radioNoiseChannel.Category = SoundManager.SoundCategoryVoip;
                     radioNoiseChannel.Looping = true;
                 }
                 radioNoiseChannel.Near = VoipSound.Near;

@@ -109,6 +109,15 @@ namespace Barotrauma.Networking
             teamSpecificStates = new Dictionary<CharacterTeamType, TeamSpecificState>();
             int teamCount = GameMain.GameSession?.GameMode is PvPMode ? 2 : 1;
 
+            if (Level.Loaded == null)
+            {
+                throw new InvalidOperationException("Attempted to instantiate a respawn manager before a level was loaded.");
+            }
+
+            bool shouldLoadShuttle =
+                shuttleInfo != null &&
+                !Level.Loaded.ShouldSpawnCrewInsideOutpost();
+
             respawnShuttles.Clear();
             List<WifiComponent> wifiComponents = new List<WifiComponent>();
             for (int i = 0; i < teamCount; i++)
@@ -116,7 +125,7 @@ namespace Barotrauma.Networking
                 var teamId = i == 0 ? CharacterTeamType.Team1 : CharacterTeamType.Team2;
                 teamSpecificStates.Add(teamId, new TeamSpecificState(teamId));
 
-                if (shuttleInfo != null && networkMember.ServerSettings is not { RespawnMode: RespawnMode.Permadeath })
+                if (shouldLoadShuttle)
                 {
                     shuttleDoors.Add(teamId, new List<Door>());
                     shuttleSteering.Add(teamId, new List<Steering>());
@@ -179,7 +188,7 @@ namespace Barotrauma.Networking
                             {
                                 foreach (Wire wire in connection.Wires)
                                 {
-                                    if (wire != null) wire.Locked = true;
+                                    if (wire != null) { wire.Locked = true; }
                                 }
                             }
                         }
@@ -271,6 +280,15 @@ namespace Barotrauma.Networking
                 return sub;
             }
             return null;
+        }
+
+        private void SetShuttleBodyType(CharacterTeamType team, BodyType bodyType)
+        {
+            var shuttle = GetShuttle(team);
+            if (shuttle != null)
+            {
+                shuttle.PhysicsBody.BodyType = bodyType;
+            }
         }
 
         private void ResetShuttle(TeamSpecificState teamSpecificState)
@@ -371,12 +389,13 @@ namespace Barotrauma.Networking
             shuttle.SetPosition(new Vector2(
                 teamSpecificState.TeamID == CharacterTeamType.Team1 ? Level.Loaded.StartPosition.X : Level.Loaded.EndPosition.X, 
                 Level.Loaded.Size.Y + shuttle.Borders.Height));
-            shuttle.Velocity = Vector2.Zero;            
+            shuttle.Velocity = Vector2.Zero;
 
             foreach (var characterPosition in characterPositions)
             {
                 characterPosition.Key.TeleportTo(characterPosition.Value);
             }
+            SetShuttleBodyType(teamSpecificState.TeamID, BodyType.Static);
         }
 
         public static float GetReducedSkill(CharacterInfo characterInfo, Skill skill, float skillLossPercentage, float? currentSkillLevel = null)

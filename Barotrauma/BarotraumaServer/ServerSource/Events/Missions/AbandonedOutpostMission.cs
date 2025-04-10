@@ -1,7 +1,5 @@
 using Barotrauma.Networking;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -24,7 +22,7 @@ namespace Barotrauma
                 character.WriteSpawnData(msg, character.ID, restrictMessageSize: false);
                 msg.WriteBoolean(requireKill.Contains(character));
                 msg.WriteBoolean(requireRescue.Contains(character));
-                msg.WriteUInt16((ushort)characterItems[character].Count());
+                msg.WriteUInt16((ushort)characterItems[character].Count);
                 foreach (Item item in characterItems[character])
                 {
                     item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0, item.ParentInventory?.FindIndex(item) ?? -1);

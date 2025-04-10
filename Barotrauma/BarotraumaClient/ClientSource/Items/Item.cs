@@ -676,12 +676,6 @@ namespace Barotrauma
                         origin.Y = -origin.Y + decorativeSprite.Sprite.size.Y;
                         spriteEffects |= SpriteEffects.FlipVertically;
                     }
-                    if (body != null)
-                    {
-                        var ca = MathF.Cos(-body.DrawRotation);
-                        var sa = MathF.Sin(-body.DrawRotation);
-                        offset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
-                    }
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(drawPos.X + offset.X, -(drawPos.Y + offset.Y)), decorativeSpriteColor, origin,
                         -rotation + spriteRotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffects,
                         depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
@@ -797,6 +791,11 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+
+            foreach (var containedItem in ContainedItems)
+            {
+                containedItem.UpdateSpriteStates(deltaTime);
             }
         }
 
@@ -1762,7 +1761,7 @@ namespace Barotrauma
             if (texts.Any() && !recreateHudTexts) { return texts; }
             texts.Clear();
 
-            string nameText = Name;
+            string nameText = RichString.Rich(Prefab.Name).SanitizedValue;
             if (Prefab.Tags.Contains("identitycard") || Tags.Contains("despawncontainer"))
             {
                 string[] readTags = Tags.Split(',');
@@ -2502,18 +2501,24 @@ namespace Barotrauma
 
             if (inventory != null)
             {
-                if (inventorySlotIndex is >= 0 and < 255)
+                if (inventorySlotIndex is >= 0 and < 255 &&
+                    !inventory.TryPutItem(item, inventorySlotIndex, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false, ignoreCondition: true) &&
+                    inventory.IsSlotEmpty(inventorySlotIndex))
                 {
-                    if (!inventory.TryPutItem(item, inventorySlotIndex, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false, ignoreCondition: true) &&
-                        inventory.IsSlotEmpty(inventorySlotIndex))
-                    {
-                        //If the item won't go nicely, force it to the slot. If the server says the item is in the slot, it should go in the slot.
-                        //May happen e.g. when a character is configured to spawn with an item that won't normally go in its inventory slots.
-                        inventory.ForceToSlot(item, index: inventorySlotIndex);
-                        return item;
-                    }
+                    //If the item won't go nicely, force it to the slot. If the server says the item is in the slot, it should go in the slot.
+                    //May happen e.g. when a character is configured to spawn with an item that won't normally go in its inventory slots.
+                    inventory.ForceToSlot(item, index: inventorySlotIndex);
                 }
-                inventory.TryPutItem(item, user: null, allowedSlots: item.AllowedSlots, createNetworkEvent: false);
+                else
+                {
+                    inventory.TryPutItem(item, user: null, allowedSlots: item.AllowedSlots, createNetworkEvent: false);
+                }
+                item.SetTransform(inventory.Owner.SimPosition, 0.0f);
+                item.Submarine = inventory.Owner.Submarine;
+                if (inventory.Owner is Character { Enabled: false } && item.body != null)
+                {
+                    item.body.Enabled = false;
+                }                
             }
 
             return item;

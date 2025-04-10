@@ -65,7 +65,7 @@ namespace Barotrauma.Abilities
                         }
                         if (!nearbyCharactersAppliesToAllies)
                         {
-                            targets.RemoveAll(c => c is Character otherCharacter && HumanAIController.IsFriendly(otherCharacter, Character));
+                            targets.RemoveAll(c => c is Character otherCharacter && HumanAIController.IsFriendly(otherCharacter, Character, onlySameTeam: true));
                         }
                         if (!nearbyCharactersAppliesToEnemies)
                         {

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -251,6 +252,8 @@ namespace Barotrauma
             public Vector2 DrawPosition;
             public float MoveUpAmount;
             public readonly RichString Text;
+            public ImmutableArray<RichTextData>? RichTextData { get; private set; }
+
             public readonly Character Character;
             public readonly Submarine Submarine;
             public readonly Vector2 TextSize;
@@ -260,8 +263,10 @@ namespace Barotrauma
 
             public SpeechBubble(Character character, float lifeTime, Color color, string text = "")
             {
-                Text = RichString.Rich(ToolBox.WrapText(text, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text)));
+                var richStr = RichString.Rich(text);
+                Text = ToolBox.WrapText(richStr.SanitizedValue, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text));
                 TextSize = GUIStyle.SmallFont.MeasureString(Text);
+                RichTextData = richStr.RichTextData;
 
                 Character = character;
                 Position = GetDesiredPosition();
@@ -329,7 +334,7 @@ namespace Barotrauma
                     if (key == null) { continue; }
                     key.Reset();
                 }
-                if (GUI.InputBlockingMenuOpen)
+                if (GUI.InputBlockingMenuOpen || ConversationAction.IsDialogOpen)
                 {
                     cursorPosition = 
                         Position + PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
@@ -1193,7 +1198,7 @@ namespace Barotrauma
                     Vector2 bubbleSize = bubble.TextSize + Vector2.One * GUI.IntScale(15);
                     speechBubbleIconSliced.Draw(spriteBatch, new RectangleF(iconPos - bubbleSize / 2, bubbleSize), bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha);
                 }
-                GUI.DrawStringWithColors(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text.SanitizedValue, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, bubble.Text.RichTextData, font: GUIStyle.SmallFont);
+                GUI.DrawStringWithColors(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text.SanitizedValue, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, bubble.RichTextData, font: GUIStyle.SmallFont);
             }
             spriteBatch.End();
         }

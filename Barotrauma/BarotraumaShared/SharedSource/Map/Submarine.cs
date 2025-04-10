@@ -1917,6 +1917,7 @@ namespace Barotrauma
             }
             element.Add(new XAttribute("tags", Info.Tags.ToString()));
             element.Add(new XAttribute("outposttags", Info.OutpostTags.ConvertToString()));
+            element.Add(new XAttribute("triggeroutpostmissionevents", Info.TriggerOutpostMissionEvents.ConvertToString()));
             element.Add(new XAttribute("gameversion", GameMain.Version.ToString()));
 
             Rectangle dimensions = VisibleBorders;

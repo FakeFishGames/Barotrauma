@@ -207,11 +207,17 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// The top of the abyss area (the y-coordinate at which the abyss starts)
+        /// </summary>
         public int AbyssStart
         {
             get { return AbyssArea.Y + AbyssArea.Height; }
         }
 
+        /// <summary>
+        /// The bottom of the abyss area (the y-coordinate at which the abyss ends, below which there's nothing but the ocean floor)
+        /// </summary>
         public int AbyssEnd
         {
             get { return AbyssArea.Y; }
@@ -547,11 +553,7 @@ namespace Barotrauma
             Mirrored = mirror;
 
 #if CLIENT
-            if (backgroundCreatureManager == null)
-            {
-                var files = ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<BackgroundCreaturePrefabsFile>()).ToArray();
-                backgroundCreatureManager = files.Any() ? new BackgroundCreatureManager(files) : new BackgroundCreatureManager("Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml");
-            }
+            backgroundCreatureManager ??= new BackgroundCreatureManager();            
 #endif
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -2170,7 +2172,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!MathUtils.GetLineRectangleIntersection(closestParentNode.ToVector2(), cavePos.ToVector2(), new Rectangle(caveArea.X, caveArea.Y + caveArea.Height, caveArea.Width, caveArea.Height), out Vector2 caveStartPosVector))
+            if (!MathUtils.GetLineWorldRectangleIntersection(closestParentNode.ToVector2(), cavePos.ToVector2(), new Rectangle(caveArea.X, caveArea.Y + caveArea.Height, caveArea.Width, caveArea.Height), out Vector2 caveStartPosVector))
             {
                 caveStartPosVector = caveArea.Location.ToVector2();
             }
@@ -3361,7 +3363,7 @@ namespace Barotrauma
                         if (r.Contains(e.Point2)) { return true; }
                         if (r.Contains(eCenter)) { return true; }
 
-                        if (MathUtils.GetLineRectangleIntersection(e.Point1, e.Point2, r, out _))
+                        if (MathUtils.GetLineWorldRectangleIntersection(e.Point1, e.Point2, r, out _))
                         {
                             return true;
                         }
@@ -3588,7 +3590,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Camera cam)
         {
-            LevelObjectManager.Update(deltaTime);
+            LevelObjectManager.Update(deltaTime, cam);
 
             foreach (LevelWall wall in ExtraWalls) { wall.Update(deltaTime); }
             for (int i = UnsyncedExtraWalls.Count - 1; i >= 0; i--)
@@ -5081,6 +5083,11 @@ namespace Barotrauma
         public static bool IsPositionAboveLevel(Vector2 worldPosition)
         {
             return Loaded != null && worldPosition.Y > Loaded.Size.Y;
+        }
+
+        public static bool IsPositionInAbyss(Vector2 worldPosition)
+        {
+            return Loaded != null && worldPosition.Y < loaded.AbyssStart && worldPosition.Y > loaded.AbyssEnd;
         }
 
         public void DebugSetStartLocation(Location newStartLocation)

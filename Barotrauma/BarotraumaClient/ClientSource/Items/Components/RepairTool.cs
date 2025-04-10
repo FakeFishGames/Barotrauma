@@ -58,7 +58,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-
         partial void UseProjSpecific(float deltaTime, Vector2 raystart)
         {
             foreach (ParticleEmitter particleEmitter in particleEmitters)
@@ -88,25 +87,18 @@ namespace Barotrauma.Items.Components
                 MathUtils.InverseLerp(targetStructure.Prefab.MinHealth, targetStructure.Health, targetStructure.Health - targetStructure.SectionDamage(sectionIndex)),
                 GUIStyle.Red, GUIStyle.Green);
 
-            if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
-
-            Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-            if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition;
+            if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
             foreach (var emitter in particleEmitterHitStructure)
             {
-                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                EmitParticle(emitter, deltaTime, pickedPosition, targetStructure.Submarine);
             }
         }
 
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter)
         {
-            Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-            if (targetCharacter.Submarine != null) particlePos += targetCharacter.Submarine.DrawPosition;
             foreach (var emitter in particleEmitterHitCharacter)
             {
-                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                EmitParticle(emitter, deltaTime, pickedPosition, targetCharacter.Submarine);
             }
         }
 
@@ -134,15 +126,22 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-            if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;
             foreach ((RelatedItem relatedItem, ParticleEmitter emitter) in particleEmitterHitItem)
             {
                 if (!relatedItem.MatchesItem(targetItem)) { continue; }
-                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                EmitParticle(emitter, deltaTime, pickedPosition, targetItem.Submarine);
             }            
         }
+
+        private void EmitParticle(ParticleEmitter emitter, float deltaTime, Vector2 simPosition, Submarine targetSub)
+        {
+            Vector2 particlePos = ConvertUnits.ToDisplayUnits(simPosition);
+            if (targetSub != null) { particlePos += targetSub.DrawPosition; }
+            float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+            emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi,
+                tracerPoints: new Tuple<Vector2, Vector2>(item.WorldPosition + TransformedBarrelPos, particlePos));
+        }
+
 #if DEBUG
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {

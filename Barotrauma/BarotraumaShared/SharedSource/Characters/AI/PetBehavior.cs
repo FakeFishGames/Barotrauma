@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -160,7 +160,8 @@ namespace Barotrauma
                         aggregate += Items[i].Commonness;
                         if (aggregate >= r && Items[i].Prefab != null)
                         {
-                            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetProducedItem:" + pet.AIController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
+                            //disabled to reduce the amount of data we collect through GA
+                            //GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetProducedItem:" + pet.AIController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
                             Entity.Spawner?.AddItemToSpawnQueue(Items[i].Prefab, pet.AIController.Character.WorldPosition);
                             break;
                         }
@@ -293,10 +294,15 @@ namespace Barotrauma
             return false;
         }
 
+        public bool CanPlayWith(Character player)
+        {
+            return AIController.Character.IsOnFriendlyTeam(player);
+        }
+
         public void Play(Character player)
         {
             if (PlayTimer > 0.0f) { return; }
-            if (!AIController.Character.IsFriendly(player)) { return; }
+            if (!CanPlayWith(player)) { return; }
             if (ToggleOwner)
             {
                 Owner = Owner == player ? null : player;

@@ -500,7 +500,8 @@ namespace Barotrauma
             }
             
 #if SERVER
-            if (GameMain.Server?.ServerSettings?.RespawnMode == RespawnMode.Permadeath)
+            if (GameMain.Server?.ServerSettings?.RespawnMode == RespawnMode.Permadeath &&
+                causeOfDeath.Type != CauseOfDeathType.Disconnected)
             {
                 UnlockAchievement(character, "abyssbeckons".ToIdentifier());
             }

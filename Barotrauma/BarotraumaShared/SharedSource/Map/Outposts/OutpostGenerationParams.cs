@@ -59,6 +59,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should hallways of the minimum hallway length be always generated between modules, even if they could be placed directly against each other with no overlaps?"), Editable]
+        public bool AlwaysGenerateHallways
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Should this outpost always be destructible, regardless if damaging outposts is allowed by the server?"), Editable]
         public bool AlwaysDestructible
         {

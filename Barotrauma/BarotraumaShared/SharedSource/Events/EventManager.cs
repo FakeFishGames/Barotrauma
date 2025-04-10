@@ -158,6 +158,7 @@ namespace Barotrauma
             activeEvents.Clear();
 #if SERVER
             MissionAction.ResetMissionsUnlockedThisRound();
+            UnlockPathAction.ResetPathsUnlockedThisRound();
 #endif
             pathFinder = new PathFinder(WayPoint.WayPointList, false);
             totalPathLength = 0.0f;
@@ -187,6 +188,12 @@ namespace Barotrauma
             var selectAlwaysEventSets = GetAllowedEventSets(EventSet.Prefabs.ToList(), requireCampaignSet: playingCampaign).Where(s => s.SelectAlways);
             foreach (var eventSet in selectAlwaysEventSets)
             {
+                if (eventSet.GetCommonness(level) <= 0.0f)
+                { 
+                    //you might be wondering why an event set would be configured to SelectAlways, but have a commonness of 0:
+                    //the set might have a non-zero commonness in some other biome or level type, but not this one
+                    continue;
+                }
                 if (eventSet.Additive)
                 {
                     additiveSet = eventSet;
@@ -251,6 +258,22 @@ namespace Barotrauma
                             //if no event that unlocks the path can be found, unlock it automatically
                             level.StartLocation.Connections.ForEach(c => c.Locked = false);
                         }
+                    }
+                    if (GameMain.NetworkMember is not { IsClient: true } && level.StartOutpost != null)
+                    {                        
+                        foreach (var eventTag in level.StartOutpost.Info.TriggerOutpostMissionEvents)
+                        {
+                            EventPrefab eventPrefab = EventPrefab.FindEventPrefab(identifier: Identifier.Empty, tag: eventTag, level.StartOutpost.ContentPackage);
+                            if (eventPrefab == null)
+                            {
+                                DebugConsole.ThrowError($"Outpost {level.StartOutpost.Info.DisplayName} failed to trigger an event (tag: {eventTag}).", contentPackage: level.StartOutpost.ContentPackage);
+                            }
+                            else
+                            {
+                                var newEvent = eventPrefab.CreateInstance(RandomSeed);
+                                ActivateEvent(newEvent);
+                            }
+                        }                        
                     }
                 }
                 RegisterNonRepeatableChildEvents(initialEventSet);
@@ -450,12 +473,10 @@ namespace Barotrauma
         /// <summary>
         /// Registers the exhaustible events in the level as exhausted, and adds the current events to the event history
         /// </summary>
-        public void RegisterEventHistory(bool registerFinishedOnly = false)
+        public void StoreEventDataAtRoundEnd(bool registerFinishedOnly = false)
         {
             if (level?.LevelData == null) { return; }
             
-            level.LevelData.EventsExhausted = !registerFinishedOnly;
-
             if (level.LevelData.Type == LevelData.LevelType.Outpost)
             {
                 if (registerFinishedOnly)
@@ -466,7 +487,7 @@ namespace Barotrauma
                         if (parentSet == null) { continue; }
                         if (parentSet.Exhaustible)
                         {
-                            level.LevelData.EventsExhausted = true;
+                            level.LevelData.ExhaustEventSet(parentSet);
                         }
                         if (!level.LevelData.FinishedEvents.TryAdd(parentSet, 1))
                         {
@@ -513,7 +534,7 @@ namespace Barotrauma
             selectedEvents.Remove(eventSet);
             if (level == null) { return; }
             if (level.LevelData.HasHuntingGrounds && eventSet.DisableInHuntingGrounds) { return; }
-            if (eventSet.Exhaustible && level.LevelData.EventsExhausted) { return; }
+            if (eventSet.Exhaustible && level.LevelData.IsEventSetExhausted(eventSet)) { return; }
 
             DebugConsole.NewMessage($"Loading event set {eventSet.Identifier}", Color.LightBlue, debugOnly: true);
 
@@ -740,7 +761,7 @@ namespace Barotrauma
         {
             return
                 level.IsAllowedDifficulty(eventSet.MinLevelDifficulty, eventSet.MaxLevelDifficulty) &&
-                level.LevelData.Type == eventSet.LevelType &&
+                eventSet.LevelType.HasFlag(level.LevelData.Type)  &&
                 (eventSet.RequiredLayer.IsEmpty || Submarine.LayerExistsInAnySub(eventSet.RequiredLayer)) &&
                 (eventSet.RequiredSpawnPointTag.IsEmpty || WayPoint.WayPointList.Any(wp => wp.Tags.Contains(eventSet.RequiredSpawnPointTag))) &&
                 (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier);
@@ -753,7 +774,7 @@ namespace Barotrauma
             {
                 if (eventSet.Faction != location.Faction?.Prefab.Identifier && eventSet.Faction != location.SecondaryFaction?.Prefab.Identifier) { return false; }
             }
-            var locationType = location.GetLocationType();
+            var locationType = location.Type;
             bool includeGenericEvents = level.Type == LevelData.LevelType.LocationConnection || !locationType.IgnoreGenericEvents;
             if (includeGenericEvents && eventSet.LocationTypeIdentifiers == null) { return true; }
             return eventSet.LocationTypeIdentifiers != null && eventSet.LocationTypeIdentifiers.Any(identifier => identifier == locationType.Identifier);
@@ -1148,16 +1169,15 @@ namespace Barotrauma
         /// Get the entity that should be used in determining how far the player has progressed in the level.
         /// = The submarine or player character that has progressed the furthest. 
         /// </summary>
-        public static ISpatialEntity GetRefEntity()
+        public static ISpatialEntity GetRefEntity(bool acceptRemoteControlledSubs = false)
         {
             ISpatialEntity refEntity = Submarine.MainSub;
 #if CLIENT
             if (Character.Controlled != null)
             {
-                if (Character.Controlled.Submarine != null && 
-                    Character.Controlled.Submarine.Info.Type == SubmarineType.Player)
+                if (Character.Controlled.Submarine is { Info.Type: SubmarineType.Player } playerSub)
                 {
-                    refEntity = Character.Controlled.Submarine;
+                    GetRefSubForCharacter(Character.Controlled);
                 }
                 else
                 {
@@ -1170,19 +1190,39 @@ namespace Barotrauma
             foreach (Barotrauma.Networking.Client client in GameMain.Server.ConnectedClients)
             {
                 if (client.Character == null) { continue; }
-                //only take the players inside a player sub into account. 
-                //Otherwise the system could be abused by for example making a respawned player wait
-                //close to the destination outpost
-                if (client.Character.Submarine != null && 
-                    client.Character.Submarine.Info.Type == SubmarineType.Player)
+                GetRefSubForCharacter(client.Character);
+
+            }
+#endif
+
+            void GetRefSubForCharacter(Character character)
+            {
+                if (character.Submarine is { Info.Type: SubmarineType.Player } playerSub)
                 {
-                    if (client.Character.Submarine.WorldPosition.X > refEntity.WorldPosition.X)
+                    if (playerSub.WorldPosition.X > refEntity.WorldPosition.X)
                     {
-                        refEntity = client.Character.Submarine;
+                        refEntity = playerSub;
+                    }
+                }
+                if (acceptRemoteControlledSubs)
+                {
+                    if (character.ViewTarget?.Submarine is { Info.Type: SubmarineType.Player } viewedSub)
+                    {
+                        if (viewedSub.WorldPosition.X > refEntity.WorldPosition.X)
+                        {
+                            refEntity = viewedSub;
+                        }
+                    }
+                    if (character.SelectedItem?.GetComponent<Steering>()?.ControlledSub is { } controlledSub)
+                    {
+                        if (controlledSub.WorldPosition.X > refEntity.WorldPosition.X)
+                        {
+                            refEntity = controlledSub;
+                        }
                     }
                 }
             }
-#endif
+
             return refEntity;
         }
 

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
@@ -1573,15 +1574,24 @@ namespace Barotrauma
             if (locationHasDealOnItem)
             {
                 var relativeWidth = (0.9f * nameAndQuantityFrame.Rect.Height) / nameAndQuantityFrame.Rect.Width;
+                Vector2 dealIconSize = new Vector2(relativeWidth, 0.9f) * 0.5f;
                 var dealIcon = new GUIImage(
-                    new RectTransform(new Vector2(relativeWidth, 0.9f), nameAndQuantityFrame.RectTransform, anchor: Anchor.CenterLeft)
+                    new RectTransform(dealIconSize, nameAndQuantityFrame.RectTransform, anchor: Anchor.CenterRight)
                     {
                         AbsoluteOffset = new Point((int)nameBlock.Padding.X, 0)
                     },
                     "StoreDealIcon", scaleToFit: true)
                 {
-                    CanBeFocused = false
+                    CanBeFocused = false,
+                    UserData = "StoreDealIcon"
                 };
+                var dealIconColor = dealIcon.Color;
+                if (forceDisable)
+                {
+                    dealIconColor.A = 0;
+                }
+
+                dealIcon.Color = dealIconColor;
                 dealIcon.SetAsFirstChild();
             }
             bool isParentOnLeftSideOfInterface = parentComponent == storeBuyList || parentComponent == storeDailySpecialsGroup ||
@@ -1713,7 +1723,7 @@ namespace Barotrauma
             mainGroup.Recalculate();
             mainGroup.RectTransform.RecalculateChildren(true, true);
             amountInput?.LayoutGroup.Recalculate();
-            nameBlock.Text = ToolBox.LimitString(nameBlock.Text, nameBlock.Font, nameBlock.Rect.Width);
+            nameBlock.Text = ToolBox.LimitString(nameBlock.Text.SanitizedString, nameBlock.Font, nameBlock.Rect.Width);
             mainGroup.RectTransform.Children.ForEach(c => c.IsFixedSize = true);
 
             return frame;
@@ -1795,6 +1805,9 @@ namespace Barotrauma
 
         private void SetItemFrameStatus(GUIComponent itemFrame, bool enabled)
         {
+            float full = 1f;
+            float dim = 0.7f;
+            float alpha = (enabled ? full : dim);
             if (itemFrame?.UserData is not PurchasedItem pi) { return; }
             bool refreshFrameStatus = !pi.IsStoreComponentEnabled.HasValue || pi.IsStoreComponentEnabled.Value != enabled;
             if (!refreshFrameStatus) { return; }
@@ -1802,14 +1815,14 @@ namespace Barotrauma
             {
                 if (pi.ItemPrefab?.InventoryIcon != null)
                 {
-                    icon.Color = pi.ItemPrefab.InventoryIconColor * (enabled ? 1.0f : 0.5f);
+                    icon.Color = pi.ItemPrefab.InventoryIconColor * alpha;
                 }
                 else if (pi.ItemPrefab?.Sprite != null)
                 {
-                    icon.Color = pi.ItemPrefab.SpriteColor * (enabled ? 1.0f : 0.5f);
+                    icon.Color = pi.ItemPrefab.SpriteColor * alpha;
                 }
             };
-            var color = Color.White * (enabled ? 1.0f : 0.5f);
+            var color = Color.White * alpha;
             if (itemFrame.FindChild("name", recursive: true) is GUITextBlock name)
             {
                 name.TextColor = color;
@@ -1835,7 +1848,7 @@ namespace Barotrauma
             }
             if (itemFrame.FindChild("price", recursive: true) is GUITextBlock priceBlock)
             {
-                priceBlock.TextColor = isDiscounted ? storeSpecialColor * (enabled ? 1.0f : 0.5f) : color;
+                priceBlock.TextColor = isDiscounted ? storeSpecialColor * alpha : color;
             }
             if (itemFrame.FindChild("addbutton", recursive: true) is GUIButton addButton)
             {
@@ -1844,6 +1857,10 @@ namespace Barotrauma
             else if (itemFrame.FindChild("removebutton", recursive: true) is GUIButton removeButton)
             {
                 removeButton.Enabled = enabled;
+            }
+            if (itemFrame.FindChild("StoreDealIcon", recursive: true) is GUIImage dealIcon)
+            {
+                dealIcon.Color = dealIcon.Color * alpha;
             }
             pi.IsStoreComponentEnabled = enabled;
             itemFrame.UserData = pi;
@@ -2270,6 +2287,15 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             updateStopwatch.Restart();
+
+            if (GameMain.DevMode)
+            {
+                if (PlayerInput.KeyDown(Keys.D0))
+                {
+                    CreateUI();
+                    needsRefresh = true;
+                }
+            }
 
             if (GameMain.GraphicsWidth != resolutionWhenCreated.X || GameMain.GraphicsHeight != resolutionWhenCreated.Y)
             {

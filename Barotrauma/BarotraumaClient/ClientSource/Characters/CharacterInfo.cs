@@ -552,6 +552,8 @@ namespace Barotrauma
             string newName = inc.ReadString();
             string originalName = inc.ReadString();
             bool renamingEnabled = inc.ReadBoolean();
+            BotStatus botStatus = (BotStatus)inc.ReadByte();
+            int salary = inc.ReadInt32();
             int tagCount = inc.ReadByte();
             HashSet<Identifier> tagSet = new HashSet<Identifier>();
             for (int i = 0; i < tagCount; i++)
@@ -602,6 +604,8 @@ namespace Barotrauma
                 MinReputationToHire = (factionId, minReputationToHire),
                 RenamingEnabled = renamingEnabled
             };
+            ch.BotStatus = botStatus;
+            ch.Salary = salary;
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;
             ch.Head.HairColor = hairColor;

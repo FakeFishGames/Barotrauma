@@ -272,8 +272,15 @@ namespace Barotrauma.Items.Components
 
                     if (worldBorders.Intersects(detectRect))
                     {
-                        MotionDetected = true;
-                        return;
+                        foreach (Structure wall in Structure.WallList)
+                        {
+                            if (wall.Submarine == sub &&
+                                wall.WorldRect.Intersects(detectRect))
+                            {
+                                MotionDetected = true;
+                                return;
+                            }
+                        }
                     }
                 }
             }

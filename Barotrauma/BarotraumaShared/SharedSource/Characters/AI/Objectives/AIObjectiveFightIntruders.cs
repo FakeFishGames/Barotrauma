@@ -75,7 +75,7 @@ namespace Barotrauma
                 }
             }
             if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
-            if (target.IsHandcuffed && target.IsKnockedDown) { return false; }
+            if (target.IsHandcuffed) { return false; }
             if (EnemyAIController.IsLatchedToSomeoneElse(target, character)) { return false; }
             return true;
         }

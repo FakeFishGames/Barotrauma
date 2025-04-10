@@ -378,17 +378,24 @@ namespace Barotrauma
 
             bool showReputation = hudVisibility > 0.0f && location.Type.HasOutpost && location.Reputation != null;
 
+            LocationType locationTypeToDisplay = location.GetLocationTypeToDisplay(out Identifier overrideDescriptionIdentifier);
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.DisplayName, font: GUIStyle.LargeFont) { Padding = Vector4.Zero };
             if (!location.Type.Name.IsNullOrEmpty())
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), locationTypeToDisplay.Name, font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
             }
 
             CreateSpacing(10);
 
-            if (!location.Type.Description.IsNullOrEmpty())
+            var description = locationTypeToDisplay.Description;
+            if (!overrideDescriptionIdentifier.IsEmpty)
             {
-                CreateTextWithIcon(location.Type.Description, location.Type.Sprite);
+                description = TextManager.Get(overrideDescriptionIdentifier);
+            }
+            if (!description.IsNullOrEmpty())
+            {
+                CreateTextWithIcon(description, locationTypeToDisplay.Sprite);
             }
 
             int highestSubTier = location.HighestSubmarineTierAvailable();
@@ -699,6 +706,7 @@ namespace Barotrauma
                             CurrentLocation.CreateStores();
                             ProgressWorld(campaign);
                             Radiation?.OnStep(1);
+                            mapAnimQueue.Clear();
                         }
                         else
                         {
@@ -828,7 +836,7 @@ namespace Barotrauma
 
                     if (!rect.Intersects(drawRect)) { continue; }
 
-                    Color color = location.Type.SpriteColor;
+                    Color color = location.OverrideIconColor ?? location.Type.SpriteColor;
                     if (!location.Visited) { color = Color.White; }
                     if (location.Connections.Find(c => c.Locations.Contains(currentDisplayLocation)) == null)
                     {
@@ -849,6 +857,27 @@ namespace Barotrauma
                         color = Color.Lerp(color, GUIStyle.Yellow, notificationColorLerp);
                         iconScale *= notificationPulseAmount;
                     }
+
+#if DEBUG
+                    if (generationParams.ShowStoreInfo)
+                    {
+                        if (location.Stores == null || location.Stores.None())
+                        {
+                            color = Color.DarkBlue;
+                        }
+                        //stores created, but nothing in stock
+                        else if (location.Stores.Values.None(s => s.Stock.Any()))
+                        {
+                            color = Color.Yellow;
+                        }
+                        else
+                        {
+                            color = Color.Green;
+                        }
+
+                        GUI.DrawString(spriteBatch, pos + Vector2.One * 20, "Time since visited: " +location.WorldStepsSinceVisited, Color.Yellow);
+                    }
+#endif
 
                     locationSprite.Draw(spriteBatch, pos, color,
                         scale: generationParams.LocationIconSize / locationSprite.size.X * iconScale * zoom);
@@ -948,8 +977,7 @@ namespace Barotrauma
 
             DrawDecorativeHUD(spriteBatch, rect);
 
-            bool drawRadiationTooltip = true;
-            
+            bool drawRadiationTooltip = HighlightedLocation == null;            
             if (tooltip != null)
             {
                 GUIComponent.DrawToolTip(spriteBatch, tooltip.Value.tip, tooltip.Value.targetArea);
@@ -1058,7 +1086,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(viewArea.X, viewArea.Y + viewArea.Height, viewArea.Width, viewArea.Height), out Vector2 intersection))
+                    if (MathUtils.GetLineWorldRectangleIntersection(start, end, new Rectangle(viewArea.X, viewArea.Y + viewArea.Height, viewArea.Width, viewArea.Height), out Vector2 intersection))
                     {
                         if (!viewArea.Contains(start))
                         {

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -67,6 +67,7 @@ namespace Barotrauma
                         return null;
                     });
                     serverInfo.Checked = true;
+                    serverInfo.HasPassword |= entry.Passworded;
 
                     onServerDataReceived(serverInfo, this);
                 });

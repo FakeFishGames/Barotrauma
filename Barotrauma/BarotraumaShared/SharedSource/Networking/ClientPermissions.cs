@@ -83,10 +83,16 @@ namespace Barotrauma.Networking
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null) { return; }
 
-            List.Clear();
             foreach (XElement element in doc.Root.Elements())
             {
-                List.Add(new PermissionPreset(element));
+                var newPermissionPreset = new PermissionPreset(element);
+                var existingPreset = List.FirstOrDefault(p => p.Identifier == newPermissionPreset.Identifier);
+                if (existingPreset != null)
+                {
+                    List.Remove(existingPreset);
+                    DebugConsole.AddWarning($"The permission preset file {file} contains a permission preset that conflicts with another preset. Overriding the previous preset...");
+                }
+                List.Add(newPermissionPreset);
             }
         }
 

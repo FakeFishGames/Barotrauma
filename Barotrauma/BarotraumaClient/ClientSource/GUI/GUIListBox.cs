@@ -1030,7 +1030,7 @@ namespace Barotrauma
             while (index < Content.CountChildren)
             {
                 GUIComponent child = Content.GetChild(index);
-                if (child.Visible)
+                if (child.Visible && child.CanBeFocused)
                 {
                     Select(index, force, GetAutoScroll(!SmoothScroll && autoScroll == AutoScroll.Enabled), takeKeyBoardFocus, playSelectSound);
                     if (SmoothScroll)
@@ -1049,7 +1049,7 @@ namespace Barotrauma
             while (index >= 0)
             {
                 GUIComponent child = Content.GetChild(index);
-                if (child.Visible)
+                if (child.Visible && child.CanBeFocused)
                 {
                     Select(index, force, GetAutoScroll(!SmoothScroll && autoScroll == AutoScroll.Enabled), takeKeyBoardFocus, playSelectSound);
                     if (SmoothScroll)

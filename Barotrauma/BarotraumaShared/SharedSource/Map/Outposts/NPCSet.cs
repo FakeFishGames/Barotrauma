@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         public readonly static PrefabCollection<NPCSet> Sets = new PrefabCollection<NPCSet>();
 
-        private readonly ImmutableArray<HumanPrefab> Humans;
+        public readonly ImmutableArray<HumanPrefab> Humans;
 
         public NPCSet(ContentXElement element, NPCSetsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {

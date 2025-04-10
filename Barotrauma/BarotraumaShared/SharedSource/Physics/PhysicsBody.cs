@@ -39,6 +39,7 @@ namespace Barotrauma
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
+
         public PosInfo(Vector2 pos, float? rotation, Vector2 linearVelocity, float? angularVelocity, float time)
             : this(pos, rotation, linearVelocity, angularVelocity, 0, time)
         {

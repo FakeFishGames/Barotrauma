@@ -2,6 +2,7 @@
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -251,7 +252,7 @@ namespace Barotrauma
                 foreach (var skill in characterInfo.Job.GetSkills())
                 {
                     float newSkill = skill.Level * SkillMultiplier;
-                    skill.IncreaseSkill(newSkill - skill.Level, increasePastMax: false);
+                    skill.IncreaseSkill(newSkill - skill.Level, canIncreasePastDefaultMaximumSkill: false);
                 }
             }
             characterInfo.Salary = characterInfo.CalculateSalary(BaseSalary, SalaryMultiplier);
@@ -259,6 +260,12 @@ namespace Barotrauma
             characterInfo.GiveExperience(ExperiencePoints);
             return characterInfo;
         }
+        
+        /// <summary>
+        /// Items marked to be spawned infinitely (by NPCs).
+        /// </summary>
+        private readonly Dictionary<Identifier, ItemPrefab> infiniteItems = new();
+        public IReadOnlyCollection<ItemPrefab> InfiniteItems => infiniteItems.Values;
 
         public static void InitializeItem(Character character, ContentXElement itemElement, Submarine submarine, HumanPrefab humanPrefab, WayPoint spawnPoint = null, Item parentItem = null, bool createNetworkEvents = true)
         {
@@ -323,9 +330,13 @@ namespace Barotrauma
                 wifiComponent.TeamID = character.TeamID;
             }
             parentItem?.Combine(item, user: null);
+            if (itemElement.GetAttributeBool(nameof(JobPrefab.JobItem.Infinite), false))
+            { 
+                humanPrefab.infiniteItems.TryAdd(itemPrefab.Identifier, itemPrefab);
+            }
             foreach (ContentXElement childItemElement in itemElement.Elements())
             {
-                int amount = childItemElement.GetAttributeInt("amount", 1);
+                int amount = childItemElement.GetAttributeInt(nameof(JobPrefab.JobItem.Amount), 1);
                 for (int i = 0; i < amount; i++)
                 {
                     InitializeItem(character, childItemElement, submarine, humanPrefab, spawnPoint, item, createNetworkEvents);

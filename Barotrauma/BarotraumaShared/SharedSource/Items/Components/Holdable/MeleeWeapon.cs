@@ -334,6 +334,7 @@ namespace Barotrauma.Items.Components
                 if (targetLimb.character.IgnoreMeleeWeapons) { return false; }
                 var targetCharacter = targetLimb.character;
                 if (targetCharacter == picker) { return false; }
+                if (HitFriendlyTarget(targetCharacter)) { return false; }
                 if (AllowHitMultiple)
                 {
                     if (hitTargets.Contains(targetCharacter)) { return false; }
@@ -348,7 +349,7 @@ namespace Barotrauma.Items.Components
             {
                 if (targetCharacter == picker || targetCharacter == User) { return false; }
                 if (targetCharacter.IgnoreMeleeWeapons) { return false; }
-                targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
+                if (HitFriendlyTarget(targetCharacter)) { return false; }
                 if (AllowHitMultiple)
                 {
                     if (hitTargets.Contains(targetCharacter)) { return false; }
@@ -395,10 +396,22 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
-
             impactQueue.Enqueue(f2);
-
             return true;
+
+            // Prevent bots from hitting friendly targets.
+            bool HitFriendlyTarget(Character target)
+            {
+                if (User.IsPlayer) { return false; }
+                if (User.AIController is HumanAIController { Enabled: true } humanAI)
+                {
+                    if (humanAI.ObjectiveManager.CurrentObjective is AIObjectiveCombat combat && combat.Enemy != target)
+                    {
+                        if (humanAI.IsFriendly(target, onlySameTeam: true)) { return true; }
+                    }
+                }
+                return false;
+            }
         }
 
         private System.Text.StringBuilder serverLogger;

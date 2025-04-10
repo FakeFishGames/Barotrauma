@@ -20,7 +20,7 @@ namespace Barotrauma
         private List<LevelObject> updateableObjects;
         private List<LevelObject>[,] objectGrid;
 
-        const float ParallaxStrength = 0.0001f;
+        public const float ParallaxStrength = 0.0001f;
 
         public float GlobalForceDecreaseTimer
         {
@@ -416,11 +416,11 @@ namespace Barotrauma
                 }
             }
 
-            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z * ParallaxStrength;
-            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z * ParallaxStrength;
+            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z;
+            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z;
 
-            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z * ParallaxStrength - level.BottomPos;
-            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z * ParallaxStrength - level.BottomPos;
+            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z - level.BottomPos;
+            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z - level.BottomPos;
 
             if (newObject.Triggers != null)
             {
@@ -455,6 +455,8 @@ namespace Barotrauma
 #endif
             objects.Add(newObject);
             if (newObject.NeedsUpdate) { updateableObjects.Add(newObject); }
+            //add some variance to the Z position to prevent z-fighting
+            //(based on the x and y position of the object, scaled to be visually insignificant)
             newObject.Position.Z += (minX + minY) % 100.0f * 0.00001f;
 
             int xStart = (int)Math.Floor(minX / GridSize);
@@ -566,7 +568,7 @@ namespace Barotrauma
             return availableSpawnPositions;
         }
 
-        public void Update(float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
             GlobalForceDecreaseTimer += deltaTime;
             if (GlobalForceDecreaseTimer > 1000000.0f)
@@ -612,10 +614,10 @@ namespace Barotrauma
                 }
             }
 
-            UpdateProjSpecific(deltaTime);            
+            UpdateProjSpecific(deltaTime, cam);            
         }
 
-        partial void UpdateProjSpecific(float deltaTime);
+        partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
         private void OnObjectTriggered(LevelObject triggeredObject, LevelTrigger trigger, Entity triggerer)
         {

@@ -3,6 +3,7 @@
   <Character file="%ModDir%/Human.xml" />
   <Character file="%ModDir%/Mudraptor.xml" />
   <Character file="%ModDir%/Testcyborgworm_m.xml" />
+  <Character file="%ModDir%/Testcrawlerhatchling.xml" />
   <Character file="%ModDir%/Characters/Crawler/Crawler.xml" />  
   <Character file="%ModDir%/Spineling_morbusine_m.xml" />  
 </contentpackage>

@@ -84,6 +84,13 @@ namespace Barotrauma.Items.Components
 
         public float Length { get; private set; }
 
+        [Serialize(0.3f, IsPropertySaveable.No), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f, DecimalCount = 2)]
+        public float Width
+        {
+            get;
+            set;
+        }
+
         [Serialize(5000.0f, IsPropertySaveable.No, description: "The maximum distance the wire can extend (in pixels).")]
         public float MaxLength
         {
@@ -885,8 +892,13 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            if (item.Container?.GetComponent<CircuitBox>() is { } circuitBox)
+            {
+                circuitBox.RemoveWire(this);
+            }
             ClearConnections();
             base.RemoveComponentSpecific();
+
 #if CLIENT
             if (DraggingWire == this) { draggingWire = null; }
             overrideSprite?.Remove();

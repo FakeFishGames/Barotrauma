@@ -168,6 +168,16 @@ namespace Barotrauma
             }
         }
 
+        public bool CanVoteToStartRound(Client client)
+        {
+            return !client.AFK || !GameMain.Server.ServerSettings.AllowAFK;
+        }
+
+        public bool CanVoteToEndRound(Client client)
+        {
+            return client.HasSpawned && client.InGame;
+        }
+
         private bool ShouldRejectVote(Client sender, VoteType voteType)
         {
             if (rejectedVoteTimes.ContainsKey(sender))
@@ -415,8 +425,8 @@ namespace Barotrauma
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowEndVoting);
             if (GameMain.Server.ServerSettings.AllowEndVoting)
             {
-                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound)));
-                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned));
+                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => CanVoteToEndRound(c) && c.GetVote<bool>(VoteType.EndRound)));
+                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => CanVoteToEndRound(c)));
             }
 
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowVoteKick);

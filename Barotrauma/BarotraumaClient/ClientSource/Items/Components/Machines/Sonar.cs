@@ -219,8 +219,9 @@ namespace Barotrauma.Items.Components
             Vector2 size = isConnectedToSteering ? controlBoxSize : new Vector2(0.46f, 0.4f);
 
             controlContainer = new GUIFrame(new RectTransform(size, GuiFrame.RectTransform, Anchor.BottomLeft), "ItemUI");
-            if (!isConnectedToSteering && !GUI.IsFourByThree())
+            if (!isConnectedToSteering && GUI.AspectRatioDifference <= 0)
             {
+                // In wider than 4:3 aspect ratio, we'll limit the max size.
                 controlContainer.RectTransform.MaxSize = new Point((int)(380 * GUI.xScale), (int)(300 * GUI.yScale));
             }
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)

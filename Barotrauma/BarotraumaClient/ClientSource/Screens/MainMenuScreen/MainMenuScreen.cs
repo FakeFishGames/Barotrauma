@@ -23,6 +23,8 @@ namespace Barotrauma
 {
     sealed class MainMenuScreen : Screen
     {
+        public static HashSet<Identifier> DismissedNotifications = new HashSet<Identifier>();
+
         private enum Tab
         {
             NewGame = 0,
@@ -512,6 +514,22 @@ namespace Barotrauma
                     return true;
                 }
             };
+            
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 230) },
+                "Local MP Quickstart", style: "GUIButtonLarge", color: GUIStyle.Red)
+            {
+                IgnoreLayoutGroups = true,
+                UserData = Tab.Empty,
+                ToolTip = "Starts a server and another client and connects both to localhost, using names 'client1' and 'client2'.",
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    
+                    DebugConsole.StartLocalMPSession(numClients: 2);
+
+                    return true;
+                }
+            };
 #endif
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(480, 80);
@@ -572,6 +590,12 @@ namespace Barotrauma
             SelectTab(Tab.Empty);
         }
 
+        public static void AddDismissedNotification(Identifier id)
+        {
+            DismissedNotifications.Add(id);
+            GameSettings.SaveCurrentConfig();
+        }
+
         private void SetMenuTabPositioning()
         {
             foreach (GUIFrame menuTab in menuTabs.Values)
@@ -600,7 +624,7 @@ namespace Barotrauma
             };
             var tutorialPreview = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), tutorialContent.RectTransform)) { RelativeSpacing = 0.05f, Stretch = true };
             var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "InnerFrame");
-            tutorialBanner = new GUIImage(new RectTransform(Vector2.One, imageContainer.RectTransform), style: null, scaleToFit: true);
+            tutorialBanner = new GUIImage(new RectTransform(Vector2.One, imageContainer.RectTransform), style: null, scaleToFit: GUIImage.ScalingMode.ScaleToFitSmallestExtent);
 
             var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
             var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopLeft)
@@ -929,6 +953,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Failed to find the job \"" + job + "\"!");
                 }
                 gamesession.CrewManager.AddCharacterInfo(characterInfo);
+                characterInfo.SetNameBasedOnJob();
             }
             gamesession.CrewManager.InitSinglePlayerRound();
         }
@@ -1296,11 +1321,9 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Loading save \"" + path + "\" failed", e);
+                GameMain.GameSession = null;
                 return;
             }
-
-            //TODO
-            //GameMain.LobbyScreen.Select();
         }
 
 #region UI Methods
@@ -1333,7 +1356,7 @@ namespace Barotrauma
 
             var serverSettings = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile, out _)?.Root ?? new XElement("serversettings");
 
-            var name = serverSettings.GetAttributeString("name", "");
+            var name = serverSettings.GetAttributeString(nameof(ServerSettings.ServerName), "");
             var password = serverSettings.GetAttributeString("password", "");
             var isPublic = serverSettings.GetAttributeBool("IsPublic", true);
             var banAfterWrongPassword = serverSettings.GetAttributeBool("banafterwrongpassword", false);
@@ -1367,7 +1390,7 @@ namespace Barotrauma
             var playstyleContainer = new GUIFrame(new RectTransform(new Vector2(1.35f, 0.1f), parent.RectTransform), style: null, color: Color.Black);
 
             playstyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 0.1f), playstyleContainer.RectTransform), 
-                GUIStyle.GetComponentStyle($"PlayStyleBanner.{PlayStyle.Serious}").GetSprite(GUIComponent.ComponentState.None), scaleToFit: true)
+                GUIStyle.GetComponentStyle($"PlayStyleBanner.{PlayStyle.Serious}").GetSprite(GUIComponent.ComponentState.None), scaleToFit: GUIImage.ScalingMode.ScaleToFitSmallestExtent)
             {
                 UserData = PlayStyle.Serious
             };

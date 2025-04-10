@@ -159,7 +159,6 @@ namespace Barotrauma
         }
 
         public static float DamageEffectCutoff;
-        public static Color DamageEffectColor;
 
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
@@ -192,13 +191,6 @@ namespace Barotrauma
                 }
             }
 
-
-            if (damageEffect != null)
-            {
-                damageEffect.Parameters["aCutoff"].SetValue(0.0f);
-                damageEffect.Parameters["cCutoff"].SetValue(0.0f);
-                DamageEffectCutoff = 0.0f;
-            }
         }
 
         public static void DrawPaintedColors(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)

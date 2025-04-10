@@ -213,7 +213,8 @@ namespace Barotrauma
             if (targetHull == null) { return false; }
             if (maxDistance > 0)
             {
-                if (Vector2.DistanceSquared(Character.WorldPosition, targetWorldPos) > maxDistance * maxDistance) { return false; }
+                // Too far from the gap.
+                if (Vector2.DistanceSquared(Character.WorldPosition, gap.WorldPosition) > maxDistance * maxDistance) { return false; }
             }
             if (SteeringManager is IndoorsSteeringManager pathSteering)
             {
@@ -325,7 +326,7 @@ namespace Barotrauma
                         }
                         if (dropOtherIfCannotMove)
                         {
-                            if (otherItem.Prefab.Identifier == item.Prefab.Identifier || otherItem.HasIdentifierOrTags(targetTags))
+                            if (otherItem.Prefab.Identifier == item.Prefab.Identifier || (targetTags != null && otherItem.HasIdentifierOrTags(targetTags)))
                             {
                                 bool switchingToBetterSuit =
                                     targetTags != null &&
@@ -358,13 +359,23 @@ namespace Barotrauma
             }
         }
 
-        public void UnequipEmptyItems(Item parentItem, bool avoidDroppingInSea = true) => UnequipEmptyItems(Character, parentItem, avoidDroppingInSea);
+        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
+        public void UnequipEmptyItems(Item parentItem, bool avoidDroppingInSea = true, bool allowDestroying = false) => UnequipEmptyItems(Character, parentItem, avoidDroppingInSea, allowDestroying);
 
-        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingInSea = true, int? unequipMax = null) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea, unequipMax);
+        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
+        /// <param name="unequipMax">Optional max amount for items to be unequipped.</param>
+        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingInSea = true, bool allowDestroying = false, int? unequipMax = null) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea, allowDestroying, unequipMax);
 
-        public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingInSea = true) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingInSea);
-
-        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true, int? unequipMax = null)
+        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
+        public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingInSea = true, bool allowDestroying = false) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingInSea, allowDestroying);
+        
+        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
+        /// <param name="unequipMax">Optional max amount for items to be unequipped.</param>
+        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true, bool allowDestroying = false, int? unequipMax = null)
         {
             var inventory = parentItem.OwnInventory;
             if (inventory == null || !inventory.Container.DrawInventory) { return; }
@@ -376,21 +387,36 @@ namespace Barotrauma
                     if (containedItem == null) { continue; }
                     if (predicate == null || predicate(containedItem))
                     {
-                        if (avoidDroppingInSea && !character.IsInFriendlySub)
+                        if (allowDestroying && GameMain.NetworkMember is not { IsClient: true } && character.AIController.HasInfiniteItemSpawns(containedItem.Prefab.Identifier))
                         {
-                            // If we are not inside a friendly sub (= same team), try to put the item in the inventory instead dropping it.
-                            if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.AnySlot))
-                            {
-                                if (unequipMax.HasValue && ++removed >= unequipMax) { return; }
-                                continue;
-                            }
+                            Entity.Spawner?.AddItemToRemoveQueue(containedItem);
                         }
-                        containedItem.Drop(character);
+                        else
+                        {
+                            if (avoidDroppingInSea && !character.IsInFriendlySub)
+                            {
+                                // If we are not inside a friendly sub (= same team), try to put the item in the inventory instead dropping it.
+                                if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.AnySlot))
+                                {
+                                    if (unequipMax.HasValue && ++removed >= unequipMax) { return; }
+                                    continue;
+                                }
+                            }
+                            containedItem.Drop(character);
+                        }
                         if (unequipMax.HasValue && ++removed >= unequipMax) { return; }
                     }
                 }
             }
         }
+        
+        public bool HasInfiniteItemSpawns(IEnumerable<Identifier> itemIdentifiers) 
+            => (Character.HumanPrefab?.InfiniteItems.Any(it => itemIdentifiers.Contains(it.Identifier) || it.Tags.Any(itemIdentifiers.Contains)) ?? false) 
+               || (Character.Info?.Job?.HasJobItem(jobItem => jobItem.Infinite && itemIdentifiers.Contains(jobItem.GetItemIdentifier(Character.TeamID, isPvPMode: GameMain.GameSession.GameMode is PvPMode))) ?? false);
+        
+        public bool HasInfiniteItemSpawns(Identifier itemIdentifier) 
+            => (Character.HumanPrefab?.InfiniteItems.Any(it => it.Identifier == itemIdentifier || it.Tags.Contains(itemIdentifier)) ?? false) 
+               || (Character.Info?.Job?.HasJobItem(jobItem => jobItem.Infinite && jobItem.GetItemIdentifier(Character.TeamID, isPvPMode: GameMain.GameSession.GameMode is PvPMode) == itemIdentifier) ?? false);
 
         public void ReequipUnequipped()
         {
