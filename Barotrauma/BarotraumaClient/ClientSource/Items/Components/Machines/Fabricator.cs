@@ -86,6 +86,9 @@ namespace Barotrauma.Items.Components
         [Serialize(true, IsPropertySaveable.No)]
         public bool ShowAvailableOnlyTickBox { get; set; }
 
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool ShowCategoryButtons { get; set; }
+
         public override bool RecreateGUIOnResolutionChange => true;
 
         protected override void OnResolutionChanged()
@@ -120,7 +123,7 @@ namespace Barotrauma.Items.Components
             itemCategoryButtons.Clear();
 
             //only create category buttons if there's more than one category in addition to "All"
-            if (itemCategories.Count > 2)
+            if (ShowCategoryButtons && itemCategories.Count > 2)
             {
                 // ===  Item category buttons ===
                 var categoryButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.05f, 1.0f), innerArea.RectTransform))
@@ -887,7 +890,7 @@ namespace Barotrauma.Items.Components
                     itemIcon.Draw(
                         spriteBatch,
                         slotRect.Center.ToVector2(),
-                        color: targetItem.TargetItem.InventoryIconColor * 0.4f,
+                        color: Color.Lerp(targetItem.TargetItem.InventoryIconColor, Color.TransparentBlack, 0.5f),
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y) * 0.9f);
                 }
             }
@@ -1259,6 +1262,15 @@ namespace Barotrauma.Items.Components
 
             if (!IsActive)
             {
+                if (outputContainer != null && outputContainer.Inventory.AllItems.Any())
+                {
+                    if (outputContainer.Inventory.visualSlots is { } visualSlots && visualSlots.Any() &&
+                        visualSlots[0].HighlightTimer <= 0.0f)
+                    {
+                        visualSlots[0].ShowBorderHighlight(GUIStyle.Green, 0.5f, 0.5f);
+                    }
+                }
+
                 if (selectedItem != null && displayingForCharacter != character)
                 {
                     //reselect to recreate the info based on the new user's skills

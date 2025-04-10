@@ -749,8 +749,8 @@ namespace Barotrauma
         /// </summary>
         private bool ActiveServiceFull()
         {
-            return (PendingHires.Count(ci => ci.BotStatus == BotStatus.PendingHireToActiveService) + campaign.CrewManager.GetCharacterInfos().Count())
-                   >= CrewManager.MaxCrewSize;
+            int pendingHireCount = PendingHires?.Count(ci => ci.BotStatus == BotStatus.PendingHireToActiveService) ?? 0;
+            return pendingHireCount + campaign.CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize;
         }
 
         private bool EnoughReputationToHire(CharacterInfo characterInfo)

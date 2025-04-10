@@ -218,11 +218,11 @@ namespace Barotrauma
                                             //the first character in the CustomInteract callback is always the NPC and the 2nd the character who interacted with it
                                             //but the TriggerAction can configure the 1st and 2nd entity in either order,
                                             //let's make sure we pass the NPC and the interactor in the intended order
-                                            if (e1 == npc && targets2.Contains(interactor)) 
+                                            if (e1 == npc && ParentEvent.GetTargets(Target2Tag).Contains(interactor)) 
                                             { 
                                                 Trigger(npc, interactor); 
                                             } 
-                                            else if (targets1.Contains(interactor) && e2 == npc)
+                                            else if (ParentEvent.GetTargets(Target1Tag).Contains(interactor) && e2 == npc)
                                             { 
                                                 Trigger(interactor, npc); 
                                             } 

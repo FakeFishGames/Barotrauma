@@ -356,7 +356,7 @@ namespace Barotrauma
             //that allows the NPC to fight intruders and otherwise function in the outpost if the mission is configured to spawn the hostile NPCs in a friendly outpost
             if (teamId != originalTeam)
             {
-                spawnedCharacter.SetOriginalTeamAndChangeTeam(teamId);
+                spawnedCharacter.SetOriginalTeamAndChangeTeam(teamId, processImmediately: true);
             }
             if (element.GetAttribute("color") != null)
             {

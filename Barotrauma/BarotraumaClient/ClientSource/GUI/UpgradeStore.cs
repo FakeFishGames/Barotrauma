@@ -799,8 +799,6 @@ namespace Barotrauma
 
             customizeTabOpen = !hasUpgradeModules && hasSwappableItems;
 
-            customizeTabOpen = false;
-
             GUIComponent[] categoryFrames = GetFrames(category);
             foreach (GUIComponent itemFrame in itemPreviews.Values)
             {

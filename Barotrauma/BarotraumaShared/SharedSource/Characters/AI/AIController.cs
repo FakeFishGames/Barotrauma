@@ -213,7 +213,8 @@ namespace Barotrauma
             if (targetHull == null) { return false; }
             if (maxDistance > 0)
             {
-                if (Vector2.DistanceSquared(Character.WorldPosition, targetWorldPos) > maxDistance * maxDistance) { return false; }
+                // Too far from the gap.
+                if (Vector2.DistanceSquared(Character.WorldPosition, gap.WorldPosition) > maxDistance * maxDistance) { return false; }
             }
             if (SteeringManager is IndoorsSteeringManager pathSteering)
             {

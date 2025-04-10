@@ -250,8 +250,7 @@ namespace Barotrauma
             }
             // Overrides the team change set in the base method.
             var teamId = element.GetAttributeEnum("teamid", requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None);
-            var originalTeam = Level.Loaded.StartOutpost?.TeamID ?? teamId;
-            if (teamId != originalTeam)
+            if (teamId != spawnedCharacter.TeamID)
             {
                 spawnedCharacter.SetOriginalTeamAndChangeTeam(teamId);
             }

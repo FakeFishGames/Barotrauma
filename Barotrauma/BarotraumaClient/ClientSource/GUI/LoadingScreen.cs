@@ -25,8 +25,6 @@ namespace Barotrauma
         private Video currSplashScreen;
         private DateTime videoStartTime;
 
-        private bool mirrorBackground;
-
         public struct PendingSplashScreen
         {
             public string Filename;
@@ -108,8 +106,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, samplerState: GUI.SamplerState);
 
-            GUI.DrawBackgroundSprite(spriteBatch, currentBackgroundTexture, Color.White, drawArea, 
-                spriteEffects: mirrorBackground ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+            GUI.DrawBackgroundSprite(spriteBatch, currentBackgroundTexture, Color.White, drawArea);
             overlay.Draw(spriteBatch, Vector2.Zero, scale: overlayScale);
 
             double noiseT = Timing.TotalTime * 0.02f;
@@ -386,7 +383,6 @@ namespace Barotrauma
             {
                 currentBackgroundTexture = missions.Where(m => m.Prefab.HasPortraits).First().Prefab.GetPortrait(Rand.Int(int.MaxValue));
             }
-            mirrorBackground = Rand.Range(0.0f, 1.0f) < 0.5f;
 
             while (!drawn)
             {

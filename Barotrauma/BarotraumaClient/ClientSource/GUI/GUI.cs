@@ -911,6 +911,11 @@ namespace Barotrauma
                 PauseMenu.AddToGUIUpdateList();
             }
 
+            foreach (var openAccordion in GUIComponent.OpenAccordionPopups)
+            {
+                openAccordion.AddToGUIUpdateList(order: 1);
+            }
+
             SocialOverlay.Instance?.AddToGuiUpdateList();
 
             GUIContextMenu.AddActiveToGUIUpdateList();

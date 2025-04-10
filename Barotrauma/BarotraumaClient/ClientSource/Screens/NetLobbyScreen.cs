@@ -477,10 +477,20 @@ namespace Barotrauma
                 AbsoluteSpacing = GUI.IntScale(5)
             };
 
-            Favorite = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.5f), serverInfoContent.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothHeight),
+
+            var topRightContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), serverInfoContent.RectTransform, Anchor.TopRight), 
+                isHorizontal: true, childAnchor: Anchor.TopRight)
+            {
+                AbsoluteSpacing = GUI.IntScale(5),
+                CanBeFocused = true
+            };
+
+            SettingsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), topRightContainer.RectTransform, Anchor.TopRight),
+                TextManager.Get("ServerSettingsButton"), style: "GUIButtonFreeScale");
+
+            Favorite = new GUITickBox(new RectTransform(Vector2.One, topRightContainer.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothHeight),
                 "", null, "GUIServerListFavoriteTickBox")
             {
-                IgnoreLayoutGroups = true,
                 Selected = false,
                 ToolTip = TextManager.Get("addtofavorites"),
                 OnSelected = (tickbox) =>
@@ -500,8 +510,6 @@ namespace Barotrauma
                 }
             };
 
-            SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.4f), serverInfoContent.RectTransform, Anchor.TopRight),
-                TextManager.Get("ServerSettingsButton"), style: "GUIButtonFreeScale");
         }
 
         private void CreateServerMessagePopup(string serverName, string message)

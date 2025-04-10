@@ -1341,12 +1341,13 @@ namespace Barotrauma
                             }
                             
                             match.BotStatus = pendingToReserveBench[i++] ? BotStatus.PendingHireToReserveBench : BotStatus.PendingHireToActiveService;
+                            if (match.BotStatus == BotStatus.PendingHireToActiveService)
+                            {
+                                //can't add more bots to active service is max has been reached
+                                if (pendingHireInfos.Count(ci => ci.BotStatus == BotStatus.PendingHireToActiveService) + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize) { continue; } 
+                            }
 
                             pendingHireInfos.Add(match);
-                            if (pendingHireInfos.Count(ci => ci.BotStatus == BotStatus.PendingHireToActiveService) + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
-                            {
-                                break;
-                            }
                         }
                         location.HireManager.PendingHires = pendingHireInfos;
                     }

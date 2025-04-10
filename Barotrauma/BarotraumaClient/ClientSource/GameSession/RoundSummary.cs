@@ -467,7 +467,7 @@ namespace Barotrauma
             };
             if (icon != null)
             {
-                missionIcon = new GUIImage(new RectTransform(new Point(iconSize), content.RectTransform), icon, null, true)
+                missionIcon = new GUIImage(new RectTransform(new Point(iconSize), content.RectTransform), icon, scaleToFit: true)
                 {
                     Color = iconColor,
                     HoverColor = iconColor,

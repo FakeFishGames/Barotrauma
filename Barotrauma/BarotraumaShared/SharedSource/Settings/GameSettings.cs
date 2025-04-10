@@ -542,6 +542,7 @@ namespace Barotrauma
             {
                 currentConfig = Config.FromElement(currentConfigDoc.Root ?? throw new NullReferenceException("Config XML element is invalid: document is null."));
 #if CLIENT
+                MainMenuScreen.DismissedNotifications = currentConfigDoc.Root.GetAttributeIdentifierArray(nameof(MainMenuScreen.DismissedNotifications), defaultValue: Array.Empty<Identifier>()).ToHashSet();
                 ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
                 MultiplayerPreferences.Init(
                     currentConfigDoc.Root.GetChildElement("player"),
@@ -660,6 +661,8 @@ namespace Barotrauma
             }
 
 #if CLIENT
+            root.Add(new XAttribute(nameof(MainMenuScreen.DismissedNotifications), string.Join(',', MainMenuScreen.DismissedNotifications.Select(n => n.Value))));
+
             XElement serverFiltersElement = new XElement("serverfilters"); root.Add(serverFiltersElement);
             ServerListFilters.Instance.SaveTo(serverFiltersElement);
 

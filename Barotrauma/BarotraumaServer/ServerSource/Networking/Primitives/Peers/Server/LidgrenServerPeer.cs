@@ -200,11 +200,11 @@ namespace Barotrauma.Networking
             }
 
             PendingClient? pendingClient = pendingClients.Find(c => c.Connection.NetConnection == inc.SenderConnection);
-
             if (pendingClient is null)
             {
                 pendingClient = new PendingClient(new LidgrenConnection(inc.SenderConnection));
                 pendingClients.Add(pendingClient);
+                GameServer.Log($"Incoming connection from {pendingClient.Connection.NetConnection?.RemoteEndPoint?.ToString() ?? "null"}.", ServerLog.MessageType.ServerMessage);
             }
 
             inc.SenderConnection.Approve();
@@ -218,7 +218,25 @@ namespace Barotrauma.Networking
 
             IReadMessage inc = lidgrenMsg.ToReadMessage();
 
-            var (_, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
+            PeerPacketHeaders peerPacketHeaders = default;
+            try
+            {
+                peerPacketHeaders = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
+            }
+            catch
+            {
+                if (pendingClient != null) 
+                {
+                    //pending (= not yet authenticated) client sent malformed data, immediately ban them so they can't use this for spamming
+                    GameServer.Log($"Received an invalid connection attempt from {pendingClient.Connection.NetConnection?.RemoteEndPoint?.ToString() ?? "null"}. Banning the IP.", ServerLog.MessageType.DoSProtection);
+                    serverSettings.BanList.BanPlayer(name: "Unknown", endpoint: pendingClient.Connection.Endpoint, reason: "Invalid connection attempt", duration: null);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            var (_, packetHeader, initialization) = peerPacketHeaders;
 
             if (packetHeader.IsConnectionInitializationStep() && pendingClient != null && initialization.HasValue)
             {

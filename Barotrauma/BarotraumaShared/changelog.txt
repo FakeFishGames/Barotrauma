@@ -1,9 +1,56 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.8.6.2
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed some icons still scaling incorrectly (e.g. location icons on the campaign map, device icons on the status monitor).
+- Fixed device previews not appearing in the shipyard menu when you've selected a category with only swappable items but no upgrades (doesn't affect any vanilla content).
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.8.6.1
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed an issue that caused the scaling of item icons in the submarine editor (and potentially other places) to be incorrect.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.8.6.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed certain scripted events breaking when you switch the character (e.g. interaction icons disappearing from some NPCs).
+- Fixed hostages being hostile to you and the outpost team in jailbreak missions.
+- Fixed inability to communicate using the headset with characters spawned via the debug console (once again).
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.8.5.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Updated translations.
+- Fixed "favorite" checkbox rendering behind the server settings button in the server lobby.
+- Fixed server not allowing new characters to be hired to the reserve bench if over the maximum crew size.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.8.4.2
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed PvP variants of the underwater scooter being sold in campaign stores.
+- Hid the new sorting and filtering options from vending machines.
+- Fixes to several AI issues that sometimes made it difficult for monsters to board the sub (e.g. repeatedly moving in and out of the airlock).
+- Fixes to issues that sometimes caused monsters that are indoors to attempt to attack a target through a wall/floor/ceiling even if they have a valid path to the target.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.8.4.1
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 - Fixed characters sometimes ending up in an invalid state when a player goes back to the server lobby, opts to spectate and rejoins the round: the character wouldn't go unconscious or braindead as it should, but the client would not regain control of it either.
 - AI characters no longer accidentally hit friendly characters with melee weapons.
+- Fixed bots not reacting to enemies while following, unless being attacked.
+- Fixed bots being allowed to operate items in unsafe hulls, meaning they'd attempt to get to a device in a room with e.g. monsters or fires, and then immediately flee, and repeat.
+- AI fixes to make characters better at dealing with fires.
+- Fixed bots getting stuck in ladders while following the player and aiming at the enemy.
+- Fixed bots not facing the enemies (or sometimes glitching while trying to face both the player and the enemy) while following a player.
+- Fixes to several AI issues that caused issues when bots where trying to find safety.
+- Fixed bots sometimes changing targets when they should just stick to the current target, causing indecisive behavior.
+- Made bots crouch by default when using ranged weapons, so that other bots (or players) can shoot past them. 
+- Improved AI behavior in close combat: when a bot has a valid ranged weapon in the inventory, they now try to keep the distance to the target and switch back to the ranged weapon when possible. Previously the bots just used melee, because they can't shoot the targets when they are really close.Improved AI behavior in close combat: when a bot has a valid ranged weapon in the inventory, they now try to keep the distance to the target and switch back to the ranged weapon when possible. Previously the bots just used melee, because they can't shoot the targets when they are really close.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 v1.8.4.0

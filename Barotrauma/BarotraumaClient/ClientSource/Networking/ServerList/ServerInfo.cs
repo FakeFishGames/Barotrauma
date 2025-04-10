@@ -180,7 +180,7 @@ namespace Barotrauma.Networking
             {
                 float playStyleBannerAspectRatio = (float)playStyleBannerSprite.SourceRect.Width / (float)playStyleBannerSprite.SourceRect.Height;
                 playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), frame.RectTransform, scaleBasis: ScaleBasis.BothWidth),
-                    playStyleBannerSprite, null, true);
+                    playStyleBannerSprite, scaleToFit: true);
                 playStyleBannerColor = playStyleBannerSprite.SourceElement.GetAttributeColor("bannercolor", Color.Black);
             }
             else
