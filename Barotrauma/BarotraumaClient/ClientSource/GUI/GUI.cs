@@ -915,6 +915,10 @@ namespace Barotrauma
             {
                 openAccordion.AddToGUIUpdateList(order: 1);
             }
+            if (PlayerInput.PrimaryMouseButtonDown())
+            {
+                GUIComponent.OpenAccordionPopups.Clear();
+            }
 
             SocialOverlay.Instance?.AddToGuiUpdateList();
 
@@ -2647,6 +2651,8 @@ namespace Barotrauma
                 if (color.HasValue)
                 {
                     button.Color = color.Value;
+                    button.HoverColor = Color.Lerp(color.Value, Color.White, 0.5f);
+                    button.PressedColor = Color.Lerp(color.Value, Color.Black, 0.5f);
                 }
             }
 

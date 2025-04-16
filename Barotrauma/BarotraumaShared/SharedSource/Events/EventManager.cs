@@ -774,7 +774,7 @@ namespace Barotrauma
             {
                 if (eventSet.Faction != location.Faction?.Prefab.Identifier && eventSet.Faction != location.SecondaryFaction?.Prefab.Identifier) { return false; }
             }
-            var locationType = location.Type;
+            var locationType = location.GetLocationTypeToDisplay();
             bool includeGenericEvents = level.Type == LevelData.LevelType.LocationConnection || !locationType.IgnoreGenericEvents;
             if (includeGenericEvents && eventSet.LocationTypeIdentifiers == null) { return true; }
             return eventSet.LocationTypeIdentifiers != null && eventSet.LocationTypeIdentifiers.Any(identifier => identifier == locationType.Identifier);

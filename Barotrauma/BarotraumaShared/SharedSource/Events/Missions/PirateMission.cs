@@ -24,8 +24,6 @@ namespace Barotrauma
 
         private readonly Dictionary<HumanPrefab, List<StatusEffect>> characterStatusEffects = new Dictionary<HumanPrefab, List<StatusEffect>>();
 
-        private readonly Dictionary<HumanPrefab, List<StatusEffect>> characterStatusEffects = new Dictionary<HumanPrefab, List<StatusEffect>>();
-
         // Update the last sighting periodically so that the players can find the pirate sub even if they have lost the track of it.
         private readonly float pirateSightingUpdateFrequency = 30;
         private float pirateSightingUpdateTimer;

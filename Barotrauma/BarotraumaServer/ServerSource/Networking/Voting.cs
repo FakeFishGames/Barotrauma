@@ -284,7 +284,12 @@ namespace Barotrauma
                     break;
                 case VoteType.Kick:
                     byte kickedClientID = inc.ReadByte();
-                    if ((DateTime.Now - sender.JoinTime).TotalSeconds < GameMain.Server.ServerSettings.DisallowKickVoteTime)
+
+                    if (!GameMain.Server.ServerSettings.AllowVoteKick)
+                    {
+                        DebugConsole.ThrowError($"Client {sender.Name} attempted to vote to kick a client, even though vote kicking is disabled. Ignoring the vote.");
+                    }
+                    else if ((DateTime.Now - sender.JoinTime).TotalSeconds < GameMain.Server.ServerSettings.DisallowKickVoteTime)
                     {
                         GameMain.Server.SendDirectChatMessage($"ServerMessage.kickvotedisallowed", sender);
                     }

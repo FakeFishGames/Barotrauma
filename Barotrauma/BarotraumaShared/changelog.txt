@@ -1,4 +1,21 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.8.7.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed an AI bug that made bots scared of water, making them seek safety from flooded rooms even when they were wearing diving suits.
+- Fixed non-hitscan projectiles registering hits with characters that are behind the weapon, even if the barrel is in front of the character.
+- Fixed submarine maintaining an incorrect position (= starting to steer somewhere completely off) when you enable "maintain position" and then enter a new level.
+- Fixed autopilot failing to navigate to a destination if it's already on at the start of the round.
+- Fixed dedicated server descriptions still sometimes getting truncated.
+- Fixed lights shining out from items inside character inventories.
+- Fixed inability to access the inventories of other players when they're manually ragdolling.
+- Fixed "firing blanks" traitor event requiring you to replace standard coilgun ammo boxes with fake ones, instead of accepting any type of coilgun ammo.
+- Fixed switches flipping around when you attach them while facing left.
+- Fixed grenade "cooking" hint not showing the correct keybinding (just saying [usekey] instead of the actual keybinding).
+- Fixed main menu notifications (changelog, unstable info) staying open if you don't manually close them and e.g. start a new game or go to the sub editor.
+- Fixed normal outpost events triggering in outpost that have been abandoned because of Jovian Radiation.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.8.6.2
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -2196,17 +2196,22 @@ namespace Barotrauma
 
         private static float CalculateHullSafety(Hull hull, IEnumerable<Hull> visibleHulls, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false, bool ignorePressureProtection = false)
         {
+            bool isProtectedFromPressure = character.IsProtectedFromPressure;
             if (!ignorePressureProtection)
             {
-                bool isProtectedFromPressure = character.IsProtectedFromPressure;
                 if (hull == null) { return isProtectedFromPressure ? 100 : 0; }
                 if (hull.LethalPressure > 0 && !isProtectedFromPressure) { return 0; }
             }
+            else
+            {
+                if (hull == null) { return 0; }
+            }
+
             // Oxygen factor should be 1 with 70% oxygen or more and 0.1 when the oxygen level is 30% or lower.
             // With insufficient oxygen, the safety of the hull should be 39, all the other factors aside. So, just below the HULL_SAFETY_THRESHOLD.
             float oxygenFactor = ignoreOxygen ? 1 : MathHelper.Lerp((HULL_SAFETY_THRESHOLD - 1) / 100, 1, MathUtils.InverseLerp(HULL_LOW_OXYGEN_PERCENTAGE, 100 - HULL_LOW_OXYGEN_PERCENTAGE, hull.OxygenPercentage));
             float waterFactor = 1;
-            if (!ignoreWater)
+            if (!ignoreWater && !isProtectedFromPressure)
             {
                 if (visibleHulls != null)
                 {

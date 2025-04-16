@@ -709,17 +709,6 @@ namespace Barotrauma
                 }
             }
 
-            bool muteBackgroundMusic = false;
-            for (int i = 0; i < SoundManager.SourceCount; i++)
-            {
-                SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(SoundManager.SourcePoolIndex.Default, i);
-                if (playingSoundChannel is { MuteBackgroundMusic: true, IsPlaying: true })
-                {
-                    muteBackgroundMusic = true;
-                    break;
-                }
-            }
-
             int activeTrackCount = targetMusic.Count(m => m != null);
             for (int i = 0; i < MaxMusicChannels; i++)
             {

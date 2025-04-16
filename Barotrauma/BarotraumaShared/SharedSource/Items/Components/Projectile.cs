@@ -397,6 +397,9 @@ namespace Barotrauma.Items.Components
             if (Item.Removed) { return; }
             launchPos = simPosition;
             LaunchSub = item.Submarine;
+            //set the rotation of the projectile again because dropping the projectile in Use
+            //resets the rotation and moves it to the position of the parent item
+            Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians), findNewHull: false);
             if (DeactivationTime > 0)
             {
                 deactivationTimer = DeactivationTime;

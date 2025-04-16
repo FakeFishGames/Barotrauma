@@ -891,7 +891,7 @@ namespace Barotrauma
             var spawnPoint = WayPoint.WayPointList.Find(wp => wp.SpawnType.HasFlag(SpawnType.Submarine) && wp.Submarine == outpost);
             if (spawnPoint != null)
             {
-                //pre-determine spawnpoint, just use it directly
+                //pre-determined spawnpoint, just use it directly
                 sub.SetPosition(spawnPoint.WorldPosition);
                 sub.NeutralizeBallast();
                 sub.EnableMaintainPosition();
@@ -944,6 +944,14 @@ namespace Barotrauma
                         sub.SetPosition(spawnPos);
                         myPort.Dock(outPostPort);
                         myPort.Lock(isNetworkMessage: true, applyEffects: false);
+                        foreach (var item in sub.GetItems(alsoFromConnectedSubs: true))
+                        {
+                            //need to refresh position to maintain since the sub was moved to the docking port
+                            if (item.GetComponent<Steering>() is { MaintainPos: true } steering)
+                            {
+                                steering.RefreshPosToMaintain();
+                            }
+                        }
                     }
                     else
                     {

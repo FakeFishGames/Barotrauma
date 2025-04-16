@@ -1701,7 +1701,7 @@ namespace Barotrauma
             if (hasPortrait)
             {
                 float portraitAspectRatio = portrait.SourceRect.Width / portrait.SourceRect.Height;
-                GUIImage portraitImage = new GUIImage(new RectTransform(new Vector2(0.5f, 1f), locationInfoContainer.RectTransform, Anchor.CenterRight), portrait, scaleToFit: true)
+                GUIImage portraitImage = new GUIImage(new RectTransform(new Vector2(0.45f, 1f), locationInfoContainer.RectTransform, Anchor.CenterRight), portrait, scaleToFit: GUIImage.ScalingMode.ScaleToFitLargestExtent)
                 {
                     IgnoreLayoutGroups = true
                 };

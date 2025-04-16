@@ -312,8 +312,7 @@ namespace Barotrauma.Items.Components
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
                 PhysicsBody body = ParentBody ?? item.body;
-                if ((body == null || !body.Enabled) &&
-                    (item.FindParentInventory(static it => it is ItemInventory { Container.HideItems: true }) != null))
+                if ((body == null || !body.Enabled) && !IsVisibleInInventory())
                 {
                     lightBrightness = 0.0f;
                     SetLightSourceState(false, 0.0f);
@@ -336,6 +335,24 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Is the item currently in an inventory, and visible in that inventory? E.g. held by a character or on a shelf that shows the contained items.
+        /// </summary>
+        /// <returns></returns>
+        private bool IsVisibleInInventory()
+        {
+            if (item.GetRootInventoryOwner() is Character ownerCharacter && item.RootContainer?.GetComponent<Holdable>() is not { IsActive: true })
+            {
+                //if the item is in a character inventory, the light should only be visible if the character is holding the item
+                //(not if it's e.q. inside a wearable item, or in a rifle worn on the back)
+                return false;
+            }
+            else
+            {
+                return item.FindParentInventory(static it => it is ItemInventory { Container.HideItems: true }) == null;
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.AiTarget != null)
@@ -351,20 +368,10 @@ namespace Barotrauma.Items.Components
 #endif
 
 
-            bool visibleInContainer;
+            bool isVisibleInInventory = IsVisibleInInventory();
             var ownerCharacter = item.GetRootInventoryOwner() as Character;
-            if (ownerCharacter != null && item.RootContainer?.GetComponent<Holdable>() is not { IsActive: true })
-            {
-                //if the item is in a character inventory, the light should only be visible if the character is holding the item
-                //(not if it's e.q. inside a wearable item, or in a rifle worn on the back)
-                visibleInContainer = false;
-            }
-            else
-            {
-                visibleInContainer = item.FindParentInventory(static it => it is ItemInventory { Container.HideItems: true }) == null;
-            }
 
-            if ((item.Container != null && !visibleInContainer && ownerCharacter == null) || 
+            if ((item.Container != null && !isVisibleInInventory && ownerCharacter == null) || 
                 (ownerCharacter != null && ownerCharacter.InvisibleTimer > 0.0f))
             {
                 lightBrightness = 0.0f;
@@ -374,7 +381,7 @@ namespace Barotrauma.Items.Components
             SetLightSourceTransformProjSpecific();
 
             PhysicsBody body = ParentBody ?? item.body;
-            if ((body == null || !body.Enabled) && !visibleInContainer)
+            if ((body == null || !body.Enabled) && !isVisibleInInventory)
             {
                 lightBrightness = 0.0f;
                 SetLightSourceState(false, 0.0f);

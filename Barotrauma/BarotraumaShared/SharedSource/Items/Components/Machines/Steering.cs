@@ -89,19 +89,10 @@ namespace Barotrauma.Items.Components
 #endif
                 if (autoPilot)
                 {
-                    if (pathFinder == null)
-                    {
-                        pathFinder = new PathFinder(WayPoint.WayPointList, false)
-                        {
-                            GetNodePenalty = GetNodePenalty
-                        };
-                    }
                     MaintainPos = true;
                     if (posToMaintain == null)
                     {
-                        posToMaintain = controlledSub != null ?
-                            controlledSub.WorldPosition :
-                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                        RefreshPosToMaintain();
                     }
                 }
                 else
@@ -264,6 +255,24 @@ namespace Barotrauma.Items.Components
 
             user = character;
             return true;
+        }
+
+        /// <summary>
+        /// Sets the position the autopilot tries to maintain to the current position of the sub.
+        /// </summary>
+        public void RefreshPosToMaintain()
+        {
+            posToMaintain = controlledSub != null ?
+                controlledSub.WorldPosition :
+                item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+        }
+
+        public override void OnMapLoaded()
+        {
+            if (MaintainPos)
+            {
+                RefreshPosToMaintain();
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -628,7 +637,10 @@ namespace Barotrauma.Items.Components
 
             if (pathFinder == null)
             {
-                pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                pathFinder = new PathFinder(WayPoint.WayPointList, false)
+                {
+                    GetNodePenalty = GetNodePenalty
+                };
             }
 
             Vector2 target;

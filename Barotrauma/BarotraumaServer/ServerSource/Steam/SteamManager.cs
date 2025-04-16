@@ -66,7 +66,7 @@ namespace Barotrauma.Steam
                     Steamworks.SteamServer.Passworded = hasPassword;
                     return;
                 case string serverMessage when key == "message":
-                    int maxValueLength = 255;
+                    int maxValueLength = 127;
                     int totalMaxLength = 2000;
                     int chunkIndex = 0;
                     for (int charIndex = 0; charIndex < serverMessage.Length && charIndex < totalMaxLength; charIndex += maxValueLength)
