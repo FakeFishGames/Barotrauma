@@ -73,7 +73,7 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:
-        - v1.8.6.2 (Calm Before the Storm update)
+        - v1.8.7.0 (Calm Before the Storm update)
         - Other
     validations:
       required: true
