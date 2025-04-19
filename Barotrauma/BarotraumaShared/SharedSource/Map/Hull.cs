@@ -1407,6 +1407,11 @@ namespace Barotrauma
             IsAirlock = false;
         }
 
+        public bool IsBallast()
+        {
+	        return roomName != null && roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
         /// Does this hull have any doors leading outside?
         /// </summary>
