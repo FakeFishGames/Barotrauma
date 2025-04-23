@@ -37,11 +37,11 @@ namespace Barotrauma.Items.Components
             var rechargeRateContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), upperArea.RectTransform), style: null);
             var rechargeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.0f), rechargeRateContainer.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("rechargerate"), textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
-            LocalizedString kW = TextManager.Get("kilowatt");
+            LocalizedString kWmin = TextManager.Get("kilowattminute");
             var rechargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), rechargeRateContainer.RectTransform, Anchor.CenterRight),
                 "", textColor: GUIStyle.TextColorNormal, font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
             {
-                TextGetter = () => $"{(int)MathF.Round(currPowerConsumption)} {kW} ({(int)MathF.Round(RechargeRatio * 100)} %)"
+                TextGetter = () => $"{(int)MathF.Round(currPowerConsumption)} {kWmin} ({(int)MathF.Round(RechargeRatio * 100)} %)"
             };
             if (rechargeText.TextSize.X > rechargeText.Rect.Width) { rechargeText.Font = GUIStyle.SmallFont; }
 
@@ -93,11 +93,11 @@ namespace Barotrauma.Items.Components
             {
                 ToolTip = TextManager.Get("PowerTransferTipPower")
             };
-            LocalizedString kWmin = TextManager.Get("kilowattminute");
+            LocalizedString kW = TextManager.Get("kilowatt");
             var chargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), chargeTextContainer.RectTransform, Anchor.CenterRight), 
                 "", textColor: GUIStyle.TextColorNormal, font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
             {
-                TextGetter = () => $"{(int)MathF.Round(charge)}/{(int)adjustedCapacity} {kWmin} ({(int)MathF.Round(MathUtils.Percentage(charge, adjustedCapacity))} %)"
+                TextGetter = () => $"{(int)MathF.Round(charge)}/{(int)adjustedCapacity} {kW} ({(int)MathF.Round(MathUtils.Percentage(charge, adjustedCapacity))} %)"
             };
             if (chargeText.TextSize.X > chargeText.Rect.Width) { chargeText.Font = GUIStyle.SmallFont; }
 
