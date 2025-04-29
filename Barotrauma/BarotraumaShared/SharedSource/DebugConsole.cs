@@ -2926,7 +2926,7 @@ namespace Barotrauma
                     Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
                     {
                         newCharacter.HumanPrefab = humanPrefab;
-                        AddToCrew(newCharacter);
+                        SetTeamAndCrew(newCharacter);
                         humanPrefab.GiveItems(newCharacter, newCharacter.Submarine, spawnPoint);
                         humanPrefab.InitializeCharacter(newCharacter);
 #if SERVER
@@ -2942,7 +2942,7 @@ namespace Barotrauma
                 CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
                 Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, characterInfo, onSpawn: newCharacter =>
                 {
-                    AddToCrew(newCharacter);
+                    SetTeamAndCrew(newCharacter);
                     newCharacter.GiveJobItems(isPvPMode: GameMain.GameSession?.GameMode is PvPMode, spawnPoint);
                     newCharacter.GiveIdCardTags(spawnPoint);
                     newCharacter.Info.StartItemsGiven = true;
@@ -2950,10 +2950,13 @@ namespace Barotrauma
             }
             else if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) is { } prefab)
             {
-                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(prefab.Identifier) : null);
+                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(prefab.Identifier) : null, onSpawn: newCharacter =>
+                {
+                    SetTeamAndCrew(newCharacter);
+                });
             }
 
-            void AddToCrew(Character newCharacter)
+            void SetTeamAndCrew(Character newCharacter)
             {
                 newCharacter.TeamID = teamType;
                 if (addToCrew)

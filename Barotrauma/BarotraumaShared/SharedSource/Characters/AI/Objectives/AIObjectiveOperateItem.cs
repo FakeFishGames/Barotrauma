@@ -10,7 +10,7 @@ namespace Barotrauma
     class AIObjectiveOperateItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "operate item".ToIdentifier();
-        public override string DebugTag =>  $"{Identifier} {component.Name}";
+        public override string DebugTag =>  $"{Identifier} ({component.Name})";
 
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowMultipleInstances => true;

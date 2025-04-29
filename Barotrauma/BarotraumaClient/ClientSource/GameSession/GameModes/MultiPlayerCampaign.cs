@@ -879,6 +879,8 @@ namespace Barotrauma
             {
                 if (requireCorrectRoundId && roundId != campaign.RoundID)
                 {
+                    //set update flag anyway so we can tell the server we received this data and it won't need to keep resending it
+                    campaign.SetLastUpdateIdForFlag(flag, id);
                     DebugConsole.Log($"Received campaing update for a different round (client: {campaign.RoundID}, server: {roundId}), ignoring...");                    
                     return false;
                 }

@@ -399,7 +399,7 @@ namespace Barotrauma.Items.Components
             LaunchSub = item.Submarine;
             //set the rotation of the projectile again because dropping the projectile in Use
             //resets the rotation and moves it to the position of the parent item
-            Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians), findNewHull: false);
+            Item.SetTransform(simPosition, GetLaunchRotation(rotation), findNewHull: false);
             if (DeactivationTime > 0)
             {
                 deactivationTimer = DeactivationTime;
@@ -489,17 +489,26 @@ namespace Barotrauma.Items.Components
                     float modifiedLaunchImpulse = (LaunchImpulse + launchImpulseModifier) * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse);
                     //needs to be set after DoLaunch, because dropping the item resets the rotation and dir
-                    float afterLaunchAngle = launchAngle + (item.body.Dir * LaunchRotationRadians);
-                    if (item.body.Dir < 0)
-                    {
-                        afterLaunchAngle -= MathHelper.Pi;
-                    }
-                    item.SetTransform(item.body.SimPosition, afterLaunchAngle, findNewHull: false);
+                    item.SetTransform(item.body.SimPosition, GetLaunchRotation(launchAngle), findNewHull: false);
                 }
             }
             User = character;
             ApplyStatusEffects(ActionType.OnUse, 1.0f, User, user: User);
             return true;
+        }
+
+        /// <summary>
+        /// Gets the final rotation of the projectile after being launched, taking <see cref="LaunchRotationRadians"/> 
+        /// and the orientation of the projectile's physics body into account.
+        /// </summary>
+        private float GetLaunchRotation(float unmodifiedLaunchRotation)
+        {
+            float launchRotation = unmodifiedLaunchRotation + (item.body.Dir * LaunchRotationRadians);
+            if (item.body.Dir < 0)
+            {
+                launchRotation -= MathHelper.Pi;
+            }
+            return launchRotation;
         }
 
         public override bool Use(float deltaTime, Character character = null) => Use(character);

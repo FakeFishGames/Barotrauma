@@ -10,6 +10,7 @@ namespace Barotrauma
     class AIObjectiveGoTo : AIObjective
     {
         public override Identifier Identifier { get; set; } = "go to".ToIdentifier();
+        public override string DebugTag => $"{Identifier} ({Target?.ToString() ?? "none"})";
 
         public override bool KeepDivingGearOn => GetTargetHull() == null;
 

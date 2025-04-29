@@ -2406,7 +2406,8 @@ namespace Barotrauma.Networking
                 settingsBytes = outmsg.LengthBytes - settingsBytes;
 
                 int campaignBytes = outmsg.LengthBytes;
-                if (outmsg.LengthBytes < MsgConstants.MTU - 500 &&
+                bool hasSpaceForCampaignData = outmsg.LengthBytes < MsgConstants.MTU - 500;
+                if (hasSpaceForCampaignData &&
                     GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode)
                 {
                     outmsg.WriteBoolean(true);
@@ -2417,6 +2418,10 @@ namespace Barotrauma.Networking
                 {
                     outmsg.WriteBoolean(false);
                     outmsg.WritePadBits();
+                    if (!hasSpaceForCampaignData)
+                    {
+                        DebugConsole.Log($"Not enough space to fit campaign data in the lobby update (length {outmsg.LengthBytes} bytes), omitting...");
+                    }
                 }
                 campaignBytes = outmsg.LengthBytes - campaignBytes;
 
@@ -2426,6 +2431,10 @@ namespace Barotrauma.Networking
                 if (outmsg.LengthBytes < MsgConstants.MTU - 500)
                 {
                     WriteClientList(segmentTable, c, outmsg);
+                }
+                else
+                {
+                    DebugConsole.Log($"Not enough space to fit client list in the lobby update (length {outmsg.LengthBytes} bytes), omitting...");
                 }
                 clientListBytes = outmsg.LengthBytes - clientListBytes;
 

@@ -2250,9 +2250,14 @@ namespace Barotrauma
                                                 //(otherwise e.g. a character with 1000 vitality would only get a tenth of the strength)
                                                 float afflictionStrength = affliction.Strength * (newCharacter.MaxVitality / 100.0f);
 
-                                                Limb afflictionLimb = character.CharacterHealth.GetAfflictionLimb(affliction) ?? character.AnimController.MainLimb;
-                                                Limb newAfflictionLimb = newCharacter.AnimController.GetLimb(afflictionLimb.type) ?? newCharacter.AnimController.MainLimb;
-
+                                                Limb newAfflictionLimb = newCharacter.AnimController.MainLimb;
+                                                //if the character has been already removed (some weird statuseffect setup, one effect removes the character before another tries to replace it with something else?)
+                                                //we can't find the limbs any more and need go with the main limb
+                                                if (!character.Removed)
+                                                {
+                                                    Limb afflictionLimb = character.CharacterHealth.GetAfflictionLimb(affliction) ?? character.AnimController.MainLimb;
+                                                    newAfflictionLimb = newCharacter.AnimController.GetLimb(afflictionLimb.type) ?? newCharacter.AnimController.MainLimb;
+                                                }
                                                 newCharacter.CharacterHealth.ApplyAffliction(newAfflictionLimb, affliction.Prefab.Instantiate(afflictionStrength));
                                             }
                                         }

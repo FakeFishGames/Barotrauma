@@ -1,5 +1,4 @@
-﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
@@ -18,6 +17,15 @@ namespace Barotrauma
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 20.0f;
         const float MaxDamageRange = 250.0f;
+
+        /// <summary>
+        /// How often the FireSource checks whether it can spread to nearby hulls.
+        /// </summary>
+        const float SpreadToOtherHullsInterval = 5.0f;
+        /// <summary>
+        /// The probability of the fire spreading to a nearby hull when the <see cref="TrySpreadToNearbyHulls"/> check is made.
+        /// </summary>
+        const float SpreadToOtherHullsProbability = 0.15f;
 
         protected Hull hull;
 
@@ -69,6 +77,12 @@ namespace Barotrauma
             get { return Math.Min((float)Math.Sqrt(size.X) * 10.0f, MaxDamageRange); }
         }
 
+        /// <summary>
+        /// Affects how far above the fire source things can get damaged and how far above a gap can be for the fire to spread through it.
+        /// An arbitrary value chosen roughly based on how high the flame particles seem to extend.
+        /// </summary>
+        public float FlameHeight => MathHelper.Clamp(size.X * 3, 50.0f, 400.0f);
+
         public bool DamagesItems
         {
             get;
@@ -95,6 +109,8 @@ namespace Barotrauma
         /// Which character caused this fire (if any)?
         /// </summary>
         public readonly Character SourceCharacter;
+
+        private float spreadToOtherHullsTimer;
 
         public FireSource(Vector2 worldPosition, Hull spawningHull = null, Character sourceCharacter = null, bool isNetworkMessage = false)
         {
@@ -219,7 +235,7 @@ namespace Barotrauma
                 if (removed) { return; }
             }
 
-            if (!(this is DummyFireSource))
+            if (this is not DummyFireSource)
             {
                 ReduceOxygen(deltaTime);
             }
@@ -236,7 +252,14 @@ namespace Barotrauma
 
             LimitSize();
 
-            if (size.X > 256.0f && !(this is DummyFireSource))
+            spreadToOtherHullsTimer -= deltaTime;
+            if (spreadToOtherHullsTimer <= 0.0f)
+            {
+                TrySpreadToNearbyHulls();
+                spreadToOtherHullsTimer = SpreadToOtherHullsInterval;
+            }
+
+            if (size.X > 256.0f && this is not DummyFireSource)
             {
                 if (burnDecals.Count == 0)
                 {
@@ -262,11 +285,61 @@ namespace Barotrauma
             }
 
             UpdateProjSpecific(growModifier, deltaTime);
-
             
             if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
                 Remove();
+            }
+        }
+
+        /// <summary>
+        /// Makes the fire source attempt to spread to nearby hulls through gaps the firesource is in contact with. 
+        /// The probability of spreading is affected by <see cref="SpreadToOtherHullsProbability"/>.
+        /// </summary>
+        private void TrySpreadToNearbyHulls()
+        {
+            foreach (var gap in hull.ConnectedGaps)
+            {
+                if (!gap.IsRoomToRoom || gap.Open <= 0.0f) { continue; }
+
+                //no need for any syncing here, server lets the clients know if new fire sources spawn
+                if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Unsynced) > SpreadToOtherHullsProbability) { continue; }
+
+                if (gap.linkedTo.Where(h => h != hull).FirstOrDefault() is not Hull otherHull) { continue; }
+
+                //if firesource intersects with the gap
+                if (position.X > gap.Rect.Right) { continue; }
+                if (position.X + size.X < gap.Rect.X) { continue; }
+                if (position.Y + FlameHeight < gap.Rect.Y - gap.Rect.Height) { continue; }
+                if (position.Y - size.Y > gap.Rect.Y) { continue; }
+
+                //how far into the other hull should the firesource spawn
+                float spawnOffset = 20.0f;
+                Vector2 fireSourcePos = gap.WorldPosition;
+                if (gap.IsHorizontal)
+                {
+                    if (otherHull.Position.X < hull.Position.X)
+                    {
+                        fireSourcePos.X = otherHull.WorldRect.Right - spawnOffset;
+                    }
+                    else if (otherHull.Position.X > hull.Position.X)
+                    {
+                        fireSourcePos.X = otherHull.WorldRect.X + spawnOffset;
+                    }
+                }
+                else
+                {
+                    fireSourcePos.X = MathHelper.Clamp(fireSourcePos.X, position.X, position.X + size.X);
+                    if (otherHull.Position.Y > hull.Position.Y)
+                    {
+                        fireSourcePos.Y = otherHull.WorldRect.Y - otherHull.WorldRect.Height + spawnOffset;
+                    }
+                    else if (otherHull.Position.Y < hull.Position.Y)
+                    {
+                        fireSourcePos.Y = otherHull.WorldRect.Y - spawnOffset;
+                    }
+                }
+                new FireSource(fireSourcePos, spawningHull: otherHull);
             }
         }
 
@@ -282,16 +355,6 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float growModifier, float deltaTime);
 
-        private void OnChangeHull(Vector2 pos, Hull particleHull)
-        {
-            if (particleHull == hull || particleHull == null) return;
-
-            //hull already has a firesource roughly at the particles position -> don't create a new one
-            if (particleHull.FireSources.Find(fs => pos.X > fs.position.X - 100.0f && pos.X < fs.position.X + fs.size.X + 100.0f) != null) return;
-
-            new FireSource(new Vector2(pos.X, particleHull.WorldRect.Y - particleHull.Rect.Height + 5.0f));
-        }
-
         private void DamageCharacters(float deltaTime)
         {
             if (size.X <= 0.0f) { return; }
@@ -304,7 +367,7 @@ namespace Barotrauma
                 if (!IsInDamageRange(c, DamageRange)) { continue; }
 
                 //GetApproximateDistance returns float.MaxValue if there's no path through open gaps between the hulls (e.g. if there's a door/wall in between)
-                if (hull.GetApproximateDistance(Position, c.Position, c.CurrentHull, 10000.0f) > size.X + DamageRange)
+                if (hull.GetApproximateDistance(Position, c.Position, c.CurrentHull, 10000.0f) > size.X + DamageRange + FlameHeight)
                 {
                     continue;
                 }
@@ -330,16 +393,16 @@ namespace Barotrauma
 
         public bool IsInDamageRange(Character c, float damageRange)
         {
-            if (c.Position.X < position.X - damageRange || c.Position.X > position.X + size.X + damageRange) return false;
-            if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) return false;
+            if (c.Position.X < position.X - damageRange || c.Position.X > position.X + size.X + damageRange) { return false; }
+            if (c.Position.Y < position.Y - size.Y || c.Position.Y > Math.Max(hull.Rect.Y, position.Y + FlameHeight)) { return false; }
 
             return true;
         }
 
         public bool IsInDamageRange(Vector2 worldPosition, float damageRange)
         {
-            if (worldPosition.X < WorldPosition.X - damageRange || worldPosition.X > WorldPosition.X + size.X + damageRange) return false;
-            if (worldPosition.Y < WorldPosition.Y - size.Y || worldPosition.Y > hull.WorldRect.Y) return false;
+            if (worldPosition.X < WorldPosition.X - damageRange || worldPosition.X > WorldPosition.X + size.X + damageRange) { return false; }
+            if (worldPosition.Y < WorldPosition.Y - size.Y || worldPosition.Y > Math.Max(hull.WorldRect.Y, WorldPosition.Y + FlameHeight)) { return false; }
 
             return true;
         }

@@ -12,6 +12,7 @@ namespace Barotrauma
     class AIObjectiveGetItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "get item".ToIdentifier();
+        public override string DebugTag => $"{Identifier} ({(IdentifiersOrTags == null || IdentifiersOrTags.None() ? "none" : string.Join(", ", IdentifiersOrTags))})";
 
         public override bool AbandonWhenCannotCompleteSubObjectives => false;
         public override bool AllowMultipleInstances => true;

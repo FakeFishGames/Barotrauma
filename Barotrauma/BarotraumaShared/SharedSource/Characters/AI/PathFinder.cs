@@ -206,19 +206,21 @@ namespace Barotrauma
             {
                 float xDiff = Math.Abs(start.X - node.TempPosition.X);
                 float yDiff = Math.Abs(start.Y - node.TempPosition.Y);
+                //higher cost for vertical movement when inside the sub
                 if (InsideSubmarine && !(node.Waypoint.Submarine?.Info?.IsRuin ?? false))
                 {
-                    //higher cost for vertical movement when inside the sub
                     if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
                     {
                         yDiff += 10.0f;
                     }
-                    node.TempDistance = xDiff + yDiff * 10.0f; 
+                    //only apply the higher cost for vertical movement if it's more than a meter
+                    //(small differences can be caused by non-meaningful variance in the vertical position of the waypoint, we only care about actually going up/down e.g. ladders or stairs)
+                    if (Math.Abs(yDiff) > 1.0f)
+                    {
+                        yDiff *= 10.0f;
+                    }
                 }
-                else
-                {
-                    node.TempDistance = xDiff + yDiff;
-                }
+                node.TempDistance = xDiff + yDiff;
 
                 //much higher cost to waypoints that are outside
                 if (node.Waypoint.CurrentHull == null && ApplyPenaltyToOutsideNodes) { node.TempDistance *= 10.0f; }

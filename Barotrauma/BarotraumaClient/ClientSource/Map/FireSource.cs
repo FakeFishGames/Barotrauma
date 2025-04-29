@@ -1,4 +1,4 @@
-using Barotrauma.Lights;
+﻿using Barotrauma.Lights;
 using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System;
@@ -13,21 +13,14 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float growModifier, float deltaTime)
         {
-            if (this is DummyFireSource)
-            {
-                EmitParticles(size, WorldPosition, deltaTime, hull, growModifier,  null);
-            }
-            else
-            {
-                EmitParticles(size, WorldPosition, deltaTime, hull, growModifier, OnChangeHull);
-            }
+            EmitParticles(size, WorldPosition, deltaTime, hull, growModifier);
 
             lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
             if (Math.Abs((lightSource.Range * 0.2f) - Math.Max(size.X, size.Y)) > 1.0f) { lightSource.Range = Math.Max(size.X, size.Y) * 5.0f; }
             if (Vector2.DistanceSquared(lightSource.Position, position) > 5.0f) { lightSource.Position = position + Vector2.UnitY * 30.0f; }
         }
 
-        public void EmitParticles(Vector2 size, Vector2 worldPosition, float deltaTime, Hull hull, float growModifier, Particle.OnChangeHullHandler onChangeHull = null)
+        public void EmitParticles(Vector2 size, Vector2 worldPosition, float deltaTime, Hull hull, float growModifier)
         {
             var particlePrefab = ParticleManager.FindPrefab("flame");
             if (particlePrefab == null) { return; }
@@ -53,9 +46,6 @@ namespace Barotrauma
                     particlePos, particleVel, 0.0f, hull);
 
                 if (particle == null) { continue; }
-
-                //make some of the particles create another firesource when they enter another hull
-                if (Rand.Int(20) == 1) { particle.OnChangeHull = onChangeHull; }
 
                 particle.Size *= MathHelper.Clamp(size.X / 60.0f * Math.Max(hull.Oxygen / hull.Volume, 0.4f), 0.5f, 1.0f);
 

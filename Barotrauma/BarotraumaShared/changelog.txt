@@ -1,4 +1,24 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.8.8.1
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed client list often appearing empty in the server lobby when joining mid-round while a campaign was active.
+- Fixed job variant selection panel rendering below the job selection panel, often making it unusable.
+- Fixed job variant selection only working in the server lobby, not in the tab menu mid-round.
+- Fixed inability to preview loadouts if there's only one variant of a job available (e.g. assistants).
+- Fixed fires no longer spreading from room to room.
+- Fixed a pathfinding issue that sometimes caused both to get stuck running back and forth towards the target they're trying to reach (one common place where this occurred was Barsuk's engine room).
+- Fixed non-hitscan projectiles such as harpoons launching with an incorrect rotation when fired to the left.
+- Fixed Herja not having any assistant or non-job-specific spawnpoints, causing assistants and custom classes to spawn at other classes' spawnpoints, potentially giving them ID card tags they shouldn't have.
+- Autoinjectors no longer inject meds on dead characters (even though they are technically below the health threshold at which the autoinjection should trigger).
+- Fixed team argument not working on the "spawncharacter" console command when spawning non-humans.
+- Fixed some edge chunk objects in hydrothermal wastes and the great sea spawning in front of the level walls.
+- Fixed missing gap in one of the new crew modules, which prevented water and oxygen from flowing through the module properly.
+
+Modding:
+- Fixed transferring afflictions to a newly spawned character using status effects causing a crash if the original character had already been removed. Didn't affect any vanilla content.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.8.7.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

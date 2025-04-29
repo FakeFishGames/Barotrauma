@@ -18,7 +18,7 @@ namespace Barotrauma
         private GUIButton serverLogReverseButton;
         private GUIListBox serverLogBox, serverLogFilterTicks;
 
-        private GUIComponent jobVariantTooltip;
+        private static GUIComponent jobVariantTooltip;
 
         private GUIComponent playStyleIconContainer;
         
@@ -2876,7 +2876,7 @@ namespace Barotrauma
             };
         }
 
-        private void CreateJobVariantTooltip(JobPrefab jobPrefab, CharacterTeamType team, int variant, bool isPvPMode, GUIComponent parentSlot)
+        private static void CreateJobVariantTooltip(JobPrefab jobPrefab, CharacterTeamType team, int variant, bool isPvPMode, GUIComponent parentSlot)
         {
             jobVariantTooltip = new GUIFrame(new RectTransform(new Point((int)(400 * GUI.Scale), (int)(180 * GUI.Scale)), GUI.Canvas, pivot: Pivot.BottomRight),
                 style: "GUIToolTip")
@@ -4111,20 +4111,28 @@ namespace Barotrauma
                 JobSelectionFrame.Visible = false;
             }
 
-            if (GUI.MouseOn?.UserData is JobVariant jobPrefab && 
+            UpdateJobVariantSelectionIfNeeded();
+        }
+
+        public static void UpdateJobVariantSelectionIfNeeded()
+        {
+            if (GUI.MouseOn?.UserData is JobVariant jobPrefab &&
                 GUI.MouseOn.Style?.Name == "JobVariantButton" &&
                 GUI.MouseOn.Parent != null)
             {
-                if (jobVariantTooltip?.UserData is not JobVariant prevVisibleVariant || 
-                    prevVisibleVariant.Prefab != jobPrefab.Prefab || 
+                bool isMultiplayer = GameMain.NetLobbyScreen != null && GameMain.NetworkMember != null;
+                var teamPreference = isMultiplayer ? GameMain.NetLobbyScreen.TeamPreference : CharacterTeamType.Team1;
+                var isPvPMode = isMultiplayer ? GameMain.NetLobbyScreen.SelectedMode == GameModePreset.PvP : false; 
+                if (jobVariantTooltip?.UserData is not JobVariant prevVisibleVariant ||
+                    prevVisibleVariant.Prefab != jobPrefab.Prefab ||
                     prevVisibleVariant.Variant != jobPrefab.Variant)
                 {
-                    CreateJobVariantTooltip(jobPrefab.Prefab, TeamPreference, jobPrefab.Variant, isPvPMode: SelectedMode == GameModePreset.PvP, GUI.MouseOn.Parent);
+                    CreateJobVariantTooltip(jobPrefab.Prefab, teamPreference, jobPrefab.Variant, isPvPMode, GUI.MouseOn.Parent);
                 }
             }
             if (jobVariantTooltip != null)
             {
-                jobVariantTooltip?.AddToGUIUpdateList();
+                jobVariantTooltip?.AddToGUIUpdateList(order: 1);
                 Rectangle mouseRect = jobVariantTooltip.MouseRect;
                 mouseRect.Inflate(60 * GUI.Scale, 60 * GUI.Scale);
                 if (!mouseRect.Contains(PlayerInput.MousePosition)) { jobVariantTooltip = null; }
@@ -4547,7 +4555,7 @@ namespace Barotrauma
                     team: TeamPreference,
                     isPvPMode: SelectedMode == GameModePreset.PvP,
                     selectedByPlayer: false);
-                if (images != null && images.Length > 1)
+                if (images != null && images.Length > 0)
                 {
                     jobPrefab.Variant = Math.Min(jobPrefab.Variant, images.Length);
                     int currVisible = jobPrefab.Variant;
@@ -5055,9 +5063,8 @@ namespace Barotrauma
                     for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
                     {
                         int selectedVariantIndex = Math.Min(jobPrefab.Variant, images.Length);
-                        images[variantIndex].Visible = images.Length == 1 || selectedVariantIndex == variantIndex;
-                        
-                        if (images.Length > 1)
+                        images[variantIndex].Visible = images.Length == 1 || selectedVariantIndex == variantIndex;                        
+                        if (images.Length > 0)
                         {
                             var variantButton = CreateJobVariantButton(jobPrefab, variantIndex, images.Length, slot);
                             variantButton.OnClicked = (btn, obj) =>

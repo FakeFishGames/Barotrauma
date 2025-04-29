@@ -550,14 +550,14 @@ namespace Barotrauma
                 if (subObjective.IsCompleted)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.", Color.LightGreen);
+                    DebugConsole.NewMessage($"{character.Name}: Removing subObjective \"{subObjective.DebugTag}\" of \"{DebugTag}\", because it is completed.", Color.LightGreen);
 #endif
                     subObjectives.Remove(subObjective);
                 }
                 else if (!subObjective.CanBeCompleted)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Removing SUBobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.", Color.Red);
+                    DebugConsole.NewMessage($"{character.Name}: Removing subObjective \"{subObjective.DebugTag}\" of \"{DebugTag}\", because it cannot be completed.", Color.Red);
 #endif
                     subObjectives.Remove(subObjective);
                     if (AbandonWhenCannotCompleteSubObjectives)

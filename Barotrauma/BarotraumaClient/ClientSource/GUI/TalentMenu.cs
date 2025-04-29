@@ -1047,6 +1047,8 @@ namespace Barotrauma
                     showCaseClosureQueue.Enqueue(identifier);
                 }
             }
+
+            NetLobbyScreen.UpdateJobVariantSelectionIfNeeded();
         }
 
         private static bool IsOwnCharacter(CharacterInfo? info)

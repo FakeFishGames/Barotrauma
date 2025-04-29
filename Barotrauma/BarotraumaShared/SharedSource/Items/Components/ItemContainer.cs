@@ -635,6 +635,8 @@ namespace Barotrauma.Items.Components
                     autoInjectCooldown -= deltaTime;
                     if (autoInjectCooldown <= 0.0f &&
                         ownerInventory?.Owner is Character ownerCharacter && 
+                        //no point in trying to heal if the character is already dead
+                        !ownerCharacter.IsDead &&
                         ownerCharacter.HealthPercentage / 100f <= AutoInjectThreshold &&
                         ownerCharacter.HasEquippedItem(item))
                     {

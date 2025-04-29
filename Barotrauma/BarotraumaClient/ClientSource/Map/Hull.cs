@@ -394,6 +394,10 @@ namespace Barotrauma
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
                     GUI.DrawRectangle(spriteBatch, fireSourceRect, GUIStyle.Red, false, 0, 5);
                     GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUIStyle.Orange, false, 0, 5);
+
+                    Vector2 topCenter = new Vector2(fireSourceRect.Center.X, fireSourceRect.Y);
+                    GUI.DrawLine(spriteBatch, topCenter, topCenter - Vector2.UnitY * fs.FlameHeight, GUIStyle.Red * 0.7f, width: 5);
+
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
                 foreach (FireSource fs in FakeFireSources)
