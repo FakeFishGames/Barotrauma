@@ -501,6 +501,9 @@ namespace Barotrauma
 
         public void SelectTarget(AITarget target, float priority)
         {
+            if (target == null)
+                return;
+
             SelectedAiTarget = target;
             currentTargetMemory = GetTargetMemory(target, addIfNotFound: true);
             currentTargetMemory.Priority = priority;
@@ -4400,7 +4403,9 @@ namespace Barotrauma
                     {
                         if (SelectedAiTarget != door.Item.AiTarget || State != AIState.Attack)
                         {
-                            SelectTarget(door.Item.AiTarget, CurrentTargetMemory.Priority);
+                            if (door.Item.AiTarget != null)
+                                SelectTarget(door.Item.AiTarget, CurrentTargetMemory.Priority);
+
                             State = AIState.Attack;
                             return false;
                         }
