@@ -534,7 +534,7 @@ namespace Barotrauma
 
             hashTask = new Task(() =>
             {
-                hash = Md5Hash.CalculateForFile(FilePath, Md5Hash.StringHashOptions.IgnoreWhitespace);
+                hash = Md5Hash.CalculateForFile(FilePath);
             });
             hashTask.Start();
         }
