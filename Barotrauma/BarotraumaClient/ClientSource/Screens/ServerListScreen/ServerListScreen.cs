@@ -1327,20 +1327,26 @@ namespace Barotrauma
 
             int similarServerCount = 0;
             string serverInfoStr = getServerInfoStr(serverInfo);
-            foreach (var serverElement in serverList.Content.Children)
+            Parallel.ForEach(serverList.Content.Children, serverElement =>
             {
-                if (!serverElement.Visible) { continue; }
-                if (serverElement.UserData is not ServerInfo otherServer || otherServer == serverInfo) { continue; }
-                if (ToolBox.LevenshteinDistance(serverInfoStr, getServerInfoStr(otherServer)) < serverInfoStr.Length * (1.0f - MinSimilarityPercentage))
+                if (!serverElement.Visible)
+                    return;
+
+                if (serverElement.UserData is not ServerInfo otherServer || otherServer == serverInfo)
+                    return;
+
+                if (ToolBox.LevenshteinDistance(serverInfoStr, getServerInfoStr(otherServer)) <
+                    serverInfoStr.Length * (1.0f - MinSimilarityPercentage))
                 {
                     similarServerCount++;
-                    if (similarServerCount > MaxAllowedSimilarServers) 
-                    {  
-                        DebugConsole.Log($"Server {serverInfo.ServerName} seems to be almost identical to {otherServer.ServerName}. Hiding as a potential spam server.");
-                        break;
+                    if (similarServerCount > MaxAllowedSimilarServers)
+                    {
+                        DebugConsole.Log(
+                            $"Server {serverInfo.ServerName} seems to be almost identical to {otherServer.ServerName}. Hiding as a potential spam server.");
                     }
                 }
-            }
+            });
+            
             if (similarServerCount > MaxAllowedSimilarServers) { return; }
 
             static string getServerInfoStr(ServerInfo serverInfo)
