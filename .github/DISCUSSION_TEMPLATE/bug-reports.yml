@@ -74,6 +74,8 @@ body:
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:
         - v1.8.8.1 (Calm Before the Storm Hotfix 2)
+        - v1.9.0.0 (Unstable)
+        
         - Other
     validations:
       required: true
