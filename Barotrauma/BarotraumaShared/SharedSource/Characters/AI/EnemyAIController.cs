@@ -1265,6 +1265,10 @@ namespace Barotrauma
                 attackSimPos = Character.Submarine == wallTarget.Structure.Submarine ? wallTarget.Position : attackWorldPos;
                 attackSimPos = ConvertUnits.ToSimUnits(attackSimPos);
             }
+            else if (SelectedAiTarget.Entity is Submarine)
+            {
+                attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
+            }
             else
             {
                 attackSimPos = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
