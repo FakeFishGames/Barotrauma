@@ -511,6 +511,7 @@ namespace Barotrauma
             {
                 MapEntity.MapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
                 Character.CharacterList.ForEach(c => c.AiTarget?.Draw(spriteBatch));
+                Submarine.MainSub?.AiTarget.Draw(spriteBatch);
                 if (GameMain.GameSession?.EventManager != null)
                 {
                     GameMain.GameSession.EventManager.DebugDraw(spriteBatch);

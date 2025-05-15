@@ -87,9 +87,10 @@ namespace Barotrauma.Items.Components
             set
             {
                 range = MathHelper.Clamp(value, 0.0f, 100000.0f);
-                if (item?.AiTarget != null && item.AiTarget.MaxSoundRange <= 0)
+                AITarget aiTarget = item.Submarine?.AiTarget != null && item.body == null ? item.Submarine.AiTarget : item.AiTarget;
+                if (aiTarget != null && aiTarget.MaxSoundRange <= 0)
                 {
-                    item.AiTarget.MaxSoundRange = range;
+                    aiTarget.MaxSoundRange = range;
                 }
             }
         }
@@ -216,11 +217,6 @@ namespace Barotrauma.Items.Components
                         activePings[currentPingIndex].Direction = pingDirection;
                         activePings[currentPingIndex].State = 0.0f;
                         activePings[currentPingIndex].PrevPingRadius = 0.0f;
-                        foreach (AITarget aiTarget in GetAITargets())
-                        {
-                            aiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
-                            aiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                        }
                         item.Use(deltaTime);
                     }
                 }
@@ -235,7 +231,13 @@ namespace Barotrauma.Items.Components
                 foreach (AITarget aiTarget in GetAITargets())
                 {
                     float range = MathUtils.InverseLerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
-                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range));
+                    var idealRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    if (aiTarget.SoundRange < idealRange)
+                    {
+                        aiTarget.SoundRange = idealRange;
+                        aiTarget.SectorDegrees = activePings[pingIndex].IsDirectional ? DirectionalPingSector : 360.0f;
+                        aiTarget.SectorDir = new Vector2(activePings[pingIndex].Direction.X, -activePings[pingIndex].Direction.Y);
+                    }
                 }
                 if (activePings[pingIndex].State > 1.0f)
                 {
@@ -259,7 +261,8 @@ namespace Barotrauma.Items.Components
         {
             if (!UseTransducers)
             {
-                if (item.AiTarget != null) { yield return item.AiTarget; }                
+                if (item.Submarine != null && item.body == null && item.Submarine.AiTarget != null) { yield return item.Submarine.AiTarget; }
+                else if (item.AiTarget != null) { yield return item.AiTarget; }                
             }
             else
             {
