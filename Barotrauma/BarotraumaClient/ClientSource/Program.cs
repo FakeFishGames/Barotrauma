@@ -114,7 +114,7 @@ namespace Barotrauma
             try
             {
                 string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
-                exeHash = Md5Hash.CalculateForFile(exePath, Md5Hash.StringHashOptions.BytePerfect);
+                exeHash = Md5Hash.CalculateForFile(exePath);
             }
             catch
             {
