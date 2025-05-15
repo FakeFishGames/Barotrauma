@@ -57,6 +57,10 @@ namespace Barotrauma
                     }
                     color = Color.CadetBlue;
                 }
+                else if (Entity is Submarine)
+                {
+                    color = Color.WhiteSmoke;
+                }
                 else
                 {
                     //color = Color.WhiteSmoke;
