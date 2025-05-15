@@ -1243,11 +1243,6 @@ namespace Barotrauma
         {
             RefreshConnectedSubs();
 
-            if (aiTarget != null && aiTarget.NeedsUpdate)
-            {
-                aiTarget.Update(deltaTime);
-            }
-
             if (Info.IsWreck)
             {
                 WreckAI?.Update(deltaTime);
@@ -1623,8 +1618,6 @@ namespace Barotrauma
             {
                 this
             };
-
-            aiTarget = new AITarget(this);
 
             upgradeEventIdentifier = new Identifier($"Submarine{ID}");
             Loading = true;
