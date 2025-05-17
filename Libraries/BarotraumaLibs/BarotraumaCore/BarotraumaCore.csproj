@@ -23,6 +23,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\XNATypes\XNATypes.csproj" />
+      <PackageReference Include="DnsClient" Version="1.8.0" />
     </ItemGroup>
 
 </Project>
