@@ -454,6 +454,7 @@ namespace Barotrauma
                     }
                     reportProblemsTimer = reportProblemsInterval;
                 }
+                CheckForDraggedCorpses();
                 SpeakAboutIssues();
                 UnequipUnnecessaryItems();
                 reactTimer = GetReactionTime();
@@ -1200,6 +1201,37 @@ namespace Barotrauma
                     string msgId = "DialogPressure";
                     Character.Speak(TextManager.GetWithVariable(msgId, "[roomname]", Character.CurrentHull.DisplayName, FormatCapitals.Yes).Value, delay: Rand.Range(minDelay, maxDelay), identifier: msgId.ToIdentifier(), minDurationBetweenSimilar: 30.0f);
                 }
+            }
+        }
+
+        private void CheckForDraggedCorpses()
+        {
+            if (Character.IsOnPlayerTeam) { return; }
+
+            foreach (Character otherCharacter in Character.CharacterList)
+            {
+                if (otherCharacter.SelectedCharacter == null || !otherCharacter.SelectedCharacter.IsDead || 
+                    otherCharacter.SelectedCharacter.TeamID != Character.TeamID || !Character.CanSeeTarget(otherCharacter))
+                {
+                    continue;
+                }
+
+                // Player is dragging a corpse from our team
+                if (Character.SpeechImpediment < 100)
+                {
+                    Character.Speak(TextManager.Get("dialogstealwarning").Value, null, 
+                        Rand.Range(0.5f, 1.0f), "dialogstealwarning".ToIdentifier(), 10.0f);
+                }
+
+                if (Character.IsSecurity)
+                {
+                    AddCombatObjective(AIObjectiveCombat.CombatMode.Arrest, otherCharacter);
+                }
+                else
+                {
+                    AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, otherCharacter);
+                }
+                break; // Only react to one at a time
             }
         }
 
