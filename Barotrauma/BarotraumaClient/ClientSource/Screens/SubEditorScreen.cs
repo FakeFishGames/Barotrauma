@@ -5685,7 +5685,8 @@ namespace Barotrauma
                                     if (entity is Item item && item.Components.Any(ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
                                     {
                                         var container = item.GetComponents<ItemContainer>().ToList();
-                                        if (!container.Any() || container.Any(ic => ic?.DrawInventory ?? false))
+                                        if (!container.Any() || container.Any(ic => ic?.DrawInventory ?? false) ||
+                                            item.Components.Any(ic => ic is CircuitBox))
                                         {
                                             OpenItem(item);
                                             break;
