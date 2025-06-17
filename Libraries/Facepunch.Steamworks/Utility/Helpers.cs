@@ -99,7 +99,19 @@ namespace Steamworks
 			if ( len == 0 )
 				return string.Empty;
 
-			return UTF8Encoding.UTF8.GetString( (byte*)ptr, len );
+			return Utility.Utf8NoBom.GetString( (byte*)ptr, len );
+		}
+		
+		internal static string BuildVersionString( params string[] interfaceVersions )
+		{
+			var sb = new StringBuilder();
+			foreach ( var version in interfaceVersions )
+			{
+				sb.Append( version ).Append( '\0' );
+			}
+
+			sb.Append( '\0' );
+			return sb.ToString();
 		}
 	}
 

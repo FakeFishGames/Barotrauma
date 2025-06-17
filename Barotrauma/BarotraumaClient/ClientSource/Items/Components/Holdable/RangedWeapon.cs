@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
                         particleEmitterCharges.Add(new ParticleEmitter(subElement));
                         break;
                     case "chargesound":
-                        chargeSound = RoundSound.Load(subElement, false);
+                        chargeSound = RoundSound.Load(subElement);
                         break;
                 }
             }

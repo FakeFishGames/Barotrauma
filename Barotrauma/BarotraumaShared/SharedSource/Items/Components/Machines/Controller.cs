@@ -349,7 +349,7 @@ namespace Barotrauma.Items.Components
                 // Don't move lower body limbs if there's another selected secondary item that should control them
                 if (limb.IsLowerBody && user.HasSelectedAnotherSecondaryItem(Item)) { continue; }
                 // Don't move hands if there's a selected primary item that should control them
-                if (!limb.IsLowerBody && Item == user.SelectedSecondaryItem && user.SelectedItem != null) { continue; }
+                if (limb.IsArm && Item == user.SelectedSecondaryItem && user.SelectedItem != null) { continue; }
                 if (lb.AllowUsingLimb)
                 {
                     switch (lb.LimbType)

@@ -553,12 +553,12 @@ namespace Barotrauma.Items.Components
                 bool flipX = rootBody is { Dir: -1 } || flippedX;
                 if (flipX)
                 {
-                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
+                    spriteEffects |= SpriteEffects.FlipHorizontally;
                 }
                 bool flipY = flippedY;
                 if (flipY)
                 {
-                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
+                    spriteEffects |= SpriteEffects.FlipVertically;
                 }
 
                 contained.Item.Sprite.Draw(

@@ -589,6 +589,9 @@ namespace Barotrauma
 
         public Identifier VariantOf => Prefab.VariantOf;
 
+        /// <summary>
+        /// Non-localized name of the character (for characters with info, their name, for monsters, their species). E.g. "Mudraptor_veteran", "John Smith".
+        /// </summary>
         public string Name
         {
             get
@@ -597,6 +600,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Localized display name of the character (e.g. "Mudraptor Veteran", "John Smith") - this should generally be used in any the player sees.
+        /// </summary>
         public string DisplayName
         {
             get
@@ -1206,6 +1212,11 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        /// <summary>
+        /// Can be used by mods to check the cause of death of the character using conditionals (e.g. if some <see cref="OnDeath"/> effects should or should not be triggered by certain causes of death).
+        /// </summary>
+        public CauseOfDeathType CauseOfDeathType => CauseOfDeath?.Type ?? CauseOfDeathType.None;
 
         //can other characters select (= grab) this character
         public bool CanBeSelected
@@ -2406,7 +2417,7 @@ namespace Barotrauma
                     {
                         if (!CanInteractWith(item)) { continue; }
 
-                        if (SelectedItem?.OwnInventory != null && SelectedItem.OwnInventory.CanBePut(item))
+                        if (SelectedItem?.OwnInventory != null && !SelectedItem.OwnInventory.Locked && SelectedItem.OwnInventory.CanBePut(item))
                         {
                             SelectedItem.OwnInventory.TryPutItem(item, this);
                         }
@@ -5703,6 +5714,7 @@ namespace Barotrauma
 
         public bool HasRecipeForItem(Identifier recipeIdentifier)
         {
+            if (GameMain.GameSession != null && GameMain.GameSession.UnlockedRecipes.Contains(recipeIdentifier)) { return true; }
             return characterTalents.Any(t => t.UnlockedRecipes.Contains(recipeIdentifier));
         }
 

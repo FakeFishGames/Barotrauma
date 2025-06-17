@@ -92,13 +92,6 @@ namespace Barotrauma.Networking
                         CharacterID = value.ID;
                     }
                 }
-                else
-                {
-                    if (value != null)
-                    {
-                        DebugConsole.NewMessage(value.Name, Color.Yellow);
-                    }
-                }
                 character = value;
                 if (character != null)
                 {
@@ -272,12 +265,15 @@ namespace Barotrauma.Networking
             SetPermissions(permissions, permittedCommands);
         }
 
-        public static string SanitizeName(string name)
+        /// <summary>
+        /// Strips out newlines and some common non-renderable symbols (ASCII codes below 32) out of the name, and optionally limits the maximum size.
+        /// </summary>
+        public static string SanitizeName(string name, int maxLength = MaxNameLength)
         {
-            name = name.Trim();
-            if (name.Length > MaxNameLength)
+            name = name.Trim().Replace("\r\n", " ").Replace('\n', ' ').Replace('\r', ' ');
+            if (name.Length > maxLength)
             {
-                name = name.Substring(0, MaxNameLength);
+                name = name.Substring(0, maxLength);
             }
             string rName = "";
             for (int i = 0; i < name.Length; i++)

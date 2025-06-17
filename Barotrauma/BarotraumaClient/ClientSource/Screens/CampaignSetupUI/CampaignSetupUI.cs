@@ -11,6 +11,14 @@ namespace Barotrauma
 {
     abstract class CampaignSetupUI
     {
+        protected enum SaveSortingType
+        {
+            LastPlayedDescending, LastPlayedAscending,
+            NameDescending, NameAscending
+        }
+
+        private const SaveSortingType DefaultSaveSortingType = SaveSortingType.LastPlayedDescending;
+
         protected readonly GUIComponent newGameContainer, loadGameContainer;
 
         protected GUIListBox saveList;
@@ -111,24 +119,54 @@ namespace Barotrauma
             return saveFrame;
         }
 
-        protected void SortSaveList()
+        protected void SortSaveList(SaveSortingType sortingType = DefaultSaveSortingType) => saveList?.Content.RectTransform.SortChildren((rect1, rect2) =>
         {
-            saveList.Content.RectTransform.SortChildren((c1, c2) =>
+            if (rect1.GUIComponent.UserData is not CampaignMode.SaveInfo file1 || rect2.GUIComponent.UserData is not CampaignMode.SaveInfo file2) { return 0; }
+            if (!file1.SaveTime.TryUnwrap(out SerializableDateTime file1WriteTime) || !file2.SaveTime.TryUnwrap(out SerializableDateTime file2WriteTime)) { return 0; }
+            return sortingType switch
             {
-                if (c1.GUIComponent.UserData is not CampaignMode.SaveInfo file1
-                    || c2.GUIComponent.UserData is not CampaignMode.SaveInfo file2)
-                {
-                    return 0;
-                }
+                SaveSortingType.LastPlayedDescending => file2WriteTime.CompareTo(file1WriteTime),
+                SaveSortingType.LastPlayedAscending => file1WriteTime.CompareTo(file2WriteTime),
+                SaveSortingType.NameDescending => string.Compare(Path.GetFileNameWithoutExtension(file1.FilePath), Path.GetFileNameWithoutExtension(file2.FilePath), StringComparison.OrdinalIgnoreCase),
+                SaveSortingType.NameAscending => string.Compare(Path.GetFileNameWithoutExtension(file2.FilePath), Path.GetFileNameWithoutExtension(file1.FilePath), StringComparison.OrdinalIgnoreCase),
+                _ => 0
+            };
+        });
 
-                if (!file1.SaveTime.TryUnwrap(out var file1WriteTime)
-                    || !file2.SaveTime.TryUnwrap(out var file2WriteTime))
+        protected void CreateSaveFilteringHeader(GUIComponent parent)
+        {
+            GUILayoutGroup container = new(new RectTransform(Vector2.UnitX, parent.RectTransform), true) { Stretch = true };
+
+            GUI.CreateFilterBox(new RectTransform(new Vector2(0.6f, 1f), container.RectTransform)).OnTextChanged += (_, filterText) =>
+            {
+                filterText = filterText.Trim();
+                foreach (GUIComponent saveElement in saveList.Content.Children)
                 {
-                    return 0;
+                    if (saveElement.UserData is not CampaignMode.SaveInfo saveInfo) { continue; }
+                    saveElement.Visible = filterText.IsNullOrEmpty()
+                        || Path.GetFileNameWithoutExtension(saveInfo.FilePath).Contains(filterText, StringComparison.OrdinalIgnoreCase);
                 }
-                
-                return file2WriteTime.CompareTo(file1WriteTime);
-            });
+                return true;
+            };
+
+            SaveSortingType[] sortingTypes = Enum.GetValues<SaveSortingType>();
+            GUIDropDown dropDown = new(new RectTransform(new Vector2(0.4f, 1f), container.RectTransform), elementCount: sortingTypes.Length)
+            {
+                OnSelected = (_, data) =>
+                {
+                    SortSaveList((SaveSortingType)data);
+                    return true;
+                }
+            };
+
+            foreach (SaveSortingType sortingType in sortingTypes)
+            {
+                dropDown.AddItem(TextManager.Get($"SaveSortingType.{sortingType}"), sortingType);
+            }
+
+            dropDown.SelectItem(DefaultSaveSortingType);
+
+            container.RectTransform.MinSize = (0, container.Children.Max(child => child.Rect.Size.Y));
         }
         
         public struct CampaignSettingElements

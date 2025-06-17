@@ -1159,15 +1159,6 @@ namespace Barotrauma
 
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 
-        private float RotationRad
-            => MathHelper.ToRadians(
-                this switch
-                {
-                    Structure s => s.Rotation,
-                    Item it => it.Rotation,
-                    _ => 0.0f
-                });
-
         private Vector2 GetEditingHandlePos(int x, int y, Camera cam)
         {
             Vector2 handleDiff = new Vector2(x * (rect.Width * 0.5f), y * (rect.Height * 0.5f));

@@ -251,14 +251,13 @@ namespace Barotrauma
             }
         }
 
-        protected float rotationRad = 0f;
         [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, DecimalCount = 3, ForceShowPlusMinusButtons = true, ValueStep = 0.1f), Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Rotation
         {
-            get => MathHelper.ToDegrees(rotationRad);
+            get => MathHelper.ToDegrees(RotationRad);
             set
             {
-                rotationRad = MathHelper.WrapAngle(MathHelper.ToRadians(value));
+                RotationRad = MathHelper.WrapAngle(MathHelper.ToRadians(value));
                 if (StairDirection != Direction.None)
                 {
                     CreateStairBodies();
@@ -373,7 +372,7 @@ namespace Barotrauma
         {
             get
             {
-                float rotation = MathHelper.ToRadians(Prefab.BodyRotation) + this.rotationRad;
+                float rotation = MathHelper.ToRadians(Prefab.BodyRotation) + this.RotationRad;
                 if (IsHorizontal)
                 {
                     if (FlippedX) { rotation = -MathHelper.Pi - rotation; }
@@ -396,9 +395,9 @@ namespace Barotrauma
             get
             {
                 Vector2 bodyOffset = Prefab.BodyOffset;
-                if (rotationRad != 0f)
+                if (RotationRad != 0f)
                 {
-                    bodyOffset = MathUtils.RotatePoint(bodyOffset, -rotationRad);
+                    bodyOffset = MathUtils.RotatePoint(bodyOffset, -RotationRad);
                 }
                 if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
                 if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
@@ -627,7 +626,7 @@ namespace Barotrauma
 
             Body newBody = GameMain.World.CreateRectangle(bodyWidth, bodyHeight, 1.5f);
 
-            var rotationWithFlip = FlippedX ^ FlippedY ? -rotationRad : rotationRad;
+            float rotationWithFlip = RotationRadWithFlipping;
             
             newBody.BodyType = BodyType.Static;
             Vector2 stairRectHeightDiff = new Vector2(0f, stairHeight / 2.0f - rect.Height / 2.0f);
@@ -764,8 +763,8 @@ namespace Barotrauma
         public override Quad2D GetTransformedQuad()
             => Quad2D.FromSubmarineRectangle(rect).Rotated(
                 FlippedX != FlippedY
-                    ? rotationRad
-                    : -rotationRad);
+                    ? RotationRad
+                    : -RotationRad);
 
         /// <summary>
         /// Checks if there's a structure items can be attached to at the given position and returns it.
@@ -1280,7 +1279,7 @@ namespace Barotrauma
                     gapRect.Width += 20;
                     gapRect.Height += 20;
 
-                    bool rotatedEnoughToChangeOrientation = (MathUtils.WrapAngleTwoPi(rotationRad - MathHelper.PiOver4) % MathHelper.Pi < MathHelper.PiOver2);
+                    bool rotatedEnoughToChangeOrientation = (MathUtils.WrapAngleTwoPi(RotationRad - MathHelper.PiOver4) % MathHelper.Pi < MathHelper.PiOver2);
                     if (rotatedEnoughToChangeOrientation)
                     {
                         var center = gapRect.Location + gapRect.Size.FlipY() / new Point(2);
@@ -1345,6 +1344,9 @@ namespace Barotrauma
                 if (gapOpen - prevGapOpenState > 0.25f && createExplosionEffect && !gap.IsRoomToRoom)
                 {
                     CreateWallDamageExplosion(gap, attacker, createWallDamageProjectiles);
+#if CLIENT
+                    SteamTimelineManager.OnHullBreached(this);
+#endif
                 }
             }
 
@@ -1378,7 +1380,7 @@ namespace Barotrauma
         {
             const float explosionRange = 500.0f;
             float explosionStrength = gap.Open;
-
+            
             var linkedHull = gap.linkedTo.FirstOrDefault() as Hull;
             if (linkedHull != null)
             {
@@ -1595,7 +1597,7 @@ namespace Barotrauma
 
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation);
 
-        public override void FlipX(bool relativeToSub)
+        public override void FlipX(bool relativeToSub, bool force = false)
         {
             base.FlipX(relativeToSub);
 
@@ -1623,7 +1625,7 @@ namespace Barotrauma
             }
         }
 
-        public override void FlipY(bool relativeToSub)
+        public override void FlipY(bool relativeToSub, bool force = false)
         {
             base.FlipY(relativeToSub);
 

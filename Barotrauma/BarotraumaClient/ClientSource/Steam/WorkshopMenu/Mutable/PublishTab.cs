@@ -10,6 +10,7 @@ using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Steamworks;
+using Steamworks.Ugc;
 using Directory = Barotrauma.IO.Directory;
 using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentPackage>;
 using Path = Barotrauma.IO.Path;
@@ -335,8 +336,9 @@ namespace Barotrauma.Steam
                             .WithTags(tagButtons.Where(kvp => kvp.Value.Selected).Select(kvp => kvp.Key.Value))
                             .WithChangeLog(changeNoteTextBox.Text)
                             .WithMetaData($"gameversion={localPackage.GameVersion};modversion={versionTextBox.Text}")
-                            .WithVisibility(visibility)
                             .WithPreviewFile(thumbnailPath);
+
+                        ugcEditor.Visibility = visibility;
 
                         CoroutineManager.StartCoroutine(
                             MessageBoxCoroutine((currentStepText, messageBox)

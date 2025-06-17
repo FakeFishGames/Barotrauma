@@ -230,30 +230,28 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f)
+        public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f, Color? color = null)
         {
             Vector2 topLeft = roundedGridCenter - Vector2.One * GridSize * gridCells / 2;
             Vector2 bottomRight = roundedGridCenter + Vector2.One * GridSize * gridCells / 2;
 
             for (int i = 0; i < gridCells; i++)
             {
-                float distFromGridX = (MathUtils.RoundTowardsClosest(gridCenter.X, GridSize.X) - gridCenter.X) / GridSize.X;
-                float distFromGridY = (MathUtils.RoundTowardsClosest(gridCenter.Y, GridSize.Y) - gridCenter.Y) / GridSize.Y;
+                float middleIndex = (gridCells - 1) / 2.0f;
+                float normalizedPos = Math.Abs((i - middleIndex) / middleIndex);
+                float expandX = MathHelper.Lerp(30.0f, 0.0f, normalizedPos);
+                float expandY = expandX;
 
-                float normalizedDistX = Math.Abs(i + distFromGridX - gridCells / 2) / (gridCells / 2);
-                float normalizedDistY = Math.Abs(i - distFromGridY - gridCells / 2) / (gridCells / 2);
-
-                float expandX = MathHelper.Lerp(30.0f, 0.0f, normalizedDistY);
-                float expandY = MathHelper.Lerp(30.0f, 0.0f, normalizedDistX);
+                Color lineColor = color ?? Color.White;
 
                 GUI.DrawLine(spriteBatch,
                     new Vector2(topLeft.X - expandX, -bottomRight.Y + i * GridSize.Y),
                     new Vector2(bottomRight.X + expandX, -bottomRight.Y + i * GridSize.Y),
-                    Color.White * (1.0f - normalizedDistY) * alpha, depth: 0.6f, width: 3);
+                    lineColor * (1.0f - normalizedPos) * alpha, depth: 0.6f, width: 3);
                 GUI.DrawLine(spriteBatch,
                     new Vector2(topLeft.X + i * GridSize.X, -topLeft.Y + expandY),
                     new Vector2(topLeft.X + i * GridSize.X, -bottomRight.Y - expandY),
-                    Color.White * (1.0f - normalizedDistX) * alpha, depth: 0.6f, width: 3);
+                    lineColor * (1.0f - normalizedPos) * alpha, depth: 0.6f, width: 3);
             }
         }
 

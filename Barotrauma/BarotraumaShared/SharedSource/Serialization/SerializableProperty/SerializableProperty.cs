@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using RestSharp.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -12,6 +13,10 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Is the value of the property saved when saving (serializing) the entity? 
+    /// Can be set to false if e.g. the value doesn't ever change from the prefab value, or if changes to it shouldn't persist between rounds.
+    /// </summary>
     public enum IsPropertySaveable
     {
         Yes,
@@ -883,7 +888,16 @@ namespace Barotrauma
         public static Dictionary<Identifier, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
         {
             Dictionary<Identifier, SerializableProperty> dictionary = GetProperties(obj);
-
+#if DEBUG
+            var nonPublicProperties = obj.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var property in nonPublicProperties)
+            {
+                if (property.GetAttribute<Serialize>() != null)
+                {
+                    DebugConsole.ThrowError($"The property {property.Name} in class {obj.GetType()} is set as serializable, but isn't public. Serializable properties must have at least a public getter.");
+                }
+            }
+#endif
             foreach (var property in dictionary.Values)
             {
                 //set the value of the property to the default value if there is one

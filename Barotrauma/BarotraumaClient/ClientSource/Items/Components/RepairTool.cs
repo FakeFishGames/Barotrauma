@@ -4,10 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -28,7 +24,7 @@ namespace Barotrauma.Items.Components
         private readonly List<ParticleEmitter> particleEmitterHitCharacter = new List<ParticleEmitter>();
         private readonly List<(RelatedItem relatedItem, ParticleEmitter emitter)> particleEmitterHitItem = new List<(RelatedItem relatedItem, ParticleEmitter emitter)>();
 
-        private float prevProgressBarState;
+        private float prevProgressBarState = 1;
         private Item prevProgressBarTarget = null;
 
         partial void InitProjSpecific(ContentXElement element)

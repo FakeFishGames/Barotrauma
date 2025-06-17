@@ -308,6 +308,9 @@ namespace Barotrauma
         public Vector2 DebugTargetPos;
         public Vector2 DebugRefPos;
 
+        /// <summary>
+        /// Is the limb the waist, a part of a leg or a tail?
+        /// </summary>
         public bool IsLowerBody
         {
             get
@@ -330,22 +333,33 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Is the limb a leg or a part of a leg (upper or lower leg or foot)
+        /// </summary>
         public bool IsLeg
         {
             get
             {
-                switch (type)
+                return type switch
                 {
-                    case LimbType.LeftFoot:
-                    case LimbType.LeftLeg:
-                    case LimbType.LeftThigh:
-                    case LimbType.RightFoot:
-                    case LimbType.RightLeg:
-                    case LimbType.RightThigh:
-                        return true;
-                    default:
-                        return false;
-                }
+                    LimbType.LeftFoot or LimbType.LeftLeg or LimbType.LeftThigh or LimbType.RightFoot or LimbType.RightLeg or LimbType.RightThigh => true,
+                    _ => false,
+                };
+            }
+        }
+
+        /// <summary>
+        /// Is the limb an arm or a part of an arm (upper or lower arm or hand)
+        /// </summary>
+        public bool IsArm
+        {
+            get
+            {
+                return type switch
+                {
+                    LimbType.LeftArm or LimbType.LeftForearm or LimbType.LeftHand or LimbType.RightArm or LimbType.RightForearm or LimbType.RightHand => true,
+                    _ => false,
+                };
             }
         }
 

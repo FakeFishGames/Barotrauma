@@ -771,6 +771,8 @@ namespace Barotrauma
 
         private QuickUseAction GetQuickUseAction(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
         {
+            if (!item.IsInteractable(Character.Controlled)) { return QuickUseAction.None; }
+
             if (allowApplyTreatment && CharacterHealth.OpenHealthWindow != null && 
                 //if the item can be equipped in the health interface slot, don't use it as a treatment but try to equip it
                 !item.AllowedSlots.Contains(InvSlotType.HealthInterface))

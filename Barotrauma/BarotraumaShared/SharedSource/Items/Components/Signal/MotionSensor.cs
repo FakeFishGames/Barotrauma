@@ -325,23 +325,18 @@ namespace Barotrauma.Items.Components
         private bool TriggersOn(Character character, bool triggerFromHumans, bool triggerFromPets, bool triggerFromMonsters)
         {
             if (IgnoreDead && character.IsDead) { return false; }
-            if (character.IsHuman)
-            {
-                if (!triggerFromHumans) { return false; }
-            }
-            else if (character.IsPet)
+            if (character.IsPet)
             {
                 if (!triggerFromPets) { return false; }
+            }
+            else if (character.IsHuman || CharacterParams.CompareGroup(character.Group, CharacterPrefab.HumanGroup))
+            {
+                if (!triggerFromHumans) { return false; }
             }
             else
             {
                 // Not a human or a pet -> monster?
                 if (!triggerFromMonsters) { return false; }
-                if (CharacterParams.CompareGroup(character.Group, CharacterPrefab.HumanGroup))
-                {
-                    //characters in the "human" group aren't considered monsters (even if they were something like a friendly mudraptor)
-                    return false;
-                }
             }
             // Check matching character, if defined.
             if (targetCharacters.Any())

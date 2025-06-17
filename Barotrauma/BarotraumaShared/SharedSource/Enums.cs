@@ -123,7 +123,7 @@ namespace Barotrauma
         /// </summary>
         OnAbility = 23,
         /// <summary>
-        /// Executes once when a specific Containable is placed inside an ItemContainer. Only valid for Containables defined in an ItemContainer component.
+        /// Executes once when a specific Containable is placed inside an ItemContainer. Only valid for Containables defined in an ItemContainer component. Does not execute if the item is placed into the container when loading an existing submarine or a character (i.e. when the item was "already in" the container).
         /// </summary>
         OnInserted = 24,
         /// <summary>

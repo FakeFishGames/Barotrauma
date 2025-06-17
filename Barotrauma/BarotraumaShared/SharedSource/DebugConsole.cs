@@ -162,6 +162,8 @@ namespace Barotrauma
         private static readonly int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
 
+        private static WeakReference<Character> previousControlledCharacter;  // For SP freecam
+
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
         {
             var matchingCommand = commands.Find(c => c.Names.Intersect(names.Split('|').ToIdentifiers()).Any());
@@ -935,8 +937,29 @@ namespace Barotrauma
 
                 if (GameMain.Client == null)
                 {
-                    Character.Controlled = null;
-                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    if (Character.Controlled == null)
+                    {
+                        // Exiting freecam - try to return to previous character
+                        Character prevCharacter = null;
+                        if (previousControlledCharacter != null && previousControlledCharacter.TryGetTarget(out prevCharacter) && 
+                            prevCharacter != null && !prevCharacter.IsDead && !prevCharacter.Removed)
+                        {
+                            Character.Controlled = prevCharacter;
+                            NewMessage("Exiting freecam mode", Color.Yellow);
+                        }
+                        else
+                        {
+                            NewMessage("Could not regain control of the previous character (dead or removed).", Color.Red);
+                        }
+                    }
+                    else
+                    {
+                        // Entering freecam - store current character ID
+                        previousControlledCharacter = new WeakReference<Character>(Character.Controlled);
+                        Character.Controlled = null;
+                        GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                        NewMessage("Entering freecam mode", Color.Yellow);
+                    }
                 }
                 else
                 {
@@ -1348,14 +1371,13 @@ namespace Barotrauma
                 }                
                 else if (args[0].Equals("endoutpost", StringComparison.OrdinalIgnoreCase))
                 {
-                    Submarine.MainSub.SetPosition(Level.Loaded.EndExitPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
-
-                    var submarineDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Submarine.MainSub);
                     if (Level.Loaded?.EndOutpost == null)
                     {
                         NewMessage("Can't teleport the sub to the end outpost (no outpost at the end of the level).", Color.Red);
                         return;
                     }
+                    Submarine.MainSub.SetPosition(Level.Loaded.EndExitPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                    var submarineDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Submarine.MainSub);
                     var outpostDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Level.Loaded.EndOutpost);
                     if (submarineDockingPort != null && outpostDockingPort != null)
                     {
@@ -1616,7 +1638,18 @@ namespace Barotrauma
                             yield return CoroutineStatus.Success;
                         }
                     }
-                    
+
+                    if (Level.Loaded.StartOutpost != null &&
+                        Level.Loaded.StartOutpost.Info.OutpostTags.Contains("PvPOutpost".ToIdentifier()))
+                    {
+                        ThrowError("Chose a PvP outpost for the start of the level. This is probably not intentional, unless there's a PvP outpost that's also intended to be used in normal levels?");
+                    }
+                    if (Level.Loaded.EndOutpost != null &&
+                        Level.Loaded.EndOutpost.Info.OutpostTags.Contains("PvPOutpost".ToIdentifier()))
+                    {
+                        ThrowError("Chose a PvP outpost for the end of the level. This is probably not intentional, unless there's a PvP outpost that's also intended to be used in normal levels?");
+                    }
+
                     var levelCells = Level.Loaded.GetCells(
                         Submarine.MainSub.WorldPosition,
                         Math.Max(Submarine.MainSub.Borders.Width / Level.GridCellSize, 2));
@@ -1796,7 +1829,7 @@ namespace Barotrauma
                         int targetLevel = prefab.GetMaxLevelForCurrentSub() - upgradeManager.GetRealUpgradeLevel(prefab, category);
                         for (int i = 0; i < targetLevel; i++)
                         {
-                            upgradeManager.PurchaseUpgrade(prefab, category, force: true);
+                            upgradeManager.TryPurchaseUpgrade(prefab, category, force: true);
                         }
                         NewMessage($"Upgraded {category.Identifier}.{prefab.Identifier} by {targetLevel} levels.", Color.DarkGreen);
                     }
@@ -2297,6 +2330,7 @@ namespace Barotrauma
             commands.Add(new Command("devmode", "Toggle the dev mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("showmonsters", "Permanently unlocks all the monsters in the character editor. Use \"hidemonsters\" to undo.", null, isCheat: true));
             commands.Add(new Command("hidemonsters", "Permanently hides in the character editor all the monsters that haven't been encountered in the game. Use \"showmonsters\" to undo.", null, isCheat: true));
+            commands.Add(new Command("loslightingfreecam", "Toggles line of sight effect, lighting, and enables freecam mode. (client-only)", null, isCheat: true));
 
             InitProjectSpecific();
 
@@ -2911,7 +2945,7 @@ namespace Barotrauma
                 isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             }
 
-            ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType teamType, out bool addToCrew);
+            ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType? teamType, out bool addToCrew);
 
             if (usePreConfiguredNPC)
             {
@@ -2950,25 +2984,30 @@ namespace Barotrauma
             }
             else if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) is { } prefab)
             {
-                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(prefab.Identifier) : null, onSpawn: newCharacter =>
-                {
-                    SetTeamAndCrew(newCharacter);
-                });
+                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(prefab.Identifier) : null, onSpawn: SetTeamAndCrew);
             }
 
             void SetTeamAndCrew(Character newCharacter)
             {
-                newCharacter.TeamID = teamType;
+                if (teamType.HasValue)
+                {
+                    newCharacter.TeamID = teamType.Value;
+                }
+                else if (isHuman)
+                {
+                    newCharacter.TeamID = Character.Controlled?.TeamID ?? CharacterTeamType.Team1;
+                }
                 if (addToCrew)
                 {
                     GameMain.GameSession?.CrewManager.AddCharacter(newCharacter);
                 }
             }
 
-            void ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType teamType, out bool addToCrew)
+            void ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType? teamType, out bool addToCrew)
             {
                 spawnPosition = Vector2.Zero;
                 spawnPoint = null;
+                teamType = null;
 
                 int argIndex = characterArgumentCount;
                 if (args.Length > argIndex)
@@ -3024,15 +3063,14 @@ namespace Barotrauma
                     {
                         teamType = (CharacterTeamType)teamID;
                     }
-                    else if (!Enum.TryParse(args[argIndex], ignoreCase: true, out teamType))
+                    else if (Enum.TryParse(args[argIndex], ignoreCase: true, out CharacterTeamType parsedTeamType))
                     {
-                        teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
-                        ThrowError($"\"{args[argIndex]}\" is not a valid team id. Defaulting to {teamType}.");
+                        teamType = parsedTeamType;
                     }
-                }
-                else
-                {
-                    teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+                    else
+                    {
+                        ThrowError($"\"{args[argIndex]}\" is not a valid team id.");
+                    }
                 }
 
                 argIndex++;
@@ -3393,6 +3431,9 @@ namespace Barotrauma
         public static void ThrowError(string error, Exception e = null, ContentPackage contentPackage = null, bool createMessageBox = false, bool appendStackTrace = false)
         {
             error = AddContentPackageInfoToMessage(error, contentPackage);
+#if CLIENT
+            SteamTimelineManager.OnError(error, e);
+#endif
             if (e != null)
             {
                 error += " {" + e.Message + "}\n";

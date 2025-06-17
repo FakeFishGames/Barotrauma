@@ -22,10 +22,11 @@ namespace Barotrauma
         /// How often the FireSource checks whether it can spread to nearby hulls.
         /// </summary>
         const float SpreadToOtherHullsInterval = 5.0f;
+
         /// <summary>
         /// The probability of the fire spreading to a nearby hull when the <see cref="TrySpreadToNearbyHulls"/> check is made.
         /// </summary>
-        const float SpreadToOtherHullsProbability = 0.15f;
+        protected virtual float SpreadToOtherHullsProbability => 0.15f;
 
         protected Hull hull;
 
@@ -252,11 +253,14 @@ namespace Barotrauma
 
             LimitSize();
 
-            spreadToOtherHullsTimer -= deltaTime;
-            if (spreadToOtherHullsTimer <= 0.0f)
+            if (SpreadToOtherHullsProbability > 0.0f)
             {
-                TrySpreadToNearbyHulls();
-                spreadToOtherHullsTimer = SpreadToOtherHullsInterval;
+                spreadToOtherHullsTimer -= deltaTime;
+                if (spreadToOtherHullsTimer <= 0.0f)
+                {
+                    TrySpreadToNearbyHulls();
+                    spreadToOtherHullsTimer = SpreadToOtherHullsInterval;
+                }
             }
 
             if (size.X > 256.0f && this is not DummyFireSource)

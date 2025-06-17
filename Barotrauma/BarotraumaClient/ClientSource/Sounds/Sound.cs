@@ -1,8 +1,6 @@
-﻿using System;
-using OpenAL;
+﻿using Barotrauma.IO;
 using Microsoft.Xna.Framework;
-using Barotrauma.IO;
-using System.Xml.Linq;
+using System;
 
 namespace Barotrauma.Sounds
 {
@@ -23,6 +21,11 @@ namespace Barotrauma.Sounds
         public readonly bool Stream;
 
         public readonly bool StreamsReliably;
+
+        /// <summary>
+        /// Length of the audio in seconds. Null if the length is unknown (e.g. a streaming audio source).
+        /// </summary>
+        public abstract double? DurationSeconds { get; }
 
         public bool Loading { get; protected set; }
 

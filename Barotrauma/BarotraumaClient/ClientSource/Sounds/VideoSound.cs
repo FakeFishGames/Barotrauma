@@ -1,23 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenAL;
+﻿using Barotrauma.Media;
 using Microsoft.Xna.Framework;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Barotrauma.Media;
+using OpenAL;
+using System;
+using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {
     class VideoSound : Sound
     {
         private readonly object mutex;
-        private Queue<short[]> sampleQueue;
+        private readonly Queue<short[]> sampleQueue;
 
         private SoundChannel soundChannel;
-        private Video video;
+        private readonly Video video;
+
+        public override double? DurationSeconds => null;
 
         public VideoSound(SoundManager owner, string filename, int sampleRate, int channelCount, Video vid) : base(owner, filename, true, false)
         {

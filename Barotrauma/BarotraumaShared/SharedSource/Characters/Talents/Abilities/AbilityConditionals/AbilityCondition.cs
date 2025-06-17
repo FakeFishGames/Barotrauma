@@ -69,9 +69,9 @@ namespace Barotrauma.Abilities
             switch (targetType)
             {
                 case TargetType.Enemy:
-                    return !HumanAIController.IsFriendly(character, targetCharacter, onlySameTeam: false);
+                    return !HumanAIController.IsFriendly(character, targetCharacter);
                 case TargetType.Ally:
-                    return HumanAIController.IsFriendly(character, targetCharacter, onlySameTeam: true);
+                    return HumanAIController.IsFriendly(character, targetCharacter);
                 case TargetType.NotSelf:
                     return targetCharacter != character;
                 case TargetType.Alive:
@@ -84,5 +84,6 @@ namespace Barotrauma.Abilities
                     return true;
             }
         }
+
     }
 }

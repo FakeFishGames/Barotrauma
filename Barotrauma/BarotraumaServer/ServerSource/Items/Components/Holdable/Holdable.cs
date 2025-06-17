@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
         {
             base.ServerEventWrite(msg, c, extraData);
 
-            bool writeAttachData = attachable && body != null;
+            bool writeAttachData = attachable && originalBody != null;
             msg.WriteBoolean(writeAttachData);
             if (!writeAttachData) { return; }
 
@@ -22,8 +22,8 @@ namespace Barotrauma.Items.Components
             }
 
             msg.WriteBoolean(Attached);
-            msg.WriteSingle(body.SimPosition.X);
-            msg.WriteSingle(body.SimPosition.Y);
+            msg.WriteSingle(originalBody.SimPosition.X);
+            msg.WriteSingle(originalBody.SimPosition.Y);
             msg.WriteUInt16(item.Submarine?.ID ?? Entity.NullEntityID);
             msg.WriteUInt16(attacherId);
         }
@@ -40,6 +40,9 @@ namespace Barotrauma.Items.Components
 
             Drop(false, null);
             item.SetTransform(simPosition, 0.0f, findNewHull: false);
+            //don't find the new hull in SetTransform, because that'd also potentially change the submarine (teleport the item outside if it's attached outside)
+            //instead just find the hull, so the item is considered to be in the right hull
+            item.CurrentHull = Hull.FindHull(item.WorldPosition, item.CurrentHull);
             AttachToWall();
             OnUsed.Invoke(new ItemUseInfo(item, c.Character));
 

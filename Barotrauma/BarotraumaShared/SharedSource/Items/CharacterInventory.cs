@@ -220,6 +220,22 @@ namespace Barotrauma
             return false;
         }
 
+
+        /// <summary>
+        /// Can the item be put in the inventory in a slot of the specified type (i.e. is there a suitable free slot or a stack the item can be put in).
+        /// </summary>
+        public bool CanBePut(Item item, InvSlotType slotType)
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (slotType.HasFlag(SlotTypes[i]))
+                {
+                    if (CanBePutInSlot(item, i)) { return true; }
+                }
+            }
+            return false;
+        }
+
         public override bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
         {
             return 

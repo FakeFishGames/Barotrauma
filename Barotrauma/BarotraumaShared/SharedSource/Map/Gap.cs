@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -829,13 +830,14 @@ namespace Barotrauma
                 foreach (var connectedGap in hull.ConnectedGaps)
                 {
                     if (connectedGap == this) { continue; }
+                    if (connectedGap.IsRoomToRoom != IsRoomToRoom) { continue; }
                     //let the "more open" gap reduce this gap's flow rate
                     //or if they're both equally open, let the one that was created first handle it
                     //(note that we can't use Entity.ID here because gaps on walls don't have IDs)
                     if (connectedGap.open > open ||
                         (connectedGap.open == open && connectedGap.CreationIndex < CreationIndex)) 
                     {
-                        Rectangle intersection = Rectangle.Intersect(rect, connectedGap.rect);
+                        Rectangle intersection = Rectangle.Intersect(rect.ToWorldRect(), connectedGap.rect.ToWorldRect());
                         if (intersection.Width > 0 && intersection.Height > 0)
                         {
                             //reduce flow rate based on how much of this gap is covered by the connected one, and how open the connected one is
@@ -843,6 +845,7 @@ namespace Barotrauma
                                 intersection.Height / (float)rect.Height : 
                                 intersection.Width / (float)rect.Width;
                             overlappingGapFlowRateReduction += relativeOverlap * connectedGap.open;
+                            overlappingGaps.Add(connectedGap);
                         }
                     }
                     if (overlappingGapFlowRateReduction >= 1.0f)

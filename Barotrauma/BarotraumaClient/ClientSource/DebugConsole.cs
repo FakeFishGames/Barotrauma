@@ -902,6 +902,14 @@ namespace Barotrauma
                     DebugConsole.ThrowError("The command 'wikiimage_sub' failed.", e);
                 }
             }));
+            
+            AssignOnExecute("loslightingfreecam", (string[] args) =>
+            {
+                ExecuteCommand("los");
+                ExecuteCommand("lighting");
+                ExecuteCommand("freecam");
+            });
+            AssignRelayToServer("loslightingfreecam", false);
 
             AssignRelayToServer("kick", false);
             AssignRelayToServer("kickid", false);
@@ -1091,6 +1099,42 @@ namespace Barotrauma
                             (lightComponent.LightColor.A / 255.0f) * value.W);
                 }
             }, isCheat: false));
+            
+            commands.Add(new Command("steamtimelinetest", "steamtimelinetest: Test the Steamworks timeline feature.", (string[] args) =>
+            {
+                // Add an instantaneous event to the Steam timeline
+                var eventHandle = Steamworks.SteamTimeline.AddInstantaneousTimelineEvent(
+                    "Barotrauma Test Event", 
+                    "This is a test event created from the debug console", 
+                    "steam_marker", // Important: icon must be specified, or it does nothing :D
+                    1, // Priority
+                    0.0f, // Current time (no offset)
+                    Steamworks.TimelineEventClipPriority.Standard);
+                
+                NewMessage($"Steamworks timeline test: Added instantaneous event with handle: {eventHandle}", Color.Yellow);
+            }));
+            
+            commands.Add(new Command("setsteamtimelinegamemode", "setsteamtimelinegamemode [gamemode]: Sets the Steam timeline gamemode to the specified value.", args =>
+            {
+                if (args.Length == 0) 
+                {
+                    NewMessage("Please specify a gamemode. Available modes: " + string.Join(", ", Enum.GetNames(typeof(SteamTimelineManager.TimelineGameMode))), Color.Red);
+                    return; 
+                }
+
+                if (Enum.TryParse<SteamTimelineManager.TimelineGameMode>(args[0], ignoreCase: true, out var gameMode))
+                {
+                    SteamTimelineManager.SetTimelineGameMode(gameMode);
+                    NewMessage($"Timeline gamemode set to: {gameMode}", Color.Green);
+                }
+                else
+                {
+                    NewMessage($"Invalid gamemode '{args[0]}'. Available modes: " + string.Join(", ", Enum.GetNames(typeof(SteamTimelineManager.TimelineGameMode))), Color.Red);
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[] { Enum.GetNames(typeof(SteamTimelineManager.TimelineGameMode)) };
+            }));
 
             commands.Add(new Command("color|colour", "Change color (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
@@ -2525,6 +2569,85 @@ namespace Barotrauma
 
 #if DEBUG
 
+           commands.Add(new Command(
+                "listachievements",
+                "listachievements: Lists all achievement identifiers, names, descriptions, and their current Steam status (Locked/Unlocked).",
+                (string[] args) =>
+                {
+                    NewMessage("--- Achievement Status: Name - (Identifier) - [Status] - Description ---", Color.Cyan);
+
+                    var supportedIds = AchievementManager.SupportedAchievements;
+
+                    if (supportedIds == null || !supportedIds.Any())
+                    {
+                        NewMessage("No achievement identifiers found in AchievementManager.SupportedAchievements.", Color.Yellow);
+                        NewMessage("-------------------------------------------------------------------", Color.Cyan);
+                        return;
+                    }
+
+                    if (!SteamManager.IsInitialized || !Steamworks.SteamClient.IsValid)
+                    {
+                         NewMessage("Steam not initialized. Cannot fetch achievement status or texts.", Color.Red);
+                         foreach (Identifier id in supportedIds.OrderBy(i => i.Value))
+                         {
+                             NewMessage($"- Name N/A - ({id.Value}) - [Status Unknown] - Description N/A", Color.Red);
+                         }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var steamAchievements = Steamworks.SteamUserStats.Achievements
+                                                    .ToDictionary(a => a.Identifier, StringComparer.OrdinalIgnoreCase);
+
+                            foreach (Identifier id in supportedIds.OrderBy(i => i.Value))
+                            {
+                                string statusText;
+                                string nameText = "Name N/A";
+                                string descText = "Description N/A";
+                                Color statusColor;
+
+                                if (steamAchievements.TryGetValue(id.Value, out var steamAch))
+                                {
+                                    nameText = steamAch.Name ?? "Name N/A";
+                                    descText = steamAch.Description ?? "Description N/A";
+
+                                    if (steamAch.State)
+                                    {
+                                        statusText = "[Unlocked]";
+                                        statusColor = Color.LimeGreen;
+                                    }
+                                    else
+                                    {
+                                        statusText = "[Locked]";
+                                        statusColor = Color.Orange;
+                                    }
+                                }
+                                else
+                                {
+                                    statusText = "[Not Found on Steam]";
+                                    statusColor = Color.Red;
+                                }
+                                
+                                string output = $"- {nameText} - ({id.Value}) - {statusText} - {descText}";
+                                NewMessage(output, statusColor);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            ThrowError("Error retrieving achievement statuses/texts from Steam.", e);
+                             foreach (Identifier id in supportedIds.OrderBy(i => i.Value))
+                             {
+                                 NewMessage($"- Name N/A - ({id.Value}) - [Status Error] - Description N/A", Color.Red);
+                             }
+                        }
+                    }
+
+                    NewMessage("-------------------------------------------------------------------", Color.Cyan);
+                },
+                isCheat: true
+            ));
+            
             commands.Add(new Command("unlockachievement", "unlockachievement [identifier]: Unlocks the specified achievement.", (string[] args) =>
             {
                 if (args.Length < 1) 
@@ -2535,6 +2658,60 @@ namespace Barotrauma
                 NewMessage($"Unlocked \"{args[0]}\".");
                 AchievementManager.UnlockAchievement(args[0].ToIdentifier());
             }, isCheat: true));
+            
+            commands.Add(new Command(
+                "resetachievement",
+                "resetachievement [identifier]: Clears (locks) the specified Steam achievement for testing.",
+                args =>
+                {
+                    if (args.Length < 1)
+                    {
+                        ThrowError("Please specify the achievement identifier to reset.");
+                        return;
+                    }
+
+                    if (!SteamManager.IsInitialized || !Steamworks.SteamClient.IsValid)
+                    {
+                        ThrowError("Steam not initialized.");
+                        return;
+                    }
+
+                    string achievementId = args[0];
+                    bool found = false;
+                    bool success = false;
+
+                    try
+                    {
+                        var achievement = Steamworks.SteamUserStats.Achievements
+                                            .FirstOrDefault(a => a.Identifier.Equals(achievementId, StringComparison.OrdinalIgnoreCase));
+
+                        if (achievement.Identifier == null)
+                        {
+                             ThrowError($"Achievement with identifier \"{achievementId}\" not found.");
+                             return;
+                        }
+
+                        found = true;
+                        success = achievement.Clear();
+
+                        if (success)
+                        {
+                            // IMPORTANT: Store the stats to make the change persistent
+                            SteamManager.StoreStats();
+                            NewMessage($"Reset achievement \"{achievementId}\".", Color.Yellow);
+                        }
+                        else
+                        {
+                            ThrowError($"Failed to clear achievement \"{achievementId}\" (Steamworks returned false).");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                         ThrowError($"An error occurred while trying to reset achievement \"{achievementId}\". Found: {found}, Success: {success}", e);
+                    }
+                },
+                isCheat: true
+            ));
 
             commands.Add(new Command("deathprompt", "Shows the death prompt for testing purposes.", (string[] args) =>
             {
@@ -2696,7 +2873,14 @@ namespace Barotrauma
                 {
                     int amount = 1;
                     if (args.Length > 0) { int.TryParse(args[0], out amount); }
-                    GameMain.LevelEditorScreen.TestLevelGenerationForErrors(amount);
+                    try
+                    {
+                        GameMain.LevelEditorScreen.TestLevelGenerationForErrors(amount);
+                    }
+                    catch (Exception e)
+                    {
+                        ThrowError("Failed to generate levels", e);
+                    }
                 }
                 else
                 {

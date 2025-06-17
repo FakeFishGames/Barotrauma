@@ -92,6 +92,8 @@ namespace Barotrauma.Steam
                 
                 //Maybe I'm completely wrong! All I know is that we need to handle both!
             }
+            
+            SteamTimelineManager.Initialize();
         }
 
         public static bool NetworkingDebugLog { get; private set; } = false;

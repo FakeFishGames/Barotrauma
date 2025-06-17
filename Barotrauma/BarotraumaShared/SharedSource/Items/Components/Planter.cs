@@ -110,17 +110,15 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             IsActive = true;
-#if CLIENT
             var lights = item.GetComponents<LightComponent>();
             if (lights.Any())
             {
                 lightComponents = lights.ToList();
-                foreach (var light in lightComponents)
+                foreach (var light in item.GetComponents<LightComponent>())
                 {
-                    light.Light.Enabled = false;
+                    light.IsOn = false;
                 }
             }
-#endif
             container = item.GetComponent<ItemContainer>();
             GrowableSeeds = new Growable[container.Capacity];
         }
@@ -233,7 +231,6 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
             
-#if CLIENT
             if (lightComponents != null && lightComponents.Count > 0)
             {
                 bool hasSeed = false;
@@ -243,10 +240,9 @@ namespace Barotrauma.Items.Components
                 }
                 foreach (var light in lightComponents)
                 {
-                    light.Light.Enabled = hasSeed;
+                    light.IsOn = hasSeed;
                 }
             }
-#endif
 
             if (container?.Inventory == null) { return; }
 

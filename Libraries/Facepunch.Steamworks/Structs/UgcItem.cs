@@ -116,10 +116,10 @@ namespace Steamworks.Ugc
         /// The number of downvotes of this item
         /// </summary>
         public uint VotesDown => details.VotesDown;
-        /// <summary>
-        /// Dependencies/children of this item or collection, available only from WithChildren(true) queries
-        /// </summary>
-        public PublishedFileId[]? Children;
+		/// <summary>
+		/// Dependencies/children of this item or collection, available only from WithDependencies(true) queries
+		/// </summary>
+		public PublishedFileId[]? Children;
 
 		/// <summary>
 		/// Additional previews of this item or collection, available only from WithAdditionalPreviews(true) queries

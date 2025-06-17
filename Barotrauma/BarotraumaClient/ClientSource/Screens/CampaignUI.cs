@@ -352,7 +352,7 @@ namespace Barotrauma
             Location currentDisplayLocation = Campaign.GetCurrentDisplayLocation();
             if (connection != null && connection.Locations.Contains(currentDisplayLocation))
             {
-                List<Mission> availableMissions = currentDisplayLocation.GetMissionsInConnection(connection).ToList();
+                List<Mission> availableMissions = currentDisplayLocation.GetMissionsInConnection(connection).Where(m => m.Prefab.ShowInMenus || GameMain.DebugDraw).ToList();
 
                 if (!availableMissions.Any()) { availableMissions.Insert(0, null); }
 
@@ -389,19 +389,26 @@ namespace Barotrauma
                         AbsoluteSpacing = GUI.IntScale(5)
                     };
 
-                    var missionName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission?.Name ?? TextManager.Get("NoMission"), font: GUIStyle.SubHeadingFont, wrap: true);
-                    missionName.RectTransform.MinSize = new Point(0, GUI.IntScale(15));
+                    LocalizedString missionName = mission?.Name ?? TextManager.Get("NoMission");
+                    if (GameMain.DebugDraw && mission != null)
+                    {
+                        if (!mission.Prefab.ShowInMenus) { missionName = $"[HIDDEN] {missionName}"; }
+                        missionName += $" ({mission.Prefab.Identifier})";
+                    }
+
+                    var missionNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), missionName, font: GUIStyle.SubHeadingFont, wrap: true);
+                    missionNameBlock.RectTransform.MinSize = new Point(0, GUI.IntScale(15));
                     if (mission == null)
                     {
-                        missionTextContent.RectTransform.MinSize = missionName.RectTransform.MinSize = new Point(0, GUI.IntScale(35));
+                        missionTextContent.RectTransform.MinSize = missionNameBlock.RectTransform.MinSize = new Point(0, GUI.IntScale(35));
                         missionTextContent.ChildAnchor = Anchor.CenterLeft;
                     }
                     else
                     {
                         GUITickBox tickBox = null;
-                        if (!isMissionInNextLocation)
+                        if (!isMissionInNextLocation && mission.Prefab.ShowInMenus)
                         {
-                            tickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.X, 0) }, label: string.Empty)
+                            tickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, missionNameBlock.RectTransform, anchor: Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionNameBlock.Padding.X, 0) }, label: string.Empty)
                             {
                                 UserData = mission,
                                 Selected = Campaign.Map.CurrentLocation?.SelectedMissions.Contains(mission) ?? false
@@ -443,7 +450,7 @@ namespace Barotrauma
                         GUILayoutGroup difficultyIndicatorGroup = null;
                         if (mission.Difficulty.HasValue)
                         {
-                            difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.9f), missionName.RectTransform, anchor: Anchor.CenterRight) { AbsoluteOffset = new Point((int)missionName.Padding.Z, 0) },
+                            difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.9f), missionNameBlock.RectTransform, anchor: Anchor.CenterRight) { AbsoluteOffset = new Point((int)missionNameBlock.Padding.Z, 0) },
                                 isHorizontal: true, childAnchor: Anchor.CenterRight)
                             {
                                 AbsoluteSpacing = 1,
@@ -465,11 +472,11 @@ namespace Barotrauma
 
                         float extraPadding = 0;// 0.8f * tickBox.Rect.Width;
                         float extraZPadding = difficultyIndicatorGroup != null ? mission.Difficulty.Value * (difficultyIndicatorGroup.Children.First().Rect.Width + difficultyIndicatorGroup.AbsoluteSpacing) : 0;
-                        missionName.Padding = new Vector4(missionName.Padding.X + (tickBox?.Rect.Width ?? 0) * 1.2f + extraPadding,
-                            missionName.Padding.Y,
-                            missionName.Padding.Z + extraZPadding + extraPadding,
-                            missionName.Padding.W);
-                        missionName.CalculateHeightFromText();
+                        missionNameBlock.Padding = new Vector4(missionNameBlock.Padding.X + (tickBox?.Rect.Width ?? 0) * 1.2f + extraPadding,
+                            missionNameBlock.Padding.Y,
+                            missionNameBlock.Padding.Z + extraZPadding + extraPadding,
+                            missionNameBlock.Padding.W);
+                        missionNameBlock.CalculateHeightFromText();
 
                         //spacing
                         new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform) { MinSize = new Point(0, GUI.IntScale(10)) }, style: null);
@@ -544,7 +551,7 @@ namespace Barotrauma
                 OnClicked = (GUIButton btn, object obj) =>
                 {
                     if (missionList.Content.FindChild(c => c is GUITickBox tickBox && tickBox.Selected, recursive: true) == null &&
-                        missionList.Content.Children.Any(c => c.UserData is Mission mission && mission.Locations.Contains(Campaign?.Map?.CurrentLocation)))
+                        missionList.Content.Children.Any(c => c.UserData is Mission { Prefab.ShowInMenus: true } mission && mission.Locations.Contains(Campaign?.Map?.CurrentLocation)))
                     {
                         var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                         noMissionVerification.Buttons[0].OnClicked = (btn, userdata) =>

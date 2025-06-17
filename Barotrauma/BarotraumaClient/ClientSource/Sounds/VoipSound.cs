@@ -8,6 +8,8 @@ namespace Barotrauma.Sounds
 {
     class VoipSound : Sound
     {
+        public override double? DurationSeconds => null;
+
         public override SoundManager.SourcePoolIndex SourcePoolIndex
         {
             get

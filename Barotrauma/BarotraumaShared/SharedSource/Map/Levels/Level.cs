@@ -4481,6 +4481,10 @@ namespace Barotrauma
                                 }
                             }
                         }
+
+                        bool onlyEntrance = LevelData.Type != LevelData.LevelType.Outpost;
+
+                        LocationType locationType = location?.Type;
                         if (missionForcedOutpostParamsId != null && 
                             OutpostGenerationParams.OutpostParams.TryGet(missionForcedOutpostParamsId, out var missionForcedOutpostParams))
                         {
@@ -4490,6 +4494,13 @@ namespace Barotrauma
                         {
                             outpostGenerationParams = LevelData.ForceOutpostGenerationParams;
                         }
+                        else if (locationType != null && 
+                            locationType.GetForcedOutpostGenerationParams() is { } forcedOutpostGenerationParams &&
+                            //do not use the forced parameters if we want to generate only the entrance, and the parameters define a full, pre-built outpost
+                            (!onlyEntrance || forcedOutpostGenerationParams.OutpostFilePath.IsNullOrEmpty()))
+                        {
+                            outpostGenerationParams = forcedOutpostGenerationParams;
+                        }
                         else
                         {
                             outpostGenerationParams =
@@ -4497,7 +4508,6 @@ namespace Barotrauma
                                 LevelData.GetSuitableOutpostGenerationParams(location, LevelData).GetRandom(Rand.RandSync.ServerAndClient);
                         }
 
-                        LocationType locationType = location?.Type;
                         if (locationType == null)
                         {
                             locationType = LocationType.Prefabs.GetRandom(Rand.RandSync.ServerAndClient);
@@ -4512,7 +4522,7 @@ namespace Barotrauma
                         if (location != null)
                         {
                             DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location: {location.DisplayName}, level type: {LevelData.Type})");
-                            outpost = OutpostGenerator.Generate(outpostGenerationParams, location, onlyEntrance: LevelData.Type != LevelData.LevelType.Outpost, LevelData.AllowInvalidOutpost);
+                            outpost = OutpostGenerator.Generate(outpostGenerationParams, location, onlyEntrance: onlyEntrance, LevelData.AllowInvalidOutpost);
                         }
                         else
                         {

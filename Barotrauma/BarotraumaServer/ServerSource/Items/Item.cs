@@ -274,6 +274,7 @@ namespace Barotrauma
                 msg.WriteByte(originalSlotIndex < 0 ? (byte)255 : (byte)originalSlotIndex);
             }
 
+            msg.WriteBoolean(OnInsertedEffectsAppliedOnPreviousRound);
             msg.WriteByte(body == null ? (byte)0 : (byte)body.BodyType);
             msg.WriteBoolean(SpawnedInCurrentOutpost);
             msg.WriteBoolean(AllowStealing);

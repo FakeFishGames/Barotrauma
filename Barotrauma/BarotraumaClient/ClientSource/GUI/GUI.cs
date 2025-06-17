@@ -2236,6 +2236,29 @@ namespace Barotrauma
             return textBox;
         }
 
+        /// <summary>
+        /// Creates a pre-built filter box.
+        /// </summary>
+        /// <remarks>
+        /// The filter function must be set using <see cref="GUITextBox.OnTextChanged"/>.<see langword="add"/>.
+        /// </remarks>
+        public static GUITextBox CreateFilterBox(RectTransform rectT)
+        {
+            GUITextBox textBox = new(rectT, createClearButton: true)
+            {
+                OnEnterPressed = (tb, _) =>
+                {
+                    tb.Deselect();
+                    return true;
+                }
+            };
+            GUITextBlock label = new(new RectTransform(Vector2.One, textBox.TextBlock.RectTransform, Anchor.CenterLeft), TextManager.Get("serverlog.filter"), GUIStyle.TextColorNormal * 0.75f);
+            textBox.OnSelected += (_, _) => label.Visible = false;
+            textBox.OnDeselected += (tb, _) => label.Visible = tb.Text.IsNullOrEmpty();
+            textBox.OnTextChanged += (tb, text) => label.Visible = !tb.Selected && text.IsNullOrEmpty();
+            return textBox;
+        }
+
         public static void NotifyPrompt(LocalizedString header, LocalizedString body)
         {
             GUIMessageBox msgBox = new GUIMessageBox(header, body, new[] { TextManager.Get("Ok") }, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
@@ -2295,9 +2318,61 @@ namespace Barotrauma
             return msgBox;
         }
 
-#endregion
+#nullable enable
+        #region Item UI
+        /// <summary>
+        /// Creates a 7-segment display.
+        /// </summary>
+        /// <param name="leftLabel">Returns <see langword="null"/> if <paramref name="leftLabelText"/> is <see langword="null"/> or empty.</param>
+        /// <param name="rightLabelText">Defaults to <c>TextManager.Get("kilowatt")</c>.</param>
+        /// <param name="leftLabelFont">Defaults to <see cref="GUIStyle.LargeFont"/>.</param>
+        public static GUITextBlock CreateDigitalDisplay(RectTransform rect, out GUITextBlock? leftLabel, out GUITextBlock rightLabel, LocalizedString? leftLabelText = null, LocalizedString? rightLabelText = null, LocalizedString? tooltip = null, GUIFont? leftLabelFont = null)
+        {
+            GUILayoutGroup textArea = new(rect, isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                CanBeFocused = true,
+                ToolTip = tooltip!,
+                AbsoluteSpacing = 5
+            };
 
-#region Element positioning
+            leftLabel = null;
+            if (!leftLabelText.IsNullOrEmpty())
+            {
+                leftLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1f), textArea.RectTransform), leftLabelText, textColor: GUIStyle.TextColorBright, font: leftLabelFont ?? GUIStyle.LargeFont, textAlignment: Alignment.CenterRight);
+            }
+
+            GUIFrame displayBackground = new(new RectTransform(new Vector2(0.55f, 0.8f), textArea.RectTransform), style: "DigitalFrameDark");
+            GUITextBlock displayText = new(new RectTransform(new Vector2(0.9f, 0.95f), displayBackground.RectTransform, Anchor.Center), "8888", font: GUIStyle.DigitalFont, textColor: GUIStyle.TextColorDark, textAlignment: Alignment.CenterRight);
+            displayText.TextScale = Math.Max((displayText.Rect.Height - 10) / GUIStyle.DigitalFont.LineHeight, 0.1f);
+
+            rightLabel = new GUITextBlock(new RectTransform(Vector2.Zero, textArea.RectTransform), rightLabelText ?? TextManager.Get("kilowatt"), textColor: GUIStyle.TextColorNormal, font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
+            {
+                Padding = Vector4.Zero
+            };
+            rightLabel.RectTransform.MinSize = rightLabel.TextSize.ToPoint();
+
+            textArea.GetAllChildren().ForEach(child => child.CanBeFocused = false);
+            return displayText;
+        }
+
+        /// <param name="labelFont">Defaults to <see cref="GUIStyle.SubHeadingFont"/>.</param>
+        public static GUITickBox CreateIndicatorLight(RectTransform rect, string style = "", LocalizedString? label = null, LocalizedString? tooltip = null, GUIFont? labelFont = null)
+        {
+            GUITickBox indicator = new(rect, label, font: labelFont ?? GUIStyle.SubHeadingFont, style: style)
+            {
+                Enabled = false,
+                ToolTip = tooltip!
+            };
+            indicator.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
+            return indicator;
+        }
+        #endregion
+#nullable restore
+
+        #endregion
+
+        #region Element positioning
         private static List<T> CreateElements<T>(int count, RectTransform parent, Func<RectTransform, T> constructor,
             Vector2? relativeSize = null, Point? absoluteSize = null,
             Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,

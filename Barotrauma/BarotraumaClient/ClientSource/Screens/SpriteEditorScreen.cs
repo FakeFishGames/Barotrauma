@@ -368,6 +368,7 @@ namespace Barotrauma
                     "DecorativeSprite",
                     "BarrelSprite",
                     "RailSprite",
+                    "ChargeSprite",
                     "SchematicSprite",
                     "WeldedSprite"
                 };

@@ -14,6 +14,13 @@ namespace Barotrauma
 
         public override bool KeepDivingGearOn => GetTargetHull() == null;
 
+        /// <summary>
+        /// Is the goal of this objective to get diving gear (i.e. has it been created by <see cref="AIObjectiveFindDivingGear"/>)? 
+        /// If so, the objective won't attempt to create another objective if the path requires diving gear 
+        /// (wouldn't make sense to start looking for diving gear so the bot can get to a room they're trying to get diving gear from!)
+        /// </summary>
+        public bool IsFindDivingGearSubObjective;
+
         private AIObjectiveFindDivingGear findDivingGear;
         private readonly bool repeat;
         //how long until the path to the target is declared unreachable
@@ -379,85 +386,89 @@ namespace Barotrauma
                 }
             }
             if (Abandon) { return; }
-            bool needsDivingSuit = (!isInside || hasOutdoorNodes) && !character.IsImmuneToPressure;
-            bool tryToGetDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
-            bool tryToGetDivingSuit = needsDivingSuit;
-            Character followTarget = Target as Character;
-            if (Mimic && !character.IsImmuneToPressure)
+
+            if (!IsFindDivingGearSubObjective)
             {
-                if (HumanAIController.HasDivingSuit(followTarget))
+                bool needsDivingSuit = (!isInside || hasOutdoorNodes) && !character.IsImmuneToPressure;
+                bool tryToGetDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
+                bool tryToGetDivingSuit = needsDivingSuit;
+                Character followTarget = Target as Character;
+                if (Mimic && !character.IsImmuneToPressure)
                 {
-                    tryToGetDivingGear = true;
-                    tryToGetDivingSuit = true;
+                    if (HumanAIController.HasDivingSuit(followTarget))
+                    {
+                        tryToGetDivingGear = true;
+                        tryToGetDivingSuit = true;
+                    }
+                    else if (HumanAIController.HasDivingMask(followTarget) && character.CharacterHealth.OxygenLowResistance < 1)
+                    {
+                        tryToGetDivingGear = true;
+                    }
                 }
-                else if (HumanAIController.HasDivingMask(followTarget) && character.CharacterHealth.OxygenLowResistance < 1)
+                bool needsEquipment = false;
+                float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
+                if (tryToGetDivingSuit)
                 {
-                    tryToGetDivingGear = true;
+                    needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen, requireSuitablePressureProtection: !objectiveManager.FailedToFindDivingGearForDepth);
                 }
-            }
-            bool needsEquipment = false;
-            float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
-            if (tryToGetDivingSuit)
-            {
-                needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen, requireSuitablePressureProtection: !objectiveManager.FailedToFindDivingGearForDepth);
-            }
-            else if (tryToGetDivingGear)
-            {
-                needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
-            }
-            if (!getDivingGearIfNeeded)
-            {
-                if (needsEquipment)
+                else if (tryToGetDivingGear)
                 {
-                    // Don't try to reach the target without proper equipment.
-                    Abandon = true;
-                    return;
+                    needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
                 }
-            }
-            else
-            {
-                if (character.LockHands)
+                if (!getDivingGearIfNeeded)
                 {
-                    cantFindDivingGear = true;
+                    if (needsEquipment)
+                    {
+                        // Don't try to reach the target without proper equipment.
+                        Abandon = true;
+                        return;
+                    }
                 }
-                if (cantFindDivingGear && needsDivingSuit)
+                else
                 {
-                    // Don't try to reach the target without a suit because it's lethal.
-                    Abandon = true;
-                    return;
-                }
-                if (needsEquipment && !cantFindDivingGear)
-                {
-                    SteeringManager.Reset();
-                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: tryToGetDivingSuit, objectiveManager),
-                        onAbandon: () =>
-                        {
-                            cantFindDivingGear = true;
-                            if (needsDivingSuit)
+                    if (character.LockHands)
+                    {
+                        cantFindDivingGear = true;
+                    }
+                    if (cantFindDivingGear && needsDivingSuit)
+                    {
+                        // Don't try to reach the target without a suit because it's lethal.
+                        Abandon = true;
+                        return;
+                    }
+                    if (needsEquipment && !cantFindDivingGear)
+                    {
+                        SteeringManager.Reset();
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: tryToGetDivingSuit, objectiveManager),
+                            onAbandon: () =>
                             {
-                                // Shouldn't try to reach the target without a suit, because it's lethal.
-                                Abandon = true;
-                            }
-                            else
-                            {
-                                // Try again without requiring the diving suit (or mask)
-                                RemoveSubObjective(ref findDivingGear);
-                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: !tryToGetDivingSuit, objectiveManager),
-                                    onAbandon: () =>
-                                    {
-                                        Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
-                                        RemoveSubObjective(ref findDivingGear);
-                                    },
-                                    onCompleted: () =>
-                                    {
-                                        RemoveSubObjective(ref findDivingGear);
-                                    });
-                            }
-                        },
-                        onCompleted: () => RemoveSubObjective(ref findDivingGear));
-                    return;
+                                cantFindDivingGear = true;
+                                if (needsDivingSuit)
+                                {
+                                    // Shouldn't try to reach the target without a suit, because it's lethal.
+                                    Abandon = true;
+                                }
+                                else
+                                {
+                                    // Try again without requiring the diving suit (or mask)
+                                    RemoveSubObjective(ref findDivingGear);
+                                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: !tryToGetDivingSuit, objectiveManager),
+                                        onAbandon: () =>
+                                        {
+                                            Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
+                                            RemoveSubObjective(ref findDivingGear);
+                                        },
+                                        onCompleted: () =>
+                                        {
+                                            RemoveSubObjective(ref findDivingGear);
+                                        });
+                                }
+                            },
+                            onCompleted: () => RemoveSubObjective(ref findDivingGear));
+                        return;
+                    }
                 }
-            }
+            }            
             if (IsDoneFollowing())
             {
                 OnCompleted();

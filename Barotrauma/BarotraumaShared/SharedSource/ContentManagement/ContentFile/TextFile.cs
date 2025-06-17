@@ -21,7 +21,7 @@ namespace Barotrauma
             {
                 TextManager.TextPacks.TryAdd(language, ImmutableList<TextPack>.Empty);
             }
-            var newPack = new TextPack(this, mainElement, language);
+            var newPack = new TextPack(this, mainElement, language, load: language == GameSettings.CurrentConfig.Language);
             var newList = TextManager.TextPacks[language].Add(newPack);
             TextManager.TextPacks.TryRemove(language, out _);
             TextManager.TextPacks.TryAdd(language, newList);

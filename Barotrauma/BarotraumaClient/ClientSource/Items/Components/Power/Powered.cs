@@ -12,7 +12,7 @@
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "poweronsound":
-                        powerOnSound = RoundSound.Load(subElement, false);
+                        powerOnSound = RoundSound.Load(subElement);
                         break;
                 }
             }

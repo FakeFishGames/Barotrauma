@@ -434,12 +434,19 @@ namespace Barotrauma.Items.Components
 
             foreach (FabricationRecipe fi in fabricationRecipes.Values)
             {
+                RichString recipeTooltip = RichString.Rich(fi.TargetItem.Description);
+                if (fi.RequiresRecipe)
+                {
+                    recipeTooltip += "\n\n" + $"‖color:{XMLExtensions.ToStringHex(GUIStyle.Red)}‖{TextManager.Get("fabricatorrequiresrecipe")}‖color:end‖";
+                }
+                recipeTooltip = RichString.Rich(recipeTooltip);
+
                 var frame = new GUIFrame(new RectTransform(new Point(itemList.Content.Rect.Width, (int)(40 * GUI.yScale)), itemList.Content.RectTransform), style: null)
                 {
                     UserData = fi,
                     HoverColor = Color.Gold * 0.2f,
                     SelectedColor = Color.Gold * 0.5f,
-                    ToolTip = RichString.Rich(fi.TargetItem.Description)
+                    ToolTip = recipeTooltip
                 };
                 
                 var container = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform),
@@ -451,8 +458,8 @@ namespace Barotrauma.Items.Components
                     new GUIImage(new RectTransform(new Point(frame.Rect.Height,frame.Rect.Height), container.RectTransform),
                         itemIcon, scaleToFit: true)
                     {
-                        Color = fi.TargetItem.InventoryIconColor,
-                        ToolTip = RichString.Rich(fi.TargetItem.Description)
+                        Color = itemIcon == fi.TargetItem.Sprite ? fi.TargetItem.SpriteColor : fi.TargetItem.InventoryIconColor,
+                        ToolTip = recipeTooltip
                     };
                 }
 
@@ -461,7 +468,7 @@ namespace Barotrauma.Items.Components
                 {
                     Padding = Vector4.Zero,
                     AutoScaleVertical = true,
-                    ToolTip = RichString.Rich(fi.TargetItem.Description)
+                    ToolTip = recipeTooltip
                 };
 
                 new GUITextBlock(new RectTransform(new Vector2(0.85f, 1f), frame.RectTransform, Anchor.BottomRight), 
@@ -513,7 +520,7 @@ namespace Barotrauma.Items.Components
             var nonItems = itemList.Content.Children.Where(c => c.UserData is not FabricationRecipe).ToList();
             nonItems.ForEach(i => i.Visible = false);
 
-            SortItems(character: null);
+            SortItems(character);
             FilterEntities(selectedItemCategory, itemFilterBox?.Text ?? string.Empty);
             HideEmptyItemListCategories();
         }
@@ -1195,6 +1202,15 @@ namespace Barotrauma.Items.Components
                 };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), TextManager.FormatCurrency(SelectedItem.RequiredMoney),
                     font: GUIStyle.SmallFont);
+            }
+
+            if (selectedRecipe.RequiresRecipe && !AnyOneHasRecipeForItem(Character.Controlled, selectedRecipe.TargetItem))
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform),
+                    TextManager.Get("fabricatorrequiresrecipe"), textColor: GUIStyle.Red, font: GUIStyle.SubHeadingFont)
+                {
+                    AutoScaleHorizontal = true,
+                };
             }
         }
 

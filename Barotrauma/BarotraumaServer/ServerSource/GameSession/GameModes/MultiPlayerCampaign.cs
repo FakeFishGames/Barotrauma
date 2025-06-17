@@ -92,6 +92,7 @@ namespace Barotrauma
                 purchasedHullRepairs = value;
                 PurchasedHullRepairsInLatestSave |= value;
                 IncrementLastUpdateIdForFlag(NetFlags.Misc);
+                DebugConsole.NewMessage("Set PurchasedHullRepairs to " + PurchasedHullRepairs, Color.Cyan);
             }
         }
         public override bool PurchasedLostShuttles
@@ -861,6 +862,13 @@ namespace Barotrauma
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
+            if (purchasedUpgradeCount > 0 || purchasedItemSwapCount > 0)
+            {
+                //if the client attempted to purchase something, increment flag regardless of whether the upgrades were actually purchased or not
+                //so we can sync the correct state in case the client incorrectly assumed they can buy something (e.g. lost permissions just as they were purchasing)
+                IncrementLastUpdateIdForFlag(NetFlags.UpgradeManager);
+            }
+
             int hullRepairCost = GetHullRepairCost();
             int itemRepairCost = GetItemRepairCost();
             int shuttleRetrieveCost = CampaignMode.ShuttleReplaceCost;
@@ -1100,7 +1108,7 @@ namespace Barotrauma
             var characterList = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             foreach (var (prefab, category, _) in purchasedUpgrades)
             {
-                UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
+                UpgradeManager.TryPurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
                 int price = prefab.Price.GetBuyPrice(prefab, UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
@@ -1111,7 +1119,7 @@ namespace Barotrauma
             {
                 if (purchasedItemSwap.ItemToInstall == null)
                 {
-                    UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove);
+                    UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, client: sender);
                 }
                 else
                 {
@@ -1502,10 +1510,12 @@ namespace Barotrauma
         {
             element.Add(new XAttribute("campaignid", CampaignID));
             XElement modeElement = new XElement("MultiPlayerCampaign",
-                new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),
-                new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
-                new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
+                new XAttribute("purchasedlostshuttles", PurchasedLostShuttlesInLatestSave),
+                new XAttribute("purchasedhullrepairs", PurchasedHullRepairsInLatestSave),
+                new XAttribute("purchaseditemrepairs", PurchasedItemRepairsInLatestSave),
                 new XAttribute("cheatsenabled", CheatsEnabled));
+
+            DebugConsole.NewMessage("Saved PurchasedHullRepairs: "+ PurchasedHullRepairs+" (in last save "+PurchasedHullRepairsInLatestSave+")", Color.Magenta);
 
             modeElement.Add(Settings.Save());
             modeElement.Add(SaveStats());
@@ -1518,6 +1528,11 @@ namespace Barotrauma
             if (GameMain.GameSession?.EventManager != null)
             {
                 modeElement.Add(GameMain.GameSession?.EventManager.Save());
+            }
+
+            foreach (Identifier unlockedRecipe in GameMain.GameSession.UnlockedRecipes)
+            {
+                modeElement.Add(new XElement("unlockedrecipe", new XAttribute("identifier", unlockedRecipe)));
             }
 
             CampaignMetadata?.Save(modeElement);

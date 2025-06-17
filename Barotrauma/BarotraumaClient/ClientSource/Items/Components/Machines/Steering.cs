@@ -973,6 +973,7 @@ namespace Barotrauma.Items.Components
                 }
                 PosToMaintain += nudgeAmount;
             }
+            unsentChanges = true;
             return true;
         }
 

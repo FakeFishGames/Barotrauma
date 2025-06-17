@@ -15,7 +15,8 @@ namespace Barotrauma
         private readonly static HashSet<StatusEffect> ActiveLoopingSounds = new HashSet<StatusEffect>();
         private static double LastMuffleCheckTime;
         private readonly List<RoundSound> sounds = new List<RoundSound>();
-        public IEnumerable<RoundSound> Sounds { get { return sounds; } }
+        public IEnumerable<RoundSound> Sounds => sounds;
+
         private SoundSelectionMode soundSelectionMode;
         private SoundChannel soundChannel;
         private Entity soundEmitter;
@@ -64,6 +65,16 @@ namespace Barotrauma
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
         {
+            if (steamTimeLineEventToTrigger != default)
+            {
+                SteamTimelineManager.AddTimelineEvent(
+                    steamTimeLineEventToTrigger.title,
+                    steamTimeLineEventToTrigger.description,
+                    steamTimeLineEventToTrigger.icon,
+                    priority: 1,
+                    submarine: entity?.Submarine);
+            }
+
             if (playSound)
             {
                 PlaySound(entity, hull, worldPosition);
@@ -222,6 +233,7 @@ namespace Barotrauma
                 {
                     PlaySound(selectedSound);
                 }
+                playSoundAfterLoadedCoroutine = null;
                 yield return CoroutineStatus.Success;
             }
 

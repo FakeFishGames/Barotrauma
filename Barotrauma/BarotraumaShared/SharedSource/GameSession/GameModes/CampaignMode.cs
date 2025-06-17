@@ -160,10 +160,34 @@ namespace Barotrauma
             protected set;
         }
 
-        public bool PurchasedLostShuttlesInLatestSave, PurchasedHullRepairsInLatestSave, PurchasedItemRepairsInLatestSave;
+        /// <summary>
+        /// Has recovery of lost shuttles been purchased in the latest save? Determines whether the shuttles should be recovered when loading into the round. 
+        /// </summary>
+        public bool PurchasedLostShuttlesInLatestSave;
 
+        /// <summary>
+        /// Have hull repairs been purchased in the latest save? Determines whether the walls will be repaired when loading into the round. 
+        /// </summary>
+        public bool PurchasedHullRepairsInLatestSave;
+
+        /// <summary>
+        /// Has repairing damaged items been purchased in the latest save? Determines whether the items will be repaired when loading into the round. 
+        /// </summary>
+        public bool PurchasedItemRepairsInLatestSave;
+
+        /// <summary>
+        /// Have hull repairs been purchased on the current round?
+        /// </summary>
         public virtual bool PurchasedHullRepairs { get; set; }
+
+        /// <summary>
+        /// Has recovery of lost shuttles been purchased on the current round?
+        /// </summary>
         public virtual bool PurchasedLostShuttles { get; set; }
+
+        /// <summary>
+        /// Has repairing damaged items been purchased on the current round?
+        /// </summary>
         public virtual bool PurchasedItemRepairs { get; set; }
 
         public bool DivingSuitWarningShown;
@@ -441,6 +465,16 @@ namespace Barotrauma
                         currentLocation.DeselectMission(mission);
                     }
                 }
+
+                foreach (var mission in currentLocation.AvailableMissions)
+                {
+                    //if the mission isn't shown in menus, it cannot be selected by the player -> must be something that is supposed to be automatically selected
+                    if (!mission.Prefab.ShowInMenus)
+                    {
+                        currentLocation.SelectMission(mission);
+                    }
+                }
+
                 if (levelData.HasBeaconStation && !levelData.IsBeaconActive && Missions.None(m => m.Prefab.Type == Tags.MissionTypeBeacon))
                 {
                     var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.IsSideObjective && m.Type == Tags.MissionTypeBeacon);
@@ -1630,6 +1664,70 @@ namespace Barotrauma
             petsElement = new XElement("pets");
             PetBehavior.SavePets(petsElement);
             parentElement?.Add(petsElement);
+        }
+
+        /// <summary>
+        /// Loads the parts of a campaign save that are the same between single player and multiplayer saves.
+        /// </summary>
+        public void LoadSaveSharedSingleAndMultiplayer(XElement element)
+        {
+            PurchasedLostShuttlesInLatestSave = element.GetAttributeBool("purchasedlostshuttles", false);
+            PurchasedHullRepairsInLatestSave = element.GetAttributeBool("purchasedhullrepairs", false);
+            PurchasedItemRepairsInLatestSave = element.GetAttributeBool("purchaseditemrepairs", false);
+            CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
+            if (CheatsEnabled)
+            {
+                DebugConsole.CheatsEnabled = true;
+                if (!AchievementManager.CheatsEnabled)
+                {
+                    AchievementManager.CheatsEnabled = true;
+#if CLIENT
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive achievements until you restart the game.");       
+#else
+                    DebugConsole.NewMessage("Cheat commands have been enabled.", Color.Red);
+#endif
+                }
+            }
+
+            //backwards compatibility for saves made prior to the addition of personal wallets
+            int oldMoney = element.GetAttributeInt("money", 0);
+            if (oldMoney > 0)
+            {
+                Bank = new Wallet(Option<Character>.None())
+                {
+                    Balance = oldMoney
+                };
+            }
+
+
+            foreach (var subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "cargo":
+                        CargoManager.LoadPurchasedItems(subElement);
+                        break;
+                    case "pendingupgrades": //backwards compatibility
+                    case "upgrademanager":
+                        UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: IsSinglePlayer);
+                        break;
+                    case "pets":
+                        petsElement = subElement;
+                        break;
+                    case Wallet.LowerCaseSaveElementName:
+                        Bank = new Wallet(Option<Character>.None(), subElement);
+                        break;
+                    case "stats":
+                        LoadStats(subElement);
+                        break;
+                    case "eventmanager":
+                        GameMain.GameSession.EventManager.Load(subElement);
+                        break;
+                    case "unlockedrecipe":
+                        GameMain.GameSession.UnlockRecipe(subElement.GetAttributeIdentifier("identifier", Identifier.Empty), showNotifications: false);
+                        break;
+                }
+            }
         }
 
         public void LoadPets()

@@ -164,5 +164,9 @@ public static class Tags
     public static readonly Identifier Decoy = "decoy".ToIdentifier();
     public static readonly Identifier Provocative = "provocative".ToIdentifier();
 
+    /// <summary>
+    /// Tag used on status effects that mark the entity as being on fire.
+    /// </summary>
+    public static readonly Identifier OnFireStatusEffectTag = "onfire".ToIdentifier();
 }
 

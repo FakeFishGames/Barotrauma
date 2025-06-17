@@ -346,7 +346,6 @@ namespace Barotrauma
         /// </summary>
         public void RefreshAnyOpenPlayerInfo()
         {
-            DebugConsole.NewMessage($"Refreshing any open player info");
             if (IsTabMenuOpen && TabMenu.SelectedTab == TabMenu.InfoFrameTab.Talents)
             {
                 TabMenuInstance.SelectInfoFrameTab(TabMenu.InfoFrameTab.Talents);

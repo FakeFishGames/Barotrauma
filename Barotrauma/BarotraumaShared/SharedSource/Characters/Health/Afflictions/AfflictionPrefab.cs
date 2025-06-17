@@ -882,6 +882,16 @@ namespace Barotrauma
         /// Its opacity is controlled by the active effect's MinAfflictionOverlayAlphaMultiplier and MaxAfflictionOverlayAlphaMultiplier
         /// </summary>
         public readonly Sprite AfflictionOverlay;
+        
+        /// <summary>
+        /// The speed of the affliction overlay animation.
+        /// Only applicable with AfflictionOverlayAnimated, and the overlay has to be a spritesheet so there's something to animate.
+        /// </summary>
+        public float AfflictionOverlayAnimSpeed
+        {
+            get;
+            set;
+        }
 
         public ImmutableDictionary<Identifier, float> TreatmentSuitabilities
         {
@@ -1004,6 +1014,10 @@ namespace Barotrauma
                         break;
                     case "afflictionoverlay":
                         AfflictionOverlay = new Sprite(subElement);
+                        break;
+                    case "afflictionoverlayanimated":
+                        AfflictionOverlay = new SpriteSheet(subElement);
+                        AfflictionOverlayAnimSpeed = subElement.GetAttributeFloat("animspeed", 1.0f);
                         break;
                     case "statvalue":
                         DebugConsole.ThrowError($"Error in affliction \"{Identifier}\" - stat values should be configured inside the affliction's effects.",

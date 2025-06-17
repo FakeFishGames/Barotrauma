@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             //actual throwing logic is handled in Update
-            return characterUsable || character == null;
+            return (characterUsable && !UsageDisabledByRangedWeapon(character)) || character == null;
         }
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
@@ -111,24 +111,28 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (throwState != ThrowState.Throwing)
+            bool aim = false;
+            if (!UsageDisabledByRangedWeapon(picker))
             {
-                if (picker.IsKeyDown(InputType.Aim)) 
+                if (throwState != ThrowState.Throwing)
                 {
-                    if (picker.IsKeyDown(InputType.Shoot)) { throwState = ThrowState.Initiated; }
+                    if (picker.IsKeyDown(InputType.Aim)) 
+                    {
+                        if (picker.IsKeyDown(InputType.Shoot)) { throwState = ThrowState.Initiated; }
+                    }
+                    else if (throwState != ThrowState.Initiated)
+                    { 
+                        throwAngle = ThrowAngleStart; 
+                    }
                 }
-                else if (throwState != ThrowState.Initiated)
-                { 
-                    throwAngle = ThrowAngleStart; 
-                }
-            }
 
-            bool aim = picker.IsKeyDown(InputType.Aim) && picker.CanAim;
+                aim = picker.IsKeyDown(InputType.Aim) && picker.CanAim;
+            }
             if (picker.IsDead || !picker.AllowInput)
             {
                 throwState = ThrowState.None;
                 aim = false;
-            }
+            }            
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
             //return if the status effect got rid of the picker somehow

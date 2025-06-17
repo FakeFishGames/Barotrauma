@@ -5,6 +5,7 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -639,6 +640,10 @@ namespace Barotrauma
         /// Should the sound(s) configured in the effect be played if the required items aren't found?
         /// </summary>
         private readonly bool playSoundOnRequiredItemFailure = false;
+        
+        public readonly record struct SteamTimeLineEvent(string title, string description, string icon);
+        private readonly SteamTimeLineEvent steamTimeLineEventToTrigger;
+
 #endif
 
         private readonly int useItemCount;
@@ -715,6 +720,11 @@ namespace Barotrauma
         /// Can be used to tag the target entity/entities as targets in an event.
         /// </summary>
         private readonly List<(Identifier eventIdentifier, Identifier tag)> eventTargetTags;
+
+        /// <summary>
+        /// Can be used to make the effect unlock a fabrication recipe globally for the entire crew.
+        /// </summary>
+        public readonly Identifier UnlockRecipe;
 
         private Character user;
 
@@ -925,6 +935,8 @@ namespace Barotrauma
 #if CLIENT
             playSoundOnRequiredItemFailure = element.GetAttributeBool("playsoundonrequireditemfailure", false);
 #endif
+
+            UnlockRecipe = element.GetAttributeIdentifier(nameof(UnlockRecipe), Identifier.Empty);
 
             List<XAttribute> propertyAttributes = new List<XAttribute>();
             propertyConditionals = new List<PropertyConditional>();
@@ -1238,6 +1250,26 @@ namespace Barotrauma
                         forceSayIdentifier = subElement.GetAttributeIdentifier("message", Identifier.Empty);
                         forceSayInRadio = subElement.GetAttributeBool("sayinradio", false);
                         break;
+#if CLIENT
+                    case "steamtimelineevent":
+                        steamTimeLineEventToTrigger = new SteamTimeLineEvent(
+                            subElement.GetAttributeString("title", string.Empty),
+                            subElement.GetAttributeString("description", string.Empty),
+                            subElement.GetAttributeString("icon", string.Empty));
+                        if (steamTimeLineEventToTrigger.title.IsNullOrWhiteSpace())
+                        {
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - steam timeline event has no title.", contentPackage: element.ContentPackage);
+                        }
+                        if (steamTimeLineEventToTrigger.description.IsNullOrWhiteSpace())
+                        {
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - steam timeline event has no description.", contentPackage: element.ContentPackage);
+                        }
+                        if (steamTimeLineEventToTrigger.icon.IsNullOrWhiteSpace())
+                        {
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - steam timeline event has no icon.", contentPackage: element.ContentPackage);
+                        }
+                        break;
+#endif
                 }
             }
             InitProjSpecific(element, parentDebugName);
@@ -2122,6 +2154,11 @@ namespace Barotrauma
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
 
+            if (isNotClient && !UnlockRecipe.IsEmpty && GameMain.GameSession is { } gameSession)
+            {
+                gameSession.UnlockRecipe(UnlockRecipe, showNotifications: true);
+            }
+
             if (isNotClient && triggeredEvents != null && GameMain.GameSession?.EventManager is { } eventManager)
             {
                 foreach (EventPrefab eventPrefab in triggeredEvents)
@@ -2489,6 +2526,12 @@ namespace Barotrauma
                                     {
                                         rotation = parentItemBody.TransformRotation(chosenItemSpawnInfo.RotationRad);
                                     }
+                                    else if (parentItem != null)
+                                    {
+                                        rotation = PhysicsBody.TransformRotation(
+                                            -parentItem.RotationRad + chosenItemSpawnInfo.RotationRad, 
+                                            dir: parentItem.FlippedX ? -1.0f : 1.0f);
+                                    }
                                     break;
                                 case ItemSpawnInfo.SpawnRotationType.Target:
                                     if (!entity.Removed)
@@ -2556,11 +2599,17 @@ namespace Barotrauma
                                 projectile.Shoot(user, spawnPos, spawnPos, rotation, ignoredBodies: ignoredBodies, createNetworkEvent: true, damageMultiplier: damageMultiplier);
                                 projectile.Item.Submarine = projectile.LaunchSub = sourceEntity?.Submarine;
                             }
-                            else if (newItem.body != null)
+                            else
                             {
-                                newItem.body.SetTransform(newItem.SimPosition, rotation);
-                                Vector2 impulseDir = new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
-                                newItem.body.ApplyLinearImpulse(impulseDir * chosenItemSpawnInfo.Impulse);
+                                if (newItem.body != null)
+                                {
+                                    //flipped on one axis = need to flip the rotation of the item (not if flipped on both, that's essentially double negation)
+                                    bool flip = parentItem is { FlippedX: true } != parentItem is { FlippedY: true };
+                                    newItem.body.Dir = flip ? -1 : 1;
+                                    newItem.body.SetTransform(newItem.SimPosition, flip ? rotation - MathHelper.Pi : rotation);
+                                    Vector2 impulseDir = new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
+                                    newItem.body.ApplyLinearImpulse(impulseDir * chosenItemSpawnInfo.Impulse);
+                                }
                             }
                         }
                         OnItemSpawned(newItem, chosenItemSpawnInfo);

@@ -7,20 +7,21 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal unsafe class ISteamUGC : SteamInterface
+	internal unsafe partial class ISteamUGC : SteamInterface
 	{
+		public const string Version = "STEAMUGC_INTERFACE_VERSION020";
 		
 		internal ISteamUGC( bool IsGameServer )
 		{
 			SetupInterface( IsGameServer );
 		}
 		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUGC_v017", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamUGC_v017();
-		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUGC_v017();
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamGameServerUGC_v017", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamGameServerUGC_v017();
-		public override IntPtr GetServerInterfacePointer() => SteamAPI_SteamGameServerUGC_v017();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUGC_v020", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamUGC_v020();
+		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUGC_v020();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamGameServerUGC_v020", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamGameServerUGC_v020();
+		public override IntPtr GetServerInterfacePointer() => SteamAPI_SteamGameServerUGC_v020();
 		
 		
 		#region FunctionMeta
@@ -47,12 +48,13 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_CreateQueryAllUGCRequestCursor", CallingConvention = Platform.CC)]
-		private static extern UGCQueryHandle_t _CreateQueryAllUGCRequest( IntPtr self, UGCQuery eQueryType, UgcType eMatchingeMatchingUGCTypeFileType, AppId nCreatorAppID, AppId nConsumerAppID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchCursor );
+		private static extern UGCQueryHandle_t _CreateQueryAllUGCRequest( IntPtr self, UGCQuery eQueryType, UgcType eMatchingeMatchingUGCTypeFileType, AppId nCreatorAppID, AppId nConsumerAppID, IntPtr pchCursor );
 		
 		#endregion
-		internal UGCQueryHandle_t CreateQueryAllUGCRequest( UGCQuery eQueryType, UgcType eMatchingeMatchingUGCTypeFileType, AppId nCreatorAppID, AppId nConsumerAppID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchCursor )
+		internal UGCQueryHandle_t CreateQueryAllUGCRequest( UGCQuery eQueryType, UgcType eMatchingeMatchingUGCTypeFileType, AppId nCreatorAppID, AppId nConsumerAppID, string pchCursor )
 		{
-			var returnValue = _CreateQueryAllUGCRequest( Self, eQueryType, eMatchingeMatchingUGCTypeFileType, nCreatorAppID, nConsumerAppID, pchCursor );
+			using var str__pchCursor = new Utf8StringToNative( pchCursor );
+			var returnValue = _CreateQueryAllUGCRequest( Self, eQueryType, eMatchingeMatchingUGCTypeFileType, nCreatorAppID, nConsumerAppID, str__pchCursor.Pointer );
 			return returnValue;
 		}
 		
@@ -109,9 +111,9 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCTag( UGCQueryHandle_t handle, uint index, uint indexTag, out string pchValue )
 		{
-			using var mempchValue = Helpers.TakeMemory();
-			var returnValue = _GetQueryUGCTag( Self, handle, index, indexTag, mempchValue, (1024 * 32) );
-			pchValue = Helpers.MemoryToString( mempchValue );
+			using var mem__pchValue = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCTag( Self, handle, index, indexTag, mem__pchValue, (1024 * 32) );
+			pchValue = Helpers.MemoryToString( mem__pchValue );
 			return returnValue;
 		}
 		
@@ -123,9 +125,9 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCTagDisplayName( UGCQueryHandle_t handle, uint index, uint indexTag, out string pchValue )
 		{
-			using var mempchValue = Helpers.TakeMemory();
-			var returnValue = _GetQueryUGCTagDisplayName( Self, handle, index, indexTag, mempchValue, (1024 * 32) );
-			pchValue = Helpers.MemoryToString( mempchValue );
+			using var mem__pchValue = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCTagDisplayName( Self, handle, index, indexTag, mem__pchValue, (1024 * 32) );
+			pchValue = Helpers.MemoryToString( mem__pchValue );
 			return returnValue;
 		}
 		
@@ -137,9 +139,9 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCPreviewURL( UGCQueryHandle_t handle, uint index, out string pchURL )
 		{
-			using var mempchURL = Helpers.TakeMemory();
-			var returnValue = _GetQueryUGCPreviewURL( Self, handle, index, mempchURL, (1024 * 32) );
-			pchURL = Helpers.MemoryToString( mempchURL );
+			using var mem__pchURL = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCPreviewURL( Self, handle, index, mem__pchURL, (1024 * 32) );
+			pchURL = Helpers.MemoryToString( mem__pchURL );
 			return returnValue;
 		}
 		
@@ -151,9 +153,9 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCMetadata( UGCQueryHandle_t handle, uint index, out string pchMetadata )
 		{
-			using var mempchMetadata = Helpers.TakeMemory();
-			var returnValue = _GetQueryUGCMetadata( Self, handle, index, mempchMetadata, (1024 * 32) );
-			pchMetadata = Helpers.MemoryToString( mempchMetadata );
+			using var mem__pchMetadata = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCMetadata( Self, handle, index, mem__pchMetadata, (1024 * 32) );
+			pchMetadata = Helpers.MemoryToString( mem__pchMetadata );
 			return returnValue;
 		}
 		
@@ -200,11 +202,11 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCAdditionalPreview( UGCQueryHandle_t handle, uint index, uint previewIndex, out string pchURLOrVideoID, out string pchOriginalFileName, ref ItemPreviewType pPreviewType )
 		{
-			using var mempchURLOrVideoID = Helpers.TakeMemory();
-			using var mempchOriginalFileName = Helpers.TakeMemory();
-			var returnValue = _GetQueryUGCAdditionalPreview( Self, handle, index, previewIndex, mempchURLOrVideoID, (1024 * 32), mempchOriginalFileName, (1024 * 32), ref pPreviewType );
-			pchURLOrVideoID = Helpers.MemoryToString( mempchURLOrVideoID );
-			pchOriginalFileName = Helpers.MemoryToString( mempchOriginalFileName );
+			using var mem__pchURLOrVideoID = Helpers.TakeMemory();
+			using var mem__pchOriginalFileName = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCAdditionalPreview( Self, handle, index, previewIndex, mem__pchURLOrVideoID, (1024 * 32), mem__pchOriginalFileName, (1024 * 32), ref pPreviewType );
+			pchURLOrVideoID = Helpers.MemoryToString( mem__pchURLOrVideoID );
+			pchOriginalFileName = Helpers.MemoryToString( mem__pchOriginalFileName );
 			return returnValue;
 		}
 		
@@ -227,25 +229,53 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCKeyValueTag( UGCQueryHandle_t handle, uint index, uint keyValueTagIndex, out string pchKey, out string pchValue )
 		{
-			using var mempchKey = Helpers.TakeMemory();
-			using var mempchValue = Helpers.TakeMemory();
-			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, keyValueTagIndex, mempchKey, (1024 * 32), mempchValue, (1024 * 32) );
-			pchKey = Helpers.MemoryToString( mempchKey );
-			pchValue = Helpers.MemoryToString( mempchValue );
+			using var mem__pchKey = Helpers.TakeMemory();
+			using var mem__pchValue = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, keyValueTagIndex, mem__pchKey, (1024 * 32), mem__pchValue, (1024 * 32) );
+			pchKey = Helpers.MemoryToString( mem__pchKey );
+			pchValue = Helpers.MemoryToString( mem__pchValue );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetQueryFirstUGCKeyValueTag", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _GetQueryUGCKeyValueTag( IntPtr self, UGCQueryHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey, IntPtr pchValue, uint cchValueSize );
+		private static extern bool _GetQueryUGCKeyValueTag( IntPtr self, UGCQueryHandle_t handle, uint index, IntPtr pchKey, IntPtr pchValue, uint cchValueSize );
 		
 		#endregion
-		internal bool GetQueryUGCKeyValueTag( UGCQueryHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey, out string pchValue )
+		internal bool GetQueryUGCKeyValueTag( UGCQueryHandle_t handle, uint index, string pchKey, out string pchValue )
 		{
-			using var mempchValue = Helpers.TakeMemory();
-			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, pchKey, mempchValue, (1024 * 32) );
-			pchValue = Helpers.MemoryToString( mempchValue );
+			using var str__pchKey = new Utf8StringToNative( pchKey );
+			using var mem__pchValue = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, str__pchKey.Pointer, mem__pchValue, (1024 * 32) );
+			pchValue = Helpers.MemoryToString( mem__pchValue );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetNumSupportedGameVersions", CallingConvention = Platform.CC)]
+		private static extern uint _GetNumSupportedGameVersions( IntPtr self, UGCQueryHandle_t handle, uint index );
+		
+		#endregion
+		internal uint GetNumSupportedGameVersions( UGCQueryHandle_t handle, uint index )
+		{
+			var returnValue = _GetNumSupportedGameVersions( Self, handle, index );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetSupportedGameVersionData", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _GetSupportedGameVersionData( IntPtr self, UGCQueryHandle_t handle, uint index, uint versionIndex, IntPtr pchGameBranchMin, IntPtr pchGameBranchMax, uint cchGameBranchSize );
+		
+		#endregion
+		internal bool GetSupportedGameVersionData( UGCQueryHandle_t handle, uint index, uint versionIndex, out string pchGameBranchMin, out string pchGameBranchMax )
+		{
+			using var mem__pchGameBranchMin = Helpers.TakeMemory();
+			using var mem__pchGameBranchMax = Helpers.TakeMemory();
+			var returnValue = _GetSupportedGameVersionData( Self, handle, index, versionIndex, mem__pchGameBranchMin, mem__pchGameBranchMax, (1024 * 32) );
+			pchGameBranchMin = Helpers.MemoryToString( mem__pchGameBranchMin );
+			pchGameBranchMax = Helpers.MemoryToString( mem__pchGameBranchMax );
 			return returnValue;
 		}
 		
@@ -275,12 +305,13 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_AddRequiredTag", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _AddRequiredTag( IntPtr self, UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pTagName );
+		private static extern bool _AddRequiredTag( IntPtr self, UGCQueryHandle_t handle, IntPtr pTagName );
 		
 		#endregion
-		internal bool AddRequiredTag( UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pTagName )
+		internal bool AddRequiredTag( UGCQueryHandle_t handle, string pTagName )
 		{
-			var returnValue = _AddRequiredTag( Self, handle, pTagName );
+			using var str__pTagName = new Utf8StringToNative( pTagName );
+			var returnValue = _AddRequiredTag( Self, handle, str__pTagName.Pointer );
 			return returnValue;
 		}
 		
@@ -299,12 +330,13 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_AddExcludedTag", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _AddExcludedTag( IntPtr self, UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pTagName );
+		private static extern bool _AddExcludedTag( IntPtr self, UGCQueryHandle_t handle, IntPtr pTagName );
 		
 		#endregion
-		internal bool AddExcludedTag( UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pTagName )
+		internal bool AddExcludedTag( UGCQueryHandle_t handle, string pTagName )
 		{
-			var returnValue = _AddExcludedTag( Self, handle, pTagName );
+			using var str__pTagName = new Utf8StringToNative( pTagName );
+			var returnValue = _AddExcludedTag( Self, handle, str__pTagName.Pointer );
 			return returnValue;
 		}
 		
@@ -407,12 +439,13 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetLanguage", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetLanguage( IntPtr self, UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchLanguage );
+		private static extern bool _SetLanguage( IntPtr self, UGCQueryHandle_t handle, IntPtr pchLanguage );
 		
 		#endregion
-		internal bool SetLanguage( UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchLanguage )
+		internal bool SetLanguage( UGCQueryHandle_t handle, string pchLanguage )
 		{
-			var returnValue = _SetLanguage( Self, handle, pchLanguage );
+			using var str__pchLanguage = new Utf8StringToNative( pchLanguage );
+			var returnValue = _SetLanguage( Self, handle, str__pchLanguage.Pointer );
 			return returnValue;
 		}
 		
@@ -429,14 +462,27 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetCloudFileNameFilter", CallingConvention = Platform.CC)]
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetAdminQuery", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetCloudFileNameFilter( IntPtr self, UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pMatchCloudFileName );
+		private static extern bool _SetAdminQuery( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.U1 )] bool bAdminQuery );
 		
 		#endregion
-		internal bool SetCloudFileNameFilter( UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pMatchCloudFileName )
+		internal bool SetAdminQuery( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.U1 )] bool bAdminQuery )
 		{
-			var returnValue = _SetCloudFileNameFilter( Self, handle, pMatchCloudFileName );
+			var returnValue = _SetAdminQuery( Self, handle, bAdminQuery );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetCloudFileNameFilter", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetCloudFileNameFilter( IntPtr self, UGCQueryHandle_t handle, IntPtr pMatchCloudFileName );
+		
+		#endregion
+		internal bool SetCloudFileNameFilter( UGCQueryHandle_t handle, string pMatchCloudFileName )
+		{
+			using var str__pMatchCloudFileName = new Utf8StringToNative( pMatchCloudFileName );
+			var returnValue = _SetCloudFileNameFilter( Self, handle, str__pMatchCloudFileName.Pointer );
 			return returnValue;
 		}
 		
@@ -455,12 +501,13 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetSearchText", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetSearchText( IntPtr self, UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pSearchText );
+		private static extern bool _SetSearchText( IntPtr self, UGCQueryHandle_t handle, IntPtr pSearchText );
 		
 		#endregion
-		internal bool SetSearchText( UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pSearchText )
+		internal bool SetSearchText( UGCQueryHandle_t handle, string pSearchText )
 		{
-			var returnValue = _SetSearchText( Self, handle, pSearchText );
+			using var str__pSearchText = new Utf8StringToNative( pSearchText );
+			var returnValue = _SetSearchText( Self, handle, str__pSearchText.Pointer );
 			return returnValue;
 		}
 		
@@ -503,12 +550,14 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_AddRequiredKeyValueTag", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _AddRequiredKeyValueTag( IntPtr self, UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pKey, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pValue );
+		private static extern bool _AddRequiredKeyValueTag( IntPtr self, UGCQueryHandle_t handle, IntPtr pKey, IntPtr pValue );
 		
 		#endregion
-		internal bool AddRequiredKeyValueTag( UGCQueryHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pKey, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pValue )
+		internal bool AddRequiredKeyValueTag( UGCQueryHandle_t handle, string pKey, string pValue )
 		{
-			var returnValue = _AddRequiredKeyValueTag( Self, handle, pKey, pValue );
+			using var str__pKey = new Utf8StringToNative( pKey );
+			using var str__pValue = new Utf8StringToNative( pValue );
+			var returnValue = _AddRequiredKeyValueTag( Self, handle, str__pKey.Pointer, str__pValue.Pointer );
 			return returnValue;
 		}
 		
@@ -537,48 +586,52 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetItemTitle", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetItemTitle( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchTitle );
+		private static extern bool _SetItemTitle( IntPtr self, UGCUpdateHandle_t handle, IntPtr pchTitle );
 		
 		#endregion
-		internal bool SetItemTitle( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchTitle )
+		internal bool SetItemTitle( UGCUpdateHandle_t handle, string pchTitle )
 		{
-			var returnValue = _SetItemTitle( Self, handle, pchTitle );
+			using var str__pchTitle = new Utf8StringToNative( pchTitle );
+			var returnValue = _SetItemTitle( Self, handle, str__pchTitle.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetItemDescription", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetItemDescription( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchDescription );
+		private static extern bool _SetItemDescription( IntPtr self, UGCUpdateHandle_t handle, IntPtr pchDescription );
 		
 		#endregion
-		internal bool SetItemDescription( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchDescription )
+		internal bool SetItemDescription( UGCUpdateHandle_t handle, string pchDescription )
 		{
-			var returnValue = _SetItemDescription( Self, handle, pchDescription );
+			using var str__pchDescription = new Utf8StringToNative( pchDescription );
+			var returnValue = _SetItemDescription( Self, handle, str__pchDescription.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetItemUpdateLanguage", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetItemUpdateLanguage( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchLanguage );
+		private static extern bool _SetItemUpdateLanguage( IntPtr self, UGCUpdateHandle_t handle, IntPtr pchLanguage );
 		
 		#endregion
-		internal bool SetItemUpdateLanguage( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchLanguage )
+		internal bool SetItemUpdateLanguage( UGCUpdateHandle_t handle, string pchLanguage )
 		{
-			var returnValue = _SetItemUpdateLanguage( Self, handle, pchLanguage );
+			using var str__pchLanguage = new Utf8StringToNative( pchLanguage );
+			var returnValue = _SetItemUpdateLanguage( Self, handle, str__pchLanguage.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetItemMetadata", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetItemMetadata( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchMetaData );
+		private static extern bool _SetItemMetadata( IntPtr self, UGCUpdateHandle_t handle, IntPtr pchMetaData );
 		
 		#endregion
-		internal bool SetItemMetadata( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchMetaData )
+		internal bool SetItemMetadata( UGCUpdateHandle_t handle, string pchMetaData )
 		{
-			var returnValue = _SetItemMetadata( Self, handle, pchMetaData );
+			using var str__pchMetaData = new Utf8StringToNative( pchMetaData );
+			var returnValue = _SetItemMetadata( Self, handle, str__pchMetaData.Pointer );
 			return returnValue;
 		}
 		
@@ -597,36 +650,38 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetItemTags", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetItemTags( IntPtr self, UGCUpdateHandle_t updateHandle, ref SteamParamStringArray_t pTags );
+		private static extern bool _SetItemTags( IntPtr self, UGCUpdateHandle_t updateHandle, ref SteamParamStringArray_t pTags, [MarshalAs( UnmanagedType.U1 )] bool bAllowAdminTags );
 		
 		#endregion
-		internal bool SetItemTags( UGCUpdateHandle_t updateHandle, ref SteamParamStringArray_t pTags )
+		internal bool SetItemTags( UGCUpdateHandle_t updateHandle, ref SteamParamStringArray_t pTags, [MarshalAs( UnmanagedType.U1 )] bool bAllowAdminTags )
 		{
-			var returnValue = _SetItemTags( Self, updateHandle, ref pTags );
+			var returnValue = _SetItemTags( Self, updateHandle, ref pTags, bAllowAdminTags );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetItemContent", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetItemContent( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszContentFolder );
+		private static extern bool _SetItemContent( IntPtr self, UGCUpdateHandle_t handle, IntPtr pszContentFolder );
 		
 		#endregion
-		internal bool SetItemContent( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszContentFolder )
+		internal bool SetItemContent( UGCUpdateHandle_t handle, string pszContentFolder )
 		{
-			var returnValue = _SetItemContent( Self, handle, pszContentFolder );
+			using var str__pszContentFolder = new Utf8StringToNative( pszContentFolder );
+			var returnValue = _SetItemContent( Self, handle, str__pszContentFolder.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetItemPreview", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _SetItemPreview( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszPreviewFile );
+		private static extern bool _SetItemPreview( IntPtr self, UGCUpdateHandle_t handle, IntPtr pszPreviewFile );
 		
 		#endregion
-		internal bool SetItemPreview( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszPreviewFile )
+		internal bool SetItemPreview( UGCUpdateHandle_t handle, string pszPreviewFile )
 		{
-			var returnValue = _SetItemPreview( Self, handle, pszPreviewFile );
+			using var str__pszPreviewFile = new Utf8StringToNative( pszPreviewFile );
+			var returnValue = _SetItemPreview( Self, handle, str__pszPreviewFile.Pointer );
 			return returnValue;
 		}
 		
@@ -657,72 +712,79 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_RemoveItemKeyValueTags", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _RemoveItemKeyValueTags( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey );
+		private static extern bool _RemoveItemKeyValueTags( IntPtr self, UGCUpdateHandle_t handle, IntPtr pchKey );
 		
 		#endregion
-		internal bool RemoveItemKeyValueTags( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey )
+		internal bool RemoveItemKeyValueTags( UGCUpdateHandle_t handle, string pchKey )
 		{
-			var returnValue = _RemoveItemKeyValueTags( Self, handle, pchKey );
+			using var str__pchKey = new Utf8StringToNative( pchKey );
+			var returnValue = _RemoveItemKeyValueTags( Self, handle, str__pchKey.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_AddItemKeyValueTag", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _AddItemKeyValueTag( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchValue );
+		private static extern bool _AddItemKeyValueTag( IntPtr self, UGCUpdateHandle_t handle, IntPtr pchKey, IntPtr pchValue );
 		
 		#endregion
-		internal bool AddItemKeyValueTag( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchValue )
+		internal bool AddItemKeyValueTag( UGCUpdateHandle_t handle, string pchKey, string pchValue )
 		{
-			var returnValue = _AddItemKeyValueTag( Self, handle, pchKey, pchValue );
+			using var str__pchKey = new Utf8StringToNative( pchKey );
+			using var str__pchValue = new Utf8StringToNative( pchValue );
+			var returnValue = _AddItemKeyValueTag( Self, handle, str__pchKey.Pointer, str__pchValue.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_AddItemPreviewFile", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _AddItemPreviewFile( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszPreviewFile, ItemPreviewType type );
+		private static extern bool _AddItemPreviewFile( IntPtr self, UGCUpdateHandle_t handle, IntPtr pszPreviewFile, ItemPreviewType type );
 		
 		#endregion
-		internal bool AddItemPreviewFile( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszPreviewFile, ItemPreviewType type )
+		internal bool AddItemPreviewFile( UGCUpdateHandle_t handle, string pszPreviewFile, ItemPreviewType type )
 		{
-			var returnValue = _AddItemPreviewFile( Self, handle, pszPreviewFile, type );
+			using var str__pszPreviewFile = new Utf8StringToNative( pszPreviewFile );
+			var returnValue = _AddItemPreviewFile( Self, handle, str__pszPreviewFile.Pointer, type );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_AddItemPreviewVideo", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _AddItemPreviewVideo( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszVideoID );
+		private static extern bool _AddItemPreviewVideo( IntPtr self, UGCUpdateHandle_t handle, IntPtr pszVideoID );
 		
 		#endregion
-		internal bool AddItemPreviewVideo( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszVideoID )
+		internal bool AddItemPreviewVideo( UGCUpdateHandle_t handle, string pszVideoID )
 		{
-			var returnValue = _AddItemPreviewVideo( Self, handle, pszVideoID );
+			using var str__pszVideoID = new Utf8StringToNative( pszVideoID );
+			var returnValue = _AddItemPreviewVideo( Self, handle, str__pszVideoID.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_UpdateItemPreviewFile", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _UpdateItemPreviewFile( IntPtr self, UGCUpdateHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszPreviewFile );
+		private static extern bool _UpdateItemPreviewFile( IntPtr self, UGCUpdateHandle_t handle, uint index, IntPtr pszPreviewFile );
 		
 		#endregion
-		internal bool UpdateItemPreviewFile( UGCUpdateHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszPreviewFile )
+		internal bool UpdateItemPreviewFile( UGCUpdateHandle_t handle, uint index, string pszPreviewFile )
 		{
-			var returnValue = _UpdateItemPreviewFile( Self, handle, index, pszPreviewFile );
+			using var str__pszPreviewFile = new Utf8StringToNative( pszPreviewFile );
+			var returnValue = _UpdateItemPreviewFile( Self, handle, index, str__pszPreviewFile.Pointer );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_UpdateItemPreviewVideo", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _UpdateItemPreviewVideo( IntPtr self, UGCUpdateHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszVideoID );
+		private static extern bool _UpdateItemPreviewVideo( IntPtr self, UGCUpdateHandle_t handle, uint index, IntPtr pszVideoID );
 		
 		#endregion
-		internal bool UpdateItemPreviewVideo( UGCUpdateHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszVideoID )
+		internal bool UpdateItemPreviewVideo( UGCUpdateHandle_t handle, uint index, string pszVideoID )
 		{
-			var returnValue = _UpdateItemPreviewVideo( Self, handle, index, pszVideoID );
+			using var str__pszVideoID = new Utf8StringToNative( pszVideoID );
+			var returnValue = _UpdateItemPreviewVideo( Self, handle, index, str__pszVideoID.Pointer );
 			return returnValue;
 		}
 		
@@ -763,13 +825,28 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SubmitItemUpdate", CallingConvention = Platform.CC)]
-		private static extern SteamAPICall_t _SubmitItemUpdate( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchChangeNote );
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetRequiredGameVersions", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetRequiredGameVersions( IntPtr self, UGCUpdateHandle_t handle, IntPtr pszGameBranchMin, IntPtr pszGameBranchMax );
 		
 		#endregion
-		internal CallResult<SubmitItemUpdateResult_t> SubmitItemUpdate( UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchChangeNote )
+		internal bool SetRequiredGameVersions( UGCUpdateHandle_t handle, string pszGameBranchMin, string pszGameBranchMax )
 		{
-			var returnValue = _SubmitItemUpdate( Self, handle, pchChangeNote );
+			using var str__pszGameBranchMin = new Utf8StringToNative( pszGameBranchMin );
+			using var str__pszGameBranchMax = new Utf8StringToNative( pszGameBranchMax );
+			var returnValue = _SetRequiredGameVersions( Self, handle, str__pszGameBranchMin.Pointer, str__pszGameBranchMax.Pointer );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SubmitItemUpdate", CallingConvention = Platform.CC)]
+		private static extern SteamAPICall_t _SubmitItemUpdate( IntPtr self, UGCUpdateHandle_t handle, IntPtr pchChangeNote );
+		
+		#endregion
+		internal CallResult<SubmitItemUpdateResult_t> SubmitItemUpdate( UGCUpdateHandle_t handle, string pchChangeNote )
+		{
+			using var str__pchChangeNote = new Utf8StringToNative( pchChangeNote );
+			var returnValue = _SubmitItemUpdate( Self, handle, str__pchChangeNote.Pointer );
 			return new CallResult<SubmitItemUpdateResult_t>( returnValue, IsServer );
 		}
 		
@@ -891,9 +968,9 @@ namespace Steamworks
 		#endregion
 		internal bool GetItemInstallInfo( PublishedFileId nPublishedFileID, ref ulong punSizeOnDisk, out string pchFolder, ref uint punTimeStamp )
 		{
-			using var mempchFolder = Helpers.TakeMemory();
-			var returnValue = _GetItemInstallInfo( Self, nPublishedFileID, ref punSizeOnDisk, mempchFolder, (1024 * 32), ref punTimeStamp );
-			pchFolder = Helpers.MemoryToString( mempchFolder );
+			using var mem__pchFolder = Helpers.TakeMemory();
+			var returnValue = _GetItemInstallInfo( Self, nPublishedFileID, ref punSizeOnDisk, mem__pchFolder, (1024 * 32), ref punTimeStamp );
+			pchFolder = Helpers.MemoryToString( mem__pchFolder );
 			return returnValue;
 		}
 		
@@ -924,12 +1001,13 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_BInitWorkshopForGameServer", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _BInitWorkshopForGameServer( IntPtr self, DepotId_t unWorkshopDepotID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszFolder );
+		private static extern bool _BInitWorkshopForGameServer( IntPtr self, DepotId_t unWorkshopDepotID, IntPtr pszFolder );
 		
 		#endregion
-		internal bool BInitWorkshopForGameServer( DepotId_t unWorkshopDepotID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszFolder )
+		internal bool BInitWorkshopForGameServer( DepotId_t unWorkshopDepotID, string pszFolder )
 		{
-			var returnValue = _BInitWorkshopForGameServer( Self, unWorkshopDepotID, pszFolder );
+			using var str__pszFolder = new Utf8StringToNative( pszFolder );
+			var returnValue = _BInitWorkshopForGameServer( Self, unWorkshopDepotID, str__pszFolder.Pointer );
 			return returnValue;
 		}
 		
@@ -1063,6 +1141,17 @@ namespace Steamworks
 		{
 			var returnValue = _GetWorkshopEULAStatus( Self );
 			return new CallResult<WorkshopEULAStatus_t>( returnValue, IsServer );
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences", CallingConvention = Platform.CC)]
+		private static extern uint _GetUserContentDescriptorPreferences( IntPtr self, [In,Out] UGCContentDescriptorID[]  pvecDescriptors, uint cMaxEntries );
+		
+		#endregion
+		internal uint GetUserContentDescriptorPreferences( [In,Out] UGCContentDescriptorID[]  pvecDescriptors, uint cMaxEntries )
+		{
+			var returnValue = _GetUserContentDescriptorPreferences( Self, pvecDescriptors, cMaxEntries );
+			return returnValue;
 		}
 		
 	}

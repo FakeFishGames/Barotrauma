@@ -156,6 +156,9 @@ namespace Barotrauma
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "The multiplier of the minimum distance required between this character and the player/submarine before the music starts playing. The default distance is twice the length of the submarine, or a minimum of 50 meters."), Editable]
         public float MusicRangeMultiplier { get; private set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the entire crew get an achievement (assuming there is one) if someone from the crew kills the character?")]
+        public bool UnlockKillAchievementForWholeCrew { get; set; }
+
         public readonly CharacterFile File;
         public bool IsPet => AI?.IsPet ?? false;
 

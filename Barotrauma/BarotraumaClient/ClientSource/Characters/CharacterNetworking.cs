@@ -833,6 +833,9 @@ namespace Barotrauma
                         causeOfDeathAffliction = afflictionPrefab;
                     }
                 }
+
+                Character killer = FindEntityByID(msg.ReadUInt16()) as Character;
+
                 bool containsAfflictionData = msg.ReadBoolean();
                 if (!IsDead)
                 {
@@ -842,7 +845,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f), true);
+                        Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f, killer), true);
                     }
                 }                
                 if (containsAfflictionData)

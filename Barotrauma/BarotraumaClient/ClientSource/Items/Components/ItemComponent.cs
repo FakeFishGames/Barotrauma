@@ -236,7 +236,11 @@ namespace Barotrauma.Items.Components
 
         public ItemComponent GetReplacementOrThis()
         {
-            return ReplacedBy?.GetReplacementOrThis() ?? this;
+            if (ReplacedBy != null && ReplacedBy != this)
+            {
+                return ReplacedBy.GetReplacementOrThis();
+            }
+            return this;
         }
 
         public bool NeedsSoundUpdate()
@@ -511,7 +515,7 @@ namespace Barotrauma.Items.Components
                 if (HUDOverlay is SpriteSheet spriteSheet)
                 {
                     spriteSheet.Draw(spriteBatch,
-                        spriteIndex: (int)(Math.Floor(Timing.TotalTimeUnpaused * HUDOverlayAnimSpeed) % spriteSheet.FrameCount),
+                        spriteIndex: spriteSheet.GetAnimatedSpriteIndex(HUDOverlayAnimSpeed),
                         pos: screenSize / 2, color: Color.White, origin: HUDOverlay.Origin, rotate: 0, scale: screenSize / spriteSheet.FrameSize.ToVector2());
                 }
                 else

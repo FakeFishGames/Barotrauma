@@ -37,7 +37,7 @@ namespace Barotrauma.RuinGeneration
 
         public void Generate(Level level, LocationType locationType, Point position, bool mirror = false)
         {
-            Submarine = OutpostGenerator.Generate(generationParams, locationType, onlyEntrance: false);
+            Submarine = OutpostGenerator.Generate(generationParams, locationType, onlyEntrance: false, allowInvalidOutpost: level.LevelData.AllowInvalidOutpost);
             Submarine.Info.Name = $"Ruin ({level.Seed})";
             Submarine.Info.Type = SubmarineType.Ruin;
             Submarine.TeamID = CharacterTeamType.None;

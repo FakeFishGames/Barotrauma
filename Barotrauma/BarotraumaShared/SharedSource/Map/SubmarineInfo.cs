@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -194,10 +194,27 @@ namespace Barotrauma
             set;
         }
 
+        /// <summary>
+        /// When enabled, the <see cref="SubmarineElement">XML element is not loaded</see> until it is accessed.
+        /// </summary>
+        public readonly bool LazyLoad;
+
+        private XElement submarineElement;
+
         public XElement SubmarineElement
         {
-            get;
-            private set;
+            get
+            {
+                if (LazyLoad && submarineElement == null)
+                {
+                    Reload();
+                }
+                return submarineElement;
+            }
+            private set
+            {
+                submarineElement = value;
+            }
         }
 
         public override string ToString()
@@ -263,7 +280,11 @@ namespace Barotrauma
             RequiredContentPackages = new HashSet<string>();
         }
 
-        public SubmarineInfo(string filePath, string hash = "", XElement element = null, bool tryLoad = true)
+        /// <summary>
+        /// Creates a new SubmarineInfo from a file.
+        /// </summary>
+        /// <param name="lazyLoad">When enabled, the <see cref="SubmarineElement">XML element is not loaded</see> until it is accessed.</param>
+        public SubmarineInfo(string filePath, string hash = "", XElement element = null, bool tryLoad = true, bool lazyLoad = false)
         {
             FilePath = filePath;
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
@@ -296,11 +317,17 @@ namespace Barotrauma
             else
             {
                 SubmarineElement = element;
-            }
+            }            
 
             Name = SubmarineElement.GetAttributeString("name", null) ?? Name;
 
             Init();
+
+            if (lazyLoad)
+            {
+                LazyLoad = true;
+                SubmarineElement = null;
+            }
         }
 
         public SubmarineInfo(Submarine sub) : this(sub.Info)
@@ -512,6 +539,11 @@ namespace Barotrauma
             if (savedSubmarines.Contains(this)) { savedSubmarines.Remove(this); }
         }
 
+        public void UnloadSubmarineElement()
+        {
+            SubmarineElement = null;
+        }
+
         public bool IsVanillaSubmarine()
         {
             if (FilePath == null) { return false; }
@@ -689,7 +721,7 @@ namespace Barotrauma
             RemoveSavedSub(filePath);
             if (File.Exists(filePath))
             {
-                var subInfo = new SubmarineInfo(filePath);
+                var subInfo = new SubmarineInfo(filePath, lazyLoad: true);
                 if (!subInfo.IsFileCorrupted)
                 {
                     savedSubmarines.Add(subInfo);

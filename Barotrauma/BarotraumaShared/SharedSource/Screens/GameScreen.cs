@@ -141,7 +141,10 @@ namespace Barotrauma
 
             foreach (PhysicsBody body in PhysicsBody.List)
             {
-                if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) 
+                //update character (colliders) regardless if they're enabled or not, so that the draw position is updated
+                //necessary to sync the character's position even if the character is ragdolled and the collider is disabled
+                if ((body.Enabled || body.UserData is Character) && 
+                    body.BodyType != BodyType.Static) 
                 { 
                     body.Update(); 
                 }               

@@ -11,9 +11,22 @@ namespace Barotrauma
     {
         public enum RandSync
         {
-            Unsynced, //not synced, used for unimportant details like minor particle properties
-            ServerAndClient, //synced with the server (used for gameplay elements that the players can interact with)
+            /// <summary>
+            /// Not synced, used for unimportant details like minor particle properties.
+            /// </summary>
+            Unsynced,
+            /// <summary>
+            /// An RNG instance shared by the client and the server is used to generate the values. 
+            /// Please note that just using RandSync.ServerAndClient DOES NOT guarantee that the server and the client will generate the same values when doing some arbitrary calls to the methods in this class. 
+            /// The values are only guaranteed to be the same if the same seed (<see cref="SetSyncedSeed(int)"/>) is set on both sides, and then the same sequence of calls is made.
+            /// </summary>
+            ServerAndClient,
 #if CLIENT
+            /// <summary>
+            /// An RNG instance shared by different clients. Used for things that the server doesn't track, but clients want to match anyway (e.g. certain level visuals).
+            /// Please note that just using RandSync.ClientOnly DOES NOT guarantee that the clients will generate the same values when doing some arbitrary calls to the methods in this class. 
+            /// The values are only guaranteed to be the same if the same seed (<see cref="SetSyncedSeed(int)"/>) is set on both sides, and then the same sequence of calls is made.
+            /// </summary>
             ClientOnly //set to match between clients (used for misc elements that the server doesn't track, but clients want to match anyway)
 #endif
         }

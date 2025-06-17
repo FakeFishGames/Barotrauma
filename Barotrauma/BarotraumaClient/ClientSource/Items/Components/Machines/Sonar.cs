@@ -1060,6 +1060,7 @@ namespace Barotrauma.Items.Components
             int missionIndex = 0;
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
+                if (!mission.Prefab.ShowSonarLabels) { continue; }
                 int i = 0;
                 foreach ((LocalizedString label, Vector2 position) in mission.SonarLabels)
                 {
@@ -1714,15 +1715,15 @@ namespace Barotrauma.Items.Components
             foreach (Structure structure in Structure.WallList)
             {
                 if (structure.Submarine != sub) { continue; }
-                CreateBlips(structure.IsHorizontal, structure.WorldPosition, structure.WorldRect);
+                CreateBlips(structure.IsHorizontal, structure.WorldPosition, structure.WorldRect, -structure.RotationWithFlipping);
             }
             foreach (var door in Door.DoorList)
             {
                 if (door.Item.Submarine != sub || door.IsOpen) { continue; }
-                CreateBlips(door.IsHorizontal, door.Item.WorldPosition, door.Item.WorldRect, BlipType.Door);
+                CreateBlips(door.IsHorizontal, door.Item.WorldPosition, door.Item.WorldRect, rotation: 0.0f, BlipType.Door);
             }
 
-            void CreateBlips(bool isHorizontal, Vector2 worldPos, Rectangle worldRect, BlipType blipType = BlipType.Default)
+            void CreateBlips(bool isHorizontal, Vector2 worldPos, Rectangle worldRect, float rotation, BlipType blipType = BlipType.Default)
             {
                 Vector2 point1, point2;
                 if (isHorizontal)
@@ -1735,6 +1736,14 @@ namespace Barotrauma.Items.Components
                     point1 = new Vector2(worldPos.X, worldRect.Y);
                     point2 = new Vector2(worldPos.X, worldRect.Y - worldRect.Height);
                 }
+
+                if (!MathUtils.NearlyEqual(rotation, 0.0f)) 
+                {
+                    float rotationRad = MathHelper.ToRadians(rotation);
+                    point1 = MathUtils.RotatePointAroundTarget(point1, worldPos, rotationRad);
+                    point2 = MathUtils.RotatePointAroundTarget(point2, worldPos, rotationRad);
+                }
+
                 CreateBlipsForLine(
                     point1,
                     point2,

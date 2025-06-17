@@ -179,7 +179,8 @@ namespace Barotrauma.Items.Components
                 var prevDockingTarget = DockingTarget;
                 Undock(applyEffects: false);
                 Dock(prevDockingTarget);
-                Lock(isNetworkMessage: true, applyEffects: false);
+                //don't move subs at this point, it will mess up the placement logic when flipping multi-part subs
+                Lock(isNetworkMessage: true, applyEffects: false, moveSubs: false);
             }
         }
 
@@ -281,7 +282,7 @@ namespace Barotrauma.Items.Components
             OnDocked = null;
         }
 
-        public void Lock(bool isNetworkMessage, bool applyEffects = true)
+        public void Lock(bool isNetworkMessage, bool applyEffects = true, bool moveSubs = true)
         {
 #if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) { return; }
@@ -312,16 +313,19 @@ namespace Barotrauma.Items.Components
                     ApplyStatusEffects(ActionType.OnUse, 1.0f);
                 }
 
-                Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
-                if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
-                    DockingTarget.item.Submarine.Info.IsOutpost)
+                if (moveSubs)
                 {
-                    item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
-                }
-                else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
-                   item.Submarine.Info.IsOutpost)
-                {
-                    DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                    Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
+                    if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
+                        DockingTarget.item.Submarine.Info.IsOutpost)
+                    {
+                        item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
+                    }
+                    else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
+                       item.Submarine.Info.IsOutpost)
+                    {
+                        DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                    }
                 }
 
                 ConnectWireBetweenPorts();

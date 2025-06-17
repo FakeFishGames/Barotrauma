@@ -92,10 +92,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "temperatureboostsoundup":
-                        temperatureBoostSoundUp = RoundSound.Load(subElement, false);
+                        temperatureBoostSoundUp = RoundSound.Load(subElement);
                         break;
                     case "temperatureboostsounddown":
-                        temperatureBoostSoundDown = RoundSound.Load(subElement, false);
+                        temperatureBoostSoundDown = RoundSound.Load(subElement);
                         break;
                 }
             }

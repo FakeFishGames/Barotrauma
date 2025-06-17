@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -16,7 +16,7 @@ public static class DotnetCmd
 {
     private const string DotnetAppName = "dotnet";
 
-    private const string DesiredRuntimeVersion = "6.0.8";
+    private const string DesiredRuntimeVersion = "8.0.0";
     
     public static void Publish(string projPath, string configuration, string runtime, string resultPath)
     {

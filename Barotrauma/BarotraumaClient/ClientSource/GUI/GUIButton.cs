@@ -211,7 +211,7 @@ namespace Barotrauma
             }
 
             var selfStyle = Style;
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.Center), text, textAlignment: textAlignment, style: null)
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.Center), RichString.Rich(text), textAlignment: textAlignment, style: null)
             {
                 TextColor = selfStyle?.TextColor ?? Color.Black,
                 HoverTextColor = selfStyle?.HoverTextColor ?? Color.Black,

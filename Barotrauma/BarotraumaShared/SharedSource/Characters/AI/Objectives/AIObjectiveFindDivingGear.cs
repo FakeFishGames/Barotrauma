@@ -69,6 +69,7 @@ namespace Barotrauma
                         }
                         var getItemObjective = new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true)
                         {
+                            IsFindDivingGearSubObjective = true,
                             AllowStealing = HumanAIController.NeedsDivingGear(character.CurrentHull, out _),
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,

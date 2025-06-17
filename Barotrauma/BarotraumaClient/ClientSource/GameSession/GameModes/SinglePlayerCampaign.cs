@@ -133,55 +133,14 @@ namespace Barotrauma
                     case "map":
                         map = Map.Load(this, subElement);
                         break;
-                    case "cargo":
-                        CargoManager.LoadPurchasedItems(subElement);
-                        break;
-                    case "pendingupgrades": //backwards compatibility
-                    case "upgrademanager":
-                        UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: true);
-                        break;
-                    case "pets":
-                        petsElement = subElement;
-                        break;
-                    case Wallet.LowerCaseSaveElementName:
-                        Bank = new Wallet(Option<Character>.None(), subElement);
-                        break;
-                    case "stats":
-                        LoadStats(subElement);
-                        break;
-                    case "eventmanager":
-                        GameMain.GameSession.EventManager.Load(subElement);
-                        break;
                 }
             }
+
+            LoadSaveSharedSingleAndMultiplayer(element);
 
             UpgradeManager ??= new UpgradeManager(this);
 
             InitUI();
-
-            //backwards compatibility for saves made prior to the addition of personal wallets
-            int oldMoney = element.GetAttributeInt("money", 0);
-            if (oldMoney > 0)
-            {
-                Bank = new Wallet(Option<Character>.None())
-                {
-                    Balance = oldMoney
-                };
-            }
-
-            PurchasedLostShuttlesInLatestSave = element.GetAttributeBool("purchasedlostshuttles", false);
-            PurchasedHullRepairsInLatestSave = element.GetAttributeBool("purchasedhullrepairs", false);
-            PurchasedItemRepairsInLatestSave = element.GetAttributeBool("purchaseditemrepairs", false);
-            CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
-            if (CheatsEnabled)
-            {
-                DebugConsole.CheatsEnabled = true;
-                if (!AchievementManager.CheatsEnabled)
-                {
-                    AchievementManager.CheatsEnabled = true;
-                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the campaign. You will not receive Steam Achievements until you restart the game.");
-                }
-            }
 
             if (map == null)
             {
@@ -685,6 +644,11 @@ namespace Barotrauma
             if (GameMain.GameSession?.EventManager != null)
             {
                 modeElement.Add(GameMain.GameSession?.EventManager.Save());
+            }
+
+            foreach (Identifier unlockedRecipe in GameMain.GameSession.UnlockedRecipes)
+            {
+                modeElement.Add(new XElement("unlockedrecipe", new XAttribute("identifier", unlockedRecipe)));
             }
 
             //save and remove all items that are in someone's inventory so they don't get included in the sub file as well

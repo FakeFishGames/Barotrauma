@@ -370,19 +370,36 @@ namespace Barotrauma
 
         public static IEnumerable<OutpostGenerationParams> GetSuitableOutpostGenerationParams(Location location, LevelData levelData)
         {
-            var suitableParams = OutpostGenerationParams.OutpostParams
-                    .Where(p => p.LevelType == null || levelData.Type == p.LevelType)
+            var paramsForGameMode = OutpostGenerationParams.OutpostParams.Where(p => 
+                p.AllowedGameModeIdentifiers.None() || GameMain.GameSession?.GameMode is not GameMode gameMode || p.AllowedGameModeIdentifiers.Contains(gameMode.Preset.Identifier));
+
+            var paramsWithMatchingLevelType = paramsForGameMode
+                .Where(p => p.LevelType == null || levelData.Type == p.LevelType);
+
+            //1. try finding params specifically for this location type
+            var suitableParams = paramsWithMatchingLevelType
                     .Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
             if (!suitableParams.Any())
             {
-                suitableParams = OutpostGenerationParams.OutpostParams
-                    .Where(p => p.LevelType == null || levelData.Type == p.LevelType)
-                    .Where(p => location == null || !p.AllowedLocationTypes.Any());
+                //2. not found, if the location type is configured to use the modules of some other location type,
+                //   see if we could use that location type's generation params
+                if (!location.Type.UseOutpostModulesOfLocationType.IsEmpty)
+                {
+                    suitableParams = paramsWithMatchingLevelType
+                        .Where(p => p.AllowedLocationTypes.Contains(location.Type.UseOutpostModulesOfLocationType));
+                }
                 if (!suitableParams.Any())
                 {
-                    DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
-                    suitableParams = OutpostGenerationParams.OutpostParams;
+                    //3. still not found, choose some parameters that are suitable for any location type
+                    suitableParams = paramsWithMatchingLevelType
+                              .Where(p => location == null || !p.AllowedLocationTypes.Any());
+                    if (!suitableParams.Any())
+                    {
+                        DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
+                        suitableParams = paramsForGameMode;
+                    }
                 }
+
             }
             return suitableParams;
         }

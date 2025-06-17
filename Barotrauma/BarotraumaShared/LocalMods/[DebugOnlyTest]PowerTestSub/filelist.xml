@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="[DebugOnlyTest]PowerTestSub" modversion="1.0.9" corepackage="False" gameversion="1.8.0.0">
+  <Submarine file="%ModDir%/PowerTestSub.sub" />
+</contentpackage>

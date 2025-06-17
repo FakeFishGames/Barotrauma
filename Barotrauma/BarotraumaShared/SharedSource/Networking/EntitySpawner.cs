@@ -377,6 +377,7 @@ namespace Barotrauma
             if (IsInRemoveQueue(item) || item.Removed) { return; }
 
             spawnOrRemoveQueue.Enqueue(item);
+            item.IsInRemoveQueue = true;
 
             foreach (var containedItem in item.ContainedItems)
             {

@@ -632,7 +632,7 @@ namespace Barotrauma
 
             GameMain.SoundManager?.ApplySettings();
 #endif
-            if (languageChanged) { TextManager.ClearCache(); }
+            if (languageChanged) { TextManager.LanguageChanged(); }
         }
 
         public static void SaveCurrentConfig()

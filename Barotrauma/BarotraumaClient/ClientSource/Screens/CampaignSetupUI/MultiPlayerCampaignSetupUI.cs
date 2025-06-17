@@ -217,6 +217,8 @@ namespace Barotrauma
                 RelativeSpacing = 0.03f
             };
 
+            CreateSaveFilteringHeader(leftColumn);
+
             saveList = new GUIListBox(new RectTransform(Vector2.One, leftColumn.RectTransform))
             {
                 PlaySoundOnSelect = true,

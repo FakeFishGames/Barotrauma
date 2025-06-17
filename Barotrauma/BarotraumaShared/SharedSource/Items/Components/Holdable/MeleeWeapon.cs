@@ -435,55 +435,65 @@ namespace Barotrauma.Items.Components
             Structure targetStructure = target.UserData as Structure ?? targetFixture.UserData as Structure;
             Item targetItem = target.UserData is Holdable h ? h.Item : target.UserData as Item ?? targetFixture.UserData as Item;
             Entity targetEntity = targetCharacter ?? targetStructure ?? targetItem ?? target.UserData as Entity;
+
             if (Attack != null)
             {
                 Attack.SetUser(user);
-                Attack.DamageMultiplier = damageMultiplier;
-                if (targetLimb != null)
+                bool applyAttack = true;
+                if (Attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(targetEntity as ISerializableEntity)) ||
+                    Attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(user)))
                 {
-                    if (targetLimb.character.Removed) { return; }
-                    targetLimb.character.LastDamageSource = item;
-                    Attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
+                    applyAttack = false;
                 }
-                else if (targetCharacter != null)
+                if (applyAttack)
                 {
-                    if (targetCharacter.Removed) { return; }
-                    targetCharacter.LastDamageSource = item;
-                    Attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
-                }
-                else if (targetStructure != null)
-                {
-                    if (targetStructure.Removed) { return; }
-                    Attack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
-                }
-                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
-                {
-                    if (targetItem.Removed) { return; }
-                    var attackResult = Attack.DoDamage(user, targetItem, item.WorldPosition, 1.0f);
-#if CLIENT
-                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
-                        (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
+                    Attack.DamageMultiplier = damageMultiplier;
+                    if (targetLimb != null)
                     {
-                        Character.Controlled.UpdateHUDProgressBar(targetItem,
-                            targetItem.WorldPosition,
-                            targetItem.Condition / targetItem.MaxCondition,
-                            emptyColor: GUIStyle.HealthBarColorLow,
-                            fullColor: GUIStyle.HealthBarColorHigh,
-                            textTag: targetItem.Prefab.ShowNameInHealthBar ? targetItem.Name : string.Empty);
+                        if (targetLimb.character.Removed) { return; }
+                        targetLimb.character.LastDamageSource = item;
+                        Attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
                     }
+                    else if (targetCharacter != null)
+                    {
+                        if (targetCharacter.Removed) { return; }
+                        targetCharacter.LastDamageSource = item;
+                        Attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
+                    }
+                    else if (targetStructure != null)
+                    {
+                        if (targetStructure.Removed) { return; }
+                        Attack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
+                    }
+                    else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
+                    {
+                        if (targetItem.Removed) { return; }
+                        var attackResult = Attack.DoDamage(user, targetItem, item.WorldPosition, 1.0f);
+#if CLIENT
+                        if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
+                            (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
+                        {
+                            Character.Controlled.UpdateHUDProgressBar(targetItem,
+                                targetItem.WorldPosition,
+                                targetItem.Condition / targetItem.MaxCondition,
+                                emptyColor: GUIStyle.HealthBarColorLow,
+                                fullColor: GUIStyle.HealthBarColorHigh,
+                                textTag: targetItem.Prefab.ShowNameInHealthBar ? targetItem.Name : string.Empty);
+                        }
 #endif
-                }
-                else if (target.UserData is Holdable { CanPush: true } holdable)
-                {
-                    if (holdable.Item.Removed) { return; }
-                    RestoreCollision();
-                    hitting = false;
-                    User = null;
-                }
-                else
-                {
-                    return;
-                }
+                    }
+                    else if (target.UserData is Holdable { CanPush: true } holdable)
+                    {
+                        if (holdable.Item.Removed) { return; }
+                        RestoreCollision();
+                        hitting = false;
+                        User = null;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }                
             }
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }

@@ -302,7 +302,7 @@ namespace Barotrauma
                     new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
                     new List<InvSlotType>(item.AllowedSlots);
                 allowedSlots.Remove(InvSlotType.Any);
-
+                item.UnequipAutomatically = false;
                 character.Inventory.TryPutItem(item, null, allowedSlots);
             }
             else

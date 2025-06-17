@@ -592,8 +592,7 @@ namespace Barotrauma
         public bool CharacterClicked(GUIComponent component, object selection)
         {
             if (!AllowCharacterSwitch) { return false; }
-            if (selection is not Character character || character.IsDead || character.IsUnconscious) { return false; }
-            if (!character.IsOnPlayerTeam) { return false; }
+            if (selection is not Character character || !character.IsOnPlayerTeam) { return false; }
 
             if (GameMain.IsMultiplayer)
             {
@@ -604,6 +603,8 @@ namespace Barotrauma
                 }
                 return true;
             }
+
+            if (character.IsDead || character.IsUnconscious) { return false; }
 
             SelectCharacter(character);
             if (GUI.KeyboardDispatcher.Subscriber == crewList) { GUI.KeyboardDispatcher.Subscriber = null; }
@@ -3703,7 +3704,8 @@ namespace Barotrauma
                 canIssueOrders = 
                     ChatMessage.CanUseRadio(Character.Controlled) &&
                     Character.Controlled?.CurrentHull?.Submarine?.TeamID == Character.Controlled.TeamID &&
-                    !Character.Controlled.CurrentHull.Submarine.Info.IsWreck;
+                    !Character.Controlled.CurrentHull.Submarine.Info.IsWreck &&
+                    GameMain.Client is not { IsBlockedBySpamFilter: true };
             }
 
             if (canIssueOrders)

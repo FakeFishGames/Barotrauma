@@ -907,7 +907,7 @@ namespace Barotrauma
             void SetReputationText(GUITextBlock textBlock)
             {
                 LocalizedString reputationText = Reputation.GetFormattedReputationText(reputation.NormalizedValue, reputation.Value, addColorTags: true);
-                int reputationChange = (int)Math.Round(reputation.Value - initialReputation);
+                int reputationChange = (int)reputation.Value - (int)initialReputation;
                 if (Math.Abs(reputationChange) > 0)
                 {
                     string changeText = $"{(reputationChange > 0 ? "+" : "") + reputationChange}";

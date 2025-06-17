@@ -47,9 +47,8 @@ namespace Barotrauma
 
         public readonly List<MapEntity> linkedTo = new List<MapEntity>();
 
-        protected bool flippedX, flippedY;
-        public bool FlippedX { get { return flippedX; } }
-        public bool FlippedY { get { return flippedY; } }
+        public bool FlippedX { get; protected set; }
+        public bool FlippedY { get; protected set; }
 
         public bool ShouldBeSaved = true;
 
@@ -90,6 +89,16 @@ namespace Barotrauma
                 }
             }
         }
+
+        public virtual float RotationRad { get; protected set; }
+
+        /// <summary>
+        /// Rotation taking into account flipping: if the entity is flipped on either axis, the rotation is negated 
+        /// (but not if it's flipped on both axes, two flips is essentially double negation).
+        /// </summary>
+        public float RotationRadWithFlipping => FlippedX ^ FlippedY ? -RotationRad : RotationRad;
+
+        public float RotationWithFlipping => MathHelper.ToDegrees(RotationRadWithFlipping);
 
         public virtual Rectangle Rect
         {
@@ -697,9 +706,10 @@ namespace Barotrauma
         /// Flip the entity horizontally
         /// </summary>
         /// <param name="relativeToSub">Should the entity be flipped across the y-axis of the sub it's inside</param>
-        public virtual void FlipX(bool relativeToSub)
+        /// <param name="force">Forces the item to be flipped even if it's configured not to be flippable.</param>
+        public virtual void FlipX(bool relativeToSub, bool force = false)
         {
-            flippedX = !flippedX;
+            FlippedX = !FlippedX;
             if (!relativeToSub || Submarine == null) { return; }
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
@@ -711,9 +721,10 @@ namespace Barotrauma
         /// Flip the entity vertically
         /// </summary>
         /// <param name="relativeToSub">Should the entity be flipped across the x-axis of the sub it's inside</param>
-        public virtual void FlipY(bool relativeToSub)
+        /// <param name="force">Forces the item to be flipped even if it's configured not to be flippable.</param>
+        public virtual void FlipY(bool relativeToSub, bool force = false)
         {
-            flippedY = !flippedY;
+            FlippedY = !FlippedY;
             if (!relativeToSub || Submarine == null) { return; }
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;

@@ -367,7 +367,7 @@ namespace Barotrauma
             SpawnType? spawnPointType = null;
             if (!ignoreSpawnPointType) { spawnPointType = SpawnPointType; }
 
-            return GetSpawnPos(SpawnLocation, spawnPointType, targetModuleTags, SpawnPointTag.ToEnumerable(), requireTaggedSpawnPoint: RequireSpawnPointTag, allowInPlayerView: AllowInPlayerView);
+            return GetSpawnPos(SpawnLocation, spawnPointType, targetModuleTags, SpawnPointTag.IsEmpty ? null : SpawnPointTag.ToEnumerable(), requireTaggedSpawnPoint: RequireSpawnPointTag, allowInPlayerView: AllowInPlayerView);
         }
 
         private static bool IsValidSubmarineType(SpawnLocationType spawnLocation, Submarine submarine)
@@ -422,12 +422,32 @@ namespace Barotrauma
             }
             if (spawnpointTags != null && spawnpointTags.Any())
             {
-                var spawnPoints = potentialSpawnPoints.Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag) && wp.ConnectedDoor == null && wp.IsTraversable));
-                if (requireTaggedSpawnPoint || spawnPoints.Any())
+                var spawnPointsWithTag = potentialSpawnPoints.Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag) && wp.ConnectedDoor == null && wp.IsTraversable));
+                if (requireTaggedSpawnPoint || spawnPointsWithTag.Any())
                 {
-                    potentialSpawnPoints = spawnPoints.ToList();
+                    potentialSpawnPoints = spawnPointsWithTag.ToList();
+                }
+                else
+                {
+                    //no spawnpoints with the tag we want -> choose something with no tags
+                    TryGetSpawnPointsWithNoTag();
                 }
             }
+            else
+            {
+                //if no tags are specified, prefer a spawnpoint with no tags, i.e. prefer a "generic" spawnpoint instead of some special one like a jail spawnpoint
+                TryGetSpawnPointsWithNoTag();
+            }
+
+            void TryGetSpawnPointsWithNoTag()
+            {
+                var spawnPointsWithNoTag = potentialSpawnPoints.Where(wp => wp.Tags.None());
+                if (spawnPointsWithNoTag.Any())
+                {
+                    potentialSpawnPoints = spawnPointsWithNoTag.ToList();
+                }
+            }
+
             if (potentialSpawnPoints.None())
             {
                 if (requireTaggedSpawnPoint && spawnpointTags != null && spawnpointTags.Any())

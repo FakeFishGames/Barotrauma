@@ -1021,6 +1021,14 @@ namespace Barotrauma
             {
                 MaxTextLength = Client.MaxNameLength
             };
+            nameBox.OnTextChanged += (GUITextBox textBox, string text) =>
+            {
+                if (text.Contains('\n') || text.Contains('\r'))
+                {
+                    textBox.Text = text.Replace("\r\n", " ").Replace('\n', ' ').Replace('\r', ' ');
+                }
+                return true;
+            };
             new GUIButton(new RectTransform(groupElementSize, layoutGroup.RectTransform), text: TextManager.Get("confirm"))
             {
                 OnClicked = (button, userData) =>

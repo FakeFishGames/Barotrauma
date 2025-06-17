@@ -221,7 +221,7 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), nameContainer.RectTransform, Anchor.CenterLeft),
                 onDraw: (spriteBatch, component) =>
                 {
-                    character.Info?.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), Vector2.Zero, component.Rect.Width, false, character != Character.Controlled);
+                    character.Info?.DrawIcon(spriteBatch, component.Rect.Center.ToVector2(), component.Rect.Size.ToVector2());
                 });
             characterName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), nameContainer.RectTransform), "", textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont)
             {
@@ -1041,8 +1041,29 @@ namespace Barotrauma
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
             {
                 var affliction = kvp.Key;
-                affliction.Prefab.AfflictionOverlay?.Draw(spriteBatch, Vector2.Zero, Color.White * affliction.GetAfflictionOverlayMultiplier(), Vector2.Zero, 0.0f,
-                    new Vector2(GameMain.GraphicsWidth / DamageOverlay.size.X, GameMain.GraphicsHeight / DamageOverlay.size.Y));
+                if (affliction.Prefab is AfflictionPrefab { AfflictionOverlay: not null } afflictionPrefab)
+                {
+                    Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                    if (afflictionPrefab.AfflictionOverlay is SpriteSheet spriteSheet)
+                    {
+                        spriteSheet.Draw(spriteBatch,
+                            spriteIndex: spriteSheet.GetAnimatedSpriteIndex(afflictionPrefab.AfflictionOverlayAnimSpeed),
+                            pos: Vector2.Zero,
+                            color: Color.White * affliction.GetAfflictionOverlayMultiplier(),
+                            origin: Vector2.Zero,
+                            rotate: 0,
+                            scale: screenSize / spriteSheet.FrameSize.ToVector2());
+                    }
+                    else if (afflictionPrefab.AfflictionOverlay is Sprite sprite)
+                    {
+                        sprite.Draw(spriteBatch,
+                            pos: Vector2.Zero,
+                            color: Color.White * affliction.GetAfflictionOverlayMultiplier(),
+                            origin: Vector2.Zero,
+                            rotate: 0,
+                            scale: screenSize / sprite.size);                        
+                    }
+                }
 
                 var activeEffect = affliction.GetActiveEffect();
                 if (activeEffect is { ThermalOverlayRange: > 0.0f })
@@ -1554,9 +1575,9 @@ namespace Barotrauma
             };
 
             var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), parent.RectTransform),
-                affliction.Prefab.GetDescription(
+                RichString.Rich(affliction.Prefab.GetDescription(
                     affliction.Strength, 
-                    Character == Character.Controlled ? AfflictionPrefab.Description.TargetType.Self : AfflictionPrefab.Description.TargetType.OtherCharacter), 
+                    Character == Character.Controlled ? AfflictionPrefab.Description.TargetType.Self : AfflictionPrefab.Description.TargetType.OtherCharacter)), 
                 textAlignment: Alignment.TopLeft, wrap: true)
             {
                 CanBeFocused = false

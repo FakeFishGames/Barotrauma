@@ -998,6 +998,13 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public virtual void OnItemLoaded() { }
 
+        /// <summary>
+        /// Implement in a base class if the instances of the component contain some sort of data that isn't serialized using the normal serializable properties
+        /// (i.e. some data that changes per-item and isn't loaded from the prefab, but that isn't a property marked with [Serialize] either),
+        /// but that must be copied when cloning the item.
+        /// </summary>
+        public virtual void Clone(ItemComponent original) { }
+
         public virtual void OnScaleChanged() { }
 
         /// <summary>
@@ -1092,7 +1099,6 @@ namespace Barotrauma.Items.Components
                 ri.Save(newElement);
                 componentElement.Add(newElement);
             }
-
 
             SerializableProperty.SerializeProperties(this, componentElement);
 

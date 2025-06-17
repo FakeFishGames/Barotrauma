@@ -73,10 +73,12 @@ namespace Barotrauma
                             : TextManager.Get(value).Fallback(value);
 
                     conn.SetLabel(newLabel, this);
+                    conn.Connection.DisplayNameOverride = string.IsNullOrWhiteSpace(value) ? null : newLabel;
                 }
                 else
                 {
                     conn.SetLabel(conn.Connection.DisplayName, this);
+                    conn.Connection.DisplayNameOverride = null;
                 }
             }
 #endif

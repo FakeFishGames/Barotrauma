@@ -20,6 +20,8 @@ namespace Steamworks
 			SetInterface( server, new ISteamApps( server ) );
 			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
 
+			InstallEvents();
+
 			return true;
 		}
 

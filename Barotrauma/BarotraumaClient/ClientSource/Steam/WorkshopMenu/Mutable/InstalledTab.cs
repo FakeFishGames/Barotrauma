@@ -727,7 +727,9 @@ namespace Barotrauma.Steam
                             }
                             if (selectedMods.All(ContentPackageManager.WorkshopPackages.Contains))
                             {
-                                if (parentList.AllSelected.All(c => c.GetChild<GUILayoutGroup>()?.GetAllChildren<GUIButton>().Last()?.Style?.Identifier == "WorkshopMenu.DownloadedIcon") && selectedMods.Length > 0 && SteamManager.IsInitialized)
+                                static Identifier? GetButtonIconStyle(GUIComponent c) => c.GetChild<GUILayoutGroup>()?.GetAllChildren<GUIButton>().Last()?.Style?.Identifier;
+                                if (parentList.AllSelected.All(c => GetButtonIconStyle(c) is { } style && (style == "WorkshopMenu.DownloadedIcon" || style == "WorkshopMenu.InfoButtonUpdate")) && 
+                                    selectedMods.Length > 0 && SteamManager.IsInitialized)
                                 {
                                     contextMenuOptions.Add(new((selectedMods.Length > 1 ? "UnsubscribeFromAllSelected" : "WorkshopItemUnsubscribe").ToIdentifier(), true, () =>
                                     {
@@ -774,8 +776,7 @@ namespace Barotrauma.Steam
                                     return true;
                                 }
                             };
-                            msgBox.Buttons[0].OnClicked += msgBox.Close;
-                            msgBox.Buttons[1].OnClicked += (_, _) =>
+                            msgBox.Buttons[0].OnClicked += (_, _) =>
                             {
                                 if (textBox.Text == mod.Name)
                                 {
@@ -794,6 +795,7 @@ namespace Barotrauma.Steam
                                     return false;
                                 }
                             };
+                            msgBox.Buttons[1].OnClicked += msgBox.Close;
                         }
                         void CopyToLocal()
                         {

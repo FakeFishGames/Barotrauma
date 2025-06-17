@@ -868,10 +868,28 @@ namespace Barotrauma
                 if (Level.IsLoadedOutpost)
                 {
                     // Only return music type for location types which have music tracks defined
-                    var locationType = Level.Loaded.StartLocation?.Type?.Identifier;
-                    if (locationType.HasValue && locationType != Identifier.Empty && musicClips.Any(c => c.Type == locationType))
+                    var locationType = Level.Loaded?.StartLocation?.Type?.Identifier;
+                    var backgroundMusicIdentifier = Level.Loaded?.StartLocation?.Type?.BackgroundMusicLocationType;
+
+                    if (MatchesTrack(backgroundMusicIdentifier, out Identifier id) || 
+                        MatchesTrack(locationType, out id))
                     {
-                        return locationType.Value;
+                        return id;
+                    }
+
+                    bool MatchesTrack(Identifier? identifier, out Identifier idValue)
+                    {
+                        if (identifier.HasValue && identifier.Value != Identifier.Empty)
+                        {
+                            if (musicClips.Any(clip => clip.Type == identifier.Value))
+                            {
+                                idValue = identifier.Value;
+                                return true;
+                            }
+                        }
+                        
+                        idValue = Identifier.Empty;
+                        return false;
                     }
                 }
             }

@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
 
         private double lastReceivedSteeringSignalTime;
 
-        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, description: "Is autopilot currently on or not?", AlwaysUseInstanceValues = true)]
         public bool AutoPilot
         {
             get { return autoPilot; }

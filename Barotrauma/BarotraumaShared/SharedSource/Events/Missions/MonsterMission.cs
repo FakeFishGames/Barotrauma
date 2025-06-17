@@ -173,6 +173,17 @@ namespace Barotrauma
             }
         }
 
+        protected override void MissionStateChanged(int previousState)
+        {
+            // state of 1+ here means the mission is completed
+            if (previousState == 0 && State >= 1)
+            {
+#if CLIENT
+                SteamTimelineManager.OnMonsterMissionTargetsKilled(this);
+#endif
+            }
+        }
+
         protected override void UpdateMissionSpecific(float deltaTime)
         {
             switch (State)

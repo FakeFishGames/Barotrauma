@@ -435,6 +435,13 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
                 }
+                else if (HeldItems.SelectMany(static item => item.GetComponents<Holdable>())
+                                  .Where(static holdable => holdable.Aimable)
+                                  .MaxOrNull(static holdable => holdable.CameraAimOffset) is float maxOffset
+                    && maxOffset > 0f && IsKeyDown(InputType.Aim))
+                {
+                    cam.OffsetAmount = targetOffsetAmount = maxOffset;
+                }
                 else if (SelectedItem != null && ViewTarget == null &&
                     SelectedItem.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {

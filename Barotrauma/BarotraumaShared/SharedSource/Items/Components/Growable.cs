@@ -349,31 +349,31 @@ namespace Barotrauma.Items.Components
         // used for debugging where a vine failed to grow
         public readonly HashSet<Rectangle> FailedRectangles = new HashSet<Rectangle>();
 
-        [Serialize(1f, IsPropertySaveable.Yes, "How fast the plant grows.")]
+        [Serialize(1f, IsPropertySaveable.Yes, "How fast the plant grows. Value of 1 means a vine attempts to grow every 10 seconds while 2 and 0.5 mean every 5 and 20 seconds respectively.")]
         public float GrowthSpeed { get; set; }
 
-        [Serialize(100f, IsPropertySaveable.Yes, "How long the plant can go without watering.")]
-        public float MaxHealth { get; set; }
+        [Serialize(100f, IsPropertySaveable.Yes, "How much water the plant can hold. Affects how long the plant can survive without water.")]
+        public float MaxWater { get; set; }
 
-        [Serialize(1f, IsPropertySaveable.Yes, "How much damage the plant takes while in water.")]
-        public float FloodTolerance { get; set; }
+        [Serialize(1f, IsPropertySaveable.Yes, "How much extra water the plant uses per second while it is submerged in a flooded hull.")]
+        public float ExtraWaterUsedPerSecondWhileFlooded { get; set; }
 
-        [Serialize(1f, IsPropertySaveable.Yes, "How much damage the plant takes while growing.")]
-        public float Hardiness { get; set; }
+        [Serialize(1f, IsPropertySaveable.Yes, "How much water the plant consumes passively per second.")]
+        public float WaterUsedPerSecond { get; set; }
 
-        [Serialize(0.01f, IsPropertySaveable.Yes, "How often a seed is produced.")]
-        public float SeedRate { get; set; }
+        [Serialize(0.01f, IsPropertySaveable.Yes, "Percentage chance of a seed item being produced on growth ticks (every 10 seconds without a multiplier). 0.01 means 1% chance. Not used in vanilla plants.")]
+        public float SeedSpawnChance { get; set; }
 
-        [Serialize(0.01f, IsPropertySaveable.Yes, "How often a product item is produced.")]
-        public float ProductRate { get; set; }
+        [Serialize(0.01f, IsPropertySaveable.Yes, "How often a product item is produced on growth ticks (every 10 seconds without a multiplier). 0.01 means 1% chance.")]
+        public float ProductSpawnChance { get; set; }
 
-        [Serialize(0.5f, IsPropertySaveable.Yes, "Probability of an attribute being randomly modified in a newly produced seed.")]
+        [Serialize(0.5f, IsPropertySaveable.Yes, "Completely unused property that was added on the first design pass but due to the first pass being too complex was never used and now it is used by mods so it cannot be removed.")]
         public float MutationProbability { get; set; }
 
         [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, "Color of the flowers.")]
         public Color FlowerTint { get; set; }
 
-        [Serialize(3, IsPropertySaveable.Yes, "Number of flowers drawn when fully grown")]
+        [Serialize(3, IsPropertySaveable.Yes, "Number of flowers drawn.")]
         public int FlowerQuantity { get; set; }
 
         [Serialize(0.25f, IsPropertySaveable.Yes, "Size of the flower sprites.")]
@@ -403,8 +403,11 @@ namespace Barotrauma.Items.Components
         [Serialize("1,1,1,1", IsPropertySaveable.Yes, "Probability for the plant to grow in a direction.")]
         public Vector4 GrowthWeights { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, "How much damage is taken from fires.")]
+        [Serialize(0.0f, IsPropertySaveable.Yes, "How much water is lost due to fires every 10 seconds.")]
         public float FireVulnerability { get; set; }
+
+        [Serialize("0.0, 0.0", IsPropertySaveable.Yes, "Modifier to the percentage of product and seed items produced before the plant is fully grown based on how many vines have been grown. 0 would mean no products or seeds are produced while 0.5 would mean half of the normal amount.")]
+        public Vector2 LinearProductAndSeedMultiplierBeforeFullyGrown { get; set; }
 
         private const float increasedDeathSpeed = 10f;
         private bool accelerateDeath;
@@ -417,7 +420,7 @@ namespace Barotrauma.Items.Components
         public float Health
         {
             get => health;
-            set => health = Math.Clamp(value, 0, MaxHealth);
+            set => health = Math.Clamp(value, 0, MaxWater);
         }
 
         public bool Decayed { get; set; }
@@ -441,7 +444,14 @@ namespace Barotrauma.Items.Components
         {
             SerializableProperty.DeserializeProperties(this, element);
 
-            Health = MaxHealth;
+            // backwards compatibility
+            MaxWater = element.GetAttributeFloat("maxhealth", MaxWater);
+            WaterUsedPerSecond = element.GetAttributeFloat("hardiness", WaterUsedPerSecond);
+            ExtraWaterUsedPerSecondWhileFlooded = element.GetAttributeFloat("floodtolerance", ExtraWaterUsedPerSecondWhileFlooded);
+            ProductSpawnChance = element.GetAttributeFloat("productrate", ProductSpawnChance);
+            SeedSpawnChance = element.GetAttributeFloat("seedrate", SeedSpawnChance);
+
+            Health = MaxWater;
 
             if (element.HasElements)
             {
@@ -492,10 +502,7 @@ namespace Barotrauma.Items.Components
         {
             if (Decayed) { return; }
 
-            if (FullyGrown)
-            {
-                TryGenerateProduct(planter, slot);
-            }
+            TryGenerateProduct(planter, slot);
 
             if (Health > 0)
             {
@@ -504,11 +511,11 @@ namespace Barotrauma.Items.Components
                 // fertilizer makes the plant tick faster, compensate by halving water requirement
                 float multipler = planter.Fertilizer > 0 ? 0.5f : 1f;
 
-                Health -= (accelerateDeath ? Hardiness * increasedDeathSpeed : Hardiness) * multipler;
+                Health -= (accelerateDeath ? WaterUsedPerSecond * increasedDeathSpeed : WaterUsedPerSecond) * multipler;
 
                 if (planter.Item.InWater)
                 {
-                    Health -= FloodTolerance * multipler;
+                    Health -= ExtraWaterUsedPerSecondWhileFlooded * multipler;
                 }
 #if SERVER
                 if (FullyGrown)
@@ -535,7 +542,7 @@ namespace Barotrauma.Items.Components
 
         private void UpdateBranchHealth()
         {
-            Color healthColor = Color.White * (1.0f - Health / MaxHealth);
+            Color healthColor = Color.White * (1.0f - Health / MaxWater);
             foreach (VineTile vine in Vines)
             {
                 vine.HealthColor = healthColor;
@@ -546,11 +553,24 @@ namespace Barotrauma.Items.Components
         {
             productDelay++;
             if (productDelay <= maxProductDelay) { return; }
-
             productDelay = 0;
 
-            bool spawnProduct = Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < ProductRate,
-                 spawnSeed = Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < SeedRate;
+            float spawnChanceMultiplier = 1f;
+
+            if (!FullyGrown)
+            {
+                if (LinearProductAndSeedMultiplierBeforeFullyGrown.NearlyEquals(Vector2.Zero)) { return; }
+
+                float growthProgress = Vines.Count / (float)MaximumVines;
+
+                spawnChanceMultiplier = MathHelper.Lerp(LinearProductAndSeedMultiplierBeforeFullyGrown.X, LinearProductAndSeedMultiplierBeforeFullyGrown.Y, growthProgress);
+
+                if (MathUtils.NearlyEqual(spawnChanceMultiplier, 0f)) { return; }
+            }
+
+
+            bool spawnProduct = Rand.Range(0f, 1f) < (ProductSpawnChance * spawnChanceMultiplier),
+                 spawnSeed = Rand.Range(0f, 1f) < (SeedSpawnChance * spawnChanceMultiplier);
 
             Vector2 spawnPos;
 
@@ -678,7 +698,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
 
-                    fireCheckCooldown = 5f;
+                    fireCheckCooldown = 10f;
                 }
                 else
                 {

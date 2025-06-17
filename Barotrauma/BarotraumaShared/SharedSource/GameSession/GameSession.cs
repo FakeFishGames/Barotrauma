@@ -170,6 +170,9 @@ namespace Barotrauma
 
         public Submarine? Submarine { get; set; }
 
+        private readonly HashSet<Identifier> unlockedRecipes = new HashSet<Identifier>();
+        public IEnumerable<Identifier> UnlockedRecipes => unlockedRecipes;
+
         public CampaignDataPath DataPath { get; set; }
 
         public bool TraitorsEnabled =>
@@ -275,6 +278,10 @@ namespace Barotrauma
                             }
                         }
                         break;
+                        //NOTE: if you're adding something that's supposed to load something that's persistent in a campaign,
+                        //this is probably not the correct place! This is where the GameSession itself is initialized,
+                        //and if you let's say quit to the server lobby and reload, this method won't be called again.
+                        //You should probably add it to CampaignMode.LoadSaveSharedSingleAndMultiplayer
                 }
             }
         }
@@ -385,7 +392,7 @@ namespace Barotrauma
             var dummyLocations = new Location[2];
             for (int i = 0; i < 2; i++)
             {
-                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null, rand, requireOutpost: true, forceLocationType);
+                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), zone: null, biomeId: null, rand, requireOutpost: true, forceLocationType);
             }
             return dummyLocations;
         }
@@ -401,6 +408,7 @@ namespace Barotrauma
 
         public void LoadPreviousSave()
         {
+            AchievementManager.OnRoundEnded(this, roundInterrupted: true);
             Submarine.Unload();
             SaveUtil.LoadGame(DataPath);
         }
@@ -1491,6 +1499,25 @@ namespace Barotrauma
 #endif
         }
 
+        public void UnlockRecipe(Identifier identifier, bool showNotifications)
+        {
+            if (unlockedRecipes.Add(identifier))
+            {
+#if CLIENT
+                if (showNotifications)
+                {
+                    foreach (var character in GetSessionCrewCharacters(CharacterType.Both))
+                    {
+                        LocalizedString recipeName = TextManager.Get($"entityname.{identifier}").Fallback(identifier.Value);
+                        character.AddMessage(TextManager.GetWithVariable("recipeunlockednotification", "[name]", recipeName).Value, GUIStyle.Yellow, playSound: true);
+                    }
+                }
+#else
+                GameMain.Server.UnlockRecipe(identifier);
+#endif
+            }
+        }
+
         public static bool IsCompatibleWithEnabledContentPackages(IList<string> contentPackageNames, out LocalizedString errorMsg)
         {
             errorMsg = "";
@@ -1602,9 +1629,11 @@ namespace Barotrauma
                     ownedSubsElement.Add(new XElement("sub", new XAttribute("name", ownedSub.Name)));
                 }
             }
+
             if (Map != null) { rootElement.Add(new XAttribute("mapseed", Map.Seed)); }
             rootElement.Add(new XAttribute("selectedcontentpackagenames",
                 string.Join("|", ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).Select(cp => cp.Name.Replace("|", @"\|")))));
+
             
             XElement permadeathsElement = new XElement("permadeaths");
             foreach (var kvp in permadeathsPerAccount)

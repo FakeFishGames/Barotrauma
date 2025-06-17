@@ -83,6 +83,8 @@ namespace Barotrauma
 #if DEBUG
         private GUIComponent editor;
 
+        private bool editorEnabled;
+
         private void CreateEditor()
         {
             editor = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), GUI.Canvas, Anchor.TopRight, minSize: new Point(400, 0)));
@@ -534,8 +536,15 @@ namespace Barotrauma
 #if DEBUG
             if (GameMain.DebugDraw)
             {
-                if (editor == null) CreateEditor();
-                editor.AddToGUIUpdateList(order: 1);
+                if (editor == null) { CreateEditor(); }
+                if (editorEnabled)
+                {
+                    editor.AddToGUIUpdateList(order: 1);
+                }
+                if (PlayerInput.KeyHit(Keys.T))
+                {
+                    editorEnabled = !editorEnabled;
+                }
             }
 
             if (PlayerInput.KeyHit(Keys.Space))
@@ -822,7 +831,7 @@ namespace Barotrauma
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
-                    if (drawRect.X > rect.Right - GUI.IntScale(100) && generationParams.MissionIcon != null && location.AvailableMissions.Any())
+                    if (drawRect.X > rect.Right - GUI.IntScale(100) && generationParams.MissionIcon != null && location.AvailableAndVisibleMissions.Any(m => m.Prefab.ShowInMenus))
                     {
                         Vector2 offScreenMissionIconPos = new Vector2(rect.Right - GUI.IntScale(50), drawRect.Center.Y);
                         generationParams.MissionIcon.Draw(spriteBatch,
@@ -934,18 +943,19 @@ namespace Barotrauma
                     }
                     if (location != CurrentLocation && generationParams.MissionIcon != null)
                     {
-                        if ((CurrentLocation == currentDisplayLocation && CurrentLocation.AvailableMissions.Any(m => m.Locations.Contains(location))) || 
-                            location.AvailableMissions.Any(m => m.Locations[0] == m.Locations[1]))
+                        var currentLocationVisibleMissions = CurrentLocation.AvailableAndVisibleMissions;
+                        if ((CurrentLocation == currentDisplayLocation && currentLocationVisibleMissions.Any(m => m.Locations.Contains(location))) || 
+                            location.AvailableAndVisibleMissions.Any(m => m.Locations[0] == m.Locations[1]))
                         {
                             Vector2 missionIconPos = pos + new Vector2(1.35f, 0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
                             generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, generationParams.IndicatorColor, scale: missionIconScale * zoom);
                             if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom && IsPreferredTooltip(missionIconPos))
                             {
-                                var availableMissions = CurrentLocation.AvailableMissions
+                                var allVisibleMissions = currentLocationVisibleMissions
                                     .Where(m => m.Locations.Contains(location))
-                                    .Concat(location.AvailableMissions.Where(m => m.Locations[0] == m.Locations[1]))
+                                    .Concat(location.AvailableAndVisibleMissions.Where(m => m.Locations[0] == m.Locations[1]))
                                     .Distinct();
-                                tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), TextManager.Get("mission") + '\n'+ string.Join('\n', availableMissions.Select(m => "- " + m.Name)));
+                                tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), TextManager.Get("mission") + '\n'+ string.Join('\n', allVisibleMissions.Select(m => "- " + m.Name)));
                             }
                         }
                     }
@@ -992,6 +1002,12 @@ namespace Barotrauma
             spriteBatch.End();
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
+#if DEBUG
+            if (GameMain.DebugDraw)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(mapContainer.Center.X, mapContainer.Rect.Y), "Press T to toggle editing map generation parameters.", Color.Magenta, font: GUIStyle.SmallFont);
+            }
+#endif
         }
 
         public static void DrawNoise(SpriteBatch spriteBatch, Rectangle rect, float strength)

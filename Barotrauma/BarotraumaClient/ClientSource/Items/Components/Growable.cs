@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            Health = msg.ReadRangedSingle(0, MaxHealth, 8);
+            Health = msg.ReadRangedSingle(0, MaxWater, 8);
             int startOffset = msg.ReadRangedInteger(-1, MaximumVines);
             if (startOffset > -1)
             {

@@ -9,13 +9,29 @@ namespace Barotrauma
 {
     partial class EscortMission : Mission
     {
-        private readonly ContentXElement itemConfig;
+        private readonly ContentXElement terroristItemConfig;
         
         private readonly Dictionary<HumanPrefab, List<StatusEffect>> characterStatusEffects = new Dictionary<HumanPrefab, List<StatusEffect>>();
 
+        /// <summary>
+        /// Number of escorted characters by default.
+        /// </summary>
         private readonly int baseEscortedCharacters;
+        /// <summary>
+        /// A scaling factor for the number of escorted characters, relative to the recommended crew size of the sub. The total amount of escorted characters is calculated as 
+        /// baseEscortedCharacters + scalingEscortedCharacters * (RecommendedCrewSizeMin + RecommendedCrewSizeMax) / 2
+        /// </summary>
         private readonly float scalingEscortedCharacters;
+        /// <summary>
+        /// The probability for the escorted characters to be "terrorists" (turning them hostile when the sub has progressed enough in the level).
+        /// A value of 0.5 would mean about half of the characters are terrorist, 1 would mean they all are. There's 20% of randomness applied to the value to make it less predictable.
+        /// </summary>
         private readonly float terroristChance;
+
+        /// <summary>
+        /// Dialog tag the terrorists use in their dialog when they become hostile.
+        /// </summary>
+        private readonly string terroristAnnounceDialogTag;
 
         private int calculatedReward;
         private Submarine missionSub;
@@ -26,7 +42,6 @@ namespace Barotrauma
         private bool terroristsShouldAct = false;
         private float terroristDistanceSquared;
         private const string TerroristTeamChangeIdentifier = "terrorist";
-        private readonly string terroristAnnounceDialogTag = string.Empty;
 
         public EscortMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
@@ -35,8 +50,10 @@ namespace Barotrauma
             baseEscortedCharacters = prefab.ConfigElement.GetAttributeInt("baseescortedcharacters", 1);
             scalingEscortedCharacters = prefab.ConfigElement.GetAttributeFloat("scalingescortedcharacters", 0);
             terroristChance = prefab.ConfigElement.GetAttributeFloat("terroristchance", 0);
-            itemConfig = prefab.ConfigElement.GetChildElement("TerroristItems");
-            terroristAnnounceDialogTag = prefab.ConfigElement.GetAttributeString("terroristannouncedialogtag", string.Empty);
+            terroristItemConfig = prefab.ConfigElement.GetChildElement("TerroristItems");
+            terroristAnnounceDialogTag = 
+                prefab.ConfigElement.GetAttributeString("dialogterroristannounce", 
+                    prefab.ConfigElement.GetAttributeString("terroristAnnounceDialogTag", string.Empty));
             CalculateReward();
         }
 
@@ -94,35 +111,29 @@ namespace Barotrauma
                 randSync = Rand.RandSync.Unsynced; 
             }
 
-            List<HumanPrefab> humanPrefabsToSpawn = new List<HumanPrefab>();
+            List<(HumanPrefab humanPrefab, List<StatusEffect> statusEffects)> humanPrefabsToSpawn = new List<(HumanPrefab humanPrefab, List<StatusEffect> statusEffects)>();
             foreach (ContentXElement characterElement in characterConfig.Elements())
             {
                 int count = CalculateScalingEscortedCharacterCount(inMission: true);
                 var humanPrefab = GetHumanPrefabFromElement(characterElement);
                 for (int i = 0; i < count; i++)
                 {
-                    humanPrefabsToSpawn.Add(humanPrefab);
-                }
-                foreach (var element in characterElement.Elements())
-                {
-                    if (element.NameAsIdentifier() == "statuseffect")
+                    List<StatusEffect> characterStatusEffects = new List<StatusEffect>();
+                    foreach (var element in characterElement.Elements())
                     {
-                        var newEffect = StatusEffect.Load(element, parentDebugName: Prefab.Name.Value);
-                        if (newEffect == null) { continue; }
-                        if (!characterStatusEffects.ContainsKey(humanPrefab))
+                        if (element.NameAsIdentifier() == "statuseffect")
                         {
-                            characterStatusEffects[humanPrefab] = new List<StatusEffect> { newEffect };
+                            var newEffect = StatusEffect.Load(element, parentDebugName: Prefab.Name.Value);
+                            if (newEffect == null) { continue; }
+                            characterStatusEffects.Add(newEffect);               
                         }
-                        else
-                        {
-                            characterStatusEffects[humanPrefab].Add(newEffect);
-                        }                           
                     }
+                    humanPrefabsToSpawn.Add((humanPrefab, characterStatusEffects));
                 }
             }
 
             //if any of the escortees have a job defined, try to use a spawnpoint designated for that job
-            foreach (var humanPrefab in humanPrefabsToSpawn)
+            foreach ((var humanPrefab, var statusEffectList) in humanPrefabsToSpawn)
             {
                 if (humanPrefab == null || humanPrefab.Job.IsEmpty || humanPrefab.Job == "any") { continue; }
                 var jobPrefab = humanPrefab.GetJobPrefab(randSync);
@@ -136,22 +147,18 @@ namespace Barotrauma
                     }
                 }
             }
-            foreach (var humanPrefab in humanPrefabsToSpawn)
+            foreach ((var humanPrefab, var statusEffectList) in humanPrefabsToSpawn)
             {
                 Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, Submarine.MainSub, CharacterTeamType.FriendlyNPC, explicitStayInHullPos, humanPrefabRandSync: randSync);
                 if (spawnedCharacter.AIController is HumanAIController humanAI)
                 {
                     humanAI.InitMentalStateManager();
                 }
-                if (characterStatusEffects.TryGetValue(humanPrefab, out var statusEffectList))
+                foreach (var statusEffect in statusEffectList)
                 {
-                    foreach (var statusEffect in statusEffectList)
-                    {
-                        statusEffect.Apply(statusEffect.type, 1.0f, spawnedCharacter, spawnedCharacter);
-                    }
-                }
+                    statusEffect.Apply(statusEffect.type, 1.0f, spawnedCharacter, spawnedCharacter);
+                }                
             }
-
 
             if (terroristChance > 0f)
             {
@@ -256,13 +263,23 @@ namespace Barotrauma
                         character.TryAddNewTeamChange(TerroristTeamChangeIdentifier, new ActiveTeamChange(CharacterTeamType.None, ActiveTeamChange.TeamChangePriorities.Willful, aggressiveBehavior: true));
                         if (!string.IsNullOrEmpty(terroristAnnounceDialogTag))
                         {
-                            character.Speak(TextManager.Get("dialogterroristannounce").Value, null, Rand.Range(0.5f, 3f));
+                            character.Speak(TextManager.Get(terroristAnnounceDialogTag).Value, null, Rand.Range(0.5f, 3f));
                         }
-                        ContentXElement randomElement = itemConfig.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
-                        if (randomElement != null)
+                        foreach (var itemElement in terroristItemConfig.Elements())
                         {
-                            HumanPrefab.InitializeItem(character, randomElement, character.Submarine, humanPrefab: null, createNetworkEvents: true);
+                            float levelDifficulty = Level.Loaded?.Difficulty ?? 0.0f;
+                            var selectedItemElement = itemElement;
+                            if (itemElement.NameAsIdentifier() == "chooserandom".ToIdentifier())
+                            {
+                                selectedItemElement = itemElement.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= levelDifficulty);
+                            }
+                            if (selectedItemElement != null)
+                            {
+                                if (levelDifficulty < selectedItemElement.GetAttributeFloat(0f, "mindifficulty")) { continue; }
+                                HumanPrefab.InitializeItem(character, selectedItemElement, character.Submarine, humanPrefab: null, createNetworkEvents: true);
+                            }
                         }
+
                     }
                 }
             }

@@ -16,7 +16,7 @@ namespace Barotrauma
 
     static class AchievementManager
     {
-        private static readonly ImmutableHashSet<Identifier> SupportedAchievements = ImmutableHashSet.Create(
+        public static readonly ImmutableHashSet<Identifier> SupportedAchievements = ImmutableHashSet.Create(
             "killmoloch".ToIdentifier(),
             "killhammerhead".ToIdentifier(),
             "killendworm".ToIdentifier(),
@@ -146,6 +146,9 @@ namespace Barotrauma
 
         public static void OnStartRound(Biome biome = null)
         {
+#if CLIENT
+            SteamTimelineManager.OnRoundStarted();
+#endif
             roundData = new RoundData();
             foreach (Item item in Item.ItemList)
             {
@@ -160,6 +163,7 @@ namespace Barotrauma
             // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null) { return; }
 #endif
+            
             
             if (biome != null && GameMain.GameSession?.GameMode is CampaignMode)
             {
@@ -233,8 +237,8 @@ namespace Barotrauma
 
                     //convert submarine velocity to km/h
                     Vector2 submarineVel = Physics.DisplayToRealWorldRatio * ConvertUnits.ToDisplayUnits(sub.Velocity) * 3.6f;
-                    //achievement for going > 100 km/h
-                    if (Math.Abs(submarineVel.X) > 100.0f)
+                    //achievement for going > 50 km/h
+                    if (Math.Abs(submarineVel.X) > 50.0f)
                     {
                         //all conscious characters inside the sub get an achievement
                         UnlockAchievement("subhighvelocity".ToIdentifier(), true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
@@ -279,7 +283,7 @@ namespace Barotrauma
             if (c == null || c.Removed) { return; }
 
             if (c.HasEquippedItem("clownmask".ToIdentifier()) &&
-                c.HasEquippedItem("clowncostume".ToIdentifier()))
+                c.HasEquippedItem("clowngear".ToIdentifier()))
             {
                 UnlockAchievement(c, "clowncostume".ToIdentifier());
             }
@@ -407,9 +411,33 @@ namespace Barotrauma
             UnlockAchievement(reviver, "healcrit".ToIdentifier());
         }
 
+#if CLIENT
+        private static void CheckSteamTimelineEvents(Character killedCharacter, CauseOfDeath causeOfDeath)
+        {
+            if (killedCharacter == Character.Controlled)
+            {
+                SteamTimelineManager.OnPlayerDied(killedCharacter, causeOfDeath);
+                return;
+            }
+            
+            bool pvpkill = killedCharacter.IsHuman && GameMain.GameSession?.GameMode is PvPMode;
+            
+            float combatStrength = killedCharacter.Params.AI?.CombatStrength ?? 0;
+            bool significantCombatStrength = combatStrength >= 300;
+            
+            if (pvpkill || significantCombatStrength)
+            {
+                // note: sometimes the causeOfDeath.Killer is null in multiplayer
+                SteamTimelineManager.OnSignificantEnemyDied(killedCharacter, causeOfDeath);
+            }
+        }
+#endif
+
         public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
 #if CLIENT
+            CheckSteamTimelineEvents(character, causeOfDeath);
+
             // If this is a multiplayer game, the client should let the server handle achievements
             if (GameMain.Client != null || GameMain.GameSession == null) { return; }
 
@@ -417,40 +445,41 @@ namespace Barotrauma
                 causeOfDeath.Killer != null &&
                 causeOfDeath.Killer == Character.Controlled)
             {
-                IncrementStat(causeOfDeath.Killer, character.IsHuman ? AchievementStat.HumansKilled : AchievementStat.MonstersKilled , 1);
+                IncrementStat(causeOfDeath.Killer, character.IsHuman ? AchievementStat.HumansKilled : AchievementStat.MonstersKilled, 1);
             }
+
 #elif SERVER
             if (character != causeOfDeath.Killer && causeOfDeath.Killer != null)
             {
-                IncrementStat(causeOfDeath.Killer, character.IsHuman ? AchievementStat.HumansKilled : AchievementStat.MonstersKilled , 1);
+                IncrementStat(causeOfDeath.Killer, character.IsHuman ? AchievementStat.HumansKilled : AchievementStat.MonstersKilled, 1);
             }
 #endif
 
-            UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName}".ToIdentifier());
+            UnlockKillAchievement(causeOfDeath.Killer, character, $"kill{character.SpeciesName}".ToIdentifier());
             if (character.CurrentHull != null)
             {
-                UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName}indoors".ToIdentifier());
+                UnlockKillAchievement(causeOfDeath.Killer, character, $"kill{character.SpeciesName}indoors".ToIdentifier());
             }
             if (character.SpeciesName.EndsWith("boss"))
             {
-                UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("boss", "")}".ToIdentifier());
+                UnlockKillAchievement(causeOfDeath.Killer, character, $"kill{character.SpeciesName.Replace("boss", "")}".ToIdentifier());
                 if (character.CurrentHull != null)
                 {
-                    UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("boss", "")}indoors".ToIdentifier());
+                    UnlockKillAchievement(causeOfDeath.Killer, character, $"kill{character.SpeciesName.Replace("boss", "")}indoors".ToIdentifier());
                 }
             }
             if (character.SpeciesName.EndsWith("_m"))
             {
-                UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("_m", "")}".ToIdentifier());
+                UnlockKillAchievement(causeOfDeath.Killer, character, $"kill{character.SpeciesName.Replace("_m", "")}".ToIdentifier());
                 if (character.CurrentHull != null)
                 {
-                    UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("_m", "")}indoors".ToIdentifier());
+                    UnlockKillAchievement(causeOfDeath.Killer, character, $"kill{character.SpeciesName.Replace("_m", "")}indoors".ToIdentifier());
                 }
             }
 #if SERVER
             if (character.SpeciesName == "Jove" &&
                 GameMain.GameSession.Campaign is MultiPlayerCampaign &&
-                GameMain.Server?.ServerSettings is { IronmanModeActive: true })
+                (GameMain.Server?.ServerSettings is { IronmanModeActive: true } or { RespawnMode: RespawnMode.Permadeath }))
             {
                 UnlockAchievement(
                     identifier: "europasfinest".ToIdentifier(),
@@ -464,8 +493,12 @@ namespace Barotrauma
                 causeOfDeath.Killer != character)
             {
                 UnlockAchievement(causeOfDeath.Killer, "killclown".ToIdentifier());
+                if (character.CharacterHealth?.GetAffliction("psychosis") != null)
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "whatsmirksbelow".ToIdentifier());
+                }
             }
-            
+
             if (character.CharacterHealth?.GetAffliction("psychoclown") != null &&
                 character.CurrentHull?.Submarine.Info is { Type: SubmarineType.BeaconStation })
             {
@@ -516,6 +549,20 @@ namespace Barotrauma
 #endif
         }
 
+        private static void UnlockKillAchievement(Character killer, Character target, Identifier identifier)
+        {
+            if (killer != null && 
+                target.Params.UnlockKillAchievementForWholeCrew &&
+                GameSession.GetSessionCrewCharacters(CharacterType.Player).Contains(killer))
+            {
+                UnlockAchievement(identifier, unlockClients: true, characterConditions: c => c != null);
+            }
+            else
+            {
+                UnlockAchievement(killer, identifier);
+            }
+        }
+
         public static void OnTraitorWin(Character character)
         {
 #if CLIENT
@@ -525,9 +572,15 @@ namespace Barotrauma
             UnlockAchievement(character, "traitorwin".ToIdentifier());
         }
 
-        public static void OnRoundEnded(GameSession gameSession)
+        public static void OnRoundEnded(GameSession gameSession, bool roundInterrupted = false)
         {
+#if CLIENT
+            SteamTimelineManager.OnRoundEnded();
+#endif
             if (CheatsEnabled) { return; }
+            
+            // no processing for achievements if player quit to menu or such.
+            if (roundInterrupted) { return; }
 
             //made it to the destination
             if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndExit)
@@ -713,7 +766,9 @@ namespace Barotrauma
         private static void UnlockAchievementsOnPlatforms(Identifier identifier)
         {
             if (unlockedAchievements.Contains(identifier)) { return; }
-            
+
+            DebugConsole.NewMessage($"Attempting to unlock achievement {identifier}...");
+
             if (SteamManager.IsInitialized)
             {
                 if (SteamManager.UnlockAchievement(identifier))

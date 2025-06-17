@@ -320,8 +320,8 @@ namespace Barotrauma
         {
             RectangleF worldRect = Quad2D.FromSubmarineRectangle(WorldRect).Rotated(
                 FlippedX != FlippedY
-                    ? rotationRad
-                    : -rotationRad).BoundingAxisAlignedRectangle;
+                    ? RotationRad
+                    : -RotationRad).BoundingAxisAlignedRectangle;
             Vector2 worldPos = WorldPosition;
 
             Vector2 min = new Vector2(worldRect.X, worldRect.Y);
@@ -451,7 +451,7 @@ namespace Barotrauma
                         MathUtils.PositiveModulo(-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width * TextureScale.X * Scale),
                         MathUtils.PositiveModulo(-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height * TextureScale.Y * Scale));
 
-                    float rotationRad = GetRotationForSprite(this.rotationRad, Prefab.BackgroundSprite);
+                    float rotationRad = GetRotationForSprite(RotationRad, Prefab.BackgroundSprite);
 
                     Prefab.BackgroundSprite.DrawTiled(
                         spriteBatch,
@@ -484,7 +484,7 @@ namespace Barotrauma
 
             if (back == GetRealDepth() > 0.5f)
             {
-                Vector2 advanceX = MathUtils.RotatedUnitXRadians(this.rotationRad).FlipY();
+                Vector2 advanceX = MathUtils.RotatedUnitXRadians(RotationRad).FlipY();
                 Vector2 advanceY = advanceX.YX().FlipX();
                 if (FlippedX != FlippedY)
                 {
@@ -492,7 +492,7 @@ namespace Barotrauma
                     advanceY = advanceY.FlipX();
                 }
 
-                float sectionSpriteRotationRad = GetRotationForSprite(this.rotationRad, Prefab.Sprite);
+                float sectionSpriteRotationRad = GetRotationForSprite(RotationRad, Prefab.Sprite);
 
                 for (int i = 0; i < Sections.Length; i++)
                 {
@@ -558,9 +558,11 @@ namespace Barotrauma
                 foreach (var decorativeSprite in Prefab.DecorativeSprites)
                 {
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor) + this.rotationRad;
+                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor) + RotationRad;
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
-                    Vector2 drawPos = DrawPosition + MathUtils.RotatePoint(offset, -this.rotationRad);
+                    if (FlippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
+                    if (FlippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
+                    Vector2 drawPos = DrawPosition + MathUtils.RotatePoint(offset, -this.RotationRad);
                     decorativeSprite.Sprite.Draw(
                         spriteBatch: spriteBatch,
                         pos: drawPos.FlipY(),

@@ -7,9 +7,8 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal unsafe class ISteamMatchmakingRulesResponse : SteamInterface
+	internal unsafe partial class ISteamMatchmakingRulesResponse : SteamInterface
 	{
-		
 		internal ISteamMatchmakingRulesResponse( bool IsGameServer )
 		{
 			SetupInterface( IsGameServer );
@@ -17,12 +16,14 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamMatchmakingRulesResponse_RulesResponded", CallingConvention = Platform.CC)]
-		private static extern void _RulesResponded( IntPtr self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchRule, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchValue );
+		private static extern void _RulesResponded( IntPtr self, IntPtr pchRule, IntPtr pchValue );
 		
 		#endregion
-		internal void RulesResponded( [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchRule, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchValue )
+		internal void RulesResponded( string pchRule, string pchValue )
 		{
-			_RulesResponded( Self, pchRule, pchValue );
+			using var str__pchRule = new Utf8StringToNative( pchRule );
+			using var str__pchValue = new Utf8StringToNative( pchValue );
+			_RulesResponded( Self, str__pchRule.Pointer, str__pchValue.Pointer );
 		}
 		
 		#region FunctionMeta

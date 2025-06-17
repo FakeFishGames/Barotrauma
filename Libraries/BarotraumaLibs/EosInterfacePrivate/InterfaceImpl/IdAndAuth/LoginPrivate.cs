@@ -12,7 +12,7 @@ namespace EosInterfacePrivate;
 static class LoginPrivate
 {
     private const string EosLoginSteamIdentity = "BarotraumaEosLogin";
-    private static Option<Steamworks.AuthTicketForWebApi> steamworksAuthTicket;
+    private static Option<Steamworks.AuthTicket> steamworksAuthTicket;
 
     private static Option<ulong> eosConnectExpirationNotifyId, eosConnectStatusChangedNotifyId;
     private static Option<ulong> egsAuthExpirationNotifyId;
@@ -65,7 +65,7 @@ static class LoginPrivate
     {
         if (!Steamworks.SteamClient.IsValid || !Steamworks.SteamClient.IsLoggedOn) { return Result.Failure(EosInterface.Login.LoginError.SteamNotLoggedIn); }
         if (steamworksAuthTicket.TryUnwrap(out var oldTicket)) { oldTicket.Cancel(); }
-        var newTicketNullable = await Steamworks.SteamUser.GetAuthTicketForWebApi(EosLoginSteamIdentity);
+        var newTicketNullable = await Steamworks.SteamUser.GetAuthTicketForWebApiAsync(EosLoginSteamIdentity);
         if (newTicketNullable is not { Data: not null } ticket)
         {
             return Result.Failure(EosInterface.Login.LoginError.FailedToGetSteamSessionTicket);
@@ -195,7 +195,7 @@ static class LoginPrivate
     public static async Task<Result<OneOf<EosInterface.ProductUserId, EosInterface.EosConnectContinuanceToken, EosInterface.EgsAuthContinuanceToken>, EosInterface.Login.LoginError>> LoginEpicWithLinkedSteamAccount(EosInterface.Login.LoginEpicFlags flags)
     {
         if (steamworksAuthTicket.TryUnwrap(out var oldTicket)) { oldTicket.Cancel(); }
-        var newTicketNullable = await Steamworks.SteamUser.GetAuthTicketForWebApi(EosLoginSteamIdentity);
+        var newTicketNullable = await Steamworks.SteamUser.GetAuthTicketForWebApiAsync(EosLoginSteamIdentity);
         if (newTicketNullable is not { Data: not null } ticket)
         {
             return Result.Failure(EosInterface.Login.LoginError.FailedToGetSteamSessionTicket);

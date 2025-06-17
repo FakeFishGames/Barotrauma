@@ -429,8 +429,6 @@ namespace Barotrauma
             }
         }
 
-        public float RotationRad { get; private set; } 
-
         [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, DecimalCount = 3, ForceShowPlusMinusButtons = true, ValueStep = 0.1f), Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Rotation
         {
@@ -705,6 +703,22 @@ namespace Barotrauma
             get; set;
         }
 
+        /// <summary>
+        /// Have the <see cref="ActionType.OnInserted"/> effects of the item already triggered when it was placed inside it's current container?
+        /// Used to prevent the effects from executing again when e.g. an existing character (who's inventory items' effects already triggered on some earlier round) spawns mid-round.
+        /// </summary>
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool OnInsertedEffectsApplied
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Were the <see cref="ActionType.OnInserted"/> effects already been applied when the item first spawned (loaded from a save)?
+        /// Needed for communicating to the clients whether they should trigger when the item spawns.
+        /// </summary>
+        public bool OnInsertedEffectsAppliedOnPreviousRound;
+
         public Color Color
         {
             get { return spriteColor; }
@@ -765,7 +779,7 @@ namespace Barotrauma
         }
 
         [Serialize(false, IsPropertySaveable.Yes)]
-        private bool HasBeenInstantiatedOnce { get; set; }
+        public bool HasBeenInstantiatedOnce { get; set; }
         
         //the default value should be Prefab.Health, but because we can't use it in the attribute, 
         //we'll just use NaN (which does nothing) and set the default value in the constructor/load
@@ -807,8 +821,36 @@ namespace Barotrauma
             set;
         }
 
+        private bool? isDangerous;
+        /// <summary>
+        /// Bots avoid rooms with dangerous items in them. Normally this value is <see cref="ItemPrefab.IsDangerous">defined in the prefab</see>, 
+        /// but this property can be used to override the prefab value.
+        /// </summary>
+        public bool IsDangerous
+        {
+            get { return isDangerous ?? Prefab.IsDangerous; }
+            set
+            { 
+                isDangerous = value; 
+                if (!value)
+                {
+                    _dangerousItems.Remove(this);
+                }
+                else
+                {
+                    _dangerousItems.Add(this);
+                }
+            }
+        }
+
         [Editable, Serialize(false, isSaveable: IsPropertySaveable.Yes, "When enabled will prevent the item from taking damage from all sources")]
         public bool InvulnerableToDamage { get; set; }
+
+        /// <summary>
+        /// Should bots automatically unequip the item? Normally always true, but disabled on items that have been configured to be equipped by default in an item set or the character's job items.
+        /// Note that the value is not saved: if the NPC becomes persistent (e.g. Artie Dolittle hired to the crew) they will no longer keep holding the item.
+        /// </summary>
+        public bool UnequipAutomatically = true;
 
         /// <summary>
         /// Was the item stolen during the current round. Note that it's possible for the items to be found in the player's inventory even though they weren't actually stolen.
@@ -1084,6 +1126,9 @@ namespace Barotrauma
 
         public bool IsLadder { get; }
 
+        /// <summary>
+        /// Secondary items can be selected at the same time with a primary item (e.g. a ladder or a chair can be selected at the same time with some device).
+        /// </summary>
         public bool IsSecondaryItem { get; }
 
         private ItemStatManager statManager;
@@ -1369,13 +1414,7 @@ namespace Barotrauma
                     conditionMultiplierCampaign *= campaign.Settings.FuelMultiplier;
                 }
             }
-            if (!HasBeenInstantiatedOnce)
-            {
-                // This only needs to be done on the very first instantiation.
-                // MaxCondition will be multiplied in RecalculateConditionValues(), ensuring
-                // that Condition will stay in line with the multiplier from then on.
-                condition *= conditionMultiplierCampaign;
-            }
+            condition *= conditionMultiplierCampaign;
 
             RecalculateConditionValues();
 
@@ -1478,13 +1517,14 @@ namespace Barotrauma
             {
                 ItemComponent component = components[i],
                               cloneComp = clone.components[i];
-
-                if (component is not CircuitBox origBox || cloneComp is not CircuitBox cloneBox)
+                if (component.GetType() == cloneComp.GetType())
                 {
-                    continue;
+                    cloneComp.Clone(component);
                 }
-
-                cloneBox.CloneFrom(origBox, clonedContainedItems);
+                if (component is CircuitBox origBox && cloneComp is CircuitBox cloneBox)
+                {
+                    cloneBox.CloneFrom(origBox, clonedContainedItems);
+                }
             }
 
             clone.FullyInitialized = true;
@@ -2293,6 +2333,7 @@ namespace Barotrauma
 
         private void SendPendingNetworkUpdatesInternal()
         {
+            DebugConsole.NewMessage($"Sending status event for item {Name}", Color.Gray);
             CreateStatusEvent(loadingRound: false);
             lastSentCondition = condition;
             sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
@@ -2300,6 +2341,17 @@ namespace Barotrauma
 
         public void CreateStatusEvent(bool loadingRound)
         {
+            //A little hacky: clients aren't allowed to apply OnFire effects themselves, which means effects that rely on the "onfire" status tag
+            //won't work properly. But let's notify clients of the item being on fire when it breaks, so they can e.g. make tanks explode.
+
+            //An alternative could be to allow clients to run OnFire effects, but I suspect it could lead to desyncs if/when there's minor
+            //discrepancies in the progress of the fires (which is most likely why running them was disabled on clients).
+            if (GameMain.NetworkMember is { IsServer: true }  &&
+                condition <= 0.0f &&
+                StatusEffect.DurationList.Any(d => d.Targets.Contains(this) && d.Parent.HasTag(Barotrauma.Tags.OnFireStatusEffectTag)))
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this, new ApplyStatusEffectEventData(ActionType.OnFire));                
+            }
             GameMain.NetworkMember.CreateEntityEvent(this, new ItemStatusEventData(loadingRound));
         }
 
@@ -2326,10 +2378,11 @@ namespace Barotrauma
         }
 
         private bool isActive = true;
+        public bool IsInRemoveQueue;
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!isActive || IsLayerHidden) { return; }
+            if (!isActive || IsLayerHidden || IsInRemoveQueue) { return; }
 
             if (impactQueue != null)
             {
@@ -2685,14 +2738,14 @@ namespace Barotrauma
 
         partial void OnCollisionProjSpecific(float impact);
 
-        public override void FlipX(bool relativeToSub)
+        public override void FlipX(bool relativeToSub, bool force = false)
         {
             //call the base method even if the item can't flip, to handle repositioning when flipping the whole sub
             base.FlipX(relativeToSub);
 
-            if (!Prefab.CanFlipX) 
+            if (!Prefab.CanFlipX && !force) 
             {
-                flippedX = false;
+                FlippedX = false;
                 return; 
             }
 
@@ -2714,14 +2767,14 @@ namespace Barotrauma
             SetContainedItemPositions();
         }
 
-        public override void FlipY(bool relativeToSub)
+        public override void FlipY(bool relativeToSub, bool force = false)
         {
             //call the base method even if the item can't flip, to handle repositioning when flipping the whole sub
             base.FlipY(relativeToSub);
 
-            if (!Prefab.CanFlipY)
+            if (!Prefab.CanFlipY && !force)
             {
-                flippedY = false;
+                FlippedY = false;
                 return;
             }
 
@@ -4059,6 +4112,10 @@ namespace Barotrauma
                 }
             }
 
+            //store this at this point so we can tell the clients whether the effects had already been applied when the item was first loaded,
+            //(in which case a client should not execute them when they spawn the item)
+            item.OnInsertedEffectsAppliedOnPreviousRound = item.OnInsertedEffectsApplied;
+
             item.ParseLinks(element, idRemap);
 
             bool thisIsOverride = element.GetAttributeBool("isoverride", false);
@@ -4124,8 +4181,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("markedfordeconstruction", false)) { _deconstructItems.Add(item); }
 
             float prevRotation = item.Rotation;
-            if (element.GetAttributeBool("flippedx", false)) { item.FlipX(false); }
-            if (element.GetAttributeBool("flippedy", false)) { item.FlipY(false); }
+            if (element.GetAttributeBool("flippedx", false)) { item.FlipX(relativeToSub: false, force: true); }
+            if (element.GetAttributeBool("flippedy", false)) { item.FlipY(relativeToSub: false, force: true); }
             item.Rotation = prevRotation;
 
             if (appliedSwap != null)

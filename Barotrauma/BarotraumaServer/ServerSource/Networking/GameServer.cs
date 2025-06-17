@@ -4222,6 +4222,9 @@ namespace Barotrauma.Networking
         public void GiveAchievement(Client client, Identifier achievementIdentifier)
         {
             if (client.GivenAchievements.Contains(achievementIdentifier)) { return; }
+
+            DebugConsole.NewMessage($"Attempting to give the achievement {achievementIdentifier} to {client.Name}...");
+
             client.GivenAchievements.Add(achievementIdentifier);
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -4229,6 +4232,17 @@ namespace Barotrauma.Networking
             msg.WriteIdentifier(achievementIdentifier);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        public void UnlockRecipe(Identifier identifier)
+        {
+            foreach (var client in connectedClients)
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.UNLOCKRECIPE);
+                msg.WriteIdentifier(identifier);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
         }
 
         public void IncrementStat(Client client, AchievementStat stat, int amount)

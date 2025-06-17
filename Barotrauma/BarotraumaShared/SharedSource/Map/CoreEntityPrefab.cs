@@ -34,6 +34,7 @@ namespace Barotrauma
             this.Linkable = linkable;
             this.AllowedLinks = (allowedLinks ?? Enumerable.Empty<Identifier>()).ToImmutableHashSet();
             this.Aliases = (aliases ?? Enumerable.Empty<string>()).Concat(identifier.Value.ToEnumerable()).ToImmutableHashSet();
+            this.Scale = 1;
         }
 
         public static CoreEntityPrefab HullPrefab { get; private set; }

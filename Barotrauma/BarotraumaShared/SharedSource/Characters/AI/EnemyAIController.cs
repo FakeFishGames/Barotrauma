@@ -4396,11 +4396,11 @@ namespace Barotrauma
                 else if (canAttackDoors && HasValidPath())
                 {
                     var door = PathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? PathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                    if (door is { CanBeTraversed: false } && !door.HasAccess(Character))
+                    if (door is { CanBeTraversed: false } && !door.HasAccess(Character) && door.Item.AiTarget is { } doorAiTarget)
                     {
-                        if (SelectedAiTarget != door.Item.AiTarget || State != AIState.Attack)
+                        if (SelectedAiTarget != doorAiTarget || State != AIState.Attack)
                         {
-                            SelectTarget(door.Item.AiTarget, CurrentTargetMemory.Priority);
+                            SelectTarget(doorAiTarget, CurrentTargetMemory.Priority);
                             State = AIState.Attack;
                             return false;
                         }

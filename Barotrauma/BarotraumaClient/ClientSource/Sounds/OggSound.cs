@@ -17,11 +17,15 @@ namespace Barotrauma.Sounds
 
         private short[] sampleBuffer = Array.Empty<short>();
         private short[] muffleBuffer = Array.Empty<short>();
+
+        private readonly double durationSeconds;
+        public override double? DurationSeconds => durationSeconds;
+
         public OggSound(SoundManager owner, string filename, bool stream, ContentXElement xElement) : base(owner, filename,
             stream, true, xElement)
         {
             var reader = new VorbisReader(Filename);
-
+            durationSeconds = reader.TotalTime.TotalSeconds;
             ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
             SampleRate = reader.SampleRate;
 

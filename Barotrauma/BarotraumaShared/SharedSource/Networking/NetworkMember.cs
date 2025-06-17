@@ -1,8 +1,6 @@
-﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -103,6 +101,7 @@ namespace Barotrauma.Networking
         CIRCUITBOX,
         MONEY,
         READY_CHECK,        //start, end and update a ready check
+        UNLOCKRECIPE,       //unlocking a fabrication recipe
 
         SEND_BACKUP_INDICES // the server sends a list of available backups for a save file
     }

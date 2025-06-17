@@ -777,7 +777,15 @@ namespace Barotrauma
             var locationType = location.GetLocationTypeToDisplay();
             bool includeGenericEvents = level.Type == LevelData.LevelType.LocationConnection || !locationType.IgnoreGenericEvents;
             if (includeGenericEvents && eventSet.LocationTypeIdentifiers == null) { return true; }
-            return eventSet.LocationTypeIdentifiers != null && eventSet.LocationTypeIdentifiers.Any(identifier => identifier == locationType.Identifier);
+            if (eventSet.LocationTypeIdentifiers == null) { return false; }
+
+            // EventLocationType is used to have the event set consider the location id as something else, for example "city" to get events that go to city locations
+            bool hasMatchingEventLocationId = !locationType.EventLocationType.IsEmpty && 
+                                            eventSet.LocationTypeIdentifiers.Contains(locationType.EventLocationType);
+            
+            bool hasMatchingLocationId = eventSet.LocationTypeIdentifiers.Contains(locationType.Identifier);
+            
+            return hasMatchingEventLocationId || hasMatchingLocationId; 
         }
 
         private Location GetEventLocation()

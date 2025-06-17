@@ -13,7 +13,7 @@ namespace Barotrauma
     class LocationType : PrefabWithUintIdentifier
     {
         public static readonly PrefabCollection<LocationType> Prefabs = new PrefabCollection<LocationType>();
-
+        
         private readonly ImmutableArray<string> rawNames;
         private readonly ImmutableArray<Sprite> portraits;
 
@@ -21,13 +21,14 @@ namespace Barotrauma
         private readonly ImmutableArray<(Identifier Identifier, float Commonness, bool AlwaysAvailableIfMissingFromCrew)> hireableJobs;
         private readonly float totalHireableWeight;
 
-        public readonly Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
-        public readonly Dictionary<int, int> MinCountPerZone = new Dictionary<int, int>();
-
         public readonly LocalizedString Name;
+
         public readonly LocalizedString Description;
 
-        public readonly Identifier ForceLocationName;
+        /// <summary>
+        /// Forces all locations of this LocationType to use the given name. Can either be a text tag or the actual name.
+        /// </summary>
+        public readonly Identifier ForceLocationName; 
 
         public readonly float BeaconStationChance;
 
@@ -43,11 +44,151 @@ namespace Barotrauma
         public readonly ImmutableArray<Identifier> MissionIdentifiers;
         public readonly ImmutableArray<Identifier> MissionTags;
 
-        public readonly List<string> HideEntitySubcategories = new List<string>();
+        public abstract class AreaSettingData
+        {
+            public int? MinCount { get; }
+            public int? MaxCount { get; }
+            public float Commonness { get; }
 
-        public bool IsEnterable { get; private set; }
+            /// <summary>
+            /// Desired position in the biome or difficulty zone. A value between 0 and 1, where 0 is the left side of the zone/biome, and 1 the right side.
+            /// </summary>
+            public float? DesiredPosition { get; }
+            
+            public bool HasCounts => MinCount.HasValue && MaxCount.HasValue && (MaxCount > 0 || MinCount > 0);
+            public virtual bool HasValidData => true;
 
-        public bool AllowAsBiomeGate { get; private set; }
+            internal AreaSettingData(int? minCount, int? maxCount, float commonness, float? desiredPosition)
+            {
+                MinCount = minCount;
+                MaxCount = maxCount;
+                Commonness = commonness;
+                DesiredPosition = desiredPosition;
+            }
+
+            public virtual bool MatchesRemainingCount(MapLocationTypeGenerator.LocationTypeCount locationTypeCount)
+            {
+                return false;
+            }
+
+            public virtual bool MatchesLocation(Map map, Location location)
+            {
+                return false;
+            }
+            
+            public virtual bool MatchesZone(int zoneIndex)
+            {
+                return false;
+            }
+            
+            public virtual bool MatchesBiome(Identifier biomeIdentifier)
+            {
+                return false;
+            }
+            
+            public virtual bool Matches(int? zone = null, Identifier? biomeId = null)
+            {
+                return false;
+            }
+        }
+
+        public class BiomeSettingData : AreaSettingData
+        {
+            public Identifier BiomeIdentifier { get; }
+
+            public override bool HasValidData => Biome.Prefabs.ContainsKey(BiomeIdentifier);
+
+            public BiomeSettingData(Identifier biomeIdentifier, int? minCount, int? maxCount, float commonness, float? desiredPosition, LocationType locationType)
+                : base(minCount, maxCount, commonness, desiredPosition)
+            {
+                if (minCount > maxCount)
+                {
+                    DebugConsole.AddWarning($"Error in location type {locationType.Identifier}: minimum count larger than maximum count in biome {biomeIdentifier}.", 
+                        contentPackage: locationType.ContentPackage);
+                }
+                BiomeIdentifier = biomeIdentifier;
+            }
+            
+            public override bool MatchesRemainingCount(MapLocationTypeGenerator.LocationTypeCount locationTypeCount)
+            {
+                return locationTypeCount.BiomeId == BiomeIdentifier;
+            }
+
+            public override bool MatchesLocation(Map map, Location location)
+            {
+                return BiomeIdentifier == location.Biome?.Identifier;
+            }
+            
+            public override bool MatchesBiome(Identifier biomeIdentifier)
+            {
+                return BiomeIdentifier == biomeIdentifier;
+            }
+            
+            public override bool Matches(int? zone = null, Identifier? biomeId = null)
+            {
+                return biomeId.HasValue && biomeId == BiomeIdentifier;
+            }
+        }
+        
+        public class DifficultyZoneSettingData : AreaSettingData
+        {
+            public int DifficultyZone { get; }
+
+            public DifficultyZoneSettingData(int difficultyZone, int? minCount, int? maxCount, float commonness, float? desiredPosition, LocationType locationType)
+                : base(minCount, maxCount, commonness, desiredPosition)
+            {
+                if (minCount > maxCount)
+                {
+                    DebugConsole.AddWarning($"Error in location type {locationType.Identifier}: minimum count larger than maximum count in difficulty zone {difficultyZone}.",
+                        contentPackage: locationType.ContentPackage);
+                }
+                DifficultyZone = difficultyZone;
+            }
+            
+            public override bool MatchesRemainingCount(MapLocationTypeGenerator.LocationTypeCount locationTypeCount)
+            {
+                return locationTypeCount.DifficultyZone == DifficultyZone;
+            }
+            
+            public override bool MatchesLocation(Map map, Location location)
+            {
+                return DifficultyZone == map.GetZoneIndex(location.MapPosition.X);
+            }
+            
+            public override bool MatchesZone(int zoneIndex)
+            {
+                return DifficultyZone == zoneIndex;
+            }
+            
+            public override bool Matches(int? zone = null, Identifier? biomeId = null)
+            {
+                return zone.HasValue && zone == DifficultyZone;
+            }
+        }
+
+        public readonly List<AreaSettingData> AreaSettings = new List<AreaSettingData>();
+
+        public readonly List<string> HideEntitySubcategories;
+
+        public enum BiomeGateSetting
+        {
+            /// <summary>
+            /// Can be used as a gate between biomes, but not required
+            /// </summary>
+            Allow,
+            /// <summary>
+            /// Cannot be used as a gate between biomes
+            /// </summary>
+            Deny, 
+            /// <summary>
+            /// Must be used as a gate between biomes during map generation
+            /// </summary>
+            Force 
+        }
+        
+        public BiomeGateSetting BiomeGate { get; private set; }
+       
+        public bool ForceAsStartOutpost { get; private set; }
 
         /// <summary>
         /// Can this location type be used in the random, non-campaign levels that don't take place in any specific zone
@@ -109,9 +250,25 @@ namespace Barotrauma
         private readonly Identifier forceOutpostGenerationParamsIdentifier;
 
         /// <summary>
+        /// Can be used to make the location type use the same background music tracks as another location type.
+        /// </summary>
+        public readonly Identifier BackgroundMusicLocationType;
+
+        /// <summary>
         /// If set to true, only event sets that explicitly define this location type in <see cref="EventSet.LocationTypeIdentifiers"/> can be selected at this location. Defaults to false.
         /// </summary>
         public bool IgnoreGenericEvents { get; }
+        
+        /// <summary>
+        /// Used as criteria for validating if a given event set is suitable for this locationType.
+        /// For example, if set to "city", events that appear in "city" type locations can also appear here.
+        /// </summary>
+        public Identifier EventLocationType { get; private set; }
+
+        /// <summary>
+        /// If set, outpost modules configured to be suitable for the specified location type can also be used in this type of location.
+        /// </summary>
+        public Identifier UseOutpostModulesOfLocationType { get; set; }
 
         public Color SpriteColor
         {
@@ -134,7 +291,7 @@ namespace Barotrauma
         public int DailySpecialsCount { get; } = 1;
         public int RequestedGoodsCount { get; } = 1;
 
-        public readonly bool ShowSonarMarker = true;
+        public readonly bool ShowSonarMarker;
 
         public override string ToString()
         {
@@ -145,13 +302,41 @@ namespace Barotrauma
         {
             Name = TextManager.Get("LocationName." + Identifier, "unknown");
             Description = TextManager.Get("LocationDescription." + Identifier, "");
-
+            
+            // for location types based on others, e.g., Named Unique outpost, we may want to override the name of the type to still say Outpost on the map:
+            var forceNameId = element.GetAttributeIdentifier("ForceLocationTypeName", string.Empty);
+            if (!forceNameId.IsEmpty)
+            {
+                var forcedName = TextManager.Get("LocationName." + forceNameId);
+                if (!forcedName.IsNullOrEmpty())
+                {
+                    Name = forcedName;
+                }
+            }
+            
+            var forceDescriptionId = element.GetAttributeIdentifier("ForceLocationTypeDescription", string.Empty);
+            if (!forceDescriptionId.IsEmpty)
+            {
+                var forcedDescription = TextManager.Get("LocationDescription." + forceDescriptionId);
+                if (!forcedDescription.IsNullOrEmpty())
+                {
+                    Description = forcedDescription;
+                }
+            }
+            
             BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
 
             UsePortraitInRandomLoadingScreens = element.GetAttributeBool(nameof(UsePortraitInRandomLoadingScreens), true);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
-            IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
-            AllowAsBiomeGate = element.GetAttributeBool(nameof(AllowAsBiomeGate), true);
+            bool allowAsBiomeGateLegacy = element.GetAttributeBool("allowasbiomegate", true);
+            BiomeGate = element.GetAttributeEnum("BiomeGate", def: allowAsBiomeGateLegacy ? BiomeGateSetting.Allow : BiomeGateSetting.Deny);
+            if (BiomeGate != BiomeGateSetting.Deny && !HasOutpost)
+            {
+                DebugConsole.AddWarning($"Potential error in location type {Identifier}: the location is set to be allowed as a biome gate, but will never be chosen as one because it has no outpost.",
+                    contentPackage: ContentPackage);
+            }
+
+            ForceAsStartOutpost = element.GetAttributeBool(nameof(ForceAsStartOutpost), false);
             AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
 
             Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
@@ -168,17 +353,24 @@ namespace Barotrauma
             DescriptionInRadiation = element.GetAttributeIdentifier(nameof(DescriptionInRadiation), "locationdescription.abandonedirradiated");
 
             forceOutpostGenerationParamsIdentifier = element.GetAttributeIdentifier("forceoutpostgenerationparams", Identifier.Empty);
+            BackgroundMusicLocationType = element.GetAttributeIdentifier(nameof(BackgroundMusicLocationType), Identifier.Empty);
 
             IgnoreGenericEvents = element.GetAttributeBool(nameof(IgnoreGenericEvents), false);
+            
+            EventLocationType = element.GetAttributeIdentifier(nameof(EventLocationType), Identifier.Empty);
+            UseOutpostModulesOfLocationType = element.GetAttributeIdentifier(nameof(UseOutpostModulesOfLocationType), Identifier.Empty);
 
             IsAnyOutpost = element.GetAttributeBool(nameof(IsAnyOutpost), def: HasOutpost);
 
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
 
-            if (element.GetAttribute("name") != null)
+            if (element.GetAttribute(nameof(ForceLocationName)) != null ||
+                element.GetAttribute("name") != null)
             {
-                ForceLocationName = element.GetAttributeIdentifier("name", string.Empty);
+                ForceLocationName = element.GetAttributeIdentifier(nameof(ForceLocationName), 
+                    //backwards compatibility
+                    def: element.GetAttributeIdentifier("name", string.Empty));
             }
             else
             {
@@ -214,15 +406,18 @@ namespace Barotrauma
             string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
             foreach (string commonnessPerZoneStr in commonnessPerZoneStrs)
             {
-                string[] splitCommonnessPerZone = commonnessPerZoneStr.Split(':');                
+                string[] splitCommonnessPerZone = commonnessPerZoneStr.Split(':');
                 if (splitCommonnessPerZone.Length != 2 ||
                     !int.TryParse(splitCommonnessPerZone[0].Trim(), out int zoneIndex) ||
                     !float.TryParse(splitCommonnessPerZone[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoneCommonness))
                 {
-                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Identifier + "\" - commonness should be given in the format \"zone1index: zone1commonness, zone2index: zone2commonness\"");
+                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Identifier + "\" - commonness should be given in the format \"zone1index: zone1commonness, zone2index: zone2commonness\"", contentPackage: element.ContentPackage);
                     break;
                 }
-                CommonnessPerZone[zoneIndex] = zoneCommonness;
+
+                if (zoneCommonness <= 0.0f) { continue; }
+
+                AugmentDifficultyZoneSettings(zoneIndex, zoneCommonness, minCount: null);
             }
 
             string[] minCountPerZoneStrs = element.GetAttributeStringArray("mincountperzone", Array.Empty<string>());
@@ -233,13 +428,40 @@ namespace Barotrauma
                     !int.TryParse(splitMinCountPerZone[0].Trim(), out int zoneIndex) ||
                     !int.TryParse(splitMinCountPerZone[1].Trim(), out int minCount))
                 {
-                    DebugConsole.ThrowError("Failed to read minimum count values for location type \"" + Identifier + "\" - minimum counts should be given in the format \"zone1index: zone1mincount, zone2index: zone2mincount\"");
+                    DebugConsole.ThrowError("Failed to read minimum zone count values for location type \"" + Identifier + 
+                                            "\" - minimum zone counts should be given in the format \"zone1index: zone1mincount, zone2index: zone2mincount\"", contentPackage: element.ContentPackage);
                     break;
                 }
-                MinCountPerZone[zoneIndex] = minCount;
+
+                if (minCount <= 0) { continue; }
+
+                AugmentDifficultyZoneSettings(zoneIndex, zoneCommonness: null, minCount);
             }
-            var portraits = new List<Sprite>();
-            var hireableJobs = new List<(Identifier, float, bool)>();
+
+            void AugmentDifficultyZoneSettings(int zoneIndex, float? zoneCommonness, int? minCount)
+            {
+
+                var existingSettings = AreaSettings.Find(areaSettingData => areaSettingData is DifficultyZoneSettingData difficultyZoneSettingData && 
+                                                                                          difficultyZoneSettingData.DifficultyZone == zoneIndex);
+                
+                if (existingSettings != null)
+                {
+                    int index = AreaSettings.IndexOf(existingSettings);
+                    AreaSettings[index] = new DifficultyZoneSettingData(zoneIndex, 
+                        minCount ?? existingSettings.MinCount, 
+                        //note that assigning minCount to maxCount is intentional here:
+                        //previously it was only possible to define minCount (essentially the same as just defining "count" now)
+                        maxCount: minCount ?? existingSettings.MaxCount, 
+                        commonness: zoneCommonness ?? existingSettings.Commonness, desiredPosition: null, locationType: this);
+                }
+                else
+                {
+                    AreaSettings.Add(new DifficultyZoneSettingData(zoneIndex, minCount ?? 0, maxCount: minCount ?? 0, commonness: zoneCommonness ?? 0, desiredPosition: null, locationType: this));
+                }
+            }
+            
+            var portraitsList = new List<Sprite>();
+            var hireableJobsList = new List<(Identifier, float, bool)>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -249,7 +471,7 @@ namespace Barotrauma
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
                         bool availableIfMissing = subElement.GetAttributeBool("AlwaysAvailableIfMissingFromCrew", false);
                         totalHireableWeight += jobCommonness;
-                        hireableJobs.Add((jobIdentifier, jobCommonness, availableIfMissing));
+                        hireableJobsList.Add((jobIdentifier, jobCommonness, availableIfMissing));
                         break;
                     case "symbol":
                         Sprite = new Sprite(subElement, lazyLoad: true);
@@ -265,7 +487,7 @@ namespace Barotrauma
                         var portrait = new Sprite(subElement, lazyLoad: true);
                         if (portrait != null)
                         {
-                            portraits.Add(portrait);
+                            portraitsList.Add(portrait);
                         }
                         break;
                     case "store":
@@ -281,10 +503,71 @@ namespace Barotrauma
                         DailySpecialsCount = subElement.GetAttributeInt("dailyspecialscount", DailySpecialsCount);
                         RequestedGoodsCount = subElement.GetAttributeInt("requestedgoodscount", RequestedGoodsCount);
                         break;
+                    case "areasettings":
+                        ParseAreaSettings(subElement);
+                        break;
                 }
             }
-            this.portraits = portraits.ToImmutableArray();
-            this.hireableJobs = hireableJobs.ToImmutableArray();
+            this.portraits = portraitsList.ToImmutableArray();
+            this.hireableJobs = hireableJobsList.ToImmutableArray();
+            
+            void ParseAreaSettings(ContentXElement areaSettingsElement)
+            {
+                Identifier biomeIdentifier = areaSettingsElement.GetAttributeIdentifier("biome", Identifier.Empty);
+                int zone = areaSettingsElement.GetAttributeInt("zone", 0);
+                
+                if (biomeIdentifier == Identifier.Empty && zone == 0)
+                {
+                    DebugConsole.ThrowError("Failed to read area settings for locationType \"" + Identifier + "\" - biome identifier and zone are both missing.", contentPackage: element.ContentPackage);
+                    return;
+                }
+                
+                if (biomeIdentifier != Identifier.Empty && zone != 0)
+                {
+                    DebugConsole.ThrowError("Failed to read area settings for locationType \"" + Identifier + "\" - both biome identifier and zone are defined. Must be one or the other.", contentPackage: element.ContentPackage);
+                    return;
+                }
+
+                bool HasComma(string intAttributeName)
+                {
+                    var attr = areaSettingsElement.GetAttribute(intAttributeName);
+                    if (attr == null) { return false;}
+                    return attr.Value.Contains(',');
+                }
+
+                if (HasComma("mincount") || HasComma("maxcount") || HasComma("count"))
+                {
+                    DebugConsole.LogError($"AreaSettings for locationType {Identifier} has comma inside int count attribute. This causes the resulting parse to combine the numbers, resulting in incorrect amount of locations.",
+                        contentPackage: ContentPackage);
+                }
+                
+                int? minCount = areaSettingsElement.GetAttributeNullableInt("mincount");
+                int? maxCount = areaSettingsElement.GetAttributeNullableInt("maxcount");
+                int? count = areaSettingsElement.GetAttributeNullableInt("count");
+                float? desiredPosition = areaSettingsElement.GetAttributeNullableFloat("desiredposition");
+                float commonness = areaSettingsElement.GetAttributeFloat("commonness", 0);
+                
+                // if set, count overrides min and max count to eliminate randomness
+                if (count.HasValue)
+                {
+                    minCount = count;
+                    maxCount = count;
+                }
+                else if (minCount.HasValue && maxCount.HasValue && minCount <= 0 && maxCount <= 0)
+                {
+                    DebugConsole.AddWarning("Failed to read count value for location type \"" + Identifier + "\" - both min and max count are 0.", contentPackage: element.ContentPackage);
+                    return;
+                }
+                
+                if (biomeIdentifier != Identifier.Empty)
+                {
+                    AreaSettings.Add(new BiomeSettingData(biomeIdentifier, minCount, maxCount, commonness, desiredPosition, locationType: this));
+                }
+                else
+                {
+                    AreaSettings.Add(new DifficultyZoneSettingData(zone, minCount, maxCount, commonness, desiredPosition, locationType: this));
+                }
+            }
         }
 
         public IEnumerable<JobPrefab> GetHireablesMissingFromCrew()
@@ -383,7 +666,7 @@ namespace Barotrauma
             return rawNames[rand.Next() % rawNames.Length];
         }
 
-        public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false, Func<LocationType, bool> predicate = null)
+        public static LocationType Random(Random rand, int? zone = null, Identifier? biomeId = null, bool requireOutpost = false, Func<LocationType, bool> predicate = null)
         {
             Debug.Assert(Prefabs.Any(), "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
@@ -392,19 +675,22 @@ namespace Barotrauma
                     (predicate == null || predicate(lt)) && IsValid(lt))
                     .OrderBy(p => p.UintIdentifier).ToArray();
 
-            bool IsValid(LocationType lt)
+            bool IsValid(LocationType locationType)
             {
-                if (requireOutpost && !lt.HasOutpost) { return false; }
-                if (zone.HasValue)
-                {
-                    if (!lt.CommonnessPerZone.ContainsKey(zone.Value)) { return false; }
-                }
+                if (requireOutpost && !locationType.HasOutpost) { return false; }
+
+                bool validZone = !zone.HasValue || locationType.AreaSettings.Any(areaSetting => areaSetting.MatchesZone(zone.Value));
+                bool validBiome = !biomeId.HasValue || locationType.AreaSettings.Any(areaSetting => areaSetting.MatchesBiome(biomeId.Value));
+
+                if (!validZone && !validBiome) { return false; }
+
                 //if zone is not defined, this is a "random" (non-campaign) level
                 //-> don't choose location types that aren't allowed in those
-                else if (!lt.AllowInRandomLevels)
+                if (!zone.HasValue && !biomeId.HasValue && !locationType.AllowInRandomLevels)
                 {
                     return false;
                 }
+                
                 return true;
             }
 
@@ -413,17 +699,29 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Could not generate a random location type - no location types for the zone " + zone + " found!");
             }
 
-            if (zone.HasValue)
+            if (zone.HasValue || biomeId.HasValue)
             {
                 return ToolBox.SelectWeightedRandom(
                     allowedLocationTypes, 
-                    allowedLocationTypes.Select(a => a.CommonnessPerZone[zone.Value]).ToArray(),
+                    allowedLocationTypes.Select(allowedType => 
+                        allowedType.AreaSettings.Find(areaSetting => areaSetting.MatchesZone(zone.Value) || areaSetting.MatchesBiome(biomeId.Value))?.Commonness ?? 0).ToArray(),
                     rand);
             }
             else
             {
                 return allowedLocationTypes[rand.Next() % allowedLocationTypes.Length];
             }
+        }
+        
+        public bool IsValidForZoneOrBiome(int? zone, Identifier? biomeIdentifier)
+        {
+            //if zone is not defined, this is a "random" (non-campaign) level
+            //-> don't choose location types that aren't allowed in those
+            if (!zone.HasValue && !AllowInRandomLevels) { return false; }
+            
+            if (!zone.HasValue && !biomeIdentifier.HasValue) { return true; }
+            
+            return AreaSettings.Any(setting => setting.Matches(zone, biomeIdentifier));
         }
 
         public OutpostGenerationParams GetForcedOutpostGenerationParams()
@@ -433,6 +731,11 @@ namespace Barotrauma
                 return parameters;
             }
             return null;
+        }
+        
+        public bool HasCounts()
+        {
+            return AreaSettings.Any(setting => setting.HasCounts);
         }
 
         public override void Dispose() { }

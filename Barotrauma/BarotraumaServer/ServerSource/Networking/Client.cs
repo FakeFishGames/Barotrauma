@@ -138,6 +138,8 @@ namespace Barotrauma.Networking
             get { return kickVoters.Count; }
         }
 
+        public WeakReference<Character> PreviousCharacter;
+
         partial void InitProjSpecific()
         {
             kickVoters = new List<Client>();

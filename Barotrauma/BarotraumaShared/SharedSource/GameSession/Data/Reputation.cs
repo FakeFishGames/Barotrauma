@@ -206,7 +206,9 @@ namespace Barotrauma
             LocalizedString reputationName = GetReputationName(normalizedValue);
             LocalizedString formattedReputation = TextManager.GetWithVariables("reputationformat",
                 ("[reputationname]", reputationName),
-                ("[reputationvalue]", ((int)Math.Round(value)).ToString()));
+                //simply cast to float (dropping the decimals)
+                //we don't want any rounding here, otherwise it might look like you have enough rep to reach some threshold when you're actually some fraction off
+                ("[reputationvalue]", ((int)value).ToString()));
             if (addColorTags)
             {
                 formattedReputation = $"‖color:{XMLExtensions.ToStringHex(GetReputationColor(normalizedValue))}‖{formattedReputation}‖end‖";

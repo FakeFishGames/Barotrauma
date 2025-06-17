@@ -132,7 +132,7 @@ namespace Barotrauma
             SoundTriggers = new LevelTrigger[Prefab.Sounds.Count];
             for (int i = 0; i < Prefab.Sounds.Count; i++)
             {
-                Sounds[i] = RoundSound.Load(Prefab.Sounds[i].SoundElement, false);
+                Sounds[i] = RoundSound.Load(Prefab.Sounds[i].SoundElement);
                 SoundTriggers[i] = Prefab.Sounds[i].TriggerIndex > -1 ? Triggers[Prefab.Sounds[i].TriggerIndex] : null;
             }
 

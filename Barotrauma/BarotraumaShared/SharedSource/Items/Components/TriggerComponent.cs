@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
         public bool ForceFluctuation { get; set; }
 
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "How much the fluctuation affects the force. 1 is the maximum fluctuation, 0 is no fluctuation.", alwaysUseInstanceValues: true)]
-        private float ForceFluctuationStrength
+        public float ForceFluctuationStrength
         {
             get
             {
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
             }
         }
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "How fast (cycles per second) the force fluctuates.", alwaysUseInstanceValues: true)]
-        private float ForceFluctuationFrequency
+        public float ForceFluctuationFrequency
         {
             get
             {
@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
             }
         }
         [Serialize(0.01f, IsPropertySaveable.Yes, description: "How often (in seconds) the force fluctuation is calculated.", alwaysUseInstanceValues: true)]
-        private float ForceFluctuationInterval
+        public float ForceFluctuationInterval
         {
             get
             {

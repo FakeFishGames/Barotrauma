@@ -408,6 +408,11 @@ namespace Barotrauma
 
         public HashSet<Identifier> UnlockedTalents { get; private set; } = new HashSet<Identifier>();
 
+        /// <summary>
+        /// Which of the character's extra talents (talents unlocked from outside their own talent tree) are reset when the talents are resetted using e.g. Mindwipe?
+        /// </summary>
+        public HashSet<Identifier> ResettableExtraTalents { get; private set; } = new HashSet<Identifier>();
+
         private int talentResetCount;
 
         /// <summary>
@@ -792,14 +797,6 @@ namespace Barotrauma
                 Salary = CalculateSalary();
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
-
-            TalentRefundPoints = CharacterConfigElement.GetAttributeInt("refundpoints", 0);
-
-            int loadedLastRewardDistribution = CharacterConfigElement.GetAttributeInt("lastrewarddistribution", -1);
-            if (loadedLastRewardDistribution >= 0)
-            {
-                LastRewardDistribution = Option.Some(loadedLastRewardDistribution);
-            }
         }
 
         private void SetPersonalityTrait()
@@ -1016,8 +1013,20 @@ namespace Barotrauma
                         }
 
                         UnlockedTalents.Add(talentIdentifier);
+                        if (talentElement.GetAttributeBool("resettable", defaultValue: false))
+                        {
+                            ResettableExtraTalents.Add(talentIdentifier);
+                        }
                     }
                 }
+            }
+
+            TalentRefundPoints = infoElement.GetAttributeInt("refundpoints", 0);
+
+            int loadedLastRewardDistribution = infoElement.GetAttributeInt("lastrewarddistribution", -1);
+            if (loadedLastRewardDistribution >= 0)
+            {
+                LastRewardDistribution = Option.Some(loadedLastRewardDistribution);
             }
 
             LoadHeadAttachments();
@@ -1535,7 +1544,13 @@ namespace Barotrauma
             if (TalentRefundPoints <= 0) { return; }
 
             //e.g. talents from endocrine booster or extra talents some special NPC has
+            //stored in a list so we can re-unlock them on the character
             var talentsFromOutsideTree = GetUnlockedTalentsOutsideTree().ToList();
+            //remove resettable talents, so they DON'T get re-unlocked
+            foreach (var resettableExtraTalent in ResettableExtraTalents)
+            {
+                talentsFromOutsideTree.Remove(resettableExtraTalent);
+            }
 
             UnlockedTalents.Clear();
             SavedStatValues.Clear();
@@ -1570,6 +1585,9 @@ namespace Barotrauma
         public void Rename(string newName)
         {
             if (string.IsNullOrEmpty(newName)) { return; }
+
+            newName = Networking.Client.SanitizeName(newName);
+
             // Replace the name tag of any existing id cards or duffel bags
             foreach (var item in Item.ItemList)
             {
@@ -1673,7 +1691,10 @@ namespace Barotrauma
 
             foreach (Identifier talentIdentifier in UnlockedTalents)
             {
-                talentElement.Add(new XElement("Talent", new XAttribute("identifier", talentIdentifier)));
+                talentElement.Add(
+                    new XElement("Talent", 
+                        new XAttribute("identifier", talentIdentifier), 
+                        new XAttribute("resettable", ResettableExtraTalents.Contains(talentIdentifier))));
             }
 
             charElement.Add(savedStatElement);

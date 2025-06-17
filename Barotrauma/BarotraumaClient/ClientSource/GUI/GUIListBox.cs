@@ -446,19 +446,22 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
-        public void Select(object userData, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled)
+        public bool Select(object userData, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled)
         {
             var children = Content.Children;
             int i = 0;
+            bool wasSelected = false;
             foreach (GUIComponent child in children)
             {
                 if (Equals(child.UserData, userData))
                 {
+                    wasSelected = true;
                     Select(i, force, autoScroll);
-                    if (!SelectMultiple) { return; }
+                    if (!SelectMultiple) { return true; }
                 }
                 i++;
             }
+            return wasSelected;
         }
 
         private Point CalculateFrameSize(bool isHorizontal, int scrollBarSize)

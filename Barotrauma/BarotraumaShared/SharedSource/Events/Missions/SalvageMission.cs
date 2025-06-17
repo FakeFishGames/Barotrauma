@@ -92,11 +92,36 @@ namespace Barotrauma
                 set
                 {
                     if (value == state) { return; }
+                    bool wasRetrieved = Retrieved;
                     state = value;
 #if SERVER
                     GameMain.Server?.UpdateMissionState(mission);
 #endif
+                    if (!wasRetrieved && Retrieved)
+                    {
+                        OnTargetRetrieved();
+                    }
+                    else if (state == RetrievalState.PickedUp)
+                    {
+                        OnTargetPickedUp();
+                    }
                 }
+            }
+
+            private void OnTargetRetrieved()
+            {
+                if (Item == null) { return; }
+#if CLIENT
+                SteamTimelineManager.OnMissionTargetRetrieved(Item, mission);
+#endif
+            }
+            
+            private void OnTargetPickedUp()
+            {
+                if (Item == null) { return; }
+#if CLIENT
+                SteamTimelineManager.OnMissionTargetPickedUp(Item, mission);
+#endif
             }
 
             public bool Interacted;
@@ -469,13 +494,13 @@ namespace Barotrauma
                         target.Item.ExternalHighlight = true;
 #endif
                         target.Item.UpdateTransform();
-                        if (target.Item.CurrentHull == null)
+                        if (target.Item.CurrentHull == null && target.Item.body != null)
                         {
                             //prevent the body from moving if it spawned outside the hulls (we don't want it e.g. falling to the bottom of a cave or into the abyss)
                             target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
                         }
                     }
-                    else if (target.RequiredRetrievalState == Target.RetrievalState.Interact)
+                    if (target.RequiredRetrievalState == Target.RetrievalState.Interact)
                     {
                         target.Item.OnInteract += () =>
                         {

@@ -442,6 +442,8 @@ namespace Barotrauma
         /// </summary>
         public bool IsBlue => ColorExtensions.IsBlueDominant(AveragePaintedColor, minimumAlpha: 100);
 
+        public const int MaxFireSources = 16;
+
         public List<FireSource> FireSources { get; private set; }
 
         public List<DummyFireSource> FakeFireSources { get; private set; }
@@ -731,6 +733,10 @@ namespace Barotrauma
             }
             else
             {
+                if (FireSources.Count >= MaxFireSources)
+                {
+                    return;
+                }
                 FireSources.Add(fireSource);
             }
         }
@@ -781,8 +787,9 @@ namespace Barotrauma
         {
             msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
 
-            msg.WriteRangedInteger(Math.Min(FireSources.Count, 16), 0, 16);
-            for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
+            System.Diagnostics.Debug.Assert(FireSources.Count <= MaxFireSources, $"Too many fire sources ({FireSources.Count}) in hull {ID} (max {MaxFireSources}).");
+            msg.WriteRangedInteger(Math.Min(FireSources.Count, MaxFireSources), 0, MaxFireSources);
+            for (int i = 0; i < Math.Min(FireSources.Count, MaxFireSources); i++)
             {
                 var fireSource = FireSources[i];
                 Vector2 normalizedPos = new Vector2(
@@ -828,7 +835,7 @@ namespace Barotrauma
         {
             newWaterVolume = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
 
-            int fireSourceCount = msg.ReadRangedInteger(0, 16);
+            int fireSourceCount = msg.ReadRangedInteger(0, MaxFireSources);
             newFireSources = new NetworkFireSource[fireSourceCount];
             for (int i = 0; i < fireSourceCount; i++)
             {

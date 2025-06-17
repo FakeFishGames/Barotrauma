@@ -295,6 +295,25 @@ namespace Barotrauma
             return TextPacks[languageIdentifier].First().TranslatedName;
         }
 
+        public static void LanguageChanged()
+        {
+            foreach ((LanguageIdentifier language, ImmutableList<TextPack> textPacks) in TextPacks)
+            {
+                foreach (TextPack textPack in textPacks)
+                {
+                    if (GameSettings.CurrentConfig.Language == language)
+                    {
+                        textPack.VerifyLoaded();
+                    }
+                    else
+                    {
+                        textPack.Unload();
+                    }
+                }
+            }
+            ClearCache();
+        }
+
         public static void ClearCache()
         {
             lock (cachedStrings)

@@ -26,6 +26,7 @@ namespace Barotrauma
             {
                 if (state != value)
                 {
+                    int previousState = state;
                     state = value;
                     TryTriggerEvents(state);
 #if SERVER
@@ -38,6 +39,7 @@ namespace Barotrauma
 #endif
                     ShowMessage(State);
                     OnMissionStateChanged?.Invoke(this);
+                    MissionStateChanged(previousState);
                 }
             }
         }
@@ -198,6 +200,11 @@ namespace Barotrauma
             Messages = messages.ToImmutableArray();
             
             characterConfig = prefab.ConfigElement.GetChildElement("Characters");
+            if (prefab.ConfigElement.GetChildElements("Characters").Count() > 1)
+            {
+                DebugConsole.AddWarning($"Error in mission {Prefab.Identifier}: multiple <Characters> elements found. Only the first one will be used.",
+                    contentPackage: prefab.ContentPackage);
+            }
         }
 
         public LocalizedString ReplaceVariablesInMissionMessage(LocalizedString message, Submarine sub, bool replaceReward = true)
@@ -214,6 +221,8 @@ namespace Barotrauma
             }
             return message;
         }
+        
+        protected virtual void MissionStateChanged(int previousState) {}
 
         public virtual void SetLevel(LevelData level) { }
 

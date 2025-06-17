@@ -787,6 +787,13 @@ namespace Barotrauma
                 foreach (Item item in Character.HeldItems)
                 {
                     if (item == null || !item.IsInteractable(Character)) { continue; }
+                    if (!item.UnequipAutomatically) { continue; }
+                    //NPC set to operate the item they're holding, don't put it away
+                    if (ObjectiveManager.CurrentObjective is AIObjectiveOperateItem operateItem && 
+                        (operateItem.OperateTarget == item || operateItem.Component?.Item == item)) 
+                    { 
+                        continue; 
+                    }
                     if (Character.TryPutItemInAnySlot(item)) { continue; }
                     if (Character.TryPutItemInBag(item)) { continue; }
                     if (item.HasTag(Tags.Weapon))

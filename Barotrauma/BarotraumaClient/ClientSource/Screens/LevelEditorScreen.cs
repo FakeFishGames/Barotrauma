@@ -482,6 +482,11 @@ namespace Barotrauma
 
         public void TestLevelGenerationForErrors(int amountOfLevelsToGenerate)
         {
+            if (selectedParams == null)
+            {
+                throw new InvalidOperationException("No level generation parameters selected in the level editor.");
+            }
+
             CoroutineManager.StartCoroutine(GenerateLevels());
 
             IEnumerable<CoroutineStatus> GenerateLevels()
@@ -520,7 +525,7 @@ namespace Barotrauma
                         errorCatcher.Errors.ToList().ForEach(e => DebugConsole.ThrowError(e.Text));
                         yield return CoroutineStatus.Success;
                     }
-                    yield return CoroutineStatus.Running;
+                    yield return new WaitForSeconds(0.1f);
                 }
             }
         }

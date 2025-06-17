@@ -7,17 +7,18 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal unsafe class ISteamVideo : SteamInterface
+	internal unsafe partial class ISteamVideo : SteamInterface
 	{
+		public const string Version = "STEAMVIDEO_INTERFACE_V007";
 		
 		internal ISteamVideo( bool IsGameServer )
 		{
 			SetupInterface( IsGameServer );
 		}
 		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamVideo_v002", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamVideo_v002();
-		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamVideo_v002();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamVideo_v007", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamVideo_v007();
+		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamVideo_v007();
 		
 		
 		#region FunctionMeta
@@ -58,11 +59,12 @@ namespace Steamworks
 		private static extern bool _GetOPFStringForApp( IntPtr self, AppId unVideoAppID, IntPtr pchBuffer, ref int pnBufferSize );
 		
 		#endregion
-		internal bool GetOPFStringForApp( AppId unVideoAppID, out string pchBuffer, ref int pnBufferSize )
+		internal bool GetOPFStringForApp( AppId unVideoAppID, out string pchBuffer )
 		{
-			using var mempchBuffer = Helpers.TakeMemory();
-			var returnValue = _GetOPFStringForApp( Self, unVideoAppID, mempchBuffer, ref pnBufferSize );
-			pchBuffer = Helpers.MemoryToString( mempchBuffer );
+			using var mem__pchBuffer = Helpers.TakeMemory();
+			int szpnBufferSize = (1024 * 32);
+			var returnValue = _GetOPFStringForApp( Self, unVideoAppID, mem__pchBuffer, ref szpnBufferSize );
+			pchBuffer = Helpers.MemoryToString( mem__pchBuffer );
 			return returnValue;
 		}
 		

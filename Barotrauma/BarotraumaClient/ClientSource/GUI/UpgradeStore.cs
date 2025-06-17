@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -949,7 +950,7 @@ namespace Barotrauma
             GUILayoutGroup buttonLayout = new GUILayoutGroup(rectT(1f, 1f, toggleButton.Frame), isHorizontal: true);
 
             LocalizedString slotText = "";
-            if (linkedItems.Count() > 1)
+            if (linkedItems.Count > 1)
             {
                 slotText = TextManager.GetWithVariable("weaponslot", "[number]", string.Join(", ", linkedItems.Select(it => (swappableEntities.IndexOf(it) + 1).ToString())));
             }
@@ -978,7 +979,7 @@ namespace Barotrauma
             List<GUIFrame> frames = new List<GUIFrame>();
             if (currentOrPending != null)
             {
-                bool canUninstall = item.PendingItemSwap != null || !(currentOrPending.SwappableItem?.ReplacementOnUninstall.IsEmpty ?? true);
+                bool canUninstall = HasPermission && (item.PendingItemSwap != null || !(currentOrPending.SwappableItem?.ReplacementOnUninstall.IsEmpty ?? true));
 
                 bool isUninstallPending = item.Prefab.SwappableItem != null && item.PendingItemSwap?.Identifier == item.Prefab.SwappableItem.ReplacementOnUninstall;
                 if (isUninstallPending) { canUninstall = false; }
@@ -1030,7 +1031,8 @@ namespace Barotrauma
                     buttonStyle: isPurchased ? "WeaponInstallButton" : "StoreAddToCrateButton").Frame);
 
                 if (!(frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton buyButton)) { continue; }
-                if (PlayerBalance >= price)
+
+                if (HasPermission && PlayerBalance >= price)
                 {
                     buyButton.Enabled = true;
                     buyButton.OnClicked += (button, o) =>
@@ -1272,7 +1274,7 @@ namespace Barotrauma
 
             if (!prefabFrame.BuyButton.TryUnwrap(out BuyButtonFrame buyButtonFrame)) { return; }
 
-            if (!HasPermission || !prefab.IsApplicable(submarine.Info) || (itemsOnSubmarine != null && !itemsOnSubmarine.Any(it => category.CanBeApplied(it, prefab))))
+            if (!prefab.IsApplicable(submarine.Info) || (itemsOnSubmarine != null && !itemsOnSubmarine.Any(it => category.CanBeApplied(it, prefab))))
             {
                 prefabFrame.Frame.Enabled = false;
                 prefabFrame.Description.Enabled = false;
@@ -1289,12 +1291,14 @@ namespace Barotrauma
                     ("[amount]", prefab.Price.GetBuyPrice(prefab, Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation, characterList).ToString()));
                 currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
                 {
-                    if (GameMain.NetworkMember != null)
+                    if (Campaign.UpgradeManager.TryPurchaseUpgrade(prefab, category))
                     {
-                        WaitForServerUpdate = true;
+                        if (GameMain.NetworkMember != null)
+                        {
+                            WaitForServerUpdate = true;
+                        }
+                        GameMain.Client?.SendCampaignState();
                     }
-                    Campaign.UpgradeManager.PurchaseUpgrade(prefab, category);
-                    GameMain.Client?.SendCampaignState();
                     return true;
                 }, overrideConfirmButtonSound: GUISoundType.ConfirmTransaction);
 
@@ -1722,7 +1726,7 @@ namespace Barotrauma
 
             if (buttonParent.FindChild(UpgradeStoreUserData.BuyButton, recursive: true) is GUIButton button)
             {
-                bool canBuy = !WaitForServerUpdate && !isMax && campaign.GetBalance() >= price && prefab.HasResourcesToUpgrade(Character.Controlled, currentLevel + 1);
+                bool canBuy = !WaitForServerUpdate && HasPermission && !isMax && campaign.GetBalance() >= price && prefab.HasResourcesToUpgrade(Character.Controlled, currentLevel + 1);
 
                 button.Enabled = canBuy;
             }
@@ -1935,7 +1939,7 @@ namespace Barotrauma
             return frames.ToArray();
         }
 
-        private bool HasPermission => true;
+        private static bool HasPermission => CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageCampaign);
 
         // just a shortcut to create new RectTransforms since all the new RectTransform and new Vector2 confuses my IDE (and me)
         private static RectTransform rectT(float x, float y, GUIComponent parentComponent, Anchor anchor = Anchor.TopLeft, ScaleBasis scaleBasis = ScaleBasis.Normal)

@@ -109,6 +109,8 @@ namespace Barotrauma
 
         public readonly bool AllowRetry;
 
+        public readonly bool ShowSonarLabels;
+
         public readonly bool ShowInMenus, ShowStartMessage;
 
         public readonly bool IsSideObjective;
@@ -219,11 +221,12 @@ namespace Barotrauma
                 }
             }
 
-            Reward      = element.GetAttributeInt("reward", 1);
-            ExperienceMultiplier = element.GetAttributeFloat("experiencemultiplier", 1.0f);
-            AllowRetry  = element.GetAttributeBool("allowretry", false);
-            ShowInMenus = element.GetAttributeBool("showinmenus", true);
-            ShowStartMessage = element.GetAttributeBool("showstartmessage", true);
+            Reward = element.GetAttributeInt(nameof(Reward), 1);
+            ExperienceMultiplier = element.GetAttributeFloat(nameof(ExperienceMultiplier), 1.0f);
+            AllowRetry = element.GetAttributeBool(nameof(AllowRetry), false);
+            ShowSonarLabels = element.GetAttributeBool(nameof(ShowSonarLabels), true);
+            ShowInMenus = element.GetAttributeBool(nameof(ShowInMenus), true);
+            ShowStartMessage = element.GetAttributeBool(nameof(ShowStartMessage), true);
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
 
             RequireWreck = element.GetAttributeBool(nameof(RequireWreck), false);
@@ -237,11 +240,12 @@ namespace Barotrauma
 
             BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
             RequiredLocationFaction = element.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
-            Commonness  = element.GetAttributeInt("commonness", 1);
-            AllowOtherMissionsInLevel = element.GetAttributeBool("allowothermissionsinlevel", true);
+            Commonness = element.GetAttributeInt(nameof(Commonness), 1);
+            AllowOtherMissionsInLevel = element.GetAttributeBool(nameof(AllowOtherMissionsInLevel), true);
+
             if (element.GetAttribute("difficulty") != null)
             {
-                int difficulty = element.GetAttributeInt("difficulty", MinDifficulty);
+                int difficulty = element.GetAttributeInt(nameof(Difficulty), MinDifficulty);
                 Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
             }
             MinLevelDifficulty = element.GetAttributeInt(nameof(MinLevelDifficulty), MinLevelDifficulty);

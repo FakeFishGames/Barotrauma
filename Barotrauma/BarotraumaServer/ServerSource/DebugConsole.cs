@@ -2107,9 +2107,33 @@ namespace Barotrauma
                 "freecam",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    client.UsingFreeCam = true;
-                    GameMain.Server.SetClientCharacter(client, null);
-                    client.SpectateOnly = true;
+                    if (client.UsingFreeCam)
+                    {
+                        // Exiting freecam - try to return to previous character
+                        Character prevCharacter = null;
+                        if (client.PreviousCharacter != null && client.PreviousCharacter.TryGetTarget(out prevCharacter) && 
+                            prevCharacter != null && !prevCharacter.IsDead && !prevCharacter.Removed)
+                        {
+                            GameMain.Server.SendConsoleMessage($"{client.Name}: Exiting freecam mode", client, Color.Yellow);
+                            client.UsingFreeCam = false;
+                            GameMain.Server.SetClientCharacter(client, prevCharacter);
+                            client.SpectateOnly = false;
+                        }
+                        else
+                        {
+                            GameMain.Server.SendConsoleMessage($"{client.Name}: Could not regain control of the previous character (dead or removed).", client, Color.Red);
+                        }
+                    }
+                    else
+                    {
+                        // Entering freecam - store current character ID
+                        GameMain.Server.SendConsoleMessage($"{client.Name}: Entering freecam mode", client, Color.Yellow);
+                        Character currentCharacter = client.Character;
+                        client.PreviousCharacter = new WeakReference<Character>(currentCharacter);
+                        client.UsingFreeCam = true;
+                        client.SpectateOnly = true;
+                        GameMain.Server.SetClientCharacter(client, null);
+                    }
                 }
             );
 

@@ -564,7 +564,7 @@ namespace Barotrauma.Items.Components
             {
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
 #if SERVER
-                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedItem == item)
+                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character != null)
                 {
                     GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }

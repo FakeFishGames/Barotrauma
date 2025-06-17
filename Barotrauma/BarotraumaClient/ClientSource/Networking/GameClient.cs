@@ -104,6 +104,10 @@ namespace Barotrauma.Networking
         private UInt16 lastQueueChatMsgID = 0; //last message added to the queue
         private readonly List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
+        public float BlockedBySpamFilterTimer;
+
+        public bool IsBlockedBySpamFilter => BlockedBySpamFilterTimer > 0.0f;
+
         public UInt16 LastSentEntityEventID;
 
 #if DEBUG
@@ -478,6 +482,8 @@ namespace Barotrauma.Networking
                 OnPermissionChanged.Invoke(new PermissionChangedEvent(permissions, permittedConsoleCommands));
             }
 #endif
+
+            BlockedBySpamFilterTimer -= deltaTime;
 
             foreach (Client c in ConnectedClients)
             {
@@ -866,6 +872,10 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.ACHIEVEMENT:
                     ReadAchievement(inc);
                     break;
+                case ServerPacketHeader.UNLOCKRECIPE:
+                    Identifier identifier = inc.ReadIdentifier();
+                    GameMain.GameSession.UnlockRecipe(identifier, showNotifications: true);
+                    break;
                 case ServerPacketHeader.ACHIEVEMENT_STAT:
                     ReadAchievementStat(inc);
                     break;
@@ -1067,13 +1077,15 @@ namespace Barotrauma.Networking
             CloseReconnectBox();
 
             GUI.ClearCursorWait();
+            
+            string disconnectMessage = $"Client received a disconnect message. Reason: {disconnectPacket.DisconnectReason}";
+            SteamTimelineManager.OnClientDisconnect(disconnectMessage);
 
             if (disconnectPacket.ShouldCreateAnalyticsEvent)
             {
                 GameAnalyticsManager.AddErrorEventOnce(
                     "GameClient.HandleDisconnectMessage",
-                    GameAnalyticsManager.ErrorSeverity.Debug,
-                    $"Client received a disconnect message. Reason: {disconnectPacket.DisconnectReason}");
+                    GameAnalyticsManager.ErrorSeverity.Debug, disconnectMessage);
             }
             
             if (disconnectPacket.DisconnectReason == DisconnectReason.ServerFull)
@@ -1233,7 +1245,16 @@ namespace Barotrauma.Networking
         
         private void OnConnectionInitializationComplete()
         {
-            UpdatePresence($"-connect \"{ToolBox.EscapeCharacters(ServerName)}\" {string.Join(",", serverEndpoints.Select(e => e.StringRepresentation))}");
+            //don't allow connecting through the friend list if we're connected to localhost (others can't join to "localhost")
+            //we could potentially find the public IP of the server (assuming it's a public server) from the Steam API, but maybe not worth the trouble?
+            bool connectedToLocalHost = serverEndpoints.All(e => e is LidgrenEndpoint lidgrenEndpoint && lidgrenEndpoint.Address.IsLocalHost);
+            string escapedServerName = ServerName.IsNullOrWhiteSpace() ? "Server" : ToolBox.EscapeCharacters(ServerName);
+            string connectCommand =            
+                connectedToLocalHost ? 
+                    string.Empty :
+                    $"-connect \"{escapedServerName}\" {string.Join(",", serverEndpoints.Select(e => e.StringRepresentation))}";
+
+            UpdatePresence(connectCommand);
 
             canStart = true;
             connected = true;
@@ -2148,10 +2169,13 @@ namespace Barotrauma.Networking
 
                         if (lobbyUpdated)
                         {
+                            //we don't want the client to create any network events
+                            //when they modify the server lobby to match the server state as a result of this message
+                            ServerSettings.SuppressNetworkMessages = true;
+
                             var prevDispatcher = GUI.KeyboardDispatcher.Subscriber;
 
                             UInt16 updateID = inc.ReadUInt16();
-
 
                             UInt16 settingsLen = inc.ReadUInt16();
                             byte[] settingsData = inc.ReadBytes(settingsLen);
@@ -2297,6 +2321,9 @@ namespace Barotrauma.Networking
                         }
 
                         lastSentChatMsgID = inc.ReadUInt16();
+
+                        ServerSettings.SuppressNetworkMessages = false;
+
                         break;
                     case ServerNetSegment.ClientList:
                         ReadClientList(inc);
@@ -3084,6 +3111,7 @@ namespace Barotrauma.Networking
         public void RequestSelectSub(SubmarineInfo sub, SelectedSubType type)
         {
             if (!HasPermission(ClientPermissions.SelectSub) || sub == null) { return; }
+            if (ServerSettings.SuppressNetworkMessages) { return; }
 
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ClientPacketHeader.SERVER_COMMAND);
@@ -3384,6 +3412,10 @@ namespace Barotrauma.Networking
             else if (Screen.Selected == GameMain.NetLobbyScreen)
             {
                 msgBox = GameMain.NetLobbyScreen.ChatInput;
+            }
+            if (msgBox != null)
+            {
+                msgBox.Enabled = !IsBlockedBySpamFilter;
             }
 
             UpdateLogButtonVisibility();

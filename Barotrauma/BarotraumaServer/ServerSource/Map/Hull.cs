@@ -30,8 +30,8 @@ namespace Barotrauma
             //don't create updates if all clients are very far from the hull
             float hullUpdateDistanceSqr = NetConfig.HullUpdateDistance * NetConfig.HullUpdateDistance;
             if (!GameMain.Server.ConnectedClients.Any(c => 
-                    c.Character != null && 
-                    Vector2.DistanceSquared(c.Character.WorldPosition, WorldPosition) < hullUpdateDistanceSqr))
+                    (c.Character != null && Vector2.DistanceSquared(c.Character.WorldPosition, WorldPosition) < hullUpdateDistanceSqr) ||
+                    (c.SpectatePos != null && Vector2.DistanceSquared(c.SpectatePos.Value, WorldPosition) < hullUpdateDistanceSqr)) )
             {
                 return;
             }
@@ -74,6 +74,11 @@ namespace Barotrauma
                 backgroundSectionUpdateTimer = 0;
                 pendingSectionUpdates.Clear();
             }
+        }
+
+        public void ForceStatusUpdate()
+        {
+            statusUpdateTimer = NetConfig.SparseHullUpdateInterval;
         }
 
 
@@ -136,6 +141,12 @@ namespace Barotrauma
                     }
 
                     WaterVolume = newWaterVolume;
+
+                    if (newFireSources.Length != FireSources.Count)
+                    {
+                        //number of fire sources has changed, force a network update
+                        ForceStatusUpdate();
+                    }
 
                     for (int i = 0; i < newFireSources.Length; i++)
                     {

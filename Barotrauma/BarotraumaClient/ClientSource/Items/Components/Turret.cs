@@ -150,16 +150,16 @@ namespace Barotrauma.Items.Components
                         crosshairPointerSprite = new Sprite(subElement, path: textureDir);
                         break;
                     case "startmovesound":
-                        startMoveSound = RoundSound.Load(subElement, false);
+                        startMoveSound = RoundSound.Load(subElement);
                         break;
                     case "endmovesound":
-                        endMoveSound = RoundSound.Load(subElement, false);
+                        endMoveSound = RoundSound.Load(subElement);
                         break;
                     case "movesound":
-                        moveSound = RoundSound.Load(subElement, false);
+                        moveSound = RoundSound.Load(subElement);
                         break;
                     case "chargesound":
-                        chargeSound = RoundSound.Load(subElement, false);
+                        chargeSound = RoundSound.Load(subElement);
                         break;
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));

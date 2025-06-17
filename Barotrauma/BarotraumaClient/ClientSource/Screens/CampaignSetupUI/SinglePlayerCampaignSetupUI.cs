@@ -320,14 +320,14 @@ namespace Barotrauma
                     if (string.IsNullOrWhiteSpace(sender.Text))
                     {
                         characterInfo.Name = characterInfo.GetRandomName(Rand.RandSync.Unsynced);
-                        sender.Text = characterInfo.Name;
                         sender.UserData = "random";
                     }
                     else
                     {
-                        characterInfo.Name = sender.Text;
+                        characterInfo.Rename(sender.Text);
                         sender.UserData = "user";
                     }
+                    sender.Text = characterInfo.Name;
                 };
                 characterName.OnEnterPressed += (sender, text) =>
                 {
@@ -593,6 +593,8 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.03f
             };
+
+            CreateSaveFilteringHeader(leftColumn);
 
             saveList = new GUIListBox(new RectTransform(Vector2.One, leftColumn.RectTransform))
             {

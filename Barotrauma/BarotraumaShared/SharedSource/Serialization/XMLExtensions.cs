@@ -239,6 +239,16 @@ namespace Barotrauma
             return element.GetAttributeIdentifierArray(key, null, trim)?.ToImmutableHashSet()
                    ?? defaultValue;
         }
+        
+        public static float? GetAttributeNullableFloat(this XElement element, string attributeName)
+        {
+            if (element.GetAttribute(attributeName) is XAttribute attribute)
+            {
+                // if there is an error in parsing, we will return the default value, which may cause edge case errors down the line
+                return GetAttributeFloat(attribute, 0.0f);
+            }
+            return null;
+        }
 
         public static float GetAttributeFloat(this XElement element, float defaultValue, params string[] matchingAttributeName)
         {
@@ -253,7 +263,7 @@ namespace Barotrauma
 
             return defaultValue;
         }
-
+        
         public static float GetAttributeFloat(this XElement element, string name, float defaultValue) => GetAttributeFloat(element?.GetAttribute(name), defaultValue);
 
         public static float GetAttributeFloat(this XAttribute attribute, float defaultValue)
@@ -351,6 +361,16 @@ namespace Barotrauma
                 return true;
             }
             return false;
+        }
+        
+        public static int? GetAttributeNullableInt(this XElement element, string attributeName)
+        {
+            if (element.GetAttribute(attributeName) is XAttribute attribute)
+            {
+                // if there is an error in parsing, we will return the default value, which may cause edge case errors down the line
+                return GetAttributeInt(attribute, 0);
+            }
+            return null;
         }
 
         public static int GetAttributeInt(this XElement element, string name, int defaultValue) => GetAttributeInt(element?.GetAttribute(name), defaultValue);

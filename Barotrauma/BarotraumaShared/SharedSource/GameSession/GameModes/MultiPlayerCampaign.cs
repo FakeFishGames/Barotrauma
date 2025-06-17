@@ -161,23 +161,7 @@ namespace Barotrauma
         /// </summary>
         private void Load(XElement element)
         {
-            PurchasedLostShuttlesInLatestSave = element.GetAttributeBool("purchasedlostshuttles", false);
-            PurchasedHullRepairsInLatestSave = element.GetAttributeBool("purchasedhullrepairs", false);
-            PurchasedItemRepairsInLatestSave = element.GetAttributeBool("purchaseditemrepairs", false);
-            CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
-            if (CheatsEnabled)
-            {
-                DebugConsole.CheatsEnabled = true;
-                if (!AchievementManager.CheatsEnabled)
-                {
-                    AchievementManager.CheatsEnabled = true;
-#if CLIENT
-                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive achievements until you restart the game.");       
-#else
-                    DebugConsole.NewMessage("Cheat commands have been enabled.", Color.Red);
-#endif
-                }
-            }
+            LoadSaveSharedSingleAndMultiplayer(element);
 
             foreach (var subElement in element.Elements())
             {
@@ -215,29 +199,10 @@ namespace Barotrauma
                             }
                         }
                         break;
-                    case "upgrademanager":
-                    case "pendingupgrades":
-                        UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: false);
-                        break;
                     case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
                         CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
                         CrewManager.AddCharacterElements(subElement);
                         ActiveOrdersElement = subElement.GetChildElement("activeorders");
-                        break;
-                    case "cargo":
-                        CargoManager?.LoadPurchasedItems(subElement);
-                        break;
-                    case "pets":
-                        petsElement = subElement;
-                        break;
-                    case "stats":
-                        LoadStats(subElement);
-                        break;
-                    case "eventmanager":
-                        GameMain.GameSession.EventManager.Load(subElement);
-                        break;
-                    case Wallet.LowerCaseSaveElementName:
-                        Bank = new Wallet(Option<Character>.None(), subElement);
                         break;
 #if SERVER
                     case "traitormanager":
@@ -251,15 +216,6 @@ namespace Barotrauma
                         break;
 #endif
                 }
-            }
-
-            int oldMoney = element.GetAttributeInt("money", 0);
-            if (oldMoney > 0)
-            {
-                Bank = new Wallet(Option<Character>.None())
-                {
-                    Balance = oldMoney
-                };
             }
 
             UpgradeManager ??= new UpgradeManager(this);

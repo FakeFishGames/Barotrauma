@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
@@ -132,10 +133,30 @@ namespace Barotrauma
         {
             public readonly Identifier ItemPrefabIdentifier;
 
-            public ItemPrefab ItemPrefab => 
-                ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
-                : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab;
-            
+            [MaybeNull, AllowNull]
+            public ItemPrefab cachedItemPrefab;
+
+            [MaybeNull, AllowNull]
+            private Md5Hash prevContentPackagesHash;
+
+            [MaybeNull]
+            public ItemPrefab ItemPrefab
+            {
+                get
+                {
+                    if (prevContentPackagesHash == null ||
+                        !prevContentPackagesHash.Equals(ContentPackageManager.EnabledPackages.MergedHash))
+                    {
+                        cachedItemPrefab = ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab)
+                                               ? prefab
+                                               : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab;
+                        prevContentPackagesHash = ContentPackageManager.EnabledPackages.MergedHash;
+                    }
+
+                    return cachedItemPrefab;
+                }
+            }
+
             public override UInt32 UintIdentifier { get; }
 
             public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab == null ? Enumerable.Empty<ItemPrefab>() : ItemPrefab.ToEnumerable();
@@ -145,7 +166,7 @@ namespace Barotrauma
 
             public override bool MatchesItem(Item item)
             {
-                return item?.Prefab.Identifier == ItemPrefabIdentifier;
+                return item?.Prefab.Identifier == (ItemPrefab?.Identifier ?? ItemPrefabIdentifier);
             }
 
             public RequiredItemByIdentifier(Identifier itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition, LocalizedString overrideDescription, LocalizedString overrideHeader) :
@@ -711,6 +732,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.No, description: "Hides the condition displayed in the item's tooltip.")]
         public bool HideConditionInTooltip { get; set; }
 
+        [Serialize("", IsPropertySaveable.No, description: "If set, displays if the given fabrication recipe has been unlocked or not in the tooltip. The actual unlocking of the recipe should be handled in a status effect.")]
+        public Identifier UnlockedRecipeInToolTip { get; set; }
+
         //if true and the item has trigger areas defined, characters need to be within the trigger to interact with the item
         //if false, trigger areas define areas that can be used to highlight the item
         [Serialize(true, IsPropertySaveable.No)]
@@ -864,7 +888,7 @@ namespace Barotrauma
         [Serialize(10.0f, IsPropertySaveable.No)]
         public float MaxScale { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, description: "Bots avoid rooms with dangerous items in them.")]
         public bool IsDangerous { get; private set; }
 
         private int maxStackSize;
@@ -1284,6 +1308,11 @@ namespace Barotrauma
             this.PreferredContainers = preferredContainers.ToImmutableArray();
             this.LevelCommonness = levelCommonness.ToImmutableDictionary();
             this.LevelQuantity = levelQuantity.ToImmutableDictionary();
+
+            //flipping holdable items vertically is not properly supported (uses the orientation of the physics body, which depends on which direction the character holding the item is facing)
+            //so let's by default make the item non-flippable, but if there's some use case where the item needs to flip vertically, it can be enabled by explicitly defining it in the XML.
+            bool canFlipYByDefault = ConfigElement.GetChildElement(nameof(Holdable)) == null;
+            CanFlipY = ConfigElement.GetAttributeBool(nameof(CanFlipY), def: canFlipYByDefault);
 
             // Backwards compatibility
             if (storePrices.Any())

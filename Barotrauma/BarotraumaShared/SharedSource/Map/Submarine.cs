@@ -1141,6 +1141,17 @@ namespace Barotrauma
                 }
             }
 
+            foreach (var dockingPort in DockingPort.List)
+            {
+                //a little hacky: undock and redock to ensure the hulls and gaps between docking ports are correct
+                //after all the parts of the submarine have been flipped and moved to correct places.
+                if (dockingPort.DockingTarget is { } dockingTarget) 
+                {
+                    dockingPort.Undock(); 
+                    dockingPort.Dock(dockingTarget); 
+                }
+            }
+
             Item.UpdateHulls();
             Gap.UpdateHulls();
 #if CLIENT
@@ -2090,6 +2101,10 @@ namespace Barotrauma
                 foreach (Submarine sub in _loaded)
                 {
                     sub.Remove();
+                    if (sub.Info.LazyLoad)
+                    {
+                        sub.Info.UnloadSubmarineElement();
+                    }
                 }
 
                 loaded.Clear();

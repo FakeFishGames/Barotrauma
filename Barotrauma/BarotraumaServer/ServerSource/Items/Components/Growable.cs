@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.WriteRangedSingle(Health, 0f, (float)MaxHealth, 8);
+            msg.WriteRangedSingle(Health, 0f, (float)MaxWater, 8);
             if (TryExtractEventData(extraData, out EventData eventData))
             {
                 int offset = eventData.Offset;

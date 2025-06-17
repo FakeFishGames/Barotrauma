@@ -168,6 +168,17 @@ namespace Barotrauma
             }
         }
 
+        protected override void MissionStateChanged(int previousState)
+        {
+            // detect successful scanned targets increasing after scan is completed
+            if (previousState < State)
+            {
+#if CLIENT
+                SteamTimelineManager.OnScanSuccessful(this);
+#endif
+            }
+        }
+
         private void GetScanners()
         {
             foreach (var startingItem in startingItems)

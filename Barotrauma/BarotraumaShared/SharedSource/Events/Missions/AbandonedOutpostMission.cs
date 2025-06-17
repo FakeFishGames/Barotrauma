@@ -156,9 +156,34 @@ namespace Barotrauma
                 }
             }
         }
+
+        private int previousKillTargetsRemaining = -1;
+
+        private void TrackKillTargetCount()
+        {
+            if (requireKill.Count == 0) { return; }
+            
+            if (previousKillTargetsRemaining == -1)
+            {
+                previousKillTargetsRemaining = requireKill.Count();
+            }
+            
+            int killTargetsRemaining = requireKill.Count(c => !c.Removed && !c.IsDead && !(c.LockHands && c.Submarine == Submarine.MainSub));
+            // at least one of the targets have been eliminated
+            if (killTargetsRemaining < previousKillTargetsRemaining)
+            {
+#if CLIENT
+                SteamTimelineManager.OnOutpostTargetEliminated(this);
+#endif
+            }
+            
+            previousKillTargetsRemaining = killTargetsRemaining;
+        }
         
         protected override void UpdateMissionSpecific(float deltaTime)
         {
+            TrackKillTargetCount();
+            
             if (State != HostagesKilledState)
             {
                 if (requireRescue.Any(r => r.Removed || r.IsDead))

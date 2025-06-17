@@ -273,7 +273,7 @@ namespace Barotrauma
 
             new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1f), topLayout.RectTransform), onDraw: (batch, component) =>
             {
-                info.DrawPortrait(batch, component.Rect.Location.ToVector2(), Vector2.Zero, component.Rect.Width, false, false);
+                info.DrawIcon(batch, component.Rect.Center.ToVector2(), component.Rect.Size.ToVector2());
             });
 
             GUILayoutGroup nameLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1f), topLayout.RectTransform))
@@ -327,7 +327,7 @@ namespace Barotrauma
                     if (extraTalent.IsHiddenExtraTalent) { continue; }
                     GUIImage talentImg = new GUIImage(new RectTransform(Vector2.One, extraTalentList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), sprite: extraTalent.Icon, scaleToFit: true)
                     {
-                        ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{extraTalent.DisplayName}‖color:end‖" + "\n\n" + ToolBox.ExtendColorToPercentageSigns(extraTalent.Description.Value)),
+                        ToolTip = GetTalentTooltip(extraTalent, characterInfo),
                         Color = GUIStyle.Green
                     };
                 }
@@ -637,7 +637,7 @@ namespace Barotrauma
                 GUIFrame croppedTalentFrame = new GUIFrame(new RectTransform(Vector2.One, talentFrame.RectTransform, anchor: Anchor.Center, scaleBasis: ScaleBasis.BothHeight), style: null);
                 GUIButton talentButton = new GUIButton(new RectTransform(Vector2.One, croppedTalentFrame.RectTransform, anchor: Anchor.Center), style: null)
                 {
-                    ToolTip = CreateTooltip(talent, characterInfo),
+                    ToolTip = GetTalentTooltip(talent, characterInfo),
                     UserData = talent.Identifier,
                     PressedColor = pressedColor,
                     Enabled = info.Character != null,
@@ -702,24 +702,6 @@ namespace Barotrauma
                         return true;
                     },
                 };
-
-                static RichString CreateTooltip(TalentPrefab talent, CharacterInfo? character)
-                {
-                    LocalizedString progress = string.Empty;
-
-                    if (character is not null && talent.TrackedStat.TryUnwrap(out var stat))
-                    {
-                        var statValue = character.GetSavedStatValue(StatTypes.None, stat.PermanentStatIdentifier);
-                        var intValue = (int)MathF.Round(statValue);
-                        progress = "\n\n";
-                        progress += statValue < stat.Max
-                            ? TextManager.GetWithVariables("talentprogress", ("[amount]", intValue.ToString()), ("[max]", stat.Max.ToString()))
-                            : TextManager.Get("talentprogresscompleted");
-                    }
-
-                    RichString tooltip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{talent.DisplayName}‖color:end‖\n\n{ToolBox.ExtendColorToPercentageSigns(talent.Description.Value)}{progress}");
-                    return tooltip;
-                }
 
                 talentButton.Color = talentButton.HoverColor = talentButton.PressedColor = talentButton.SelectedColor = talentButton.DisabledColor = Color.Transparent;
 
@@ -812,6 +794,24 @@ namespace Barotrauma
                 OnClicked = ApplyTalentSelection,
             };
             GUITextBlock.AutoScaleAndNormalize(talentResetButton.TextBlock, talentApplyButton.TextBlock);
+        }
+
+        private static RichString GetTalentTooltip(TalentPrefab talent, CharacterInfo? character)
+        {
+            LocalizedString progress = string.Empty;
+
+            if (character is not null && talent.TrackedStat.TryUnwrap(out var stat))
+            {
+                var statValue = character.GetSavedStatValue(StatTypes.None, stat.PermanentStatIdentifier);
+                var intValue = (int)MathF.Round(statValue);
+                progress = "\n\n";
+                progress += statValue < stat.Max
+                    ? TextManager.GetWithVariables("talentprogress", ("[amount]", intValue.ToString()), ("[max]", stat.Max.ToString()))
+                    : TextManager.Get("talentprogresscompleted");
+            }
+
+            RichString tooltip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{talent.DisplayName}‖color:end‖\n\n{ToolBox.ExtendColorToPercentageSigns(talent.Description.Value)}{progress}");
+            return tooltip;
         }
 
         private bool ResetTalentSelection(GUIButton guiButton, object userData)

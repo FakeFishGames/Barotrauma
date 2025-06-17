@@ -67,6 +67,7 @@ namespace Barotrauma.Abilities
                 {
                     if (Character.HasTalent(identifier)) { continue; }
                     Character.GiveTalent(identifier);
+                    Character.Info.ResettableExtraTalents.Add(identifier);
                 }
             }
 

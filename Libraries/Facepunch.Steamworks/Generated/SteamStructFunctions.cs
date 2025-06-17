@@ -15,7 +15,7 @@ namespace Steamworks.Data
 		internal static extern Utf8StringPointer InternalGetName( ref gameserveritem_t self );
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_gameserveritem_t_SetName", CallingConvention = Platform.CC)]
-		internal static extern void InternalSetName( ref gameserveritem_t self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pName );
+		internal static extern void InternalSetName( ref gameserveritem_t self, IntPtr pName );
 		
 	}
 	
@@ -103,7 +103,7 @@ namespace Steamworks.Data
 		internal static extern void InternalSetPtr( ref NetKeyValue self, NetConfig eVal, IntPtr data );
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingConfigValue_t_SetString", CallingConvention = Platform.CC)]
-		internal static extern void InternalSetString( ref NetKeyValue self, NetConfig eVal, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string data );
+		internal static extern void InternalSetString( ref NetKeyValue self, NetConfig eVal, IntPtr data );
 		
 	}
 	
@@ -130,7 +130,7 @@ namespace Steamworks.Data
 		
 		[return: MarshalAs( UnmanagedType.I1 )]
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_SetXboxPairwiseID", CallingConvention = Platform.CC)]
-		internal static extern bool InternalSetXboxPairwiseID( ref NetIdentity self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszString );
+		internal static extern bool InternalSetXboxPairwiseID( ref NetIdentity self, IntPtr pszString );
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_GetXboxPairwiseID", CallingConvention = Platform.CC)]
 		internal static extern Utf8StringPointer InternalGetXboxPairwiseID( ref NetIdentity self );
@@ -140,12 +140,6 @@ namespace Steamworks.Data
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_GetPSNID", CallingConvention = Platform.CC)]
 		internal static extern ulong InternalGetPSNID( ref NetIdentity self );
-		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_SetStadiaID", CallingConvention = Platform.CC)]
-		internal static extern void InternalSetStadiaID( ref NetIdentity self, ulong id );
-		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_GetStadiaID", CallingConvention = Platform.CC)]
-		internal static extern ulong InternalGetStadiaID( ref NetIdentity self );
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_SetIPAddr", CallingConvention = Platform.CC)]
 		internal static extern void InternalSetIPAddr( ref NetIdentity self, ref NetAddress addr );
@@ -175,7 +169,7 @@ namespace Steamworks.Data
 		
 		[return: MarshalAs( UnmanagedType.I1 )]
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_SetGenericString", CallingConvention = Platform.CC)]
-		internal static extern bool InternalSetGenericString( ref NetIdentity self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszString );
+		internal static extern bool InternalSetGenericString( ref NetIdentity self, IntPtr pszString );
 		
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_GetGenericString", CallingConvention = Platform.CC)]
 		internal static extern Utf8StringPointer InternalGetGenericString( ref NetIdentity self );
@@ -196,7 +190,7 @@ namespace Steamworks.Data
 		
 		[return: MarshalAs( UnmanagedType.I1 )]
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIdentity_ParseString", CallingConvention = Platform.CC)]
-		internal static extern bool InternalParseString( ref NetIdentity self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszStr );
+		internal static extern bool InternalParseString( ref NetIdentity self, IntPtr pszStr );
 		
 	}
 	
@@ -234,7 +228,7 @@ namespace Steamworks.Data
 		
 		[return: MarshalAs( UnmanagedType.I1 )]
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIPAddr_ParseString", CallingConvention = Platform.CC)]
-		internal static extern bool InternalParseString( ref NetAddress self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pszStr );
+		internal static extern bool InternalParseString( ref NetAddress self, IntPtr pszStr );
 		
 		[return: MarshalAs( UnmanagedType.I1 )]
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingIPAddr_IsEqualTo", CallingConvention = Platform.CC)]

@@ -653,7 +653,10 @@ namespace Barotrauma
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)), character.Info.IsDisguisedAsAnother);
                         float yOffset = (GameMain.GameSession?.Campaign is MultiPlayerCampaign ? -10 : 4) * GUI.Scale;
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, yOffset), targetWidth: HUDLayoutSettings.PortraitArea.Width, true, character.Info.IsDisguisedAsAnother);
+
+                        character.Info?.DrawIcon(spriteBatch, 
+                            new Vector2(HUDLayoutSettings.PortraitArea.Center.X - 12 * GUI.Scale, HUDLayoutSettings.PortraitArea.Center.Y), HUDLayoutSettings.PortraitArea.Size.ToVector2(),
+                            flip: true);
                         character.Info.DrawForeground(spriteBatch);
                     }
                     mouseOnPortrait = MouseOnCharacterPortrait() && !character.ShouldLockHud();
@@ -733,8 +736,9 @@ namespace Barotrauma
 
             string focusName = character.FocusedCharacter.Info == null ? character.FocusedCharacter.DisplayName : character.FocusedCharacter.Info.DisplayName;
             Vector2 textPos = startPos;
-            Vector2 textSize = GUIStyle.Font.MeasureString(focusName);
-            Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString(focusName);
+            //measure arbitrary one-line text instead of the potentially-multi-line name
+            Vector2 textSize = GUIStyle.Font.MeasureString("T");
+            Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString("T");
 
             textPos -= new Vector2(textSize.X / 2, textSize.Y);
 

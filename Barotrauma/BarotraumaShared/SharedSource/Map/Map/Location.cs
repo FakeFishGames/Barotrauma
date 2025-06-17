@@ -478,6 +478,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Missions that are available and visible in menus (<see cref="MissionPrefab.ShowInMenus"/>)
+        /// </summary>
+        public IEnumerable<Mission> AvailableAndVisibleMissions => AvailableMissions.Where(m => m.Prefab.ShowInMenus);
+
         private readonly List<Mission> selectedMissions = new List<Mission>();
         public IEnumerable<Mission> SelectedMissions
         {
@@ -580,9 +585,9 @@ namespace Barotrauma
             return $"Location ({DisplayName ?? "null"})";
         }
 
-        public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
+        public Location(Vector2 mapPosition, int? zone, Identifier? biomeId, Random rand, bool requireOutpost = false, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
-            Type = OriginalType = forceLocationType ?? LocationType.Random(rand, zone, requireOutpost);
+            Type = OriginalType = forceLocationType ?? LocationType.Random(rand, zone, biomeId, requireOutpost);
             CreateRandomName(Type, rand, existingLocations);
             MapPosition = mapPosition;
             PortraitId = ToolBox.StringToInt(nameIdentifier.Value);
@@ -782,12 +787,12 @@ namespace Barotrauma
             }
         }
 
-        public static Location CreateRandom(Vector2 position, int? zone, Random rand, bool requireOutpost, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
+        public static Location CreateRandom(Vector2 position, int? zone, Identifier? biomeId, Random rand, bool requireOutpost, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
-            return new Location(position, zone, rand, requireOutpost, forceLocationType, existingLocations);
+            return new Location(position, zone, biomeId, rand, requireOutpost, forceLocationType, existingLocations);
         }
 
-        public void ChangeType(CampaignMode campaign, LocationType newType, bool createStores = true)
+        public void ChangeType(CampaignMode campaign, LocationType newType, bool createStores = true, bool unlockInitialMissions = true)
         {
             if (newType == Type) { return; }
 
@@ -826,10 +831,10 @@ namespace Barotrauma
                 if (Type.Faction == Identifier.Empty) { Faction = null; }
                 if (Type.SecondaryFaction == Identifier.Empty) { SecondaryFaction = null; }
             }
-            
-            if (!IsCriticallyRadiated())
+
+            if (unlockInitialMissions && !IsCriticallyRadiated())
             {
-                UnlockInitialMissions(Rand.RandSync.Unsynced);    
+                UnlockInitialMissions(Rand.RandSync.Unsynced);
             }
 
             if (createStores)
@@ -1257,7 +1262,7 @@ namespace Barotrauma
         {
             if (type?.NameFormats == null || !type.NameFormats.Any() || nameFormatIndex < 0)
             {
-                return TextManager.Get(nameId);
+                return TextManager.Get(nameId).Fallback(nameId.Value);
             }
             return type.NameFormats[nameFormatIndex % type.NameFormats.Count].Replace("[name]", TextManager.Get(nameId).Value);
         }

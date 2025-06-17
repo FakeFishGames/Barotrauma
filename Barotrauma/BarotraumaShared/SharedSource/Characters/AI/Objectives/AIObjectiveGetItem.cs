@@ -49,6 +49,13 @@ namespace Barotrauma
         public const float DefaultReach = 100;
         public const float MaxReach = 150;
 
+        /// <summary>
+        /// Is the goal of this objective to get diving gear (i.e. has it been created by <see cref="AIObjectiveFindDivingGear"/>)? 
+        /// If so, the objective won't attempt to create another objective if the path requires diving gear 
+        /// (wouldn't make sense to start looking for diving gear so the bot can get to a room they're trying to get diving gear from!)
+        /// </summary>
+        public bool IsFindDivingGearSubObjective;
+
         public bool AllowToFindDivingGear { get; set; } = true;
         public bool MustBeSpecificItem { get; set; }
 
@@ -378,6 +385,7 @@ namespace Barotrauma
                     {
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear, closeEnough: DefaultReach)
                         {
+                            IsFindDivingGearSubObjective = IsFindDivingGearSubObjective,
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
                             AbortCondition = obj => targetItem == null || (targetItem.GetRootInventoryOwner() is Entity owner && owner != moveToTarget && owner != character),
                             SpeakIfFails = false,

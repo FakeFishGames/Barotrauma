@@ -233,6 +233,7 @@ namespace Barotrauma.Items.Components
                 var cloneNode = InputOutputNodes[ioIndex];
 
                 cloneNode.Position = origNode.Position;
+                cloneNode.ReplaceAllConnectionLabelOverrides(origNode.ConnectionLabelOverrides);
             }
 
             if (!clonedContainedItems.Any()) { return; }

@@ -347,7 +347,10 @@ namespace Barotrauma
             useItemTimer = 0.05f;
             StartUsingItem();
 
-            if (!allowMovement)
+            //make the character move towards the item they're using...
+            if (!allowMovement && 
+                //...except if they've selected an item that controls the character's direction (e.g. a periscope)
+                character.SelectedSecondaryItem?.GetComponent<Controller>() is not { Direction: Direction.Left or Direction.Right })
             {
                 TargetMovement = Vector2.Zero;
                 TargetDir = handWorldPos.X > character.WorldPosition.X ? Direction.Right : Direction.Left;

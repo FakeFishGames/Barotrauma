@@ -778,34 +778,36 @@ namespace Barotrauma.Sounds
             while (!killThread)
             {
                 killThread = true;
-                for (int i = 0; i < playingChannels.Length; i++)
+                for (int sourcePoolIndex = 0; sourcePoolIndex < playingChannels.Length; sourcePoolIndex++)
                 {
-                    lock (playingChannels[i])
+                    lock (playingChannels[sourcePoolIndex])
                     {
-                        for (int j = 0; j < playingChannels[i].Length; j++)
+                        for (int channelIndex = 0; channelIndex < playingChannels[sourcePoolIndex].Length; channelIndex++)
                         {
-                            if (playingChannels[i][j] == null) { continue; }
-                            if (playingChannels[i][j].IsStream)
+                            var channel = playingChannels[sourcePoolIndex][channelIndex];
+
+                            if (channel == null) { continue; }
+                            if (channel.FadingOutAndDisposing)
                             {
-                                if (playingChannels[i][j].IsPlaying)
+                                killThread = false;
+                                channel.Gain -= 0.1f;
+                                if (channel.Gain <= 0.0f)
+                                {
+                                    channel.Dispose();
+                                    playingChannels[sourcePoolIndex][channelIndex] = null;
+                                }
+                            }
+                            else if (channel.IsStream)
+                            {
+                                if (channel.IsPlaying)
                                 {
                                     killThread = false;
-                                    playingChannels[i][j].UpdateStream();
+                                    channel.UpdateStream();
                                 }
                                 else
                                 {
-                                    playingChannels[i][j].Dispose();
-                                    playingChannels[i][j] = null;
-                                }
-                            }
-                            else if (playingChannels[i][j].FadingOutAndDisposing)
-                            {
-                                killThread = false;
-                                playingChannels[i][j].Gain -= 0.1f;
-                                if (playingChannels[i][j].Gain <= 0.0f)
-                                {
-                                    playingChannels[i][j].Dispose();
-                                    playingChannels[i][j] = null;
+                                    channel.Dispose();
+                                    playingChannels[sourcePoolIndex][channelIndex] = null;
                                 }
                             }
                         }

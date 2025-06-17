@@ -20,7 +20,7 @@ namespace Barotrauma
                     Steamworks.FriendState.Offline => FriendStatus.Offline,
                     Steamworks.FriendState.Invisible => FriendStatus.Offline,
                     _ when steamFriend.IsPlayingThisGame => FriendStatus.PlayingBarotrauma,
-                    _ when steamFriend.GameInfo is { GameID: > 0 } => FriendStatus.PlayingAnotherGame,
+                    _ when steamFriend.GameInfo is { GameID.Value: > 0 } => FriendStatus.PlayingAnotherGame,
                     _ => FriendStatus.NotPlaying
                 },
                 serverName: steamFriend.GetRichPresence("servername") ?? "",
