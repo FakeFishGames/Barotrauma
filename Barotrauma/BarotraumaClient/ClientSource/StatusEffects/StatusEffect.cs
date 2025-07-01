@@ -152,6 +152,8 @@ namespace Barotrauma
 
         private bool ignoreMuffling;
 
+        private RoundSound lastPlayingSound;
+
         private void PlaySound(Entity entity, Hull hull, Vector2 worldPosition)
         {
             if (sounds.Count == 0) { return; }
@@ -204,6 +206,7 @@ namespace Barotrauma
             else
             {
                 soundChannel.Position = new Vector3(worldPosition, 0.0f);
+                if (lastPlayingSound != null && lastPlayingSound.Stream) { lastPlayingSound.LastStreamSeekPos = soundChannel.StreamSeekPos; }
             }
 
             KeepLoopingSoundAlive(soundChannel);
@@ -248,6 +251,11 @@ namespace Barotrauma
                 ignoreMuffling = selectedSound.IgnoreMuffling;
                 if (soundChannel != null)
                 {
+                    if (soundChannel.IsStream && lastPlayingSound == selectedSound)
+                    {
+                        soundChannel.StreamSeekPos = lastPlayingSound.LastStreamSeekPos;
+                    }
+                    lastPlayingSound = selectedSound;
                     soundChannel.Looping = loopSound;
                     KeepLoopingSoundAlive(soundChannel);
                 }

@@ -16,6 +16,8 @@ namespace Barotrauma
         public readonly bool Stream;
         public readonly bool IgnoreMuffling;
 
+        public int LastStreamSeekPos;
+
         public readonly bool MuteBackgroundMusic;
 
         public readonly string? Filename;

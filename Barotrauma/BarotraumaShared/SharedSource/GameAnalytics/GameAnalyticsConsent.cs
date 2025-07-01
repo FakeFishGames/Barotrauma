@@ -282,6 +282,8 @@ namespace Barotrauma
 
         private static async Task<Consent> RequestAnswerFromRemoteDatabase()
         {
+            await Task.Yield();
+
             static void error(string reason, Exception? exception)
             {
                 DebugConsole.ThrowError($"Error in {nameof(GameAnalyticsManager)}.{nameof(RequestAnswerFromRemoteDatabase)}: {reason}", exception);

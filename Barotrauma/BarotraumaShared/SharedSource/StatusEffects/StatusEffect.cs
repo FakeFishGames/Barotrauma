@@ -853,6 +853,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Disabled effects will no longer be executed. Used to make <see cref="oneShot">oneshot</> effects only execute once.
+        /// </summary>
         public bool Disabled { get; private set; }
 
         public static StatusEffect Load(ContentXElement element, string parentDebugName)

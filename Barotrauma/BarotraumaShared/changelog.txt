@@ -1,4 +1,16 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.9.8.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed RegEx components occasionally timing out for no apparent reason (even if the expression isn't particularly performance-intensive). Seemed to have been caused by RegEx changes in .NET 8.
+- Fixed the game sometimes freezing for a long time at a specific point during the loading screen. Only affected some players: the issue had to do with the game failing to connect to a server to check whether the player has given their consent collect gameplay analytics.
+- Fixed streamed sounds always starting from the beginning when they're re-played. Particularly noticeable in the night club modules, when the music always starts from the beginning if you step outside the range of the sounds. 
+- Fixed distance attenuation and positioning not working on the music played by jukeboxes and bar speakers (meaning they'd play at full volume regardless of your distance to the speakers).
+
+Modding:
+- Fixed oneshot delayed effects (which should only ever trigger once) still continuing to run some of the logic after the first trigger, causing an unnecessary performance hit. Did not seem to affect any vanilla items.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.9.7.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -10,7 +22,7 @@ Modding:
 - Fixed conditional's TargetSelf property not working on melee weapons.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-v1.9.6.0
+v1.9.6.0 (Summer Update 2025)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 Changes and additions:
@@ -159,7 +171,7 @@ v1.8.7.0
 - Fixed normal outpost events triggering in outpost that have been abandoned because of Jovian Radiation.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-v1.8.6.2
+v1.8.6.2 (Calm Before the Storm)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 - Fixed some icons still scaling incorrectly (e.g. location icons on the campaign map, device icons on the status monitor).
@@ -579,7 +591,7 @@ Modding:
 - Fixed outpost generation parameters that reference non-existent NPC prefabs causing a crash during outpost generation.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-v1.6.17.0
+v1.6.17.0 (Unto the Breach)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 - Fixed water currents stopping subs entirely (regardless of the size of the sub or the current).
@@ -1086,7 +1098,7 @@ v1.4.5.0
 - Fixed combat diving suit being slower than intended when using an underwater scooter.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-v1.4.4.1
+v1.4.4.1 (Blood in the Water)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 - Fixed welding objective completing automatically in the basic tutorial due to the reduced flooding rates.
@@ -1545,7 +1557,7 @@ v1.1.18.1
 - Fixed opening the "load game" menu crashing the game if you have any corrupted/unloadable saves in the save folder. In multiplayer, this would just prevent opening the campaign setup menu without any error messages.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-v1.1.18.0
+v1.1.18.0 (Treacherous Tides)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 - Updated translations.
@@ -2247,7 +2259,7 @@ v1.0.8.0
 - Fixed healing your crewmates causing your karma to decrease.
 
 ---------------------------------------------------------------------------------------------------------
-v1.0.7.0
+v1.0.7.0 
 ---------------------------------------------------------------------------------------------------------
 
 - Fixed mechanic tutorial getting stuck at the point where you need to weld a leak.
@@ -2330,7 +2342,7 @@ v1.0.1.0
 - Fixed ready checks not working.
 
 ---------------------------------------------------------------------------------------------------------
-v1.0.0.0
+v1.0.0.0 (Full Release)
 ---------------------------------------------------------------------------------------------------------
 
 Faction overhaul:
@@ -2470,7 +2482,6 @@ v0.21.6.0
 
 - Minor localization fixes.
 - Fixed some occasional crashes in the character editor.
-
 
 ---------------------------------------------------------------------------------------------------------
 v0.21.5.0
@@ -2958,7 +2969,7 @@ v0.19.8.0
 - Fixed "completed initialization before receiving content package order" error when trying to reconnect to a SteamP2P server.
 
 ---------------------------------------------------------------------------------------------------------
-v0.19.7.0
+v0.19.7.0 (Hoist the Sails)
 ---------------------------------------------------------------------------------------------------------
 
 Changes and additions: 
@@ -3339,7 +3350,7 @@ v0.18.9.0
 - Backwards compatibility: readded some mission events we'd removed since the previous update.
 
 ---------------------------------------------------------------------------------------------------------
-v0.18.8.0
+v0.18.8.0 (3rd Anniversary Update)
 ---------------------------------------------------------------------------------------------------------
 
 Balancing:
@@ -3629,7 +3640,7 @@ Fixes:
 - Fixed occasional mission mismatch errors in multiplayer when there's a hunting grounds or beacon mission in the level.
 
 ---------------------------------------------------------------------------------------------------------
-v0.17.10.0
+v0.17.10.0 (Urban Expanses)
 ---------------------------------------------------------------------------------------------------------
 
 Changes and additions:
@@ -3873,7 +3884,7 @@ v0.16.6.1
 - Fixed some of Spineling's spikes getting hidden for 30 seconds instead of 15.
 
 ---------------------------------------------------------------------------------------------------------
-v0.16.6.0
+v0.16.6.0 (Rising Tide)
 ---------------------------------------------------------------------------------------------------------
 
 Changes and additions:
@@ -4523,7 +4534,7 @@ v0.15.10.0
 - Fixed harpoon rope sometimes being drawn when it's already snapped.
 
 ---------------------------------------------------------------------------------------------------------
-v0.15.9.0
+v0.15.9.0 (Among the Ancients)
 ---------------------------------------------------------------------------------------------------------
 
 Alien ruin overhaul:
@@ -4855,7 +4866,7 @@ Modding:
 - Fixed crashing when trying to create a thalamus when there's no wreck AI configs available in the selected content packages.
 
 ---------------------------------------------------------------------------------------------------------
-v0.14.4.0
+v0.14.4.0 (Thunder Under the Ice)
 ---------------------------------------------------------------------------------------------------------
 
 Changes:
@@ -5045,7 +5056,7 @@ Modding:
 - Fixed crashing if a mod's version number is incorrectly formatted in filelist.xml.
 
 ---------------------------------------------------------------------------------------------------------
-v0.13.0.11
+v0.13.0.11 (Embrace the Abyss)
 ---------------------------------------------------------------------------------------------------------
 
 Campaign changes:
@@ -5334,7 +5345,7 @@ v0.12.0.1
 - Fixed ancient weapon being sometimes unable to damage ruin walls.
 
 ---------------------------------------------------------------------------------------------------------
-v0.12.0.0
+v0.12.0.0 (Cave Update)
 ---------------------------------------------------------------------------------------------------------
 
 Cave improvements:
@@ -5600,7 +5611,7 @@ v0.11.0.8
 - Fixed dancing coilguns.
 
 ---------------------------------------------------------------------------------------------------------
-v0.11.0.7
+v0.11.0.7 (Uncharted Depths)
 ---------------------------------------------------------------------------------------------------------
 
 Environment overhaul:
@@ -5808,7 +5819,7 @@ v0.10.6.1
 - Test changing the assignment logic for maintenance/operate orders: if the player doesn't specify the target character, use the bot who already is following the same order. The intention is to make it easier to change the target item of the order. The draw back is that ordering multiple bots to man the turrets now requires an extra step: specify the target character.
 
 ---------------------------------------------------------------------------------------------------------
-v0.10.6.0
+v0.10.6.0 (Halloween 2020: Creepy Creature Feature)
 ---------------------------------------------------------------------------------------------------------
 
 Changes and additions:
@@ -6300,7 +6311,7 @@ v0.10.1.0
 - Fixed initial campaign cinematic being shown to clients who join mid-campaign.
 
 ---------------------------------------------------------------------------------------------------------
-v0.10.0.0
+v0.10.0.0 (New Frontiers)
 ---------------------------------------------------------------------------------------------------------
 
 Improved campaign mode:
@@ -6369,7 +6380,7 @@ Bugfixes:
 - Fixed a bug where a waypoint lost all the references when it was selected and the user pressed over an UI element, like the save button.
 
 ---------------------------------------------------------------------------------------------------------
-v0.9.10.0
+v0.9.10.0 (Moloch-sized Update)
 ---------------------------------------------------------------------------------------------------------
 
 Additions and changes:

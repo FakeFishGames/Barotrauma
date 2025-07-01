@@ -1,11 +1,25 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace Barotrauma.Items.Components
 {
     class RegExFindComponent : ItemComponent
     {
-        private static readonly TimeSpan timeout = TimeSpan.FromMilliseconds(1);
+        /// <summary>
+        /// The timeout should be a lot shorter (used to be 1 ms), but there seems to be an issue in .NET 8 
+        /// that sometimes causes the evaluation to randomly take a significant amount of time 
+        /// (an expression that normally takes 20 ticks might sometimes take several milliseconds every few minutes).
+        /// So let's use a relatively long timeout instead, and measure the actual time the expression took ourselves.
+        /// </summary>
+        private static readonly TimeSpan timeout = TimeSpan.FromMilliseconds(50);
+
+        private static readonly TimeSpan shortTimeout = TimeSpan.FromMilliseconds(1);
+
+        private readonly Stopwatch stopwatch = new Stopwatch();
+        private bool timedOut;
+        private int timeOutsInARow;
+        const int MaxTimeOutsInARow = 3;
 
         private string expression;
 
@@ -18,6 +32,7 @@ namespace Barotrauma.Items.Components
         private Regex regex;
 
         private bool nonContinuousOutputSent;
+
 
         private int maxOutputLength;
         [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking issues.")]
@@ -80,7 +95,7 @@ namespace Barotrauma.Items.Components
                     return;
                 }
                 //reactivate the component, in case some faulty/malicious expression caused it to time out and deactivate itself
-                IsActive = true;
+                timedOut = false;
             }
         }
 
@@ -93,6 +108,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (timedOut)
+            {
+                item.SendSignal("TIMEOUT", "signal_out");
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(expression) || regex == null) { return; }
             if (!ContinuousOutput && nonContinuousOutputSent) { return; }
 
@@ -100,7 +121,26 @@ namespace Barotrauma.Items.Components
             {
                 try
                 {
+                    stopwatch.Restart();
                     Match match = regex.Match(receivedSignal);
+                    stopwatch.Stop();
+
+                    //workaround to regex timeout issues in .NET 8, see comment on the timeout variable
+                    if (stopwatch.Elapsed > shortTimeout)
+                    {
+                        timeOutsInARow++;
+                        //if the regex times out just once every now and then, it's a symptom of the .NET 8 bug,
+                        //if multiple times in a row, it's most likely a performance-intensive/malicious expression we should react to
+                        if (timeOutsInARow >= MaxTimeOutsInARow)
+                        {
+                            throw new RegexMatchTimeoutException();
+                        }
+                    }
+                    else
+                    {
+                        timeOutsInARow = 0;
+                    }
+
                     previousResult = match.Success;
                     previousGroups = UseCaptureGroup && previousResult ? match.Groups : null;
                     previousReceivedSignal = receivedSignal;
@@ -109,9 +149,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (e is RegexMatchTimeoutException)
                     {
-                        item.SendSignal("TIMEOUT", "signal_out");
-                        //deactivate the component if the expression caused it to time out
-                        IsActive = false;
+                        timedOut = true;
                     }
                     else
                     {

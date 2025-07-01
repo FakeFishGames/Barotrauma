@@ -2333,7 +2333,6 @@ namespace Barotrauma
 
         private void SendPendingNetworkUpdatesInternal()
         {
-            DebugConsole.NewMessage($"Sending status event for item {Name}", Color.Gray);
             CreateStatusEvent(loadingRound: false);
             lastSentCondition = condition;
             sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
