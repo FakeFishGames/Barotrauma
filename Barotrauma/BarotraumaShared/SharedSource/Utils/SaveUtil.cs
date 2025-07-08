@@ -65,23 +65,13 @@ namespace Barotrauma
         private static readonly string LegacySaveFolder = Path.Combine("Data", "Saves");
         private static readonly string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
 
-#if OSX
         //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
-        public static readonly string DefaultSaveFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
-            "Library",
-            "Application Support",
-            "Daedalic Entertainment GmbH",
-            "Barotrauma");
-#else
         //"C:/Users/*user*/AppData/Local/Daedalic Entertainment GmbH/" on Windows
         //"/home/*user*/.local/share/Daedalic Entertainment GmbH/" on Linux
         public static readonly string DefaultSaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Daedalic Entertainment GmbH",
             "Barotrauma");
-#endif
-
         public static string DefaultMultiplayerSaveFolder = Path.Combine(DefaultSaveFolder, "Multiplayer");
 
         public static readonly string SubmarineDownloadFolder = Path.Combine("Submarines", "Downloaded");
