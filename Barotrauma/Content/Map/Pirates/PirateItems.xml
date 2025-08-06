@@ -74,7 +74,7 @@
     <Body radius="30" density="15" />
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9" />
-      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.8" sourcerect="203,418,89,46" origin="0.55,0.6" />
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.8" sourcerect="203,418,89,46" origin="0.55,1.15" />
       <SkillModifier skillidentifier="helm" skillvalue="12" />
       <StatusEffect type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false" />
     </Wearable>
