@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<npcsets>
+
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  <!--                          Escort Mission NPCs                              -->
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  
+  <npcset identifier="escortnpcs1">
+    <npc identifier="prisoner" job="prisoner" moduleflags="none" behavior="Patrol">
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="prisonerclothes" equip="true" />
+        <Item identifier="handcuffs" equip="true" />
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="prisonerclothes" equip="true" />
+        <Item identifier="handcuffs" equip="true" />
+        <Item identifier="divingknife" equip="false" />
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="prisonerclothes" equip="true" />
+        <Item identifier="handcuffs" equip="true" />
+        <Item identifier="ethanol" equip="false" />
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="prisonerclothes" equip="true" />
+        <Item identifier="handcuffs" equip="true" />
+        <Item identifier="antidama1" equip="false" />
+      </ItemSet>
+    </npc>
+    <npc identifier="commoner" job="commoner" behavior="Patrol">
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="commonerclothes1" equip="true" />
+        <Item identifier="screwdriver" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="commonerclothes1" equip="true" />
+        <Item identifier="baseballcap" equip="true" />
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="wrench" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="commonerclothes2" equip="true" />
+        <Item identifier="crowbar" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="commonerclothes2" equip="true" />
+        <Item identifier="divingknife" equip="false" />
+        <Item identifier="wrench" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="commonerclothes3" equip="true" />
+        <Item identifier="crowbar" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="commonerclothes3" equip="true" />
+        <Item identifier="baseballcap" equip="true" />
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="screwdriver" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="commonerclothes4" equip="true" />
+        <Item identifier="divingknife" equip="false" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="commonerseparatist" job="commoner" behavior="Patrol">
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="separatistcommoner2" equip="true" />
+        <Item identifier="piratebandana" equip="true" />
+        <Item identifier="screwdriver" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="separatistcommoner1" equip="true" />
+        <Item identifier="piratebandana" equip="true" />
+        <Item identifier="baseballcap" equip="true" />
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="wrench" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="separatistcommoner3" equip="true" outfit="true" />
+        <Item identifier="crowbar" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="piratecaptainhat" equip="true" />
+        <Item identifier="separatistcommoner1" equip="true" />
+        <Item identifier="divingknife" equip="false" />
+        <Item identifier="wrench" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="piratebodyarmor" equip="true" />
+        <Item identifier="separatistcommoner1" equip="true" />
+        <Item identifier="piratebandana" equip="true" />
+        <Item identifier="crowbar" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="vip" moduleflags="none" job="vip" behavior="StayInHull">
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="vipclothes1" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="vipclothes2" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="vipclothes3" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+    </npc>
+    <npc identifier="securitynpc" job="vipsecurityofficer" spawnpointtags="security" healthmultiplier="1" behavior="StayInHull">
+      <ItemSet>
+        <Item identifier="securitypatrolclothes" equip="true" />
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="stunbaton">
+          <Item identifier="batterycell" />
+        </Item>
+        <Item identifier="handcuffs" />
+        <Item identifier="smg">
+          <Item identifier="smgmagazine" />
+        </Item>
+        <Item identifier="smgmagazine" />
+        <Item identifier="smgmagazine" />
+        <Item identifier="divingknife" />
+        <Item identifier="bodyarmor" equip="true" />
+        <Item identifier="ballistichelmet1" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet>
+        <Item identifier="securitypatrolclothes" equip="true" />
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="stunbaton">
+          <Item identifier="batterycell" />
+        </Item>
+        <Item identifier="handcuffs" />
+        <Item identifier="revolver" equip="false">
+          <Item identifier="revolverround" />
+          <Item identifier="revolverround" />
+          <Item identifier="revolverround" />
+          <Item identifier="revolverround" />
+          <Item identifier="revolverround" />
+          <Item identifier="revolverround" />
+        </Item>
+        <Item identifier="divingknife" />
+        <Item identifier="antibleeding1" />
+        <Item identifier="bodyarmor" equip="true" />
+        <Item identifier="ballistichelmet2" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+    </npc>
+  </npcset>
+
+</npcsets>

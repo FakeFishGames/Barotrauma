@@ -1,0 +1,584 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Jobs>
+  <Job identifier="captain"
+       minnumber="0" maxnumber="1" minkarma="0" initialcount="1"
+       CampaignSetupUIOrder="0"
+       uicolor="0.65,0.73,0.84"
+       vitalitymodifier="0"
+       pricemultiplier="1.3"
+       idlebehavior="StayInHull">
+    <Jobicon>
+      <sprite texture="Content/UI/MainIconsAtlas.png" sourcerect="384,256,128,128" origin="0.5,0.5"/>
+    </Jobicon>
+    <JobiconSmall>
+      <sprite texture="Content/UI/CommandUIAtlas.png" sourcerect="612,669,28,28" origin="0.5,0.5"/>
+    </JobiconSmall>
+    <Skills>
+    <!-- Default pricemultiplier on skills is 15 mk per skillpoint. Primary skills cost more. -->
+      <Skill identifier="helm" level="40,50" primary="true" pvplevel="65" pricemultiplier="20"/>
+      <Skill identifier="weapons" level="25,35" pvplevel="55"/>
+      <Skill identifier="mechanical" level="15,25" pvplevel="50"/>
+      <Skill identifier="electrical" level="15,25" pvplevel="50"/>
+      <Skill identifier="medical" level="5,10" pvplevel="50" pricemultiplier="10"/>
+    </Skills>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="captainscap1" identifierteam2="piratecaptainhat" equip="true"/>
+      <Item identifier="captainsuniform1" identifierteam2="captainseparatistsuniform1" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="captainspipe" GameMode="PvE" equip="false">
+        <Item identifier="pipetobacco" />
+      </Item>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="captainscap2" identifierteam2="captainsseparatistcap1" equip="true"/>
+      <Item identifier="captainsuniform2" identifierteam2="captainseparatistsuniform2" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="captainspipe" GameMode="PvE" equip="false">
+        <Item identifier="pipetobacco" />
+      </Item>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="captainscap3" identifierteam2="captainsseparatistcap2" equip="true"/>
+      <Item identifier="captainsuniform3" identifierteam2="captainseparatistsuniform3" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="captainspipe" GameMode="PvE" equip="false">
+        <Item identifier="pipetobacco" />
+      </Item>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+    </ItemSet>
+    <AutonomousObjectives>
+      <Order identifier="fightintruders" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="steer" option="maintainposition" prioritymodifier="1"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.1"/>
+      <Order identifier="fixleaks" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="steer"/>
+    </AppropriateOrders>
+  </Job>
+
+  <Job identifier="engineer"
+       minkarma="0" initialcount="1"
+       CampaignSetupUIOrder="1"
+       uicolor="0.88,0.72,0.43"
+       vitalitymodifier="0"
+       pricemultiplier="1"
+       idlebehavior="Active">
+    <Jobicon>
+      <sprite texture="Content/UI/MainIconsAtlas.png" sourcerect="768,256,128,128" origin="0.5,0.5"/>
+    </Jobicon>
+    <JobiconSmall>
+      <sprite texture="Content/UI/CommandUIAtlas.png" sourcerect="612,727,28,28" origin="0.5,0.5"/>
+    </JobiconSmall>
+    <Skills>
+      <Skill identifier="electrical" level="40,50" primary="true" pvplevel="70"  pricemultiplier="20"/>
+      <Skill identifier="mechanical" level="25,35" pvplevel="50"/>
+      <Skill identifier="weapons" level="15,25" pvplevel="50"/>
+      <Skill identifier="medical" level="15,25" pvplevel="50"/>
+      <Skill identifier="helm" level="5,10" pvplevel="50" pricemultiplier="10"/>
+    </Skills>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="orangejumpsuit1" identifierteam2="engineerseparatistsuniform1" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="toolbelt" equip="true" GameMode="PvE" />
+      <Item identifier="wrench" GameMode="PvE" />
+      <Item identifier="screwdriver" GameMode="PvE" />
+      <Item identifier="fuelrod" GameMode="PvE" />
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="orangejumpsuit2" identifierteam2="engineerseparatistsuniform2" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="toolbelt" equip="true" GameMode="PvE"/>
+      <Item identifier="wrench" GameMode="PvE"/>
+      <Item identifier="screwdriver" GameMode="PvE" />
+      <Item identifier="fuelrod" GameMode="PvE" />
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <AutonomousObjectives>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="repairelectrical" prioritymodifier="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="fixleaks" prioritymodifier="0.75"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.5"/>
+      <Order identifier="repairsystems" prioritymodifier="0.5"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operatereactor"/>
+      <Order identifier="repairelectrical"/>
+      <Order identifier="chargebatteries"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
+  </Job>
+
+  <Job identifier="mechanic"
+       minkarma="0" initialcount="1"
+       CampaignSetupUIOrder="2"
+       uicolor="0.5,0.86,0.9"
+       vitalitymodifier="0"
+       pricemultiplier="1"
+       idlebehavior="Active">
+    <Jobicon>
+      <sprite texture="Content/UI/MainIconsAtlas.png" sourcerect="896,256,128,128" origin="0.5,0.5"/>
+    </Jobicon>
+    <JobiconSmall>
+      <sprite texture="Content/UI/CommandUIAtlas.png" sourcerect="641,640,28,28" origin="0.5,0.5"/>
+    </JobiconSmall>
+    <Skills>
+      <Skill identifier="mechanical" level="40,50" primary="true" pvplevel="70" pricemultiplier="20"/>
+      <Skill identifier="electrical" level="25,35" pvplevel="50"/>
+      <Skill identifier="weapons" level="15,25" pvplevel="50"/>
+      <Skill identifier="medical" level="15,25" pvplevel="50"/>
+      <Skill identifier="helm" level="5,10" pvplevel="50" pricemultiplier="10"/>
+    </Skills>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="baseballcap" identifierteam2="piratebandana" equip="true" />
+      <Item identifier="bluejumpsuit1" identifierteam2="mechanicseparatistsuniform1" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="toolbelt" equip="true" GameMode="PvE"/>
+      <Item identifier="wrench" GameMode="PvE" />
+      <Item identifier="screwdriver" GameMode="PvE" />
+      <Item identifier="weldingtool" GameMode="PvE" >
+        <Item identifier="weldingfueltank" showpreview="false"/>
+      </Item>
+      <Item identifier="plasmacutter" GameMode="PvE">
+        <Item identifier="oxygentank" showpreview="false"/>
+      </Item>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="baseballcap" identifierteam2="piratebandana" equip="true" />
+      <Item identifier="bluejumpsuit2" identifierteam2="mechanicseparatistsuniform2" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="toolbelt" equip="true" GameMode="PvE"/>
+      <Item identifier="wrench" GameMode="PvE"/>
+      <Item identifier="screwdriver" GameMode="PvE"/>
+      <Item identifier="weldingtool" GameMode="PvE">
+        <Item identifier="weldingfueltank" showpreview="false"/>
+      </Item>
+      <Item identifier="plasmacutter" GameMode="PvE">
+        <Item identifier="oxygentank" showpreview="false"/>
+      </Item>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <AutonomousObjectives>
+      <Order identifier="fixleaks" prioritymodifier="1"/>
+      <Order identifier="repairmechanical" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="repairsystems" prioritymodifier="0.5"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.5"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.3"/>
+    </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="fixleaks"/>
+      <Order identifier="pumpwater"/>
+      <Order identifier="repairmechanical"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
+  </Job>
+
+  <Job identifier="securityofficer"
+       minkarma="0"
+       uicolor="0.57,0.48,0.43"
+       vitalitymodifier="0"
+       pricemultiplier="1.15"
+       idlebehavior="Patrol">
+    <Jobicon>
+      <sprite texture="Content/UI/MainIconsAtlas.png" sourcerect="256,256,128,128" origin="0.5,0.5"/>
+    </Jobicon>
+    <JobiconSmall>
+      <sprite texture="Content/UI/CommandUIAtlas.png" sourcerect="612,640,28,28" origin="0.5,0.5"/>
+    </JobiconSmall>
+    <Skills>
+      <Skill identifier="weapons" level="40,50" primary="true" pvplevel="60" pricemultiplier="20" />
+      <Skill identifier="medical" level="25,35" pvplevel="50" />
+      <Skill identifier="mechanical" level="15,25" pvplevel="50" />
+      <Skill identifier="electrical" level="15,25" pvplevel="50" />
+      <Skill identifier="helm" level="5,10" pvplevel="50" pricemultiplier="10" />
+    </Skills>
+    <ItemSet>
+      <Item identifier="securityuniform1" identifierteam2="securityseparatistsuniform1" equip="true" outfit="true"/>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>   
+      <Item identifier="divingknife" equip="false" />
+      <Item identifier="handcuffs" GameMode="PvE"/>
+      <Item identifier="stunbaton" GameMode="PvE">
+        <Item identifier="batterycell" showpreview="false"/>
+      </Item>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="securityuniform2" identifierteam2="securityseparatistsuniform2" equip="true" outfit="true"/>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="divingknife" equip="false"/>
+      <Item identifier="handcuffs" GameMode="PvE"/>
+      <Item identifier="stunbaton" GameMode="PvE">
+        <Item identifier="batterycell" showpreview="false"/>
+      </Item>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="securityuniform3" identifierteam2="securityseparatistsuniform3" equip="true" outfit="true"/>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="divingknife" equip="false" />
+      <Item identifier="handcuffs" GameMode="PvE"/>
+      <Item identifier="stunbaton" GameMode="PvE">
+        <Item identifier="batterycell" showpreview="false"/>
+      </Item>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <AutonomousObjectives>
+      <Order identifier="fightintruders" prioritymodifier="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="0.75"/>
+      <Order identifier="inspectnoises" prioritymodifier="0.5" />
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.2"/>
+      <Order identifier="fixleaks" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operateweapons"/>
+      <Order identifier="fightintruders"/>
+    </AppropriateOrders>
+  </Job>
+
+  <Job identifier="medicaldoctor"
+       minkarma="0"
+       uicolor="0.81,0.31,0.19"
+       vitalitymodifier="0"
+       pricemultiplier="1.15"
+       idlebehavior="Active">
+    <Jobicon>
+      <sprite texture="Content/UI/MainIconsAtlas.png" sourcerect="512,256,128,128" origin="0.5,0.5"/>
+    </Jobicon>
+    <JobiconSmall>
+      <sprite texture="Content/UI/CommandUIAtlas.png" sourcerect="612,698,28,28" origin="0.5,0.5"/>
+    </JobiconSmall>
+    <Skills>
+      <Skill identifier="medical" level="40,50" primary="true" pvplevel="70" pricemultiplier="20"/>
+      <Skill identifier="weapons" level="15,25" pvplevel="50"/>
+      <Skill identifier="mechanical" level="15,25" pvplevel="50"/>
+      <Skill identifier="electrical" level="15,25" pvplevel="50"/>
+      <Skill identifier="helm" level="5,10" pvplevel="50" pricemultiplier="10"/>
+    </Skills>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="doctorsuniform1" identifierteam2="medicseparatistsuniform1" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="syringegun" GameMode="PvE"/>
+      <Item identifier="antibleeding1" GameMode="PvE" />
+      <Item identifier="antidama1" GameMode="PvE"/>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="doctorsuniform2" identifierteam2="medicseparatistsuniform2" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="syringegun" GameMode="PvE"/>
+      <Item identifier="antibleeding1" GameMode="PvE"/>
+      <Item identifier="antidama1" GameMode="PvE"/>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <AutonomousObjectives>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="0.5"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.2"/>
+      <Order identifier="fixleaks" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="rescue"/>
+      <Order identifier="requestfirstaid"/>
+    </AppropriateOrders>
+  </Job>
+
+  <Job identifier="assistant"
+       allowalways="true" minkarma="0"
+       vitalitymodifier="0"
+       pricemultiplier="0.8"
+       idlebehavior="Active">
+    <Jobicon>
+      <sprite texture="Content/UI/MainIconsAtlas.png" sourcerect="640,256,128,128" origin="0.5,0.5"/>
+    </Jobicon>
+    <JobiconSmall>
+      <sprite texture="Content/UI/CommandUIAtlas.png" sourcerect="641,669,28,28" origin="0.5,0.5"/>
+    </JobiconSmall>
+    <Skills>
+      <Skill identifier="weapons" level="20,30" pvplevel="55" />
+      <Skill identifier="mechanical" level="20,30" pvplevel="55" />
+      <Skill identifier="electrical" level="20,30" pvplevel="55"/>
+      <Skill identifier="medical" level="20,30" pvplevel="55" />
+      <Skill identifier="helm" level="17.5,20" pvplevel="55"/>
+    </Skills>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="assistantclothes" identifierteam2="separatistcommoner1" equip="true" outfit="true"/>
+      <Item identifier="wrench" GameMode="PvE"/>
+      <Item identifier="screwdriver" GameMode="PvE"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+      <Item identifier="revolver" GameMode="PvP" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+    </ItemSet>
+    <AutonomousObjectives>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="repairsystems" prioritymodifier="0.5"/>
+      <Order identifier="fixleaks" prioritymodifier="0.5"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.4"/>
+    </AutonomousObjectives>
+  </Job>
+  
+  <!--NPC only jobs-->
+  <!-- items and behaviors defined through itemsets-->
+
+  <Job identifier="watchman"
+       onlyjobspecificdialog="false"
+       minnumber="0" maxnumber="0" initialcount="0" hiddenjob="true">
+    <ItemSet>
+      <Item identifier="watchmanclothes" equip="true"/>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+      </Item>
+    </ItemSet>
+  </Job>
+
+  <Job identifier="commoner" onlyjobspecificdialog="true" minnumber="0" maxnumber="0" initialcount="0" hiddenjob="true"/>
+  <Job identifier="prisoner" onlyjobspecificdialog="true" minnumber="0" maxnumber="0" initialcount="0" hiddenjob="true">
+    <AutonomousObjectives>
+      <Order identifier="escapehandcuffs" prioritymodifier="1" />
+      <Order identifier="fightintruders" />
+    </AutonomousObjectives>
+  </Job>
+  <Job identifier="vip" onlyjobspecificdialog="true" minnumber="0" maxnumber="0" initialcount="0" hiddenjob="true">
+    <Skills>
+      <Skill identifier="medical" level="80,90" primary="true" />
+      <Skill identifier="weapons" level="15,25" />
+      <Skill identifier="mechanical" level="15,25" />
+      <Skill identifier="electrical" level="15,25" />
+      <Skill identifier="helm" level="5,10" />
+    </Skills>
+    <ItemSet />
+    <AutonomousObjectives>
+      <Order identifier="rescue" prioritymodifier="1" />
+    </AutonomousObjectives>
+  </Job>
+  <Job identifier="vipsecurityofficer" onlyjobspecificdialog="true" minnumber="0" maxnumber="0" initialcount="0" hiddenjob="true">
+    <Skills>
+      <Skill identifier="weapons" level="40,50" primary="true" />
+      <Skill identifier="medical" level="25,35" />
+      <Skill identifier="mechanical" level="15,25" />
+      <Skill identifier="electrical" level="15,25" />
+      <Skill identifier="helm" level="5,10" />
+    </Skills>
+    <AutonomousObjectives>
+      <Order identifier="fightintruders" prioritymodifier="1" />
+      <Order identifier="rescue" prioritymodifier="1" />
+      <Order identifier="inspectnoises" prioritymodifier="0.5" />
+      <Order identifier="extinguishfires" prioritymodifier="0.75" />
+    </AutonomousObjectives>
+  </Job>
+
+  <Job identifier="outpostsecurityofficer" vitalitymodifier="10" minnumber="0" maxnumber="0" initialcount="0" idlebehavior="Patrol" hiddenjob="true">
+    <Skills>
+      <Skill identifier="weapons" level="40,50" primary="true"/>
+      <Skill identifier="medical" level="25,35"/>
+      <Skill identifier="mechanical" level="15,25"/>
+      <Skill identifier="electrical" level="15,25"/>
+      <Skill identifier="helm" level="5,10"/>
+    </Skills>
+    <AutonomousObjectives>
+      <Order identifier="fightintruders" prioritymodifier="1"/>
+      <Order identifier="findthieves" prioritymodifier="1" IgnoreAtNonOutpost="true"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="inspectnoises" prioritymodifier="0.5" />
+      <Order identifier="extinguishfires" prioritymodifier ="0.75"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.2"/>
+      <Order identifier="fixleaks" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
+  </Job>
+
+  <Job identifier="outpostmanager" vitalitymodifier="0" idlebehavior="StayInHull" hiddenjob="true">
+    <Skills>
+      <Skill identifier="helm" level="40,50" primary="true"/>
+      <Skill identifier="weapons" level="25,35"/>
+      <Skill identifier="mechanical" level="15,25"/>
+      <Skill identifier="electrical" level="15,25"/>
+      <Skill identifier="medical" level="5,10"/>
+    </Skills>
+    <AutonomousObjectives>
+      <Order identifier="fightintruders" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="fixleaks" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
+  </Job>
+
+  <!-- Used for hostile NPCs -->
+  <Job identifier="killer" onlyjobspecificdialog="false" minnumber="0" maxnumber="0" initialcount="0" hiddenjob="true" idlebehavior="Patrol">
+    <Skills>
+      <Skill identifier="weapons" level="60,70" primary="true" />
+      <Skill identifier="medical" level="25,35" />
+      <Skill identifier="mechanical" level="15,25" />
+      <Skill identifier="electrical" level="15,25" />
+      <Skill identifier="helm" level="5,10" />
+    </Skills>
+    <AutonomousObjectives>
+      <Order identifier="fightintruders" prioritymodifier="1" />
+      <Order identifier="inspectnoises" prioritymodifier="0.5" />
+      <Order identifier="extinguishfires" prioritymodifier="0.75" />
+    </AutonomousObjectives>
+  </Job>
+  <Job identifier="structuredefender" onlyjobspecificdialog="false" minnumber="0" maxnumber="0" initialcount="0" hiddenjob="true" idlebehavior="Patrol">
+    <Skills>
+      <Skill identifier="weapons" level="60,70" primary="true" />
+      <Skill identifier="medical" level="25,35" />
+      <Skill identifier="mechanical" level="15,25" />
+      <Skill identifier="electrical" level="15,25" />
+      <Skill identifier="helm" level="5,10" />
+    </Skills>
+    <AutonomousObjectives>
+      <Order identifier="fightintruders" prioritymodifier="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="0.75"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.5"/>
+      <Order identifier="operateweapons" prioritymodifier="0.3"/>
+      <Order identifier="fixleaks" prioritymodifier="0.2"/>
+      <Order identifier="repairsystems" prioritymodifier="0.2"/>
+      <Order identifier="cleanupitems" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
+  </Job>
+
+  <ItemRepairPriorities>
+    <Item tag="reactor" priority="5.0"/>
+    <Item tag="navterminal" priority="5.0"/>
+    <Item tag="engine" priority="4.0"/>
+    <Item tag="pump" priority="3.0"/>
+    <Item tag="junctionbox" priority="3.0"/>
+    <Item tag="oxygengenerator" priority="2.0"/>
+    <Item tag="supercapacitor" priority="2.0"/>
+    <Item tag="door" priority="0.5"/>
+    <Item tag="fabricator" priority="0.5"/>
+    <Item tag="medicalfabricator" priority="0.5"/>
+  </ItemRepairPriorities>
+
+</Jobs>
