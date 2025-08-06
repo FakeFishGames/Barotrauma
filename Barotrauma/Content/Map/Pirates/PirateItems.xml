@@ -57,8 +57,8 @@
       <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="lacerations,gunshotwound" damagemultiplier="0.9" />
     </Wearable>
   </Item>
-  <Item name="" identifier="piratecaptainhat" category="Equipment" tags="smallitem,clothing,separatists" impactsoundtag="impact_metal_heavy" scale="0.4" cargocontaineridentifier="metalcrate">
-    <Price baseprice="175" sold="false">
+  <Item nameidentifier="piratecaptainhat" identifier="piratecaptainhat2" category="Equipment" tags="smallitem,clothing,separatists" impactsoundtag="impact_metal_heavy" scale="0.4" cargocontaineridentifier="metalcrate">
+    <Price baseprice="160" sold="false">
       <Price storeidentifier="merchantoutpost" minavailable="1" maxavailable="2" sold="true">
         <Reputation faction="separatists" min="30"/>
       </Price>
@@ -71,6 +71,28 @@
     </Price>
     <Deconstruct time="10" />
     <Sprite texture="Content/Items/Jobgear/headgears.png" sourcerect="203,418,89,46" depth="0.6" origin="0.5,0.5" />
+    <Body radius="30" density="15" />
+    <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
+      <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9" />
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" hidewearablesoftype="Hair" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.8" sourcerect="203,418,89,46" origin="0.55,0.6" />
+      <SkillModifier skillidentifier="helm" skillvalue="12" />
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false" />
+    </Wearable>
+  </Item>
+  <Item name="" identifier="piratecaptainhat" category="Equipment" tags="smallitem,clothing,separatists" impactsoundtag="impact_metal_heavy" scale="0.4" cargocontaineridentifier="metalcrate">
+    <Price baseprice="175" sold="false">
+      <Price storeidentifier="merchantoutpost" minavailable="1" maxavailable="1" sold="true">
+        <Reputation faction="separatists" min="30"/>
+      </Price>
+      <Price storeidentifier="merchantcity" minavailable="1" maxavailable="3" sold="true">
+        <Reputation faction="separatists" min="30"/>
+      </Price>
+      <Price storeidentifier="merchantresearch" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.3" />
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <Deconstruct time="10" />
+    <Sprite texture="Content/Items/Jobgear/headgears.png" sourcerect="203,418,89,90" depth="0.6" origin="0.5,0.5" />
     <Body radius="30" density="15" />
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictionidentifiers="blunttrauma,lacerations,bitewounds" armorsector="0.0,360.0" damagemultiplier="0.9" />

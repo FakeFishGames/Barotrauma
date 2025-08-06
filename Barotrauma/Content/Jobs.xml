@@ -41,6 +41,24 @@
     </ItemSet>
     <ItemSet>
       <Item identifier="idcard" equip="true" showpreview="false"/>
+      <Item identifier="captainscap1" identifierteam2="piratecaptainhat2" equip="true"/>
+      <Item identifier="captainsuniform1" identifierteam2="captainseparatistsuniform1" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true" showpreview="false"/>
+      <Item identifier="captainspipe" GameMode="PvE" equip="false">
+        <Item identifier="pipetobacco" />
+      </Item>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+        <Item identifier="revolverround" />
+      </Item>
+      <Item identifier="divingknife" equip="false" GameMode="PvP"/>
+    </ItemSet>
+    <ItemSet>
+      <Item identifier="idcard" equip="true" showpreview="false"/>
       <Item identifier="captainscap2" identifierteam2="captainsseparatistcap1" equip="true"/>
       <Item identifier="captainsuniform2" identifierteam2="captainseparatistsuniform2" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true" showpreview="false"/>

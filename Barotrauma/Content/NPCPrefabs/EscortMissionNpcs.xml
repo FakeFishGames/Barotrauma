@@ -130,6 +130,16 @@
           <Item identifier="oxygentank" />
         </Item>
       </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="idcard" equip="true" />
+        <Item identifier="piratecaptainhat2" equip="true" />
+        <Item identifier="separatistcommoner1" equip="true" />
+        <Item identifier="divingknife" equip="false" />
+        <Item identifier="wrench" equip="true" />
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
       <ItemSet>
         <Item identifier="idcard" equip="true" />
         <Item identifier="piratebodyarmor" equip="true" />

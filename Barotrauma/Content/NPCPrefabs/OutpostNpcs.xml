@@ -66,6 +66,17 @@
           <Item identifier="oxygentank" />
         </Item>
       </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="piratecaptainhat2" equip="true" />
+        <Item identifier="separatistcommoner3" equip="true" outfit="true" />
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="revolver" equip="false">
+          <Item identifier="revolverround" amount="6"/>
+        </Item>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
     </npc>
 
     <!-- for backwards compatibility (some mods that override location types still use this - if it doesn't exist, you can't get any missions)
@@ -511,6 +522,22 @@
       <ItemSet commonness="1">
         <Item identifier="watchmanclothes" equip="true"/>
         <Item identifier="piratecaptainhat" equip="true" />
+        <Item identifier="idcard" equip="true"/>
+        <Item identifier="revolver" equip="false">
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+          <Item identifier="revolverround"/>
+        </Item>
+        <Item identifier="divingmask">
+          <Item identifier="oxygentank" />
+        </Item>
+      </ItemSet>
+      <ItemSet commonness="1">
+        <Item identifier="watchmanclothes" equip="true"/>
+        <Item identifier="piratecaptainhat2" equip="true" />
         <Item identifier="idcard" equip="true"/>
         <Item identifier="revolver" equip="false">
           <Item identifier="revolverround"/>
