@@ -275,6 +275,10 @@ namespace Barotrauma.Items.Components
                 if (IsInGame())
                 {
                     if (!GetApplicableResourcePlayerHas(prefab, Character.Controlled).TryUnwrap(out var r)) { return; }
+                    if (r.Condition < 100.0)
+                    {
+                        return;
+                    }
                     resource = r.Prefab;
                     RemoveItem(r);
                 }
