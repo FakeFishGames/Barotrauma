@@ -61,6 +61,8 @@ namespace Barotrauma.Items.Components
         private int activePingsCount;
         // currently active ping index on the above list
         private int currentPingIndex = -1;
+        // if using submarine as the center for the ping, this is the submarine's AITarget
+        public AITarget SubAiTarget { get; private set; }
 
         private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
@@ -87,9 +89,10 @@ namespace Barotrauma.Items.Components
             set
             {
                 range = MathHelper.Clamp(value, 0.0f, 100000.0f);
-                if (item?.AiTarget != null && item.AiTarget.MaxSoundRange <= 0)
+                AITarget aiTarget = item.Submarine?.AiTarget != null && item.body == null ? item.Submarine.AiTarget : item.AiTarget;
+                if (aiTarget != null && aiTarget.MaxSoundRange <= 0)
                 {
-                    item.AiTarget.MaxSoundRange = range;
+                    aiTarget.MaxSoundRange = range;
                 }
             }
         }
@@ -187,6 +190,11 @@ namespace Barotrauma.Items.Components
                 connectedTransducers.RemoveAll(t => t.DisconnectTimer <= 0.0f);
             }
 
+            if (SubAiTarget != null && SubAiTarget.NeedsUpdate)
+            {
+                SubAiTarget.Update(deltaTime);
+            }
+
             for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
                 activePings[pingIndex].State += deltaTime * PingFrequency;
@@ -259,7 +267,12 @@ namespace Barotrauma.Items.Components
         {
             if (!UseTransducers)
             {
-                if (item.AiTarget != null) { yield return item.AiTarget; }                
+                if (item.Submarine != null && item.body == null)
+                {
+                    SubAiTarget ??= new AITarget(item.Submarine);
+                    yield return SubAiTarget;
+                }
+                else if (item.AiTarget != null) { yield return item.AiTarget; }                
             }
             else
             {
