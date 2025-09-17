@@ -84,7 +84,7 @@ namespace Barotrauma
             }
             if (IsValidShape(Radius, Height, Width))
             {
-                DrawShape(drawPosition, DrawRotation, color);
+                DrawShape(DrawPosition, DrawRotation, color);
             }
 
             if (LastServerState != null)

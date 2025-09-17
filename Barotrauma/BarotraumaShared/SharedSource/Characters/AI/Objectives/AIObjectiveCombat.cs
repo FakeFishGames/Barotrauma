@@ -65,7 +65,7 @@ namespace Barotrauma
 
         private readonly AIObjectiveFindSafety findSafety;
         private readonly HashSet<ItemComponent> weapons = new HashSet<ItemComponent>();
-        private readonly HashSet<Item> ignoredWeapons = new HashSet<Item>();
+        private readonly HashSet<ItemComponent> ignoredWeapons = new HashSet<ItemComponent>();
 
         private AIObjectiveContainItem seekAmmunitionObjective;
         private AIObjectiveGoTo retreatObjective;
@@ -503,7 +503,8 @@ namespace Barotrauma
                 HashSet<ItemComponent> allWeapons = FindWeaponsFromInventory();
                 while (allWeapons.Any())
                 {
-                    Weapon = GetWeapon(allWeapons, out _weaponComponent);
+                    Weapon = GetWeapon(allWeapons, out ItemComponent newWeaponComponent);
+                    _weaponComponent = newWeaponComponent;
                     if (Weapon == null)
                     {
                         // No weapons
@@ -512,7 +513,7 @@ namespace Barotrauma
                     if (!character.Inventory.Contains(Weapon) || WeaponComponent == null)
                     {
                         // Not in the inventory anymore or cannot find the weapon component
-                        allWeapons.Remove(WeaponComponent);
+                        allWeapons.RemoveWhere(weaponComponent => weaponComponent.Item == Weapon);
                         Weapon = null;
                         continue;
                     }
@@ -540,7 +541,7 @@ namespace Barotrauma
                     else
                     {
                         // No ammo and should not try to seek ammo.
-                        allWeapons.Remove(WeaponComponent);
+                        allWeapons.RemoveWhere(weaponComponent => weaponComponent.Item == Weapon);
                         Weapon = null;
                     }
                 }
@@ -980,7 +981,6 @@ namespace Barotrauma
             weapons.Clear();
             foreach (var item in character.Inventory.AllItems)
             {
-                if (ignoredWeapons.Contains(item)) { continue; }
                 GetWeapons(item, weapons);
                 if (item.OwnInventory != null)
                 {
@@ -990,11 +990,12 @@ namespace Barotrauma
             return weapons;
         }
 
-        private static void GetWeapons(Item item, ICollection<ItemComponent> weaponList)
+        private void GetWeapons(Item item, ICollection<ItemComponent> weaponList)
         {
             if (item == null) { return; }
             foreach (var component in item.Components)
             {
+                if (ignoredWeapons.Contains(component)) { continue; }
                 if (component.CombatPriority > 0)
                 {
                     weaponList.Add(component);
@@ -1332,19 +1333,21 @@ namespace Barotrauma
                 {
                     SteeringManager.Reset();
                     RemoveSubObjective(ref seekAmmunitionObjective);
-                    ignoredWeapons.Add(Weapon);
+                    ignoredWeapons.Add(WeaponComponent);
                     Weapon = null;
                 });
         }
-        
+
         /// <summary>
         /// Reloads the ammunition found in the inventory.
         /// If seekAmmo is true, tries to get find the ammo elsewhere.
         /// </summary>
+        /// <returns>True if the weapon was reloaded successfully.</returns>
         private bool Reload(bool seekAmmo)
         {
             if (WeaponComponent == null) { return false; }
             if (Weapon.OwnInventory == null) { return true; }
+            if (!Weapon.IsInteractable(character)) { return false; }
             HumanAIController.UnequipEmptyItems(Weapon, allowDestroying: !character.IsOnPlayerTeam);
             ImmutableHashSet<Identifier> ammunitionIdentifiers = null;
             if (WeaponComponent.RequiredItems.ContainsKey(RelatedItem.RelationType.Contained))

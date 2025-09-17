@@ -8,8 +8,15 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    abstract class AnimController : Ragdoll
+    abstract class AnimController : Ragdoll, ISerializableEntity
     {
+        /// <summary>
+        /// Most of the properties in this class are read-only, but can be useful for conditionals
+        /// </summary>
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
+
+        public string Name => nameof(AnimController);
+
         public Vector2 RightHandIKPos { get; protected set; }
         public Vector2 LeftHandIKPos { get; protected set; }
 
@@ -200,7 +207,10 @@ namespace Barotrauma
 
         public float WalkPos { get; protected set; }
 
-        public AnimController(Character character, string seed, RagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
+        public AnimController(Character character, string seed, RagdollParams ragdollParams = null) : base(character, seed, ragdollParams) 
+        {
+            SerializableProperties = SerializableProperty.GetProperties(this);
+        }
         
         public void UpdateAnimations(float deltaTime)
         {

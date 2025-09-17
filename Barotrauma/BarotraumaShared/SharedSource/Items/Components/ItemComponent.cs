@@ -483,6 +483,9 @@ namespace Barotrauma.Items.Components
 
         public virtual bool UpdateWhenInactive => false;
 
+        [Serialize(false, IsPropertySaveable.No, "If true, the component will retain its normal functionality when the item reaches 0 condition.")]
+        public bool UpdateWhenBroken { get; set; }
+
         //called when isActive is true and condition > 0.0f
         public virtual void Update(float deltaTime, Camera cam) 
         {

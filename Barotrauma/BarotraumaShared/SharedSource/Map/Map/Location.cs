@@ -473,7 +473,7 @@ namespace Barotrauma
         {
             get 
             {
-                availableMissions.RemoveAll(m => m.Completed || (m.Failed && !m.Prefab.AllowRetry));
+                availableMissions.RemoveAll(m => m.Completed || (m.Failed && !m.Prefab.AllowRetry) || m.ForceFailure);
                 return availableMissions; 
             }
         }
@@ -1091,6 +1091,12 @@ namespace Barotrauma
                     mission.TimesAttempted = loadedMission.TimesAttempted;
                     availableMissions.Add(mission);
                     if (loadedMission.SelectedMission) { selectedMissions.Add(mission); }
+
+                    var levelData = destination == this ? LevelData : Connections.FirstOrDefault(c => c.OtherLocation(this) == destination)?.LevelData;
+                    if (levelData != null)
+                    {
+                        mission.AdjustLevelData(levelData);
+                    }
                 }
                 loadedMissions = null;
             }

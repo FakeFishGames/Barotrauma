@@ -2866,10 +2866,11 @@ namespace Barotrauma
             }
             contextualOrders.RemoveAll(o => !IsOrderAvailable(o));
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, contextualOrders.Count, MathHelper.ToRadians(90f + 180f / contextualOrders.Count));
-            bool disableNode = !CanCharacterBeHeard();
+            bool canCharacterBeHeard = !CanCharacterBeHeard();
             for (int i = 0; i < contextualOrders.Count; i++)
             {
                 var order = contextualOrders[i];
+                bool disableNode = !canCharacterBeHeard && !order.TargetAllCharacters;
                 int hotkey = (i + 1) % 10;
                 var component = order.Option.IsEmpty ?
                     CreateOrderNode(nodeSize, commandFrame.RectTransform, offsets[i].ToPoint(), order, hotkey, disableNode: disableNode, checkIfOrderCanBeHeard: false) :

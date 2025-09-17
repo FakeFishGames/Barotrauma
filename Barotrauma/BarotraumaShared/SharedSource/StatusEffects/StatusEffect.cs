@@ -420,7 +420,7 @@ namespace Barotrauma
             [Serialize(1, IsPropertySaveable.No, description: "How many characters to spawn.")]
             public int Count { get; private set; }
 
-            [Serialize(false, IsPropertySaveable.No, description: 
+            [Serialize(false, IsPropertySaveable.No, description:
                 "Should the buffs of the character executing the effect be transferred to the spawned character?"+
                 " Useful for effects that \"transform\" a character to something else by deleting the character and spawning a new one on its place.")]
             public bool TransferBuffs { get; private set; }
@@ -445,11 +445,11 @@ namespace Barotrauma
             [Serialize("", IsPropertySaveable.No, description: "An affliction to apply on the spawned character.")]
             public Identifier AfflictionOnSpawn { get; private set; }
 
-            [Serialize(1, IsPropertySaveable.No, description: 
+            [Serialize(1, IsPropertySaveable.No, description:
                 $"The strength of the affliction applied on the spawned character. Only relevant if {nameof(AfflictionOnSpawn)} is defined.")]
             public int AfflictionStrength { get; private set; }
 
-            [Serialize(false, IsPropertySaveable.No, description: 
+            [Serialize(false, IsPropertySaveable.No, description:
                 "Should the player controlling the character that executes the effect gain control of the spawned character?" +
                 " Useful for effects that \"transform\" a character to something else by deleting the character and spawning a new one on its place.")]
             public bool TransferControl { get; private set; }
@@ -470,7 +470,7 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.No)]
             public bool InheritEventTags { get; private set; }
-            
+
             [Serialize(false, IsPropertySaveable.No, description: "Should the character team be inherited from the entity that owns the status effect?")]
             public bool InheritTeam { get; private set; }
 
@@ -722,9 +722,9 @@ namespace Barotrauma
         private readonly List<(Identifier eventIdentifier, Identifier tag)> eventTargetTags;
 
         /// <summary>
-        /// Can be used to make the effect unlock a fabrication recipe globally for the entire crew.
+        /// Can be used to make the effect unlock a fabrication recipe (or multiple recipes separated by a comma) globally for the entire crew.
         /// </summary>
-        public readonly Identifier UnlockRecipe;
+        public readonly ImmutableHashSet<Identifier> UnlockRecipes;
 
         private Character user;
 
@@ -739,6 +739,8 @@ namespace Barotrauma
         /// The probability of severing a limb damaged by this status effect. Only valid when targeting characters or limbs.
         /// </summary>
         public readonly float SeverLimbsProbability;
+
+        private readonly Vector2 randomCondition;
 
         public PhysicsBody sourceBody;
 
@@ -802,11 +804,11 @@ namespace Barotrauma
         private readonly List<Identifier> talentTriggers;
         private readonly List<int> giveExperiences;
         private readonly List<GiveSkill> giveSkills;
-        
+
         private HashSet<(Character targetCharacter, AnimLoadInfo anim)> failedAnimations;
         public readonly record struct AnimLoadInfo(AnimationType Type, Either<string, ContentPath> File, float Priority, ImmutableArray<Identifier> ExpectedSpeciesNames);
         private readonly List<AnimLoadInfo> animationsToTrigger;
-            
+
         /// <summary>
         /// How long the effect runs (in seconds). Note that if <see cref="Stackable"/> is true, 
         /// there can be multiple instances of the effect running at a time. 
@@ -903,9 +905,10 @@ namespace Barotrauma
             }
 
             SeverLimbsProbability = MathHelper.Clamp(element.GetAttributeFloat(0.0f, "severlimbs", "severlimbsprobability"), 0.0f, 1.0f);
+            randomCondition = element.GetAttributeVector2("randomcondition", Vector2.Zero);
 
-            string[] targetTypesStr = 
-                element.GetAttributeStringArray("target", null) ?? 
+            string[] targetTypesStr =
+                element.GetAttributeStringArray("target", null) ??
                 element.GetAttributeStringArray("targettype", Array.Empty<string>());
             foreach (string s in targetTypesStr)
             {
@@ -939,7 +942,10 @@ namespace Barotrauma
             playSoundOnRequiredItemFailure = element.GetAttributeBool("playsoundonrequireditemfailure", false);
 #endif
 
-            UnlockRecipe = element.GetAttributeIdentifier(nameof(UnlockRecipe), Identifier.Empty);
+            UnlockRecipes = 
+                element.GetAttributeIdentifierImmutableHashSet(nameof(UnlockRecipes), 
+                    //backwards compatibility
+                    def: element.GetAttributeIdentifierImmutableHashSet("UnlockRecipe", ImmutableHashSet<Identifier>.Empty));
 
             List<XAttribute> propertyAttributes = new List<XAttribute>();
             propertyConditionals = new List<PropertyConditional>();
@@ -1014,7 +1020,7 @@ namespace Barotrauma
                             DebugConsole.AddWarning(
                                 $"StatusEffect tags defined using the attribute 'tags' in StatusEffect ({parentDebugName}). "+
                                 "Please use the attribute 'statuseffecttags' or 'settags' instead to make it more explicit whether the 'tags' attribute means the status effect's tags, or tags the effect is supposed to set. " +
-                                "The game now assumes it means the status effect's tags.", 
+                                "The game now assumes it means the status effect's tags.",
                                 contentPackage: element.ContentPackage);
 #endif
                         }
@@ -1038,7 +1044,7 @@ namespace Barotrauma
                 //if the status effect has a duration, assume tags mean this status effect's tags and leave item tags untouched.
                 propertyAttributes.RemoveAll(a => a.Name.ToString().Equals("tags", StringComparison.OrdinalIgnoreCase));
             }
-            
+
             List<(Identifier propertyName, object value)> propertyEffects = new List<(Identifier propertyName, object value)>();
             foreach (XAttribute attribute in propertyAttributes)
             {
@@ -1074,7 +1080,7 @@ namespace Barotrauma
                         dropItem = true;
                         break;
                     case "removecharacter":
-                        removeCharacter = true; 
+                        removeCharacter = true;
                         containerForItemsOnCharacterRemoval = subElement.GetAttributeIdentifier("moveitemstocontainer", Identifier.Empty);
                         break;
                     case "breaklimb":
@@ -1132,7 +1138,7 @@ namespace Barotrauma
                                 continue;
                             }
                         }
-                        
+
                         Affliction afflictionInstance = afflictionPrefab.Instantiate(subElement.GetAttributeFloat(1.0f, "amount", nameof(afflictionInstance.Strength)));
                         // Deserializing the object normally might cause some unexpected side effects. At least it clamps the strength of the affliction, which we don't want here.
                         // Could probably be solved by using the NonClampedStrength or by bypassing the clamping, but ran out of time and played it safe here.
@@ -1166,10 +1172,10 @@ namespace Barotrauma
                         break;
                     case "spawnitem":
                         var newSpawnItem = new ItemSpawnInfo(subElement, parentDebugName);
-                        if (newSpawnItem.ItemPrefab != null) 
+                        if (newSpawnItem.ItemPrefab != null)
                         {
                             spawnItems ??= new List<ItemSpawnInfo>();
-                            spawnItems.Add(newSpawnItem); 
+                            spawnItems.Add(newSpawnItem);
                         }
                         break;
                     case "triggerevent":
@@ -1247,7 +1253,7 @@ namespace Barotrauma
                         Identifier[] expectedSpeciesNames = subElement.GetAttributeIdentifierArray("expectedspecies", Array.Empty<Identifier>());
                         animationsToTrigger ??= new List<AnimLoadInfo>();
                         animationsToTrigger.Add(new AnimLoadInfo(animType, file, priority, expectedSpeciesNames.ToImmutableArray()));
-                        
+
                         break;
                     case "forcesay":
                         forceSayIdentifier = subElement.GetAttributeIdentifier("message", Identifier.Empty);
@@ -1294,7 +1300,7 @@ namespace Barotrauma
                     return conditionValue < 0.0f || (setValue && conditionValue <= 0.0f);
                 }
             }
-            return false;
+            return randomCondition.X < 0f || randomCondition.Y < 0f;
         }
 
         public bool IncreasesItemCondition()
@@ -1306,7 +1312,7 @@ namespace Barotrauma
                     return conditionValue > 0.0f || (setValue && conditionValue > 0.0f);
                 }
             }
-            return false;
+            return randomCondition.X > 0f || randomCondition.Y > 0f;
         }
 
         private bool ChangesItemCondition(Identifier propertyName, object value, out float conditionValue)
@@ -1383,7 +1389,7 @@ namespace Barotrauma
             if (HasTargetType(TargetType.NearbyItems))
             {
                 //optimization for powered components that can be easily fetched from Powered.PoweredList
-                if (TargetIdentifiers != null && 
+                if (TargetIdentifiers != null &&
                     TargetIdentifiers.Count == 1 &&
                     (TargetIdentifiers.Contains("powered") || TargetIdentifiers.Contains("junctionbox") || TargetIdentifiers.Contains("relaycomponent")))
                 {
@@ -1491,8 +1497,8 @@ namespace Barotrauma
                 {
                     owner = ownerItem.ParentInventory?.Owner;
                 }
-                if (owner is Item container) 
-                { 
+                if (owner is Item container)
+                {
                     if (pc.Type == PropertyConditional.ConditionType.HasTag)
                     {
                         //if we're checking for tags, just check the Item object, not the ItemComponents
@@ -1500,8 +1506,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (shouldShortCircuit(AnyTargetMatches(container.AllPropertyObjects, pc.TargetItemComponent, pc), out valueToReturn)) { return valueToReturn; } 
-                    }                                
+                        if (shouldShortCircuit(AnyTargetMatches(container.AllPropertyObjects, pc.TargetItemComponent, pc), out valueToReturn)) { return valueToReturn; }
+                    }
                 }
                 if (owner is Character character && shouldShortCircuit(pc.Matches(character), out valueToReturn)) { return valueToReturn; }
             }
@@ -1673,7 +1679,7 @@ namespace Barotrauma
                     PlaySound(entity, GetHull(entity), GetPosition(entity, targets, worldPosition));
                 }
 #endif
-                return; 
+                return;
             }
 
             if (Duration > 0.0f && !Stackable)
@@ -1743,7 +1749,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                
+
             }
             position += Offset;
             position += Rand.Vector(Rand.Range(0.0f, RandomOffset));
@@ -1784,7 +1790,7 @@ namespace Barotrauma
                 }
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (targets[i] is not Item item) { continue; }                
+                    if (targets[i] is not Item item) { continue; }
                     for (int j = 0; j < useItemCount; j++)
                     {
                         if (item.Removed) { continue; }
@@ -1807,8 +1813,8 @@ namespace Barotrauma
             {
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (targets[i] is Item item) 
-                    { 
+                    if (targets[i] is Item item)
+                    {
                         foreach (var itemContainer in item.GetComponents<ItemContainer>())
                         {
                             foreach (var containedItem in itemContainer.Inventory.AllItemsMod)
@@ -1885,6 +1891,11 @@ namespace Barotrauma
                     if (target is Entity targetEntity)
                     {
                         if (targetEntity.Removed) { continue; }
+                        if (targetEntity is Item targetItem && randomCondition != Vector2.Zero)
+                        {
+                            float newCondition = Rand.Range(randomCondition.X, randomCondition.Y);
+                            targetItem.Condition = GetModifiedValue(targetItem.Condition, newCondition, deltaTime);
+                        }
                     }
                     else if (target is Limb limb)
                     {
@@ -1893,10 +1904,7 @@ namespace Barotrauma
                     }
                     foreach (var (propertyName, value) in PropertyEffects)
                     {
-                        if (!target.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property))
-                        {
-                            continue;
-                        }
+                        if (!target.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
                         ApplyToProperty(target, property, value, deltaTime);
                     }
                 }
@@ -2034,10 +2042,10 @@ namespace Barotrauma
                         }
                     }
                 }
-                
+
                 TryTriggerAnimation(target, entity);
 
-                if (!forceSayIdentifier.IsEmpty) 
+                if (!forceSayIdentifier.IsEmpty)
                 {
                     LocalizedString messageToSay = TextManager.Get(forceSayIdentifier).Fallback(forceSayIdentifier.Value);
 
@@ -2121,7 +2129,7 @@ namespace Barotrauma
                         foreach (GiveTalentInfo giveTalentInfo in giveTalentInfos)
                         {
                             if (giveTalentInfo.GiveRandom)
-                            {                        
+                            {
                                 // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
                                 IEnumerable<Identifier> viableTalents = giveTalentInfo.TalentIdentifiers.Where(id => !targetCharacter.Info.UnlockedTalents.Contains(id) && !characterTalentTree.AllTalentIdentifiers.Contains(id));
                                 if (viableTalents.None()) { continue; }
@@ -2142,8 +2150,8 @@ namespace Barotrauma
                     {
                         foreach ((Identifier eventId, Identifier tag) in eventTargetTags)
                         {
-                            if (GameMain.GameSession.EventManager.ActiveEvents.FirstOrDefault(e => e.Prefab.Identifier == eventId) is ScriptedEvent ev) 
-                            { 
+                            if (GameMain.GameSession.EventManager.ActiveEvents.FirstOrDefault(e => e.Prefab.Identifier == eventId) is ScriptedEvent ev)
+                            {
                                 targets.Where(t => t is Entity).ForEach(t => ev.AddTarget(tag, (Entity)t));
                             }
                         }
@@ -2157,9 +2165,13 @@ namespace Barotrauma
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
 
-            if (isNotClient && !UnlockRecipe.IsEmpty && GameMain.GameSession is { } gameSession)
+            if (isNotClient && UnlockRecipes.Any() && GameMain.GameSession is { } gameSession)
             {
-                gameSession.UnlockRecipe(UnlockRecipe, showNotifications: true);
+                foreach (var unlockRecipe in UnlockRecipes)
+                {
+                    Character targetCharacter = user ?? targets.Select(GetCharacterFromTarget).NotNull().FirstOrDefault();
+                    gameSession.UnlockRecipe(targetCharacter?.TeamID ?? CharacterTeamType.Team1, unlockRecipe, showNotifications: true);
+                }
             }
 
             if (isNotClient && triggeredEvents != null && GameMain.GameSession?.EventManager is { } eventManager)
@@ -2168,7 +2180,7 @@ namespace Barotrauma
                 {
                     Event ev = eventPrefab.CreateInstance(eventManager.RandomSeed);
                     if (ev == null) { continue; }
-                    eventManager.QueuedEvents.Enqueue(ev);                    
+                    eventManager.QueuedEvents.Enqueue(ev);
                     if (ev is ScriptedEvent scriptedEvent)
                     {
                         if (!triggeredEventTargetTag.IsEmpty)
@@ -2198,7 +2210,7 @@ namespace Barotrauma
                     foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
                     {
                         var characters = new List<Character>();
-                        
+
                         CharacterTeamType? inheritedTeam = null;
                         if (characterSpawnInfo.InheritTeam)
                         {
@@ -2211,16 +2223,16 @@ namespace Barotrauma
                                 _ => null
                                 // Default to Team1, when we can't deduce the team (for example when spawning outside the sub AND character inventory).
                             } ?? (isPvP ? CharacterTeamType.None : CharacterTeamType.Team1);
-                            
+
                             CharacterTeamType? GetTeamFromSubmarine(MapEntity e)
                             {
                                 if (e.Submarine == null) { return null; }
                                 // Don't allow team FriendlyNPC in outposts, because if you buy a spawner item (such as husk container) from the store and choose to get it immediately, it will be spawned in the outpost.
-                                return !isPvP && e.Submarine.Info.IsOutpost && e.Submarine.TeamID == CharacterTeamType.FriendlyNPC ? 
+                                return !isPvP && e.Submarine.Info.IsOutpost && e.Submarine.TeamID == CharacterTeamType.FriendlyNPC ?
                                     CharacterTeamType.Team1 : e.Submarine.TeamID;
                             }
                         }
-                        
+
                         for (int i = 0; i < characterSpawnInfo.Count; i++)
                         {
                             Entity.Spawner.AddCharacterToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Unsynced) + characterSpawnInfo.Offset,
@@ -2311,11 +2323,11 @@ namespace Barotrauma
                                                     Character.Controlled = newCharacter;
                                                 }
 #elif SERVER
-                                            foreach (Client c in GameMain.Server.ConnectedClients)
-                                            {
-                                                if (c.Character != target) { continue; }                                                
-                                                GameMain.Server.SetClientCharacter(c, newCharacter);                                                
-                                            }
+                                                foreach (Client c in GameMain.Server.ConnectedClients)
+                                                {
+                                                    if (c.Character != target) { continue; }
+                                                    GameMain.Server.SetClientCharacter(c, newCharacter);
+                                                }
 #endif
                                             }
                                             if (characterSpawnInfo.RemovePreviousCharacter) { Entity.Spawner?.AddEntityToRemoveQueue(character); }
@@ -2477,7 +2489,7 @@ namespace Barotrauma
                 position = entity.WorldPosition;
                 if (entity is Item it)
                 {
-                    sourceBody ??= 
+                    sourceBody ??=
                         (entity as Item)?.body ??
                         (entity as Character)?.AnimController.Collider;
                 }
@@ -2532,7 +2544,7 @@ namespace Barotrauma
                                     else if (parentItem != null)
                                     {
                                         rotation = PhysicsBody.TransformRotation(
-                                            -parentItem.RotationRad + chosenItemSpawnInfo.RotationRad, 
+                                            -parentItem.RotationRad + chosenItemSpawnInfo.RotationRad,
                                             dir: parentItem.FlippedX ? -1.0f : 1.0f);
                                     }
                                     break;
@@ -2758,29 +2770,17 @@ namespace Barotrauma
 
         private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {
-            if (disableDeltaTime || setValue) { deltaTime = 1.0f; }
-            if (value is int || value is float)
+            if (value is int or float)
             {
-                float propertyValueF = property.GetFloatValue(target);
+                float newValue = GetModifiedValue(property.GetFloatValue(target), Convert.ToSingle(value), deltaTime);
                 if (property.PropertyType == typeof(float))
                 {
-                    float floatValue = value is float single ? single : (int)value;
-                    floatValue *= deltaTime;
-                    if (!setValue)
-                    {
-                        floatValue += propertyValueF;
-                    }
-                    property.TrySetValue(target, floatValue);
+                    property.TrySetValue(target, newValue);
                     return;
                 }
                 else if (property.PropertyType == typeof(int))
                 {
-                    int intValue = (int)(value is float single ? single * deltaTime : (int)value * deltaTime);
-                    if (!setValue)
-                    {
-                        intValue += (int)propertyValueF;
-                    }
-                    property.TrySetValue(target, intValue);
+                    property.TrySetValue(target, (int)newValue);
                     return;
                 }
             }
@@ -2790,6 +2790,13 @@ namespace Barotrauma
                 return;
             }
             property.TrySetValue(target, value);
+        }
+
+        private float GetModifiedValue(float currValue, float newValue, float deltaTime)
+        {
+            if (setValue) { return newValue; }
+            if (disableDeltaTime) { deltaTime = 1f; }
+            return currValue + newValue * deltaTime;
         }
 
         public static void UpdateAll(float deltaTime)
@@ -2848,7 +2855,7 @@ namespace Barotrauma
                             element.Parent.RegisterTreatmentResults(element.Parent.user, element.Entity as Item, limb, affliction, result);
                         }
                     }
-                    
+
                     foreach ((Identifier affliction, float amount) in element.Parent.ReduceAffliction)
                     {
                         Limb targetLimb = null;
@@ -2894,10 +2901,10 @@ namespace Barotrauma
                     element.Parent.TryTriggerAnimation(target, element.Entity);
                 }
 
-                element.Parent.ApplyProjSpecific(deltaTime, 
-                    element.Entity, 
-                    element.Targets, 
-                    element.Parent.GetHull(element.Entity), 
+                element.Parent.ApplyProjSpecific(deltaTime,
+                    element.Entity,
+                    element.Targets,
+                    element.Parent.GetHull(element.Entity),
                     element.Parent.GetPosition(element.Entity, element.Targets),
                     playSound: element.Timer >= element.Duration);
 
@@ -2970,7 +2977,7 @@ namespace Barotrauma
             if (limb == null) { return; }
             foreach (Affliction limbAffliction in limb.character.CharacterHealth.GetAllAfflictions())
             {
-                if (result.Afflictions != null && 
+                if (result.Afflictions != null &&
                     /* "affliction" is the affliction directly defined in the status effect (e.g. "5 internal damage (per second / per frame / however the effect is defined to run)"), 
                      * "result" is how much we actually applied of that affliction right now (taking into account the elapsed time, resistances and such) */
                     result.Afflictions.FirstOrDefault(a => a.Prefab == limbAffliction.Prefab) is Affliction resultAffliction &&

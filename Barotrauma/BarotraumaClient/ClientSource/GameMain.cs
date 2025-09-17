@@ -270,6 +270,13 @@ namespace Barotrauma
                 ConnectCommand = Option<ConnectCommand>.None();
             }
 
+#if DEBUG
+            if (ConsoleArguments.Contains("-multiclienttestmode"))
+            {
+                DebugConsole.NewMessage("Enabled MultiClientTestMode on the client");
+                GameClient.MultiClientTestMode = true;
+            }
+#endif
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
             PerformanceCounter = new PerformanceCounter();

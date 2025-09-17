@@ -425,6 +425,11 @@ namespace Barotrauma
                     {
                         return PropertyMatchesRequirement(targetChar, characterProperty);
                     }
+                    else if (targetChar?.AnimController?.SerializableProperties is { } animControllerProperties
+                        && animControllerProperties.TryGetValue(AttributeName, out var animControllerProperty))
+                    {
+                        return PropertyMatchesRequirement(targetChar.AnimController, animControllerProperty);
+                    }
                     return ComparisonOperatorIsNotEquals;
                 case ConditionType.SkillRequirement:
                     if (targetChar != null)

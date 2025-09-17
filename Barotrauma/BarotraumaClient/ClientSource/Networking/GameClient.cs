@@ -11,7 +11,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Barotrauma.PerkBehaviors;
 
 namespace Barotrauma.Networking
 {
@@ -26,6 +25,8 @@ namespace Barotrauma.Networking
         
 #if DEBUG
         public float DebugServerVoipAmplitude;
+
+        public static bool MultiClientTestMode;
 #endif
 
         public override Voting Voting { get; }
@@ -873,8 +874,9 @@ namespace Barotrauma.Networking
                     ReadAchievement(inc);
                     break;
                 case ServerPacketHeader.UNLOCKRECIPE:
+                    CharacterTeamType team = (CharacterTeamType)inc.ReadByte();
                     Identifier identifier = inc.ReadIdentifier();
-                    GameMain.GameSession.UnlockRecipe(identifier, showNotifications: true);
+                    GameMain.GameSession?.UnlockRecipe(team, identifier, showNotifications: true);
                     break;
                 case ServerPacketHeader.ACHIEVEMENT_STAT:
                     ReadAchievementStat(inc);

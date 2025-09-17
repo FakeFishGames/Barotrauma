@@ -135,6 +135,9 @@ namespace Barotrauma
         private Affliction stunAffliction;
         public Affliction BloodlossAffliction { get => bloodlossAffliction; }
 
+        /// <summary>
+        /// Is the character dead or below 0 vitality and not able to stay conscious?
+        /// </summary>
         public bool IsUnconscious
         {
             get { return Character.IsDead || (Vitality <= 0.0f && !Character.HasAbilityFlag(AbilityFlags.AlwaysStayConscious)); }

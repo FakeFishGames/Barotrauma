@@ -8,6 +8,15 @@ namespace Barotrauma.Networking;
 
 abstract class P2PSocket : IDisposable
 {
+    public readonly P2POwnerDoSProtection dosProtection;
+    public readonly OwnerOrClient Type;
+
+    public enum OwnerOrClient
+    {
+        Client,
+        Owner
+    }
+
     public enum ErrorCode
     {
         EosNotInitialized,
@@ -38,12 +47,16 @@ abstract class P2PSocket : IDisposable
     public readonly record struct Callbacks(
         Predicate<P2PEndpoint> OnIncomingConnection,
         Action<P2PEndpoint, PeerDisconnectPacket> OnConnectionClosed,
+        P2POwnerDoSProtection.ExcessivePacketDelegate OnExcessivePackets,
         Action<P2PEndpoint, IReadMessage> OnData);
     protected readonly Callbacks callbacks;
 
-    protected P2PSocket(Callbacks callbacks)
+    protected P2PSocket(Callbacks callbacks, OwnerOrClient type)
     {
         this.callbacks = callbacks;
+        Type = type;
+
+        dosProtection = new P2POwnerDoSProtection(callbacks.OnExcessivePackets);
     }
 
     public abstract void ProcessIncomingMessages();

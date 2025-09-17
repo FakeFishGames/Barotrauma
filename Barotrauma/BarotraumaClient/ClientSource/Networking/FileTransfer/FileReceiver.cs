@@ -256,6 +256,15 @@ namespace Barotrauma.Networking
                         }
 
                         string downloadFolder = downloadFolders[(FileTransferType)fileType];
+#if CLIENT && DEBUG
+                        if (GameClient.MultiClientTestMode)
+                        {
+                            //append the name of the client to the download folder to avoid multiple clients
+                            //from trying to download a file into the same path at the same time
+                            downloadFolder += "_" + GameMain.Client.Name;
+                        }
+#endif
+
                         if (!Directory.Exists(downloadFolder))
                         {
                             try

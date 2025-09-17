@@ -197,14 +197,16 @@ namespace Barotrauma.Items.Components
             };
 
             LocalizedString labelText = GetUILabel();
-            GUITextBlock label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter),
-                labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft, wrap: true)
+            GUITextBlock label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopLeft),
+                labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopLeft, wrap: true)
                 {
                     IgnoreLayoutGroups = true
                 };
             
             int buttonSize = GUIStyle.ItemFrameTopBarHeight;
             Point margin = new Point(buttonSize / 4, buttonSize / 6);
+
+            int buttonCount = 0;
 
             GUILayoutGroup buttonArea = new GUILayoutGroup(new RectTransform(new Point(content.Rect.Width, buttonSize - margin.Y * 2), content.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(0, margin.Y) }, 
                 isHorizontal: true, childAnchor: Anchor.TopRight)
@@ -213,24 +215,37 @@ namespace Barotrauma.Items.Components
             };
             if (Inventory.Capacity > 1)
             {
-                new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "SortItemsButton")
+                if (ShowSortButton)
                 {
-                    ToolTip = TextManager.Get("SortItemsAlphabetically"),
-                    OnClicked = (btn, userdata) =>
+                    buttonCount++;
+                    new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "SortItemsButton")
                     {
-                        SortItems();
-                        return true;
-                    }
-                };
-                new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "MergeStacksButton")
+                        ToolTip = TextManager.Get("SortItemsAlphabetically"),
+                        OnClicked = (btn, userdata) =>
+                        {
+                            SortItems();
+                            return true;
+                        }
+                    };
+                }
+                if (ShowMergeButton)
                 {
-                    ToolTip = TextManager.Get("MergeItemStacks"),
-                    OnClicked = (btn, userdata) =>
+                    buttonCount++;
+                    new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "MergeStacksButton")
                     {
-                        MergeStacks();
-                        return true;
-                    }
-                };
+                        ToolTip = TextManager.Get("MergeItemStacks"),
+                        OnClicked = (btn, userdata) =>
+                        {
+                            MergeStacks();
+                            return true;
+                        }
+                    };
+                }
+            }
+
+            if (buttonCount > 0)
+            {
+                label.RectTransform.MaxSize = new Point(label.Parent.Rect.Width - buttonCount * buttonSize, int.MaxValue);
             }
 
             float minInventoryAreaSize = 0.5f;

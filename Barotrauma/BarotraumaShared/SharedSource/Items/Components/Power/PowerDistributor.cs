@@ -82,6 +82,11 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
                 CreateGUI();
+                if (Screen.Selected is not { IsEditor: true })
+                {
+                    //set text via the property to refresh the UI
+                    Name = name;
+                }
 #endif
             }
 

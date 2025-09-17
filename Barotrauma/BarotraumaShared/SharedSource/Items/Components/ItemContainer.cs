@@ -132,6 +132,12 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.No, description: "Should a button that allows sorting the items alphabetically be shown in the container's UI panel?")]
+        public bool ShowSortButton { get; set; }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Should a button that merges items into stacks be shown in the container's UI panel?")]
+        public bool ShowMergeButton { get; set; }
+
         [Serialize(true, IsPropertySaveable.Yes, description: "When this item is equipped, and you 'quick use' (double click / equip button) another equippable item, should the game attempt to move that item inside this one?")]
         public bool QuickUseMovesItemsInside { get; set; }
 

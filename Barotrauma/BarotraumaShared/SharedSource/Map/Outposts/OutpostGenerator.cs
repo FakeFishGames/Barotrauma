@@ -159,11 +159,11 @@ namespace Barotrauma
             if (GameMain.NetworkMember?.ServerSettings is { } serverSettings &&
                 serverSettings.SelectedOutpostName != "Random")
             {
+                var matchingOutpost = outpostInfos.FirstOrDefault(o => o.Name == serverSettings.SelectedOutpostName);
                 //...but only if the outpost is suitable for the mission (or if the mission has no specific requirements for the outpost)
-                if (outpostInfosSuitableForMission.None() ||
-                    outpostInfosSuitableForMission.Any(outpostInfo => outpostInfo.OutpostTags.Contains(serverSettings.SelectedOutpostName)))
+                if (outpostInfosSuitableForMission.Contains(matchingOutpost) || 
+                    outpostInfosSuitableForMission.None())
                 {
-                    var matchingOutpost = outpostInfos.FirstOrDefault(o => o.Name == serverSettings.SelectedOutpostName);
                     if (matchingOutpost != null)
                     {
                         return matchingOutpost;

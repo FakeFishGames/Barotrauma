@@ -89,8 +89,6 @@ namespace Barotrauma.Networking
         private readonly Queue<LogMessage> lines;
         private readonly Queue<LogMessage> unsavedLines;
 
-        private readonly bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
-
         public int LinesPerFile
         {
             get { return linesPerFile; }

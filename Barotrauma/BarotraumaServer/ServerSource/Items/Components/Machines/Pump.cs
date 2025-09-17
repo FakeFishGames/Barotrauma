@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
         const float NetworkUpdateInterval = 5.0f;
         private float networkUpdateTimer;
 
-        partial void UpdateProjSpecific(float deltaTime)
+        partial void UpdateNetworking(float deltaTime)
         {
             networkUpdateTimer -= deltaTime;
             if (networkUpdateTimer <= 0.0f)
@@ -51,6 +51,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
             msg.WriteBoolean(IsActive);
             msg.WriteBoolean(Hijacked);
+            msg.WriteBoolean(Disabled);
             if (TargetLevel != null)
             { 
                 msg.WriteBoolean(true);

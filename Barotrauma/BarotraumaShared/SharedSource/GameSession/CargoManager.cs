@@ -304,12 +304,17 @@ namespace Barotrauma
             // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
             var buyValues = GetBuyValuesAtCurrentLocation(storeIdentifier, itemsToPurchase.Select(i => i.ItemPrefab));
             var itemsInStoreCrate = GetBuyCrateItems(storeIdentifier, create: true);
-            foreach (PurchasedItem item in itemsToPurchase)
+            //handle checking which items can be purchased and deducting money first
+            foreach (PurchasedItem item in itemsToPurchase.ToList())
             {
                 if (item.Quantity <= 0) { continue; }
                 // Exchange money
                 int itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                if (!campaign.TryPurchase(client, itemValue)) { continue; }
+                if (!campaign.TryPurchase(client, itemValue)) 
+                {
+                    itemsToPurchase.Remove(item);
+                    continue;
+                }
 
                 // Add to the purchased items
                 var purchasedItem = itemsPurchasedFromStore.Find(pi => pi.ItemPrefab == item.ItemPrefab && pi.DeliverImmediately == item.DeliverImmediately);
@@ -329,6 +334,7 @@ namespace Barotrauma
                 }
                 store.Balance += itemValue;
             }
+            //actually spawn the items at this point
             if (GameMain.NetworkMember is not { IsClient: true })
             {
                 Character targetCharacter;

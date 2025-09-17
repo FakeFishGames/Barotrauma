@@ -139,6 +139,8 @@ namespace Barotrauma
             }
         }
 
-        public override IEnumerable<Entity> HudIconTargets => targets.Where(static t => !t.Retrieved && t.Item?.GetRootInventoryOwner() is not Character { IsLocalPlayer: true }).Select(static t => t.Item);
+        public override IEnumerable<Entity> HudIconTargets => targets
+            .Where(static t => t.Item != null && !t.Retrieved && t.Item?.GetRootInventoryOwner() is not Character { IsLocalPlayer: true })
+            .Select(static t => t.Item);
     }
 }

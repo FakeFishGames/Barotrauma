@@ -501,10 +501,14 @@ namespace Barotrauma
                     {
                         float newCutoff = MathHelper.Lerp(0.0f, 0.65f, Sections[i].damage / MaxHealth);
 
-                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.05f)
+                        //change the parameters of the damage effect and start a new sprite batch if the damage is different by 5% or more
+                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f ||
+                            //if we were previously rendering some small amount of damage but now 0 damage, make sure we update the parameters
+                            //"no damage" vs "just a tiny fraction of damage" makes a difference, even though normally 5% differences in damage aren't noticeable
+                            MathUtils.NearlyEqual(newCutoff, 0.0f) != MathUtils.NearlyEqual(Submarine.DamageEffectCutoff, 0.0f))
                         {
                             spriteBatch.End();
-                            spriteBatch.Begin(SpriteSortMode.BackToFront,
+                            spriteBatch.Begin(SpriteSortMode.Deferred,
                                 BlendState.NonPremultiplied, SamplerState.LinearWrap,
                                 null, null,
                                 damageEffect,

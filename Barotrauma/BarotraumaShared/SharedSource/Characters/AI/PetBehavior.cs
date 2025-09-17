@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using static Barotrauma.CharacterParams;
 
@@ -433,6 +434,21 @@ namespace Barotrauma
 
                 var petBehavior = (c.AIController as EnemyAIController)?.PetBehavior;
                 if (petBehavior == null) { continue; }
+
+                //never save hostile pets or pets left outside
+                if (c.TeamID == CharacterTeamType.None ||
+                    c.TeamID == CharacterTeamType.Team2 ||
+                    c.Submarine == null)
+                {
+                    continue;
+                }
+
+                //pets must be in a player sub or owned by someone to be persistent
+                if (c.Submarine is not { Info.IsPlayer: true } && 
+                    petBehavior.Owner is not { IsOnPlayerTeam: true }) 
+                { 
+                    continue; 
+                }
 
                 XElement petElement = new XElement("pet", 
                     new XAttribute("speciesname", c.SpeciesName), 

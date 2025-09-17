@@ -656,13 +656,17 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
             }));
 
-            commands.Add(new Command("godmode", "godmode [character name]: Toggle character godmode. Makes the targeted character invulnerable to damage. If the name parameter is omitted, the controlled character will receive godmode.",
+            commands.Add(new Command("godmode", "godmode [character name] [remove afflictions (true/false)]: Toggle character godmode. Makes the targeted character invulnerable to damage. If the name parameter is omitted, the controlled character will receive godmode.",
             (string[] args) =>
             {
                 bool? godmodeStateOnFirstCharacter = null;
                 HandleCommandForCrewOrSingleCharacter(args, ToggleGodMode);
                 void ToggleGodMode(Character targetCharacter)
                 {
+                    if (args.Length > 1 && bool.TryParse(args[1], out bool removeafflictions))
+                    {
+                        if (removeafflictions) { targetCharacter.CharacterHealth.RemoveAllAfflictions(); }
+                    }
                     targetCharacter.GodMode = godmodeStateOnFirstCharacter ?? !targetCharacter.GodMode;
                     godmodeStateOnFirstCharacter = targetCharacter.GodMode;
                     NewMessage((targetCharacter.GodMode ? "Enabled godmode on " : "Disabled godmode on ") + targetCharacter.Name,

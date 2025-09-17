@@ -42,7 +42,7 @@ namespace Barotrauma
             {
                 enemyAi.PetBehavior?.Update(deltaTime);
             }
-            if (IsDead || Vitality <= 0.0f || Stun > 0.0f || IsIncapacitated)
+            if (IsDead || IsUnconscious || Stun > 0.0f || IsIncapacitated)
             {
                 //don't enable simple physics on dead/incapacitated characters
                 //the ragdoll controls the movement of incapacitated characters instead of the collider,

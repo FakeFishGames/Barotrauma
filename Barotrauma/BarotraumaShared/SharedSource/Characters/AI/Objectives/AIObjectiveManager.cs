@@ -443,6 +443,10 @@ namespace Barotrauma
                 newCurrentObjective.Abandoned += () => DismissSelf(order);
                 CurrentOrders.Add(order.WithObjective(newCurrentObjective));
             }
+            else if (!order.IsDismissal)
+            {
+                DebugConsole.ThrowError($"Failed to create an objective for the order: {order.Name}");
+            }
             if (!HasOrders())
             {
                 // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
@@ -458,6 +462,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Creates an AI objective based on the order. Note that the method can return null in the case of e.g. Dismissal orders or orders that erroneously target something non-interactable.
+        /// </summary>
         public AIObjective CreateObjective(Order order, float priorityModifier = 1)
         {
             if (order == null || order.IsDismissal) { return null; }

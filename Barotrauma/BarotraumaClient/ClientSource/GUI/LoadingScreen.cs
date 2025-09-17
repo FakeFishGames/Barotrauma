@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -50,9 +51,15 @@ namespace Barotrauma
         }
 
         private RichString selectedTip;
+
+        private string selectedTipString;
+        private ImmutableArray<RichTextData>? selectedTipRichTextData;
+
         private void SetSelectedTip(LocalizedString tip)
         {
             selectedTip = RichString.Rich(tip);
+            selectedTipString = string.Empty;
+            selectedTipRichTextData = null;
         }
 
         public float LoadState;
@@ -165,13 +172,20 @@ namespace Barotrauma
                     textPos.Y += GUIStyle.LargeFont.MeasureString(loadText.ToUpper()).Y * 1.2f;
                 }
 
-                if (GUIStyle.Font.HasValue && selectedTip != null)
+                if (GUIStyle.Font.HasValue && selectedTip != null && !selectedTip.SanitizedValue.IsNullOrEmpty())
                 {
-                    string wrappedTip = ToolBox.WrapText(selectedTip.SanitizedValue, GameMain.GraphicsWidth * 0.3f, GUIStyle.Font.Value);
-                    string[] lines = wrappedTip.Split('\n');
-                    float lineHeight = GUIStyle.Font.MeasureString(selectedTip).Y;
+                    //store the string value of the LocalizedString to prevent the text from changing if/when new text packs are loaded during the loading screen
+                    if (selectedTipString.IsNullOrEmpty())
+                    {
+                        selectedTipString = selectedTip.SanitizedValue;
+                        selectedTipRichTextData = selectedTip.RichTextData;
+                    }
 
-                    if (selectedTip.RichTextData != null)
+                    string wrappedTip = ToolBox.WrapText(selectedTipString, GameMain.GraphicsWidth * 0.3f, GUIStyle.Font.Value);
+                    string[] lines = wrappedTip.Split('\n');
+                    float lineHeight = GUIStyle.Font.MeasureString(selectedTipString).Y;
+
+                    if (selectedTipRichTextData != null)
                     {
                         int rtdOffset = 0;
                         for (int i = 0; i < lines.Length; i++)
@@ -179,7 +193,7 @@ namespace Barotrauma
                             GUIStyle.Font.DrawStringWithColors(spriteBatch, lines[i],
                                 new Vector2(textPos.X, (int)(textPos.Y + i * lineHeight)),
                                 Color.White,
-                                0f, Vector2.Zero, 1f, SpriteEffects.None, 0f, selectedTip.RichTextData.Value, rtdOffset);
+                                0f, Vector2.Zero, 1f, SpriteEffects.None, 0f, selectedTipRichTextData.Value, rtdOffset);
                             rtdOffset += lines[i].Length;
                         }
                     }

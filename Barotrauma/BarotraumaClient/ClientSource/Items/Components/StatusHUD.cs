@@ -314,9 +314,12 @@ namespace Barotrauma.Items.Components
                     textColors.Add(GUIStyle.Orange);
                 }
 
-                int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
-                texts.Add(OxygenTexts[oxygenTextIndex]);
-                textColors.Add(Color.Lerp(GUIStyle.Red, GUIStyle.Green, target.Oxygen / 100.0f));
+                if (target.NeedsOxygen)
+                {
+                    int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
+                    texts.Add(OxygenTexts[oxygenTextIndex]);
+                    textColors.Add(Color.Lerp(GUIStyle.Red, GUIStyle.Green, target.Oxygen / 100.0f));
+                }
 
                 if (target.Bleeding > 0.0f)
                 {

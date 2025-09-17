@@ -36,11 +36,18 @@ namespace Barotrauma
     {
         public bool IsFiltered(ServerInfo info)
         {
-            if (!Filters.Any()) { return false; }
+            if (Filters.IsEmpty) { return false; }
 
             foreach (var (type, value) in Filters)
             {
-                if (!IsFiltered(info, type, value)) { return false; }
+                try
+                {
+                    if (!IsFiltered(info, type, value)) { return false; }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to check filter type {type} on the server info {(info.ServerName ?? "null")}.", e);
+                }
             }
 
             return true;
@@ -63,7 +70,9 @@ namespace Barotrauma
                 SpamServerFilterType.MessageEquals => CompareEquals(desc, value),
                 SpamServerFilterType.MessageContains => CompareContains(desc, value),
 
-                SpamServerFilterType.Endpoint => info.Endpoints.First().StringRepresentation.Equals(value, StringComparison.OrdinalIgnoreCase),
+                SpamServerFilterType.Endpoint =>
+                    info.Endpoints != null &&
+                    info.Endpoints.First().StringRepresentation.Equals(value, StringComparison.OrdinalIgnoreCase),
 
                 SpamServerFilterType.PlayerCountLarger => info.PlayerCount > parsedInt,
                 SpamServerFilterType.PlayerCountExact => info.PlayerCount == parsedInt,
@@ -79,10 +88,23 @@ namespace Barotrauma
             };
 
             static bool CompareEquals(string a, string b)
-                => a.Equals(b, StringComparison.OrdinalIgnoreCase) || Homoglyphs.Compare(a, b);
+            {
+                if (a == null || b == null)
+                {
+                    return a == b;
+                }
+                return a.Equals(b, StringComparison.OrdinalIgnoreCase) || Homoglyphs.Compare(a, b);                
+
+            }
 
             static bool CompareContains(string a, string b)
-                => a.Contains(b, StringComparison.OrdinalIgnoreCase);
+            {
+                if (a == null || b == null)
+                {
+                    return a == b;
+                }
+                return a.Contains(b, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         public XElement Serialize()

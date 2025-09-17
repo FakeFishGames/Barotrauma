@@ -461,20 +461,15 @@ namespace Barotrauma
             }
         }
 
-        public float ImpactTolerance
-        {
-            get { return Prefab.ImpactTolerance; }
-        }
-        
-        public float InteractDistance
-        {
-            get { return Prefab.InteractDistance; }
-        }
+        public float ImpactTolerance => Prefab.ImpactTolerance;
 
-        public float InteractPriority
-        {
-            get { return Prefab.InteractPriority; }
-        }
+        public float ImpactDamage => Prefab.ImpactDamage;
+        public float ImpactDamageProbability => Prefab.ImpactDamageProbability;
+
+        public float InteractDistance => Prefab.InteractDistance;        
+
+        public float InteractPriority => Prefab.InteractPriority;
+        
 
         public override Vector2 Position
         {
@@ -1767,7 +1762,7 @@ namespace Barotrauma
                 ic.Move(amount, ignoreContacts);
             }
 
-            if (body != null && (Submarine == null || !Submarine.Loading)) { FindHull(); }
+            if (body != null && (Submarine == null || !Submarine.Loading) || Screen.Selected is { IsEditor: true }) { FindHull(); }
         }
 
         public Rectangle TransformTrigger(Rectangle trigger, bool world = false)
@@ -2387,7 +2382,7 @@ namespace Barotrauma
             {
                 while (impactQueue.TryDequeue(out float impact))
                 {
-                    HandleCollision(impact);
+                    ReceiveImpact(impact);
                 }
             }
             if (isDroppedStackOwner && body != null)
@@ -2461,7 +2456,7 @@ namespace Barotrauma
 
                 if (ic.IsActive || ic.UpdateWhenInactive)
                 {
-                    if (condition <= 0.0f)
+                    if (!ic.UpdateWhenBroken && condition <= 0.0f)
                     {
                         ic.UpdateBroken(deltaTime, cam);
                     }
@@ -2713,25 +2708,35 @@ namespace Barotrauma
             return true;
         }
 
-        private void HandleCollision(float impact)
+        public void ReceiveImpact(float impactStrength, bool recursive = true)
         {
-            OnCollisionProjSpecific(impact);
+            OnCollisionProjSpecific(impactStrength);
             if (GameMain.NetworkMember is { IsClient: true }) { return; }
 
-            if (ImpactTolerance > 0.0f && Math.Abs(impact) > ImpactTolerance && hasStatusEffectsOfType[(int)ActionType.OnImpact])
+            if (ImpactTolerance > 0.0f && Math.Abs(impactStrength) > ImpactTolerance && Rand.Range(0.0f, 1.0f) < ImpactDamageProbability)
             {
-                foreach (StatusEffect effect in statusEffectLists[ActionType.OnImpact])
+                if (ImpactDamage != 0.0f)
                 {
-                    ApplyStatusEffect(effect, ActionType.OnImpact, deltaTime: 1.0f);
+                    Condition -= impactStrength * ImpactDamage;
                 }
+
+                if (hasStatusEffectsOfType[(int)ActionType.OnImpact])
+                {
+                    foreach (StatusEffect effect in statusEffectLists[ActionType.OnImpact])
+                    {
+                        ApplyStatusEffect(effect, ActionType.OnImpact, deltaTime: 1.0f);
+                    }
 #if SERVER
-                GameMain.Server?.CreateEntityEvent(this, new ApplyStatusEffectEventData(ActionType.OnImpact));
+                    GameMain.Server?.CreateEntityEvent(this, new ApplyStatusEffectEventData(ActionType.OnImpact));
 #endif
+                }
             }
+
+            if (!recursive) { return; }
 
             foreach (Item contained in ContainedItems)
             {
-                if (contained.body != null) { contained.HandleCollision(impact); }
+                if (contained.body != null) { contained.ReceiveImpact(impactStrength, recursive: true); }
             }
         }
 
@@ -3698,18 +3703,15 @@ namespace Barotrauma
             SerializableProperty property = extraData.SerializableProperty;
             ISerializableEntity entity = extraData.Entity;
 
-            msg.WriteVariableUInt32((uint)allProperties.Count);
-
             if (property != null)
             {
                 if (allProperties.Count > 1)
                 {
-                    int propertyIndex = allProperties.FindIndex(p => p.property == property && p.obj == entity);
-                    if (propertyIndex < 0)
+                    if (allProperties.None(p => p.property == property && p.obj == entity))
                     {
                         throw new Exception($"Could not find the property \"{property.Name}\" in \"{entity.Name ?? "null"}\"");
                     }
-                    msg.WriteVariableUInt32((uint)propertyIndex);
+                    msg.WriteIdentifier(property.Name.ToIdentifier());
                 }
 
                 object value = property.GetValue(entity);
@@ -3814,21 +3816,11 @@ namespace Barotrauma
             var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
             if (allProperties.Count == 0) { return; }
 
-            int propertyCount = (int)msg.ReadVariableUInt32();
-            if (propertyCount != allProperties.Count)
+            Identifier propertyIdentifier = msg.ReadIdentifier();
+            int propertyIndex = allProperties.IndexOf(p => p.property.Name == propertyIdentifier);
+            if (propertyIndex < 0)
             {
-                throw new Exception($"Error in {nameof(ReadPropertyChange)}. The number of properties on the item \"{Prefab.Identifier}\" does not match between the server and the client. Server: {propertyCount}, client: {allProperties.Count}.");
-            }
-
-            int propertyIndex = 0;
-            if (allProperties.Count > 1)
-            {
-                propertyIndex = (int)msg.ReadVariableUInt32();
-            }
-
-            if (propertyIndex >= allProperties.Count || propertyIndex < 0)
-            {
-                throw new Exception($"Error in {nameof(ReadPropertyChange)}. Property index out of bounds (item: {Prefab.Identifier}, index: {propertyIndex}, property count: {allProperties.Count}, in-game editable only: {inGameEditableOnly})");
+                throw new Exception($"Error in {nameof(ReadPropertyChange)}. Could not find the property \"{propertyIdentifier}\" in item \"{Prefab.Identifier}\" (property count: {allProperties.Count}, in-game editable only: {inGameEditableOnly})");
             }
 
             bool allowEditing = true;

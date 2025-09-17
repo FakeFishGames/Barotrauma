@@ -17,15 +17,21 @@ namespace Barotrauma
     {
         /// <summary>
         /// How much access other characters have to the inventory?
-        /// <see cref="Restricted"/> = Only accessible when character is knocked down or handcuffed.
-        /// <see cref="Limited"/> = Can also access inventories of bots on the same team and friendly pets.
-        /// <see cref="Allowed"/> = Can also access other players in the same team (used for drag and drop give).
         /// </summary>
         public enum AccessLevel
         {
-            Restricted,
-            Limited,
-            Allowed
+            /// <summary>
+            /// Only accessible when character is knocked down or handcuffed.
+            /// </summary>
+            OnlyIfIncapacitated,
+            /// <summary>
+            /// Can also access inventories of bots on the same team and friendly pets.
+            /// </summary>
+            AllowBotsAndPets,
+            /// <summary>
+            /// Can also access other players in the same team (used for drag and drop give).
+            /// </summary>
+            AllowFriendly
         }
         
         private readonly Character character;
@@ -342,8 +348,9 @@ namespace Barotrauma
                     {
                         foreach (Item existingItem in slots[slot].Items.ToList())
                         {
+                            if (!existingItem.IsInteractable(character)) { continue; }
                             existingItem.Drop(user);
-                            if (existingItem.ParentInventory != null) { existingItem.ParentInventory.RemoveItem(existingItem); }
+                            existingItem.ParentInventory?.RemoveItem(existingItem);
                         }
                     }
                 }

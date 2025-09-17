@@ -258,9 +258,9 @@ namespace Barotrauma
                 {
                     SlideshowPlayer = new SlideshowPlayer(GUICanvas.Instance, slideshow);
                 }
-                var outpost = GameMain.GameSession.Level.StartOutpost;
-                var borders = outpost.GetDockedBorders();
-                borders.Location += outpost.WorldPosition.ToPoint();
+                var subToFocusTo = GameMain.GameSession.Level.StartOutpost ?? Submarine.MainSub;
+                var borders = subToFocusTo.GetDockedBorders();
+                borders.Location += subToFocusTo.WorldPosition.ToPoint();
                 GameMain.GameScreen.Cam.Position = new Vector2(borders.X + borders.Width / 2, borders.Y - borders.Height / 2);
                 float startZoom = 0.8f /
                     ((float)Math.Max(borders.Width, borders.Height) / (float)GameMain.GameScreen.Cam.Resolution.X);
@@ -646,9 +646,12 @@ namespace Barotrauma
                 modeElement.Add(GameMain.GameSession?.EventManager.Save());
             }
 
-            foreach (Identifier unlockedRecipe in GameMain.GameSession.UnlockedRecipes)
+            foreach ((CharacterTeamType team, Identifier unlockedRecipe) in GameMain.GameSession.UnlockedRecipes)
             {
-                modeElement.Add(new XElement("unlockedrecipe", new XAttribute("identifier", unlockedRecipe)));
+                modeElement.Add(
+                    new XElement("unlockedrecipe",
+                    new XAttribute("identifier", unlockedRecipe),
+                    new XAttribute("team", team)));
             }
 
             //save and remove all items that are in someone's inventory so they don't get included in the sub file as well

@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -35,7 +36,7 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (item.ConditionPercentage > 10.0f || !IsActive) { return 0.0f; }
+                if (item.ConditionPercentage > 10.0f || !IsActive || Disabled) { return 0.0f; }
                 return (1.0f - item.ConditionPercentage / 10.0f) * 100.0f;
             }
         }
@@ -61,6 +62,23 @@ namespace Barotrauma.Items.Components
             set => maxFlow = value;
         }
 
+        private bool disabled;
+        [Serialize(false, IsPropertySaveable.Yes, description: "If true, the pump is unable to pump water.", alwaysUseInstanceValues: true)]
+        public bool Disabled 
+        {
+            get => disabled;
+            set
+            {
+                if (disabled == value) { return; }
+                disabled = value;
+#if SERVER
+                //send a network update soon
+                //don't force to 0 though so this doesn't lead to spam if the property is toggled rapidly
+                networkUpdateTimer = Math.Min(networkUpdateTimer, 0.5f);
+#endif
+            }
+        }
+
         [Editable, Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public bool IsOn
         {
@@ -68,15 +86,13 @@ namespace Barotrauma.Items.Components
             set { IsActive = value; }
         }
 
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool CanCauseLethalPressure { get; set; }
+
         private float currFlow;
-        public float CurrFlow
-        {
-            get
-            {
-                if (!IsActive) { return 0.0f; }
-                return Math.Abs(currFlow);
-            }
-        }
+        public float CurrFlow => IsActive ? Math.Abs(currFlow) : 0.0f;
+
+        public bool IsHullFull => item.CurrentHull != null && item.CurrentHull.WaterVolume >= item.CurrentHull.Volume * Hull.MaxCompress;
 
         public override bool HasPower => IsActive && Voltage >= MinVoltage;
         public bool IsAutoControlled => pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
@@ -85,7 +101,7 @@ namespace Barotrauma.Items.Components
 
         public override bool UpdateWhenInactive => true;
 
-        public float CurrentStress => Math.Abs(flowPercentage / 100.0f);
+        public float CurrentStress => IsActive ? Math.Abs(flowPercentage / 100.0f) : 0.0f;
 
         public Pump(Item item, ContentXElement element)
             : base(item, element)
@@ -95,48 +111,42 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(ContentXElement element);
 
+        private readonly List<Hull> linkedHulls = [];
+
         public override void Update(float deltaTime, Camera cam)
         {
             pumpSpeedLockTimer -= deltaTime;
             isActiveLockTimer -= deltaTime;
 
-            if (!IsActive)
+            currFlow = 0f;
+
+            if (item.CurrentHull == null)
             {
+                if (TargetLevel != null) { FlowPercentage = 0f; }
                 return;
             }
-
-            currFlow = 0.0f;
 
             if (TargetLevel != null)
             {
-                float hullPercentage = 0.0f;
-                if (item.CurrentHull != null) 
+                float hullWaterVolume = item.CurrentHull.WaterVolume;
+                float totalHullVolume = item.CurrentHull.Volume;
+
+                linkedHulls.Clear();
+                //hidden hulls still affect buoyancy, include them here
+                item.CurrentHull.GetLinkedHulls(linkedHulls, includeHiddenHulls: true);
+                foreach (var linkedHull in linkedHulls)
                 {
-                    float hullWaterVolume = item.CurrentHull.WaterVolume;
-                    float totalHullVolume = item.CurrentHull.Volume;
-                    foreach (var linked in item.CurrentHull.linkedTo)
-                    {
-                        if ((linked is Hull linkedHull))
-                        {
-                            hullWaterVolume += linkedHull.WaterVolume;
-                            totalHullVolume += linkedHull.Volume;
-                        }
-                    }
-                    hullPercentage = hullWaterVolume / totalHullVolume * 100.0f; 
+                    hullWaterVolume += linkedHull.WaterVolume;
+                    totalHullVolume += linkedHull.Volume;
                 }
+                float hullPercentage = hullWaterVolume / totalHullVolume * 100.0f;
                 FlowPercentage = ((float)TargetLevel - hullPercentage) * 10.0f;
             }
 
-            if (!HasPower)
-            {
-                return;
-            }
+            UpdateNetworking(deltaTime);
 
-            UpdateProjSpecific(deltaTime);
-
-            ApplyStatusEffects(ActionType.OnActive, deltaTime);
-
-            if (item.CurrentHull == null) { return; }      
+            if (!IsActive || Disabled) { return; }
+            if (flowPercentage <= 0f && item.CurrentHull.WaterVolume <= 0f) { return; }
 
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
 
@@ -150,8 +160,22 @@ namespace Barotrauma.Items.Components
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
-            item.CurrentHull.WaterVolume += currFlow * deltaTime * Timing.FixedUpdateRate; 
-            if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 30.0f * deltaTime; }
+            if (MathUtils.NearlyEqual(currFlow, 0f, epsilon: 0.01f))
+            {
+                currFlow = 0f; // Set to 0 for conditionals.
+                return;
+            }
+
+            item.CurrentHull.WaterVolume += currFlow * deltaTime * Timing.FixedUpdateRate;
+
+            if (flowPercentage > 0f && item.CurrentHull.WaterVolume > item.CurrentHull.Volume)
+            {
+                item.CurrentHull.Pressure += 30f * deltaTime;
+                if (CanCauseLethalPressure) { item.CurrentHull.LethalPressure += Hull.PressureBuildUpSpeed * deltaTime; }
+            }
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
+            UpdateProjSpecific(deltaTime);
         }
 
         public void InfectBallast(Identifier identifier, bool allowMultiplePerShip = false)
@@ -188,7 +212,7 @@ namespace Barotrauma.Items.Components
         public override float GetCurrentPowerConsumption(Connection connection = null)
         {
             //There shouldn't be other power connections to this
-            if (connection != this.powerIn || !IsActive)
+            if (connection != this.powerIn || !IsActive || Disabled)
             {
                 return 0;
             }
@@ -202,6 +226,8 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
         
+        partial void UpdateNetworking(float deltaTime);
+
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (Hijacked) { return; }
@@ -275,6 +301,12 @@ namespace Barotrauma.Items.Components
                     break;
             }
             return true;
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            linkedHulls.Clear();
         }
     }
 }

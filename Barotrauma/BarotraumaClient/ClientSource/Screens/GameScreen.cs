@@ -319,14 +319,21 @@ namespace Barotrauma
             graphics.Clear(Color.Transparent);
 
             DamageEffect.CurrentTechnique = DamageEffect.Techniques["StencilShader"];
-            DamageEffect.CurrentTechnique.Passes[0].Apply();
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.LinearWrap, effect: DamageEffect, transformMatrix: cam.Transform);
+            //reset so any parameters left over from previous usages of the shader don't persist
+            ResetDamageEffect();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, effect: DamageEffect, transformMatrix: cam.Transform);
             Submarine.DrawDamageable(spriteBatch, DamageEffect, false);
-            DamageEffect.Parameters["aCutoff"].SetValue(0.0f);
-            DamageEffect.Parameters["cCutoff"].SetValue(0.0f);
-            Submarine.DamageEffectCutoff = 0.0f;
-            DamageEffect.CurrentTechnique.Passes[0].Apply();
             spriteBatch.End();
+            //reset so parameters set in DrawDamageable don't persist
+            ResetDamageEffect();
+
+            void ResetDamageEffect()
+            {
+                DamageEffect.Parameters["aCutoff"].SetValue(0.0f);
+                DamageEffect.Parameters["cCutoff"].SetValue(0.0f);
+                Submarine.DamageEffectCutoff = 0.0f;
+                DamageEffect.CurrentTechnique.Passes[0].Apply();
+            }
 
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontDamageable", sw.ElapsedTicks);

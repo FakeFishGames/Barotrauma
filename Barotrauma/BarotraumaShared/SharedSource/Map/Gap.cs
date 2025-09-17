@@ -370,17 +370,30 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+            Hull hull1 = linkedTo.Count < 1 ? null : linkedTo[0] as Hull;
+            Hull hull2 = linkedTo.Count < 2 ? null : (Hull)linkedTo[1];
+
             int updateInterval = 4;
-            float flowMagnitude = flowForce.LengthSquared();
-            if (flowMagnitude < 1.0f)
+            //if one hull is at lethal pressure (connected to outside), and the other not yet,
+            //we need frequent updates to quickly move water into the other hull
+            if (hull1 != null && hull2 != null && 
+                hull1.LethalPressure > 0.0f != hull2.LethalPressure > 0.0f)
             {
-                //very sparse updates if there's practically no water moving
-                updateInterval = 8;
-            }
-            else if (linkedTo.Count == 2 && flowMagnitude > 10.0f)
-            {
-                //frequent updates if water is moving between hulls
                 updateInterval = 1;
+            }
+            else
+            {
+                float flowMagnitude = flowForce.LengthSquared();
+                if (flowMagnitude < 1.0f)
+                {
+                    //very sparse updates if there's practically no water moving
+                    updateInterval = 8;
+                }
+                else if (linkedTo.Count == 2 && flowMagnitude > 10.0f)
+                {
+                    //frequent updates if water is moving between hulls
+                    updateInterval = 1;
+                }
             }
 
             updateCount++;
@@ -409,8 +422,6 @@ namespace Barotrauma
                 return;
             }
 
-            Hull hull1 = (Hull)linkedTo[0];
-            Hull hull2 = linkedTo.Count < 2 ? null : (Hull)linkedTo[1];
             if (hull1 == hull2) { return; }
 
             UpdateOxygen(hull1, hull2, deltaTime);
@@ -469,6 +480,8 @@ namespace Barotrauma
                 higherSurface = Math.Max(hull1.Surface, hull2.Surface + subOffset.Y);
                 float delta = 0.0f;
 
+                Hull flowSourceHull = null;
+
                 //water level is above the lower boundary of the gap
                 if (Math.Max(hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1], hull2.Surface + subOffset.Y + hull2.WaveY[0]) > rect.Y - Size)
                 {
@@ -479,10 +492,9 @@ namespace Barotrauma
                     {
                         if (!(hull2.WaterVolume > 0.0f)) { return; }
                         lowerSurface = hull1.Surface - hull1.WaveY[hull1.WaveY.Length - 1];
-                        //delta = Math.Min((room2.water.pressure - room1.water.pressure) * sizeModifier, Math.Min(room2.water.Volume, room2.Volume));
-                        //delta = Math.Min(delta, room1.Volume - room1.water.Volume + Water.MaxCompress);
 
                         flowTargetHull = hull1;
+                        flowSourceHull = hull2;
 
                         //make sure not to move more than what the room contains
                         delta = Math.Min(((hull2.Pressure + subOffset.Y) - hull1.Pressure) * 300.0f * sizeModifier * deltaTime, Math.Min(hull2.WaterVolume, hull2.Volume));
@@ -504,6 +516,7 @@ namespace Barotrauma
                         lowerSurface = hull2.Surface - hull2.WaveY[hull2.WaveY.Length - 1];
 
                         flowTargetHull = hull2;
+                        flowSourceHull = hull1;
 
                         //make sure not to move more than what the room contains
                         delta = Math.Min((hull1.Pressure - (hull2.Pressure + subOffset.Y)) * 300.0f * sizeModifier * deltaTime, Math.Min(hull1.WaterVolume, hull1.Volume));
@@ -547,7 +560,6 @@ namespace Barotrauma
                 if (hull2.Pressure + subOffset.Y > hull1.Pressure && hull2.WaterVolume > 0.0f)
                 {
                     float delta = Math.Min(hull2.WaterVolume - hull2.Volume + (hull2.Volume * Hull.MaxCompress), deltaTime * 8000.0f * sizeModifier);
-
                     //make sure not to place more water to the target room than it can hold
                     if (hull1.WaterVolume + delta > hull1.Volume * Hull.MaxCompress)
                     {
@@ -623,19 +635,30 @@ namespace Barotrauma
             }
         }
 
-        void UpdateRoomToOut(float deltaTime, Hull hull1)
+        /// <summary>
+        /// How much water can flow through the gap to the hull if the gap is connected outside.
+        /// </summary>
+        private float GetWaterFlowFromOutside(Hull hull, float deltaTime, bool ignoreCurrentWater = false)
         {
             //a variable affecting the water flow through the gap
             //the larger the gap is, the faster the water flows
             float sizeModifier = Size * open * open * (1.0f - overlappingGapFlowRateReduction);
-
             float delta = 500.0f * sizeModifier * deltaTime;
+            if (!ignoreCurrentWater)
+            {
+                delta = Math.Min(delta, hull.Volume * Hull.MaxCompress - hull.WaterVolume);
+            }
+            return delta;
+        }
+
+        void UpdateRoomToOut(float deltaTime, Hull hull1)
+        {
+            float delta = GetWaterFlowFromOutside(hull1, deltaTime);
 
             //make sure not to place more water to the target room than it can hold
-            delta = Math.Min(delta, hull1.Volume * Hull.MaxCompress - hull1.WaterVolume);
             hull1.WaterVolume += delta;
 
-            if (hull1.WaterVolume > hull1.Volume) { hull1.Pressure += 30.0f * deltaTime; }
+            if (hull1.WaterVolume > hull1.Volume) { hull1.Pressure += 100.0f * deltaTime; }
 
             flowTargetHull = hull1;
 
@@ -697,6 +720,65 @@ namespace Barotrauma
                 {
                     hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : Hull.PressureBuildUpSpeed) * PressureDistributionSpeed * deltaTime;
                 }
+            }
+        
+            if (hull1.LethalPressure > 0)
+            {
+                SimulateWaterFlowFromOutsideToConnectedHulls(hull1, maxFlow: GetWaterFlowFromOutside(hull1, deltaTime, ignoreCurrentWater: true), deltaTime: deltaTime);
+            }        
+        }
+
+        private Hull GetOtherLinkedHull(Hull hull1)
+        {
+            if (linkedTo.Count != 2 || hull1 == null) { return null; }
+            return (linkedTo[0] == hull1 ? linkedTo[1] : linkedTo[0]) as Hull;
+        }
+
+        private static readonly HashSet<Hull> checkedHulls = new HashSet<Hull>();
+
+        /// <summary>
+        /// Simulates water flow from the source to all the hulls it's connected to across the sub, as if the water was coming directly from outside.
+        /// Used to prevent gaps from slowing down flooding when hulls are directly connected outside and highly pressurized.
+        /// </summary>
+        void SimulateWaterFlowFromOutsideToConnectedHulls(Hull hull, float maxFlow, float deltaTime)
+        {
+            checkedHulls.Clear();
+            checkedHulls.Add(hull);
+            foreach (var connectedGap in hull.ConnectedGaps)
+            {
+                if (connectedGap == this || !connectedGap.IsRoomToRoom || connectedGap.open <= 0.0f) { continue; }
+                var otherHull = connectedGap.GetOtherLinkedHull(hull);
+                if (otherHull == null) { continue; }
+                SimulateWaterFlowFromOutsideToConnectedHullsRecursive(otherHull, connectedGap, checkedHulls, hull, maxFlow, deltaTime);
+            }
+        }
+
+        static void SimulateWaterFlowFromOutsideToConnectedHullsRecursive(Hull targetHull, Gap gap, HashSet<Hull> checkedHulls, Hull originHull, float maxFlow, float deltaTime)
+        {
+            const float decay = 0.95f;
+
+            maxFlow = Math.Min(maxFlow, gap.GetWaterFlowFromOutside(targetHull, deltaTime, ignoreCurrentWater: true)) * decay;
+            if (maxFlow <= 0.001f) { return; }
+
+            checkedHulls.Add(targetHull);
+
+            //don't multiply by deltatime here, we already did that in GetWaterFlowFromOutside
+            targetHull.WaterVolume += maxFlow;
+            //lerp lethal pressure up very fast
+            if (targetHull.WaterVolume > targetHull.Volume)
+            {
+                targetHull.LethalPressure = Math.Max(targetHull.LethalPressure, MathHelper.Lerp(targetHull.LethalPressure, originHull.LethalPressure, 0.1f));
+            }
+
+            //stop pushing water to the following hulls once we get to a hull that's not at high pressure yet
+            if (targetHull.LethalPressure <= 0 || targetHull.WaterVolume < targetHull.Volume) { return; }
+
+            foreach (var connectedGap in targetHull.ConnectedGaps)
+            {
+                if (connectedGap == gap || !connectedGap.IsRoomToRoom || connectedGap.open <= 0.0f) { continue; }
+                var otherHull = connectedGap.GetOtherLinkedHull(targetHull);
+                if (otherHull == null || checkedHulls.Contains(otherHull)) { continue; }
+                SimulateWaterFlowFromOutsideToConnectedHullsRecursive(otherHull, connectedGap, checkedHulls, originHull, maxFlow, deltaTime);
             }
         }
 
@@ -883,6 +965,8 @@ namespace Barotrauma
         {
             base.Remove();
             GapList.Remove(this);
+
+            checkedHulls.Clear();
 
             foreach (Hull hull in Hull.HullList)
             {

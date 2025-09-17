@@ -1850,6 +1850,10 @@ namespace Barotrauma
                     HandleCommandForCrewOrSingleCharacter(args, ToggleGodMode, client);
                     void ToggleGodMode(Character targetCharacter)
                     {
+                        if (args.Length > 1 && bool.TryParse(args[1], out bool removeafflictions))
+                        {
+                            if (removeafflictions) { targetCharacter.CharacterHealth.RemoveAllAfflictions(); }
+                        }
                         targetCharacter.GodMode = godmodeStateOnFirstCharacter ?? !targetCharacter.GodMode;
                         godmodeStateOnFirstCharacter = targetCharacter.GodMode;
                         GameMain.NetworkMember.CreateEntityEvent(targetCharacter, new Character.CharacterStatusEventData());

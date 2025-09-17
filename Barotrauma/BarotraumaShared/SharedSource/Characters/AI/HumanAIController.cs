@@ -1092,6 +1092,8 @@ namespace Barotrauma
                         }
                         if (!isFleeing)
                         {
+                            CheckForDraggedCorpses();
+
                             foreach (Character target in Character.CharacterList)
                             {
                                 if (target.CurrentHull != hull) { continue; }
@@ -1207,6 +1209,34 @@ namespace Barotrauma
                     string msgId = "DialogPressure";
                     Character.Speak(TextManager.GetWithVariable(msgId, "[roomname]", Character.CurrentHull.DisplayName, FormatCapitals.Yes).Value, delay: Rand.Range(minDelay, maxDelay), identifier: msgId.ToIdentifier(), minDurationBetweenSimilar: 30.0f);
                 }
+            }
+        }
+        
+        private void CheckForDraggedCorpses()
+        {
+            if (Character.IsOnPlayerTeam) { return; }
+            if (Character.Submarine is not { Info.IsOutpost: true }) { return; }
+
+            //find corpses in the same team
+            foreach (Character otherCharacter in Character.CharacterList)
+            {
+                if (otherCharacter.SelectedCharacter == null || 
+                    !otherCharacter.SelectedCharacter.IsDead ||
+                    otherCharacter.SelectedCharacter.TeamID != Character.TeamID ||
+                    otherCharacter.IsInstigator)
+                {
+                    continue;
+                }
+
+                if (!Character.CanSeeTarget(otherCharacter)) { continue; }
+
+                // Player is dragging a corpse from our team
+                string dialogTag = Character.IsSecurity ? "dialogdraggingcorpsereactionsecurity" : "dialogdraggingcorpsereaction";
+                Character.Speak(TextManager.Get(dialogTag).Value, messageType: null,
+                    delay: Rand.Range(0.5f, 1.0f), identifier: "dialogdraggingcorpsereaction".ToIdentifier(), minDurationBetweenSimilar: 10.0f);                
+
+                AddCombatObjective(Character.IsSecurity ? AIObjectiveCombat.CombatMode.Arrest : AIObjectiveCombat.CombatMode.Retreat, otherCharacter);
+                break; // Only react to one at a time
             }
         }
 
@@ -1660,6 +1690,10 @@ namespace Barotrauma
         public AIObjective SetForcedOrder(Order order)
         {
             var objective = ObjectiveManager.CreateObjective(order);
+            if (order != null && !order.IsDismissal)
+            {
+                System.Diagnostics.Debug.Assert(objective != null);
+            }
             ObjectiveManager.SetForcedOrder(objective);
             return objective;
         }

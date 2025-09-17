@@ -396,7 +396,10 @@ namespace Barotrauma
                 }
             }
 
-            if (MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) && Attack.Afflictions.None())
+            if (Attack.Afflictions.None() &&
+                MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) &&
+                MathUtils.NearlyEqual(Attack.ItemDamage, 0.0f) && 
+                MathUtils.NearlyEqual(Attack.StructureDamage, 0.0f))
             {
                 return;
             }

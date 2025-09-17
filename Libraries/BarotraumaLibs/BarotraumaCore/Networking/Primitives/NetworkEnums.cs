@@ -32,7 +32,8 @@ namespace Barotrauma.Networking
         IsDisconnectMessage = 0x4,
         IsServerMessage = 0x8,
         IsHeartbeatMessage = 0x10,
-        IsDataFragment = 0x20
+        IsDataFragment = 0x20,
+        IsDoSProtectionMessage = 0x40,
     }
 
     public static class NetworkEnumExtensions
@@ -51,9 +52,12 @@ namespace Barotrauma.Networking
 
         public static bool IsHeartbeatMessage(this PacketHeader h)
             => h.HasFlag(PacketHeader.IsHeartbeatMessage);
-        
+
         public static bool IsDataFragment(this PacketHeader h)
             => h.HasFlag(PacketHeader.IsDataFragment);
+
+        public static bool IsDoSProtectionMessage(this PacketHeader h)
+            => h.HasFlag(PacketHeader.IsDoSProtectionMessage);
     }
     
     public static class NetworkMagicStrings

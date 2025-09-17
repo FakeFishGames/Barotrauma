@@ -1530,9 +1530,12 @@ namespace Barotrauma
                 modeElement.Add(GameMain.GameSession?.EventManager.Save());
             }
 
-            foreach (Identifier unlockedRecipe in GameMain.GameSession.UnlockedRecipes)
+            foreach ((CharacterTeamType team, Identifier unlockedRecipe) in GameMain.GameSession.UnlockedRecipes)
             {
-                modeElement.Add(new XElement("unlockedrecipe", new XAttribute("identifier", unlockedRecipe)));
+                modeElement.Add(
+                    new XElement("unlockedrecipe", 
+                    new XAttribute("identifier", unlockedRecipe),
+                    new XAttribute("team", team)));
             }
 
             CampaignMetadata?.Save(modeElement);

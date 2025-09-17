@@ -860,26 +860,22 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
-        private static KeyValuePair<Identifier, float>? GetReputationRequirement(PriceInfo priceInfo)
+        private static float GetReputationRequirement(PriceInfo priceInfo, Identifier faction)
         {
-            return GameMain.GameSession?.Campaign is not null
-               ? priceInfo.MinReputation.FirstOrNull()
-               : null;
+            return priceInfo.MinReputation.GetValueOrDefault(faction);
         }
 
-        private static KeyValuePair<Identifier, float>? GetTooLowReputation(PriceInfo priceInfo)
+        private static bool ReputationRequirementsMet(PriceInfo priceInfo, Identifier faction)
         {
+            if (priceInfo.MinReputation.None()) { return true; }
             if (GameMain.GameSession?.Campaign is CampaignMode campaign)
             {
-                foreach (var minRep in priceInfo.MinReputation)
+                if (priceInfo.MinReputation.TryGetValue(faction, out float requirement))
                 {
-                    if (MathF.Round(campaign.GetReputation(minRep.Key)) < minRep.Value)
-                    {
-                        return minRep;
-                    }
+                    return MathF.Round(campaign.GetReputation(faction)) >= requirement;
                 }
             }
-            return null;
+            return false;
         }
 
         int prevDailySpecialCount, prevRequestedGoodsCount, prevSubRequestedGoodsCount;
@@ -948,7 +944,7 @@ namespace Barotrauma
                         SetPriceGetters(itemFrame, true);
                     }
 
-                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && !GetTooLowReputation(priceInfo).HasValue);
+                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && ReputationRequirementsMet(priceInfo, ActiveStore.GetMerchantOrLocationFactionIdentifier()));
                     existingItemFrames.Add(itemFrame);
                 }
             }
@@ -1464,8 +1460,9 @@ namespace Barotrauma
                 PriceInfo priceInfo2 = item2.ItemPrefab.GetPriceInfo(ActiveStore);
                 if (priceInfo1 != null && priceInfo2 != null)
                 {
-                    var requiredReputation1 = GetTooLowReputation(priceInfo1)?.Value ?? 0.0f;
-                    var requiredReputation2 = GetTooLowReputation(priceInfo2)?.Value ?? 0.0f;
+                    Identifier faction = ActiveStore.GetMerchantOrLocationFactionIdentifier();
+                    float requiredReputation1 = ReputationRequirementsMet(priceInfo1, faction) ? 0.0f : GetReputationRequirement(priceInfo1, faction);
+                    float requiredReputation2 = ReputationRequirementsMet(priceInfo2, faction) ? 0.0f : GetReputationRequirement(priceInfo2, faction);
                     return requiredReputation1.CompareTo(requiredReputation2);
                 }
                 return 0;                
@@ -1942,14 +1939,15 @@ namespace Barotrauma
                     var campaign = GameMain.GameSession?.Campaign;
                     if (priceInfo != null && campaign != null)
                     {
-                        var requiredReputation = GetReputationRequirement(priceInfo);
-                        if (requiredReputation != null)
+                        Identifier faction = ActiveStore.GetMerchantOrLocationFactionIdentifier();
+                        float requiredReputation = GetReputationRequirement(priceInfo, faction);
+                        if (requiredReputation > 0)
                         {
                             var repStr = TextManager.GetWithVariables(
                                             "campaignstore.reputationrequired",
-                                            ("[amount]", ((int)requiredReputation.Value.Value).ToString()),
-                                            ("[faction]", TextManager.Get("faction." + requiredReputation.Value.Key).Value));
-                            Color color = MathF.Round(campaign.GetReputation(requiredReputation.Value.Key)) < requiredReputation.Value.Value ?
+                                            ("[amount]", ((int)requiredReputation).ToString()),
+                                            ("[faction]", TextManager.Get("faction." + faction).Value));
+                            Color color = MathF.Round(campaign.GetReputation(faction)) < requiredReputation ?
                                 GUIStyle.Orange : GUIStyle.Green;
                             toolTip += $"\n‖color:{color.ToStringHex()}‖{repStr}‖color:end‖";
                         }

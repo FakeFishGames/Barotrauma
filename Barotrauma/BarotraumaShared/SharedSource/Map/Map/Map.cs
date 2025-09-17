@@ -235,15 +235,17 @@ namespace Barotrauma
 
             //backwards compatibility (or support for loading maps created with mods that modify the end biome setup):
             //if there's too few end locations, create more
-            int missingOutpostCount = endLocations.First().Biome.EndBiomeLocationCount - endLocations.Count;
-
             Location firstEndLocation = EndLocations[0];
+            Biome endBiome = firstEndLocation.Biome;
+            int missingOutpostCount = endBiome.EndBiomeLocationCount - endLocations.Count;
+
             for (int i = 0; i < missingOutpostCount; i++)
             {
                 Vector2 mapPos = new Vector2(
                     MathHelper.Lerp(firstEndLocation.MapPosition.X, Width, MathHelper.Lerp(0.2f, 0.8f, i / (float)missingOutpostCount)),
                     Height * MathHelper.Lerp(0.2f, 1.0f, (float)rand.NextDouble()));
-                var newEndLocation = new Location(mapPos, generationParams.DifficultyZones, firstEndLocation.Biome.Identifier, rand, forceLocationType: firstEndLocation.Type, existingLocations: Locations);
+                var newEndLocation = new Location(mapPos, generationParams.DifficultyZones, endBiome.Identifier, rand, forceLocationType: firstEndLocation.Type, existingLocations: Locations);
+                newEndLocation.Biome = endBiome;
                 newEndLocation.LevelData = new LevelData(newEndLocation, this, difficulty: 100.0f);
                 Locations.Add(newEndLocation);
                 endLocations.Add(newEndLocation);

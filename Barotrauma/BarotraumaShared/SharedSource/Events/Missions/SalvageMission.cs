@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -240,6 +241,8 @@ namespace Barotrauma
         /// </summary>
         private readonly float requiredDeliveryAmount;
         
+        private readonly ImmutableArray<Identifier> wreckTags;
+        
         private LocalizedString pickedUpMessage;
 
         /// <summary>
@@ -311,11 +314,12 @@ namespace Barotrauma
             : base(prefab, locations, sub)
         {
             requiredDeliveryAmount = prefab.ConfigElement.GetAttributeFloat(nameof(requiredDeliveryAmount), 0.98f);
-
             //LevelData may not be instantiated at this point, in that case use the name identifier of the location
             rng = new MTRandom(ToolBox.StringToInt(
                     locations[0].LevelData?.Seed ?? locations[0].NameIdentifier.Value +
                     locations[1].LevelData?.Seed ?? locations[1].NameIdentifier.Value));
+
+            wreckTags = prefab.ConfigElement.GetAttributeIdentifierArray("wrecktags", []).ToImmutableArray();
 
             partiallyRetrievedMessage = GetMessage(nameof(partiallyRetrievedMessage));
             allRetrievedMessage = GetMessage(nameof(allRetrievedMessage));
@@ -755,6 +759,32 @@ namespace Barotrauma
                 }
                 target.Reset();
             }
+        }
+
+        public override void AdjustLevelData(LevelData levelData)
+        {
+            if (wreckTags.Length > 0)
+            {
+                var selectedWreck = GetRandomWreckByTags(wreckTags, levelData);
+                if (selectedWreck != null)
+                {
+                    levelData.ForceWreck = selectedWreck;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Salvage mission \"{Prefab.Identifier}\" could not find a suitable wreck with wrecktags \"{string.Join(", ", wreckTags)}\" for level difficulty {levelData.Difficulty:F1}.",
+                        contentPackage: Prefab.ContentPackage);
+                }
+            }
+        }
+
+        private static SubmarineInfo GetRandomWreckByTags(ImmutableArray<Identifier> tags, LevelData levelData)
+        {
+            return GetRandomSubmarineByTagsAndDifficulty(
+                tags,
+                levelData,
+                s => s.IsWreck,
+                "wreck");
         }
     }
 }

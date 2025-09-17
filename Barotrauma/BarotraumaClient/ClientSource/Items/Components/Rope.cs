@@ -34,8 +34,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize("0.5,0.5)", IsPropertySaveable.No)]
-        public Vector2 Origin { get; set; } = new Vector2(0.5f, 0.5f);
+        [Serialize("0.5,0.5", IsPropertySaveable.No)]
+        public Vector2 Origin { get; set; }
 
         [Serialize(true, IsPropertySaveable.No, description: "")]
         public bool BreakFromMiddle

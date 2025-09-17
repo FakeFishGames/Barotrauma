@@ -8,13 +8,14 @@ sealed class EosP2PSocket : P2PSocket
 
     private EosP2PSocket(
         Callbacks callbacks,
-        EosInterface.P2PSocket eosSocket)
-        : base(callbacks)
+        EosInterface.P2PSocket eosSocket,
+        OwnerOrClient type)
+        : base(callbacks, type)
     {
         this.eosSocket = eosSocket;
     }
 
-    public static Result<P2PSocket, Error> Create(Callbacks callbacks)
+    public static Result<P2PSocket, Error> Create(Callbacks callbacks, OwnerOrClient type)
     {
         if (!EosInterface.Core.IsInitialized) { return Result.Failure(new Error(ErrorCode.EosNotInitialized)); }
 
@@ -26,19 +27,25 @@ sealed class EosP2PSocket : P2PSocket
         var socketCreateResult = EosInterface.P2PSocket.Create(puids[0], eosSocketId);
 
         if (!socketCreateResult.TryUnwrapSuccess(out var eosSocket)) { return Result.Failure(new Error(ErrorCode.FailedToCreateEosP2PSocket, socketCreateResult.ToString())); }
-        var retVal = new EosP2PSocket(callbacks, eosSocket);
+        var retVal = new EosP2PSocket(callbacks, eosSocket, type);
 
         eosSocket.HandleIncomingConnection.Register("Event".ToIdentifier(), retVal.OnIncomingConnection);
         eosSocket.HandleClosedConnection.Register("Event".ToIdentifier(), retVal.OnConnectionClosed);
 
-        return Result.Success((P2PSocket)retVal);
+        return Result.Success<P2PSocket>(retVal);
     }
 
     public override void ProcessIncomingMessages()
     {
         foreach (var msg in eosSocket.GetMessageBatch())
         {
-            callbacks.OnData(new EosP2PEndpoint(msg.Sender), new ReadWriteMessage(msg.Buffer, 0, msg.ByteLength * 8, false));
+            EosP2PEndpoint endpoint = new EosP2PEndpoint(msg.Sender);
+            callbacks.OnData(endpoint, new ReadWriteMessage(msg.Buffer, 0, msg.ByteLength * 8, false));
+
+            if (Type is OwnerOrClient.Owner)
+            {
+                dosProtection.OnPacket(endpoint);
+            }
         }
     }
 

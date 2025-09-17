@@ -820,16 +820,22 @@ namespace Barotrauma
             {
                 int prevPos = inc.BitPosition;
 
+                const int MaxBytesToLog = 500;
+
                 StringBuilder hexData = new();
                 inc.BitPosition = 0;
-                while (inc.BitPosition < inc.LengthBits)
+                while (inc.BitPosition < inc.LengthBits &&
+                    inc.BytePosition < MaxBytesToLog)                    
                 {
                     byte b = inc.ReadByte();
                     hexData.Append($"{b:X2} ");
                 }
                 // trim the last space if there is one
                 if (hexData.Length > 0) { hexData.Length--; }
-
+                if (inc.BytePosition >= MaxBytesToLog)
+                {
+                    hexData.Append($" (data truncated, {inc.LengthBytes} bytes in the full message)");
+                }
                 inc.BitPosition = prevPos;
 
                 //only log the error once per sender, so this can't be abused by spamming the server with malformed data to fill up the console with errors

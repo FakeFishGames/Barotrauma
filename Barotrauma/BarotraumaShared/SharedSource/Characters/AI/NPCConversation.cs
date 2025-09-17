@@ -71,7 +71,7 @@ namespace Barotrauma
         private static List<Identifier> GetCurrentFlags(Character speaker)
         {
             var currentFlags = new List<Identifier>();
-            if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth) { currentFlags.Add("SubmarineDeep".ToIdentifier()); }
+            if (Submarine.MainSub != null && Submarine.MainSub.AtCosmeticDamageDepth) { currentFlags.Add("SubmarineDeep".ToIdentifier()); }
 
             if (GameMain.GameSession != null && Level.Loaded != null)
             {
@@ -84,7 +84,6 @@ namespace Barotrauma
                     if (GameMain.GameSession.RoundDuration < 120.0f && 
                         speaker?.CurrentHull != null && 
                         GameMain.GameSession.Map?.CurrentLocation?.Reputation?.Value >= 0.0f &&
-                        (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost".ToIdentifier()); 

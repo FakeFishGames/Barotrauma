@@ -3716,7 +3716,7 @@ namespace Barotrauma.Networking
 
             UpdateVoteStatus();
 
-            SendChatMessage(peerDisconnectPacket.ChatMessage(client).Value, ChatMessageType.Server, changeType: peerDisconnectPacket.ConnectionChangeType);
+            SendChatMessage(peerDisconnectPacket.ChatMessage(client.Name).Value, ChatMessageType.Server, changeType: peerDisconnectPacket.ConnectionChangeType);
 
             UpdateCrewFrame();
 
@@ -4234,13 +4234,14 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void UnlockRecipe(Identifier identifier)
+        public void UnlockRecipe(CharacterTeamType team, Identifier identifier)
         {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ServerPacketHeader.UNLOCKRECIPE);            
+            msg.WriteByte((byte)team);
+            msg.WriteIdentifier(identifier);
             foreach (var client in connectedClients)
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.UNLOCKRECIPE);
-                msg.WriteIdentifier(identifier);
                 serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
         }

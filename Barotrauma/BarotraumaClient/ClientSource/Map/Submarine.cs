@@ -160,37 +160,39 @@ namespace Barotrauma
 
         public static float DamageEffectCutoff;
 
+        private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
+
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            if (!editing && visibleEntities != null)
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
+
+            depthSortedDamageable.Clear();
+
+            //insertion sort according to draw depth
+            foreach (MapEntity e in entitiesToRender)
             {
-                foreach (MapEntity e in visibleEntities)
+                if (e is Structure structure && structure.DrawDamageEffect)
                 {
-                    if (e is Structure structure && structure.DrawDamageEffect)
+                    if (predicate != null)
                     {
-                        if (predicate != null)
-                        {
-                            if (!predicate(structure)) { continue; }
-                        }
-                        structure.DrawDamage(spriteBatch, damageEffect, editing);
+                        if (!predicate(e)) { continue; }
                     }
-                }
-            }
-            else
-            {
-                foreach (Structure structure in Structure.WallList)
-                {
-                    if (structure.DrawDamageEffect)
+                    float drawDepth = structure.GetDrawDepth();
+                    int i = 0;
+                    while (i < depthSortedDamageable.Count)
                     {
-                        if (predicate != null)
-                        {
-                            if (!predicate(structure)) { continue; }
-                        }
-                        structure.DrawDamage(spriteBatch, damageEffect, editing);
+                        float otherDrawDepth = depthSortedDamageable[i].GetDrawDepth();
+                        if (otherDrawDepth < drawDepth) { break; }
+                        i++;
                     }
+                    depthSortedDamageable.Insert(i, structure);
                 }
             }
 
+            foreach (Structure s in depthSortedDamageable)
+            {
+                s.DrawDamage(spriteBatch, damageEffect, editing);
+            }
         }
 
         public static void DrawPaintedColors(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
@@ -287,7 +289,7 @@ namespace Barotrauma
                 if (combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull))) { continue; }
 
                 List<Hull> linkedHulls = new List<Hull>();
-                MiniMap.GetLinkedHulls(hull, linkedHulls);
+                hull.GetLinkedHulls(linkedHulls);
 
                 linkedHulls.Remove(hull);
 
@@ -297,7 +299,6 @@ namespace Barotrauma
                     {
                         combinedHulls.Add(hull, new HashSet<Hull>());
                     }
-
                     combinedHulls[hull].Add(linkedHull);
                 }
             }
@@ -566,6 +567,8 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.GetComponent<OxygenGenerator>() is not OxygenGenerator oxygenGenerator) { continue; }
+
+                    oxygenGenerator.GetVents();
 
                     Dictionary<Hull, float> hullOxygenFlow = new Dictionary<Hull, float>();
 

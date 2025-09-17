@@ -18,6 +18,8 @@ namespace Barotrauma
 
         public override Camera Cam { get; }
         public static string? DrawnTooltip { get; set; }
+        
+        public static bool ConversationMode { get; set; }
 
         public static readonly List<EditorNode> nodeList = new List<EditorNode>();
 
@@ -37,6 +39,11 @@ namespace Barotrauma
         private LocationType? lastTestType;
 
         private GUITickBox? isTraitorEventBox;
+        private GUITickBox? conversationModeBox;
+
+        private readonly LanguageIdentifier originalLanguage;
+      
+        private GUIDropDown? languageDropdown;
 
         private static int CreateID()
         {
@@ -50,25 +57,99 @@ namespace Barotrauma
         {
             Cam = new Camera();
             nodeList.Clear();
+            
+            originalLanguage = GameSettings.CurrentConfig.Language;
+            
             CreateGUI();
+        }
+
+        public override void Select()
+        {
+            GUI.PreventPauseMenuToggle = false;
+            projectName = TextManager.Get("EventEditor.Unnamed").Value;
+            
+            UpdateLanguageDropdownSelection();
+            
+            base.Select();
+        }
+
+        private void UpdateLanguageDropdownSelection()
+        {
+            if (languageDropdown == null) { return; }
+            
+            languageDropdown.SelectItem(GameSettings.CurrentConfig.Language);
+        }
+
+        protected override void DeselectEditorSpecific()
+        {
+            // Restore the original language when leaving the editor
+            var config = GameSettings.CurrentConfig;
+            config.Language = originalLanguage;
+            GameSettings.SetCurrentConfig(config);
+            TextManager.LanguageChanged();
+        }
+
+        private static readonly HashSet<EditorNode> hiddenNodesInConversationMode = new HashSet<EditorNode>();
+
+        private static bool ShouldHideNodeInConversationMode(EditorNode node)
+        {
+            return hiddenNodesInConversationMode.Contains(node);
+        }
+
+        private static void UpdateHiddenNodesInConversationMode()
+        {
+            hiddenNodesInConversationMode.Clear();
+
+            // Find all text display nodes (ConversationAction and EventLogAction) and mark their inner Text nodes (and descendants) as hidden
+            foreach (var textDisplayNode in nodeList.Where(IsEventTextDisplayNode))
+            {
+                var addConnection = textDisplayNode.Connections.FirstOrDefault(c => c.Type == NodeConnectionType.Add);
+                if (addConnection != null && addConnection.ConnectedTo.Any())
+                {
+                    foreach (var connectedNode in addConnection.ConnectedTo)
+                    {
+                        if (connectedNode.Parent?.Name == "Text")
+                        {
+                            MarkNodeAndDescendantsAsHidden(connectedNode.Parent);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool IsEventTextDisplayNode(EditorNode node) => node is EventTextDisplayNode;
+
+        private static void MarkNodeAndDescendantsAsHidden(EditorNode node)
+        {
+            hiddenNodesInConversationMode.Add(node);
+
+            // Recursively mark all connected child nodes as hidden
+            foreach (var connection in node.Connections)
+            {
+                foreach (var connectedNode in connection.ConnectedTo)
+                {
+                    if (connectedNode.Parent != null && !hiddenNodesInConversationMode.Contains(connectedNode.Parent))
+                    {
+                        MarkNodeAndDescendantsAsHidden(connectedNode.Parent);
+                    }
+                }
+            }
         }
 
         private void CreateGUI()
         {
-            GuiFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), GUI.Canvas) { MinSize = new Point(300, 420) });
+            GuiFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.5f), GUI.Canvas) { MinSize = new Point(300, 520) });
             GUILayoutGroup layoutGroup = new GUILayoutGroup(RectTransform(0.9f, 0.9f, GuiFrame, Anchor.Center)) { Stretch = true, AbsoluteSpacing = GUI.IntScale(5) };
 
             // === BUTTONS === //
-            GUILayoutGroup buttonLayout = new GUILayoutGroup(RectTransform(1.0f, 0.50f, layoutGroup)) { RelativeSpacing = 0.04f };
-            GUIButton newProjectButton = new GUIButton(RectTransform(1.0f, 0.33f, buttonLayout), TextManager.Get("EventEditor.NewProject"));
-            GUIButton saveProjectButton = new GUIButton(RectTransform(1.0f, 0.33f, buttonLayout), TextManager.Get("EventEditor.SaveProject"));
-            GUIButton loadProjectButton = new GUIButton(RectTransform(1.0f, 0.33f, buttonLayout), TextManager.Get("EventEditor.LoadProject"));
-            GUIButton exportProjectButton = new GUIButton(RectTransform(1.0f, 0.33f, buttonLayout), TextManager.Get("EventEditor.Export"));
-
+            GUILayoutGroup buttonLayout = new GUILayoutGroup(RectTransform(1.0f, 0.40f, layoutGroup)) { RelativeSpacing = 0.04f };
+            GUIButton newProjectButton = new GUIButton(RectTransform(1.0f, 0.25f, buttonLayout), TextManager.Get("EventEditor.NewProject"));
+            GUIButton saveProjectButton = new GUIButton(RectTransform(1.0f, 0.25f, buttonLayout), TextManager.Get("EventEditor.SaveProject"));
+            GUIButton loadProjectButton = new GUIButton(RectTransform(1.0f, 0.25f, buttonLayout), TextManager.Get("EventEditor.LoadProject"));
+            GUIButton exportProjectButton = new GUIButton(RectTransform(1.0f, 0.25f, buttonLayout), TextManager.Get("EventEditor.Export"));
 
             // === LOAD PREFAB === //
-
-            GUILayoutGroup loadEventLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
+            GUILayoutGroup loadEventLayout = new GUILayoutGroup(RectTransform(1.0f, 0.10f, layoutGroup));
             new GUITextBlock(RectTransform(1.0f, 0.5f, loadEventLayout), TextManager.Get("EventEditor.LoadEvent"), font: GUIStyle.SubHeadingFont);
 
             GUILayoutGroup loadDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, loadEventLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
@@ -76,8 +157,7 @@ namespace Barotrauma
             GUIButton loadButton = new GUIButton(RectTransform(0.2f, 1.0f, loadDropdownLayout), TextManager.Get("Load"));
 
             // === ADD ACTION === //
-
-            GUILayoutGroup addActionLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
+            GUILayoutGroup addActionLayout = new GUILayoutGroup(RectTransform(1.0f, 0.10f, layoutGroup));
             new GUITextBlock(RectTransform(1.0f, 0.5f, addActionLayout), TextManager.Get("EventEditor.AddAction"), font: GUIStyle.SubHeadingFont);
 
             GUILayoutGroup addActionDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, addActionLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
@@ -85,7 +165,7 @@ namespace Barotrauma
             GUIButton addActionButton = new GUIButton(RectTransform(0.2f, 1.0f, addActionDropdownLayout), TextManager.Get("EventEditor.Add"));
 
             // === ADD VALUE === //
-            GUILayoutGroup addValueLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
+            GUILayoutGroup addValueLayout = new GUILayoutGroup(RectTransform(1.0f, 0.10f, layoutGroup));
             new GUITextBlock(RectTransform(1.0f, 0.5f, addValueLayout), TextManager.Get("EventEditor.AddValue"), font: GUIStyle.SubHeadingFont);
 
             GUILayoutGroup addValueDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, addValueLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
@@ -93,7 +173,7 @@ namespace Barotrauma
             GUIButton addValueButton = new GUIButton(RectTransform(0.2f, 1.0f, addValueDropdownLayout), TextManager.Get("EventEditor.Add"));
             
             // === ADD SPECIAL === //
-            GUILayoutGroup addSpecialLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
+            GUILayoutGroup addSpecialLayout = new GUILayoutGroup(RectTransform(1.0f, 0.10f, layoutGroup));
             new GUITextBlock(RectTransform(1.0f, 0.5f, addSpecialLayout), TextManager.Get("EventEditor.AddSpecial"), font: GUIStyle.SubHeadingFont);
             GUILayoutGroup addSpecialDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, addSpecialLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             GUIDropDown addSpecialDropdown = new GUIDropDown(RectTransform(0.8f, 1.0f, addSpecialDropdownLayout), elementCount: 1);
@@ -156,7 +236,45 @@ namespace Barotrauma
                 return true;
             };
 
-            isTraitorEventBox = new GUITickBox(RectTransform(1.0f, 0.125f, layoutGroup), "Traitor event");
+            isTraitorEventBox = new GUITickBox(RectTransform(1.0f, 0.10f, layoutGroup), "Traitor event");
+            
+            // === CONVERSATION MODE CHECKBOX === //
+            conversationModeBox = new GUITickBox(RectTransform(1.0f, 0.10f, layoutGroup), "Conversation Mode");
+            conversationModeBox.Selected = ConversationMode;
+            conversationModeBox.OnSelected = box =>
+            {
+                ConversationMode = !ConversationMode;
+                UpdateHiddenNodesInConversationMode();
+                return true;
+            };
+
+            // === LANGUAGE SELECTION === //
+            GUILayoutGroup languageLayout = new GUILayoutGroup(RectTransform(1.0f, 0.10f, layoutGroup));
+            new GUITextBlock(RectTransform(1.0f, 0.5f, languageLayout), TextManager.Get("Language"), font: GUIStyle.SubHeadingFont);
+            
+            var languages = TextManager.AvailableLanguages
+                .OrderBy(l => TextManager.GetTranslatedLanguageName(l).ToIdentifier());
+            
+            languageDropdown = new GUIDropDown(RectTransform(1.0f, 0.5f, languageLayout), elementCount: 10);
+            foreach (var language in languages)
+            {
+                languageDropdown.AddItem(TextManager.GetTranslatedLanguageName(language), language);
+            }
+            
+            // Select current language
+            languageDropdown.SelectItem(GameSettings.CurrentConfig.Language);
+            
+            languageDropdown.OnSelected = (component, userData) =>
+            {
+                if (userData is LanguageIdentifier selectedLanguage)
+                {
+                    var config = GameSettings.CurrentConfig;
+                    config.Language = selectedLanguage;
+                    GameSettings.SetCurrentConfig(config);
+                    TextManager.LanguageChanged();
+                }
+                return true;
+            };
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
@@ -323,6 +441,9 @@ namespace Barotrauma
                 {
                     GUI.NotifyPrompt(TextManager.Get("EventEditor.RandomGenerationHeader"), TextManager.Get("EventEditor.RandomGenerationBody"));
                 }
+                
+                // Update hidden nodes after loading
+                UpdateHiddenNodesInConversationMode();
                 return true;
             });
             return true;
@@ -334,7 +455,22 @@ namespace Barotrauma
 
             Vector2 spawnPos = Cam.WorldViewCenter;
             spawnPos.Y = -spawnPos.Y;
-            EventNode newNode = new EventNode(type, type.Name) { ID = CreateID() };
+            
+            // Create the appropriate node type based on the action type
+            EditorNode newNode;
+            if (EditorNode.IsInstanceOf(type, typeof(ConversationAction)))
+            {
+                newNode = new EventConversationNode(type, type.Name) { ID = CreateID() };
+            }
+            else if (EditorNode.IsInstanceOf(type, typeof(EventLogAction)))
+            {
+                newNode = new EventLogNode(type, type.Name) { ID = CreateID() };
+            }
+            else
+            {
+                newNode = new EventNode(type, type.Name) { ID = CreateID() };
+            }
+            
             newNode.Position = spawnPos - newNode.Size / 2;
             nodeList.Add(newNode);
             return true;
@@ -399,7 +535,19 @@ namespace Barotrauma
                     Type? t = Type.GetType($"Barotrauma.{subElement.Name}");
                     if (t != null && EditorNode.IsInstanceOf(t, typeof(EventAction)))
                     {
-                        newNode = new EventNode(t, subElement.Name.ToString()) { Position = new Vector2(ident, 0), ID = CreateID() };
+                        // Create the appropriate node type based on the action type
+                        if (EditorNode.IsInstanceOf(t, typeof(ConversationAction)))
+                        {
+                            newNode = new EventConversationNode(t, subElement.Name.ToString()) { Position = new Vector2(ident, 0), ID = CreateID() };
+                        }
+                        else if (EditorNode.IsInstanceOf(t, typeof(EventLogAction)))
+                        {
+                            newNode = new EventLogNode(t, subElement.Name.ToString()) { Position = new Vector2(ident, 0), ID = CreateID() };
+                        }
+                        else
+                        {
+                            newNode = new EventNode(t, subElement.Name.ToString()) { Position = new Vector2(ident, 0), ID = CreateID() };
+                        }
                     }
                     else
                     {
@@ -547,13 +695,6 @@ namespace Barotrauma
             return new RectTransform(new Vector2(x, y), parent.RectTransform, anchor);
         }
 
-        public override void Select()
-        {
-            GUI.PreventPauseMenuToggle = false;
-            projectName = TextManager.Get("EventEditor.Unnamed").Value;
-            base.Select();
-        }
-
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
@@ -671,6 +812,7 @@ namespace Barotrauma
         private static void Load(XElement saveElement)
         {
             nodeList.Clear();
+            hiddenNodesInConversationMode.Clear();
             projectName = saveElement.GetAttributeString("name", TextManager.Get("EventEditor.Unnamed").Value);
             foreach (XElement element in saveElement.Elements())
             {
@@ -702,6 +844,9 @@ namespace Barotrauma
                     }
                 }
             }
+            
+            // Update hidden nodes after loading
+            UpdateHiddenNodesInConversationMode();
         }
 
         private static void CreateContextMenu(EditorNode node, EventEditorNodeConnection? connection = null)
@@ -971,21 +1116,25 @@ namespace Barotrauma
 
             foreach (EditorNode node in nodeList.Where(node => node is SpecialNode))
             {
+                if (ConversationMode && ShouldHideNodeInConversationMode(node)) { continue; }
                 node.Draw(spriteBatch);
             }
             
             // Render value nodes below event nodes
             foreach (EditorNode node in nodeList.Where(node => node is ValueNode))
             {
+                if (ConversationMode && ShouldHideNodeInConversationMode(node)) { continue; }
                 node.Draw(spriteBatch);
             }
 
             foreach (EditorNode node in nodeList.Where(node => node is EventNode))
             {
+                if (ConversationMode && ShouldHideNodeInConversationMode(node)) { continue; }
                 node.Draw(spriteBatch);
             }
-
+            
             draggedNode?.Draw(spriteBatch);
+            
             foreach (var (node, _) in markedNodes)
             {
                 node.Draw(spriteBatch);
@@ -1009,6 +1158,11 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                CreateGUI();
+            }
+
+            if (PlayerInput.KeyHit(Keys.R) && PlayerInput.KeyDown(Keys.LeftShift))
             {
                 CreateGUI();
             }

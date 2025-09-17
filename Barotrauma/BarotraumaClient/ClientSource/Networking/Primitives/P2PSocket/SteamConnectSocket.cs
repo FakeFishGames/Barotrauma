@@ -64,13 +64,13 @@ sealed class SteamConnectSocket : P2PSocket
     private readonly SteamP2PEndpoint expectedEndpoint;
     private readonly ConnectionManager connectionManager;
 
-    private SteamConnectSocket(SteamP2PEndpoint expectedEndpoint, Callbacks callbacks, ConnectionManager connectionManager) : base(callbacks)
+    private SteamConnectSocket(SteamP2PEndpoint expectedEndpoint, Callbacks callbacks, ConnectionManager connectionManager, OwnerOrClient type) : base(callbacks, type)
     {
         this.expectedEndpoint = expectedEndpoint;
         this.connectionManager = connectionManager;
     }
 
-    public static Result<P2PSocket, Error> Create(SteamP2PEndpoint endpoint, Callbacks callbacks)
+    public static Result<P2PSocket, Error> Create(SteamP2PEndpoint endpoint, Callbacks callbacks, OwnerOrClient type)
     {
         if (!SteamManager.IsInitialized) { return Result.Failure(new Error(ErrorCode.SteamNotInitialized)); }
 
@@ -87,7 +87,7 @@ sealed class SteamConnectSocket : P2PSocket
         if (connectionManager is null) { return Result.Failure(new Error(ErrorCode.FailedToCreateSteamP2PSocket)); }
         connectionManager.SetEndpointAndCallbacks(endpoint, callbacks);
 
-        return Result.Success((P2PSocket)new SteamConnectSocket(endpoint, callbacks, connectionManager));
+        return Result.Success<P2PSocket>(new SteamConnectSocket(endpoint, callbacks, connectionManager, type));
     }
 
     public override void ProcessIncomingMessages()

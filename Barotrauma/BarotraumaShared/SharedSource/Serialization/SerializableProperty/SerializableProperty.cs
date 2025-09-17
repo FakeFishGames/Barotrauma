@@ -876,7 +876,18 @@ namespace Barotrauma
             Dictionary<Identifier, SerializableProperty> dictionary = new Dictionary<Identifier, SerializableProperty>();
             foreach (var property in properties)
             {
-                var serializableProperty = new SerializableProperty(property);
+                //if the getter is private, we must get it from the declaring type to access it and check if it exists
+                SerializableProperty serializableProperty = null;
+                try
+                {
+                    serializableProperty = new SerializableProperty(property);
+                }
+                catch (AmbiguousMatchException)
+                {
+                    //can happen e.g. with AnimController.CurrentGroundedParams, which is of an abstract type -
+                    //let's just ignore these types of properties (you can't really do anything with SerializableProperties that are reference types anyway)
+                    continue;
+                }
                 dictionary.Add(serializableProperty.Name.ToIdentifier(), serializableProperty);
             }
 
@@ -1064,6 +1075,15 @@ namespace Barotrauma
                                     item.Rect.Width,
                                     (int)(item.Prefab.Size.Y * item.Prefab.Scale));
                             }
+                        }
+                    }
+                    else if (attributeName == "unlockrecipe" || attributeName == "unlockrecipes")
+                    {
+                        var recipes = subElement.GetAttributeIdentifierImmutableHashSet("unlockrecipes",
+                            def: subElement.GetAttributeIdentifierImmutableHashSet("unlockrecipe", ImmutableHashSet<Identifier>.Empty));
+                        foreach (var recipe in recipes)
+                        {
+                            GameMain.GameSession?.UnlockRecipe(CharacterTeamType.Team1, recipe, showNotifications: false);
                         }
                     }
 

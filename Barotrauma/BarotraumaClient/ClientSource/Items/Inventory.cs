@@ -359,7 +359,7 @@ namespace Barotrauma
 #endif           
                 if (!item.Prefab.UnlockedRecipeInToolTip.IsEmpty && GameMain.GameSession is { } GameSession)
                 {
-                    if (GameSession.UnlockedRecipes.Contains(item.Prefab.UnlockedRecipeInToolTip))
+                    if (GameSession.HasUnlockedRecipe(Character.Controlled, item.Prefab.UnlockedRecipeInToolTip))
                     {
                         toolTip += TextManager.Get("unlockedrecipe.true");
                     }
@@ -1435,8 +1435,20 @@ namespace Barotrauma
         {
             if (giver == null || receiver == null || draggedItems.None()) { return false; }
             if (receiver == giver) { return false; }
+
+            CharacterInventory.AccessLevel accessLevel;
+            if (draggedItems.Any(it => it.HasTag(Tags.HandLockerItem)))
+            {
+                //handcuffs can't be given to players by dragging and dropping (because it can allow handcuffing them)
+                accessLevel = CharacterInventory.AccessLevel.AllowBotsAndPets;
+            }
+            else
+            {
+                accessLevel = IsDragAndDropGiveAllowed ? CharacterInventory.AccessLevel.AllowFriendly : CharacterInventory.AccessLevel.AllowBotsAndPets;
+            }
+
             return 
-                receiver.IsInventoryAccessibleTo(giver, IsDragAndDropGiveAllowed ? CharacterInventory.AccessLevel.Allowed : CharacterInventory.AccessLevel.Limited) &&
+                receiver.IsInventoryAccessibleTo(giver, accessLevel) &&
                 receiver.Inventory.CanBePut(draggedItems.FirstOrDefault(), InvSlotType.Any);
         }
 

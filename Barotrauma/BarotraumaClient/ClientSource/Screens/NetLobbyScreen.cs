@@ -2090,7 +2090,10 @@ namespace Barotrauma
             };
 
             serverLogReverseButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), serverLogListboxLayout.RectTransform), style: "UIToggleButtonVertical");
-            serverLogBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), serverLogListboxLayout.RectTransform));
+            serverLogBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), serverLogListboxLayout.RectTransform))
+            {
+                AutoHideScrollBar = false
+            };
 
             //filter tickbox list ------------------------------------------------------------------
 
@@ -2198,7 +2201,7 @@ namespace Barotrauma
                 OnClicked = (btn, obj) =>
                 {
                     if (GameMain.Client == null) { return true; }
-                    GUI.CreateVerificationPrompt(GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd",
+                    GUI.CreateVerificationPrompt(GameMain.GameSession?.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd",
                         () =>
                         {
                             GameMain.Client?.RequestEndRound(save: false);
@@ -3304,11 +3307,17 @@ namespace Barotrauma
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
-                if (SelectedMode == GameModePreset.PvP && MultiplayerPreferences.Instance.TeamPreference is not (CharacterTeamType.Team1 or CharacterTeamType.Team2))
+                if (SelectedMode == GameModePreset.PvP && 
+                    MultiplayerPreferences.Instance.TeamPreference is not (CharacterTeamType.Team1 or CharacterTeamType.Team2))
                 {
+                    if (TeamPreferenceListBox == null)
+                    {
+                        //refresh player frame to ensure we create the team preference list box
+                        UpdatePlayerFrame(characterInfo: GameMain.Client?.CharacterInfo);
+                    }
+
                     // we are in PvP but don't have a team selected, so we can't select a sub
                     // and also highlight the team selection list
-
                     foreach (GUIComponent child in TeamPreferenceListBox.Content.Children)
                     {
                         if (child.UserData is CharacterTeamType.None) { continue; }

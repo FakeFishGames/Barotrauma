@@ -341,6 +341,8 @@ namespace Barotrauma
             {
                 if (component?.GetType() is Type componentType)
                 {
+                    // Items used via a controller (i.e. turrets) are not selectable but should still be valid targets.
+                    if (!UseController && !component.CanBeSelected) { continue; }
                     if (componentType == ItemComponentType) { return component; }
                     if (CanTypeBeSubclass && componentType.IsSubclassOf(ItemComponentType)) { return component; }
                 }

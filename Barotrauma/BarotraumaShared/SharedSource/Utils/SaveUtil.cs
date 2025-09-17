@@ -116,10 +116,23 @@ namespace Barotrauma
 #if SERVER
             get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp_server"); }
 #else
-            get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp"); }
+            get            
+
+            {
+                string tempFolder = Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp");
+#if DEBUG
+                if (GameClient.MultiClientTestMode && GameMain.Client != null)
+                {
+                    //append the name of the client to the download folder to avoid multiple clients
+                    //from trying to download a file into the same path at the same time
+                    tempFolder += "_" + GameMain.Client.Name;
+                }
+#endif
+                return tempFolder;
+            }
 #endif
         }
-        
+
         public static void EnsureSaveFolderExists()
         {
             try

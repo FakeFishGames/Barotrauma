@@ -1,4 +1,70 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.10.5.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Balance:
+- Railgun rebalance: The railgun has been deemed on the weaker side by the community. It has been given a satisfaction pass, where now the high-power shell behaves more as expected, capable of penetrating multiple limbs or submarine walls, dealing more damage.
+- Broad-spectrum Antibiotics now affect all limbs with infected wound with one application, but cure less infection per limb. Base prices for Plastiseal, Antibiotic Glue and Broad-Spectrum Antibiotics have been adjusted.
+- Antibiotic Glue is now less effective on healing burns, bleeding and infections and inflicts organ damage even with successful application (and even more with failure). 
+- Added a pass to make grenades more easy to aim (and less likely to always hit the wall in the back due to excessive sliding/rolling)
+    - Reduced and equalized throwforce of most throwables (grenades, explosives) to 3.5 (some were 3.5 already, some 4.0).
+    - Add angular dampening on grenades to reduce excessive sliding/rolling.
+    - Frag grenade now uses a rectangular body instead of round/capsule, to avoid rolling too far (more in line with other grenades).
+    - Reduced throw force when aiming throwables downwards.
+- Lower the rate at which skyholder artifacts and portable pumps drain water (both were way too effective for managing leaks).
+- Made all variants of fractal guardians vulnerable to EMPs.
+- Security NPCs on submarine encounters are now better armed, with weapons fitting the faction.
+
+Blueprints:
+- Added new "blueprint" type of items, which unlock crafting recipes.
+- Three new alien material blueprints: physicorium, dementonite (gravity) and incendium, which unlock relevant (ammo) recipes.
+- Alien blueprints need to be researched at a Research station.
+- Merchants of all factions now sell item blueprints fitting to the faction's identity, locked behind reputation.
+
+Miscellaneous changes:
+- Made vent sounds a bit more quiet.
+- Made crate shelf and makeshift shelf container UIs vertical to match the look of the sprites.
+- Made some items be attachable only to the floor.
+    - Planters cannot overlap, and attach only to the floor, rather than attaching to the wall.
+    - Makeshift shelves are attached to the floor.
+- Outpost NPCs react to players dragging other outpost NPC's corpses. Normal NPCs flee, security arrests you.
+
+Fixes:
+- Fixed gaps significantly slowing down the flow of water, especially when water is flowing up through the gaps.
+- Fixed PvP outpost selection not working reliably (when you selected some specific outpost, it was possible for some other outpost to get selected regardless).
+- Fixed bot AI not running if a bot below 0 vitality is forced to stay unconscious with e.g. adrenaline or talents.
+- Fixed incorrect offset on the light that renders on a boarding pod that's in a loader.
+- Fixed defense bot only escaping if it attemps to fire it's weapon and fails due to being out of ammo, but not when it doesn't have any ammo available.
+- Fixed outpost NPCs sometimes spawning on non-human spawnpoints, e.g. the monster spawnpoints in research modules.
+- Fixed NPC conversations about the submarine being very deep starting to appear too late (at the point when the sub is already at crush depth, instead of the point where camera shake and audio effects start appearing). 
+- Fixed yet another issue with modded hairs: hairs got misaligned in the bottom-right character portrait if they were set to inherit the origin of the head sprite, and the head sprite's origin was not at the center.
+- Fixed all pets in the level getting added to the player crew at the end of a round, e.g. even hostile pets or pets inside beacon stations.
+- Fixed id cards only being sold in normal outposts and cities (not mining, research or military outposts).
+- Fixed loading screen tips often cycling too fast to read during the initial loading screen.
+- Fixed "Find Jacov Subra" mission completing if you enter the outpost he's hiding in, even if you don't find him.
+- Fixed vents' oxygen output warning being incorrectly shown when vents have been moved between hulls in the sub editor.
+- The "drop item" hotkey is disabled when the inventory is not visible (e.g. when operating a turret).
+- Fixed inability to issue orders that don't target any character in particular (e.g. ignore or deconstruct orders) when no-one can hear the order.
+- Server log fixes:
+    - Fixed new lines added to the log ignoring the filtering.
+    - Fixed log jumping up when new lines are added while you've scrolled up to read older messages.
+
+Modding:
+- When saving a submarine or an outpost in the editor, the game suggests saving it in a subfolder that contains subs of the same type instead of always saving it in the root folder of the mod.
+- Fixed "Equipped" item requirement only checking held items, not worn items as the documentation says.
+- Option to define tags for wrecks and beacon stations in the sub editor, and to make a wreck or beacon mission choose a random wreck or beacon station with the specified tags using the attributes "BeaconTags" and "WreckTags".
+- Fixed new elements defined in an item variant failing to be added to the variant if there's ClearAll elements present.
+- Fixed submarine upgrade UI displaying an incorrect icon on items that don't have an inventory icon but use the item's normal sprite instead.
+- The "sort stacks" and "merge stacks" buttons can be hidden from containers using the attributes "ShowSortButton" and "ShowMergeButton".
+- Changed how store item availabilities work by default: if no min/max amount is defined, there can be 0-5 items available instead of there always being 5.
+- Some new decorative outpost props: empty versions of the existing storage shelves which contained some decorative items.
+- Fixed game freezing if a bot uses a weapon that has both a RangedWeapon and a RepairTool component. 
+- AnimController properties can now be accessed using conditionals.
+- Fixed bots being able to unequip and reload non-interactable items if they have those in their inventory (e.g. if some custom event forces them to spawn with non-interactable items).
+- Fixed corpses spawning in wrecks that have neither human or corpse spawnpoints (making it impossible to create wrecks with no corpses).
+- Fixed unnecessary console errors about failing to load a texture when trying to preload some monster/enemy with [GENDER] tags in the filename.
+
+﻿-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.9.8.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -76,6 +142,16 @@ Fixes:
 - Fixed inability to focus on unconscious characters by clicking on the crew list.
 - Fixed parts of the Jove sculptures found in ruins being misaligned in mirrored levels (= when travelling through the level backwards).
 - Fixed the Multi-tool not functioning as a screwdriver for event checks.
+
+Changes and additions:
+- Upgraded to .NET 8. This should not cause any noticeable changes, aside from perhaps very minor performance improvements. Allows code mods to use C# 12 features.
+- Added option to filter by name and to change the sorting of the save files listed in the "load game" menu.
+- Made circuit boxes' external connections (the once that hook up to other items) use the same labels that have been set inside the circuit box.
+- Made the freecam console command a toggle: entering it again gives you back control of the character.
+- Added "loslightingfreecam" console command (convenient for testing, executes those 3 commands).
+
+Fixes:
+- Fixed bots being reluctant to go into rooms with low oxygen, even if they're trying to get diving gear from that room.
 - Fixed "fake fires" you see when under psychosis sometimes turning into real fires in single player.
 - Fixed PvP mode weapon crates showing up in the sub editor.
 - Fixed undoing the removal of an item from a container sometimes causing a crash in the sub editor.

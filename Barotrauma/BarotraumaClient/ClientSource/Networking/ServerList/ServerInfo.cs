@@ -612,7 +612,7 @@ namespace Barotrauma.Networking
         }
 
         public bool Equals(ServerInfo other)
-            => other.Endpoints.Any(e => Endpoints.Contains(e));
+            => other != null && other.Endpoints.Any(Endpoints.Contains);
 
         public override int GetHashCode() => Endpoints.First().GetHashCode();
 

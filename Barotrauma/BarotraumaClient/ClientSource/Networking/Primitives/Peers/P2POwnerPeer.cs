@@ -88,8 +88,8 @@ namespace Barotrauma.Networking
 
             remotePeers.Clear();
 
-            var socketCallbacks = new P2PSocket.Callbacks(OnIncomingConnection, OnConnectionClosed, OnP2PData);
-            var socketCreateResult = DualStackP2PSocket.Create(socketCallbacks);
+            var socketCallbacks = new P2PSocket.Callbacks(OnIncomingConnection, OnConnectionClosed, OnExcessivePackets, OnP2PData);
+            var socketCreateResult = DualStackP2PSocket.Create(socketCallbacks, type: P2PSocket.OwnerOrClient.Owner);
             socket = socketCreateResult.TryUnwrapSuccess(out var s)
                 ? s
                 : throw new Exception($"Failed to create dual-stack socket: {socketCreateResult}");
@@ -185,6 +185,29 @@ namespace Barotrauma.Networking
 
                 ForwardToServerProcess(outMsg);
             }
+        }
+
+        private void OnExcessivePackets(P2PEndpoint endpoint, bool shouldBan)
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteNetSerializableStruct(new P2POwnerToServerHeader
+            {
+                EndpointStr = selfPrimaryEndpoint.StringRepresentation,
+                AccountInfo = selfAccountInfo
+            });
+            msg.WriteNetSerializableStruct(new PeerPacketHeaders
+            {
+                DeliveryMethod = DeliveryMethod.Reliable,
+                PacketHeader = PacketHeader.IsDoSProtectionMessage
+            });
+            msg.WriteNetSerializableStruct(new DoSProtectionPacket(endpoint.StringRepresentation, shouldBan));
+            string dcMsg = TextManager.Get(shouldBan ? "DoSProtectionBanned" : "DoSProtectionKicked")
+                                      .Fallback(TextManager.Get("DoSProtectionKicked")).Value;
+
+            msg.WriteNetSerializableStruct(shouldBan
+                                               ? PeerDisconnectPacket.Banned(dcMsg)
+                                               : PeerDisconnectPacket.Kicked(dcMsg));
+            ForwardToServerProcess(msg);
         }
 
         private void StartAuthTask(IReadMessage inc, RemotePeer remotePeer)

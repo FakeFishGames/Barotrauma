@@ -696,7 +696,8 @@ namespace Barotrauma
             root.Add(CampaignSettings.CurrentSettings.Save());
 #endif
 
-            configDoc.SaveSafe(PlayerConfigPath);
+            //allow retrying a few times because the file may be in use if the player is running multiple instances of the game on the same machine
+            configDoc.SaveSafe(PlayerConfigPath, maxRetries: 4);
             
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {

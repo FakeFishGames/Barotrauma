@@ -1724,7 +1724,10 @@ namespace Barotrauma
                         GameMain.GameSession.EventManager.Load(subElement);
                         break;
                     case "unlockedrecipe":
-                        GameMain.GameSession.UnlockRecipe(subElement.GetAttributeIdentifier("identifier", Identifier.Empty), showNotifications: false);
+                        GameMain.GameSession.UnlockRecipe(
+                            subElement.GetAttributeEnum("team", CharacterTeamType.Team1),
+                            subElement.GetAttributeIdentifier("identifier", Identifier.Empty), 
+                            showNotifications: false);
                         break;
                 }
             }

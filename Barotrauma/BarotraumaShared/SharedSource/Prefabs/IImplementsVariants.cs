@@ -79,14 +79,13 @@ namespace Barotrauma
                     bool cleared = false;
                     foreach (var subElement in element.Elements())
                     {
-                        if (elementNamesToRemove.Contains(subElement.NameAsIdentifier())) 
-                        {
-                            if (!elementsToRemove.Contains(subElement)) { elementsToRemove.Add(subElement); }
-                            matchingElementFound = true;
-                            continue; 
-                        }
                         if (replacementSubElement.Name.ToString().Equals("clearall", StringComparison.OrdinalIgnoreCase))
                         {
+                            if (elementNamesToRemove.Contains(subElement.NameAsIdentifier())) 
+                            {
+                                if (!elementsToRemove.Contains(subElement)) { elementsToRemove.Add(subElement); }
+                                matchingElementFound = true;
+                            }
                             continue;
                         }
                         else if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))

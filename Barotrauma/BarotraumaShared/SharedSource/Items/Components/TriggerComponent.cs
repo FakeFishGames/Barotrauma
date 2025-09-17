@@ -13,10 +13,24 @@ namespace Barotrauma.Items.Components
 {
     partial class TriggerComponent : ItemComponent 
     {
-        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(0f, IsPropertySaveable.Yes, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
         public float Force { get; set; }
+
+        [Editable, Serialize("0,0", IsPropertySaveable.Yes, description: "The maximum amount of directional force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
+        public Vector2 DirectionalForce { get; set; }
+
+        [Editable, Serialize(false, IsPropertySaveable.Yes, $"If true, {nameof(DirectionalForce)} is relative to the angle between the target and the item, Similar to {nameof(Force)}.\nIf false, it always pushes in the same direction, with respect to the item's rotation.", alwaysUseInstanceValues: true)]
+        public bool RelativeDirectionalForce { get; set; }
+
+        [Editable, Serialize(true, IsPropertySaveable.Yes, "If false, no vertical force will be applied.", alwaysUseInstanceValues: true)]
+        public bool VerticalForce { get; set; }
+
+        [Editable, Serialize(true, IsPropertySaveable.Yes, "If false, no horizontal force will be applied.", alwaysUseInstanceValues: true)]
+        public bool HorizontalForce { get; set; }
+
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Determines if the force gets higher the closer the triggerer is to the center of the trigger.", alwaysUseInstanceValues: true)]
         public bool DistanceBasedForce { get; set; }
+
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Determines if the force fluctuates over time or if it stays constant.", alwaysUseInstanceValues: true)]
         public bool ForceFluctuation { get; set; }
 
@@ -141,11 +155,28 @@ namespace Barotrauma.Items.Components
             get => base.IsActive;
             set
             {
+                bool wasActive = base.IsActive;
+
                 base.IsActive = value;
                 if (!IsActive)
                 {
                     TriggerActive = false;
                     triggerers.Clear();
+                }
+                else if (!wasActive && PhysicsBody?.FarseerBody != null)
+                {
+                    //when the trigger becomes active, we need to check which entities are inside it
+                    ContactEdge ce = PhysicsBody.FarseerBody.ContactList;
+                    while (ce != null && ce.Contact != null)
+                    {
+                        if (ce.Contact.Enabled)
+                        {
+                            var thisFixture = ce.Contact.FixtureA.Body == PhysicsBody.FarseerBody ? ce.Contact.FixtureA : ce.Contact.FixtureB;
+                            var otherFixture = ce.Contact.FixtureA.Body == PhysicsBody.FarseerBody ? ce.Contact.FixtureB : ce.Contact.FixtureA;
+                            OnCollision(thisFixture, otherFixture, ce.Contact);
+                        }
+                        ce = ce.Next;
+                    }
                 }
             }
         }
@@ -374,7 +405,9 @@ namespace Barotrauma.Items.Components
                     float amount = MathUtils.InverseLerp(-1.0f, 1.0f, v);
                     CurrentForceFluctuation = MathHelper.Lerp(1.0f - ForceFluctuationStrength, 1.0f, amount);
                     ForceFluctuationTimer = 0.0f;
-                    GameMain.NetworkMember?.CreateEntityEvent(this);
+#if SERVER
+                    item.CreateServerEvent(this);
+#endif
                 }
             }
 
@@ -398,7 +431,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (Math.Abs(Force) < 0.01f)
+                if (Force < 0.01f && DirectionalForce.LengthSquared() < 0.0001f)
                 {
                     // Just ignore very minimal forces
                     continue;
@@ -436,7 +469,25 @@ namespace Barotrauma.Items.Components
             if (diff.LengthSquared() < 0.0001f) { return; }
             float distanceFactor = DistanceBasedForce ? LevelTrigger.GetDistanceFactor(body, PhysicsBody, RadiusInDisplayUnits) : 1.0f;
             if (distanceFactor <= 0.0f) { return; }
-            Vector2 force = distanceFactor * (CurrentForceFluctuation * Force) * Vector2.Normalize(diff) * multiplier;
+            Vector2 radialForce = Force * Vector2.Normalize(diff);
+            Vector2 directionalForce;
+            if (RelativeDirectionalForce)
+            {
+                directionalForce = DirectionalForce * new Vector2(Math.Sign(diff.X), Math.Sign(diff.Y));
+            }
+            else
+            {
+                Vector2 flippedForce = DirectionalForce;
+                if (item.FlippedX) { flippedForce.X = -flippedForce.X; }
+                if (item.FlippedY) { flippedForce.Y = -flippedForce.Y; }
+                directionalForce = MathUtils.RotatePoint(flippedForce, -item.RotationRad);
+            }
+
+            Vector2 force = (radialForce + directionalForce) * CurrentForceFluctuation * distanceFactor * multiplier;
+
+            if (!HorizontalForce) { force.Y = 0.0f; }
+            if (!VerticalForce) { force.Y = 0.0f; }
+
             if (force.LengthSquared() < 0.01f) { return; }
             if (body.Mass < 1)
             {

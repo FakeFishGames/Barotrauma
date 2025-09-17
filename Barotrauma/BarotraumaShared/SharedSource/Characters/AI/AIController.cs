@@ -312,9 +312,10 @@ namespace Barotrauma
                             if (!slots.HasFlag(characterInventory.SlotTypes[i])) { continue; }
                         }
                         targetSlot = i;
-                        //slot free, continue
                         var otherItem = targetInventory.GetItemAt(i);
+                        //slot free, continue
                         if (otherItem == null) { continue; }
+                        if (!otherItem.IsInteractable(Character)) { return false; }
                         //try to move the existing item to LimbSlot.Any and continue if successful
                         if (otherItem.AllowedSlots.Contains(InvSlotType.Any) && targetInventory.TryPutItem(otherItem, Character, CharacterInventory.AnySlot))
                         {

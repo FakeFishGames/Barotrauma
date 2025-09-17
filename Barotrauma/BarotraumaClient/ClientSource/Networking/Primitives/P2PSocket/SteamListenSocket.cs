@@ -10,12 +10,14 @@ sealed class SteamListenSocket : P2PSocket
     private sealed class SocketManager : Steamworks.SocketManager, Steamworks.ISocketManager
     {
         private Callbacks callbacks;
+        private P2PSocket socket;
         private readonly Dictionary<SteamP2PEndpoint, Steamworks.Data.Connection> endpointToConnection = new();
 
         public void SetCallbacks(Callbacks callbacks)
-        {
-            this.callbacks = callbacks;
-        }
+            => this.callbacks = callbacks;
+
+        public void SetSocket(P2PSocket socket)
+            => this.socket = socket;
 
         public override void OnConnecting(Steamworks.Data.Connection connection, Steamworks.Data.ConnectionInfo info)
         {
@@ -65,7 +67,7 @@ sealed class SteamListenSocket : P2PSocket
             callbacks.OnConnectionClosed(remoteEndpoint, peerDisconnectPacket);
             base.OnDisconnected(connection, info);
         }
-        
+
         public override void OnMessage(Steamworks.Data.Connection connection, Steamworks.Data.NetIdentity identity, IntPtr data, int size, long messageNum, long recvTime, int channel)
         {
             if (!identity.IsSteamId || data == IntPtr.Zero) { return; }
@@ -75,6 +77,11 @@ sealed class SteamListenSocket : P2PSocket
             Marshal.Copy(source: data, destination: dataArray, startIndex: 0, length: size);
 
             callbacks.OnData(endpoint, new ReadWriteMessage(dataArray, bitPos: 0, lBits: size * 8, copyBuf: false));
+
+            if (socket?.Type is OwnerOrClient.Owner)
+            {
+                socket.dosProtection.OnPacket(endpoint);
+            }
         }
 
         internal bool SendMessage(SteamP2PEndpoint endpoint, IWriteMessage outMsg, DeliveryMethod deliveryMethod)
@@ -107,26 +114,49 @@ sealed class SteamListenSocket : P2PSocket
     
     private SteamListenSocket(
         Callbacks callbacks,
-        SocketManager socketManager)
-        : base(callbacks)
+        SocketManager socketManager,
+        OwnerOrClient type)
+        : base(callbacks, type)
     {
         this.socketManager = socketManager;
     }
 
-    public static Result<P2PSocket, Error> Create(Callbacks callbacks)
+    public static Result<P2PSocket, Error> Create(Callbacks callbacks, OwnerOrClient type)
     {
         if (!SteamManager.IsInitialized) { return Result.Failure(new Error(ErrorCode.SteamNotInitialized)); }
 
         var socketManager = Steamworks.SteamNetworkingSockets.CreateRelaySocket<SocketManager>();
         if (socketManager is null) { return Result.Failure(new Error(ErrorCode.FailedToCreateSteamP2PSocket)); }
-        socketManager.SetCallbacks(callbacks);
 
-        return Result.Success((P2PSocket)new SteamListenSocket(callbacks, socketManager));
+        socketManager.SetCallbacks(callbacks);
+        P2PSocket socket = new SteamListenSocket(callbacks, socketManager, type);
+        socketManager.SetSocket(socket);
+
+        return Result.Success(socket);
     }
 
     public override void ProcessIncomingMessages()
     {
-        socketManager.Receive();
+        const int bufferSize = 32;
+        const int maxIterations = 100;
+
+        // could technically cause a stack overflow since the call is recursive,
+        // use a while loop instead
+        int iteration;
+        for (iteration = 0; iteration < maxIterations; iteration++)
+        {
+            int received = socketManager.Receive(bufferSize: bufferSize, receiveToEnd: false);
+
+            if (received < bufferSize)
+            {
+                break;
+            }
+        }
+
+        if (iteration >= maxIterations)
+        {
+            DebugConsole.ThrowError("Steam P2P socket received too many messages in a single frame.");
+        }
     }
 
     public override bool SendMessage(P2PEndpoint endpoint, IWriteMessage outMsg, DeliveryMethod deliveryMethod)

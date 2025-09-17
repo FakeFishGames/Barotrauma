@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="[DebugOnlyTest]PipeTestSub" modversion="1.0.0" corepackage="False" gameversion="1.8.4.2">
+  <Submarine file="%ModDir%/Dugong_PipeTest.sub" />
+</contentpackage>

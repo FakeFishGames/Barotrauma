@@ -419,7 +419,12 @@ namespace Barotrauma
                 float scale = Math.Min(targetAreaSize.X / headSprite.size.X, targetAreaSize.Y / headSprite.size.Y);
                 headSprite.SourceRect = new Rectangle(CalculateOffset(headSprite, Head.SheetIndex.ToPoint()), headSprite.SourceRect.Size);
                 SetHeadEffect(spriteBatch);
-                headSprite.Draw(spriteBatch, screenPos, scale: scale, color: Head.SkinColor, spriteEffect: spriteEffects);
+                Vector2 origin = headSprite.Origin;
+                if (flip)
+                {
+                    origin.X = headSprite.size.X - origin.X;
+                }
+                headSprite.Draw(spriteBatch, screenPos, origin: origin, scale: scale, color: Head.SkinColor, spriteEffect: spriteEffects);
                 if (AttachmentSprites != null)
                 {
                     float depthStep = 0.000001f;
@@ -467,6 +472,14 @@ namespace Barotrauma
             {
                 origin = head.Origin;
                 attachment.Sprite.Origin = origin;
+                if (spriteEffects.HasFlag(SpriteEffects.FlipHorizontally))
+                {
+                    origin.X = head.size.X - origin.X;
+                }
+                if (spriteEffects.HasFlag(SpriteEffects.FlipVertically))
+                {
+                    origin.Y = head.size.Y - origin.Y;
+                }
             }
             else
             {

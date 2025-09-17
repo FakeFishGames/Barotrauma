@@ -133,7 +133,7 @@ namespace Barotrauma.Items.Components
         
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (FlowPercentage < 0.0f)
+            if (currFlow < 0f)
             {
                 foreach (var (position, emitter) in pumpOutEmitters)
                 {
@@ -154,10 +154,10 @@ namespace Barotrauma.Items.Components
                     }
 
                     emitter.Emit(deltaTime, item.WorldPosition + relativeParticlePos, item.CurrentHull, angle,
-                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, -FlowPercentage / 100.0f));
+                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, -currFlow / maxFlow));
                 }
             }
-            else if (FlowPercentage > 0.0f)
+            else if (currFlow > 0f)
             {
                 foreach (var (position, emitter) in pumpInEmitters)
                 {
@@ -174,7 +174,7 @@ namespace Barotrauma.Items.Components
                         relativeParticlePos.Y = -relativeParticlePos.Y;
                     }
                     emitter.Emit(deltaTime, item.WorldPosition + relativeParticlePos, item.CurrentHull, angle,
-                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, FlowPercentage / 100.0f));
+                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, currFlow / maxFlow));
                 }
             }
         }
@@ -185,7 +185,7 @@ namespace Barotrauma.Items.Components
         {
             autoControlIndicator.Selected = IsAutoControlled;
             PowerButton.Enabled = isActiveLockTimer <= 0.0f;
-            if (HasPower)
+            if (HasPower && !Disabled)
             {
                 flickerTimer = 0;
                 powerLight.Selected = IsActive;
@@ -229,6 +229,7 @@ namespace Barotrauma.Items.Components
             float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             bool isActive = msg.ReadBoolean();
             bool hijacked = msg.ReadBoolean();
+            bool disabled = msg.ReadBoolean();
             float? targetLevel;
             if (msg.ReadBoolean())
             {
@@ -250,6 +251,7 @@ namespace Barotrauma.Items.Components
             FlowPercentage = flowPercentage;
             IsActive = isActive;
             Hijacked = hijacked;
+            Disabled = disabled;
             TargetLevel = targetLevel;
         }
     }

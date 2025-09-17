@@ -343,12 +343,27 @@ namespace Barotrauma
         }
 
 
+        /// <summary>
+        /// Is the sub at the depth where it starts to take damage to appear due to the pressure?
+        /// </summary>
         public bool AtDamageDepth
         {
             get
             {
                 if (Level.Loaded == null || subBody == null) { return false; }
                 return RealWorldDepth > Level.Loaded.RealWorldCrushDepth && RealWorldDepth > RealWorldCrushDepth;
+            }
+        }
+
+        /// <summary>
+        /// Is the sub at the depth where cosmetic effects (e.g. camera shake) start to appear due to the pressure?
+        /// </summary>
+        public bool AtCosmeticDamageDepth
+        {
+            get
+            {
+                if (Level.Loaded == null || subBody == null) { return false; }
+                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth + SubmarineBody.CosmeticDamageEffectThreshold && RealWorldDepth > RealWorldCrushDepth + SubmarineBody.CosmeticDamageEffectThreshold;
             }
         }
 

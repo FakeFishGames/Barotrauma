@@ -101,6 +101,7 @@ namespace Barotrauma
         public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true, bool requireValidContainer = true, bool ignoreItemsMarkedForDeconstruction = true)
         {
             if (item == null) { return false; }
+            if (item.GetComponents<Pickable>().None(c => c is not Door && c.CanBePicked)) { return false; }
             if (item.DontCleanUp) { return false; }
             if (item.Illegitimate == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)

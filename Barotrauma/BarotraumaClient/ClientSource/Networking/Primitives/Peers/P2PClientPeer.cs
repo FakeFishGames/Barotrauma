@@ -59,11 +59,11 @@ namespace Barotrauma.Networking
 
             ServerConnection = ServerEndpoint.MakeConnectionFromEndpoint();
 
-            var socketCallbacks = new P2PSocket.Callbacks(OnIncomingConnection, OnConnectionClosed, OnP2PData);
+            var socketCallbacks = new P2PSocket.Callbacks(OnIncomingConnection, OnConnectionClosed, OnExcessivePackets, OnP2PData);
             var socketCreateResult = ServerEndpoint switch
             {
-                EosP2PEndpoint => EosP2PSocket.Create(socketCallbacks),
-                SteamP2PEndpoint steamP2PEndpoint => SteamConnectSocket.Create(steamP2PEndpoint, socketCallbacks),
+                EosP2PEndpoint => EosP2PSocket.Create(socketCallbacks, P2PSocket.OwnerOrClient.Client),
+                SteamP2PEndpoint steamP2PEndpoint => SteamConnectSocket.Create(steamP2PEndpoint, socketCallbacks, P2PSocket.OwnerOrClient.Client),
                 _ => throw new Exception($"Invalid server endpoint: {ServerEndpoint.GetType()} {ServerEndpoint}")
             };
             socket = socketCreateResult.TryUnwrapSuccess(out var s)
@@ -95,6 +95,11 @@ namespace Barotrauma.Networking
             heartbeatTimer = 1.0;
 
             isActive = true;
+        }
+
+        private void OnExcessivePackets(P2PEndpoint endpoint, bool shouldBan)
+        {
+            // do nothing
         }
 
         private bool OnIncomingConnection(P2PEndpoint remoteEndpoint)
@@ -163,7 +168,7 @@ namespace Barotrauma.Networking
                 int completeMessageLengthBits = completeMessage.Length * 8;
                 incomingDataMessages.Add(new ReadWriteMessage(completeMessage.ToArray(), 0, completeMessageLengthBits, copyBuf: false));
             }
-            else if (packetHeader.IsHeartbeatMessage())
+            else if (packetHeader.IsHeartbeatMessage() || packetHeader.IsDoSProtectionMessage())
             {
                 return; //TODO: implement heartbeats
             }

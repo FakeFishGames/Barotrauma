@@ -785,7 +785,7 @@ namespace Barotrauma
         #region Shared network write
         private void SharedStatusWrite(IWriteMessage msg)
         {
-            msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+            msg.WriteSingle(waterVolume);
 
             System.Diagnostics.Debug.Assert(FireSources.Count <= MaxFireSources, $"Too many fire sources ({FireSources.Count}) in hull {ID} (max {MaxFireSources}).");
             msg.WriteRangedInteger(Math.Min(FireSources.Count, MaxFireSources), 0, MaxFireSources);
@@ -833,7 +833,7 @@ namespace Barotrauma
 
         private void SharedStatusRead(IReadMessage msg, out float newWaterVolume, out NetworkFireSource[] newFireSources)
         {
-            newWaterVolume = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+            newWaterVolume = msg.ReadSingle();
 
             int fireSourceCount = msg.ReadRangedInteger(0, MaxFireSources);
             newFireSources = new NetworkFireSource[fireSourceCount];
@@ -1267,6 +1267,23 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Recursively find all the hulls linked to the specified hull.
+        /// </summary>
+        public void GetLinkedHulls(List<Hull> linkedHulls, bool includeHiddenHulls = false)
+        {
+            foreach (var linkedEntity in linkedTo)
+            {
+                if (linkedEntity is Hull linkedHull)
+                {
+                    if (linkedHulls.Contains(linkedHull)) { continue; }
+                    if (!includeHiddenHulls && linkedHull.IsHidden) { continue; }
+                    linkedHulls.Add(linkedHull);
+                    linkedHull.GetLinkedHulls(linkedHulls, includeHiddenHulls);
+                }
+            }
         }
 
         public static void DetectItemVisibility(Character c=null)

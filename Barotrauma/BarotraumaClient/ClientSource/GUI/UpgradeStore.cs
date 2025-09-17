@@ -1743,12 +1743,12 @@ namespace Barotrauma
                 }
             }
 
-            static void CreateMaterialCosts(GUIListBox list, UpgradePrefab prefab, int targetLevel)
+            static void CreateMaterialCosts(GUIListBox list, UpgradePrefab upgradePrefab, int targetLevel)
             {
                 list.Content.ClearChildren();
                 var allItems = CargoManager.FindAllItemsOnPlayerAndSub(Character.Controlled);
 
-                var resources = prefab.GetApplicableResources(targetLevel);
+                var resources = upgradePrefab.GetApplicableResources(targetLevel);
 
                 foreach (ApplicableResourceCollection collection in resources)
                 {
@@ -1769,7 +1769,7 @@ namespace Barotrauma
 
                     bool hasItems = collection.Cost.Amount <= allItems.Count(collection.Cost.MatchesItem);
 
-                    Sprite icon = defaultItemPrefab.InventoryIcon ?? prefab.Sprite;
+                    Sprite icon = defaultItemPrefab.InventoryIcon ?? defaultItemPrefab.Sprite;
                     Color iconColor = defaultItemPrefab.InventoryIcon is null ? defaultItemPrefab.SpriteColor : defaultItemPrefab.InventoryIconColor;
 
                     GUIImage itemIcon = new GUIImage(new RectTransform(Vector2.One, itemFrame.RectTransform, scaleBasis: ScaleBasis.Smallest, anchor: Anchor.Center), sprite: icon, scaleToFit: true)
@@ -1798,7 +1798,7 @@ namespace Barotrauma
                         if (index > length) { index = 0; }
 
                         ItemPrefab currentPrefab = collection.MatchingItems[(int)MathF.Floor(index)];
-                        Sprite icon = currentPrefab.InventoryIcon ?? prefab.Sprite;
+                        Sprite icon = currentPrefab.InventoryIcon ?? currentPrefab.Sprite;
                         Color iconColor = currentPrefab.InventoryIcon is null ? currentPrefab.SpriteColor : currentPrefab.InventoryIconColor;
                         itemIcon.Sprite = icon;
                         itemIcon.Color = hasItems ? iconColor : iconColor * 0.9f;

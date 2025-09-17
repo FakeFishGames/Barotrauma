@@ -106,6 +106,8 @@ namespace Barotrauma
                 void AddTexturePath(string path)
                 {
                     if (string.IsNullOrEmpty(path)) { return; }
+                    //if the path contains a gender variable, we can't load it yet because we don't know which gender we need
+                    if (path.Contains("[GENDER]")) { return; }
                     texturePaths.Add(ContentPath.FromRaw(characterPrefab.ContentPackage, ragdollParams.Texture));
                 }
             }

@@ -11,6 +11,8 @@ namespace Barotrauma
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; protected set; }
 
+        public HashSet<Identifier> MissionTags { get; } = [];
+
         [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
         public float MinLevelDifficulty { get; set; }
 
@@ -21,6 +23,10 @@ namespace Barotrauma
         {
             Name = $"{nameof(ExtraSubmarineInfo)} ({submarineInfo.Name})";
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            foreach (var missionTag in element.GetAttributeIdentifierArray(nameof(MissionTags), []))
+            {
+                MissionTags.Add(missionTag);
+            }
         }
 
         public ExtraSubmarineInfo(SubmarineInfo submarineInfo)
@@ -41,11 +47,18 @@ namespace Barotrauma
                     kvp.Value.TrySetValue(this, kvp.Value.GetValue(original));
                 }
             }
+            foreach (var missionTag in original.MissionTags)
+            {
+                MissionTags.Add(missionTag);
+            }
         }
 
         public virtual void Save(XElement element)
         {
             SerializableProperty.SerializeProperties(this, element);
+            // MissionTags is not automatically serialized because HashSet<Identifier> is not a supported type
+            // We need to manually serialize it as a comma-separated string
+            element.SetAttributeValue(nameof(MissionTags), string.Join(',', MissionTags));
         }
     }
 
@@ -135,18 +148,10 @@ namespace Barotrauma
         [Serialize(50.0f, IsPropertySaveable.Yes), Editable]
         public float PreferredDifficulty { get; set; }
 
-        private readonly HashSet<Identifier> missionTags = new HashSet<Identifier>();
-
-        public HashSet<Identifier> MissionTags => missionTags;
-
         public EnemySubmarineInfo(SubmarineInfo submarineInfo, XElement element) : base(submarineInfo, element)
         {
             Name = $"{nameof(EnemySubmarineInfo)} ({submarineInfo.Name})";
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-            foreach (var missionTag in element.GetAttributeIdentifierArray(nameof(MissionTags), Array.Empty<Identifier>()))
-            {
-                missionTags.Add(missionTag);
-            }
         }
 
         public EnemySubmarineInfo(SubmarineInfo submarineInfo) : base(submarineInfo)
@@ -156,16 +161,8 @@ namespace Barotrauma
 
         public EnemySubmarineInfo(EnemySubmarineInfo original) : base(original)
         {
-            foreach (var missionTag in original.missionTags)
-            {
-                missionTags.Add(missionTag);
-            }
         }
 
-        public override void Save(XElement element)
-        {
-            base.Save(element);
-            element.Add(new XAttribute(nameof(MissionTags), string.Join(',', missionTags)));
-        }
+
     }
 }

@@ -48,7 +48,7 @@ namespace Barotrauma
 
         protected static bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
-        private readonly CheckDataAction completeCheckDataAction;
+        protected readonly CheckDataAction completeCheckDataAction;
 
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
@@ -110,8 +110,10 @@ namespace Barotrauma
 
         public bool Failed
         {
-            get { return failed; }
+            get { return failed || ForceFailure; }
         }
+
+        public bool ForceFailure;
 
         public virtual bool AllowRespawning
         {
@@ -541,9 +543,10 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember is not { IsClient: true })
             {
-                completed =                 
+                completed =      
+                    !ForceFailure &&
                     DetermineCompleted() && 
-                    (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+                    (completeCheckDataAction == null || completeCheckDataAction.GetSuccess());
             }
             if (completed)
             {
@@ -569,6 +572,10 @@ namespace Barotrauma
             TimesAttempted++;
 
             EndMissionSpecific(completed);
+            if (ForceFailure)
+            {
+                failed = true;
+            }
         }
 
         protected abstract bool DetermineCompleted();
@@ -828,6 +835,51 @@ namespace Barotrauma
             return new Vector2(
                 cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.ServerAndClient),
                 cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
+        }
+
+        /// <summary>
+        /// Gets a random submarine by tags, filtered by difficulty. Used by missions that force specific submarines (wrecks, beacons, etc.)
+        /// </summary>
+        /// <param name="tags">Mission tags to match against</param>
+        /// <param name="seed">Random seed for selection</param>
+        /// <param name="submarineSelector">Function to filter submarines by type (e.g., s => s.IsWreck)</param>
+        /// <param name="submarineTypeName">Name of submarine type for error messages (e.g., "wreck", "beacon station")</param>
+        /// <returns>Selected submarine, or null if none found</returns>
+        protected static SubmarineInfo GetRandomSubmarineByTagsAndDifficulty(
+            IEnumerable<Identifier> tags,
+            LevelData levelData,
+            Func<SubmarineInfo, bool> submarineSelector,
+            string submarineTypeName)
+        {
+            var rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
+            float levelDifficulty = levelData.Difficulty;
+
+            var submarinesWithTags = SubmarineInfo.SavedSubmarines
+                .Where(submarineSelector)
+                .Where(s =>
+                {
+                    return s.GetExtraSubmarineInfo is { } extraInfo && (tags.None() || tags.Any(t => extraInfo.MissionTags.Contains(t)));
+                })
+                .ToList();
+
+            var matchingSubmarines = submarinesWithTags
+                .Where(s =>
+                {
+                    return s.GetExtraSubmarineInfo is { } extraInfo &&
+                           levelDifficulty >= extraInfo.MinLevelDifficulty &&
+                           levelDifficulty <= extraInfo.MaxLevelDifficulty;
+                })
+                .ToList();
+
+            if (matchingSubmarines.Count == 0)
+            {
+                if (submarinesWithTags.Count > 0)
+                {
+                    DebugConsole.ThrowError($"Found {submarinesWithTags.Count} {submarineTypeName}(s) with matching tags \"{string.Join(", ", tags)}\", but none are suitable for level difficulty {levelDifficulty:F1}.");
+                }
+                return null;
+            }
+            return matchingSubmarines[rand.Next(matchingSubmarines.Count)];
         }
     }
 
