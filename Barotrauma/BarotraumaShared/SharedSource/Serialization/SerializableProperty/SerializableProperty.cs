@@ -84,7 +84,8 @@ namespace Barotrauma
             { typeof(Rectangle), "rectangle" },
             { typeof(Color), "color" },
             { typeof(string[]), "stringarray" },
-            { typeof(Identifier[]), "identifierarray" }
+            { typeof(Identifier[]), "identifierarray" },
+            { typeof(GUIFont), "font" }
         }.ToImmutableDictionary();
 
         private static readonly Dictionary<Type, Dictionary<Identifier, SerializableProperty>> cachedProperties = 
@@ -224,6 +225,9 @@ namespace Barotrauma
                     case "identifierarray":
                         PropertyInfo.SetValue(parentObject, ParseIdentifierArray(value));
                         break;
+                    case "font":
+                        PropertyInfo.SetValue(parentObject, GUIStyle.Fonts.TryGetValue(new(value), out GUIFont font) ? font : null);
+                        break;
                 }
             }
             catch (Exception e)
@@ -319,6 +323,11 @@ namespace Barotrauma
                             case "identifierarray":
                                 PropertyInfo.SetValue(parentObject, ParseIdentifierArray((string)value));
                                 return true;
+#if CLIENT
+                            case "font":
+                                PropertyInfo.SetValue(parentObject, GUIStyle.Fonts.TryGetValue(new((string)value), out GUIFont font) ? font : null);
+                                return true;
+#endif
                             default:
                                 DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
                                 DebugConsole.ThrowError($"(Cannot convert a string to a {PropertyType})");
@@ -1007,6 +1016,9 @@ namespace Barotrauma
                         case "identifierarray":
                             Identifier[] identifierArray = (Identifier[])value;
                             stringValue =  identifierArray != null ? string.Join(';', identifierArray) : "";
+                            break;
+                        case "font":
+                            stringValue = ((GUIFont)value).Identifier.Value;
                             break;
                         default:
                             stringValue = value.ToString();
