@@ -1,8 +1,8 @@
 ﻿#nullable enable
 
-using Barotrauma.IO;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -43,6 +43,17 @@ namespace Barotrauma
             }
         }
 
+        private static void CalculateHashStream(Stream stream, out string stringRepresentation, out byte[] byteRepresentation)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                byte[] byteHash = md5.ComputeHash(stream);
+
+                byteRepresentation = byteHash;
+                stringRepresentation = ByteRepresentationToStringRepresentation(byteHash);
+            }
+        }
+
         private static string ByteRepresentationToStringRepresentation(byte[] byteHash)
             => ToolBoxCore.ByteArrayToHexString(byteHash);
 
@@ -73,6 +84,13 @@ namespace Barotrauma
                 StringRepresentation = ByteRepresentationToStringRepresentation(bytes);
                 ByteRepresentation = bytes;
             }
+
+            ShortRepresentation = GetShortHash(StringRepresentation);
+        }
+        
+        private Md5Hash(Stream stream)
+        {
+            CalculateHashStream(stream, out StringRepresentation, out ByteRepresentation);
 
             ShortRepresentation = GetShortHash(StringRepresentation);
         }
@@ -111,17 +129,11 @@ namespace Barotrauma
             IgnoreWhitespace = 0x2
         }
 
-        public static Md5Hash CalculateForFile(string path, StringHashOptions options)
+        public static Md5Hash CalculateForFile(string path)
         {
-            if (options.HasFlag(StringHashOptions.IgnoreWhitespace) || options.HasFlag(StringHashOptions.IgnoreCase))
+            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                string str = File.ReadAllText(path, Encoding.UTF8);
-                return CalculateForString(str, options);
-            }
-            else
-            {
-                byte[] bytes = File.ReadAllBytes(path);
-                return CalculateForBytes(bytes);
+                return new Md5Hash(stream);
             }
         }
 
