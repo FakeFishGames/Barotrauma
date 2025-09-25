@@ -1,5 +1,4 @@
 ﻿#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,6 +12,11 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
+    public class NetStructReadException : Exception
+    {
+        public NetStructReadException(string message, Exception? innerException = null) : base(message, innerException) { }
+    }
+
     /// <summary>
     /// Marks fields and properties as to be serialized and deserialized by <see cref="INetSerializableStruct"/>.
     /// Also contains settings for some types like maximum and minimum values for numbers to reduce bits used.
@@ -730,8 +734,15 @@ namespace Barotrauma
         /// <returns>A new struct of type T with fields and properties deserialized</returns>
         public static T Read<T>(IReadMessage inc) where T : INetSerializableStruct
         {
-            ReadOnlyBitField bitField = new ReadOnlyBitField(inc);
-            return ReadInternal<T>(inc, bitField);
+            try
+            {
+                ReadOnlyBitField bitField = new ReadOnlyBitField(inc);
+                return ReadInternal<T>(inc, bitField);
+            }
+            catch (Exception e)
+            {
+                throw new NetStructReadException($"Failed to read {nameof(INetSerializableStruct)}", e);
+            }
         }
 
         public static T ReadInternal<T>(IReadMessage inc, ReadOnlyBitField bitField) where T : INetSerializableStruct
@@ -749,7 +760,7 @@ namespace Barotrauma
                 }
                 catch (Exception exception)
                 {
-                    throw new Exception($"Failed to assign" +
+                    throw new NetStructReadException($"Failed to assign" +
                                         $" {value ?? "[NULL]"} ({value?.GetType().Name ?? "[NULL]"})" +
                                         $" to {typeof(T).Name}.{property.Name} ({property.Type.Name})", exception);
                 }

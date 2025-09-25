@@ -2866,7 +2866,7 @@ namespace Barotrauma
             }
             contextualOrders.RemoveAll(o => !IsOrderAvailable(o));
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, contextualOrders.Count, MathHelper.ToRadians(90f + 180f / contextualOrders.Count));
-            bool canCharacterBeHeard = !CanCharacterBeHeard();
+            bool canCharacterBeHeard = CanCharacterBeHeard();
             for (int i = 0; i < contextualOrders.Count; i++)
             {
                 var order = contextualOrders[i];

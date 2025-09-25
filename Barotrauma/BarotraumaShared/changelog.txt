@@ -1,4 +1,14 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.10.6.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed contextual orders no longer working even if you were within radio/speaking range of a bot.
+- Fixes to several multiplayer exploits, including one that allowed clients to cause server-side lag by sending specifically crafted messages to the server, even if the server didn't allow them to join.
+- Fixed a bug caused by the water flow changes in the previous update: water flow through gaps in inside the submarine was much faster than intended when there were multiple breaches on the submarine's outer hull.
+- Reduced the water flow through gaps when the hulls on are not linked. Linked hulls are intended to behave as if they were one room, and should allow unrestricted water flow.
+- Railgun shells now disappear shortly after the first impact: the change in the previous update (which allowed them to penetrate multiple limbs/targets) had the side-effect that a shell that went through a single limb could fall back on the submarine and still do full damage.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.10.5.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

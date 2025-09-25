@@ -1,4 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="[DebugOnlyTest]testGapSub" modversion="1.0.3" corepackage="False" gameversion="1.9.5.0">
+<contentpackage name="[DebugOnlyTest]testGapSub" modversion="1.0.4" corepackage="False" gameversion="1.10.4.0">
   <Submarine file="%ModDir%/testGapSub.sub" />
 </contentpackage>

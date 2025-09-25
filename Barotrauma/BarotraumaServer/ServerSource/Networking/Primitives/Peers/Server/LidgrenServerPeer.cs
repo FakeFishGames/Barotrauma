@@ -269,8 +269,27 @@ namespace Barotrauma.Networking
                     return;
                 }
 
-                var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
-                callbacks.OnMessageReceived.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
+                try
+                {
+                    var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
+                    callbacks.OnMessageReceived.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
+                }
+
+                catch (NetStructReadException)
+                {
+                    //kick the client if we fail to parse their message
+                    if (conn != OwnerConnection)
+                    {
+                        if (connectedClients.Find(c => c.Connection == conn) is { } connectedClient)
+                        {
+                            Disconnect(connectedClient.Connection, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                        }
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
 
             LidgrenConnection? FindConnection(NetConnection ligdrenConn)

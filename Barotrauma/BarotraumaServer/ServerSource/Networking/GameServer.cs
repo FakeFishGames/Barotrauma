@@ -4384,9 +4384,22 @@ namespace Barotrauma.Networking
                 moustacheIndex: netInfo.MoustacheIndex,
                 faceAttachmentIndex: netInfo.FaceAttachmentIndex);
 
-            sender.CharacterInfo.Head.SkinColor = netInfo.SkinColor;
-            sender.CharacterInfo.Head.HairColor = netInfo.HairColor;
-            sender.CharacterInfo.Head.FacialHairColor = netInfo.FacialHairColor;
+            sender.CharacterInfo.Head.SkinColor = validateColor(netInfo.SkinColor, "skin color", sender.CharacterInfo.SkinColors.Select(kvp => kvp.Color));
+            sender.CharacterInfo.Head.HairColor = validateColor(netInfo.HairColor, "hair color", sender.CharacterInfo.HairColors.Select(kvp => kvp.Color));
+            sender.CharacterInfo.Head.FacialHairColor = validateColor(netInfo.FacialHairColor, "facial hair color", sender.CharacterInfo.FacialHairColors.Select(kvp => kvp.Color));
+
+            Color validateColor(Color newColor, string colorName, IEnumerable<Color> supportedColors)
+            {
+                if (!supportedColors.Contains(newColor))
+                {
+                    DebugConsole.AddWarning($"Client {sender.Name} attempted to set their {colorName} to an unsupported value ({newColor}).");
+                    return supportedColors.First();
+                }
+                else
+                {
+                    return newColor;
+                }
+            }
 
             if (netInfo.JobVariants.Length > 0)
             {

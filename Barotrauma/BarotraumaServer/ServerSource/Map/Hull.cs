@@ -64,15 +64,15 @@ namespace Barotrauma
                 decalUpdateTimer = 0;
                 decalUpdatePending = false;
             }
-            if (pendingSectionUpdates.Count > 0 && backgroundSectionUpdateTimer > NetConfig.HullUpdateInterval)
+            if (pendingSectorUpdates.Count > 0 && backgroundSectionUpdateTimer > NetConfig.HullUpdateInterval)
             {
-                foreach (int pendingSectionUpdate in pendingSectionUpdates)
+                foreach (int pendingSectorUpdate in pendingSectorUpdates)
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
+                    GameMain.NetworkMember.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectorUpdate));
                 }
                 
                 backgroundSectionUpdateTimer = 0;
-                pendingSectionUpdates.Clear();
+                pendingSectorUpdates.Clear();
             }
         }
 
@@ -177,6 +177,8 @@ namespace Barotrauma
                     }
                     break;
                 case EventType.BackgroundSections:
+                    bool addPendingSectorUpdate = false;
+
                     SharedBackgroundSectionRead(
                         msg,
                         bsnu =>
@@ -185,17 +187,67 @@ namespace Barotrauma
                             Color color = bsnu.Color;
                             float colorStrength = bsnu.ColorStrength;
 
-                            #warning TODO: verify the client is close enough to this hull to paint it, that the sprayer is functional and that the color matches
-                            if (!(c.Character is { AllowInput: true })) { return; }
-                            if (c.Character.HeldItems.All(it => it.GetComponent<Sprayer>() == null)) { return; }
+                            if (c.Character is not { AllowInput: true }) { return; }
 
+                            //ideally the server would just run the painting logic the same way as clients instead of relying on the clients setting colors on the hull,
+                            //but that's non-trivial because the server doesn't know the client's exact cursor position, just the direction they're aiming at
+                            //and we want the painting to be precise, lag shouldn't cause the paint to end up in the wrong place, etc.
+                            //but now that clients set the colors themselves, we need to do some sanity checks:
+
+                            var sprayer = c.Character.HeldItems
+                                .Select(it => it.GetComponent<Sprayer>())
+                                .FirstOrDefault(component => component != null);
+                            if (sprayer == null) { return; }
+
+                            Item liquidItem = sprayer.LiquidContainer?.Inventory?.FirstOrDefault();
+                            if (liquidItem == null) { return; }
+
+                            if (!sprayer.LiquidColors.TryGetValue(liquidItem.Prefab.Identifier, out Color paintColor)) { return; }
+
+                            bool isCleaning = paintColor.A == 0;
+
+                            var backgroundSectionPos = GetBackgroundSectionWorldPos(BackgroundSections[i]);
+                            //rough distance check to disallow painting from very far away
+                            //(slightly longer range than the normal range of the sprayer to give the client some leeway)
+                            if (Vector2.Distance(backgroundSectionPos, sprayer.Item.WorldPosition) > sprayer.Range * 1.1f)
+                            {
+                                return;
+                            }
+
+                            //if we get to this point (client can paint this section), let's sync the changes
+                            //the color change below may fail if the color is out of sync client-side, even if the client isn't doing anything malicious,
+                            //in which case we want to get the client back in sync
+                            addPendingSectorUpdate = true;
+
+                            if (isCleaning)
+                            {
+                                //if we're cleaning, strength of the color must go down
+                                if (colorStrength >= BackgroundSections[i].ColorStrength) { return; }
+                            }
+                            else
+                            {
+                                Vector3 colorChange = color.ToVector3() - BackgroundSections[i].Color.ToVector3();
+                                Vector3 expectedColorChange = paintColor.ToVector3() - BackgroundSections[i].Color.ToVector3();
+
+                                //color should be going towards the color of the paint, if it's not, don't allow changing it
+                                if (Math.Sign(colorChange.X) != Math.Sign(expectedColorChange.X) ||
+                                    Math.Sign(colorChange.Y) != Math.Sign(expectedColorChange.Y) ||
+                                    Math.Sign(colorChange.Z) != Math.Sign(expectedColorChange.Z))
+                                {
+                                    return;
+                                }
+                                BackgroundSections[i].SetColor(color);
+                            }
                             BackgroundSections[i].SetColorStrength(colorStrength);
-                            BackgroundSections[i].SetColor(color);
                         },
                         out int sectorToUpdate);
-                    RefreshAveragePaintedColor();
-                    //add to pending updates to notify other clients as well
-                    pendingSectionUpdates.Add(sectorToUpdate);
+
+                    if (addPendingSectorUpdate)
+                    {
+                        RefreshAveragePaintedColor();
+                        //add to pending updates to notify other clients as well
+                        pendingSectorUpdates.Add(sectorToUpdate);
+                    }
                     break;
                 case EventType.Decal:
                     byte decalIndex = msg.ReadByte();
@@ -209,7 +261,7 @@ namespace Barotrauma
                     break;
                 default:
                     throw new Exception($"Malformed incoming hull event: {eventType} is not a supported event type");
-            }         
+            }
         }
     }
 }

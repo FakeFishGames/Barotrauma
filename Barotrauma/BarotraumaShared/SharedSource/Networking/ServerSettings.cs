@@ -648,6 +648,17 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        /// <summary>
+        /// Does the server allow interacting with NPCs that offer services (e.g. stores) remotely?
+        /// Can be enabled if you're using mods that allow remote interactions - disabled by default to prevent modified clients from cheating.
+        /// </summary>
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool AllowRemoteCampaignInteractions
+        {
+            get;
+            private set;
+        } = false;
+
         private bool voiceChatEnabled;
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool VoiceChatEnabled

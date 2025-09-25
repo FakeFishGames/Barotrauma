@@ -73,11 +73,31 @@ namespace Barotrauma.Networking
 
             try
             {
-                foreach (var incBuf in ChildServerRelay.Read())
+                foreach (byte[] incBuf in ChildServerRelay.Read())
                 {
-                    IReadMessage inc = new ReadOnlyMessage(incBuf, false, 0, incBuf.Length, OwnerConnection);
-
-                    HandleDataMessage(inc);
+                    P2PEndpoint? senderEndpoint = null;
+                    try
+                    {
+                        IReadMessage inc = new ReadOnlyMessage(incBuf, false, 0, incBuf.Length, OwnerConnection);
+                        HandleDataMessage(inc, out senderEndpoint);
+                    }
+                    catch (NetStructReadException)
+                    {
+                        //kick the client if we fail to parse their message
+                        if (senderEndpoint != null && senderEndpoint != ownerEndpoint)
+                        {
+                            if (pendingClients.Find(c => c.Connection.Endpoint == senderEndpoint) is { } pendingClient)
+                            {
+                                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                            }
+                            if (connectedClients.Find(c => c.Connection.Endpoint == senderEndpoint) is { } connectedClient)
+                            {
+                                Disconnect(connectedClient.Connection, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                            }
+                            break;
+                        }
+                        throw;
+                    }
                 }
             }
 
@@ -100,8 +120,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void HandleDataMessage(IReadMessage inc)
+        private void HandleDataMessage(IReadMessage inc, out P2PEndpoint? senderEndPoint)
         {
+            senderEndPoint = null;
             if (!started) { return; }
 
             var senderInfo = INetSerializableStruct.Read<P2POwnerToServerHeader>(inc);
