@@ -38,6 +38,15 @@ namespace Barotrauma.Networking
                 port = int.TryParse(split[1], out var tmpPort) ? tmpPort : port;
             }
             
+            // SRV look-up: only when the user did not specify a port
+            if (port == NetConfig.DefaultPort
+                && tryParseHostName
+                && DnsSrvResolver.TryResolve(hostName, out var srvHost, out var srvPort))
+            {
+                hostName = srvHost;
+                port     = srvPort;
+            }
+            
             if (LidgrenAddress.Parse(hostName).TryUnwrap(out var adr) || 
                 (tryParseHostName && LidgrenAddress.ParseHostName(hostName).TryUnwrap(out adr)))
             {
