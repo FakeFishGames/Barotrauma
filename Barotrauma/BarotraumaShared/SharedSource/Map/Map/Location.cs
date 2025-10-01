@@ -1600,7 +1600,7 @@ namespace Barotrauma
             return HasOutpost() && CanHaveCampaignInteraction(CampaignMode.InteractionType.PurchaseSub);
         }
 
-        public int HighestSubmarineTierAvailable(SubmarineClass submarineClass = SubmarineClass.Undefined)
+        public int HighestSubmarineTierAvailable(SubmarineClass submarineClass = null)
         {
             if (CanHaveSubsForSale())
             {
