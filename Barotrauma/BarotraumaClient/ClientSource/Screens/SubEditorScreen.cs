@@ -2701,34 +2701,40 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), minDifficultyGroup.RectTransform),
                 TextManager.Get("minleveldifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), minDifficultyGroup.RectTransform), NumberType.Int)
+            var minLevelDifficultyInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), minDifficultyGroup.RectTransform), NumberType.Int)
             {
                 IntValue = (int)(extraSubInfo?.MinLevelDifficulty ?? 0),
                 MinValueInt = 0,
                 MaxValueInt = 100,
                 OnValueChanged = (numberInput) =>
                 {
-                    extraSubInfo.MinLevelDifficulty = numberInput.IntValue;
+                    if (GetExtraSubmarineInfo(MainSub?.Info) is { } extraSubInfo)
+                    {
+                        extraSubInfo.MinLevelDifficulty = numberInput.IntValue;
+                    }
                 }
             };
-            minDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            minDifficultyGroup.RectTransform.MaxSize = minLevelDifficultyInput.TextBox.RectTransform.MaxSize;
             var maxDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), extraSettingsContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), maxDifficultyGroup.RectTransform),
                 TextManager.Get("maxleveldifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), maxDifficultyGroup.RectTransform), NumberType.Int)
+            var maxLevelDifficultyInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), maxDifficultyGroup.RectTransform), NumberType.Int)
             {
                 IntValue = (int)(extraSubInfo?.MaxLevelDifficulty ?? 100),
                 MinValueInt = 0,
                 MaxValueInt = 100,
                 OnValueChanged = (numberInput) =>
                 {
-                    extraSubInfo.MaxLevelDifficulty = numberInput.IntValue;
+                    if (GetExtraSubmarineInfo(MainSub?.Info) is { } extraSubInfo)
+                    {
+                        extraSubInfo.MaxLevelDifficulty = numberInput.IntValue;
+                    }
                 }
             };
-            maxDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            maxDifficultyGroup.RectTransform.MaxSize = maxLevelDifficultyInput.TextBox.RectTransform.MaxSize;
 
             GUITextBox missionTagsBox = CreateMissionTagsUI(extraSettingsContainer, extraSubInfo?.MissionTags ?? Enumerable.Empty<Identifier>(), ChangeMissionTags);
 
@@ -2808,7 +2814,7 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), enemySubmarineRewardGroup.RectTransform),
                 TextManager.Get("enemysub.reward"), textAlignment: Alignment.CenterLeft, wrap: true);
-            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), enemySubmarineRewardGroup.RectTransform), NumberType.Int, buttonVisibility: GUINumberInput.ButtonVisibility.ForceHidden)
+            var enemySubRewardInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), enemySubmarineRewardGroup.RectTransform), NumberType.Int, buttonVisibility: GUINumberInput.ButtonVisibility.ForceHidden)
             {
                 IntValue = (int)(MainSub?.Info?.EnemySubmarineInfo?.Reward ?? 4000),
                 MinValueInt = 0,
@@ -2818,14 +2824,14 @@ namespace Barotrauma
                     MainSub.Info.EnemySubmarineInfo.Reward = numberInput.IntValue;
                 }
             };
-            enemySubmarineRewardGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            enemySubmarineRewardGroup.RectTransform.MaxSize = enemySubRewardInput.TextBox.RectTransform.MaxSize;
             var enemySubmarineDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), enemySubmarineSettingsContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), enemySubmarineDifficultyGroup.RectTransform),
                 TextManager.Get("preferreddifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), enemySubmarineDifficultyGroup.RectTransform), NumberType.Int)
+            var enemySubDifficultyInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), enemySubmarineDifficultyGroup.RectTransform), NumberType.Int)
             {
                 IntValue = (int)(MainSub?.Info?.EnemySubmarineInfo?.PreferredDifficulty ?? 50),
                 MinValueInt = 0,
@@ -2835,7 +2841,7 @@ namespace Barotrauma
                     MainSub.Info.EnemySubmarineInfo.PreferredDifficulty = numberInput.IntValue;
                 }
             };
-            enemySubmarineDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            enemySubmarineDifficultyGroup.RectTransform.MaxSize = enemySubDifficultyInput.TextBox.RectTransform.MaxSize;
 
             //--------------------------------------------------------
 
@@ -3129,6 +3135,8 @@ namespace Barotrauma
                 if (newExtraSubInfo != null)
                 {
                     missionTagsBox.Text = string.Join(',', newExtraSubInfo.MissionTags);
+                    newExtraSubInfo.MinLevelDifficulty = minLevelDifficultyInput?.IntValue ?? 0;
+                    newExtraSubInfo.MaxLevelDifficulty = maxLevelDifficultyInput?.IntValue ?? 100;
                 }
 
                 previewImageButtonHolder.Children.ForEach(c => c.Enabled = MainSub.Info.AllowPreviewImage);

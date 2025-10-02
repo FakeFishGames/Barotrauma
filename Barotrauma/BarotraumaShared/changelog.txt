@@ -1,4 +1,11 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.10.7.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Additional fixes to multiplayer exploits.
+- Fixed crashing when editing a beacon station's, wreck's or enemy sub's min/max level difficulty settings in the sub editor before you have saved the sub for the first time.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.10.6.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -9,7 +16,7 @@ v1.10.6.0
 - Railgun shells now disappear shortly after the first impact: the change in the previous update (which allowed them to penetrate multiple limbs/targets) had the side-effect that a shell that went through a single limb could fall back on the submarine and still do full damage.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-v1.10.5.0
+v1.10.5.0 (Autumn Update 2025)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 Balance:

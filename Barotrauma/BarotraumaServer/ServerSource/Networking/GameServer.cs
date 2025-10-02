@@ -1052,52 +1052,74 @@ namespace Barotrauma.Networking
             string errorStr = "Unhandled error report";
             string errorStrNoName = errorStr;
 
-            ClientNetError error = (ClientNetError)inc.ReadByte();
-            switch (error)
+            bool malformedData = false;
+            try
             {
-                case ClientNetError.MISSING_EVENT:
-                    UInt16 expectedID = inc.ReadUInt16();
-                    UInt16 receivedID = inc.ReadUInt16();
-                    errorStr = errorStrNoName = "Expecting event id " + expectedID.ToString() + ", received " + receivedID.ToString();
-                    break;
-                case ClientNetError.MISSING_ENTITY:
-                    UInt16 eventID = inc.ReadUInt16();
-                    UInt16 entityID = inc.ReadUInt16();
-                    byte subCount = inc.ReadByte();
-                    List<string> subNames = new List<string>();
-                    for (int i = 0; i < subCount; i++)
-                    {
-                        subNames.Add(inc.ReadString());
-                    }
-                    Entity entity = Entity.FindEntityByID(entityID);
-                    if (entity == null)
-                    {
-                        errorStr = errorStrNoName = "Received an update for an entity that doesn't exist (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
-                    }
-                    else if (entity is Character character)
-                    {
-                        errorStr = $"Missing character {character.Name} (event id {eventID}, entity id {entityID}).";
-                        errorStrNoName = $"Missing character {character.SpeciesName}  (event id {eventID}, entity id {entityID}).";
-                    }
-                    else if (entity is Item item)
-                    {
-                        errorStr = errorStrNoName = $"Missing item {item.Name}, sub: {item.Submarine?.Info?.Name ?? "none"} (event id {eventID}, entity id {entityID}).";
-                    }
-                    else
-                    {
-                        errorStr = errorStrNoName = $"Missing entity {entity}, sub: {entity.Submarine?.Info?.Name ?? "none"} (event id {eventID}, entity id {entityID}).";
-                    }
-                    if (GameStarted)
-                    {
-                        var serverSubNames = Submarine.Loaded.Select(s => s.Info.Name);
-                        if (subCount != Submarine.Loaded.Count || !subNames.SequenceEqual(serverSubNames))
+                ClientNetError error = (ClientNetError)inc.ReadByte();
+                switch (error)
+                {
+                    case ClientNetError.MISSING_EVENT:
+                        UInt16 expectedID = inc.ReadUInt16();
+                        UInt16 receivedID = inc.ReadUInt16();
+                        errorStr = errorStrNoName = "Expecting event id " + expectedID.ToString() + ", received " + receivedID.ToString();
+                        break;
+                    case ClientNetError.MISSING_ENTITY:
+                        UInt16 eventID = inc.ReadUInt16();
+                        UInt16 entityID = inc.ReadUInt16();
+                        int subCount = inc.ReadByte();
+                        List<string> subNames = new List<string>();
+                        for (int i = 0; i < Math.Min(subCount, 5); i++)
                         {
-                            string subErrorStr =  $" Loaded submarines don't match (client: {string.Join(", ", subNames)}, server: {string.Join(", ", serverSubNames)}).";
-                            errorStr += subErrorStr;
-                            errorStrNoName += subErrorStr;
+                            string subName = inc.ReadString();
+                            if (subName == null || subName.Length > 16)
+                            {
+                                malformedData = true;
+                            }
+                            else
+                            {
+                                subNames.Add(subName);
+                            }
                         }
-                    }
-                    break;
+                        Entity entity = Entity.FindEntityByID(entityID);
+                        if (entity == null)
+                        {
+                            errorStr = errorStrNoName = "Received an update for an entity that doesn't exist (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                        }
+                        else if (entity is Character character)
+                        {
+                            errorStr = $"Missing character {character.Name} (event id {eventID}, entity id {entityID}).";
+                            errorStrNoName = $"Missing character {character.SpeciesName}  (event id {eventID}, entity id {entityID}).";
+                        }
+                        else if (entity is Item item)
+                        {
+                            errorStr = errorStrNoName = $"Missing item {item.Name}, sub: {item.Submarine?.Info?.Name ?? "none"} (event id {eventID}, entity id {entityID}).";
+                        }
+                        else
+                        {
+                            errorStr = errorStrNoName = $"Missing entity {entity}, sub: {entity.Submarine?.Info?.Name ?? "none"} (event id {eventID}, entity id {entityID}).";
+                        }
+                        if (GameStarted)
+                        {
+                            var serverSubNames = Submarine.Loaded.Select(s => s.Info.Name);
+                            if (subCount != Submarine.Loaded.Count || !subNames.SequenceEqual(serverSubNames))
+                            {
+                                string subErrorStr =  $" Loaded submarines don't match (client: {string.Join(", ", subNames)}, server: {string.Join(", ", serverSubNames)}).";
+                                errorStr += subErrorStr;
+                                errorStrNoName += subErrorStr;
+                            }
+                        }
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Failed to read error data from the client {ClientLogName(c)}.", e);
+                malformedData = true;
+            }
+            if (malformedData)
+            {
+                KickClient(c, "Received malformed error data.");
+                return;
             }
 
             Log(ClientLogName(c) + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
@@ -1121,7 +1143,6 @@ namespace Barotrauma.Networking
             {
                 KickClient(c, errorStr);
             }
-
         }
 
         private void WriteEventErrorData(Client client, string errorStr)

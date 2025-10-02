@@ -3811,9 +3811,12 @@ namespace Barotrauma.Networking
                     outMsg.WriteUInt16(eventId);
                     outMsg.WriteUInt16(entityId);
                     outMsg.WriteByte((byte)Submarine.Loaded.Count);
-                    foreach (Submarine sub in Submarine.Loaded)
+                    //server has restrictions on the length and number of subs listed in the error (see GameServer.HandleClientError),
+                    //let's adhere to those
+                    foreach (Submarine sub in Submarine.Loaded.Take(5))
                     {
-                        outMsg.WriteString(sub.Info.Name);
+                        string subNameTruncated = sub.Info.Name.Length > 16 ? sub.Info.Name.Substring(0, 16) : sub.Info.Name;
+                        outMsg.WriteString(subNameTruncated);
                     }
                     break;
             }
