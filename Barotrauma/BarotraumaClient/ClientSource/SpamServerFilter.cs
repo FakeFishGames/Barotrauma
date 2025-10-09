@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Cache;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -20,8 +21,10 @@ namespace Barotrauma
         Invalid,
         NameEquals,
         NameContains,
+        NameMatches,
         MessageEquals,
         MessageContains,
+        MessageMatches,
         PlayerCountLarger,
         PlayerCountExact,
         MaxPlayersLarger,
@@ -66,9 +69,11 @@ namespace Barotrauma
             {
                 SpamServerFilterType.NameEquals => CompareEquals(name, value),
                 SpamServerFilterType.NameContains => CompareContains(name, value),
+                SpamServerFilterType.NameMatches => CompareRegex(name, value),
 
                 SpamServerFilterType.MessageEquals => CompareEquals(desc, value),
                 SpamServerFilterType.MessageContains => CompareContains(desc, value),
+                SpamServerFilterType.MessageMatches => CompareRegex(desc, value),
 
                 SpamServerFilterType.Endpoint =>
                     info.Endpoints != null &&
@@ -104,6 +109,15 @@ namespace Barotrauma
                     return a == b;
                 }
                 return a.Contains(b, StringComparison.OrdinalIgnoreCase);
+            }
+
+            static bool CompareRegex(string a, string b)
+            {
+                if (a == null || b == null)
+                {
+                    return a == b;
+                }
+                return Regex.IsMatch(a, b);
             }
         }
 
@@ -215,8 +229,10 @@ The filters are saved in this file, which you can edit manually if you want to.
 The available filter types are:
 - NameEquals: The server name must equal the specified value. Homoglyphs are also checked.
 - NameContains: The server name must contain the specified value.
+- NameMatches: The server name must match the specified regular expression pattern. Use inline options like (?i) for case-insensitive matching.
 - MessageEquals: The server description must equal the specified value. Homoglyphs are also checked.
 - MessageContains: The server description must contain the specified value.
+- MessageMatches: The server description must match the specified regular expression pattern. Use inline options like (?i) for case-insensitive matching.
 - PlayerCountLarger: The player count must be larger than the specified value.
 - PlayerCountExact: The player count must match the specified value exactly.
 - MaxPlayersLarger: The max player count must be larger than the specified value.
@@ -234,8 +250,10 @@ Examples:
   <Filter namecontains=""discord.gg"" />
   <Filter messagecontains=""discord.gg"" />
   <Filter nameequals=""get good get lmaobox"" maxplayersexact=""999"" />
+  <Filter namematches=""(?i)(buy|sell|trade).*cheap"" />
+  <Filter messagematches=""(?i)join.*discord\.(gg|com)"" />
 </Filters>
-These will hide all servers that have a discord.gg link in their name or description and servers with the name ""get good get lmaobox"" that have 999 max players.
+These will hide all servers that have a discord.gg link in their name or description, servers with the name ""get good get lmaobox"" that have 999 max players, servers with names matching the pattern for buying/selling/trading (case-insensitive), and servers with messages containing discord links (case-insensitive).
 ";
         static SpamServerFilters()
         {
