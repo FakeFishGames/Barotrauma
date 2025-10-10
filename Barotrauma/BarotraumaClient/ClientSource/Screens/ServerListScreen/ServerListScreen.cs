@@ -1319,7 +1319,13 @@ namespace Barotrauma
             const float MinSimilarityPercentage = 0.8f;
 
             if (string.IsNullOrWhiteSpace(serverInfo.ServerName)) { return; }
-            if (serverInfo.PlayerCount > serverInfo.MaxPlayers) { return; }
+
+            if (serverInfo.ServerName.Length > NetConfig.ServerNameMaxLength) { return; }
+            /*no newline symbols in server names!*/
+            if (serverInfo.ServerName.Contains('\n') || serverInfo.ServerName.Contains('\r')) { return; }
+            if (serverInfo.ServerMessage.Length > NetConfig.ServerMessageMaxLength) { return; }
+            //+1 because it seems the count can sometimes be slightly off (something to do with steam lobbies not immediately refreshing?)
+            if (serverInfo.PlayerCount > serverInfo.MaxPlayers + 1) { return; }
             if (serverInfo.PlayerCount < 0) { return; }
             if (serverInfo.MaxPlayers <= 0) { return; }
             //no way a legit server can have this many players

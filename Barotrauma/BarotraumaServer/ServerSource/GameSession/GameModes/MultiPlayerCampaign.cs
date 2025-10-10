@@ -1293,9 +1293,9 @@ namespace Barotrauma
             CharacterInfo firedCharacter = null;
             (ushort id, string newName) appliedRename = (Entity.NullEntityID, string.Empty);
 
-            if (location != null && HasCampaignInteractionAvailable(sender, InteractionType.Crew))
+            if (location != null)
             {
-                if (fireCharacter && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
+                if (fireCharacter && AllowedToManageCampaign(sender, ClientPermissions.ManageHires) && HasCampaignInteractionAvailable(sender, InteractionType.Crew))
                 {
                     firedCharacter = CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(info => info.ID == firedIdentifier);
                     if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
@@ -1306,6 +1306,10 @@ namespace Barotrauma
                     {
                         DebugConsole.ThrowError($"Tried to fire an invalid character ({firedIdentifier})");
                     }
+                }
+                else
+                {
+                    GameServer.Log($"{sender.Name} attempted to fire a character without having access to an appropriate NPC.", ServerLog.MessageType.Error);
                 }
 
                 if (renameCharacter)
@@ -1321,8 +1325,13 @@ namespace Barotrauma
                         {
                             characterInfo = location.HireManager.AvailableCharacters.FirstOrDefault(info => info.ID == renamedIdentifier);
                         }
+                        if (characterInfo != null && characterInfo != sender.CharacterInfo && !HasCampaignInteractionAvailable(sender, InteractionType.Crew))
+                        {
+                            GameServer.Log($"{sender.Name} attempted to rename a character without having access to an appropriate NPC.", ServerLog.MessageType.Error);
+                            characterInfo = null;
+                        }
                     }
-                    if (characterInfo == null && renamedIdentifier == sender.CharacterInfo?.ID)
+                    else if (characterInfo == null && renamedIdentifier == sender.CharacterInfo?.ID)
                     {
                         characterInfo = sender.CharacterInfo;
                     }
@@ -1353,7 +1362,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (location.HireManager != null)
+                if (location.HireManager != null && HasCampaignInteractionAvailable(sender, InteractionType.Crew))
                 {
                     if (validateHires)
                     {
@@ -1396,10 +1405,10 @@ namespace Barotrauma
                         }
                     });
                 }
-            }
-            else
-            {
-                GameServer.Log($"{sender.Name} attempted to manage hires without having access to an appropriate NPC.", ServerLog.MessageType.Error);
+                else
+                {
+                    GameServer.Log($"{sender.Name} attempted to hire characters without having access to an appropriate NPC.", ServerLog.MessageType.Error);
+                }
             }
 
             // bounce back
