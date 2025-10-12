@@ -1013,8 +1013,6 @@ namespace Barotrauma
                 return false;
             }
 #endif
-            if (SpamServerFilters.IsFiltered(serverInfo)) { return false; }
-
             if (!string.IsNullOrEmpty(searchBox.Text) && !serverInfo.ServerName.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase)) { return false; }
 
             if (filterSameVersion.Selected)
@@ -1330,6 +1328,8 @@ namespace Barotrauma
             if (serverInfo.MaxPlayers <= 0) { return; }
             //no way a legit server can have this many players
             if (serverInfo.MaxPlayers > MaxAllowedPlayers) { return; }
+            
+            if (SpamServerFilters.IsFiltered(serverInfo)) { return; }
 
             int similarServerCount = 0;
             string serverInfoStr = getServerInfoStr(serverInfo);
