@@ -73,7 +73,8 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:
-        - v1.10.7.1 (Autumn Update 2025 Hotfix 3)
+        - v1.10.7.2 (Autumn Update 2025 Hotfix 4)
+        - v1.11.0.0 (Unstable)
         - Other
     validations:
       required: true
