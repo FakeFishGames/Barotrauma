@@ -338,10 +338,7 @@ namespace Barotrauma
         private GUIImage previewImage;
         private GUILayoutGroup previewImageButtonHolder;
 
-        private const int submarineNameLimit = 30;
         private GUITextBlock submarineNameCharacterCount;
-
-        private const int submarineDescriptionLimit = 500;
         private GUITextBlock submarineDescriptionCharacterCount;
 
         private Mode mode;
@@ -2304,20 +2301,19 @@ namespace Barotrauma
             };
             nameBox.OnTextChanged += (textBox, text) =>
             {
-                if (text.Length > submarineNameLimit)
+                if (text.Length > SubmarineInfo.MaxNameLength)
                 {
-                    nameBox.Text = text.Substring(0, submarineNameLimit);
+                    nameBox.Text = text.Substring(0, SubmarineInfo.MaxNameLength);
                     nameBox.Flash(GUIStyle.Red);
                     return true;
                 }
 
-                submarineNameCharacterCount.Text = text.Length + " / " + submarineNameLimit;
+                submarineNameCharacterCount.Text = text.Length + " / " + SubmarineInfo.MaxNameLength;
                 return true;
             };
 
             nameBox.Text = MainSub?.Info.Name ?? "";
-
-            submarineNameCharacterCount.Text = nameBox.Text.Length + " / " + submarineNameLimit;
+            submarineNameCharacterCount.Text = nameBox.Text.Length + " / " + SubmarineInfo.MaxNameLength;
 
             var descriptionHeaderGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.03f), leftColumn.RectTransform), isHorizontal: true);
 
@@ -2333,9 +2329,9 @@ namespace Barotrauma
 
             descriptionBox.OnTextChanged += (textBox, text) =>
             {
-                if (text.Length > submarineDescriptionLimit)
+                if (text.Length > SubmarineInfo.MaxDescriptionLength)
                 {
-                    descriptionBox.Text = text.Substring(0, submarineDescriptionLimit);
+                    descriptionBox.Text = text.Substring(0, SubmarineInfo.MaxDescriptionLength);
                     descriptionBox.Flash(GUIStyle.Red);
                     return true;
                 }
@@ -3439,7 +3435,7 @@ namespace Barotrauma
             enemySubmarineSettingsContainer.Recalculate();
 
             descriptionBox.Text = MainSub == null ? "" : MainSub.Info.Description.Value;
-            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
+            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + SubmarineInfo.MaxDescriptionLength;
 
             subTypeDropdown.SelectItem(MainSub.Info.Type);
 
@@ -5045,7 +5041,7 @@ namespace Barotrauma
                 textBox.UserData = text;
             }
 
-            submarineDescriptionCharacterCount.Text = text.Length + " / " + submarineDescriptionLimit;
+            submarineDescriptionCharacterCount.Text = text.Length + " / " + SubmarineInfo.MaxDescriptionLength;
         }
 
         private bool SelectPrefab(GUIComponent component, object obj)

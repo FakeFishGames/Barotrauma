@@ -3815,7 +3815,10 @@ namespace Barotrauma.Networking
                     //let's adhere to those
                     foreach (Submarine sub in Submarine.Loaded.Take(5))
                     {
-                        string subNameTruncated = sub.Info.Name.Length > 16 ? sub.Info.Name.Substring(0, 16) : sub.Info.Name;
+                        string subNameTruncated = 
+                            sub.Info.Name.Length > MaxSubNameLengthInErrorMessages ? 
+                                sub.Info.Name.Substring(0, MaxSubNameLengthInErrorMessages) : 
+                                sub.Info.Name;
                         outMsg.WriteString(subNameTruncated);
                     }
                     break;

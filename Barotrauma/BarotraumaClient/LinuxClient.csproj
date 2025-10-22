@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>1.10.7.1</Version>
+    <Version>1.10.7.2</Version>
     <Copyright>Copyright © FakeFish 2018-2024</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>

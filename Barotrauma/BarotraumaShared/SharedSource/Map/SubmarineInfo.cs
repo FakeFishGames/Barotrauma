@@ -63,6 +63,9 @@ namespace Barotrauma
 
         public HashSet<string> RequiredContentPackages = new HashSet<string>();
 
+        public const int MaxNameLength = 30;
+        public const int MaxDescriptionLength = 500;
+
         public string Name
         {
             get;

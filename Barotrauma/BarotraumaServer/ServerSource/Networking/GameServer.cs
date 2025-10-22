@@ -1071,7 +1071,7 @@ namespace Barotrauma.Networking
                         for (int i = 0; i < Math.Min(subCount, 5); i++)
                         {
                             string subName = inc.ReadString();
-                            if (subName == null || subName.Length > 16)
+                            if (subName == null || subName.Length > MaxSubNameLengthInErrorMessages)
                             {
                                 malformedData = true;
                             }
@@ -1092,7 +1092,7 @@ namespace Barotrauma.Networking
                         }
                         else if (entity is Item item)
                         {
-                            errorStr = errorStrNoName = $"Missing item {item.Name}, sub: {item.Submarine?.Info?.Name ?? "none"} (event id {eventID}, entity id {entityID}).";
+                            errorStr = errorStrNoName = $"Missing item {item.Name} ({item.Prefab.Identifier}), sub: {item.Submarine?.Info?.Name ?? "none"} (event id {eventID}, entity id {entityID}).";
                         }
                         else
                         {
@@ -1100,7 +1100,8 @@ namespace Barotrauma.Networking
                         }
                         if (GameStarted)
                         {
-                            var serverSubNames = Submarine.Loaded.Select(s => s.Info.Name);
+                            var serverSubNames = Submarine.Loaded.Select(s => 
+                                s.Info.Name.Length > MaxSubNameLengthInErrorMessages ? s.Info.Name.Substring(0, MaxSubNameLengthInErrorMessages) : s.Info.Name);
                             if (subCount != Submarine.Loaded.Count || !subNames.SequenceEqual(serverSubNames))
                             {
                                 string subErrorStr =  $" Loaded submarines don't match (client: {string.Join(", ", subNames)}, server: {string.Join(", ", serverSubNames)}).";
