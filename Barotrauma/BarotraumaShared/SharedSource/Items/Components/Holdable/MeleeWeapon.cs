@@ -95,17 +95,27 @@ namespace Barotrauma.Items.Components
             PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>()).ToImmutableHashSet();
         }
 
+        /// <summary>
+        /// Lerps between the original penalty and a neutral value, which should be 1 for multipliers and 0 for additive penalties.
+        /// </summary>
+        /// <param name="character">The character to get stat values from</param>
+        /// <param name="originalPenalty">The original penalty value</param>
+        /// <param name="neutralValue">Neutral value to lerp towards. Should be 1 for multipliers and 0 for additives.</param>
+        /// <returns></returns>
+        private static float ApplyDualWieldPenaltyReduction(Character character, float originalPenalty, float neutralValue)
+        {
+            float statAdjustmentPrc = character.GetStatValue(StatTypes.DualWieldingPenaltyReduction);
+            statAdjustmentPrc = MathHelper.Clamp(statAdjustmentPrc, 0f, 1f);
+            float reducedPenaltyMultiplier = MathHelper.Lerp(originalPenalty, neutralValue, statAdjustmentPrc);
+            return reducedPenaltyMultiplier;
+        }
+
+
         public override void Equip(Character character)
         {
             base.Equip(character);
             //force a wait of at least 1 second when equipping the weapon, so you can't "rapid-fire" by swapping between weapons
             const float forcedDelayOnEquip = 1.0f;
-			
-
-            if (character.IsDualWieldingMeleeWeapons()) 
-            { 
-                baseReloadTime *= Math.Max(1f, ApplyDualWieldPenaltyReduction(character, DualWieldReloadTimePenaltyMultiplier, neutralValue: 1f));
-            }
 			
             reloadTimer = Math.Max(Math.Min(reload, forcedDelayOnEquip), reloadTimer);
             IsActive = true;
@@ -130,6 +140,12 @@ namespace Barotrauma.Items.Components
             SetUser(character);
 
             if (Item.RequireAimToUse && hitPos < MathHelper.PiOver4) { return false; }
+
+			
+            if (character.IsDualWieldingMeleeWeapons()) 
+            { 
+                baseReloadTime *= Math.Max(1f, ApplyDualWieldPenaltyReduction(character, DualWieldReloadTimePenaltyMultiplier, neutralValue: 1f));
+            }
 
             ActivateNearbySleepingCharacters();
             reloadTimer = reload;
