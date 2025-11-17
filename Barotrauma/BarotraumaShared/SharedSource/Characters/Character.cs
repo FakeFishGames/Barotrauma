@@ -881,7 +881,25 @@ namespace Barotrauma
             
             return false;
         }
-
+        
+        public bool IsDualWieldingMeleeWeapons()
+        {
+            int meleeItemCount = 0;
+            foreach (var item in HeldItems)
+            {
+                if (item.GetComponent<MeleeWeapon>() != null)
+                {
+                    meleeItemCount++;
+                }
+                
+                if (meleeItemCount > 1)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
         private float lowPassMultiplier;
         public float LowPassMultiplier
         {

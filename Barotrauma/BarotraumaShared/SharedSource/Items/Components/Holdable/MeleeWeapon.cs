@@ -54,8 +54,15 @@ namespace Barotrauma.Items.Components
         {
             get;
             set;
+        }		
+        
+        [Serialize(defaultValue: 1f, IsPropertySaveable.Yes, description: "Penalty multiplier to reload time when dual-wielding.")]
+        public float DualWieldReloadTimePenaltyMultiplier
+        {
+            get;
+            private set;
         }
-
+        
         [Editable, Serialize(true, IsPropertySaveable.No)]
         public bool Swing { get; set; }
 
@@ -93,6 +100,13 @@ namespace Barotrauma.Items.Components
             base.Equip(character);
             //force a wait of at least 1 second when equipping the weapon, so you can't "rapid-fire" by swapping between weapons
             const float forcedDelayOnEquip = 1.0f;
+			
+
+            if (character.IsDualWieldingMeleeWeapons()) 
+            { 
+                baseReloadTime *= Math.Max(1f, ApplyDualWieldPenaltyReduction(character, DualWieldReloadTimePenaltyMultiplier, neutralValue: 1f));
+            }
+			
             reloadTimer = Math.Max(Math.Min(reload, forcedDelayOnEquip), reloadTimer);
             IsActive = true;
         }
