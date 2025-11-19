@@ -486,6 +486,10 @@ namespace Barotrauma
                     }
                 }
             }
+            else if (aiTarget.Entity is Submarine)
+            {
+                _targetingTags.Add(Tags.Sonar);
+            }
             else if (aiTarget.Entity is Structure)
             {
                 _targetingTags.Add(Tags.Wall);
@@ -1260,6 +1264,10 @@ namespace Barotrauma
                 }
                 attackSimPos = Character.Submarine == wallTarget.Structure.Submarine ? wallTarget.Position : attackWorldPos;
                 attackSimPos = ConvertUnits.ToSimUnits(attackSimPos);
+            }
+            else if (SelectedAiTarget.Entity is Submarine)
+            {
+                attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
             }
             else
             {
@@ -3412,7 +3420,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (Character.Submarine == null && aiTarget.Entity?.Submarine != null && targetCharacter == null)
+                if (Character.Submarine == null && aiTarget.Entity is Submarine || aiTarget.Entity?.Submarine != null && targetCharacter == null)
                 {
                     if (matchingTargetParams.PrioritizeSubCenter || matchingTargetParams.AttackPattern is AttackPattern.Circle or AttackPattern.Sweep)
                     {
