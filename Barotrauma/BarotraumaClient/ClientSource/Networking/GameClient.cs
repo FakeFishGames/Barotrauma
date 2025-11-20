@@ -1981,7 +1981,7 @@ namespace Barotrauma.Networking
             {
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
-                SubmarineClass subClass = (SubmarineClass)inc.ReadByte();
+                Identifier subClass = inc.ReadIdentifier();
                 bool isShuttle = inc.ReadBoolean();
                 bool requiredContentPackagesInstalled = inc.ReadBoolean();
 
@@ -1990,7 +1990,7 @@ namespace Barotrauma.Networking
                 {
                     matchingSub = new SubmarineInfo(Path.Combine(SaveUtil.SubmarineDownloadFolder, subName) + ".sub", subHash, tryLoad: false)
                     {
-                        SubmarineClass = subClass
+                        Class = SubmarineClass.Find(subClass)
                     };
                     if (isShuttle) { matchingSub.AddTag(SubmarineTag.Shuttle); }
                 }
@@ -2730,7 +2730,7 @@ namespace Barotrauma.Networking
                         }
                         if (subElement.FindChild("classtext", recursive: true) is GUITextBlock classTextBlock)
                         {
-                            classTextBlock.Text = TextManager.Get($"submarineclass.{newSub.SubmarineClass}");
+                            classTextBlock.Text = newSub.Class.Name;
                             classTextBlock.TextColor = new Color(classTextBlock.TextColor, 0.8f);
                         }
                         if (subElement.FindChild("pricetext", recursive: true) is GUITextBlock priceTextBlock)

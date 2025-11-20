@@ -25,7 +25,6 @@ namespace Barotrauma
     }
 
     public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
-    public enum SubmarineClass { Undefined, Scout, Attack, Transport }
 
     partial class SubmarineInfo : IDisposable
     {
@@ -121,7 +120,12 @@ namespace Barotrauma
 
         public bool IsManuallyOutfitted { get; set; }
 
-        public SubmarineClass SubmarineClass;
+        private Identifier classIdentifier;
+        public SubmarineClass Class
+        {
+            get => SubmarineClass.Find(classIdentifier) ?? SubmarineClass.Undefined;
+            set => classIdentifier = value.Identifier;
+        }
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
         public BeaconStationInfo BeaconStationInfo { get; set; }
@@ -150,7 +154,7 @@ namespace Barotrauma
             Type is SubmarineType.Ruin or SubmarineType.OutpostModule &&
             OutpostModuleInfo.ModuleFlags.Any(f => f.StartsWith("ruin"));
 
-        public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
+        public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && Class.UsableInCampaign;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
 
         public bool AllowPreviewImage => Type == SubmarineType.Player;
@@ -352,7 +356,7 @@ namespace Barotrauma
             LowFuel = original.LowFuel;
             GameVersion = original.GameVersion;
             Type = original.Type;
-            SubmarineClass = original.SubmarineClass;
+            Class = original.Class;
             hash = !string.IsNullOrEmpty(original.FilePath) && File.Exists(original.FilePath) ? original.MD5Hash : null;
             Dimensions = original.Dimensions;
             CargoCapacity = original.CargoCapacity;
@@ -502,23 +506,11 @@ namespace Barotrauma
 
             if (Type == SubmarineType.Player)
             {
-                if (SubmarineElement?.Attribute("class") != null)
-                {
-                    string classStr = SubmarineElement.GetAttributeString("class", "Undefined");
-                    if (classStr == "DeepDiver")
-                    {
-                        //backwards compatibility
-                        SubmarineClass = SubmarineClass.Scout;
-                    }
-                    else if (Enum.TryParse(classStr, out SubmarineClass submarineClass))
-                    {
-                        SubmarineClass = submarineClass;
-                    }
-                }
+                classIdentifier = SubmarineElement.GetAttributeIdentifier("class", SubmarineClass.UndefinedIdentifier);
             }
             else
             {
-                SubmarineClass = SubmarineClass.Undefined;
+                classIdentifier = SubmarineClass.UndefinedIdentifier;
             }
 
             RequiredContentPackages.Clear();

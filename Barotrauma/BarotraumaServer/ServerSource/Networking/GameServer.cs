@@ -2057,7 +2057,7 @@ namespace Barotrauma.Networking
                 var sub = subList[i];
                 outmsg.WriteString(sub.Name);
                 outmsg.WriteString(sub.MD5Hash.ToString());
-                outmsg.WriteByte((byte)sub.SubmarineClass);
+                outmsg.WriteIdentifier(sub.Class.Identifier);
                 outmsg.WriteBoolean(sub.HasTag(SubmarineTag.Shuttle));
                 outmsg.WriteBoolean(sub.RequiredContentPackagesInstalled);
             }
