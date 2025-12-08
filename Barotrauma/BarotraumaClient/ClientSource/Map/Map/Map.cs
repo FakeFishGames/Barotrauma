@@ -397,7 +397,7 @@ namespace Barotrauma
             }
             if (!description.IsNullOrEmpty())
             {
-                CreateTextWithIcon(description, locationTypeToDisplay.Sprite);
+                CreateTextWithIcon(description, iconSprite: locationTypeToDisplay.Sprite);
             }
 
             int highestSubTier = location.HighestSubmarineTierAvailable();
@@ -417,32 +417,29 @@ namespace Barotrauma
             }
             if (highestSubTier > 0)
             {
-                CreateTextWithIcon(TextManager.GetWithVariable("advancedsub.all", "[tiernumber]", highestSubTier.ToString()), icon: null, style: "LocationOverlaySubmarineIcon");
+                CreateTextWithIcon(TextManager.GetWithVariable("advancedsub.all", "[tiernumber]", highestSubTier.ToString()), iconStyle: "LocationOverlaySubmarineIcon");
             }
             if (overrideTiers != null)
             {
                 foreach (var (subClass, tier) in overrideTiers)
                 {
-                    CreateTextWithIcon(TextManager.GetWithVariable($"advancedsub.{subClass}", "[tiernumber]", tier.ToString()), icon: null, style: "LocationOverlaySubmarineIcon");
+                    CreateTextWithIcon(TextManager.GetWithVariable($"advancedsub.{subClass}", "[tiernumber]", tier.ToString()), iconStyle: "LocationOverlaySubmarineIcon");
                 }
             }
 
             CreateSpacing(10);
 
-            void CreateTextWithIcon(LocalizedString text, Sprite icon, string style = null)
+            void CreateTextWithIcon(LocalizedString text, Sprite iconSprite = null, string iconStyle = null)
             {
-                var textHolder = new GUILayoutGroup(new RectTransform(new Point(content.Rect.Width, (int)GUIStyle.Font.MeasureString(text).Y), content.RectTransform), isHorizontal: true)
-                {
-                    Stretch = true,
-                    CanBeFocused = true
-                };
-                var guiIcon =
-                    style == null ? 
-                    new GUIImage(new RectTransform(Vector2.One * 1.25f, textHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), icon) :
-                    new GUIImage(new RectTransform(Vector2.One * 1.25f, textHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style);
-                var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1.0f), textHolder.RectTransform), text);
-                textBlock.RectTransform.MinSize = new Point((int)textBlock.TextSize.X, 0);
-                textHolder.RectTransform.MinSize = new Point((int)textBlock.TextSize.X + guiIcon.Rect.Width, 0);
+                GUITextBlock textBox = new(new RectTransform(new Vector2(0.9f, 0f), content.RectTransform), text, wrap: true);
+
+                if (iconSprite == null && iconStyle == null) { return; }
+                float iconSize = GUIStyle.Font.LineHeight * 1.5f;
+
+                textBox.Padding = textBox.Padding with { X = iconSize + 5f };
+                RectTransform iconTF = new(new Point((int)iconSize), textBox.RectTransform, Anchor.CenterLeft) { IsFixedSize = true };
+                if (iconSprite != null) { new GUIImage(iconTF, iconSprite, scaleToFit: true); }
+                if (iconStyle != null) { new GUIImage(iconTF, iconStyle, scaleToFit: true); }
             }
 
             void CreateSpacing(int height)
@@ -486,10 +483,11 @@ namespace Barotrauma
                 CreateSpacing(20);
             }
 
-            locationInfoOverlay.RectTransform.NonScaledSize =
-                new Point(
-                    Math.Max(locationInfoOverlay.Rect.Width, (int)(content.Children.Max(c => c is GUITextBlock textBlock ? textBlock.TextSize.X : c.RectTransform.MinSize.X) * 1.2f)),
-                    (int)(content.Children.Sum(c => c.Rect.Height) / content.RectTransform.RelativeSize.Y));
+            float childWidth = Math.Max(locationInfoOverlay.Rect.Width, content.Children.Max(c => c is GUITextBlock textBlock ? textBlock.TextSize.X + textBlock.Padding.X + textBlock.Padding.Z : c.RectTransform.MinSize.X));
+            childWidth = Math.Max(locationInfoOverlay.Rect.Width, childWidth);
+            float childHeight = content.Children.Sum(c => c.Rect.Height);
+            Vector2 childSize = new Vector2(childWidth, childHeight) / content.RectTransform.RelativeSize;
+            locationInfoOverlay.RectTransform.NonScaledSize = childSize.ToPoint();
         }
 
         partial void ClearAnimQueue()

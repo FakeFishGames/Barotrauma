@@ -37,7 +37,8 @@ sealed class ConditionallyEditable : Editable
         HasIntegratedButtons,
         IsToggleableController,
         HasConnectionPanel,
-        DeteriorateUnderStress
+        DeteriorateUnderStress,
+        ReceivesSubmarineImpacts
     }
 
     public bool IsEditable(ISerializableEntity entity)
@@ -72,6 +73,8 @@ sealed class ConditionallyEditable : Editable
                 => GetComponent<ConnectionPanel>(entity) != null,
             ConditionType.DeteriorateUnderStress
                 => entity is Item repairableItem && repairableItem.Components.Any(c => c is IDeteriorateUnderStress),
+            ConditionType.ReceivesSubmarineImpacts
+                => entity is Item { Prefab.ReceiveSubmarineImpacts: true },
             _
                 => false
         };

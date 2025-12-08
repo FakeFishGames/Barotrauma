@@ -813,20 +813,6 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.No)]
         public bool DamagedByMonsters { get; private set; }
 
-        private float impactTolerance;
-        [Serialize(0.0f, IsPropertySaveable.No)]
-        public float ImpactTolerance
-        {
-            get { return impactTolerance; }
-            set { impactTolerance = Math.Max(value, 0.0f); }
-        }
-
-        [Serialize(0.0f, IsPropertySaveable.No, description: "The amount of damage the item takes from impacts. Acts as a multiplier on the strength of the impact. Note that ImpactTolerance must be set for impacts to register.")]
-        public float ImpactDamage { get; set; }
-
-        [Serialize(1.0f, IsPropertySaveable.No, description: "Probability for impacts to register. Defaults to 1. Note that ImpactTolerance must also be set for impacts to register.")]
-        public float ImpactDamageProbability { get; set; }
-
         [Serialize(false, IsPropertySaveable.No, "If true, submarine impacts will trigger OnImpact effects. Only applies to items with a null or non-dynamic physics body - items with dynamic bodies always react to impacts.")]
         public bool ReceiveSubmarineImpacts { get; set; }
 

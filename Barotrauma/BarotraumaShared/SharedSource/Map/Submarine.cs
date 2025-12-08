@@ -1400,6 +1400,8 @@ namespace Barotrauma
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
                 if (pump == null || item.CurrentHull == null) { continue; }
+                //if the pump has no connection panel, it must be something else than a ballast pump (e.g. a weak point which uses a pump component to pump water in)
+                if (item.GetComponent<ConnectionPanel>() == null) { continue; }
                 if (!item.HasTag(Tags.Ballast) && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);

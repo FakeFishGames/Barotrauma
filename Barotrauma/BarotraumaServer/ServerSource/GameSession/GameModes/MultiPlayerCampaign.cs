@@ -278,7 +278,14 @@ namespace Barotrauma
                     characterInfo.ApplyDeathEffects();
                 }
                 c.CharacterInfo = characterInfo;
-                SetClientCharacterData(c);
+                
+                // Only create new character data if the connected client has an active character (which they might not,
+                // eg. if they are in the lobby). Otherwise the CharacterCampaignData constructor would fall back to a new
+                // Character object, overwriting the inventory and wallet with empty values.
+                if (c.Character != null)
+                {
+                    SetClientCharacterData(c);
+                }
             }
 
             //refresh the character data of clients who aren't in the server anymore
@@ -1105,10 +1112,6 @@ namespace Barotrauma
                     bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
                 }
             }
-            else
-            {
-                GameServer.Log($"{sender.Name} attempted to buy or sell items without having access to a store NPC.", ServerLog.MessageType.Error);
-            }
 
             if ((purchasedUpgrades.Any() || purchasedItemSwaps.Any()) &&
                 HasCampaignInteractionAvailable(sender, InteractionType.Upgrade))
@@ -1141,10 +1144,6 @@ namespace Barotrauma
                         item.PendingItemSwap = null;
                     }
                 }
-            }
-            else
-            {
-                GameServer.Log($"{sender.Name} attempted to buy upgrades without having access to an NPC offering upgrades.", ServerLog.MessageType.Error);
             }
         }
 

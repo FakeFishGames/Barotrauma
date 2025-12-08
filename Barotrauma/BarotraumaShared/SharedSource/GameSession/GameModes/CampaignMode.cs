@@ -469,7 +469,8 @@ namespace Barotrauma
                 foreach (var mission in currentLocation.AvailableMissions)
                 {
                     //if the mission isn't shown in menus, it cannot be selected by the player -> must be something that is supposed to be automatically selected
-                    if (!mission.Prefab.ShowInMenus)
+                    //side objectives are also automatically selected
+                    if (!mission.Prefab.ShowInMenus || mission.Prefab.IsSideObjective)
                     {
                         currentLocation.SelectMission(mission);
                     }
@@ -1429,18 +1430,18 @@ namespace Barotrauma
             map = null;
         }
 
-        public int NumberOfMissionsAtLocation(Location location)
+        public int NumberOfSelectableMissionsAtLocation(Location location)
         {
-            return Map?.CurrentLocation?.SelectedMissions?.Count(m => m.Locations.Contains(location)) ?? 0;
+            return Map?.CurrentLocation?.SelectedMissions?.Count(m => m.Locations.Contains(location) && !m.Prefab.IsSideObjective) ?? 0;
         }
 
         public void CheckTooManyMissions(Location currentLocation, Client sender)
         {
             foreach (Location location in currentLocation.Connections.Select(c => c.OtherLocation(currentLocation)))
             {
-                if (NumberOfMissionsAtLocation(location) > Settings.TotalMaxMissionCount)
+                if (NumberOfSelectableMissionsAtLocation(location) > Settings.TotalMaxMissionCount)
                 {
-                    DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.DisplayName}! Count was {NumberOfMissionsAtLocation(location)}. Deselecting extra missions.");
+                    DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.DisplayName}! Count was {NumberOfSelectableMissionsAtLocation(location)}. Deselecting extra missions.");
                     foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.TotalMaxMissionCount).ToList())
                     {
                         currentLocation.DeselectMission(mission);

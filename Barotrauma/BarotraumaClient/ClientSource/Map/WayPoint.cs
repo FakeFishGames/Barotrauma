@@ -172,16 +172,19 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, drawPos - ExitPointSize.ToVector2() / 2, ExitPointSize.ToVector2(), Color.Cyan, thickness: 5);
             }
 
-            GUIStyle.SmallFont.DrawString(spriteBatch,
-                ID.ToString(),
-                new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
-                color);
-            if (Tunnel?.Type != null)
+            if (Screen.Selected?.Cam is { Zoom: > 0.4f })
             {
                 GUIStyle.SmallFont.DrawString(spriteBatch,
-                Tunnel.Type.ToString(),
-                new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 45),
-                color);
+                    ID.ToString(),
+                    new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
+                    color);
+                if (Tunnel?.Type != null)
+                {
+                    GUIStyle.SmallFont.DrawString(spriteBatch,
+                    Tunnel.Type.ToString(),
+                    new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 45),
+                    color);
+                }
             }
         }
 

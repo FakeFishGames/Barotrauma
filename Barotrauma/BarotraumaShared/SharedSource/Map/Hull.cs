@@ -1133,54 +1133,72 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
-        /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
+        /// Used in <see cref="GetApproximateDistance"/>
         /// </summary>
-        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0)
+        private static readonly Dictionary<Hull, float> cachedDistances = [];
+        /// <summary>
+        /// Used in <see cref="GetApproximateDistance"/>
+        /// </summary>
+        private static readonly PriorityQueue<(Hull hull, Vector2 pos), float> priorityQueue = new PriorityQueue<(Hull hull, Vector2 pos), float>();
+
+        /// <summary>
+        /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
+        /// Uses a Dijkstra's algorithm to find the shortest path.
+        /// </summary>
+        /// <param name="minimumGapOpenness">The gap's <see cref="Gap.Open">openness</see> must be larger than or equal to this to be considered valid for the path.</param>
+        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0, float minimumGapOpenness = 0.5f)
         {
-            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance, distanceMultiplierPerClosedDoor);
-        }
+            cachedDistances.Clear();
+            priorityQueue.Clear();
 
-        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance, float distanceMultiplierFromDoors = 0)
-        {
-            if (distance >= maxDistance) { return float.MaxValue; }
-            if (this == target)
+            cachedDistances[this] = 0f;
+            priorityQueue.Enqueue((this, startPos), 0f);
+
+            while (priorityQueue.TryDequeue(out var current, out float currentDist))
             {
-                return distance + Vector2.Distance(startPos, endPos);
-            }
+                Hull currentHull = current.hull;
+                Vector2 currentPos = current.pos;
 
-            connectedHulls.Add(this);
+                if (currentDist > maxDistance) { return float.MaxValue; }
 
-            foreach (Gap g in ConnectedGaps)
-            {
-                float distanceMultiplier = 1;
-                if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
+                // If we've reached the target, add the final segment from hull to endPos
+                if (currentHull == targetHull)
                 {
-                    //gap blocked if the door is closed, and we haven't made any predictions of it opening client-side
-                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.PredictedState.HasValue) || 
-                        //OR we've predicted that the door is closed client-side
-                        (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    return currentDist + Vector2.Distance(currentPos, endPos);
+                }
+
+                foreach (Gap g in ConnectedGaps)
+                {
+                    float distanceMultiplier = 1;
+                    if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                     {
-                        if (g.ConnectedDoor.OpenState < 0.1f)
+                        //gap blocked if the door is closed, and we haven't made any predictions of it opening client-side
+                        if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.PredictedState.HasValue) ||
+                            //OR we've predicted that the door is closed client-side
+                            (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                         {
-                            if (distanceMultiplierFromDoors <= 0) { continue; }
-                            distanceMultiplier *= distanceMultiplierFromDoors;
+                            if (g.ConnectedDoor.OpenState < 0.1f)
+                            {
+                                if (distanceMultiplierPerClosedDoor <= 0) { continue; }
+                                distanceMultiplier *= distanceMultiplierPerClosedDoor;
+                            }
                         }
                     }
-                }
-                else if (g.Open <= 0.0f)
-                {
-                    continue;
-                }
-
-                for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
-                {
-                    if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
+                    else if (g.Open < minimumGapOpenness)
                     {
-                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position) * distanceMultiplier, maxDistance);
-                        if (dist < float.MaxValue)
+                        continue;
+                    }
+
+                    for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
+                    {
+                        if (g.linkedTo[i] is Hull nextHull && nextHull != currentHull)
                         {
-                            return dist;
+                            float newDist = currentDist + Vector2.Distance(currentPos, g.Position) * distanceMultiplier;
+                            if (!cachedDistances.TryGetValue(nextHull, out float oldDist) || newDist < oldDist)
+                            {
+                                cachedDistances[nextHull] = newDist;
+                                priorityQueue.Enqueue((nextHull, g.Position), newDist);
+                            }
                         }
                     }
                 }
@@ -1274,7 +1292,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Recursively find all the hulls linked to the specified hull.
+        /// Recursively find all the hulls linked to the specified hull, including the hull itself.
         /// </summary>
         public void GetLinkedHulls(List<Hull> linkedHulls, bool includeHiddenHulls = false)
         {

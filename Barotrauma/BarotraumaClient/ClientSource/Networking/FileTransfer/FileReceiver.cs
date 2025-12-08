@@ -239,6 +239,13 @@ namespace Barotrauma.Networking
                             }
                             return;
                         }
+
+                        //if we're still downloading mods, we're not ready to receive the campaign save
+                        if (fileType == (byte)FileTransferType.CampaignSave && Screen.Selected is ModDownloadScreen)
+                        {
+                            GameMain.Client.CancelFileTransfer(transferId);
+                            return;                            
+                        }
                         
                         if (!ValidateInitialData(fileType, fileName, fileSize, out string errorMsg))
                         {

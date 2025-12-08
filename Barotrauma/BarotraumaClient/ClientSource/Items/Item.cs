@@ -733,7 +733,7 @@ namespace Barotrauma
                 {
                     updateableComponents.Add(ic);
                 }
-                isActive = true;
+                IsActive = true;
             }
         }
 
@@ -2170,7 +2170,7 @@ namespace Barotrauma
                 return;
             }
 
-            isActive = true;
+            IsActive = true;
 
             if (positionBuffer.Count > 0)
             {
@@ -2515,8 +2515,7 @@ namespace Barotrauma
                 {
                     inventory.TryPutItem(item, user: null, allowedSlots: item.AllowedSlots, createNetworkEvent: false);
                 }
-                item.SetTransform(inventory.Owner.SimPosition, 0.0f);
-                item.Submarine = inventory.Owner.Submarine;
+                item.SetTransform(inventory.Owner.SimPosition, 0.0f, forceSubmarine: inventory.Owner.Submarine);
                 if (inventory.Owner is Character { Enabled: false } && item.body != null)
                 {
                     item.body.Enabled = false;

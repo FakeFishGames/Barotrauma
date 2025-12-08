@@ -434,12 +434,10 @@ namespace Barotrauma.Items.Components
 
             foreach (FabricationRecipe fi in fabricationRecipes.Values)
             {
-                RichString recipeTooltip = RichString.Rich(fi.TargetItem.Description);
-                if (fi.RequiresRecipe)
-                {
-                    recipeTooltip += "\n\n" + $"‖color:{XMLExtensions.ToStringHex(GUIStyle.Red)}‖{TextManager.Get("fabricatorrequiresrecipe")}‖color:end‖";
-                }
-                recipeTooltip = RichString.Rich(recipeTooltip);
+                RichString recipeTooltip =
+                    fi.RequiresRecipe ?
+                    RichString.Rich(fi.TargetItem.Description + "\n\n" + $"‖color:{XMLExtensions.ToStringHex(GUIStyle.Red)}‖{TextManager.Get("fabricatorrequiresrecipe")}‖color:end‖") :
+                    RichString.Rich(fi.TargetItem.Description);
 
                 var frame = new GUIFrame(new RectTransform(new Point(itemList.Content.Rect.Width, (int)(40 * GUI.yScale)), itemList.Content.RectTransform), style: null)
                 {
@@ -894,10 +892,11 @@ namespace Barotrauma.Items.Components
                 if (outputContainer.Inventory.IsEmpty())
                 {
                     var itemIcon = targetItem.TargetItem.InventoryIcon ?? targetItem.TargetItem.Sprite;
+                    Color iconColor = itemIcon == targetItem.TargetItem.Sprite ? targetItem.TargetItem.SpriteColor : targetItem.TargetItem.InventoryIconColor;
                     itemIcon.Draw(
                         spriteBatch,
                         slotRect.Center.ToVector2(),
-                        color: Color.Lerp(targetItem.TargetItem.InventoryIconColor, Color.TransparentBlack, 0.5f),
+                        color: Color.Lerp(iconColor, Color.TransparentBlack, 0.5f),
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y) * 0.9f);
                 }
             }
@@ -1132,24 +1131,27 @@ namespace Barotrauma.Items.Components
 
             if (!selectedRecipe.TargetItem.Description.IsNullOrEmpty())
             {
+                RichString richDescription = RichString.Rich(selectedRecipe.TargetItem.Description);
+
                 var descriptionParent = largeUI ? paddedReqFrame : paddedFrame;
                 var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionParent.RectTransform),
-                    RichString.Rich(selectedRecipe.TargetItem.Description),
+                    richDescription,
                     font: GUIStyle.SmallFont, wrap: true);
                 if (!largeUI)
                 {
                     description.Padding = new Vector4(0, description.Padding.Y, description.Padding.Z, description.Padding.W);
                 }
 
-                while (description.Rect.Height + nameBlock.Rect.Height > descriptionParent.Rect.Height)
+                while (description.Rect.Height + nameBlock.Rect.Height > descriptionParent.Rect.Height / 2)
                 {
                     var lines = description.WrappedText.Split('\n');
                     if (lines.Count <= 1) { break; }
-                    var newString = string.Join('\n', lines.Take(lines.Count - 1));
+                    string newString = string.Join('\n', lines.Take(lines.Count - 1));
                     description.Text = newString.Substring(0, newString.Length - 4) + "...";
                     description.CalculateHeightFromText();
-                    description.ToolTip = selectedRecipe.TargetItem.Description;
+                    description.ToolTip = richDescription;
                 }
+                description.Text.RetrieveValue();
             }
 
             IEnumerable<Skill> inadequateSkills = Enumerable.Empty<Skill>();
@@ -1328,7 +1330,10 @@ namespace Barotrauma.Items.Components
 
                     var childContainer = child.GetChild<GUILayoutGroup>();
                     childContainer.GetChild<GUITextBlock>().TextColor = baseColor * (canBeFabricated ? 1.0f : 0.5f);
-                    childContainer.GetChild<GUIImage>().Color = recipe.TargetItem.InventoryIconColor * (canBeFabricated ? 1.0f : 0.5f);
+
+                    GUIImage icon = childContainer.GetChild<GUIImage>();
+                    Color iconColor = icon.Sprite == recipe.TargetItem.Sprite ? recipe.TargetItem.SpriteColor : recipe.TargetItem.InventoryIconColor;
+                    childContainer.GetChild<GUIImage>().Color = iconColor * (canBeFabricated ? 1.0f : 0.5f);
 
                     var limitReachedText = child.FindChild(nameof(FabricationLimitReachedText));
                     limitReachedText.Visible = !canBeFabricated && fabricationLimits.TryGetValue(recipe.RecipeHash, out int amount) && amount <= 0;

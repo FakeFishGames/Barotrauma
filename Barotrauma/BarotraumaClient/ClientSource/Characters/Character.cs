@@ -54,15 +54,29 @@ namespace Barotrauma
             get { return controlled; }
             set
             {
-                if (controlled == value) return;
-                if ((!(controlled is null)) && (!(Screen.Selected?.Cam is null)) && value is null)
+                if (controlled == value && controlled == null)
                 {
-                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
-                    Lights.LightManager.ViewTarget = null;
+                    // Return early, but only when setting the controlled to null, because on controlling a character, we'll want to ensure that the target is both enabled and unfrozen.
+                    return;
+                }
+                if (controlled != value)
+                {
+                    CharacterHealth.OpenHealthWindow = null;
+                    if (controlled != null && value == null)
+                    {
+                        if (Screen.Selected?.Cam is Camera camera)
+                        {
+                            camera.TargetPos = Vector2.Zero;;
+                        }
+                        Lights.LightManager.ViewTarget = null;
+                    }
                 }
                 controlled = value;
-                if (controlled != null) controlled.Enabled = true;
-                CharacterHealth.OpenHealthWindow = null;                
+                if (controlled != null)
+                {
+                    controlled.Enabled = true;
+                    controlled.AnimController.Frozen = false;
+                }
             }
         }
 
@@ -442,7 +456,7 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = maxOffset;
                 }
-                else if (SelectedItem != null && ViewTarget == null &&
+                else if (SelectedItem != null && ViewTarget == null && !IsIncapacitated &&
                     SelectedItem.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
@@ -456,7 +470,7 @@ namespace Barotrauma
                 }
                 else if (Lights.LightManager.ViewTarget == this)
                 {
-                    if (GUI.PauseMenuOpen || IsUnconscious)
+                    if (GUI.PauseMenuOpen || IsIncapacitated)
                     {
                         if (deltaTime > 0.0f)
                         {

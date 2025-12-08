@@ -699,7 +699,13 @@ namespace Barotrauma
         /// and the health UI will render the affected limb in green rather than red.
         /// </summary>
         public readonly bool IsBuff;
-        
+
+        /// <summary>
+        /// Should the affliction be affected by damage multipliers on an attack (e.g. when the attacker has talents that boost damage).
+        /// By default, afflictions defined as buffs aren't affected.
+        /// </summary>
+        public readonly bool AffectedByAttackMultipliers;
+
         /// <summary>
         /// If set to true, this affliction can affect characters that are marked as
         /// machines, such as the Fractal Guardian.
@@ -781,6 +787,14 @@ namespace Barotrauma
         public readonly float TreatmentSuggestionThreshold;
 
         /// <summary>
+        /// Does the affliction need to have caused some amount of vitality loss for bots to consider treating it?
+        /// Normally bots use vitality loss as a way to determine what kind of injuries need treatment, but some afflictions (e.g. poisons, infections)
+        /// might require treatment regardless of the vitality loss. If disabled, the bots will use the strength of the affliction to evaluate the severity instead of the vitality loss.
+        /// Defaults to true for all afflictions that aren't of the type Paralysis, Poison or HuskInfection.
+        /// </summary>
+        public readonly bool VitalityLossRequiredForTreatment;
+
+        /// <summary>
         /// Bots will not try to treat the affliction if the character has any of these afflictions
         /// </summary>
         public ImmutableHashSet<Identifier> IgnoreTreatmentIfAfflictedBy;
@@ -838,14 +852,15 @@ namespace Barotrauma
         public readonly bool DamageParticles;
 
         /// <summary>
-        /// An arbitrary modifier that affects how much medical skill is increased when you apply the affliction on a target. 
-        /// If the affliction causes damage or is of the 'poison' or 'paralysis' type, the skill is increased only when the target is hostile. 
-        /// If the affliction is of the 'buff' type, the skill is increased only when the target is friendly.
+        /// A  modifier that affects how much medical skill is increased when you apply this affliction on a target. 
+        /// If the affliction causes damage or is of the 'poison' or 'paralysis' type, the skill is increased only when the target is hostile, and the modifier is multiplied by the amount of vitality the enemy lost.
+        /// If the affliction is of the 'buff' type, the skill is increased only when the target is friendly, and the modifier is multiplied by the strength of the affliction the target gained.
         /// </summary>
         public readonly float MedicalSkillGain;
 
         /// <summary>
-        /// An arbitrary modifier that affects how much weapons skill is increased when you apply the affliction on a target. 
+        /// A modifier that affects how much weapons skill is increased when you apply the affliction on a target.
+        /// Multiplied by the amount of vitality the enemy lost.
         /// The skill is increased only when the target is hostile. 
         /// </summary>
         public readonly float WeaponsSkillGain;
@@ -925,6 +940,7 @@ namespace Barotrauma
             ShowDescriptionInTooltip = element.GetAttributeBool(nameof(ShowDescriptionInTooltip), true);
 
             IsBuff = element.GetAttributeBool(nameof(IsBuff), false);
+            AffectedByAttackMultipliers = element.GetAttributeBool(nameof(AffectedByAttackMultipliers), def: !IsBuff);
             AffectMachines = element.GetAttributeBool(nameof(AffectMachines), true);
 
             ShowBarInHealthMenu = element.GetAttributeBool("showbarinhealthmenu", true);
@@ -976,6 +992,11 @@ namespace Barotrauma
                 Math.Max(ActivationThreshold, AfflictionType == "talentbuff" ? float.MaxValue : ShowIconToOthersThreshold));
             TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 10.0f));
             TreatmentSuggestionThreshold = element.GetAttributeFloat(nameof(TreatmentSuggestionThreshold), TreatmentThreshold);
+
+            bool alwaysRequiresTreatment = AfflictionType == ParalysisType || AfflictionType == PoisonType || this is AfflictionPrefabHusk;
+
+            VitalityLossRequiredForTreatment = element.GetAttributeBool(nameof(VitalityLossRequiredForTreatment),
+                def: !alwaysRequiresTreatment);
 
             DamageOverlayAlpha  = element.GetAttributeFloat(nameof(DamageOverlayAlpha), 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat(nameof(BurnOverlayAlpha), 0.0f);

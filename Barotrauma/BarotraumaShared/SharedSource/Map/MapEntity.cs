@@ -792,6 +792,7 @@ namespace Barotrauma
                         ItemPrefab itemPrefab = ItemPrefab.Find(name, identifier);
                         if (itemPrefab != null)
                         {
+                            DebugConsole.AddWarning($"Could not find a structure with the identifier {identifier}, but there's a matching item with the identifier. Converting to an item.");
                             t = typeof(Item);
                         }
                     }

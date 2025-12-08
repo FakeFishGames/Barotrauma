@@ -2221,11 +2221,7 @@ namespace Barotrauma
                     if (GameMain.Client == null) { return true; }
 
                     //the player presumably no longer wants to be afk if they clicked the start button
-                    if (afkBox.Selected)
-                    {
-                        afkBox.Flash(GUIStyle.Green);
-                    }
-                    afkBox.Selected = false;
+                    SetAFKSelected(false);
 
                     if (CampaignSetupFrame.Visible && CampaignSetupUI != null)
                     {
@@ -2357,7 +2353,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
-                afkBox.Visible = !GameMain.Client.IsServerOwner && GameMain.Client.ServerSettings.AllowAFK;
+                afkBox.Visible = GameMain.Client.IsServerOwner || GameMain.Client.ServerSettings.AllowAFK;
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
                 joinOnGoingRoundButton.OnClicked = (btn, userdata) =>
                 {
@@ -3079,6 +3075,15 @@ namespace Barotrauma
                 //reset selection when the AFK option becomes available or unavailable
                 afkBox.Selected = false;
                 afkBox.Visible = allowAFK;
+            }
+        }
+
+        public void SetAFKSelected(bool selected)
+        {
+            if (afkBox.Selected != selected)
+            {
+                afkBox.Flash(GUIStyle.Green);
+                afkBox.Selected = selected;
             }
         }
 
@@ -4994,7 +4999,7 @@ namespace Barotrauma
                 };
 
                 micIcon = new GUIImage(new RectTransform(new Vector2(0.05f, 1.0f), chatRow.RectTransform), style: "GUIMicrophoneUnavailable");
-                chatInput.Select();
+                chatInput.Select(ignoreSelectSound: true);
             }
 
             //this needs to be done even if we're using the existing chatinput instance instead of creating a new one,

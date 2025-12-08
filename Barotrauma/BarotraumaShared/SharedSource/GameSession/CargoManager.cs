@@ -690,7 +690,7 @@ namespace Barotrauma
                         foreach (Item containedItem in character.Inventory.AllItemsMod)
                         {
                             //only put into containers that draw the inventory (not ones with a hidden inventory like circuit boxes!)
-                            if (containedItem.OwnInventory?.Container is { DrawInventory: true } &&
+                            if (containedItem.OwnInventory?.Container is { DrawInventory: true } container && container.IsAccessible() &&
                                 containedItem.OwnInventory.TryPutItem(item, user: null, item.AllowedSlots)) 
                             { 
                                 break; 

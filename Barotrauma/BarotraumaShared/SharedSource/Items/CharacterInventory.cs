@@ -226,6 +226,14 @@ namespace Barotrauma
             return false;
         }
 
+        public bool IsSlotEmpty(InvSlotType limbSlot)
+        {
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (SlotTypes[i] == limbSlot && slots[i].Empty()) { return true; }
+            }
+            return false;
+        }
 
         /// <summary>
         /// Can the item be put in the inventory in a slot of the specified type (i.e. is there a suitable free slot or a stack the item can be put in).
@@ -438,7 +446,8 @@ namespace Barotrauma
             }
 
             int placedInSlot = -1;
-            foreach (InvSlotType allowedSlot in allowedSlots)
+            //order by whether the slot is empty, i.e. try putting in free slots first before trying to unequip items from occupied slots
+            foreach (InvSlotType allowedSlot in allowedSlots.OrderBy(slotType => IsSlotEmpty(slotType) ? 0 : 1))
             {
                 if (allowedSlot.HasFlag(InvSlotType.RightHand) && character.AnimController.GetLimb(LimbType.RightHand) == null) { continue; }
                 if (allowedSlot.HasFlag(InvSlotType.LeftHand) && character.AnimController.GetLimb(LimbType.LeftHand) == null) { continue; }

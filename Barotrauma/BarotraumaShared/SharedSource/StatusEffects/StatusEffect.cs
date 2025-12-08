@@ -779,7 +779,10 @@ namespace Barotrauma
         /// </summary>
         private readonly HashSet<(Identifier affliction, float strength)> requiredAfflictions;
 
-        public float AfflictionMultiplier = 1.0f;
+        /// <summary>
+        /// Multiplier used on afflictions caused by the status effect, except ones that <see cref="AfflictionPrefab.AffectedByAttackMultipliers">have been configured to not be affected by attack multipliers.
+        /// </summary>
+        public float AttackMultiplier = 1.0f;
 
         public List<Affliction> Afflictions
         {
@@ -800,6 +803,12 @@ namespace Barotrauma
         }
 
         public readonly List<(Identifier AfflictionIdentifier, float ReduceAmount)> ReduceAffliction = new List<(Identifier affliction, float amount)>();
+
+        /// <summary>
+        /// Normally using a StatusEffect to heal someone's afflictions gives an amount of medical skill relative to the amount of health the target regained.
+        /// This can be used to disable that behavior, in case there are items that "heal" someone without being considered medical items or something that should give medical skill.
+        /// </summary>
+        public readonly bool CanGiveMedicalSkill;
 
         private readonly List<Identifier> talentTriggers;
         private readonly List<int> giveExperiences;
@@ -903,6 +912,8 @@ namespace Barotrauma
                 }
                 if (targetLimbs.Count > 0) { this.targetLimbs = targetLimbs.ToArray(); }
             }
+
+            CanGiveMedicalSkill = element.GetAttributeBool(nameof(CanGiveMedicalSkill), true);
 
             SeverLimbsProbability = MathHelper.Clamp(element.GetAttributeFloat(0.0f, "severlimbs", "severlimbsprobability"), 0.0f, 1.0f);
             randomCondition = element.GetAttributeVector2("randomcondition", Vector2.Zero);
@@ -1985,7 +1996,7 @@ namespace Barotrauma
                         {
                             float healthChange = targetCharacter.Vitality - prevVitality;
                             targetCharacter.AIController?.OnHealed(healer: user, healthChange);
-                            if (user != null)
+                            if (user != null && CanGiveMedicalSkill)
                             {
                                 targetCharacter.TryAdjustHealerSkill(user, healthChange);
 #if SERVER
@@ -2656,16 +2667,6 @@ namespace Barotrauma
                         {
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull, onSpawned: item =>
                             {
-                                if (chosenItemSpawnInfo.Equip && entity is Character character && character.Inventory != null)
-                                {
-                                    //if the item is both pickable and wearable, try to wear it instead of picking it up
-                                    List<InvSlotType> allowedSlots =
-                                       item.GetComponents<Pickable>().Count() > 1 ?
-                                       new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
-                                       new List<InvSlotType>(item.AllowedSlots);
-                                    allowedSlots.Remove(InvSlotType.Any);
-                                    character.Inventory.TryPutItem(item, null, allowedSlots);
-                                }
                                 OnItemSpawned(item, chosenItemSpawnInfo);
                             });
                         }
@@ -2734,6 +2735,17 @@ namespace Barotrauma
             }
             void OnItemSpawned(Item newItem, ItemSpawnInfo itemSpawnInfo)
             {
+                if (itemSpawnInfo.Equip && newItem.ParentInventory is CharacterInventory characterInventory && characterInventory.Owner is Character character)
+                {
+                    //if the item is both pickable and wearable, try to wear it instead of picking it up
+                    List<InvSlotType> allowedSlots =
+                       newItem.GetComponents<Pickable>().Count() > 1 ?
+                       new List<InvSlotType>(newItem.GetComponent<Wearable>()?.AllowedSlots ?? newItem.GetComponent<Pickable>().AllowedSlots) :
+                       new List<InvSlotType>(newItem.AllowedSlots);
+                    allowedSlots.Remove(InvSlotType.Any);
+                    character.Inventory.TryPutItem(newItem, null, allowedSlots);
+                }
+
                 newItem.Condition = newItem.MaxCondition * itemSpawnInfo.Condition;
                 if (itemSpawnInfo.InheritEventTags)
                 {
@@ -2889,7 +2901,10 @@ namespace Barotrauma
                                 targetCharacter.AIController?.OnHealed(healer: element.User, healthChange);
                                 if (element.User != null)
                                 {
-                                    targetCharacter.TryAdjustHealerSkill(element.User, healthChange);
+                                    if (element.Parent.CanGiveMedicalSkill)
+                                    {
+                                        targetCharacter.TryAdjustHealerSkill(element.User, healthChange);
+                                    }
 #if SERVER
                                     GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.User, -healthChange, 0.0f);
 #endif
@@ -2933,12 +2948,16 @@ namespace Barotrauma
                     afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.PoisonMultiplier);
                 }
             }
-            return afflictionMultiplier * AfflictionMultiplier;
+            return afflictionMultiplier;
         }
 
         private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool multiplyByMaxVitality)
         {
             float afflictionMultiplier = GetAfflictionMultiplier(entity, targetCharacter, deltaTime);
+            if (affliction.AffectedByAttackMultipliers)
+            {
+                afflictionMultiplier *= AttackMultiplier;
+            }
             if (multiplyByMaxVitality)
             {
                 afflictionMultiplier *= targetCharacter.MaxVitality / 100f;
@@ -2970,6 +2989,10 @@ namespace Barotrauma
             return affliction;
         }
 
+        /// <summary>
+        /// Register results of the afflictions that the status effect applied on the target (e.g. buffs), giving the user medical skill and indicating the treatment in the UI.
+        /// The effects of reducing afflictions are handled when going through the <see cref="ReduceAffliction">ReduceAffliction list</see>.
+        /// </summary>
         private void RegisterTreatmentResults(Character user, Item item, Limb limb, Affliction affliction, AttackResult result)
         {
             if (item == null) { return; }
@@ -2986,12 +3009,13 @@ namespace Barotrauma
                     if (type == ActionType.OnUse || type == ActionType.OnSuccess)
                     {
                         limbAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
-                        limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction);
+                        if (CanGiveMedicalSkill) { limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction); }
+                       
                     }
                     else if (type == ActionType.OnFailure)
                     {
                         limbAffliction.AppliedAsFailedTreatmentTime = Timing.TotalTime;
-                        limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction);
+                        if (CanGiveMedicalSkill) { limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction); }                       
                     }
                 }
             }

@@ -34,6 +34,8 @@ namespace Barotrauma
 
         //which entities have been selected for editing
         public static HashSet<MapEntity> SelectedList { get; private set; } = new HashSet<MapEntity>();
+        private static List<Rectangle> oldRects = new List<Rectangle>();
+        private static Vector2 entityMovementNudge;
 
         public static List<MapEntity> CopiedList = new List<MapEntity>();
 
@@ -267,7 +269,7 @@ namespace Barotrauma
                                 i++;
                             }
                             highlightedEntities.Insert(i, e);
-                            if (i == 0) highLightedEntity = e;
+                            if (i == 0) { highLightedEntity = e; }
                         }
                     }
                     UpdateHighlighting(highlightedEntities);
@@ -278,10 +280,19 @@ namespace Barotrauma
 
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                Vector2 nudge = GetNudgeAmount();
-                if (nudge != Vector2.Zero)
+                Vector2 previousNudge = entityMovementNudge;
+                entityMovementNudge = GetNudgeAmount();
+                if (entityMovementNudge != Vector2.Zero)
                 {
-                    foreach (MapEntity entityToNudge in SelectedList) { entityToNudge.Move(nudge); }
+                    if (previousNudge == Vector2.Zero)
+                    {
+                        oldRects = SelectedList.Select(entity => entity.Rect).ToList();
+                    }
+                    foreach (MapEntity entityToNudge in SelectedList) { entityToNudge.Move(entityMovementNudge); }
+                }
+                else if (previousNudge != Vector2.Zero)
+                {
+                    SubEditorScreen.StoreCommand(new TransformCommand(new List<MapEntity>(SelectedList), SelectedList.Select(entity => entity.Rect).ToList(), oldRects, resized: false));
                 }
             }
             else
@@ -352,7 +363,7 @@ namespace Barotrauma
                                 }
                             }
 
-                            SubEditorScreen.StoreCommand(new TransformCommand(new List<MapEntity>(SelectedList),SelectedList.Select(entity => entity.Rect).ToList(), oldRects, false));
+                            SubEditorScreen.StoreCommand(new TransformCommand(new List<MapEntity>(SelectedList), SelectedList.Select(entity => entity.Rect).ToList(), oldRects, resized: false));
                             if (deposited.Any() && deposited.Any(entity => entity is Item))
                             {
                                 var depositedItems = deposited.Where(entity => entity is Item).Cast<Item>().ToList();
@@ -508,7 +519,7 @@ namespace Barotrauma
             selectionSize = Vector2.Zero;
             selectionPos = Vector2.Zero;
         }
-
+        
         public static Vector2 GetNudgeAmount(bool doHold = true)
         {
             Vector2 nudgeAmount = Vector2.Zero;
@@ -532,10 +543,10 @@ namespace Barotrauma
                 }
             }
 
-            if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y =  1f;
-            if (PlayerInput.KeyHit(Keys.Down))  nudgeAmount.Y = -1f;
-            if (PlayerInput.KeyHit(Keys.Left))  nudgeAmount.X = -1f;
-            if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X =  1f;
+            if (PlayerInput.KeyHit(Keys.Up)) { nudgeAmount.Y =  1f; }
+            if (PlayerInput.KeyHit(Keys.Down)) { nudgeAmount.Y = -1f; }
+            if (PlayerInput.KeyHit(Keys.Left)) { nudgeAmount.X = -1f;}
+            if (PlayerInput.KeyHit(Keys.Right)) { nudgeAmount.X =  1f; }
 
             return nudgeAmount;
         }

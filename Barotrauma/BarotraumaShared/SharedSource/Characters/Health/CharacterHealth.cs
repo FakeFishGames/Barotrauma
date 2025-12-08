@@ -304,6 +304,19 @@ namespace Barotrauma
             InitProjSpecific(element, character);
         }
 
+        public void CheckForErrors()
+        {
+            for (int i = 0; i < limbHealths.Count; i++)
+            {
+                if (Character.AnimController.Limbs.None(l => l.HealthIndex == i))
+                {
+                    DebugConsole.AddWarning(
+                        $"Potential error in character {Character.DisplayName}: none of the limbs have been set to use the LimbHealth #{i}, and it will do nothing. "
+                        + "Did you forget to set the HealthIndex values of the limbs?", contentPackage: Character.ContentPackage);
+                }
+            }
+        }
+
         private void InitIrremovableAfflictions()
         {
             irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
@@ -1118,20 +1131,38 @@ namespace Barotrauma
 
         // We need to use another list of the afflictions when we call the status effects triggered by afflictions,
         // because those status effects may add or remove other afflictions while iterating the collection.
-        private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
+        private readonly List<Affliction> afflictionsCopy = [];
+
+        private bool isApplyingAfflictionStatusEffects;
         public void ApplyAfflictionStatusEffects(ActionType type)
         {
-            afflictionsCopy.Clear();
-            afflictionsCopy.AddRange(afflictions.Keys);
-            foreach (Affliction affliction in afflictionsCopy)
+            if (isApplyingAfflictionStatusEffects)
             {
-                affliction.ApplyStatusEffects(type, 1.0f, this, targetLimb: GetAfflictionLimb(affliction));
+                //pretty hacky: if we're already in the process of applying afflictions' status effects
+                //(i.e. calling this method caused some additional afflictions to appear and trigger status effects)
+                //let's instantiate a new list so we don't end up modifying afflictionsCopy while enumerating it
+                foreach (Affliction affliction in afflictions.Keys.ToList())
+                {
+                    affliction.ApplyStatusEffects(type, 1.0f, this, targetLimb: GetAfflictionLimb(affliction));
+                }
+            }
+            else
+            {
+                isApplyingAfflictionStatusEffects = true;
+                afflictionsCopy.Clear();
+                afflictionsCopy.AddRange(afflictions.Keys);
+                isApplyingAfflictionStatusEffects = true;
+                foreach (Affliction affliction in afflictionsCopy)
+                {
+                    affliction.ApplyStatusEffects(type, 1.0f, this, targetLimb: GetAfflictionLimb(affliction));
+                }
+                isApplyingAfflictionStatusEffects = false;
             }
         }
 
         public (CauseOfDeathType type, Affliction affliction) GetCauseOfDeath()
         {
-            List<Affliction> currentAfflictions = GetAllAfflictions(true);
+            IEnumerable<Affliction> currentAfflictions = GetAllAfflictions(true);
 
             Affliction strongestAffliction = null;
             float largestStrength = 0.0f;
@@ -1154,7 +1185,7 @@ namespace Barotrauma
         }
 
         private readonly List<Affliction> allAfflictions = new List<Affliction>();
-        private List<Affliction> GetAllAfflictions(bool mergeSameAfflictions, Func<Affliction, bool> predicate = null)
+        private IEnumerable<Affliction> GetAllAfflictions(bool mergeSameAfflictions, Func<Affliction, bool> predicate = null)
         {
             allAfflictions.Clear();
             if (!mergeSameAfflictions)

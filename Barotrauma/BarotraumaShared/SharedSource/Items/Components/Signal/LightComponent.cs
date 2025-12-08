@@ -140,7 +140,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates. 0 = not at all, 1 = alternates between full brightness and off.")]
         public float PulseAmount
         {
             get { return pulseAmount; }

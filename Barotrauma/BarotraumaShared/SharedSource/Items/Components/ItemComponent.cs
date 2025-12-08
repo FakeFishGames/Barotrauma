@@ -920,7 +920,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float afflictionMultiplier = 1.0f)
+        /// <param name="attackMultiplier">Multiplier used on afflictions caused by the status effects, except ones that <see cref="AfflictionPrefab.AffectedByAttackMultipliers">have been configured to not be affected by attack multipliers.</see></param>
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float attackMultiplier = 1.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -932,7 +933,7 @@ namespace Barotrauma.Items.Components
             {
                 if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
-                effect.AfflictionMultiplier = afflictionMultiplier;
+                effect.AttackMultiplier = attackMultiplier;
                 var c = character;
                 if (user != null && effect.HasTargetType(StatusEffect.TargetType.Character) && !effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
@@ -940,7 +941,7 @@ namespace Barotrauma.Items.Components
                     c = user;
                 }
                 item.ApplyStatusEffect(effect, type, deltaTime, c, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
-                effect.AfflictionMultiplier = 1.0f;
+                effect.AttackMultiplier = 1.0f;
                 reducesCondition |= effect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well

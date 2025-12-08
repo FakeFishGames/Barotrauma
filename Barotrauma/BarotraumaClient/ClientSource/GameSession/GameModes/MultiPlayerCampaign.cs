@@ -112,8 +112,16 @@ namespace Barotrauma
 
             GUITextBlock.AutoScaleAndNormalize(newCampaignButton.TextBlock, loadCampaignButton.TextBlock);
 
-            GameMain.NetLobbyScreen.CampaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
-            GameMain.NetLobbyScreen.CampaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;
+            GameMain.NetLobbyScreen.CampaignSetupUI.StartNewGame = (SubmarineInfo sub, string saveName, string mapSeed, CampaignSettings settings) =>
+            {
+                GameMain.NetLobbyScreen.SetAFKSelected(false);
+                GameMain.Client.SetupNewCampaign(sub, saveName, mapSeed, settings);
+            };
+            GameMain.NetLobbyScreen.CampaignSetupUI.LoadGame = (string filePath, Option<uint> backupIndex) =>
+            {
+                GameMain.NetLobbyScreen.SetAFKSelected(false);
+                GameMain.Client.SetupLoadCampaign(filePath, backupIndex);
+            };
         }
 
         partial void InitProjSpecific()
@@ -169,6 +177,7 @@ namespace Barotrauma
             {
                 StartRound = () =>
                 {
+                    GameMain.NetLobbyScreen.SetAFKSelected(false);
                     GameMain.Client.RequestStartRound();
                 }
             };

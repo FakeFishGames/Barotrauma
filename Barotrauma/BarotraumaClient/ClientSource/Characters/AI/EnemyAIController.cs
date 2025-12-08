@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         public override void DebugDraw(SpriteBatch spriteBatch)
         {
-            if (Character.IsUnconscious || !Character.Enabled || !Enabled) { return; }
+            if (Character.IsUnconscious || !Character.Enabled || !Enabled || Screen.Selected?.Cam is { Zoom: < 0.4f }) { return; }
 
             Vector2 pos = Character.DrawPosition;
             pos.Y = -pos.Y;

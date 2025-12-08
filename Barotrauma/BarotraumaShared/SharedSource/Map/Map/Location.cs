@@ -378,7 +378,14 @@ namespace Barotrauma
                 if (characters.Any())
                 {
                     price *= 1f + characters.Max(static c => c.GetStatValue(StatTypes.StoreSellMultiplier, includeSaved: false));
-                    price *= 1f + characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValueWithAll(StatTypes.StoreSellMultiplier, tag)));
+                    price *= 1f + characters.Max(c => GetMultiplierForItem(c, item));
+
+                    float GetMultiplierForItem(Character character, ItemPrefab item)
+                    {
+                        return 
+                            item.Tags.Sum(tag => character.Info.GetSavedStatValue(StatTypes.StoreSellMultiplier, tag)) +
+                            character.Info.GetSavedStatValue(StatTypes.StoreSellMultiplier, Tags.StatIdentifierTargetAll);
+                    }
                 }
 
                 // Price should never go below 1 mk
@@ -588,7 +595,7 @@ namespace Barotrauma
         public Location(Vector2 mapPosition, int? zone, Identifier? biomeId, Random rand, bool requireOutpost = false, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
             Type = OriginalType = forceLocationType ?? LocationType.Random(rand, zone, biomeId, requireOutpost);
-            CreateRandomName(Type, rand, existingLocations);
+            AssignRandomName(Type, rand, existingLocations);
             MapPosition = mapPosition;
             PortraitId = ToolBox.StringToInt(nameIdentifier.Value);
             Connections = new List<LocationConnection>(); 
@@ -1210,7 +1217,7 @@ namespace Barotrauma
             HireManager.AvailableCharacters = hireableCharacters.ToList();
         }
 
-        private void CreateRandomName(LocationType type, Random rand, IEnumerable<Location> existingLocations)
+        public void AssignRandomName(LocationType type, Random rand, IEnumerable<Location> existingLocations)
         {
             if (!type.ForceLocationName.IsEmpty)
             {

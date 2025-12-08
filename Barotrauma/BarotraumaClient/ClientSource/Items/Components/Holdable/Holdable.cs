@@ -119,8 +119,7 @@ namespace Barotrauma.Items.Components
                 if (!attached)
                 {
                     Drop(false, null);
-                    item.SetTransform(simPosition, 0.0f);
-                    item.Submarine = sub;
+                    item.SetTransform(simPosition, 0.0f, forceSubmarine: sub);
                     AttachToWall();
                     PlaySound(ActionType.OnUse, attacher);
                     ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, character: attacher, user: attacher);
@@ -142,8 +141,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    item.SetTransform(simPosition, 0.0f);
-                    item.Submarine = sub;
+                    item.SetTransform(simPosition, 0.0f, forceSubmarine: sub);
                 }
             }
         }

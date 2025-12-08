@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
             var inputBuilder = ImmutableArray.CreateBuilder<CircuitBoxInputConnection>();
             var outputBuilder = ImmutableArray.CreateBuilder<CircuitBoxOutputConnection>();
 
-            foreach (Connection conn in Item.Connections)
+            foreach (Connection conn in Item.Connections.OrderBy(static c => c.DisplayOrder))
             {
                 if (conn.IsOutput)
                 {
@@ -236,9 +236,7 @@ namespace Barotrauma.Items.Components
                 cloneNode.ReplaceAllConnectionLabelOverrides(origNode.ConnectionLabelOverrides);
             }
 
-            if (!clonedContainedItems.Any()) { return; }
-            
-            foreach (var origComp in original.Components)
+            foreach (CircuitBoxComponent origComp in original.Components)
             {
                 if (!clonedContainedItems.TryGetValue(origComp.Item.ID, out var clonedItem)) { continue; }
                 var newComponent = new CircuitBoxComponent(origComp.ID, clonedItem, origComp.Position, this, origComp.UsedResource);
@@ -661,6 +659,7 @@ namespace Barotrauma.Items.Components
             }
 
             wire.From.Connection.CircuitBoxConnections.Remove(wire.To);
+            wire.To.Connection.CircuitBoxConnections.Remove(wire.From);
 
             if (wire.From is CircuitBoxInputConnection input)
             {

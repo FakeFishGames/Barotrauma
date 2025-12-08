@@ -29,7 +29,7 @@ namespace Barotrauma
         const float VerticalDrag = 0.05f;
         const float MaxDrag = 0.1f;
 
-        private const float ImpactDamageMultiplier = 10.0f;
+        private const float ImpactDamageMultiplier = 3.0f;
 
         //limbs with a mass smaller than this won't cause an impact when they hit the sub
         private const float MinImpactLimbMass = 10.0f;
@@ -886,6 +886,11 @@ namespace Barotrauma
             }
 
             float wallImpact = Vector2.Dot(impact.Velocity, -impact.Normal);
+            if (wallImpact < MinCollisionImpact) { return; }
+
+            //magic number to make wall impacts on par with monster impacts (the latter are affected by the mass of the monster)
+            const float WallImpactMultiplier = 3.0f;
+            wallImpact *= WallImpactMultiplier;
 
             ApplyImpact(wallImpact, -impact.Normal, impact.ImpactPos);
             foreach (Submarine dockedSub in submarine.DockedTo)
@@ -1070,17 +1075,20 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != submarine) { continue; }
+                if (Timing.TotalTimeUnpaused < item.LastSubmarineImpactTime + Item.SubmarineImpactCooldown) { continue; }
 
                 if (item.body is not { BodyType: BodyType.Dynamic })
                 {
                     if (!item.Prefab.ReceiveSubmarineImpacts) { continue; }
                     item.ReceiveImpact(impact, recursive: false);
+                    item.LastSubmarineImpactTime = Timing.TotalTimeUnpaused;
                 }
 
                 if (!item.body.Enabled || item.CurrentHull == null || item.body.Mass > impulseMagnitude) { continue; }
 
                 item.body.ApplyLinearImpulse(impulse, 10.0f);
                 item.PositionUpdateInterval = 0.0f;
+                item.LastSubmarineImpactTime = Timing.TotalTimeUnpaused;
             }
 
             float dmg = applyDamage ? impact * ImpactDamageMultiplier : 0.0f;

@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
         //how many wires can be linked to this connection in total
         public readonly int MaxWires = 5;
 
+        public readonly int DisplayOrder;
+
         public readonly string Name;
         private readonly LocalizedString _displayName;
         public LocalizedString DisplayName
@@ -92,7 +94,7 @@ namespace Barotrauma.Items.Components
             return "Connection (" + item.Name + ", " + Name + ")";
         }
 
-        public Connection(ContentXElement element, ConnectionPanel connectionPanel, IdRemap idRemap)
+        public Connection(ContentXElement element, int connectionIndex, ConnectionPanel connectionPanel, IdRemap idRemap, bool isItemSwap)
         {
 
 #if CLIENT
@@ -117,25 +119,44 @@ namespace Barotrauma.Items.Components
             IsOutput = element.Name.ToString() == "output";
             Name = element.GetAttributeString("name", IsOutput ? "output" : "input");
 
+            int displayOrder;
+            if (element.GetAttribute("displayorderoverride") is not { } displayOrderAttr)
+            {
+                var sameElements = connectionPanel.Connections.Where(c => c.IsOutput == IsOutput);
+                displayOrder = !sameElements.Any() ? 0 : sameElements.Max(static c => c.DisplayOrder) + 1;
+            }
+            else
+            {
+                displayOrder = displayOrderAttr.GetAttributeInt(0);
+            }
+
+            DisplayOrder = displayOrder;
+
             string displayNameTag = "", fallbackTag = "";
             //if displayname is not present, attempt to find it from the prefab
             if (element.GetAttribute("displayname") == null)
             {
                 foreach (var subElement in item.Prefab.ConfigElement.Elements())
                 {
-                    if (!subElement.Name.ToString().Equals("connectionpanel", StringComparison.OrdinalIgnoreCase)) { continue; }
-                    
+                    if (!subElement.Name.ToString().Equals("connectionpanel", StringComparison.OrdinalIgnoreCase)) { continue; }                    
+                    int prefabConnectionIndex = 0;
                     foreach (XElement connectionElement in subElement.Elements())
                     {
                         string prefabConnectionName = connectionElement.GetAttributeString("name", null);
+                        if (prefabConnectionName.IsNullOrEmpty()) { continue; }
+
                         string[] aliases = connectionElement.GetAttributeStringArray("aliases", Array.Empty<string>());
-                        if (prefabConnectionName == Name || aliases.Contains(Name))
+                        if (prefabConnectionName == Name || aliases.Contains(Name) ||
+                            //when swapping items, we move wires based on the order of the connections, not the names
+                            //= we should find a connection based on the index if the name doesn't match
+                            (isItemSwap && connectionIndex == prefabConnectionIndex))
                         {
                             displayNameTag = connectionElement.GetAttributeString("displayname", "");
                             fallbackTag = connectionElement.GetAttributeString("fallbackdisplayname", "");
                         }
+                        prefabConnectionIndex++;
                     }
-                }
+                }                
             }
             else
             {

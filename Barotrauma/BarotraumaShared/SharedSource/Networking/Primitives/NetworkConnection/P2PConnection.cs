@@ -25,6 +25,6 @@ abstract class P2PConnection : NetworkConnection<P2PEndpoint>
 
     public void Heartbeat()
     {
-        Timeout = TimeoutThreshold;
+        Timeout = TimeoutThresholdNotInGame;
     }
 }

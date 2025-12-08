@@ -40,6 +40,8 @@ namespace Barotrauma
 
         #region Transform Editor
         private const float TransformWidgetOffset = 300f;
+        private const float RotationSnapIncrement = MathF.PI / 36f;
+        private const float ScaleSnapIncrement = 0.1f;
 
         private GUITickBox rotateToolToggle, scaleToolToggle;
         public bool TransformWidgetSelected => TransformWidget.IsSelected;
@@ -141,6 +143,7 @@ namespace Barotrauma
                     if (rotateToolToggle.Selected)
                     {
                         transformCommand.RotationRad = MathUtils.VectorToAngle(PlayerInput.MousePosition - Cam.WorldToScreen(transformCommand.Pivot));
+                        if (!PlayerInput.IsShiftDown()) { transformCommand.RotationRad = MathUtils.RoundTowardsClosest(transformCommand.RotationRad.Value, RotationSnapIncrement); }
                         rotationString = TextManager.GetWithVariable("SubEditor.TransformWidget.Rotation", "[value]", MathHelper.ToDegrees(transformCommand.RotationRad.Value).ToString("0.000", CultureInfo.CurrentCulture));
                     }
 
@@ -148,7 +151,9 @@ namespace Barotrauma
                     LocalizedString scaleString = null;
                     if (scaleToolToggle.Selected)
                     {
-                        transformCommand.ScaleMult = Math.Clamp(Vector2.Distance(PlayerInput.MousePosition, Cam.WorldToScreen(transformCommand.Pivot)) / (TransformWidgetOffset * GUI.Scale), transformCommand.MinScale, transformCommand.MaxScale);
+                        transformCommand.ScaleMult = Vector2.Distance(PlayerInput.MousePosition, Cam.WorldToScreen(transformCommand.Pivot)) / (TransformWidgetOffset * GUI.Scale);
+                        if (!PlayerInput.IsShiftDown()) { transformCommand.ScaleMult = MathUtils.RoundTowardsClosest(transformCommand.ScaleMult.Value, ScaleSnapIncrement); }
+                        transformCommand.ScaleMult = Math.Clamp(transformCommand.ScaleMult.Value, transformCommand.MinScale, transformCommand.MaxScale);
                         scaleString = TextManager.GetWithVariable("SubEditor.TransformWidget.Scale", "[value]", transformCommand.ScaleMult.Value.ToString("0.000", CultureInfo.CurrentCulture));
                     }
 

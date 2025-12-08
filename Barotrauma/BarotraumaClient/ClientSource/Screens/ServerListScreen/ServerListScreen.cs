@@ -1126,6 +1126,10 @@ namespace Barotrauma
                     {
                         new GUIMessageBox(TextManager.Get("error"), TextManager.Get("CannotJoinSteamServer.SteamNotInitialized"));
                     }
+                    else if (endpoint is EosP2PEndpoint && !EosInterface.Core.IsInitialized)
+                    {
+                        new GUIMessageBox(TextManager.Get("error"), TextManager.Get("EosStatus.NotInitialized"));
+                    }
                     else
                     {
                         JoinServer(endpoint.ToEnumerable().ToImmutableArray(), "");
@@ -1183,9 +1187,29 @@ namespace Barotrauma
 
             endpointBox.OnTextChanged += (textBox, text) =>
             {
-                okButton.Enabled = favoriteButton.Enabled = !string.IsNullOrEmpty(text);                
+                okButton.Enabled = favoriteButton.Enabled = !string.IsNullOrEmpty(text);
                 return true;
             };
+
+            // Connect on enter press, gotta go fast
+            endpointBox.OnEnterPressed += (textBox, text) =>
+            {
+                if (okButton.Enabled)
+                {
+                    if (okButton.PlaySoundOnSelect)
+                    {
+                        SoundPlayer.PlayUISound(okButton.ClickSound);
+                    }
+                    okButton.OnClicked.Invoke(okButton, okButton.UserData);
+                }
+                return true;
+            };
+            
+            // Focus on and select all the text, for easier input/deletion (after the dialog is shown, apparently it takes a moment)
+            CoroutineManager.Invoke(() =>
+            {
+                endpointBox.Select(ignoreSelectSound: true);
+            }, 0.1f);
         }
 
         private void RemoveMsgFromServerList()

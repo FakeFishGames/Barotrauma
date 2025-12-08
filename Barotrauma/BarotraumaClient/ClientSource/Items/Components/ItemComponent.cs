@@ -409,10 +409,10 @@ namespace Barotrauma.Items.Components
                         loopingSoundChannel.Looping = true;
                         loopingSoundChannel.Near = loopingSound.Range * 0.4f;
                         loopingSoundChannel.Far = loopingSound.Range;
-                    }
-                    if (loopingSound.RoundSound.Stream)
-                    {
-                        loopingSoundChannel.StreamSeekPos = loopingSound.RoundSound.LastStreamSeekPos;
+                        if (loopingSound.RoundSound.Stream)
+                        {
+                            loopingSoundChannel.StreamSeekPos = loopingSound.RoundSound.LastStreamSeekPos;
+                        }
                     }
                 }
             }

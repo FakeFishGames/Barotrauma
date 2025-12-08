@@ -154,6 +154,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize("0,0", IsPropertySaveable.Yes)]
+        public Point DisallowAttachingOverSize
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, IsPropertySaveable.No, description: "Should the item be attached to a wall by default when it's placed in the submarine editor.")]
         public bool AttachedByDefault
         {
@@ -496,13 +503,19 @@ namespace Barotrauma.Items.Components
                         Vector2 diff = new Vector2(
                             (heldHand.SimPosition.X - arm.SimPosition.X) / 2f,
                             (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f);
-                        item.SetTransform(heldHand.SimPosition + diff, 0.0f);
+
+                        //we have forced the item to be in the same sub as the dropper above,
+                        //and are placing it to the position of the hands in "local" coordinates
+                        //which may be outside the sub if the character is e.g. standing half-way through the airlock
+                        // -> let's use the forceSubmarine argument ensure the item is still considered to be in the sub's coordinate space,
+                        //    or it will end up in a weird state and seemingly disappear
+                        item.SetTransform(heldHand.SimPosition + diff, 0.0f, forceSubmarine: picker.Submarine);
                     }
                     else
                     {
-                        item.SetTransform(picker.SimPosition, 0.0f);
-                    }     
-                }           
+                        item.SetTransform(picker.SimPosition, 0.0f, forceSubmarine: picker.Submarine);
+                    }
+                }
             }
 
             picker.Inventory.RemoveItem(item);
@@ -621,17 +634,34 @@ namespace Barotrauma.Items.Components
             if (disallowAttachingOverTags.Any() || !AllowAttachInsideDoors)
             {
                 var connectedHulls = item.CurrentHull?.GetConnectedHulls(includingThis: true, searchDepth: 5, ignoreClosedGaps: true);
-                Vector2 size = item.Rect.Size.ToVector2() / 2;
+
+                Vector2 size = DisallowAttachingOverSize == Point.Zero ? 
+                    item.Rect.Size.ToVector2() : 
+                    DisallowAttachingOverSize.ToVector2() * item.Scale;
+                size /= 2f;
+
                 foreach (Item otherItem in Item.ItemList)
                 {
                     if (otherItem == item || otherItem.body is { BodyType: BodyType.Dynamic, Enabled: true }) { continue; }
                     if (connectedHulls != null && !connectedHulls.Contains(otherItem.CurrentHull)) { continue; }
-                    if (disallowAttachingOverTags.None(tag => otherItem.HasTag(tag)) &&
+                    if (disallowAttachingOverTags.None(otherItem.HasTag) &&
                         (otherItem.GetComponent<Door>() == null || AllowAttachInsideDoors)) 
                     { 
                         continue; 
                     }
                     Rectangle worldRect = otherItem.WorldRect;
+
+                    if (otherItem.GetComponent<Holdable>() is Holdable otherHoldable)
+                    {
+                        if (!otherHoldable.attached) { continue; }
+                        if (otherHoldable.DisallowAttachingOverSize != Point.Zero)
+                        {
+                            Vector2 scaledSize = otherHoldable.DisallowAttachingOverSize.ToVector2() * item.Scale;
+                            worldRect = new Rectangle(
+                                otherItem.WorldPosition.ToPoint() - new Point((int)(scaledSize.X / 2), (int)(-scaledSize.Y / 2)),
+                                scaledSize.ToPoint());
+                        }
+                    }                        
                     if (attachPos.X + size.X < worldRect.X || attachPos.X - size.X > worldRect.Right) { continue; }
                     if (attachPos.Y - size.Y > worldRect.Y || attachPos.Y + size.Y < worldRect.Y - worldRect.Height) { continue; }
                     tempOverlappingItems.Add(otherItem);

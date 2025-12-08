@@ -3338,7 +3338,13 @@ namespace Barotrauma
                     if (!CanIssueOrders) { return false; }
                     var character = userData as Character;
                     int priority = GetManualOrderPriority(character, order);
-                    SetCharacterOrder(character, order.WithManualPriority(priority).WithOrderGiver(Character.Controlled));
+                    Item targetEntity = null;
+                    if (order.MustSetTarget && order.TargetEntity == null)
+                    {
+                        var matchingItems = order.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: characterContext ?? Character.Controlled);
+                        targetEntity = matchingItems.FirstOrDefault();
+                    }
+                    SetCharacterOrder(character, order.WithItemComponent(targetEntity).WithManualPriority(priority).WithOrderGiver(Character.Controlled));
                     DisableCommandUI();
                     return true;
                 }

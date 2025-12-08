@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System.Linq;
 
 namespace Barotrauma
@@ -94,6 +95,7 @@ namespace Barotrauma
                 if (potentialDeconstructor?.InputContainer == null) { continue; }
                 if (!potentialDeconstructor.InputContainer.Inventory.CanBePut(Item)) { continue; }
                 if (!potentialDeconstructor.Item.HasAccess(character)) { continue; }
+                if (Item.Prefab.DeconstructItems.None(it => it.IsValidDeconstructor(otherItem))) { continue; }
                 float distFactor = GetDistanceFactor(Item.WorldPosition, potentialDeconstructor.Item.WorldPosition, factorAtMaxDistance: 0.2f);
                 if (distFactor > bestDistFactor)
                 {

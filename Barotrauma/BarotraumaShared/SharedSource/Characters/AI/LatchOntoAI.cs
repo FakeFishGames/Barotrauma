@@ -114,7 +114,7 @@ namespace Barotrauma
             if (target.Submarine != character.Submarine) { return; }
             Reset();
             TargetCharacter = target;
-            targetBody = target.AnimController.Collider.FarseerBody;
+            targetBody = target.AnimController.MainLimb.body.FarseerBody;
             attachSurfaceNormal = Vector2.Normalize(character.WorldPosition - target.WorldPosition);
         }
 

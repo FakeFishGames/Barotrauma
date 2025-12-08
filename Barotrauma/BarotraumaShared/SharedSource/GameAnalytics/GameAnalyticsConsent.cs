@@ -89,7 +89,19 @@ namespace Barotrauma
 
         private static async Task<AuthTicket> GetSteamAuthTicket()
         {
-            var authTicket = await SteamManager.GetAuthTicketForGameAnalyticsConsent();
+            var authTicketTask = SteamManager.GetAuthTicketForGameAnalyticsConsent();
+
+            // Add a timeout to prevent the game from freezing indefinitely
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(10));
+
+            var completedTask = await Task.WhenAny(authTicketTask, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                throw new TimeoutException("Timed out while trying to retrieve Steamworks authentication ticket for GameAnalytics.");
+            }
+
+            var authTicket = await authTicketTask;
+
             return authTicket.TryUnwrap(out var ticketUnwrapped) && ticketUnwrapped.Data is { Length: > 0 }
                 ? new AuthTicket(ToolBoxCore.ByteArrayToHexString(ticketUnwrapped.Data), Platform.Steam) //convert byte array to hex
                 : throw new Exception("Could not retrieve Steamworks authentication ticket for GameAnalytics");

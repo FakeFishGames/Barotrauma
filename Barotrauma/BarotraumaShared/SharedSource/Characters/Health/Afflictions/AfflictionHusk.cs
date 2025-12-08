@@ -164,15 +164,18 @@ namespace Barotrauma
                     }
                     break;
                 case InfectionState.Transition:
-                    if (character == Character.Controlled)
+                    if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
                     {
+                        if (character == Character.Controlled)
+                        {
 #if CLIENT
-                        GUI.AddMessage(TextManager.Get("HuskCantSpeak"), GUIStyle.Red);
+                            GUI.AddMessage(TextManager.Get("HuskCantSpeak"), GUIStyle.Red);
 #endif
-                    }
-                    else if (character.IsBot)
-                    {
-                        character.Speak(TextManager.Get("dialoghuskcantspeak").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskcantspeak".ToIdentifier());
+                        }
+                        else if (character.IsBot)
+                        {
+                            character.Speak(TextManager.Get("dialoghuskcantspeak").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskcantspeak".ToIdentifier());
+                        }
                     }
                     break;
                 case InfectionState.Active:

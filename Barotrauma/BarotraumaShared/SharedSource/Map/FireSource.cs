@@ -371,7 +371,7 @@ namespace Barotrauma
                 if (!IsInDamageRange(c, DamageRange)) { continue; }
 
                 //GetApproximateDistance returns float.MaxValue if there's no path through open gaps between the hulls (e.g. if there's a door/wall in between)
-                if (hull.GetApproximateDistance(Position, c.Position, c.CurrentHull, 10000.0f) > size.X + DamageRange + FlameHeight)
+                if (hull.GetApproximateDistance(Position, c.Position, c.CurrentHull, maxDistance: 10000.0f, minimumGapOpenness: Structure.LargeGapOpenness) > size.X + DamageRange + FlameHeight)
                 {
                     continue;
                 }

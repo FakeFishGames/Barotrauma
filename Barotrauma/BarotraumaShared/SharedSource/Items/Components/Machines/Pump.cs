@@ -136,6 +136,7 @@ namespace Barotrauma.Items.Components
                 item.CurrentHull.GetLinkedHulls(linkedHulls, includeHiddenHulls: true);
                 foreach (var linkedHull in linkedHulls)
                 {
+                    if (linkedHull == item.CurrentHull) { continue; }
                     hullWaterVolume += linkedHull.WaterVolume;
                     totalHullVolume += linkedHull.Volume;
                 }
@@ -148,7 +149,7 @@ namespace Barotrauma.Items.Components
             if (!IsActive || Disabled) { return; }
             if (flowPercentage <= 0f && item.CurrentHull.WaterVolume <= 0f) { return; }
 
-            float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
+            float powerFactor = Math.Min(PowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
 
             currFlow = flowPercentage / 100.0f * MaxFlow * powerFactor;
             if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)

@@ -741,7 +741,7 @@ namespace Barotrauma
                     var missionsToShow = missions.Where(m => m.Prefab.ShowStartMessage);
                     if (missionsToShow.Count() > 1)
                     {
-                        string joinedMissionNames = string.Join(", ", missions.Select(m => m.Name));
+                        string joinedMissionNames = string.Join(", ", missions.Where(static m => m.Prefab.ShowInMenus).Select(static m => m.Name));
                         GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Mission"), joinedMissionNames), Color.CadetBlue, playSound: false);
                     }
                     else

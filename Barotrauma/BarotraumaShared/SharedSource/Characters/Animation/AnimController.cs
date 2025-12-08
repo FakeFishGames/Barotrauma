@@ -216,6 +216,7 @@ namespace Barotrauma
         {
             UpdateTemporaryAnimations();
             UpdateAnim(deltaTime);
+            CheckRopeState();
         }
 
         protected abstract void UpdateAnim(float deltaTime);
@@ -1132,6 +1133,25 @@ namespace Barotrauma
             Vector2 pos = character.WorldPosition;
             Recreate(ragdollParams);
             character.TeleportTo(pos);
+        }
+
+        protected void CheckRopeState()
+        {
+            if (!shouldHangWithRope)
+            {
+                StopHangingWithRope();
+            }
+            if (!shouldHoldToRope)
+            {
+                StopHoldingToRope();
+            }
+            if (!shouldBeDraggedWithRope)
+            {
+                StopGettingDraggedWithRope();
+            }
+            shouldHoldToRope = false;
+            shouldHangWithRope = false;
+            shouldBeDraggedWithRope = false;
         }
 
         private void StartAnimation(Animation animation)

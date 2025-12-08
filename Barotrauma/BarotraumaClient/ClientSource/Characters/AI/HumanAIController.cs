@@ -11,7 +11,7 @@ namespace Barotrauma
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (Character == Character.Controlled) { return; }
-            if (!DebugAI) { return; }
+            if (!DebugAI || Screen.Selected?.Cam is { Zoom: < 0.4f }) { return; }
             Vector2 pos = Character.DrawPosition;
             pos.Y = -pos.Y;
             Vector2 textOffset = new Vector2(-40, -160);

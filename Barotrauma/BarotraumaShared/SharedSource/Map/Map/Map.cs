@@ -735,7 +735,7 @@ namespace Barotrauma
             Location startLocation = Locations.MinBy(l => l.MapPosition.X);
             if (LocationType.Prefabs.TryGet("outpost", out LocationType startLocationType))
             {
-                startLocation.ChangeType(campaign, startLocationType, createStores: false);
+                mapLocationTypeGenerator.ChangeLocationTypeAndName(campaign, startLocation, startLocationType);
                 mapLocationTypeGenerator.AddToFilled(startLocation);
             }
 

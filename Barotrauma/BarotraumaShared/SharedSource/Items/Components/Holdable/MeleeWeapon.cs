@@ -538,8 +538,8 @@ namespace Barotrauma.Items.Components
             }
             if (targetEntity != null)
             {
-                ApplyStatusEffects(conditionalActionType, 1.0f, targetCharacter, targetLimb, useTarget: targetEntity, user: user, afflictionMultiplier: damageMultiplier);
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, useTarget: targetEntity, user: user, afflictionMultiplier: damageMultiplier);
+                ApplyStatusEffects(conditionalActionType, 1.0f, targetCharacter, targetLimb, useTarget: targetEntity, user: user, attackMultiplier: damageMultiplier);
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, useTarget: targetEntity, user: user, attackMultiplier: damageMultiplier);
             }
 
             if (DeleteOnUse)

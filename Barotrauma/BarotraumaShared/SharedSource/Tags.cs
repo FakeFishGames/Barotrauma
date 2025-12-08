@@ -52,6 +52,7 @@ public static class Tags
     public static readonly Identifier ChairItem = "chair".ToIdentifier();
     public static readonly Identifier ArtifactHolder = "artifactholder".ToIdentifier();
     public static readonly Identifier Thalamus = "thalamus".ToIdentifier();
+    public static readonly Identifier GeneticResearchStation = "geneticresearchstation".ToIdentifier();
 
     public static readonly Identifier IgnoreThis = "ignorethis".ToIdentifier();
     public static readonly Identifier UnignoreThis = "unignorethis".ToIdentifier();

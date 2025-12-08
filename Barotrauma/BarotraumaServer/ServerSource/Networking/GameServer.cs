@@ -1845,6 +1845,9 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
+                        //client presumably isn't afk if they clicked to start a round
+                        sender.AFK = false;
+
                         bool continueCampaign = inc.ReadBoolean();
                         if (mpCampaign != null && mpCampaign.GameOver || continueCampaign)
                         {
@@ -2030,7 +2033,8 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (!FileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
+                //don't send the campaign save if there's any other transfers running (client waiting for subs, mods, or already transferring the campaign save)
+                if (FileSender.ActiveTransfers.None(t => t.Connection == c.Connection))
                 {
                     FileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.DataPath.SavePath);
                     c.LastCampaignSaveSendTime = (campaign.LastSaveID, (float)NetTime.Now);
@@ -3057,7 +3061,7 @@ namespace Barotrauma.Networking
                     WayPoint jobItemSpawnPoint = mainSubWaypoints != null ? mainSubWaypoints[i] : spawnWaypoints[i];
 
                     Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, spawnWaypoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, isRemotePlayer: true, hasAi: false);
-                    spawnedCharacter.AnimController.Frozen = true;
+                    //spawnedCharacter.AnimController.Frozen = true;
                     spawnedCharacter.TeamID = teamID;
                     teamClients[i].Character = spawnedCharacter;
                     var characterData = campaign?.GetClientCharacterData(teamClients[i]);
@@ -4302,7 +4306,7 @@ namespace Barotrauma.Networking
 
         public void SetClientCharacter(Client client, Character newCharacter)
         {
-            if (client == null) return;
+            if (client == null) { return; }
 
             //the client's previous character is no longer a remote player
             if (client.Character != null)
@@ -4328,13 +4332,14 @@ namespace Barotrauma.Networking
                     newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
                 }
 
-                if (newCharacter.Info != null && newCharacter.Info.Character == null)
+                if (newCharacter.Info is { Character: null })
                 {
                     newCharacter.Info.Character = newCharacter;
                 }
 
                 newCharacter.SetOwnerClient(client);
                 newCharacter.Enabled = true;
+                newCharacter.AnimController.Frozen = false;
                 client.Character = newCharacter;
                 client.CharacterInfo = newCharacter.Info;
                 CreateEntityEvent(newCharacter, new Character.ControlEventData(client));

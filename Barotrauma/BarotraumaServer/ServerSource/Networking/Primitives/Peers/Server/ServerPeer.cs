@@ -55,13 +55,13 @@ namespace Barotrauma.Networking
                 PasswordRetries = 0;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime + Timing.Step * 3.0;
-                TimeOut = NetworkConnection.TimeoutThreshold;
+                TimeOut = NetworkConnection.TimeoutThresholdNotInGame;
                 AuthSessionStarted = false;
             }
 
             public void Heartbeat()
             {
-                TimeOut = NetworkConnection.TimeoutThreshold;
+                TimeOut = NetworkConnection.TimeoutThresholdNotInGame;
             }
         }
 
@@ -124,7 +124,7 @@ namespace Barotrauma.Networking
 
         protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc, ConnectionInitialization initializationStep)
         {
-            pendingClient.TimeOut = NetworkConnection.TimeoutThreshold;
+            pendingClient.TimeOut = NetworkConnection.TimeoutThresholdNotInGame;
 
             if (pendingClient.InitializationStep != initializationStep) { return; }
 

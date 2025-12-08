@@ -1223,6 +1223,7 @@ namespace Barotrauma
                 if (otherCharacter.SelectedCharacter == null || 
                     !otherCharacter.SelectedCharacter.IsDead ||
                     otherCharacter.SelectedCharacter.TeamID != Character.TeamID ||
+                    otherCharacter.IsPet ||
                     otherCharacter.IsInstigator)
                 {
                     continue;

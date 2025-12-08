@@ -208,19 +208,30 @@ namespace Barotrauma
                 isEnabled = value;
                 try
                 {
-                    if (isEnabled) FarseerBody.Enabled = isPhysEnabled; else FarseerBody.Enabled = false;
+                    FarseerBody.Enabled = isEnabled && isPhysEnabled;
                 }
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = " + value + " (" + isPhysEnabled + ")", e);
-                    if (UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + UserData.GetType().ToString(), Color.Red);
-                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", Color.Red);
-                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", Color.Red);
-                    if (FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
-
+                    if (UserData != null)
+                    {
+                        DebugConsole.NewMessage("PhysicsBody UserData: " + UserData.GetType(), Color.Red);
+                    }
+                    if (GameMain.World.ContactManager == null)
+                    {
+                        DebugConsole.NewMessage("ContactManager is null!", Color.Red);
+                    }
+                    else if (GameMain.World.ContactManager.BroadPhase == null)
+                    {
+                        DebugConsole.NewMessage("Broadphase is null!", Color.Red);
+                    }
+                    if (FarseerBody.FixtureList == null)
+                    {
+                        DebugConsole.NewMessage("FixtureList is null!", Color.Red);
+                    }
                     if (UserData is Entity entity)
                     {
-                        DebugConsole.NewMessage("Entity \"" + entity.ToString() + "\" removed!", Color.Red);
+                        DebugConsole.NewMessage("Entity \"" + entity + "\" removed!", Color.Red);
                     }
                 }
             }

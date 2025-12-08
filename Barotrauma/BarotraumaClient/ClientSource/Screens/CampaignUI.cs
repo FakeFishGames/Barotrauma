@@ -354,9 +354,11 @@ namespace Barotrauma
             {
                 List<Mission> availableMissions = currentDisplayLocation.GetMissionsInConnection(connection).Where(m => m.Prefab.ShowInMenus || GameMain.DebugDraw).ToList();
 
-                if (!availableMissions.Any()) { availableMissions.Insert(0, null); }
+                if (availableMissions.None()) { availableMissions.Insert(0, null); }
 
                 availableMissions.AddRange(location.AvailableMissions.Where(m => m.Locations[0] == m.Locations[1]));
+                //show side objectives last
+                availableMissions.Sort((m1, m2) => (m1?.Prefab.IsSideObjective ?? false).CompareTo(m2?.Prefab.IsSideObjective ?? false));
 
                 missionList.Content.ClearChildren();
 
@@ -390,6 +392,10 @@ namespace Barotrauma
                     };
 
                     LocalizedString missionName = mission?.Name ?? TextManager.Get("NoMission");
+                    if (mission is { Prefab.IsSideObjective: true })
+                    {
+                        missionName = TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), missionName);
+                    }
                     if (GameMain.DebugDraw && mission != null)
                     {
                         if (!mission.Prefab.ShowInMenus) { missionName = $"[HIDDEN] {missionName}"; }
@@ -406,7 +412,7 @@ namespace Barotrauma
                     else
                     {
                         GUITickBox tickBox = null;
-                        if (!isMissionInNextLocation && mission.Prefab.ShowInMenus)
+                        if (!isMissionInNextLocation && mission.Prefab.ShowInMenus && !mission.Prefab.IsSideObjective)
                         {
                             tickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, missionNameBlock.RectTransform, anchor: Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionNameBlock.Padding.X, 0) }, label: string.Empty)
                             {
@@ -539,7 +545,7 @@ namespace Barotrauma
                     int missionCount = 0;
                     if (GameMain.GameSession != null && Campaign.Map?.CurrentLocation?.SelectedMissions != null)
                     {
-                        missionCount = Campaign.Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location) && !GameMain.GameSession.Missions.Contains(m));
+                        missionCount = Campaign.Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location) && !GameMain.GameSession.Missions.Contains(m) && !m.Prefab.IsSideObjective);
                     }
                     return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{missionCount}/{Campaign.Settings.TotalMaxMissionCount}");
                 }
@@ -551,9 +557,9 @@ namespace Barotrauma
                 OnClicked = (GUIButton btn, object obj) =>
                 {
                     if (missionList.Content.FindChild(c => c is GUITickBox tickBox && tickBox.Selected, recursive: true) == null &&
-                        missionList.Content.Children.Any(c => c.UserData is Mission { Prefab.ShowInMenus: true } mission && mission.Locations.Contains(Campaign?.Map?.CurrentLocation)))
+                        missionList.Content.Children.Any(c => c.UserData is Mission { Prefab.ShowInMenus: true, Prefab.IsSideObjective: false } mission && mission.Locations.Contains(Campaign?.Map?.CurrentLocation)))
                     {
-                        var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                        var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), [TextManager.Get("yes"), TextManager.Get("no")]);
                         noMissionVerification.Buttons[0].OnClicked = (btn, userdata) =>
                         {
                             StartRound?.Invoke();
@@ -648,7 +654,7 @@ namespace Barotrauma
 
         private void UpdateMaxMissions(Location location)
         {
-            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.TotalMaxMissionCount;
+            hasMaxMissions = Campaign.NumberOfSelectableMissionsAtLocation(location) >= Campaign.Settings.TotalMaxMissionCount;
         }
 
         public readonly struct PlayerBalanceElement

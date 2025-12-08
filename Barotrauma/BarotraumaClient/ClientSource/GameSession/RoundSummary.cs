@@ -173,7 +173,8 @@ namespace Barotrauma
             List<Mission> missionsToDisplay = new List<Mission>(selectedMissions.Where(m => m.Prefab.ShowInMenus));
             if (startLocation != null)
             {
-                foreach (Mission mission in startLocation.SelectedMissions)
+                //side objectives can't be selected manually (they're always selected), we need to add them separately from SelectedMissions
+                foreach (Mission mission in startLocation.SelectedMissions.Union(startLocation.AvailableMissions.Where(m => m.Prefab.IsSideObjective)))
                 {
                     if (missionsToDisplay.Contains(mission)) { continue; }
                     if (!mission.Prefab.ShowInMenus) { continue; }

@@ -260,8 +260,16 @@ namespace Barotrauma
                                 {
                                     continue;
                                 }
-                                split[j] = split[j].Replace(" & ", " &amp; ");
-                                xmlContentByLanguage[languageName].Add($"<{split[0]}>{split[j]}</{split[0]}>");
+
+                                string textContent = split[j];
+                                if (textContent == "#NAME?")
+                                {
+                                    throw new Exception(
+                                        $"Error while converting csv to xml: #NAME? value found on line {row}, language: {languageName}." +
+                                        " This indicates a missing value in the csv file (some text got accidentally converted to a broken formula in the localization sheet?).");
+                                }
+                                textContent = textContent.Replace(" & ", " &amp; ");
+                                xmlContentByLanguage[languageName].Add($"<{split[0]}>{textContent}</{split[0]}>");
                             }
                         }
                     }

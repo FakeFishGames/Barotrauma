@@ -53,6 +53,16 @@ namespace Barotrauma
         const float LeakThreshold = 0.1f;
         const float BigGapThreshold = 0.7f;
 
+        /// <summary>
+        /// How <see cref="Gap.open">open</see> the gap on a partially broken wall section is at most (when it's below <see cref="BigGapThreshold"/>, after which it lerps up to <see cref="LargeGapOpenness"/>).
+        /// </summary>
+        public const float SmallGapOpenness = 0.35f;
+
+        /// <summary>
+        /// How <see cref="Gap.open">open</see> the gap on a fully broken wall section is.
+        /// </summary>
+        public const float LargeGapOpenness = 0.75f;
+
         public override ContentPackage ContentPackage => Prefab?.ContentPackage;
 
 #if CLIENT
@@ -63,6 +73,9 @@ namespace Barotrauma
         private readonly Dictionary<Body, Vector2> bodyDimensions = new Dictionary<Body, Vector2>();
 
         private static Explosion explosionOnBroken;
+
+        public delegate void OnHealthChangedHandler(Character attacker, float damage);
+        public OnHealthChangedHandler OnHealthChanged;
 
         [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody)]
         public bool Indestructible
@@ -1332,11 +1345,11 @@ namespace Barotrauma
                 float gapOpen = 0;
                 if (damageRatio > BigGapThreshold)
                 {
-                    gapOpen = MathHelper.Lerp(0.35f, 0.75f, MathUtils.InverseLerp(BigGapThreshold, 1.0f, damageRatio));
+                    gapOpen = MathHelper.Lerp(SmallGapOpenness, LargeGapOpenness, MathUtils.InverseLerp(BigGapThreshold, 1.0f, damageRatio));
                 }
                 else if (damageRatio > LeakThreshold)
                 {
-                    gapOpen = MathHelper.Lerp(0f, 0.35f, MathUtils.InverseLerp(LeakThreshold, BigGapThreshold, damageRatio));
+                    gapOpen = MathHelper.Lerp(0f, SmallGapOpenness, MathUtils.InverseLerp(LeakThreshold, BigGapThreshold, damageRatio));
                 }
                 gap.Open = gapOpen;
 
@@ -1355,16 +1368,20 @@ namespace Barotrauma
             Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, MaxHealth);
             HasDamage = Sections.Any(s => s.damage > 0.0f);
 
-            if (attacker != null && damageDiff != 0.0f)
+            if (damageDiff != 0.0f)
             {
-                HumanAIController.StructureDamaged(this, damageDiff, attacker);
-                OnHealthChangedProjSpecific(attacker, damageDiff);
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                OnHealthChanged?.Invoke(attacker, damageDiff);
+                if (attacker != null)
                 {
-                    if (damageDiff < 0.0f)
+                    HumanAIController.StructureDamaged(this, damageDiff, attacker);
+                    OnHealthChangedProjSpecific(attacker, damageDiff);
+                    if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                     {
-                        attacker.Info?.ApplySkillGain(Barotrauma.Tags.MechanicalSkill,
-                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage);
+                        if (damageDiff < 0.0f)
+                        {
+                            attacker.Info?.ApplySkillGain(Barotrauma.Tags.MechanicalSkill,
+                                -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage);
+                        }
                     }
                 }
             }
@@ -1775,9 +1792,9 @@ namespace Barotrauma
                 //3. not found, attempt to find a prefab that uses the previous name as an identifier
                 if (prefab == null) { prefab = MapEntityPrefab.Find(null, name) as StructurePrefab; }
             }
-            else
+            else if (StructurePrefab.Prefabs.TryGet(identifier, out StructurePrefab structurePrefab))
             {
-                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
+                prefab = structurePrefab;
             }
             return prefab;
         }

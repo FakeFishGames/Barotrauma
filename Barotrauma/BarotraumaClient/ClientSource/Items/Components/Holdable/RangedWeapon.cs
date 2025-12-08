@@ -28,8 +28,8 @@ namespace Barotrauma.Items.Components
             set
             {
                 _chargeSoundWindupPitchSlide = new Vector2(
-                        Math.Max(value.X, SoundChannel.MinFrequencyMultiplier), 
-                        Math.Min(value.Y, SoundChannel.MaxFrequencyMultiplier));
+                        MathHelper.Clamp(value.X, SoundChannel.MinFrequencyMultiplier, SoundChannel.MaxFrequencyMultiplier),
+                        MathHelper.Clamp(value.Y, SoundChannel.MinFrequencyMultiplier, SoundChannel.MaxFrequencyMultiplier));
             }
         }
         private Vector2 _chargeSoundWindupPitchSlide;

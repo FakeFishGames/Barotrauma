@@ -832,7 +832,7 @@ namespace Barotrauma.Items.Components
 
         public float FabricationDegreeOfSuccess(Character character, ImmutableArray<Skill> skills)
         {
-            if (skills.Length == 0) { return 1.0f; }
+            if (skills.Length == 0) { return 0.5f; }
             if (character == null) { return 0.0f; }
 
             float minDegreeOfSuccess = 1.0f;

@@ -562,6 +562,11 @@ namespace Barotrauma.Networking
                 {
                     SendLobbyUpdate();
                 }
+                if (Timing.TotalTime > LastMissingCampaignSubRequestTime)
+                {
+                    TryRequestMissingCampaignSubs();
+                    LastMissingCampaignSubRequestTime = Timing.TotalTime + MissingCampaignSubRequestInterval;
+                }
             }
 
             if (ServerSettings.VoiceChatEnabled)
@@ -2282,13 +2287,7 @@ namespace Barotrauma.Networking
                                     if (GameMain.Client.IsServerOwner) { RequestSelectMode(modeIndex); }
                                 }
 
-                                if (GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
-                                {
-                                    foreach (SubmarineInfo sub in ServerSubmarines.Where(s => !ServerSettings.HiddenSubs.Contains(s.Name)))
-                                    {
-                                        GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Campaign);
-                                    }
-                                }
+                                TryRequestMissingCampaignSubs();
 
                                 GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);
                                 GameMain.NetLobbyScreen.SetAllowAFK(allowAFK);
@@ -2642,6 +2641,21 @@ namespace Barotrauma.Networking
             msg.WriteUInt16(bot.ID);
             msg.WriteBoolean(pendingHire);
             ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        private double LastMissingCampaignSubRequestTime;
+
+        const double MissingCampaignSubRequestInterval = 10.0f;
+
+        private void TryRequestMissingCampaignSubs()
+        {
+            if (GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
+            {
+                foreach (SubmarineInfo sub in ServerSubmarines.Where(s => !ServerSettings.HiddenSubs.Contains(s.Name)))
+                {
+                    GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Campaign);
+                }
+            }
         }
 
         public void RequestFile(FileTransferType fileType, string file, string fileHash)

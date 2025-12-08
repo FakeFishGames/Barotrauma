@@ -641,8 +641,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < hits.Count; i++)
             {
                 var h = hits[i];
-                item.SetTransform(h.Point, rotation);
-                item.Submarine = h.Submarine;
+                item.SetTransform(h.Point, rotation, forceSubmarine: h.Submarine);
                 item.UpdateTransform();
                 if (HandleProjectileCollision(h.Fixture, h.Normal, Vector2.Zero))
                 {

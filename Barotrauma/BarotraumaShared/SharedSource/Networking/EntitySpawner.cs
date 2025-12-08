@@ -94,6 +94,10 @@ namespace Barotrauma
                             }
                         }
                     }
+                    if (Inventory.Owner is Character { DisabledByEvent: true })
+                    {
+                        spawnedItem.IsActive = false;
+                    }
                 }
                 else
                 {
@@ -363,7 +367,10 @@ namespace Barotrauma
                 if (GameMain.Server != null)
                 {
                     Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
-                    if (client != null) GameMain.Server.SetClientCharacter(client, null);
+                    if (client != null)
+                    {
+                        GameMain.Server.SetClientCharacter(client, null);
+                    }
                 }
 #endif
             }

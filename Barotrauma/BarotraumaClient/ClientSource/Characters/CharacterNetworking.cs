@@ -23,8 +23,8 @@ namespace Barotrauma
                         memState.Clear();
                         return;
                     }
-
-                    //freeze AI characters if more than x seconds have passed since last update from the server
+                    
+                    //freeze other characters (than the controlled) if more than x seconds have passed since last update from the server
                     if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - NetConfig.FreezeCharacterIfPositionDataMissingDelay)
                     {
                         AnimController.Frozen = true;

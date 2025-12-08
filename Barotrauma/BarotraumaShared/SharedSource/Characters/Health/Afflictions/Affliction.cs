@@ -85,6 +85,8 @@ namespace Barotrauma
 
         public double AppliedAsSuccessfulTreatmentTime, AppliedAsFailedTreatmentTime;
 
+        public bool AffectedByAttackMultipliers => Prefab.AffectedByAttackMultipliers;
+
         public float Duration;
 
         /// <summary>

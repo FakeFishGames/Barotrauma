@@ -403,14 +403,19 @@ namespace Barotrauma
             return (Duration == 0.0f) ? dmg : dmg * deltaTime;
         }
 
-        public float GetTotalDamage(bool includeStructureDamage = false)
+        /// <summary>
+        /// Returns the total damage (vitality decrease) this attack causes on characters.
+        /// </summary>
+        public float GetTotalCharacterDamage()
         {
-            float totalDamage = includeStructureDamage ? StructureDamage : 0.0f;
+            float totalDamage = 0.0f;
             foreach (Affliction affliction in Afflictions.Keys)
             {
-                totalDamage += affliction.GetVitalityDecrease(null);
+                float afflictionVitalityDecrease =  affliction.GetVitalityDecrease(null);
+                if (affliction.AffectedByAttackMultipliers) { afflictionVitalityDecrease *= DamageMultiplier; }
+                totalDamage += afflictionVitalityDecrease;
             }
-            return totalDamage * DamageMultiplier;
+            return totalDamage;
         }
 
         public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f)

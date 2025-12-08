@@ -300,7 +300,9 @@ namespace Barotrauma
                     return;
                 }
                 Submarine refSub = GetReferenceSub(acceptRemoteControlledSubs: true);
-                if (Submarine.MainSubs.Length == 2 && Submarine.MainSubs[1] != null)
+                //randomly choose which main sub to spawn the monsters around if there's 2 player subs (e.g. in the PvP mode)
+                if (Submarine.MainSubs.Length == 2 && 
+                    Submarine.MainSubs[1] is { Info.Type: SubmarineType.Player })
                 {
                     refSub = Submarine.MainSubs.GetRandom(Rand.RandSync.Unsynced);
                 }

@@ -63,10 +63,7 @@ namespace Barotrauma.Items.Components
             /// This can be used to make them additionally work the other way around, periodically getting the current value of the property from the item and refreshing the UI.
             /// </summary>
             public float GetValueInterval { get; set; } = -1.0f;
-
-#if CLIENT
             public float GetValueTimer;
-#endif
 
             public string Name => "CustomInterfaceElement";
 
@@ -248,7 +245,7 @@ namespace Barotrauma.Items.Components
                     ciElement.Label = "Signal out " + customInterfaceElementList.Count(e => e.ContinuousSignal == ciElement.ContinuousSignal);
                 }
                 customInterfaceElementList.Add(ciElement);
-                IsActive |= ciElement.ContinuousSignal;
+                IsActive |= ciElement.ContinuousSignal || ciElement.GetValueInterval > 0.0f;
             }
 
             InitProjSpecific();
@@ -348,13 +345,10 @@ namespace Barotrauma.Items.Components
             //make sure the clients know about the states of the checkboxes and text fields
             if (customInterfaceElementList.Any())
             {
-                if (item.FullyInitialized)
+                CoroutineManager.Invoke(() =>
                 {
-                    CoroutineManager.Invoke(() =>
-                    {
-                        if (!item.Removed) { item.CreateServerEvent(this); }
-                    }, delay: 0.1f);
-                }
+                    if (item.FullyInitialized && !item.Removed) { item.CreateServerEvent(this); }
+                }, delay: 0.1f);
             }
 #endif
         }
@@ -418,6 +412,16 @@ namespace Barotrauma.Items.Components
         {
             foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
             {
+                if (ciElement.GetValueInterval > 0.0f)
+                {
+                    ciElement.GetValueTimer -= deltaTime;
+                    if (ciElement.GetValueTimer <= 0.0f)
+                    {
+                        SetSignalToPropertyValue(ciElement);
+                        ciElement.GetValueTimer = ciElement.GetValueInterval;
+                    }
+                }
+
                 if (!ciElement.ContinuousSignal && ciElement.PropertyName != "Voltage") { continue; }
                 //TODO: allow changing output when a tickbox is not selected
                 if (!string.IsNullOrEmpty(ciElement.Signal) && ciElement.Connection != null)

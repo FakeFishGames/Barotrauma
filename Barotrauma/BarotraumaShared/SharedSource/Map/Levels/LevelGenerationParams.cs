@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class LevelGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
+    internal partial class LevelGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
     {
         public readonly static PrefabCollection<LevelGenerationParams> LevelParams = new PrefabCollection<LevelGenerationParams>();
 

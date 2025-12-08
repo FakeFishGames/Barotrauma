@@ -769,7 +769,7 @@ namespace Barotrauma
                 Attack attack = GetAttackDefinition(weapon);
                 if (attack != null)
                 {
-                    lethalDmg = attack.GetTotalDamage();
+                    lethalDmg = attack.GetTotalCharacterDamage();
                     float max = lethalDmg + 1;
                     if (weapon.Item.HasTag(Tags.StunnerItem))
                     {
@@ -795,7 +795,7 @@ namespace Barotrauma
                     Attack attack = GetAttackDefinition(weapon);
                     if (attack != null)
                     {
-                        lethalDmg = attack.GetTotalDamage();
+                        lethalDmg = attack.GetTotalCharacterDamage();
                         float stunDmg = ApproximateStunDamage(weapon, attack);
                         float diff = stunDmg - lethalDmg;
                         if (diff < 0)
@@ -809,7 +809,7 @@ namespace Barotrauma
             {
                 // Cannot do stun damage -> use the melee damage to determine the priority.
                 Attack attack = GetAttackDefinition(weapon);
-                priority = attack?.GetTotalDamage() ?? priority / 2;
+                priority = attack?.GetTotalCharacterDamage() ?? priority / 2;
             }
             // Reduce the priority of the weapon, if we don't have requires skills to use it.
             float startPriority = priority;
@@ -960,7 +960,7 @@ namespace Barotrauma
             Attack attack = GetAttackDefinition(weapon);
             if (attack != null)
             {
-                lethalDmg = attack.GetTotalDamage();
+                lethalDmg = attack.GetTotalCharacterDamage();
             }
             return lethalDmg;
         }

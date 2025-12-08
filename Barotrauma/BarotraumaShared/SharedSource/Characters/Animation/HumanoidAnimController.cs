@@ -478,21 +478,6 @@ namespace Barotrauma
             aiming = false;
             wasAimingMelee = aimingMelee;
             aimingMelee = false;
-            if (!shouldHangWithRope)
-            {
-                StopHangingWithRope();
-            }
-            if (!shouldHoldToRope)
-            {
-                StopHoldingToRope();
-            }
-            if (!shouldBeDraggedWithRope)
-            {
-                StopGettingDraggedWithRope();
-            }
-            shouldHoldToRope = false;
-            shouldHangWithRope = false;
-            shouldBeDraggedWithRope = false;
         }
 
         void UpdateStanding()
@@ -1256,34 +1241,25 @@ namespace Barotrauma
             float prevVitality = target.Vitality;
             bool wasCritical = prevVitality < 0.0f;
 
-            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
+            float cprBoost = character.GetStatValue(StatTypes.CPRBoost);
+            float skill = character.GetSkillLevel(Tags.MedicalSkill);
+            bool oxygenAvailable = target.OxygenAvailable >= CharacterHealth.InsufficientOxygenThreshold;
+
+            //Serverside code
+            if (oxygenAvailable && GameMain.NetworkMember is not { IsClient: true })
             {
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them        
-            }
-
-            float cprBoost = character.GetStatValue(StatTypes.CPRBoost);
-
-            int skill = (int)character.GetSkillLevel(Tags.MedicalSkill);
-
-            if (GameMain.NetworkMember is not { IsClient: true })
-            {
                 if (cprBoost >= 1f)
                 {
                     //prevent the patient from suffocating no matter how fast their oxygen level is dropping
                     target.Oxygen = Math.Max(target.Oxygen, -10.0f);
                 }
-            }
-
-            //Serverside code
-            if (GameMain.NetworkMember is not { IsClient: true })
-            {
                 if (target.Oxygen < -10.0f)
                 {
                     //stabilize the oxygen level but don't allow it to go positive and revive the character yet
                     float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
                     stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
-                    character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
-                    if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
+                    target.Oxygen += stabilizationAmount * deltaTime;
                 }
             }
 
@@ -1317,7 +1293,7 @@ namespace Barotrauma
                 }
                 //need to CPR for at least a couple of seconds before the target can be revived
                 //(reviving the target when the CPR has barely started looks strange)
-                if (cprAnimTimer > 2.0f && GameMain.NetworkMember is not { IsClient: true })
+                if (oxygenAvailable && cprAnimTimer > 2.0f && GameMain.NetworkMember is not { IsClient: true })
                 {
                     float reviveChance = skill * CPRSettings.Active.ReviveChancePerSkill;
                     reviveChance = (float)Math.Pow(reviveChance, CPRSettings.Active.ReviveChanceExponent);
@@ -1338,7 +1314,7 @@ namespace Barotrauma
             //got the character back into a non-critical state, increase medical skill
             //BUT only if it has been more than 10 seconds since the character revived someone
             //otherwise it's easy to abuse the system by repeatedly reviving in a low-oxygen room 
-            if (!target.IsDead)
+            if (!target.IsDead || !oxygenAvailable)
             {
                 target.CharacterHealth.RecalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)

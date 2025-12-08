@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
                 });
             initializationStep = ConnectionInitialization.AuthInfoAndVersion;
 
-            timeout = NetworkConnection.TimeoutThreshold;
+            timeout = NetworkConnection.TimeoutThresholdNotInGame;
             heartbeatTimer = 1.0;
 
             isActive = true;
@@ -139,7 +139,7 @@ namespace Barotrauma.Networking
 
             timeout = Screen.Selected == GameMain.GameScreen
                 ? NetworkConnection.TimeoutThresholdInGame
-                : NetworkConnection.TimeoutThreshold;
+                : NetworkConnection.TimeoutThresholdNotInGame;
 
             var (_, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
 

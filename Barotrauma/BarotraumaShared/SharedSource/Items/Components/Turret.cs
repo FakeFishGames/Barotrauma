@@ -268,7 +268,7 @@ namespace Barotrauma.Items.Components
         public float RotationSpeedHighSkill { get; private set; }
         
         [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "Optional screen tint color when the item is being operated (R,G,B,A)."), 
-         Editable]
+         Editable(TransferToSwappedItem = true)]
         public Color HudTint { get; set; }
         
         [Header(localizedTextTag: "sp.turret.AutoOperate.propertyheader")]

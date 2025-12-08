@@ -155,12 +155,16 @@ namespace Barotrauma
             return filledLocations.Contains(location);
         }
         
-        public static void ChangeLocationTypeAndName(CampaignMode campaign, Location location, LocationType suitableLocationType)
+        public void ChangeLocationTypeAndName(CampaignMode campaign, Location location, LocationType suitableLocationType)
         {
             location.ChangeType(campaign, suitableLocationType, createStores: false, unlockInitialMissions: false);
             if (!suitableLocationType.ForceLocationName.IsEmpty)
             {
                 location.ForceName(suitableLocationType.ForceLocationName);
+            }
+            else
+            {
+                location.AssignRandomName(location.Type, Rand.GetRNG(Rand.RandSync.ServerAndClient), existingLocations: map.Locations);
             }
         }
         

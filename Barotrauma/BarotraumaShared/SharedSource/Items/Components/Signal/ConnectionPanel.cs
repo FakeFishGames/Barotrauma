@@ -78,10 +78,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
-                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
+                        Connections.Add(new Connection(subElement, connectionIndex: Connections.Count, this, IdRemap.DiscardId, isItemSwap: false));
                         break;
                     case "output":
-                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
+                        Connections.Add(new Connection(subElement, connectionIndex: Connections.Count, this, IdRemap.DiscardId, isItemSwap: false));
                         break;
                 }
             }
@@ -293,10 +293,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":
-                        loadedConnections.Add(new Connection(subElement, this, idRemap));
+                        loadedConnections.Add(new Connection(subElement, connectionIndex: loadedConnections.Count, this, idRemap, isItemSwap));
                         break;
                     case "output":
-                        loadedConnections.Add(new Connection(subElement, this, idRemap));
+                        loadedConnections.Add(new Connection(subElement, connectionIndex: loadedConnections.Count, this, idRemap, isItemSwap));
                         break;
                 }
             }

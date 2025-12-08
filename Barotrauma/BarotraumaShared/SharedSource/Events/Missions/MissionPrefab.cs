@@ -8,9 +8,9 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class MissionPrefab : PrefabWithUintIdentifier
+    internal sealed partial class MissionPrefab : PrefabWithUintIdentifier, IImplementsVariants<MissionPrefab>
     {
-        public static readonly PrefabCollection<MissionPrefab> Prefabs = new PrefabCollection<MissionPrefab>();
+        public static readonly PrefabCollection<MissionPrefab> Prefabs = [];
 
         /// <summary>
         /// The keys here are for backwards compatibility, tying the old mission types to the appropriate class. 
@@ -42,7 +42,7 @@ namespace Barotrauma
             { "Combat".ToIdentifier(), typeof(CombatMission) }
         };
 
-        public static readonly HashSet<Identifier> HiddenMissionTypes = new HashSet<Identifier>() { "GoTo".ToIdentifier(), "End".ToIdentifier() };
+        public static readonly HashSet<Identifier> HiddenMissionTypes = ["GoTo".ToIdentifier(), "End".ToIdentifier()];
 
         public class ReputationReward
         {
@@ -58,110 +58,117 @@ namespace Barotrauma
             }
         }
 
-        private readonly ConstructorInfo constructor;
+        private ConstructorInfo constructor;
 
-        public readonly Identifier Type;
+        public Identifier Type { get; private set; }
 
-        public readonly Type MissionClass;
+        public Type MissionClass { get; private set; }
 
-        public readonly bool MultiplayerOnly, SingleplayerOnly;
+        public bool MultiplayerOnly { get; private set; }
+        public bool SingleplayerOnly { get; private set; }
 
-        public readonly Identifier TextIdentifier;
+        public Identifier TextIdentifier { get; private set; }
 
-        public readonly ImmutableHashSet<Identifier> Tags;
+        public ImmutableHashSet<Identifier> Tags { get; private set; }
 
-        public readonly LocalizedString Name;
-        public readonly LocalizedString Description;
-        public readonly LocalizedString SuccessMessage;
-        public readonly LocalizedString FailureMessage;
-        public readonly LocalizedString SonarLabel;
-        public readonly Identifier SonarIconIdentifier;
+        public LocalizedString Name { get; private set; }
+        public LocalizedString Description { get; private set; }
+        public LocalizedString SuccessMessage { get; private set; }
+        public LocalizedString FailureMessage { get; private set; }
+        public LocalizedString SonarLabel { get; private set; }
+        public Identifier SonarIconIdentifier { get; private set; }
 
-        public readonly Identifier AchievementIdentifier;
+        public Identifier AchievementIdentifier { get; private set; }
 
-        public readonly ImmutableList<ReputationReward> ReputationRewards;
+        public ImmutableList<ReputationReward> ReputationRewards { get; private set; }
 
-        public readonly List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>
-            DataRewards = new List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>();
+        public readonly List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)> DataRewards = [];
 
-        public readonly int Commonness;
+        public int Commonness { get; private set; }
         /// <summary>
         /// Displayed difficulty (indicator)
         /// </summary>
-        public readonly int? Difficulty;
+        public int? Difficulty { get; private set; }
         public const int MinDifficulty = 1, MaxDifficulty = 4;
         /// <summary>
         /// The actual minimum difficulty of the level allowed for this mission to trigger.
         /// </summary>
-        public readonly int MinLevelDifficulty = 0;
+        public int MinLevelDifficulty { get; private set; } = 0;
         /// <summary>
         /// The actual maximum difficulty of the level allowed for this mission to trigger.
         /// </summary>
-        public readonly int MaxLevelDifficulty = 100;
+        public int MaxLevelDifficulty { get; private set; } = 100;
 
-        public readonly int Reward;
+        public int Reward { get; private set; }
 
-        public readonly float ExperienceMultiplier;
+        public float ExperienceMultiplier { get; private set; }
 
         // The titles and bodies of the popup messages during the mission, shown when the state of the mission changes. The order matters.
-        public readonly ImmutableArray<LocalizedString> Headers;
-        public readonly ImmutableArray<LocalizedString> Messages;
+        public ImmutableArray<LocalizedString> Headers { get; private set; }
+        public ImmutableArray<LocalizedString> Messages { get; private set; }
 
-        public readonly bool AllowRetry;
+        public bool AllowRetry { get; private set; }
 
-        public readonly bool ShowSonarLabels;
+        public bool ShowSonarLabels { get; private set; }
 
-        public readonly bool ShowInMenus, ShowStartMessage;
+        public bool ShowInMenus { get; private set; }
+        public bool ShowStartMessage { get; private set; }
 
-        public readonly bool IsSideObjective;
+        /// <summary>
+        /// Makes the mission not count for the maximum mission limit, and forces it to always be selected when it's available in a level.
+        /// </summary>
+        public bool IsSideObjective { get; private set; }
 
-        public readonly bool AllowOtherMissionsInLevel;
+        public bool AllowOtherMissionsInLevel { get; private set; }
 
-        public readonly bool RequireWreck, RequireRuin, RequireBeaconStation, RequireThalamusWreck;
-        public readonly bool SpawnBeaconStationInMiddle;
+        public bool RequireWreck { get; private set; }
+        public bool RequireRuin { get; private set; }
+        public bool RequireBeaconStation { get; private set; }
+        public bool RequireThalamusWreck { get; private set; }
+        public bool SpawnBeaconStationInMiddle { get; private set; }
 
-        public readonly bool AllowOutpostNPCs;
+        public bool AllowOutpostNPCs { get; private set; }
 
-        public readonly Identifier ForceOutpostGenerationParameters;
+        public Identifier ForceOutpostGenerationParameters { get; private set; }
 
-        public readonly RespawnMode? ForceRespawnMode;
+        public RespawnMode? ForceRespawnMode { get; private set; }
 
         /// <summary>
         /// If set, the players can choose which outpost is used for the mission (selected from the outposts that have this tag). Only works in multiplayer.
         /// </summary>
-        public readonly Identifier AllowOutpostSelectionFromTag;
+        public Identifier AllowOutpostSelectionFromTag { get; private set; }
 
-        public readonly bool LoadSubmarines = true;
+        public bool LoadSubmarines { get; private set; } = true;
 
         /// <summary>
         /// If enabled, locations this mission takes place in cannot change their type
         /// </summary>
-        public readonly bool BlockLocationTypeChanges;
+        public bool BlockLocationTypeChanges { get; private set; }
 
-        public readonly bool ShowProgressBar;
-        public readonly bool ShowProgressInNumbers;
-        public readonly int MaxProgressState;
-        public readonly LocalizedString ProgressBarLabel;
+        public bool ShowProgressBar { get; private set; }
+        public bool ShowProgressInNumbers { get; private set; }
+        public int MaxProgressState { get; private set; }
+        public LocalizedString ProgressBarLabel { get; private set; }
 
         /// <summary>
         /// The mission can only be received when travelling from a location of the first type to a location of the second type
         /// </summary>
-        public readonly List<(Identifier from, Identifier to)> AllowedConnectionTypes;
+        public List<(Identifier from, Identifier to)> AllowedConnectionTypes { get; private set; }
 
         /// <summary>
         /// The mission can only be received in these location types
         /// </summary>
-        public readonly List<Identifier> AllowedLocationTypes = new List<Identifier>();
+        public readonly List<Identifier> AllowedLocationTypes = [];
 
         /// <summary>
         /// The mission can only happen in locations owned by this faction. In the mission mode, the location is forced to be owned by this faction.
         /// </summary>
-        public readonly Identifier RequiredLocationFaction;
+        public Identifier RequiredLocationFaction { get; private set; }
 
         /// <summary>
         /// Show entities belonging to these sub categories when the mission starts
         /// </summary>
-        public readonly List<string> UnhideEntitySubCategories = new List<string>();
+        public List<string> UnhideEntitySubCategories { get; private set; }
 
         public class TriggerEvent
         {
@@ -186,22 +193,39 @@ namespace Barotrauma
             }
         }
 
-        public readonly List<TriggerEvent> TriggerEvents = new List<TriggerEvent>();
+        public readonly List<TriggerEvent> TriggerEvents = [];
 
         public LocationTypeChange LocationTypeChangeOnCompleted;
 
-        public readonly ContentXElement ConfigElement;
+        private readonly ContentXElement originalElement;
+        public ContentXElement ConfigElement { get; private set; }
+
+        public Identifier VariantOf { get; }
+        public MissionPrefab ParentPrefab { get; set; }
 
         public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
-            ConfigElement = element;
+            ConfigElement = originalElement = element;
 
-            TextIdentifier = element.GetAttributeIdentifier("textidentifier", Identifier);
+            VariantOf = element.VariantOf();
+            if (!VariantOf.IsEmpty) { return; } // Don't read the XML until the PrefabCollection loads the parent.
+            ParseConfigElement();
+        }
 
-            Tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet();
+        public void InheritFrom(MissionPrefab parent)
+        {
+            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement);
+            ParseConfigElement(parent);
+        }
 
-            Name = GetText(element.GetAttributeString("name", ""), "MissionName");
-            Description = GetText(element.GetAttributeString("description", ""), "MissionDescription");
+        private void ParseConfigElement(MissionPrefab variantOf = null)
+        {
+            TextIdentifier = ConfigElement.GetAttributeIdentifier("textidentifier", Identifier);
+
+            Tags = [.. ConfigElement.GetAttributeIdentifierArray("tags", [])];
+
+            Name = GetText(ConfigElement.GetAttributeString("name", ""), "MissionName");
+            Description = GetText(ConfigElement.GetAttributeString("description", ""), "MissionDescription");
 
             LocalizedString GetText(string textTag, string textTagPrefix)
             {
@@ -211,105 +235,100 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return
-                        //prefer finding a text based on the specific text tag defined in the mission config
-                        TextManager.Get(textTag)
-                        //2nd option: the "default" format (MissionName.SomeMission)
-                        .Fallback(TextManager.Get($"{textTagPrefix}.{TextIdentifier}"))
-                        //last option: use the text in the xml as-is with no localization
-                        .Fallback(textTag);
+                    return TextManager.Get(textTag) // Prefer finding a text based on the specific text tag defined in the mission config.
+                           .Fallback(TextManager.Get($"{textTagPrefix}.{TextIdentifier}")) // 2nd option: the "default" format (MissionName.SomeMission).
+                           .Fallback(textTag); // Last option: Use the text in the xml as-is with no localization.
                 }
             }
 
-            Reward = element.GetAttributeInt(nameof(Reward), 1);
-            ExperienceMultiplier = element.GetAttributeFloat(nameof(ExperienceMultiplier), 1.0f);
-            AllowRetry = element.GetAttributeBool(nameof(AllowRetry), false);
-            ShowSonarLabels = element.GetAttributeBool(nameof(ShowSonarLabels), true);
-            ShowInMenus = element.GetAttributeBool(nameof(ShowInMenus), true);
-            ShowStartMessage = element.GetAttributeBool(nameof(ShowStartMessage), true);
-            IsSideObjective = element.GetAttributeBool("sideobjective", false);
+            Reward = ConfigElement.GetAttributeInt(nameof(Reward), 1);
+            ExperienceMultiplier = ConfigElement.GetAttributeFloat(nameof(ExperienceMultiplier), 1f);
+            AllowRetry = ConfigElement.GetAttributeBool(nameof(AllowRetry), false);
+            ShowSonarLabels = ConfigElement.GetAttributeBool(nameof(ShowSonarLabels), true);
+            ShowInMenus = ConfigElement.GetAttributeBool(nameof(ShowInMenus), true);
+            ShowStartMessage = ConfigElement.GetAttributeBool(nameof(ShowStartMessage), true);
+            IsSideObjective = ConfigElement.GetAttributeBool("sideobjective", false);
 
-            RequireWreck = element.GetAttributeBool(nameof(RequireWreck), false);
-            RequireThalamusWreck = element.GetAttributeBool(nameof(RequireThalamusWreck), false);
-            RequireRuin = element.GetAttributeBool(nameof(RequireRuin), false);
-            RequireBeaconStation = element.GetAttributeBool(nameof(RequireBeaconStation), false);
-            SpawnBeaconStationInMiddle = element.GetAttributeBool(nameof(SpawnBeaconStationInMiddle), false);
-            if (RequireThalamusWreck) { RequireWreck = true; }
+            RequireWreck = ConfigElement.GetAttributeBool(nameof(RequireWreck), false);
+            RequireThalamusWreck = ConfigElement.GetAttributeBool(nameof(RequireThalamusWreck), false);
+            RequireRuin = ConfigElement.GetAttributeBool(nameof(RequireRuin), false);
+            RequireBeaconStation = ConfigElement.GetAttributeBool(nameof(RequireBeaconStation), false);
+            SpawnBeaconStationInMiddle = ConfigElement.GetAttributeBool(nameof(SpawnBeaconStationInMiddle), false);
+            RequireWreck |= RequireThalamusWreck;
 
-            LoadSubmarines = element.GetAttributeBool(nameof(LoadSubmarines), true);
+            LoadSubmarines = ConfigElement.GetAttributeBool(nameof(LoadSubmarines), true);
 
-            BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
-            RequiredLocationFaction = element.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
-            Commonness = element.GetAttributeInt(nameof(Commonness), 1);
-            AllowOtherMissionsInLevel = element.GetAttributeBool(nameof(AllowOtherMissionsInLevel), true);
+            BlockLocationTypeChanges = ConfigElement.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
+            RequiredLocationFaction = ConfigElement.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
+            Commonness = ConfigElement.GetAttributeInt(nameof(Commonness), 1);
+            AllowOtherMissionsInLevel = ConfigElement.GetAttributeBool(nameof(AllowOtherMissionsInLevel), true);
 
-            if (element.GetAttribute("difficulty") != null)
+            if (ConfigElement.GetAttribute("difficulty") != null)
             {
-                int difficulty = element.GetAttributeInt(nameof(Difficulty), MinDifficulty);
+                int difficulty = ConfigElement.GetAttributeInt(nameof(Difficulty), MinDifficulty);
                 Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
             }
-            MinLevelDifficulty = element.GetAttributeInt(nameof(MinLevelDifficulty), MinLevelDifficulty);
-            MaxLevelDifficulty = element.GetAttributeInt(nameof(MaxLevelDifficulty), MaxLevelDifficulty);
+            MinLevelDifficulty = ConfigElement.GetAttributeInt(nameof(MinLevelDifficulty), MinLevelDifficulty);
+            MaxLevelDifficulty = ConfigElement.GetAttributeInt(nameof(MaxLevelDifficulty), MaxLevelDifficulty);
             MinLevelDifficulty = Math.Clamp(MinLevelDifficulty, 0, Math.Min(MaxLevelDifficulty, 100));
             MaxLevelDifficulty = Math.Clamp(MaxLevelDifficulty, Math.Max(MinLevelDifficulty, 0), 100);
 
-            AllowOutpostNPCs = element.GetAttributeBool(nameof(AllowOutpostNPCs), true);
-            ForceOutpostGenerationParameters = element.GetAttributeIdentifier(nameof(ForceOutpostGenerationParameters), Identifier.Empty);
-            AllowOutpostSelectionFromTag = element.GetAttributeIdentifier(nameof(AllowOutpostSelectionFromTag), Identifier.Empty);
+            AllowOutpostNPCs = ConfigElement.GetAttributeBool(nameof(AllowOutpostNPCs), true);
+            ForceOutpostGenerationParameters = ConfigElement.GetAttributeIdentifier(nameof(ForceOutpostGenerationParameters), Identifier.Empty);
+            AllowOutpostSelectionFromTag = ConfigElement.GetAttributeIdentifier(nameof(AllowOutpostSelectionFromTag), Identifier.Empty);
 
-            if (element.GetAttribute(nameof(ForceRespawnMode)) != null)
+            if (ConfigElement.GetAttribute(nameof(ForceRespawnMode)) != null)
             {
-                ForceRespawnMode = element.GetAttributeEnum(nameof(ForceRespawnMode), RespawnMode.MidRound);
+                ForceRespawnMode = ConfigElement.GetAttributeEnum(nameof(ForceRespawnMode), RespawnMode.MidRound);
             }
 
-            ShowProgressBar = element.GetAttributeBool(nameof(ShowProgressBar), false);
-            ShowProgressInNumbers = element.GetAttributeBool(nameof(ShowProgressInNumbers), false);
-            MaxProgressState = element.GetAttributeInt(nameof(MaxProgressState), 1);
-            string progressBarLabel = element.GetAttributeString(nameof(ProgressBarLabel), "");
+            ShowProgressBar = ConfigElement.GetAttributeBool(nameof(ShowProgressBar), false);
+            ShowProgressInNumbers = ConfigElement.GetAttributeBool(nameof(ShowProgressInNumbers), false);
+            MaxProgressState = ConfigElement.GetAttributeInt(nameof(MaxProgressState), 1);
+            string progressBarLabel = ConfigElement.GetAttributeString(nameof(ProgressBarLabel), "");
             ProgressBarLabel = TextManager.Get(progressBarLabel).Fallback(progressBarLabel);
 
-            string successMessageTag = element.GetAttributeString("successmessage", "");
+            string successMessageTag = ConfigElement.GetAttributeString("successmessage", "");
             SuccessMessage = TextManager.Get($"MissionSuccess.{TextIdentifier}");
             if (!string.IsNullOrEmpty(successMessageTag))
             {
                 SuccessMessage = SuccessMessage
-                    .Fallback(TextManager.Get(successMessageTag))
-                    .Fallback(successMessageTag);
+                                 .Fallback(TextManager.Get(successMessageTag))
+                                 .Fallback(successMessageTag);
             }
             SuccessMessage = SuccessMessage.Fallback(TextManager.Get("missioncompleted"));
 
-            string failureMessageTag = element.GetAttributeString("failuremessage", "");
+            string failureMessageTag = ConfigElement.GetAttributeString("failuremessage", "");
             FailureMessage = TextManager.Get($"MissionFailure.{TextIdentifier}");
             if (!string.IsNullOrEmpty(failureMessageTag))
             {
                 FailureMessage = FailureMessage
-                    .Fallback(TextManager.Get(failureMessageTag))
-                    .Fallback(failureMessageTag);
+                                 .Fallback(TextManager.Get(failureMessageTag))
+                                 .Fallback(failureMessageTag);
             }
             FailureMessage = FailureMessage.Fallback(TextManager.Get("missionfailed"));
 
-            string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
-            SonarLabel =
-                TextManager.Get($"MissionSonarLabel.{sonarLabelTag}")
-                .Fallback(TextManager.Get(sonarLabelTag))
-                .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"));
+            string sonarLabelTag = ConfigElement.GetAttributeString("sonarlabel", "");
+            SonarLabel = TextManager.Get($"MissionSonarLabel.{sonarLabelTag}")
+                         .Fallback(TextManager.Get(sonarLabelTag))
+                         .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"));
             if (!string.IsNullOrEmpty(sonarLabelTag))
             {
                 SonarLabel = SonarLabel.Fallback(sonarLabelTag);
             }
 
-            SonarIconIdentifier = element.GetAttributeIdentifier("sonaricon", "");
+            SonarIconIdentifier = ConfigElement.GetAttributeIdentifier("sonaricon", "");
 
-            MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
-            SingleplayerOnly    = element.GetAttributeBool("singleplayeronly", false);
+            MultiplayerOnly = ConfigElement.GetAttributeBool("multiplayeronly", false);
+            SingleplayerOnly = ConfigElement.GetAttributeBool("singleplayeronly", false);
 
-            AchievementIdentifier = element.GetAttributeIdentifier("achievementidentifier", "");
+            AchievementIdentifier = ConfigElement.GetAttributeIdentifier("achievementidentifier", "");
 
-            UnhideEntitySubCategories = element.GetAttributeStringArray("unhideentitysubcategories", Array.Empty<string>()).ToList();
+            UnhideEntitySubCategories = [.. ConfigElement.GetAttributeStringArray("unhideentitysubcategories", [])];
 
-            var headers = new List<LocalizedString>();
-            var messages = new List<LocalizedString>();
-            AllowedConnectionTypes = new List<(Identifier from, Identifier to)>();
+            List<LocalizedString> headers = [];
+            List<LocalizedString> messages = [];
+            AllowedConnectionTypes = [];
 
             for (int i = 0; i < 100; i++)
             {
@@ -322,26 +341,24 @@ namespace Barotrauma
                 }
             }
 
-            List<ReputationReward> reputationRewards = new List<ReputationReward>();
+            List<ReputationReward> reputationRewards = [];
             int messageIndex = 0;
-            foreach (var subElement in element.Elements())
+            foreach (ContentXElement subElement in ConfigElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "message":
-                        if (messageIndex > headers.Count - 1)
+                        if (messageIndex >= headers.Count)
                         {
                             headers.Add(string.Empty);
                             messages.Add(string.Empty);
                         }
-                        headers[messageIndex] = 
-                            TextManager.Get($"MissionHeader{messageIndex}.{TextIdentifier}")
-                            .Fallback(TextManager.Get(subElement.GetAttributeString("header", "")))
-                            .Fallback(subElement.GetAttributeString("header", ""));
-                        messages[messageIndex] = 
-                            TextManager.Get($"MissionMessage{messageIndex}.{TextIdentifier}")
-                            .Fallback(TextManager.Get(subElement.GetAttributeString("text", "")))
-                            .Fallback(subElement.GetAttributeString("text", ""));
+                        headers[messageIndex] = TextManager.Get($"MissionHeader{messageIndex}.{TextIdentifier}")
+                                                .Fallback(TextManager.Get(subElement.GetAttributeString("header", "")))
+                                                .Fallback(subElement.GetAttributeString("header", ""));
+                        messages[messageIndex] = TextManager.Get($"MissionMessage{messageIndex}.{TextIdentifier}")
+                                                 .Fallback(TextManager.Get(subElement.GetAttributeString("text", "")))
+                                                 .Fallback(subElement.GetAttributeString("text", ""));
                         messageIndex++;
                         break;
                     case "locationtype":
@@ -352,9 +369,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            AllowedConnectionTypes.Add((
-                                subElement.GetAttributeIdentifier("from", ""),
-                                subElement.GetAttributeIdentifier("to", "")));
+                            AllowedConnectionTypes.Add((subElement.GetAttributeIdentifier("from", ""), subElement.GetAttributeIdentifier("to", "")));
                         }
                         break;
                     case "locationtypechange":
@@ -375,7 +390,7 @@ namespace Barotrauma
                             string operatingString = subElement.GetAttributeString("operation", string.Empty);
                             if (!string.IsNullOrWhiteSpace(operatingString))
                             {
-                                operation = (SetDataAction.OperationType) Enum.Parse(typeof(SetDataAction.OperationType), operatingString);
+                                operation = (SetDataAction.OperationType)Enum.Parse(typeof(SetDataAction.OperationType), operatingString);
                             }
 
                             DataRewards.Add((identifier, value, operation));
@@ -386,13 +401,13 @@ namespace Barotrauma
                         break;
                 }
             }
-            Headers = headers.ToImmutableArray();
-            Messages = messages.ToImmutableArray();
-            ReputationRewards = reputationRewards.ToImmutableList();
+            Headers = [.. headers];
+            Messages = [.. messages];
+            ReputationRewards = [.. reputationRewards];
 
-            MissionClass = FindMissionClass(element);
-            Type = element.GetAttributeIdentifier(nameof(Type), Identifier.Empty);
-         
+            MissionClass = FindMissionClass(ConfigElement);
+            Type = ConfigElement.GetAttributeIdentifier(nameof(Type), Identifier.Empty);
+
 #if DEBUG
             if (MissionClass == typeof(MonsterMission) && SonarLabel.IsNullOrEmpty())
             {
@@ -403,17 +418,19 @@ namespace Barotrauma
             if (!LoadSubmarines && MissionClass != typeof(CombatMission))
             {
                 DebugConsole.AddWarning($"Potential error in mission {Identifier}: Disabling submarines is only intended for combat missions taking place in an outpost, and may lead to issues in other types of missions.",
-                    contentPackage: element.ContentPackage);
+                    contentPackage: ConfigElement.ContentPackage);
             }
 
-            constructor = FindMissionConstructor(element, MissionClass);
+            constructor = FindMissionConstructor(ConfigElement, MissionClass);
             if (constructor == null)
             {
                 DebugConsole.ThrowError($"Failed to find a constructor for the mission type \"{Type}\"!",
-                    contentPackage: element.ContentPackage);
+                    contentPackage: ConfigElement.ContentPackage);
             }
 
-            InitProjSpecific(element);
+#if CLIENT
+            ParseConfigElementClient(ConfigElement, variantOf);
+#endif
         }
 
         private Type FindMissionClass(ContentXElement element)
@@ -476,8 +493,6 @@ namespace Barotrauma
             }
             return constructor;
         }
-        
-        partial void InitProjSpecific(ContentXElement element);
 
         public bool IsAllowed(Location from, Location to)
         {

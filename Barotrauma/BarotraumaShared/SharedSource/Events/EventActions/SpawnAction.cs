@@ -14,14 +14,41 @@ namespace Barotrauma
         public enum SpawnLocationType
         {
             Any,
+            /// <summary>
+            /// Spawnpoint inside the main submarine.
+            /// </summary>
             MainSub,
+            /// <summary>
+            /// Spawnpoint inside an outpost.
+            /// </summary>
             Outpost,
+            /// <summary>
+            /// Spawnpoint on the main path through the level.
+            /// </summary>
             MainPath,
+            /// <summary>
+            /// Spawnpoint in a cave. Only valid if there are caves in the level.
+            /// </summary>
             Cave,
+            /// <summary>
+            /// Spawnpoint in an abyss cave. Only valid if there are abyss caves in the level.
+            /// </summary>
             AbyssCave,
+            /// <summary>
+            /// Spawnpoint in a ruin. Only valid if there are ruins in the level.
+            /// </summary>
             Ruin,
+            /// <summary>
+            /// Spawnpoint in a wreck. Only valid if there are wrecks in the level.
+            /// </summary>
             Wreck,
+            /// <summary>
+            /// Spawnpoint in a beacon station. Only valid if there are beacon stations in the level.
+            /// </summary>
             BeaconStation,
+            /// <summary>
+            /// A spawnpoint on the main path through the level. The difference to the <see cref="MainPath"/> type is that the closest possible spawnpoint is chosen.
+            /// </summary>
             NearMainSub
         }
 
@@ -425,7 +452,7 @@ namespace Barotrauma
             }
             else
             {
-                spawnPointsWithCorrectType = potentialSpawnPoints.Where(wp => wp.SpawnType != SpawnType.Path);
+                spawnPointsWithCorrectType = potentialSpawnPoints;
             }
             if (spawnPointsWithCorrectType.Any())
             {
@@ -485,7 +512,12 @@ namespace Barotrauma
             }
 
             //spawnpoints that match the desired criteria found, choose the best one next
-            IEnumerable<WayPoint> validSpawnPoints = potentialSpawnPoints;
+            //  preferring non-path spawnpoints if there's any available
+            var nonPathSpawnPoints = potentialSpawnPoints.Where(wp => wp.SpawnType != SpawnType.Path);
+            var validSpawnPoints =
+                nonPathSpawnPoints.Any() && spawnPointType != SpawnType.Path ?
+                nonPathSpawnPoints :
+                potentialSpawnPoints;
 
             //don't spawn in an airlock module if there are other options
             var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false);

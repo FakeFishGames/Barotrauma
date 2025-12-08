@@ -1406,7 +1406,8 @@ namespace Barotrauma.Items.Components
 
         public void RegisterExplosion(Explosion explosion, Vector2 worldPosition)
         {
-            if (Character.Controlled?.SelectedItem != item) { return; }
+            if (Character.Controlled?.SelectedItem == null) { return; }
+            if (Character.Controlled.SelectedItem != Item && !Character.Controlled.SelectedItem.linkedTo.Contains(Item)) { return; }
             if (explosion.Attack.StructureDamage <= 0 && explosion.Attack.ItemDamage <= 0 && explosion.EmpStrength <= 0) { return; }
             Vector2 transducerCenter = GetTransducerPos();
             if (Vector2.DistanceSquared(worldPosition, transducerCenter) > range * range) { return; }
@@ -1564,7 +1565,15 @@ namespace Barotrauma.Items.Components
             foreach (Item item in Item.SonarVisibleItems)
             {
                 System.Diagnostics.Debug.Assert(item.Prefab.SonarSize > 0.0f);
-                if (item.CurrentHull == null)
+
+                if (item.CurrentHull != null) { continue; }
+
+                bool isItemVisible =
+                    item.ParentInventory == null ||
+                    item.GetComponent<Holdable>() is { IsActive: true } ||
+                    item.Container?.GetComponent<ItemContainer>() is { HideItems: false };
+
+                if (isItemVisible)
                 {
                     float pointDist = ((item.WorldPosition - pingSource) * displayScale).LengthSquared();
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)

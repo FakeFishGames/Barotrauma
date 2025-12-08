@@ -1041,12 +1041,77 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(10.0f, IsPropertySaveable.Yes)]
+        //note: the following properties are autoinitialized because it's important for them to have sensible (non-zero) default values,
+        //and non-admin clients don't know the values set by the server
+
+        [Serialize(30.0f, IsPropertySaveable.Yes)]
         public float MinimumMidRoundSyncTimeout
         {
             get;
             private set;
-        }
+        } = 30.0f;
+
+        /// <summary>
+        /// How long the server waits for the clients to get in sync after the round has started before kicking them
+        /// </summary>
+        [Serialize(120.0f, IsPropertySaveable.Yes)]
+        public float RoundStartSyncDuration
+        {
+            get;
+            private set;
+        } = 120.0f;
+
+        /// <summary>
+        /// How long the server keeps events that everyone currently synced has received
+        /// </summary>
+        [Serialize(15.0f, IsPropertySaveable.Yes)]
+        public float EventRemovalTime
+        {
+            get;
+            private set;
+        } = 15.0f;
+
+        /// <summary>
+        /// If a client hasn't received an event that has been succesfully sent to someone within this time, they get kicked
+        /// </summary>
+        [Serialize(20.0f, IsPropertySaveable.Yes)]
+        public float OldReceivedEventKickTime
+        {
+            get;
+            private set;
+        } = 20.0f;
+
+        /// <summary>
+        /// If a client hasn't received an event after this time, they get kicked
+        /// </summary>
+        [Serialize(40.0f, IsPropertySaveable.Yes)]
+        public float OldEventKickTime
+        {
+            get;
+            private set;
+        } = 40.0f;
+
+        /// <summary>
+        /// Amount of seconds before connections between the server and the clients time out (i.e. if the client fails to receive messages from the server for this amount of time or vice versa, they get disconnected).
+        /// Used when a round is not currently running, i.e. in the lobby or in loading screens.
+        /// </summary>
+        [Serialize(60.0f, IsPropertySaveable.Yes)]
+        public float TimeoutThresholdNotInGame
+        {
+            get;
+            private set;
+        } = 60.0f;
+
+        /// <summary>
+        /// Amount of seconds before connections between the server and the clients time out (i.e. if the client fails to receive messages from the server for this amount of time or vice versa, they get disconnected).
+        /// Used when a round is running.
+        /// </summary>
+        [Serialize(10.0f, IsPropertySaveable.Yes)]
+        public float TimeoutThresholdInGame
+        {
+            get;
+            private set;
+        } = 10.0f;
 
         private bool karmaEnabled;
         [Serialize(false, IsPropertySaveable.Yes)]

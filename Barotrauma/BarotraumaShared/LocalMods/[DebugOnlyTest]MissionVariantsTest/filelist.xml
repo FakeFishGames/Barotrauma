@@ -1,0 +1,3 @@
+﻿<contentpackage name="Mission Variants Test" modversion="1.0.0" corepackage="False" gameversion="1.10.2.0">
+  <Missions file="%ModDir%/Missions.xml"/>
+</contentpackage>

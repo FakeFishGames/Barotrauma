@@ -1,4 +1,86 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.11.4.1 (Winter Update 2025)
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Wallaby, a new tier 2 Attack class submarine. Boasts an unexpectedly high amount of firepower for its size, while also providing a full set of fabrication facilities, but also includes weak points in the pipe system which can cause water hazards inside the sub.
+- Added valves and weakpoints. Weakpoints are pipes that can break, causing a water hazard (which floods the submarine and is hard to pass).
+   - Weakpoints are repairable with a wrench. Turning off a valve makes it easier to repair, but makes any linked pumps not work while the valve is closed
+   - Wall weakpoints have their condition linked to a wall. This means these walls cannot be cut as a shortcut between rooms
+- Added level background visuals to the sub editor's test mode to make it easier to see what the sub looks like in the actual in-game environments.
+- Balancing combat mission NPCs: improved the higher-level enemy NPCs and gave them better gear.
+- Made the rotation tool snap to 1-degree increments and the scale tool snap to 0.1 increments in the sub editor. Holding Shift while using the tools temporarily disables snapping.
+- Added 2 more input and output connections (0 and 9) to circuit boxes to make it match the mux/demux components and use 0-indexing like other components.
+- Increased the number of signal connections on relays from 2 to 5.
+- You can no longer revive characters with CPR when the character has no oxygen available (e.g. by giving CPR to someone wearing a diving suit with an empty oxygen tank). Not only was this weird, it made it easy to farm medical skill by repeatedly reviving the character with CPR.
+
+Multiplayer: 
+- Fixed inventories and wallets sometimes resetting in multiplayer: more specifically, happened when a client was still connected to the server (for example in the lobby) and their character had despawned by the end of the round.
+- Fixed characters sometimes suffocating or dying if loading into the round takes a long time. Now the characters don't spawn until the client has fully loaded into the round.
+- Adjusted certain multiplier timeout thresholds to make errors such as "timed out", "expected old event" and "expected removed event" less frequent. Also made many of the timeout thresholds editable in the server config file (however, you should be careful when changing these values, as setting them too high may cause other issues).
+- Fixed AFK setting staying enabled when a client chooses to load a campaign, causing them to load into a round with no character.
+- Small improvements to the "direct join" prompt: autofocus on the text box, you can press enter to join.
+- Fixed non-player teams being affected by the friendly fire setting (e.g. bandits were unable to damage monsters when friendly fire was disabled).
+- Fixed input selector and output selector components' "move_input"/"move_output" signals not getting synced in multiplayer.
+- Fixed a syncing issue with the timed detonators that made it possible to make them explode immediately at the start of the next round by letting the timer reach 0, and then putting an explosive inside and waiting for the next round.
+
+Fixes:
+- Attempt to fix reported freezes at 80% in the loading screen, which failed when the game failed to fetch an authentication ticket from Steam to be used for checking whether you've given consent to collect gameplay analytics.
+- Fixed explosions not showing up on the sonar if you've selected a status monitor linked to the nav terminal, instead of having directly selected the nav terminal.
+- Fixed reactors automatically adjusting themselves at the start of the round when the reactor is off or controlled by signals. The intention of the rapid autoadjustment is to make sure there's no overloads when the load suddenly drops as the sub starts receiving power from the outpost, but it should not run when the reactor is off or controlled by signals.
+- Fixed fire damaging characters through walls that are just slightly damaged, and overall improved the logic for calculating fire damage through gaps.
+- Fixed items sometimes disappearing when you drop them standing half-way through a door way (or more specifically, when the character is considered to be in the sub, but their hands are outside hulls).
+- Fixed inability to undo nudging entities with arrow keys in the sub editor.
+- Fixed adding water to newly added hulls not working in the sub editor until the sub is saved and loaded.
+- Fixed monsters sometimes spawning near the enemy submarine when there's a sub-vs-sub mission active (sometimes leading to the mission completing by itself when the monsters manage to take down the sub).
+- Fixed items such as the "diver's remains" loot appearing on sonar despite being in a monster's inventory. More specifically, affected items with a SonarSize greater than 0.
+- Fixed tooltips not refreshing on the affliction icons above the character portrait (meaning if the strength of the affliction changed, changing the description, the old description would still appear in the tooltip).
+- Fixed "eliminate thalamus" mission not working in MP's mission mode unless the difficulty is set above 50.
+- Fixed outpost NPCs panicking and calling security when they saw you dragging a dead pet - they should only do so if you're dragging another outpost NPC's corpse.
+- Fixed purchasing genes when your inventory is full causing the genes to automatically combine with any genes in your inventory.
+- Fixed NPCs that are configured to dual-wield weapons (e.g. some elite bandits) only equipping one of the weapons.
+- Fixed pumps calculating the desired water level incorrectly for linked hulls when controlled via the "set_target_level" input. 
+- Fixed variants of husk infection always causing the "you try to scream but no sound comes out" message to pop up, even if the affliction doesn't prevent speaking (e.g. husk symbiosis). 
+- Fixed ability to aim with the rifle scope when you're stunned/unconscious.
+- Fixed circuit boxes not saving the wires if there's no components in the box.
+- Fixed wires not getting transferred when swapping e.g. a blank loader to a flak cannon loader (or more specifically, to any loader with differently named connections) in the mission mode.
+- Fixed fabricators showing thalamus veins as suitable materials for items that require a wire as a material.
+- Fixed assigning a specific character to operate turrets throwing a console error ("Controller not specified") when there's only one turret in the sub.
+- Fixed swarm feeders, or other monsters that can latch on to characters, deattaching when you ragdoll.
+- Fixed monsters becoming unable to run (or swim fast) after they've used a rope attack (e.g. latcher's tongue or the fractal guardian's harpoon).
+- Fixed machines (e.g. fractal guardians, defense bot) not being immune to the "infected wound" affliction.
+- Fixed outpost events that should spawn things in mines often spawning them in some random module instead (e.g. the mudraptor eggs in the "occupational hazards" event).
+- Fixed portable pump working without power.
+- Fixed hidden missions showing up in the scrolling text that appears at the top of the screen at the start of a round.
+- Fixed traveling tradesman talent giving a larger-than-intended sale price bonus for certain items. More specifically, it gave the 20% bonus for each tag the item had.
+- Fixed icons of all afflictions (even hidden ones) briefly appearing above the health bar when a character dies.
+- Fixed docking port staying open if you leave a level with some non-persistent sub (e.g. respawn shuttle or an enemy sub) docked to it.
+
+Modding:
+- Support for defining mission variants (the same way as e.g. item or character variants): allows creating variants of missions that change certain properties of the base mission without having to redefine the whole XML.
+- Fixed ExplosionRadiusMultiplier not affecting the range of damage done to characters.
+- Fixed items updating in preloaded characters' inventories. Meant that e.g. characters with a Disposable Diving Suit would appear to spawn with the suit already degraded or broken.
+- Fixed fabricator icons using the inventory icon color even if the item has no inventory icon and uses the normal sprite (and its color) instead.
+- Fixed crashing when an item fails to play a looping, streamed sound (e.g. because the maximum number of instances of that sound is already playing). Did not seem to occur in the vanilla game.
+- Added support for configuring monsters as "multiplayeronly" in NestMission and MonsterMission (this worked in AbandonedOutpostMission and SalvageMission already, just hadn't been implemented here). 
+- Fixed StatusEffect's Equip attribute only working if the item spawns in ThisInventory (not when it spawns it e.g. in SameInventory).
+- Improved reactor modding compatibility: added the tag "reactoritem" as a containable item to allow items other than fuel to be contained.
+- Fixed assault rifle defining the required ammo using the identifier "assaultriflemagazine" instead of the tag "assaultrifleammo", making it difficult to add new types of ammo for the weapon.
+- Fixed fabrication being a lot faster than intended (= a lot faster than the RequiredTime set in XML) if there's no skill requirements. 
+- Fixes characters never being considered "in water" for the first frame after they spawn, causing NotInWater effects to trigger on monsters spawning outside.
+- When swapping a turret, the old turret's HudTint value is transferred to the new one.
+- Fixed pump particles getting rotated incorrectly on mirrored pumps.
+- Better Research Station modding compatibility: 
+    - Added smallitem and mediumitem as containables to give more flexibility on what items can be put inside.
+    - Increased the number of output slots to 3 to support recipes that produce more than 1 item, and to prevent from items falling out if the input is invalid and gets moved to the output slots.
+- Fixed crashing when applying an affliction's status effects causes other afflictions to apply their status effects.
+- Added a new "AffectedByAttackMultipliers" property to afflictions: can be used to prevent specific afflictions from being affected by Attack's damage multipliers. Buffs aren't affected by default.
+- Added a new "VitalityLossRequiredForTreatment" property to afflictions: can be used to make bots treat afflictions even if the affliction doesn't cause vitality loss.
+- Added a new "CanGiveMedicalSkill" property to StatusEffects: can be used to prevent the effect from giving the user medical skill, even if it causes healing.
+- Made missions' SideObjective setting more useful for modders: previously all it did was affecting which beacon and hunting grounds missions can get "spontaneously" selected for levels with beacons and hunting grounds. Now all side objectives available in a level are automatically selected, without having to manually select them in the mission selection UI.
+- Set mantis's group to "mantisoid" and watcher's to "watcheroid" (doesn't do anything in the vanilla game but useful for mods).
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.10.7.2
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
