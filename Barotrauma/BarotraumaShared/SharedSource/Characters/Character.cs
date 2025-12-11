@@ -6033,6 +6033,20 @@ namespace Barotrauma
             AnimController.StopClimbing();
             ReleaseSecondaryItem();
         }
+        public void TryFlipCharacter()
+        {
+            if (AnimController is FishAnimController fishAnimController)
+            {
+                if (fishAnimController.CurrentFishAnimation.Flip)
+                {
+                    fishAnimController.Flip();
+                }
+            }
+            else
+            {
+                AnimController.Flip();
+            }
+        }
     }
 
     class ActiveTeamChange
