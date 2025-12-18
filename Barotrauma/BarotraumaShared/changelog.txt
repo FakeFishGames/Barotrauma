@@ -1,4 +1,14 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.11.5.0 (Winter Update Hotfix 1)
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed players sometimes retaining their old inventory items if they die and respawn on a later round.
+- Fixed inability to order bots to deconstruct items that don't yield anything when deconstructed.
+- Fixed weak points causing the "high pressure" icon to appear in the room, despite the pressure not being high enough to cause damage.
+- Fixed relay connections being in an incorrect order in circuit boxes.
+- Fixed ImpactTolerance, ImpactDamage and ImpactDamageProbability resetting back to defaults when saving and reloading a sub.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.11.4.1 (Winter Update 2025)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

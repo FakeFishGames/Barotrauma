@@ -311,7 +311,7 @@ namespace Barotrauma
                 if (Character.AnimController.Limbs.None(l => l.HealthIndex == i))
                 {
                     DebugConsole.AddWarning(
-                        $"Potential error in character {Character.DisplayName}: none of the limbs have been set to use the LimbHealth #{i}, and it will do nothing. "
+                        $"Potential error in character \"{Character.Prefab.Identifier}\": none of the limbs have been set to use the LimbHealth #{i}, and it will do nothing. "
                         + "Did you forget to set the HealthIndex values of the limbs?", contentPackage: Character.ContentPackage);
                 }
             }

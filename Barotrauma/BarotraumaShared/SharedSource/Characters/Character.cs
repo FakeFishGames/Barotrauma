@@ -624,9 +624,9 @@ namespace Barotrauma
         {
             get
             {
-                if (IsPet)
+                if (IsPet && AIController is EnemyAIController { PetBehavior: { } petBehavior })
                 {
-                    string petName = (AIController as EnemyAIController).PetBehavior.GetTagName();
+                    string petName = petBehavior.GetTagName();
                     if (!string.IsNullOrEmpty(petName)) { return petName; }
                 }
 

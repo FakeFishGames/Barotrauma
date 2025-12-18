@@ -462,18 +462,18 @@ namespace Barotrauma
         }
 
         private float impactTolerance;
-        [Serialize(0.0f, IsPropertySaveable.No), ConditionallyEditable(ConditionallyEditable.ConditionType.ReceivesSubmarineImpacts, MinValueFloat = 0, MaxValueFloat = 100)]
+        [Serialize(0.0f, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.ReceivesSubmarineImpacts, MinValueFloat = 0, MaxValueFloat = 100)]
         public float ImpactTolerance
         {
             get { return impactTolerance; }
             set { impactTolerance = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(0.0f, IsPropertySaveable.No, description: "The amount of damage the item takes from impacts. Acts as a multiplier on the strength of the impact. Note that ImpactTolerance must be set for impacts to register."), 
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The amount of damage the item takes from impacts. Acts as a multiplier on the strength of the impact. Note that ImpactTolerance must be set for impacts to register."), 
             ConditionallyEditable(ConditionallyEditable.ConditionType.ReceivesSubmarineImpacts, MinValueFloat = 0, MaxValueFloat = 100)]
         public float ImpactDamage { get; set; }
 
-        [Serialize(1.0f, IsPropertySaveable.No, description: "Probability for impacts to register. Defaults to 1. Note that ImpactTolerance must also be set for impacts to register."), 
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "Probability for impacts to register. Defaults to 1. Note that ImpactTolerance must also be set for impacts to register."), 
             ConditionallyEditable(ConditionallyEditable.ConditionType.ReceivesSubmarineImpacts, MinValueFloat = 0, MaxValueFloat = 1)]
         public float ImpactDamageProbability { get; set; }
 

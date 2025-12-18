@@ -273,16 +273,27 @@ namespace Barotrauma
                 }
                 if (characterInfo == null || characterInfo.Discarded) { continue; }
                 //reduce skills if the character has died
-                if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
+                bool diedToDisconnect = characterInfo.CauseOfDeath is { Type: CauseOfDeathType.Disconnected };
+                bool diedForReal = characterInfo.CauseOfDeath != null && !diedToDisconnect;
+                if (diedForReal)
                 {
                     characterInfo.ApplyDeathEffects();
                 }
                 c.CharacterInfo = characterInfo;
-                
-                // Only create new character data if the connected client has an active character (which they might not,
-                // eg. if they are in the lobby). Otherwise the CharacterCampaignData constructor would fall back to a new
-                // Character object, overwriting the inventory and wallet with empty values.
-                if (c.Character != null)
+
+                //Different scenarios for saving (or not saving) the character:
+                // 1. Client is controlling a character, character is alive
+                //      -> save normally
+                // 2. Client is not controlling a character, previous character died
+                //      -> save normally (applying skill reduction, getting rid of the items the character had, etc)
+                // 3. Client is not controlling a character, previous character died due to a disconnect (e.g. client left or went to the lobby, and later returned)
+                //      -> do not save, the character should retain their skills and items
+                // 4. Client is not controlling a character, and they don't have any previous character data
+                //      -> we shouldn't be getting to this point at all, we return earlier if no character info that has spawned is found
+                // 5. Client is not controlling a character, but they have previous character data which has not yet spawned (e.g. they've played on this server on some previous round)
+                //      -> we shouldn't be getting to this point at all, we return earlier if no character info that has spawned is found
+
+                if (c.Character != null || diedForReal)
                 {
                     SetClientCharacterData(c);
                 }

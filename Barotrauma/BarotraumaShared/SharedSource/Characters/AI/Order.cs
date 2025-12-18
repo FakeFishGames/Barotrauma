@@ -440,13 +440,14 @@ namespace Barotrauma
 
             if (Identifier == Tags.DeconstructThis && item.AllowDeconstruct)
             {
-                if (item.AllowDeconstruct && !Item.DeconstructItems.Contains(item) && 
-                    //only allow deconstructing if there are deconstruction recipes that
+                if (item.AllowDeconstruct && !Item.DeconstructItems.Contains(item) &&
+                    //only allow deconstructing if there are no deconstruction recipes (= deconstructing yields nothing), or deconstruction recipes that
+                    (item.Prefab.DeconstructItems.None() ||
                     item.Prefab.DeconstructItems.Any(deconstructItem =>
                         //1. don't require any additional items (bots can't handle that)
                         deconstructItem.RequiredOtherItem.None() &&
                         //2. don't require a research station (bots don't know how to use those)
-                        (deconstructItem.RequiredDeconstructor.Length == 0 || deconstructItem.RequiredDeconstructor.Any(d => d != Tags.GeneticResearchStation))))
+                        (deconstructItem.RequiredDeconstructor.Length == 0 || deconstructItem.RequiredDeconstructor.Any(d => d != Tags.GeneticResearchStation)))))
                 { 
                     return true;
                 }
