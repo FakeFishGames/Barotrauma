@@ -37,6 +37,7 @@
       <input name="power_in" displayname="connection.powerin"/>
       <input name="position_in" displayname="connection.turretaimingin"/>
       <input name="set_light" displayname="connection.setlight" />
+      <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
 
     <aitarget maxsightrange="3000" />

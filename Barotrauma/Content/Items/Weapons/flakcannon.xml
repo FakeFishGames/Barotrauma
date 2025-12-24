@@ -46,6 +46,7 @@
       <input name="trigger_in" displayname="connection.turrettriggerin" />
       <input name="toggle_light" displayname="connection.togglelight"/>
       <input name="set_light" displayname="connection.setlight" />
+      <input name="set_color" displayname="connection.setcolor" />
       <input name="set_auto_operate" displayname="connection.setautooperate" />
       <input name="toggle_auto_operate" displayname="connection.toggleautooperate" />
     </ConnectionPanel>
