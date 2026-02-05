@@ -1202,7 +1202,7 @@ namespace Barotrauma
                     character.TeamID = CharacterTeamType.Team1;
                     character.GiveJobItems(isPvPMode: false, spawnPoint);
                     
-                    DebugConsole.NewMessage($"[SubEditor] Spawned test character for editor: {user.Name}", Color.LightGreen);
+                    DebugConsole.Log($"[SubEditor] Spawned test character for editor: {user.Name}");
                 }
             }
         }
@@ -1228,6 +1228,28 @@ namespace Barotrauma
         /// </summary>
         private bool ShowHostSessionPrompt(GUIButton button, object obj)
         {
+            // Check if already in a multiplayer game
+            if (GameMain.Client != null)
+            {
+                // Already connected to a server - enable collaborative mode
+                SubEditorNetworkingClient.Initialize();
+                string playerName = GameMain.Client.Name ?? "Editor";
+                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
+                
+                // Populate with existing connected clients
+                foreach (var client in GameMain.Client.ConnectedClients)
+                {
+                    byte colorIndex = (byte)(client.SessionId % SubEditorUser.UserColors.Length);
+                    var user = new SubEditorUser((byte)client.SessionId, client.Name, colorIndex);
+                    SubEditorNetworkingClient.Instance.AddUser(user);
+                }
+                
+                UpdateCollaborativeSessionUI();
+                DebugConsole.Log("[SubEditor] Collaborative mode enabled - using existing multiplayer connection");
+                return true;
+            }
+            
+            // Not in a multiplayer game - show host dialog
             var msgBox = new GUIMessageBox(
                 TextManager.Get("SubEditorHostSession").Fallback("Host Collaborative Session"), "",
                 new LocalizedString[] { TextManager.Get("Start").Fallback("Start"), TextManager.Get("Cancel") },
@@ -1290,6 +1312,29 @@ namespace Barotrauma
         /// </summary>
         private bool ShowJoinSessionPrompt(GUIButton button, object obj)
         {
+            // Check if already in a multiplayer game
+            if (GameMain.Client != null)
+            {
+                // Already connected to a server - enable collaborative mode as client
+                SubEditorNetworkingClient.Initialize();
+                string playerName = GameMain.Client.Name ?? "Editor";
+                byte sessionId = (byte)(GameMain.Client.SessionId % 256);
+                byte colorIndex = (byte)(sessionId % SubEditorUser.UserColors.Length);
+                SubEditorNetworkingClient.Instance.JoinSession(sessionId, playerName, colorIndex);
+                
+                // Populate with existing connected clients
+                foreach (var client in GameMain.Client.ConnectedClients)
+                {
+                    byte clientColorIndex = (byte)(client.SessionId % SubEditorUser.UserColors.Length);
+                    var user = new SubEditorUser((byte)client.SessionId, client.Name, clientColorIndex);
+                    SubEditorNetworkingClient.Instance.AddUser(user);
+                }
+                
+                UpdateCollaborativeSessionUI();
+                DebugConsole.Log("[SubEditor] Joined collaborative session - using existing multiplayer connection");
+                return true;
+            }
+            
             var msgBox = new GUIMessageBox(
                 TextManager.Get("SubEditorJoinSession").Fallback("Join Collaborative Session"), "",
                 new LocalizedString[] { TextManager.Get("ServerListJoin").Fallback("Join"), TextManager.Get("Cancel") },
@@ -1361,7 +1406,7 @@ namespace Barotrauma
                 // Update UI to show we're in a session
                 UpdateCollaborativeSessionUI();
                 
-                DebugConsole.NewMessage($"[SubEditor] Started hosting collaborative session: {sessionName} on port {port}", Color.LightGreen);
+                DebugConsole.Log($"[SubEditor] Started hosting collaborative session: {sessionName} on port {port}");
                 
                 // Show info dialog with connection details
                 var endpoints = new List<string>();
@@ -1417,7 +1462,7 @@ namespace Barotrauma
                 
                 UpdateCollaborativeSessionUI();
                 
-                DebugConsole.NewMessage($"[SubEditor] Joined collaborative session at {endpoint}", Color.LightGreen);
+                DebugConsole.Log($"[SubEditor] Joined collaborative session at {endpoint}");
             }
             catch (Exception e)
             {
@@ -4224,14 +4269,14 @@ namespace Barotrauma
         {
             if (loadFrame == null)
             {
-                DebugConsole.NewMessage("load frame null", Color.Red);
+                DebugConsole.Log("load frame null");
                 return false;
             }
 
             GUIListBox subList = loadFrame.GetAnyChild<GUIListBox>();
             if (subList == null)
             {
-                DebugConsole.NewMessage("Sublist null", Color.Red);
+                DebugConsole.Log("Sublist null");
                 return false;
             }
 

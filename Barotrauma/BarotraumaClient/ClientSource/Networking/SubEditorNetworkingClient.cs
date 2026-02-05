@@ -73,7 +73,7 @@ namespace Barotrauma.Networking
             var localUser = new SubEditorUser(sessionId, playerName, colorIndex);
             AddUser(localUser);
             
-            DebugConsole.NewMessage($"[SubEditor] Joined collaborative session as {playerName} (color {colorIndex})", Color.LightGreen);
+            DebugConsole.Log($"[SubEditor] Joined collaborative session as {playerName} (color {colorIndex})");
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Barotrauma.Networking
             var localUser = new SubEditorUser(sessionId, playerName, 0);
             AddUser(localUser);
             
-            DebugConsole.NewMessage($"[SubEditor] Hosting collaborative session as {playerName}", Color.LightGreen);
+            DebugConsole.Log($"[SubEditor] Hosting collaborative session as {playerName}");
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace Barotrauma.Networking
         {
             if (!IsActive) return;
             
-            DebugConsole.NewMessage("[SubEditor] Left collaborative session", Color.Yellow);
+            DebugConsole.Log("[SubEditor] Left collaborative session");
             Clear();
         }
 
@@ -159,11 +159,11 @@ namespace Barotrauma.Networking
                     msg.WriteNetSerializableStruct(selectionData);
                     GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
                 }
-                DebugConsole.NewMessage($"[SubEditor] Selected entity {entity.ID}", Color.Gray);
+                DebugConsole.Log($"[SubEditor] Selected entity {entity.ID}");
             }
             else
             {
-                DebugConsole.NewMessage($"[SubEditor] Cannot select entity {entity.ID} - locked by another user", Color.Orange);
+                DebugConsole.Log($"[SubEditor] Cannot select entity {entity.ID} - locked by another user");
             }
         }
 

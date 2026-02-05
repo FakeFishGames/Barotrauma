@@ -69,7 +69,7 @@ namespace Barotrauma.Networking
             var hostUser = new SubEditorUser((byte)host.SessionId, host.Name, hostColorIndex);
             subEditorSession.AddUser(hostUser);
 
-            DebugConsole.NewMessage($"[SubEditor] Session started by {host.Name}", Microsoft.Xna.Framework.Color.LightGreen);
+            DebugConsole.Log($"[SubEditor] Session started by {host.Name}");
 
             // Notify the host that session started
             SendSubEditorClientList();
@@ -96,7 +96,7 @@ namespace Barotrauma.Networking
             subEditorHost = null;
             isSubEditorSessionActive = false;
 
-            DebugConsole.NewMessage("[SubEditor] Session ended", Microsoft.Xna.Framework.Color.Yellow);
+            DebugConsole.Log("[SubEditor] Session ended");
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
             var user = new SubEditorUser((byte)client.SessionId, client.Name, colorIndex);
             subEditorSession.AddUser(user);
 
-            DebugConsole.NewMessage($"[SubEditor] {client.Name} joined the session", Microsoft.Xna.Framework.Color.LightGreen);
+            DebugConsole.Log($"[SubEditor] {client.Name} joined the session");
 
             // Send updated client list to everyone
             SendSubEditorClientList();
@@ -126,7 +126,7 @@ namespace Barotrauma.Networking
 
             subEditorSession.RemoveUser((byte)client.SessionId);
 
-            DebugConsole.NewMessage($"[SubEditor] {client.Name} left the session", Microsoft.Xna.Framework.Color.Yellow);
+            DebugConsole.Log($"[SubEditor] {client.Name} left the session");
 
             // If the host left, end the session
             if (client == subEditorHost)
@@ -280,7 +280,7 @@ namespace Barotrauma.Networking
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
 
-            DebugConsole.NewMessage("[SubEditor] Test mode started", Microsoft.Xna.Framework.Color.Cyan);
+            DebugConsole.Log("[SubEditor] Test mode started");
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace Barotrauma.Networking
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
 
-            DebugConsole.NewMessage("[SubEditor] Test mode ended", Microsoft.Xna.Framework.Color.Yellow);
+            DebugConsole.Log("[SubEditor] Test mode ended");
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace Barotrauma.Networking
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
 
-            DebugConsole.NewMessage($"[SubEditor] Submarine synced from host ({submarineXml.Length} chars)", Microsoft.Xna.Framework.Color.LightGreen);
+            DebugConsole.Log($"[SubEditor] Submarine synced from host ({submarineXml.Length} chars)");
         }
     }
 }
