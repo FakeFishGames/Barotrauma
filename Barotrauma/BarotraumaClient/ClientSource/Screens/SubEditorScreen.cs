@@ -977,6 +977,9 @@ namespace Barotrauma
             };
             snapToGridFrame.RectTransform.MinSize = new Point(snapToGridFrame.Rect.Width, (int)(saveStampButton.Rect.Height / saveStampButton.RectTransform.RelativeSize.Y));
 
+            // Collaborative editing users panel
+            CreateCollaborativeUsersPanel();
+
             //Entity menu
             //------------------------------------------------
 
@@ -1361,6 +1364,13 @@ namespace Barotrauma
                 {
                     joinButton.Text = TextManager.Get("SubEditorConnected").Fallback("Connected");
                 }
+
+                // Show users panel and refresh list
+                if (collaborativeUsersPanel != null)
+                {
+                    collaborativeUsersPanel.Visible = true;
+                    RefreshCollaborativeUsersList();
+                }
             }
             else
             {
@@ -1368,6 +1378,12 @@ namespace Barotrauma
                 joinButton.Enabled = true;
                 hostButton.Text = TextManager.Get("SubEditorHostButton").Fallback("Host");
                 joinButton.Text = TextManager.Get("SubEditorJoinButton").Fallback("Join");
+
+                // Hide users panel
+                if (collaborativeUsersPanel != null)
+                {
+                    collaborativeUsersPanel.Visible = false;
+                }
             }
         }
 
@@ -1404,6 +1420,80 @@ namespace Barotrauma
         private void DrawCollaborativeCursors(SpriteBatch spriteBatch)
         {
             SubEditorNetworkingClient.Instance?.DrawCursors(spriteBatch, cam);
+        }
+
+        /// <summary>
+        /// Create the panel showing connected collaborative editors.
+        /// </summary>
+        private void CreateCollaborativeUsersPanel()
+        {
+            collaborativeUsersPanel = new GUIFrame(new RectTransform(new Vector2(0.12f, 0.3f), GUI.Canvas, Anchor.TopRight)
+            {
+                MinSize = new Point((int)(150 * GUI.Scale), (int)(100 * GUI.Scale)),
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(10 * GUI.Scale))
+            }, "InnerFrame")
+            {
+                Visible = false
+            };
+
+            var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), collaborativeUsersPanel.RectTransform, Anchor.TopCenter),
+                TextManager.Get("SubEditorCollaborators").Fallback("Editors"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+
+            collaborativeUsersList = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.7f), collaborativeUsersPanel.RectTransform, Anchor.Center)
+            {
+                RelativeOffset = new Vector2(0, 0.05f)
+            });
+
+            var leaveButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.12f), collaborativeUsersPanel.RectTransform, Anchor.BottomCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.02f)
+            }, TextManager.Get("SubEditorLeaveSession").Fallback("Leave Session"), style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, userData) =>
+                {
+                    LeaveCollaborativeSession();
+                    return true;
+                }
+            };
+        }
+
+        /// <summary>
+        /// Refresh the list of connected users in the panel.
+        /// </summary>
+        private void RefreshCollaborativeUsersList()
+        {
+            if (collaborativeUsersList == null) return;
+            collaborativeUsersList.Content.ClearChildren();
+
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
+
+            foreach (var kvp in SubEditorNetworkingClient.Instance.ConnectedEditors)
+            {
+                var user = kvp.Value;
+                var userFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), collaborativeUsersList.Content.RectTransform), style: null)
+                {
+                    UserData = user
+                };
+
+                // Color indicator
+                new GUIFrame(new RectTransform(new Vector2(0.1f, 0.8f), userFrame.RectTransform, Anchor.CenterLeft)
+                {
+                    RelativeOffset = new Vector2(0.02f, 0)
+                }, style: null)
+                {
+                    Color = user.GetColor(),
+                    OutlineColor = Color.White
+                };
+
+                // Username
+                var isLocal = user.SessionId == SubEditorNetworkingClient.Instance.LocalSessionId;
+                var displayName = isLocal ? $"{user.Name} (You)" : user.Name;
+                new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), userFrame.RectTransform, Anchor.CenterRight),
+                    displayName, font: GUIStyle.SmallFont);
+            }
+
+            // Show/hide panel based on active session
+            collaborativeUsersPanel.Visible = SubEditorNetworkingClient.Instance.IsActive;
         }
 
         #endregion Collaborative Editing
@@ -5532,6 +5622,7 @@ namespace Barotrauma
             entityCountPanel.AddToGUIUpdateList();
             layerPanel.AddToGUIUpdateList();
             TopPanel.AddToGUIUpdateList();
+            collaborativeUsersPanel?.AddToGUIUpdateList();
 
             if (WiringMode)
             {
@@ -5810,6 +5901,13 @@ namespace Barotrauma
         {
             SkipInventorySlotUpdate = false;
             ImageManager.Update((float)deltaTime);
+
+            // Update cursor position for collaborative editing
+            if (SubEditorNetworkingClient.Instance?.IsActive == true)
+            {
+                Vector2 worldPos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                SubEditorNetworkingClient.Instance.UpdateCursor(worldPos, (float)deltaTime);
+            }
 
             Hull.UpdateCheats((float)deltaTime, cam);
 
@@ -6618,6 +6716,9 @@ namespace Barotrauma
                 wiringToolPanel.DrawManually(spriteBatch);                
             }
             MapEntity.DrawEditor(spriteBatch, cam);
+
+            // Draw other users' cursors in collaborative editing mode
+            DrawCollaborativeCursors(spriteBatch);
 
             GUI.Draw(Cam, spriteBatch);
 
