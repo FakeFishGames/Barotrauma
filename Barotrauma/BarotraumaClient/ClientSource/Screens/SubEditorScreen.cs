@@ -1386,8 +1386,8 @@ namespace Barotrauma
 
         /// <summary>
         /// Start hosting a collaborative editing session.
-        /// This starts a real DedicatedServer process (like normal multiplayer) 
-        /// and connects to it, but in SubEditor mode.
+        /// Starts a DedicatedServer in SubEditor mode. Host stays in SubEditor
+        /// and clients connecting will be told to enter SubEditor.
         /// </summary>
         private void StartHostingSession(string sessionName, int port)
         {
@@ -1403,50 +1403,18 @@ namespace Barotrauma
 #endif
                 
                 // Build command line arguments for the server
-                // We pass a special flag to indicate SubEditor mode
                 var arguments = new List<string>
                 {
                     "-name", sessionName,
-                    "-public", "false",  // SubEditor sessions are private by default
+                    "-port", port.ToString(),
+                    "-public", "false",  // SubEditor sessions are private
                     "-playstyle", PlayStyle.Casual.ToString(),
-                    "-banafterwrongpassword", "false",
                     "-karmaenabled", "false",
                     "-maxplayers", "16",
                     "-language", GameSettings.CurrentConfig.Language.ToString(),
                     "-nopassword",
-                    "-subeditormode", "true"  // Special flag for SubEditor mode
+                    "-subeditormode", "true"  // Server enters SubEditor mode
                 };
-                
-                // Build endpoints for connection
-                var endpoints = new List<Endpoint>();
-                if (SteamManager.GetSteamId().TryUnwrap(out var steamId))
-                {
-                    endpoints.Add(new SteamP2PEndpoint(steamId));
-                }
-                
-                var puids = EosInterface.IdQueries.GetLoggedInPuids();
-                if (puids.Length > 0)
-                {
-                    endpoints.Add(new EosP2PEndpoint(puids[0]));
-                }
-                
-                // Always add LAN endpoint as fallback
-                if (endpoints.Count == 0)
-                {
-                    endpoints.Add(new LidgrenEndpoint(IPAddress.Loopback, port));
-                }
-                
-                // Add P2P endpoint to arguments if available
-                if (endpoints.FirstOrDefault() is P2PEndpoint firstEndpoint)
-                {
-                    arguments.Add("-endpoint");
-                    arguments.Add(firstEndpoint.StringRepresentation);
-                }
-                
-                // Generate owner key for authentication
-                int ownerKey = Math.Max(Rand.Int(int.MaxValue), 1);
-                arguments.Add("-ownerkey");
-                arguments.Add(ownerKey.ToString());
                 
                 // Configure the server process
                 var processInfo = new System.Diagnostics.ProcessStartInfo
@@ -1461,31 +1429,17 @@ namespace Barotrauma
                 };
                 arguments.ForEach(processInfo.ArgumentList.Add);
                 
-                // Start the server process using the same mechanism as main menu
+                // Start the server process
                 ChildServerRelay.Start(processInfo);
                 
-                // Wait for server to be ready
-                Thread.Sleep(1000);
+                DebugConsole.Log($"[SubEditor] Started SubEditor server: {sessionName} on port {port}");
                 
-                // Connect to our own server as the owner/host
-                GameMain.Client = new GameClient(
-                    playerName,
-                    endpoints.ToImmutableArray(),
-                    sessionName,
-                    Option.Some(ownerKey));
-                
-                // Initialize SubEditor networking layer
+                // Initialize local SubEditor networking (host doesn't need GameClient)
                 SubEditorNetworkingClient.Initialize();
                 SubEditorNetworkingClient.Instance.HostSession(0, playerName);
                 
-                DebugConsole.Log($"[SubEditor] Started server: {sessionName} on port {port}");
-                
                 // Show connection info dialog
                 var connectionInfo = new List<string>();
-                if (SteamManager.GetSteamId().TryUnwrap(out var displaySteamId))
-                {
-                    connectionInfo.Add($"Steam ID: {displaySteamId}");
-                }
                 try
                 {
                     var localIp = Dns.GetHostEntry(Dns.GetHostName())
@@ -1499,10 +1453,14 @@ namespace Barotrauma
                 catch { /* Ignore */ }
                 connectionInfo.Add($"Localhost: 127.0.0.1:{port}");
                 
+                // Note: Steam P2P joining would require the host to also be a GameClient
+                // For now, only direct IP connection is supported for SubEditor
+                
                 new GUIMessageBox(
                     TextManager.Get("SubEditorSessionStarted").Fallback("SubEditor Session Started"),
-                    TextManager.Get("SubEditorShareConnectionInfo").Fallback("Share this info with friends to join:") + 
-                    "\n\n" + string.Join("\n", connectionInfo));
+                    TextManager.Get("SubEditorShareConnectionInfo").Fallback("Share this with others to join via direct connect:") + 
+                    "\n\n" + string.Join("\n", connectionInfo) +
+                    "\n\nNote: Use 'Join Game' > 'Direct Connect' to join.");
                 
                 UpdateCollaborativeSessionUI();
             }

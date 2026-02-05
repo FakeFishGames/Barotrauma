@@ -927,8 +927,11 @@ namespace Barotrauma.Networking
             {
                 case SubEditorPacketHeader.EnterSubEditor:
                     // Server is in SubEditor mode - switch to SubEditor screen
+                    // Use the same cleanup as the "editsubs" console command
                     DebugConsole.Log("[SubEditor] Server requested SubEditor mode - switching screens");
-                    GameMain.SubEditorScreen.Select();
+                    Entity.Spawner?.Remove();
+                    Entity.Spawner = null;
+                    GameMain.SubEditorScreen.Select(enableAutoSave: false);
                     
                     // Initialize collaborative editing
                     SubEditorNetworkingClient.Initialize();
