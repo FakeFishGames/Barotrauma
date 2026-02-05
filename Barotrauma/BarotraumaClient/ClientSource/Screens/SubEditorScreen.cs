@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Xml.Linq;
 using Barotrauma.Sounds;
@@ -278,6 +280,12 @@ namespace Barotrauma
 
         private GUIDropDown linkedSubBox;
 
+        // Collaborative editing UI elements
+        private GUIButton hostButton;
+        private GUIButton joinButton;
+        private GUIFrame collaborativeUsersPanel;
+        private GUIListBox collaborativeUsersList;
+
         private static GUIComponent autoSaveLabel;
         private static int MaxAutoSaves => GameSettings.CurrentConfig.MaxAutoSaves;
 
@@ -511,6 +519,23 @@ namespace Barotrauma
             {
                 ToolTip = TextManager.Get("TestSubButton"),
                 OnClicked = TestSubmarine
+            };
+
+            // Collaborative editing buttons
+            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
+
+            hostButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
+                TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
+                OnClicked = ShowHostSessionPrompt
+            };
+
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
+                TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
+                OnClicked = ShowJoinSessionPrompt
             };
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
@@ -1110,6 +1135,9 @@ namespace Barotrauma
             };
             snapToGridFrame.RectTransform.MinSize = new Point(snapToGridFrame.Rect.Width, (int)(saveStampButton.Rect.Height / saveStampButton.RectTransform.RelativeSize.Y));
 
+            // Collaborative editing users panel
+            CreateCollaborativeUsersPanel();
+
             //Entity menu
             //------------------------------------------------
 
@@ -1228,9 +1256,21 @@ namespace Barotrauma
                 return true;
             }
 
+            // In collaborative mode, only the host can start test mode
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && !SubEditorNetworkingClient.Instance.IsHost)
+            {
+                new GUIMessageBox(
+                    TextManager.Get("SubEditorTestModeError").Fallback("Cannot Start Test"),
+                    TextManager.Get("SubEditorTestModeHostOnly").Fallback("Only the host can start test mode."));
+                return true;
+            }
+
             CloseItem();
 
             backedUpSubInfo = new SubmarineInfo(MainSub);
+
+            // Check if we're in collaborative mode
+            bool isCollaborativeTest = SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost;
 
             GameSession gameSession = new GameSession(backedUpSubInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
             
@@ -1253,6 +1293,15 @@ namespace Barotrauma
             
             if (gameSession.GameMode is TestGameMode testGameMode)
             {
+                // Store if this is a collaborative test
+                if (isCollaborativeTest)
+                {
+                    testGameMode.IsCollaborativeTest = true;
+                    
+                    // Spawn additional characters for connected editors
+                    SpawnCollaborativeEditorCharacters();
+                }
+
                 testGameMode.OnRoundEnd = () =>
                 {
                     Submarine.Unload();
@@ -1264,10 +1313,509 @@ namespace Barotrauma
             return true;
         }
 
+        /// <summary>
+        /// Spawn characters for connected collaborative editors during test mode.
+        /// </summary>
+        private void SpawnCollaborativeEditorCharacters()
+        {
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
+
+            // Get available spawn points
+            var spawnPoints = WayPoint.WayPointList
+                .Where(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Human)
+                .ToList();
+            
+            if (spawnPoints.Count == 0) return;
+
+            int spawnIndex = 0;
+            foreach (var kvp in SubEditorNetworkingClient.Instance.ConnectedEditors)
+            {
+                var user = kvp.Value;
+                
+                // Skip the local user (they already have a character from TestGameMode.Start())
+                if (user.SessionId == SubEditorNetworkingClient.Instance.LocalSessionId) continue;
+
+                // Get spawn point (cycle through available points)
+                var spawnPoint = spawnPoints[spawnIndex % spawnPoints.Count];
+                spawnIndex++;
+
+                // Create a character for this editor
+                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, user.Name);
+                
+                // Spawn the character
+                var character = Character.Create(
+                    characterInfo,
+                    spawnPoint.WorldPosition,
+                    "", 
+                    isRemotePlayer: false,
+                    hasAi: true);
+
+                if (character != null)
+                {
+                    character.TeamID = CharacterTeamType.Team1;
+                    character.GiveJobItems(isPvPMode: false, spawnPoint);
+                    
+                    DebugConsole.Log($"[SubEditor] Spawned test character for editor: {user.Name}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Notify connected editors that test mode has ended.
+        /// </summary>
+        private void NotifyTestModeEnded()
+        {
+            // TODO: Send network message to return all users to editor
+            DebugConsole.NewMessage("[SubEditor] Test mode ended, returning to editor", Color.Yellow);
+        }
+
         public void ClearBackedUpSubInfo()
         {
             backedUpSubInfo = null;
         }
+
+        #region Collaborative Editing
+
+        /// <summary>
+        /// Show the dialog for hosting a collaborative editing session.
+        /// </summary>
+        private bool ShowHostSessionPrompt(GUIButton button, object obj)
+        {
+            // Check if already in a multiplayer game
+            if (GameMain.Client != null)
+            {
+                // Already connected to a server - enable collaborative mode
+                SubEditorNetworkingClient.Initialize();
+                string playerName = GameMain.Client.Name ?? "Editor";
+                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
+                
+                // Populate with existing connected clients
+                foreach (var client in GameMain.Client.ConnectedClients)
+                {
+                    byte colorIndex = (byte)(client.SessionId % SubEditorUser.UserColors.Length);
+                    var user = new SubEditorUser((byte)client.SessionId, client.Name, colorIndex);
+                    SubEditorNetworkingClient.Instance.AddUser(user);
+                }
+                
+                UpdateCollaborativeSessionUI();
+                DebugConsole.Log("[SubEditor] Collaborative mode enabled - using existing multiplayer connection");
+                return true;
+            }
+            
+            // Not in a multiplayer game - show host dialog
+            var msgBox = new GUIMessageBox(
+                TextManager.Get("SubEditorHostSession").Fallback("Host Collaborative Session"), "",
+                new LocalizedString[] { TextManager.Get("Start").Fallback("Start"), TextManager.Get("Cancel") },
+                relativeSize: new Vector2(0.3f, 0.35f), minSize: new Point(400, 250));
+            
+            msgBox.Content.ChildAnchor = Anchor.TopCenter;
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            // Server name
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform),
+                TextManager.Get("ServerName").Fallback("Session Name"), textAlignment: Alignment.CenterLeft);
+            var nameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform))
+            {
+                Text = $"{MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor")}'s Session",
+                MaxTextLength = NetConfig.ServerNameMaxLength
+            };
+
+            // Port
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform),
+                TextManager.Get("Port").Fallback("Port"), textAlignment: Alignment.CenterLeft);
+            var portBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform))
+            {
+                Text = NetConfig.DefaultPort.ToString()
+            };
+
+            // Info text
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), content.RectTransform),
+                TextManager.Get("SubEditorHostInfo").Fallback("Others can join using your IP address and port."), 
+                textAlignment: Alignment.Center, wrap: true, font: GUIStyle.SmallFont)
+            {
+                TextColor = Color.Gray
+            };
+
+            var startButton = msgBox.Buttons[0];
+            startButton.OnClicked = (btn, userdata) =>
+            {
+                if (!int.TryParse(portBox.Text, out int port) || port < 1 || port > 65535)
+                {
+                    portBox.Flash(Color.Red);
+                    return false;
+                }
+
+                StartHostingSession(nameBox.Text, port);
+                msgBox.Close();
+                return true;
+            };
+
+            msgBox.Buttons[1].OnClicked = msgBox.Close;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Show the dialog for joining a collaborative editing session.
+        /// </summary>
+        private bool ShowJoinSessionPrompt(GUIButton button, object obj)
+        {
+            // Check if already in a multiplayer game
+            if (GameMain.Client != null)
+            {
+                // Already connected to a server - enable collaborative mode as client
+                SubEditorNetworkingClient.Initialize();
+                string playerName = GameMain.Client.Name ?? "Editor";
+                byte sessionId = (byte)(GameMain.Client.SessionId % 256);
+                byte colorIndex = (byte)(sessionId % SubEditorUser.UserColors.Length);
+                SubEditorNetworkingClient.Instance.JoinSession(sessionId, playerName, colorIndex);
+                
+                // Populate with existing connected clients
+                foreach (var client in GameMain.Client.ConnectedClients)
+                {
+                    byte clientColorIndex = (byte)(client.SessionId % SubEditorUser.UserColors.Length);
+                    var user = new SubEditorUser((byte)client.SessionId, client.Name, clientColorIndex);
+                    SubEditorNetworkingClient.Instance.AddUser(user);
+                }
+                
+                UpdateCollaborativeSessionUI();
+                DebugConsole.Log("[SubEditor] Joined collaborative session - using existing multiplayer connection");
+                return true;
+            }
+            
+            var msgBox = new GUIMessageBox(
+                TextManager.Get("SubEditorJoinSession").Fallback("Join Collaborative Session"), "",
+                new LocalizedString[] { TextManager.Get("ServerListJoin").Fallback("Join"), TextManager.Get("Cancel") },
+                relativeSize: new Vector2(0.3f, 0.25f), minSize: new Point(400, 200));
+            
+            msgBox.Content.ChildAnchor = Anchor.TopCenter;
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.5f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            // Server address
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform),
+                TextManager.Get("ServerEndpoint").Fallback("Server IP:Port"), textAlignment: Alignment.CenterLeft);
+            var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.4f), content.RectTransform))
+            {
+                Text = $"127.0.0.1:{NetConfig.DefaultPort}"
+            };
+
+            var joinButton = msgBox.Buttons[0];
+            joinButton.OnClicked = (btn, userdata) =>
+            {
+                if (Endpoint.Parse(endpointBox.Text).TryUnwrap(out var endpoint))
+                {
+                    JoinCollaborativeSession(endpoint);
+                    msgBox.Close();
+                }
+                else if (LidgrenEndpoint.ParseFromWithHostNameCheck(endpointBox.Text, tryParseHostName: true).TryUnwrap(out var lidgrenEndpoint))
+                {
+                    JoinCollaborativeSession(lidgrenEndpoint);
+                    msgBox.Close();
+                }
+                else
+                {
+                    new GUIMessageBox(TextManager.Get("error"), 
+                        TextManager.GetWithVariable("invalidipaddress", "[serverip]:[port]", endpointBox.Text)
+                            .Fallback($"Invalid address: {endpointBox.Text}"));
+                    endpointBox.Flash(Color.Red);
+                }
+                return true;
+            };
+
+            msgBox.Buttons[1].OnClicked = msgBox.Close;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Start hosting a collaborative editing session.
+        /// Starts a DedicatedServer in SubEditor mode. Host stays in SubEditor
+        /// and clients connecting will be told to enter SubEditor.
+        /// </summary>
+        private void StartHostingSession(string sessionName, int port)
+        {
+            try
+            {
+                string playerName = MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor");
+                
+                // Determine the server executable path
+#if WINDOWS
+                string serverFileName = "DedicatedServer.exe";
+#else
+                string serverFileName = "./DedicatedServer";
+#endif
+                
+                // Build command line arguments for the server
+                var arguments = new List<string>
+                {
+                    "-name", sessionName,
+                    "-port", port.ToString(),
+                    "-public", "false",  // SubEditor sessions are private
+                    "-playstyle", PlayStyle.Casual.ToString(),
+                    "-karmaenabled", "false",
+                    "-maxplayers", "16",
+                    "-language", GameSettings.CurrentConfig.Language.ToString(),
+                    "-nopassword",
+                    "-requireauthentication", "false",  // Allow LAN connections without Steam/EOS auth
+                    "-subeditormode", "true"  // Server enters SubEditor mode
+                };
+                
+                // Configure the server process
+                var processInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = serverFileName,
+                    WorkingDirectory = System.IO.Directory.GetCurrentDirectory(),
+#if !DEBUG
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+#endif
+                };
+                arguments.ForEach(processInfo.ArgumentList.Add);
+                
+                // Start the server process
+                ChildServerRelay.Start(processInfo);
+                
+                DebugConsole.Log($"[SubEditor] Started SubEditor server: {sessionName} on port {port}");
+                
+                // Initialize local SubEditor networking (host doesn't need GameClient)
+                SubEditorNetworkingClient.Initialize();
+                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
+                
+                // Show connection info dialog
+                var connectionInfo = new List<string>();
+                try
+                {
+                    var localIp = Dns.GetHostEntry(Dns.GetHostName())
+                        .AddressList
+                        .FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                    if (localIp != null)
+                    {
+                        connectionInfo.Add($"LAN: {localIp}:{port}");
+                    }
+                }
+                catch { /* Ignore */ }
+                connectionInfo.Add($"Localhost: 127.0.0.1:{port}");
+                
+                // Note: Steam P2P joining would require the host to also be a GameClient
+                // For now, only direct IP connection is supported for SubEditor
+                
+                new GUIMessageBox(
+                    TextManager.Get("SubEditorSessionStarted").Fallback("SubEditor Session Started"),
+                    TextManager.Get("SubEditorShareConnectionInfo").Fallback("Share this with others to join via direct connect:") + 
+                    "\n\n" + string.Join("\n", connectionInfo) +
+                    "\n\nNote: Use 'Join Game' > 'Direct Connect' to join.");
+                
+                UpdateCollaborativeSessionUI();
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("[SubEditor] Failed to start server", e);
+                new GUIMessageBox(TextManager.Get("error"), 
+                    TextManager.Get("SubEditorHostFailed").Fallback("Failed to start session: ") + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Join an existing collaborative editing session.
+        /// Connects using the game's standard GameClient, then enters SubEditor.
+        /// </summary>
+        private void JoinCollaborativeSession(Endpoint endpoint)
+        {
+            try
+            {
+                string playerName = MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor");
+                
+                // Connect to the server using standard GameClient
+                // The server is already running in SubEditor mode
+                GameMain.Client = new GameClient(
+                    playerName,
+                    ImmutableArray.Create(endpoint),
+                    string.Empty,  // Server name not known yet
+                    Option.None);  // Not the owner
+                
+                // Initialize SubEditor networking layer
+                SubEditorNetworkingClient.Initialize();
+                
+                byte sessionId = (byte)(1 + (Rand.Int(15) % 15));
+                byte colorIndex = sessionId;
+                SubEditorNetworkingClient.Instance.JoinSession(sessionId, playerName, colorIndex);
+                
+                DebugConsole.Log($"[SubEditor] Connecting to session at {endpoint}");
+                
+                UpdateCollaborativeSessionUI();
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("[SubEditor] Failed to join session", e);
+                new GUIMessageBox(TextManager.Get("error"), 
+                    TextManager.Get("SubEditorJoinFailed").Fallback("Failed to join: ") + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Update UI elements based on collaborative session state.
+        /// </summary>
+        private void UpdateCollaborativeSessionUI()
+        {
+            if (SubEditorNetworkingClient.Instance?.IsActive == true)
+            {
+                // Disable host/join buttons when in session
+                hostButton.Enabled = false;
+                joinButton.Enabled = false;
+                
+                // Change button text to indicate active session
+                if (SubEditorNetworkingClient.Instance.IsHost)
+                {
+                    hostButton.Text = TextManager.Get("SubEditorHosting").Fallback("Hosting...");
+                }
+                else
+                {
+                    joinButton.Text = TextManager.Get("SubEditorConnected").Fallback("Connected");
+                }
+
+                // Show users panel and refresh list
+                if (collaborativeUsersPanel != null)
+                {
+                    collaborativeUsersPanel.Visible = true;
+                    RefreshCollaborativeUsersList();
+                }
+            }
+            else
+            {
+                hostButton.Enabled = true;
+                joinButton.Enabled = true;
+                hostButton.Text = TextManager.Get("SubEditorHostButton").Fallback("Host");
+                joinButton.Text = TextManager.Get("SubEditorJoinButton").Fallback("Join");
+
+                // Hide users panel
+                if (collaborativeUsersPanel != null)
+                {
+                    collaborativeUsersPanel.Visible = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Leave the current collaborative session.
+        /// </summary>
+        private void LeaveCollaborativeSession()
+        {
+            SubEditorNetworkingClient.Instance?.LeaveSession();
+            UpdateCollaborativeSessionUI();
+        }
+
+        /// <summary>
+        /// Check if the local user can edit a specific entity (not locked by others).
+        /// </summary>
+        public bool CanEditEntity(MapEntity entity)
+        {
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return true;
+            return SubEditorNetworkingClient.Instance.CanEditEntity(entity);
+        }
+
+        /// <summary>
+        /// Get the selection color for an entity (colored if selected by another user).
+        /// </summary>
+        public Color GetEntitySelectionColor(MapEntity entity)
+        {
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return Color.White;
+            return SubEditorNetworkingClient.Instance.GetEntitySelectionColor(entity.ID) ?? Color.White;
+        }
+
+        /// <summary>
+        /// Draw other users' cursors in the editor.
+        /// </summary>
+        private void DrawCollaborativeCursors(SpriteBatch spriteBatch)
+        {
+            SubEditorNetworkingClient.Instance?.DrawCursors(spriteBatch, cam);
+        }
+
+        /// <summary>
+        /// Create the panel showing connected collaborative editors.
+        /// </summary>
+        private void CreateCollaborativeUsersPanel()
+        {
+            collaborativeUsersPanel = new GUIFrame(new RectTransform(new Vector2(0.12f, 0.3f), GUI.Canvas, Anchor.TopRight)
+            {
+                MinSize = new Point((int)(150 * GUI.Scale), (int)(100 * GUI.Scale)),
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(10 * GUI.Scale))
+            }, "InnerFrame")
+            {
+                Visible = false
+            };
+
+            var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), collaborativeUsersPanel.RectTransform, Anchor.TopCenter),
+                TextManager.Get("SubEditorCollaborators").Fallback("Editors"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+
+            collaborativeUsersList = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.7f), collaborativeUsersPanel.RectTransform, Anchor.Center)
+            {
+                RelativeOffset = new Vector2(0, 0.05f)
+            });
+
+            var leaveButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.12f), collaborativeUsersPanel.RectTransform, Anchor.BottomCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.02f)
+            }, TextManager.Get("SubEditorLeaveSession").Fallback("Leave Session"), style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, userData) =>
+                {
+                    LeaveCollaborativeSession();
+                    return true;
+                }
+            };
+        }
+
+        /// <summary>
+        /// Refresh the list of connected users in the panel.
+        /// </summary>
+        private void RefreshCollaborativeUsersList()
+        {
+            if (collaborativeUsersList == null) return;
+            collaborativeUsersList.Content.ClearChildren();
+
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
+
+            foreach (var kvp in SubEditorNetworkingClient.Instance.ConnectedEditors)
+            {
+                var user = kvp.Value;
+                var userFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), collaborativeUsersList.Content.RectTransform), style: null)
+                {
+                    UserData = user
+                };
+
+                // Color indicator
+                new GUIFrame(new RectTransform(new Vector2(0.1f, 0.8f), userFrame.RectTransform, Anchor.CenterLeft)
+                {
+                    RelativeOffset = new Vector2(0.02f, 0)
+                }, style: null)
+                {
+                    Color = user.GetColor(),
+                    OutlineColor = Color.White
+                };
+
+                // Username
+                var isLocal = user.SessionId == SubEditorNetworkingClient.Instance.LocalSessionId;
+                var displayName = isLocal ? $"{user.Name} (You)" : user.Name;
+                new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), userFrame.RectTransform, Anchor.CenterRight),
+                    displayName, font: GUIStyle.SmallFont);
+            }
+
+            // Show/hide panel based on active session
+            collaborativeUsersPanel.Visible = SubEditorNetworkingClient.Instance.IsActive;
+        }
+
+        #endregion Collaborative Editing
 
         private void UpdateEntityList()
         {
@@ -3988,14 +4536,14 @@ namespace Barotrauma
         {
             if (loadFrame == null)
             {
-                DebugConsole.NewMessage("load frame null", Color.Red);
+                DebugConsole.Log("load frame null");
                 return false;
             }
 
             GUIListBox subList = loadFrame.GetAnyChild<GUIListBox>();
             if (subList == null)
             {
-                DebugConsole.NewMessage("Sublist null", Color.Red);
+                DebugConsole.Log("Sublist null");
                 return false;
             }
 
@@ -5489,6 +6037,7 @@ namespace Barotrauma
             entityCountPanel.AddToGUIUpdateList();
             layerPanel.AddToGUIUpdateList();
             TopPanel.AddToGUIUpdateList();
+            collaborativeUsersPanel?.AddToGUIUpdateList();
 
             if (WiringMode)
             {
@@ -5767,6 +6316,13 @@ namespace Barotrauma
         {
             SkipInventorySlotUpdate = false;
             ImageManager.Update((float)deltaTime);
+
+            // Update cursor position for collaborative editing
+            if (SubEditorNetworkingClient.Instance?.IsActive == true)
+            {
+                Vector2 worldPos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                SubEditorNetworkingClient.Instance.UpdateCursor(worldPos, (float)deltaTime);
+            }
 
             Hull.UpdateCheats((float)deltaTime, cam);
 

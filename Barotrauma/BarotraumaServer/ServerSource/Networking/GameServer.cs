@@ -15,7 +15,7 @@ using Barotrauma.PerkBehaviors;
 
 namespace Barotrauma.Networking
 {
-    sealed class GameServer : NetworkMember
+    sealed partial class GameServer : NetworkMember
     {
         public override bool IsServer => true;
         public override bool IsClient => false;
@@ -378,6 +378,24 @@ namespace Barotrauma.Networking
                 if (otherClient == newClient) { continue; }
                 CoroutineManager.StartCoroutine(SendClientPermissionsAfterClientListSynced(newClient, otherClient));
             }
+            
+            // If server is in SubEditor mode, tell the client to enter SubEditor
+            if (GameMain.IsSubEditorMode)
+            {
+                SendSubEditorModeMessage(newClient);
+            }
+        }
+        
+        /// <summary>
+        /// Send a message to a client telling them to enter SubEditor mode.
+        /// </summary>
+        private void SendSubEditorModeMessage(Client client)
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EnterSubEditor);
+            serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            DebugConsole.Log($"[SubEditor] Sent EnterSubEditor message to {client.Name}");
         }
 
         private void OnClientDisconnect(NetworkConnection connection, PeerDisconnectPacket peerDisconnectPacket)
@@ -1028,6 +1046,9 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPacketHeader.REQUEST_BACKUP_INDICES:
                     SendBackupIndices(inc, connectedClient);
+                    break;
+                case ClientPacketHeader.SUBEDITOR:
+                    ReadSubEditorMessage(inc, connectedClient);
                     break;
                 case ClientPacketHeader.ERROR:
                     HandleClientError(inc, connectedClient);

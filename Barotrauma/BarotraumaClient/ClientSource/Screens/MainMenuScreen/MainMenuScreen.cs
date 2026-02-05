@@ -459,7 +459,7 @@ namespace Barotrauma
                 UserData = Tab.Credits,
                 OnClicked = SelectTab
             };
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("QuitButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), "COPILOT BUILD TEST", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 OnClicked = QuitClicked
