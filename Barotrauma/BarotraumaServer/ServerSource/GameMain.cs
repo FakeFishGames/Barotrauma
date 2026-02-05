@@ -48,6 +48,12 @@ namespace Barotrauma
 
         public static Thread MainThread { get; private set; }
 
+        /// <summary>
+        /// When true, the server is running in SubEditor collaborative mode.
+        /// Players connecting will be placed in SubEditor instead of the lobby.
+        /// </summary>
+        public static bool IsSubEditorMode { get; private set; }
+
         //only screens the server implements
         public static GameScreen GameScreen;
         public static NetLobbyScreen NetLobbyScreen;
@@ -224,6 +230,15 @@ namespace Barotrauma
                         ownerEndpoint = P2PEndpoint.Parse(CommandLineArgs[i + 1]);
                         i++;
                         break;
+                    case "-subeditormode":
+                        bool.TryParse(CommandLineArgs[i + 1], out bool subEditorMode);
+                        IsSubEditorMode = subEditorMode;
+                        if (IsSubEditorMode)
+                        {
+                            DebugConsole.NewMessage("[SubEditor] Server starting in collaborative SubEditor mode", Color.Cyan);
+                        }
+                        i++;
+                        break;
                     case "-pipes":
                         //handled in TryStartChildServerRelay
                         i += 2;
@@ -241,7 +256,9 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 ownerEndpoint);
-            Server.StartServer(registerToServerList: true);
+            
+            // In SubEditor mode, don't register to public server list
+            Server.StartServer(registerToServerList: !IsSubEditorMode && publiclyVisible);
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {

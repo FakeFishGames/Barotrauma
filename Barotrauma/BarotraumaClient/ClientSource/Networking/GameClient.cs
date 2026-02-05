@@ -925,6 +925,16 @@ namespace Barotrauma.Networking
             
             switch (subHeader)
             {
+                case SubEditorPacketHeader.EnterSubEditor:
+                    // Server is in SubEditor mode - switch to SubEditor screen
+                    DebugConsole.Log("[SubEditor] Server requested SubEditor mode - switching screens");
+                    GameMain.SubEditorScreen.Select();
+                    
+                    // Initialize collaborative editing
+                    SubEditorNetworkingClient.Initialize();
+                    byte colorIndex = (byte)(SessionId % SubEditorUser.UserColors.Length);
+                    SubEditorNetworkingClient.Instance.JoinSession((byte)SessionId, Name, colorIndex);
+                    break;
                 case SubEditorPacketHeader.CursorPosition:
                     var cursorData = INetSerializableStruct.Read<SubEditorCursorData>(inc);
                     SubEditorNetworkingClient.Instance?.ReceiveCursorPosition(cursorData);

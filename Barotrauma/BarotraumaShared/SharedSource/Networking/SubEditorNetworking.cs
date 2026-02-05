@@ -10,6 +10,8 @@ namespace Barotrauma.Networking
     /// </summary>
     public enum SubEditorPacketHeader : byte
     {
+        /// <summary>Server tells client to enter SubEditor mode</summary>
+        EnterSubEditor,
         /// <summary>Host sends full submarine XML to clients when loading</summary>
         SyncSubmarine,
         /// <summary>Client/Host sends cursor position updates</summary>

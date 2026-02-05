@@ -371,6 +371,24 @@ namespace Barotrauma.Networking
                 if (otherClient == newClient) { continue; }
                 CoroutineManager.StartCoroutine(SendClientPermissionsAfterClientListSynced(newClient, otherClient));
             }
+            
+            // If server is in SubEditor mode, tell the client to enter SubEditor
+            if (GameMain.IsSubEditorMode)
+            {
+                SendSubEditorModeMessage(newClient);
+            }
+        }
+        
+        /// <summary>
+        /// Send a message to a client telling them to enter SubEditor mode.
+        /// </summary>
+        private void SendSubEditorModeMessage(Client client)
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EnterSubEditor);
+            serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            DebugConsole.Log($"[SubEditor] Sent EnterSubEditor message to {client.Name}");
         }
 
         private void OnClientDisconnect(NetworkConnection connection, PeerDisconnectPacket peerDisconnectPacket)
