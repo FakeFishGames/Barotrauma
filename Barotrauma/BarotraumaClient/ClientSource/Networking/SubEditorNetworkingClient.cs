@@ -17,6 +17,13 @@ namespace Barotrauma.Networking
         /// </summary>
         public static SubEditorNetworkingClient Instance { get; private set; }
 
+        // Cursor rendering constants
+        private const float MinCursorMovementDistanceSquared = 100f;
+        private const int CursorSize = 10;
+        private const int CursorHalfSize = 5;
+        private const int UsernameOffsetX = 12;
+        private const int UsernameOffsetY = -8;
+
         private float cursorSyncTimer;
         private Vector2 lastSentCursorPos;
         private byte localSessionId;
@@ -105,7 +112,7 @@ namespace Barotrauma.Networking
             cursorSyncTimer -= deltaTime;
             
             // Only sync if position changed significantly and timer expired
-            if (cursorSyncTimer <= 0 && Vector2.DistanceSquared(lastSentCursorPos, worldPosition) > 100f)
+            if (cursorSyncTimer <= 0 && Vector2.DistanceSquared(lastSentCursorPos, worldPosition) > MinCursorMovementDistanceSquared)
             {
                 SendCursorPosition(worldPosition);
                 lastSentCursorPos = worldPosition;
@@ -187,7 +194,7 @@ namespace Barotrauma.Networking
                     // Draw a simple cursor indicator
                     // Using GUI primitives since we don't have a custom sprite
                     GUI.DrawRectangle(spriteBatch, 
-                        new Rectangle((int)screenPos.X - 5, (int)screenPos.Y - 5, 10, 10), 
+                        new Rectangle((int)screenPos.X - CursorHalfSize, (int)screenPos.Y - CursorHalfSize, CursorSize, CursorSize), 
                         cursorColor, 
                         isFilled: true);
                     
@@ -195,7 +202,7 @@ namespace Barotrauma.Networking
                     if (GUIStyle.SmallFont != null)
                     {
                         GUI.DrawString(spriteBatch, 
-                            screenPos + new Vector2(12, -8), 
+                            screenPos + new Vector2(UsernameOffsetX, UsernameOffsetY), 
                             user.Name, 
                             cursorColor, 
                             font: GUIStyle.SmallFont);
