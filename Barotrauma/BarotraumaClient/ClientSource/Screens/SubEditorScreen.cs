@@ -1098,9 +1098,21 @@ namespace Barotrauma
                 return true;
             }
 
+            // In collaborative mode, only the host can start test mode
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && !SubEditorNetworkingClient.Instance.IsHost)
+            {
+                new GUIMessageBox(
+                    TextManager.Get("SubEditorTestModeError").Fallback("Cannot Start Test"),
+                    TextManager.Get("SubEditorTestModeHostOnly").Fallback("Only the host can start test mode."));
+                return true;
+            }
+
             CloseItem();
 
             backedUpSubInfo = new SubmarineInfo(MainSub);
+
+            // Check if we're in collaborative mode
+            bool isCollaborativeTest = SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost;
 
             GameSession gameSession = new GameSession(backedUpSubInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
             
@@ -1123,14 +1135,85 @@ namespace Barotrauma
             
             if (gameSession.GameMode is TestGameMode testGameMode)
             {
+                // Store if this is a collaborative test
+                if (isCollaborativeTest)
+                {
+                    testGameMode.IsCollaborativeTest = true;
+                    
+                    // Spawn additional characters for connected editors
+                    SpawnCollaborativeEditorCharacters();
+                }
+
                 testGameMode.OnRoundEnd = () =>
                 {
                     Submarine.Unload();
                     GameMain.SubEditorScreen.Select();
+                    
+                    // Notify other users that test mode ended
+                    if (isCollaborativeTest)
+                    {
+                        NotifyTestModeEnded();
+                    }
                 };
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Spawn characters for connected collaborative editors during test mode.
+        /// </summary>
+        private void SpawnCollaborativeEditorCharacters()
+        {
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
+
+            // Get available spawn points
+            var spawnPoints = WayPoint.WayPointList
+                .Where(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Human)
+                .ToList();
+            
+            if (spawnPoints.Count == 0) return;
+
+            int spawnIndex = 0;
+            foreach (var kvp in SubEditorNetworkingClient.Instance.ConnectedEditors)
+            {
+                var user = kvp.Value;
+                
+                // Skip the local user (they already have a character from TestGameMode.Start())
+                if (user.SessionId == SubEditorNetworkingClient.Instance.LocalSessionId) continue;
+
+                // Get spawn point (cycle through available points)
+                var spawnPoint = spawnPoints[spawnIndex % spawnPoints.Count];
+                spawnIndex++;
+
+                // Create a character for this editor
+                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, user.Name);
+                
+                // Spawn the character
+                var character = Character.Create(
+                    characterInfo,
+                    spawnPoint.WorldPosition,
+                    "", 
+                    isRemotePlayer: false,
+                    hasAi: true);
+
+                if (character != null)
+                {
+                    character.TeamID = CharacterTeamType.Team1;
+                    character.GiveJobItems(isPvPMode: false, spawnPoint);
+                    
+                    DebugConsole.NewMessage($"[SubEditor] Spawned test character for editor: {user.Name}", Color.LightGreen);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Notify connected editors that test mode has ended.
+        /// </summary>
+        private void NotifyTestModeEnded()
+        {
+            // TODO: Send network message to return all users to editor
+            DebugConsole.NewMessage("[SubEditor] Test mode ended, returning to editor", Color.Yellow);
         }
 
         public void ClearBackedUpSubInfo()

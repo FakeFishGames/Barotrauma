@@ -4,6 +4,11 @@ namespace Barotrauma
 {
     partial class TestGameMode : GameMode
     {
+        /// <summary>
+        /// Whether this test was started from a collaborative editing session.
+        /// </summary>
+        public bool IsCollaborativeTest { get; set; }
+
         public TestGameMode(GameModePreset preset) : base(preset)
         {
             foreach (JobPrefab jobPrefab in JobPrefab.Prefabs.OrderBy(p => p.Identifier))

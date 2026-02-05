@@ -44,7 +44,9 @@ namespace Barotrauma.Networking
         READY_TO_SPAWN,
         TAKEOVERBOT,
 
-        REQUEST_BACKUP_INDICES // client wants a list of available backups for a save file
+        REQUEST_BACKUP_INDICES, // client wants a list of available backups for a save file
+
+        SUBEDITOR // collaborative submarine editor messages
     }
 
     enum ClientNetSegment
@@ -101,7 +103,9 @@ namespace Barotrauma.Networking
         MONEY,
         READY_CHECK,        //start, end and update a ready check
 
-        SEND_BACKUP_INDICES // the server sends a list of available backups for a save file
+        SEND_BACKUP_INDICES, // the server sends a list of available backups for a save file
+
+        SUBEDITOR // collaborative submarine editor messages
     }
     enum ServerNetSegment
     {
