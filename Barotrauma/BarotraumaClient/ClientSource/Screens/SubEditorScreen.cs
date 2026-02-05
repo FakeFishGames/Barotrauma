@@ -1413,6 +1413,7 @@ namespace Barotrauma
                     "-maxplayers", "16",
                     "-language", GameSettings.CurrentConfig.Language.ToString(),
                     "-nopassword",
+                    "-requireauthentication", "false",  // Allow LAN connections without Steam/EOS auth
                     "-subeditormode", "true"  // Server enters SubEditor mode
                 };
                 
