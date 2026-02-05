@@ -1386,58 +1386,129 @@ namespace Barotrauma
 
         /// <summary>
         /// Start hosting a collaborative editing session.
+        /// This starts a real DedicatedServer process (like normal multiplayer) 
+        /// and connects to it, but in SubEditor mode.
         /// </summary>
         private void StartHostingSession(string sessionName, int port)
         {
-            // Initialize the networking client
-            SubEditorNetworkingClient.Initialize();
-            
-            // For now, we'll use a simplified approach:
-            // The host will start a server process and connect to it as a client
-            // This leverages the existing multiplayer infrastructure
-            
             try
             {
                 string playerName = MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor");
                 
-                // Generate session ID for the host (always 0 for host)
-                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
+                // Determine the server executable path
+#if WINDOWS
+                string serverFileName = "DedicatedServer.exe";
+#else
+                string serverFileName = "./DedicatedServer";
+#endif
                 
-                // Update UI to show we're in a session
-                UpdateCollaborativeSessionUI();
+                // Build command line arguments for the server
+                // We pass a special flag to indicate SubEditor mode
+                var arguments = new List<string>
+                {
+                    "-name", sessionName,
+                    "-public", "false",  // SubEditor sessions are private by default
+                    "-playstyle", PlayStyle.Casual.ToString(),
+                    "-banafterwrongpassword", "false",
+                    "-karmaenabled", "false",
+                    "-maxplayers", "16",
+                    "-language", GameSettings.CurrentConfig.Language.ToString(),
+                    "-nopassword",
+                    "-subeditormode", "true"  // Special flag for SubEditor mode
+                };
                 
-                DebugConsole.Log($"[SubEditor] Started hosting collaborative session: {sessionName} on port {port}");
-                
-                // Show info dialog with connection details
-                var endpoints = new List<string>();
+                // Build endpoints for connection
+                var endpoints = new List<Endpoint>();
                 if (SteamManager.GetSteamId().TryUnwrap(out var steamId))
                 {
-                    endpoints.Add($"Steam: {steamId}");
+                    endpoints.Add(new SteamP2PEndpoint(steamId));
                 }
                 
-                // Get local IP for direct connection
+                var puids = EosInterface.IdQueries.GetLoggedInPuids();
+                if (puids.Length > 0)
+                {
+                    endpoints.Add(new EosP2PEndpoint(puids[0]));
+                }
+                
+                // Always add LAN endpoint as fallback
+                if (endpoints.Count == 0)
+                {
+                    endpoints.Add(new LidgrenEndpoint(IPAddress.Loopback, port));
+                }
+                
+                // Add P2P endpoint to arguments if available
+                if (endpoints.FirstOrDefault() is P2PEndpoint firstEndpoint)
+                {
+                    arguments.Add("-endpoint");
+                    arguments.Add(firstEndpoint.StringRepresentation);
+                }
+                
+                // Generate owner key for authentication
+                int ownerKey = Math.Max(Rand.Int(int.MaxValue), 1);
+                arguments.Add("-ownerkey");
+                arguments.Add(ownerKey.ToString());
+                
+                // Configure the server process
+                var processInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = serverFileName,
+                    WorkingDirectory = System.IO.Directory.GetCurrentDirectory(),
+#if !DEBUG
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+#endif
+                };
+                arguments.ForEach(processInfo.ArgumentList.Add);
+                
+                // Start the server process using the same mechanism as main menu
+                ChildServerRelay.Start(processInfo);
+                
+                // Wait for server to be ready
+                Thread.Sleep(1000);
+                
+                // Connect to our own server as the owner/host
+                GameMain.Client = new GameClient(
+                    playerName,
+                    endpoints.ToImmutableArray(),
+                    sessionName,
+                    Option.Some(ownerKey));
+                
+                // Initialize SubEditor networking layer
+                SubEditorNetworkingClient.Initialize();
+                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
+                
+                DebugConsole.Log($"[SubEditor] Started server: {sessionName} on port {port}");
+                
+                // Show connection info dialog
+                var connectionInfo = new List<string>();
+                if (SteamManager.GetSteamId().TryUnwrap(out var displaySteamId))
+                {
+                    connectionInfo.Add($"Steam ID: {displaySteamId}");
+                }
                 try
                 {
-                    var localIp = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName())
+                    var localIp = Dns.GetHostEntry(Dns.GetHostName())
                         .AddressList
                         .FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
                     if (localIp != null)
                     {
-                        endpoints.Add($"LAN: {localIp}:{port}");
+                        connectionInfo.Add($"LAN: {localIp}:{port}");
                     }
                 }
-                catch { /* Ignore network errors */ }
-                
-                endpoints.Add($"Localhost: 127.0.0.1:{port}");
+                catch { /* Ignore */ }
+                connectionInfo.Add($"Localhost: 127.0.0.1:{port}");
                 
                 new GUIMessageBox(
-                    TextManager.Get("SubEditorSessionStarted").Fallback("Session Started"),
-                    TextManager.Get("SubEditorShareConnectionInfo").Fallback("Share this with others to let them join:") + 
-                    "\n\n" + string.Join("\n", endpoints));
+                    TextManager.Get("SubEditorSessionStarted").Fallback("SubEditor Session Started"),
+                    TextManager.Get("SubEditorShareConnectionInfo").Fallback("Share this info with friends to join:") + 
+                    "\n\n" + string.Join("\n", connectionInfo));
+                
+                UpdateCollaborativeSessionUI();
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"[SubEditor] Failed to start collaborative session", e);
+                DebugConsole.ThrowError("[SubEditor] Failed to start server", e);
                 new GUIMessageBox(TextManager.Get("error"), 
                     TextManager.Get("SubEditorHostFailed").Fallback("Failed to start session: ") + e.Message);
             }
@@ -1445,30 +1516,38 @@ namespace Barotrauma
 
         /// <summary>
         /// Join an existing collaborative editing session.
+        /// Connects using the game's standard GameClient, then enters SubEditor.
         /// </summary>
         private void JoinCollaborativeSession(Endpoint endpoint)
         {
             try
             {
-                SubEditorNetworkingClient.Initialize();
-                
                 string playerName = MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor");
                 
-                // Generate a random session ID for this client (1-15)
+                // Connect to the server using standard GameClient
+                // The server is already running in SubEditor mode
+                GameMain.Client = new GameClient(
+                    playerName,
+                    ImmutableArray.Create(endpoint),
+                    string.Empty,  // Server name not known yet
+                    Option.None);  // Not the owner
+                
+                // Initialize SubEditor networking layer
+                SubEditorNetworkingClient.Initialize();
+                
                 byte sessionId = (byte)(1 + (Rand.Int(15) % 15));
                 byte colorIndex = sessionId;
-                
                 SubEditorNetworkingClient.Instance.JoinSession(sessionId, playerName, colorIndex);
                 
-                UpdateCollaborativeSessionUI();
+                DebugConsole.Log($"[SubEditor] Connecting to session at {endpoint}");
                 
-                DebugConsole.Log($"[SubEditor] Joined collaborative session at {endpoint}");
+                UpdateCollaborativeSessionUI();
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"[SubEditor] Failed to join collaborative session", e);
+                DebugConsole.ThrowError("[SubEditor] Failed to join session", e);
                 new GUIMessageBox(TextManager.Get("error"), 
-                    TextManager.Get("SubEditorJoinFailed").Fallback("Failed to join session: ") + e.Message);
+                    TextManager.Get("SubEditorJoinFailed").Fallback("Failed to join: ") + e.Message);
             }
         }
 
