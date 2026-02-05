@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -21,6 +21,9 @@ namespace Barotrauma
         private List<Event> scriptedEvent;
 
         private GUIButton createEventButton;
+
+        public LevelGenerationParams BackgroundParams { get; private set; }
+        public Vector2 WaterParticleOffset;
 
         public override void Start()
         {
@@ -68,6 +71,12 @@ namespace Barotrauma
                     }
                 };
             }
+
+            if (Level.Loaded == null)
+            {
+                BackgroundParams ??= LevelGenerationParams.LevelParams.Where(lp => !lp.AllowedBiomeIdentifiers.Contains("endzone")).GetRandom(Rand.RandSync.Unsynced);
+                GameMain.LightManager.AmbientLight = BackgroundParams.AmbientLightColor;
+            }
         }
 
         public override void AddToGUIUpdateList()
@@ -93,6 +102,8 @@ namespace Barotrauma
                     sEvent.Update(deltaTime);
                 }
             }
+
+            BackgroundParams?.UpdateWaterParticleOffset(ref WaterParticleOffset, BackgroundParams.WaterParticleVelocity, deltaTime);
         }
 
         private void GenerateOutpost(Submarine submarine)

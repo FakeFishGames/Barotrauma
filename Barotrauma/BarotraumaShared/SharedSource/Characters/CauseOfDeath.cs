@@ -4,7 +4,11 @@ namespace Barotrauma
 {
     enum CauseOfDeathType
     {
-        Unknown, Pressure, Suffocation, Drowning, Affliction, Disconnected
+        Unknown, Pressure, Suffocation, Drowning, Affliction, Disconnected,
+        /// <summary>
+        /// Special cause of death type returned by <see cref="Character.CauseOfDeathType"/> when the character is not dead.
+        /// </summary>        
+        None
     }
 
     class CauseOfDeath

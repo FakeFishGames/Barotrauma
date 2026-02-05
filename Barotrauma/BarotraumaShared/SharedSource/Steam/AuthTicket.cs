@@ -44,8 +44,8 @@ namespace Barotrauma.Steam
         #region Auth ticket for EOS host
         private const string EosHostAuthIdentity = "BarotraumaRemotePlayerAuth";
 
-        private static Option<Steamworks.AuthTicketForWebApi> currentEosHostAuthTicket = Option.None;
-        public static async Task<Option<Steamworks.AuthTicketForWebApi>> GetAuthTicketForEosHostAuth()
+        private static Option<Steamworks.AuthTicket> currentEosHostAuthTicket = Option.None;
+        public static async Task<Option<Steamworks.AuthTicket>> GetAuthTicketForEosHostAuth()
         {
             if (!IsInitialized)
             {
@@ -58,7 +58,7 @@ namespace Barotrauma.Steam
             }
             currentEosHostAuthTicket = Option.None;
 
-            var newTicket = await Steamworks.SteamUser.GetAuthTicketForWebApi(identity: EosHostAuthIdentity);
+            var newTicket = await Steamworks.SteamUser.GetAuthTicketForWebApiAsync(identity: EosHostAuthIdentity);
 
             currentEosHostAuthTicket = newTicket != null
                 ? Option.Some(newTicket)
@@ -71,8 +71,8 @@ namespace Barotrauma.Steam
         #region Auth ticket for GameAnalytics consent server
         private const string GameAnalyticsConsentIdentity = "BarotraumaGameAnalyticsConsent";
 
-        private static Option<Steamworks.AuthTicketForWebApi> currentGameAnalyticsConsentTicket = Option.None;
-        public static async Task<Option<Steamworks.AuthTicketForWebApi>> GetAuthTicketForGameAnalyticsConsent()
+        private static Option<Steamworks.AuthTicket> currentGameAnalyticsConsentTicket = Option.None;
+        public static async Task<Option<Steamworks.AuthTicket>> GetAuthTicketForGameAnalyticsConsent()
         {
             if (!IsInitialized)
             {
@@ -85,7 +85,7 @@ namespace Barotrauma.Steam
             }
             currentGameAnalyticsConsentTicket = Option.None;
 
-            var newTicket = await Steamworks.SteamUser.GetAuthTicketForWebApi(identity: GameAnalyticsConsentIdentity);
+            var newTicket = await Steamworks.SteamUser.GetAuthTicketForWebApiAsync(identity: GameAnalyticsConsentIdentity);
 
             currentGameAnalyticsConsentTicket = newTicket != null
                 ? Option.Some(newTicket)

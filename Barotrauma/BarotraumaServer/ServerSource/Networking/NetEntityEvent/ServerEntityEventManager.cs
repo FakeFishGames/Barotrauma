@@ -128,11 +128,11 @@ namespace Barotrauma.Networking
             //remove old events that have been sent to all clients, they are redundant now
             //  keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
             //  and events less than 15 seconds old to give disconnected clients a bit of time to reconnect without getting desynced
-            if (GameMain.GameSession.RoundDuration > NetConfig.RoundStartSyncDuration)
+            if (GameMain.GameSession.RoundDuration > server.ServerSettings.RoundStartSyncDuration)
             {
                 events.RemoveAll(e => 
                     (NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) || !inGameClientsPresent) && 
-                    e.CreateTime < Timing.TotalTime - NetConfig.EventRemovalTime);
+                    e.CreateTime < Timing.TotalTime - server.ServerSettings.EventRemovalTime);
             }
             
             for (int i = events.Count - 1; i >= 0; i--)
@@ -226,7 +226,7 @@ namespace Barotrauma.Networking
 
                 if (Timing.TotalTime - lastWarningTime > 5.0 && 
                     Timing.TotalTime - lastSentToAnyoneTime > 10.0 && 
-                    GameMain.GameSession.RoundDuration > NetConfig.RoundStartSyncDuration)
+                    GameMain.GameSession.RoundDuration > server.ServerSettings.RoundStartSyncDuration)
                 {
                     lastWarningTime = Timing.TotalTime;
                     string warningMsg = $"WARNING: ServerEntityEventManager is lagging behind! Last sent id: {lastSentToAnyone}, latest create id: {ID}";
@@ -240,8 +240,8 @@ namespace Barotrauma.Networking
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
                 if (firstEventToResend != null &&
-                    GameMain.GameSession.RoundDuration > NetConfig.RoundStartSyncDuration &&
-                    ((lastSentToAnyoneTime - firstEventToResend.CreateTime) > NetConfig.OldReceivedEventKickTime || (Timing.TotalTime - firstEventToResend.CreateTime) > NetConfig.OldEventKickTime))
+                    GameMain.GameSession.RoundDuration > server.ServerSettings.RoundStartSyncDuration &&
+                    ((lastSentToAnyoneTime - firstEventToResend.CreateTime) > server.ServerSettings.OldReceivedEventKickTime || (Timing.TotalTime - firstEventToResend.CreateTime) > server.ServerSettings.OldEventKickTime))
                 {
                     //  This event is 10 seconds older than the last one we've successfully sent,
                     //  kick everyone that hasn't received it yet, this is way too old

@@ -23,6 +23,12 @@ namespace Barotrauma
             get { return allowedLocationTypes; } 
         }
 
+        private readonly HashSet<Identifier> allowedGameModeIdentifiers = new HashSet<Identifier>();
+
+        public IEnumerable<Identifier> AllowedGameModeIdentifiers
+        {
+            get { return allowedGameModeIdentifiers; }
+        }
 
         [Serialize(-1, IsPropertySaveable.Yes, description: "Should this type of outpost be forced to the locations at the end of the campaign map? 0 = first end level, 1 = second end level, and so on."), Editable(MinValueInt = -1, MaxValueInt = 10)]
         public int ForceToEndLocationIndex
@@ -54,6 +60,13 @@ namespace Barotrauma
 
         [Serialize(200.0f, IsPropertySaveable.Yes, description: "Minimum length of the hallways between modules. If 0, the generator will place the modules directly against each other assuming it can be done without making any modules overlap."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float MinHallwayLength
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should hallways of the minimum hallway length be always generated between modules, even if they could be placed directly against each other with no overlaps?"), Editable]
+        public bool AlwaysGenerateHallways
         {
             get;
             set;
@@ -272,6 +285,7 @@ namespace Barotrauma
         {
             Name = element.GetAttributeString("name", Identifier.Value);
             allowedLocationTypes = element.GetAttributeIdentifierArray("allowedlocationtypes", Array.Empty<Identifier>()).ToHashSet();
+            allowedGameModeIdentifiers = element.GetAttributeIdentifierArray("allowedgamemodes", Array.Empty<Identifier>()).ToHashSet();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             if (element.GetAttribute("leveltype") != null)

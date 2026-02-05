@@ -1790,7 +1790,7 @@ namespace Barotrauma.CharacterEditor
                     XElement element = animation.MainElement;
                     if (element == null) { continue; }
                     element.SetAttributeValue("type", name);
-                    string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType);
+                    string fullPath = AnimationParams.GetDefaultFilePath(name, animation.AnimationType);
                     element.Name = AnimationParams.GetDefaultFileName(name, animation.AnimationType);
 #if DEBUG
                     element.Save(fullPath);
@@ -1818,7 +1818,7 @@ namespace Barotrauma.CharacterEditor
                         default: continue;
                     }
                     Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
-                    string fullPath = AnimationParams.GetDefaultFile(name, animType);
+                    string fullPath = AnimationParams.GetDefaultFilePath(name, animType);
                     AnimationParams.Create(fullPath, name, animType, type);
                 }
             }

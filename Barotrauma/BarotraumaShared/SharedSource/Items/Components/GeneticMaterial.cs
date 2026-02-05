@@ -244,24 +244,48 @@ namespace Barotrauma.Items.Components
                 if (!targetCharacter.HasEquippedItem(item) &&
                     (rootContainer == null || !targetCharacter.HasEquippedItem(rootContainer) || !targetCharacter.Inventory.IsInLimbSlot(rootContainer, InvSlotType.HealthInterface)))
                 {
-                    item.ApplyStatusEffects(ActionType.OnSevered, 1.0f, targetCharacter);
+                    Character prevTargetCharacter = targetCharacter;
+
                     //deactivate so the material is no longer updated or considered to be "in effect" in GetCombinedEffectStrength
-                    IsActive = false;
-                    var affliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
-                    if (affliction != null)
+                    Deactivate();
+                    if (rootContainer != null)
                     {
-                        affliction.Strength = GetCombinedEffectStrength();
+                        foreach (var otherItem in rootContainer.ContainedItems)
+                        {
+                            if (otherItem != item && otherItem.GetComponent<GeneticMaterial>() is { IsActive: true } otherGeneticMaterial)
+                            {
+                                //we need to deactivate other genetic materials in the container too at this point,
+                                //otherwise their effects might get triggered by the damage done by removing the gene
+                                otherGeneticMaterial.Deactivate();
+                            }
+                        }
                     }
 
-                    var taintedAffliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
-                    if (taintedAffliction != null)
-                    {
-                        taintedAffliction.Strength = GetCombinedTaintedEffectStrength();
-                    }
-
-                    targetCharacter = null;
+                    //do this after nullifying the effects, otherwise the damage from removing the genes could trigger the gene's own effects
+                    item.ApplyStatusEffects(ActionType.OnSevered, 1.0f, prevTargetCharacter);
                 }
             }
+        }
+
+        private void Deactivate()
+        {
+            IsActive = false;
+            if (targetCharacter != null)
+            {
+                var affliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
+                if (affliction != null)
+                {
+                    affliction.Strength = GetCombinedEffectStrength();
+                }
+
+                var taintedAffliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
+                if (taintedAffliction != null)
+                {
+                    taintedAffliction.Strength = GetCombinedTaintedEffectStrength();
+                }
+            }
+            NestedMaterial?.Deactivate();
+            targetCharacter = null;
         }
 
         public enum CombineResult

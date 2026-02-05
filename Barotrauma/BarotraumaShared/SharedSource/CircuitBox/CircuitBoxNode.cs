@@ -1,8 +1,9 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 
@@ -142,7 +143,7 @@ namespace Barotrauma
             Vector2 drawPos = Position;
             drawPos.Y = -drawPos.Y;
 
-            foreach (var c in Connectors)
+            foreach (var c in Connectors.OrderBy(static c => c.Connection.DisplayOrder))
             {
                 bool isOutput = c.IsOutput;
 

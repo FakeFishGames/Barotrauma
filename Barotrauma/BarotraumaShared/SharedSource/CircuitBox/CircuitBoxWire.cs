@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
@@ -182,7 +182,10 @@ namespace Barotrauma
                 To.Connection.DisconnectWire(wire);
             }
             // if EntitySpawner is not available
-            wireItem.Remove();
+            if (!wireItem.Removed)
+            {
+                wireItem.Remove();
+            }
         }
 
         public static ItemPrefab DefaultWirePrefab => ItemPrefab.Prefabs[Tags.RedWire];

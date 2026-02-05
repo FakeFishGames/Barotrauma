@@ -5,9 +5,9 @@ using Barotrauma.Tutorials;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -27,18 +27,28 @@ namespace Barotrauma
 
         private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
         private readonly List<Character> characters = new List<Character>();
+        
+        private readonly List<CharacterInfo> reserveBench = new List<CharacterInfo>();
 
-        public IEnumerable<Character> GetCharacters()
-        {
-            return characters;
-        }
         /// <summary>
-        /// Note: this only returns AI characters' infos in multiplayer. The infos are used to manage hiring/firing/renaming, which only applies to AI characters.
+        /// NOTE: When called from client code, this method will include players, but NOT when called from server code.
+        /// CrewManager is used for dealing with things relevant to AI characters, like hiring, firing, renaming, and the reserve bench.
+        /// In single player/client code, player CharacterInfos are still stored in it but only for displaying crew listings in the GUI correctly.
         /// Use <see cref="GetSessionCrewCharacters"/> to get all the characters regardless if they're player or AI controlled.
         /// </summary>
-        public IEnumerable<CharacterInfo> GetCharacterInfos()
+        /// <param name="includeReserveBench">Should characters on the reserve be included? Defaults to false.</param>
+        public IEnumerable<CharacterInfo> GetCharacterInfos(bool includeReserveBench = false)
         {
+            if (includeReserveBench)
+            {
+                return characterInfos.Concat(reserveBench);
+            }
             return characterInfos;
+        }
+        
+        public IEnumerable<CharacterInfo> GetReserveBenchInfos()
+        {
+            return reserveBench;
         }
 
         private Character welcomeMessageNPC;
@@ -174,7 +184,14 @@ namespace Barotrauma
                 if (characterElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
                 characterInfo.CrewListIndex = characterElement.GetAttributeInt("crewlistindex", -1);
 #endif
-                characterInfos.Add(characterInfo);
+                if (characterElement.GetAttributeBool(nameof(CharacterInfo.IsOnReserveBench), false))
+                {
+                    reserveBench.Add(characterInfo);
+                }
+                else
+                {
+                    characterInfos.Add(characterInfo);
+                }
                 foreach (var subElement in characterElement.Elements())
                 {
                     switch (subElement.Name.ToString().ToLowerInvariant())
@@ -199,7 +216,14 @@ namespace Barotrauma
         /// <param name="characterInfo"></param>
         public void RemoveCharacterInfo(CharacterInfo characterInfo)
         {
+            if (characterInfo is { IsOnReserveBench: true })
+            {
+                reserveBench.Remove(characterInfo);
+            }
             characterInfos.Remove(characterInfo);
+#if CLIENT
+            GameMain.GameSession?.DeathPrompt?.UpdateBotList();
+#endif
         }
         
         public void AddCharacter(Character character)
@@ -289,6 +313,15 @@ namespace Barotrauma
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
         {
+            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign)
+            {
+                Debug.Assert(characterInfo.BotStatus == BotStatus.ActiveService);
+                if (characterInfo.BotStatus != BotStatus.ActiveService)
+                {
+                    DebugConsole.ThrowError($"CrewManager.AddCharacterInfo called on a bot ({characterInfo.DisplayName}) with the wrong status ({characterInfo.BotStatus})");
+                }
+            }
+            
             if (characterInfos.Contains(characterInfo))
             {
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace.CleanupStackTrace());
@@ -296,11 +329,15 @@ namespace Barotrauma
             }
 
             characterInfos.Add(characterInfo);
+#if CLIENT
+            GameMain.GameSession?.DeathPrompt?.UpdateBotList();
+#endif
         }
 
         public void ClearCharacterInfos()
         {
             characterInfos.Clear();
+            reserveBench.Clear();
         }
 
         public void InitRound()
@@ -313,7 +350,7 @@ namespace Barotrauma
 
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
-
+            
             if (Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost())
             {
                 spawnWaypoints = GetOutpostSpawnpoints();
@@ -324,7 +361,7 @@ namespace Barotrauma
                 while (spawnWaypoints.Any() && spawnWaypoints.Count < characterInfos.Count)
                 {
                     spawnWaypoints.Add(spawnWaypoints[Rand.Int(spawnWaypoints.Count)]);
-                }                
+                }
             }
             if (spawnWaypoints == null || !spawnWaypoints.Any())
             {

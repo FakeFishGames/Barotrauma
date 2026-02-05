@@ -1,4 +1,4 @@
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     /// <summary>
     /// Makes a specific character invulnerable to damage and unable to die.
@@ -36,13 +36,21 @@ namespace Barotrauma
             {
                 if (target != null && target is Character character)
                 {
-                    if (UpdateAfflictions)
+                    if (Enabled)
                     {
-                        character.CharacterHealth.Unkillable = Enabled;
+                        if (UpdateAfflictions)
+                        {
+                            character.CharacterHealth.Unkillable = true;
+                        }
+                        else
+                        {
+                            character.GodMode = true;
+                        }
                     }
                     else
                     {
-                        character.GodMode = Enabled;
+                        character.CharacterHealth.Unkillable = false;
+                        character.GodMode = false;
                     }
                 }
             }

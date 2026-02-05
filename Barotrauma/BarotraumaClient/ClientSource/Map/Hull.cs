@@ -183,7 +183,7 @@ namespace Barotrauma
                     networkUpdateTimer += deltaTime;
                     if (networkUpdateTimer > 0.2f)
                     {
-                        if (!pendingSectionUpdates.Any() && !pendingDecalUpdates.Any())
+                        if (!pendingSectorUpdates.Any() && !pendingDecalUpdates.Any())
                         {
                             //these are used to modify the amount water/fire in the hull with console commands
                             //they should be usable even when not controlling a character
@@ -194,11 +194,11 @@ namespace Barotrauma
                             GameMain.Client?.CreateEntityEvent(this, new DecalEventData(decal));
                         }
                         pendingDecalUpdates.Clear();
-                        foreach (int pendingSectionUpdate in pendingSectionUpdates)
+                        foreach (int pendingSectorUpdate in pendingSectorUpdates)
                         {
-                            GameMain.Client?.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
+                            GameMain.Client?.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectorUpdate));
                         }
-                        pendingSectionUpdates.Clear();
+                        pendingSectorUpdates.Clear();
                         networkUpdatePending = false;
                         networkUpdateTimer = 0.0f;
                     }
@@ -230,7 +230,12 @@ namespace Barotrauma
             if (!primaryMouseButtonHeld && !secondaryMouseButtonHeld && !doubleClicked && !secondaryDoubleClicked) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-            Hull hull = FindHull(position);
+            Hull hull =
+                Screen.Selected is { IsEditor: true } ?
+                //use the unoptimized version in the editor to make sure newly placed hulls are found
+                //(FindHull uses the "EntityGrid" which is generated after loading the sub)
+                FindHullUnoptimized(position) :
+                FindHull(position);
 
             if (hull == null || hull.IdFreed) { return; }
             if (EditWater)
@@ -361,7 +366,7 @@ namespace Barotrauma
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
                 GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
-            if (GameMain.DebugDraw)
+            if (GameMain.DebugDraw && Screen.Selected?.Cam is { Zoom: > 0.5f })
             {
                 GUIStyle.SmallFont.DrawString(spriteBatch, "Pressure: " + ((int)pressure - rect.Y).ToString() +
                     " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
@@ -394,6 +399,10 @@ namespace Barotrauma
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
                     GUI.DrawRectangle(spriteBatch, fireSourceRect, GUIStyle.Red, false, 0, 5);
                     GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUIStyle.Orange, false, 0, 5);
+
+                    Vector2 topCenter = new Vector2(fireSourceRect.Center.X, fireSourceRect.Y);
+                    GUI.DrawLine(spriteBatch, topCenter, topCenter - Vector2.UnitY * fs.FlameHeight, GUIStyle.Red * 0.7f, width: 5);
+
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
                 foreach (FireSource fs in FakeFireSources)

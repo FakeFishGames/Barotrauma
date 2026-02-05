@@ -17,9 +17,15 @@ namespace Barotrauma
 
         private static readonly Dictionary<Client, ConversationAction> lastActiveAction = new Dictionary<Client, ConversationAction>();
 
+        /// <summary>
+        /// Clients who this Conversation prompt is being currently shown to
+        /// </summary>
         private readonly HashSet<Client> targetClients = new HashSet<Client>();
         private readonly Dictionary<Client, DateTime> ignoredClients = new Dictionary<Client, DateTime>();
 
+        /// <summary>
+        /// Clients who this Conversation prompt is being currently shown to
+        /// </summary>
         public IEnumerable<Client> TargetClients
         {
             get
@@ -52,10 +58,25 @@ namespace Barotrauma
             }
         }
 
+        public bool CanClientStartConversation(Client client)
+        {
+            if (!TargetTag.IsEmpty)
+            {
+                var targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e));
+                return targets.Contains(client.Character);
+            }
+            return true;
+        }
+
         public void IgnoreClient(Client c, float seconds)
         {
             if (!ignoredClients.ContainsKey(c)) { ignoredClients.Add(c, DateTime.Now); }
             ignoredClients[c] = DateTime.Now + TimeSpan.FromSeconds(seconds);
+            //this action is not active for the client if they decided to ignore it
+            if (lastActiveAction.TryGetValue(c, out ConversationAction lastActive) && lastActive == this)
+            {
+                lastActiveAction.Remove(c);
+            }
             Reset();
         }
 
@@ -116,18 +137,31 @@ namespace Barotrauma
             {
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    if (c.InGame && c.Character != null)
+                    if (CanClientReceive(c))
                     {
                         if (targetCharacter == null || targetCharacter == c.Character)
                         {
                             targetClients.Add(c);
                             lastActiveAction[c] = this;
                             lastActiveTime = Timing.TotalTime;
+                            DebugConsole.Log($"Sending conversationaction {ParentEvent.Prefab.Identifier} to client...");
                             ServerWrite(speaker, c, interrupt);
                         }
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Is it possible for the client to receive ConversationActions 
+        /// (just checking if they're in game, controlling a character and not marked as ignoring the action, 
+        /// but not accounting for whether this action targets them or not).
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        private bool CanClientReceive(Client c)
+        {
+            return c != null && c.InGame && c.Character != null && !ignoredClients.ContainsKey(c);
         }
 
         public void ServerWrite(Character speaker, Client client, bool interrupt)

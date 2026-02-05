@@ -63,6 +63,9 @@ namespace Barotrauma
 
         public HashSet<string> RequiredContentPackages = new HashSet<string>();
 
+        public const int MaxNameLength = 30;
+        public const int MaxDescriptionLength = 500;
+
         public string Name
         {
             get;
@@ -129,24 +132,23 @@ namespace Barotrauma
 
         public ImmutableHashSet<Identifier> OutpostTags { get; set; } = ImmutableHashSet<Identifier>.Empty;
 
-        public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
+        public ImmutableHashSet<Identifier> TriggerOutpostMissionEvents { get; set; } = ImmutableHashSet<Identifier>.Empty;
+
+        public bool IsOutpost => Type is SubmarineType.Outpost or SubmarineType.OutpostModule;
 
         public bool IsWreck => Type == SubmarineType.Wreck;
         public bool IsBeacon => Type == SubmarineType.BeaconStation;
         public bool IsEnemySubmarine => Type == SubmarineType.EnemySubmarine;
         public bool IsPlayer => Type == SubmarineType.Player;
         public bool IsRuin => Type == SubmarineType.Ruin;
-        
+
         /// <summary>
         /// Ruin modules are of type SubmarineType.OutpostModule, until the ruin generator (or the test game mode) sets them as ruins.
         /// This is a helper workaround check intended to be used only in the context of the sub editor and the test game mode, where ruins aren't generated.
         /// </summary>
-        public bool ShouldBeRuin => Type is SubmarineType.Ruin or SubmarineType.OutpostModule && 
-                                            (OutpostModuleInfo.ModuleFlags.Contains("ruin".ToIdentifier()) || 
-                                             OutpostModuleInfo.ModuleFlags.Contains("ruinentrance".ToIdentifier()) ||
-                                             OutpostModuleInfo.ModuleFlags.Contains("ruinvault".ToIdentifier()) ||
-                                             OutpostModuleInfo.ModuleFlags.Contains("ruinworkshop".ToIdentifier()) ||
-                                             OutpostModuleInfo.ModuleFlags.Contains("ruinshrine".ToIdentifier()));
+        public bool ShouldBeRuin => 
+            Type is SubmarineType.Ruin or SubmarineType.OutpostModule &&
+            OutpostModuleInfo.ModuleFlags.Any(f => f.StartsWith("ruin"));
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
@@ -195,10 +197,27 @@ namespace Barotrauma
             set;
         }
 
+        /// <summary>
+        /// When enabled, the <see cref="SubmarineElement">XML element is not loaded</see> until it is accessed.
+        /// </summary>
+        public readonly bool LazyLoad;
+
+        private XElement submarineElement;
+
         public XElement SubmarineElement
         {
-            get;
-            private set;
+            get
+            {
+                if (LazyLoad && submarineElement == null)
+                {
+                    Reload();
+                }
+                return submarineElement;
+            }
+            private set
+            {
+                submarineElement = value;
+            }
         }
 
         public override string ToString()
@@ -264,7 +283,11 @@ namespace Barotrauma
             RequiredContentPackages = new HashSet<string>();
         }
 
-        public SubmarineInfo(string filePath, string hash = "", XElement element = null, bool tryLoad = true)
+        /// <summary>
+        /// Creates a new SubmarineInfo from a file.
+        /// </summary>
+        /// <param name="lazyLoad">When enabled, the <see cref="SubmarineElement">XML element is not loaded</see> until it is accessed.</param>
+        public SubmarineInfo(string filePath, string hash = "", XElement element = null, bool tryLoad = true, bool lazyLoad = false)
         {
             FilePath = filePath;
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
@@ -297,11 +320,17 @@ namespace Barotrauma
             else
             {
                 SubmarineElement = element;
-            }
+            }            
 
             Name = SubmarineElement.GetAttributeString("name", null) ?? Name;
 
             Init();
+
+            if (lazyLoad)
+            {
+                LazyLoad = true;
+                SubmarineElement = null;
+            }
         }
 
         public SubmarineInfo(Submarine sub) : this(sub.Info)
@@ -341,6 +370,7 @@ namespace Barotrauma
             OutpostGenerationParams = original.OutpostGenerationParams;
             LayersHiddenByDefault = original.LayersHiddenByDefault;
             OutpostTags = original.OutpostTags;
+            TriggerOutpostMissionEvents = original.TriggerOutpostMissionEvents;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
@@ -438,6 +468,14 @@ namespace Barotrauma
 
             OutpostTags = SubmarineElement.GetAttributeIdentifierImmutableHashSet(nameof(OutpostTags), ImmutableHashSet<Identifier>.Empty);
 
+            TriggerOutpostMissionEvents = SubmarineElement.GetAttributeIdentifierImmutableHashSet(nameof(TriggerOutpostMissionEvents), ImmutableHashSet<Identifier>.Empty);
+            //backwards compatibility: previously the outpost deathmatch mission always triggered an event with the tag "deathmatchweapondrop"
+            //now that's configured in the outpost itself, so let's make older outposts trigger it automatically
+            if (GameVersion < new Version(1, 8, 0, 0) && OutpostTags.Contains("PvPOutpost"))
+            {
+                TriggerOutpostMissionEvents = TriggerOutpostMissionEvents.Add("deathmatchweapondrop".ToIdentifier());
+            }
+
             if (SubmarineElement?.Attribute("type") != null)
             {
                 if (Enum.TryParse(SubmarineElement.GetAttributeString("type", ""), out SubmarineType type))
@@ -502,6 +540,11 @@ namespace Barotrauma
             PreviewImage = null;
 #endif
             if (savedSubmarines.Contains(this)) { savedSubmarines.Remove(this); }
+        }
+
+        public void UnloadSubmarineElement()
+        {
+            SubmarineElement = null;
         }
 
         public bool IsVanillaSubmarine()
@@ -681,7 +724,7 @@ namespace Barotrauma
             RemoveSavedSub(filePath);
             if (File.Exists(filePath))
             {
-                var subInfo = new SubmarineInfo(filePath);
+                var subInfo = new SubmarineInfo(filePath, lazyLoad: true);
                 if (!subInfo.IsFileCorrupted)
                 {
                     savedSubmarines.Add(subInfo);

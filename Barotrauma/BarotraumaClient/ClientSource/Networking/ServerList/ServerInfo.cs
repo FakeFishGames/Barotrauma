@@ -26,11 +26,72 @@ namespace Barotrauma.Networking
 
         public Option<DataSource> MetadataSource = Option.None;
 
+        // Cached normalized versions of server strings for efficient homoglyph comparison
+        private string? cachedNormalizedName;
+        private string? cachedNormalizedMessage;
+        private string? cachedNormalizedGameMode;
+
+        private string serverName = "";
+        private string serverMessage = "";
+        private Identifier gameMode = Identifier.Empty;
+
         [Serialize("", IsPropertySaveable.Yes)]
-        public string ServerName { get; set; } = "";
-        
+        public string ServerName
+        {
+            get { return serverName; }
+            set
+            {
+                serverName = value;
+                cachedNormalizedName = null; // Invalidate cache
+            }
+        }
+
         [Serialize("", IsPropertySaveable.Yes)]
-        public string ServerMessage { get; set; } = "";
+        public string ServerMessage
+        {
+            get { return serverMessage; }
+            set
+            {
+                serverMessage = value;
+                cachedNormalizedMessage = null; // Invalidate cache
+            }
+        }
+
+        public string NormalizedServerName
+        {
+            get
+            {
+                if (cachedNormalizedName == null)
+                {
+                    cachedNormalizedName = Homoglyphs.Normalize(ServerName);
+                }
+                return cachedNormalizedName;
+            }
+        }
+
+        public string NormalizedServerMessage
+        {
+            get
+            {
+                if (cachedNormalizedMessage == null)
+                {
+                    cachedNormalizedMessage = Homoglyphs.Normalize(ServerMessage);
+                }
+                return cachedNormalizedMessage;
+            }
+        }
+
+        public string NormalizedGameMode
+        {
+            get
+            {
+                if (cachedNormalizedGameMode == null)
+                {
+                    cachedNormalizedGameMode = Homoglyphs.Normalize(GameMode.Value);
+                }
+                return cachedNormalizedGameMode;
+            }
+        }
 
         public int PlayerCount { get; set; }
         
@@ -43,8 +104,16 @@ namespace Barotrauma.Networking
         public bool HasPassword { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes)]
-        public Identifier GameMode { get; set; }
-        
+        public Identifier GameMode
+        {
+            get { return gameMode; }
+            set
+            {
+                gameMode = value;
+                cachedNormalizedGameMode = null; // Invalidate cache
+            }
+        }
+
         [Serialize(SelectionMode.Manual, IsPropertySaveable.Yes)]
         public SelectionMode ModeSelectionMode { get; set; }
         
@@ -180,7 +249,7 @@ namespace Barotrauma.Networking
             {
                 float playStyleBannerAspectRatio = (float)playStyleBannerSprite.SourceRect.Width / (float)playStyleBannerSprite.SourceRect.Height;
                 playStyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f / playStyleBannerAspectRatio), frame.RectTransform, scaleBasis: ScaleBasis.BothWidth),
-                    playStyleBannerSprite, null, true);
+                    playStyleBannerSprite, scaleToFit: true);
                 playStyleBannerColor = playStyleBannerSprite.SourceElement.GetAttributeColor("bannercolor", Color.Black);
             }
             else
@@ -385,14 +454,24 @@ namespace Barotrauma.Networking
                             { MinSize = new Point(0, 15) },
                         package.Name)
                     {
-                        CanBeFocused = false
+                        Enabled = false
                     };
+                    packageText.Box.DisabledColor = packageText.Box.Color;
+                    packageText.TextBlock.DisabledTextColor = packageText.TextBlock.TextColor;
                     if (!string.IsNullOrEmpty(package.Hash))
                     {
-                        if (ContentPackageManager.AllPackages.Any(contentPackage => contentPackage.Hash.StringRepresentation == package.Hash))
+                        if (ContentPackageManager.AllPackages.FirstOrDefault(contentPackage => contentPackage.Hash.StringRepresentation == package.Hash) is { } matchingPackage)
                         {
                             packageText.TextColor = GUIStyle.Green;
                             packageText.Selected = true;
+                            matchingPackage.TryFetchUgcDescription(onFinished: (string? description) =>
+                            {
+                                if (packageText.ToolTip.IsNullOrEmpty() &&
+                                    !string.IsNullOrEmpty(description))
+                                {
+                                    packageText.ToolTip = description + "...";
+                                }
+                            });
                         }
                         //workshop download link found
                         else if (package.Id.TryUnwrap(out var ugcId) && ugcId is SteamWorkshopId)
@@ -437,7 +516,7 @@ namespace Barotrauma.Networking
 
         public void UpdateInfo(Func<string, string?> valueGetter)
         {
-            ServerMessage = valueGetter("message") ?? "";
+            ServerMessage = ExtractServerMessage(valueGetter);
             if (Version.TryParse(valueGetter("version"), out var version))
             {
                 GameVersion = version;
@@ -475,6 +554,22 @@ namespace Barotrauma.Networking
                 string? data = valueGetter(key);
                 return bool.TryParse(data, out var result) && result;
             }
+        }
+
+        private static string ExtractServerMessage(Func<string, string?> valueGetter)
+        {
+            string msg = valueGetter("message") ?? string.Empty;
+            if (!msg.IsNullOrEmpty()) { return msg; }
+
+            int messageIndex = 0;
+            string splitMessage;
+            do
+            {
+                splitMessage = valueGetter($"message{messageIndex}") ?? string.Empty;
+                msg += splitMessage;
+                messageIndex++;
+            } while (!splitMessage.IsNullOrEmpty());
+            return msg;
         }
 
         private static ServerListContentPackageInfo[] ExtractContentPackageInfo(string serverName, Func<string, string?> valueGetter)
@@ -515,14 +610,27 @@ namespace Barotrauma.Networking
                 return Array.Empty<ServerListContentPackageInfo>();
             }
 
-            return contentPackageNames
-                .Zip(contentPackageHashes, (name, hash) => (name, hash))
-                .Zip(contentPackageIds, (t1, id) =>
-                    new ServerListContentPackageInfo(
-                        t1.name,
-                        t1.hash,
-                        ContentPackageId.Parse(id)))
-                .ToArray();
+            List<ServerListContentPackageInfo> contentPackageInfos = new List<ServerListContentPackageInfo>();
+            for (int i = 0; i < contentPackageNames.Count; i++)
+            {
+                string name = contentPackageNames[i];
+                string hash = contentPackageHashes[i];
+                string ugcId = contentPackageIds[i];
+                //according to Steam documentation, this is the maximum length of a workshop item title
+                //see k_cchPublishedDocumentTitleMax
+                if (name.Length > 128 + 1)
+                {
+                    name = name.Substring(0, 128 + 1);
+                }
+                if (hash.Length > Md5Hash.MaxHashLength)
+                {
+                    hash = hash.Substring(0, Md5Hash.MaxHashLength);
+                }
+                //note that we don't validate the UGC ID here, that should be handled in ContentPackageId.Parse
+                contentPackageInfos.Add(new ServerListContentPackageInfo(name, hash, ContentPackageId.Parse(ugcId)));
+            }
+
+            return contentPackageInfos.ToArray();
         }
 
         public static Option<ServerInfo> FromXElement(XElement element)
@@ -586,7 +694,7 @@ namespace Barotrauma.Networking
         }
 
         public bool Equals(ServerInfo other)
-            => other.Endpoints.Any(e => Endpoints.Contains(e));
+            => other != null && other.Endpoints.Any(Endpoints.Contains);
 
         public override int GetHashCode() => Endpoints.First().GetHashCode();
 

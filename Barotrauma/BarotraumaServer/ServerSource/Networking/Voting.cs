@@ -168,6 +168,16 @@ namespace Barotrauma
             }
         }
 
+        public bool CanVoteToStartRound(Client client)
+        {
+            return !client.AFK || !GameMain.Server.ServerSettings.AllowAFK;
+        }
+
+        public bool CanVoteToEndRound(Client client)
+        {
+            return client.HasSpawned && client.InGame;
+        }
+
         private bool ShouldRejectVote(Client sender, VoteType voteType)
         {
             if (rejectedVoteTimes.ContainsKey(sender))
@@ -274,7 +284,12 @@ namespace Barotrauma
                     break;
                 case VoteType.Kick:
                     byte kickedClientID = inc.ReadByte();
-                    if ((DateTime.Now - sender.JoinTime).TotalSeconds < GameMain.Server.ServerSettings.DisallowKickVoteTime)
+
+                    if (!GameMain.Server.ServerSettings.AllowVoteKick)
+                    {
+                        DebugConsole.ThrowError($"Client {sender.Name} attempted to vote to kick a client, even though vote kicking is disabled. Ignoring the vote.");
+                    }
+                    else if ((DateTime.Now - sender.JoinTime).TotalSeconds < GameMain.Server.ServerSettings.DisallowKickVoteTime)
                     {
                         GameMain.Server.SendDirectChatMessage($"ServerMessage.kickvotedisallowed", sender);
                     }
@@ -415,8 +430,8 @@ namespace Barotrauma
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowEndVoting);
             if (GameMain.Server.ServerSettings.AllowEndVoting)
             {
-                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound)));
-                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned));
+                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => CanVoteToEndRound(c) && c.GetVote<bool>(VoteType.EndRound)));
+                msg.WriteByte((byte)GameMain.Server.ConnectedClients.Count(c => CanVoteToEndRound(c)));
             }
 
             msg.WriteBoolean(GameMain.Server.ServerSettings.AllowVoteKick);

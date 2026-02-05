@@ -376,6 +376,33 @@ namespace Barotrauma
 #endif
         }
 
+        public enum DataSampleSize
+        {
+            Small, 
+            Medium, 
+            Large,
+            Full
+        }
+
+        private readonly static Dictionary<DataSampleSize, float> dataSampleSizes = new Dictionary<DataSampleSize, float>()
+        {
+            { DataSampleSize.Small, 0.01f },
+            { DataSampleSize.Medium, 0.05f },
+            { DataSampleSize.Large, 0.5f },
+            { DataSampleSize.Full, 1.0f }
+        };
+
+        /// <summary>
+        /// Should we log something into GameAnalytics if we only want a random sample of some events?
+        /// Essentially just randomly decides whether to log or not based on the probability
+        /// </summary>
+        /// <param name="probability">A value between 0 and 1</param>
+        /// <returns></returns>
+        public static bool ShouldLogRandomSample(DataSampleSize sampleSize = DataSampleSize.Small)
+        {
+            return Rand.Range(0.0f, 1.0f) < dataSampleSizes[sampleSize];
+        }
+
         public static void AddErrorEvent(ErrorSeverity errorSeverity, string message)
         {
             if (!SendUserStatistics) { return; }

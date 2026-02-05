@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Transactions;
 
 namespace Barotrauma
 {
@@ -317,10 +316,23 @@ namespace Barotrauma
 
             graphics.SetRenderTarget(renderTargetDamageable);
             graphics.Clear(Color.Transparent);
+
             DamageEffect.CurrentTechnique = DamageEffect.Techniques["StencilShader"];
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.LinearWrap, effect: DamageEffect, transformMatrix: cam.Transform);
+            //reset so any parameters left over from previous usages of the shader don't persist
+            ResetDamageEffect();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, effect: DamageEffect, transformMatrix: cam.Transform);
             Submarine.DrawDamageable(spriteBatch, DamageEffect, false);
             spriteBatch.End();
+            //reset so parameters set in DrawDamageable don't persist
+            ResetDamageEffect();
+
+            void ResetDamageEffect()
+            {
+                DamageEffect.Parameters["aCutoff"].SetValue(0.0f);
+                DamageEffect.Parameters["cCutoff"].SetValue(0.0f);
+                Submarine.DamageEffectCutoff = 0.0f;
+                DamageEffect.CurrentTechnique.Passes[0].Apply();
+            }
 
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontDamageable", sw.ElapsedTicks);
@@ -335,14 +347,25 @@ namespace Barotrauma
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTargetBackground);
-            if (Level.Loaded == null)
+            if (Level.Loaded != null)
             {
-                graphics.Clear(new Color(11, 18, 26, 255));
+                Level.Loaded.DrawBack(graphics, spriteBatch, cam);
+            }
+            else if (GameMain.GameSession.GameMode is TestGameMode testMode)
+            {
+                graphics.Clear(testMode.BackgroundParams.BackgroundColor);
+
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap);
+                testMode.BackgroundParams.DrawBackgrounds(spriteBatch, cam);
+                spriteBatch.End();
+
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null, cam.Transform);
+                testMode.BackgroundParams.DrawWaterParticles(spriteBatch, cam, testMode.WaterParticleOffset);
+                spriteBatch.End();
             }
             else
             {
-                //graphics.Clear(new Color(255, 255, 255, 255));
-                Level.Loaded.DrawBack(graphics, spriteBatch, cam);
+                graphics.Clear(new Color(11, 18, 26, 255));
             }
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);

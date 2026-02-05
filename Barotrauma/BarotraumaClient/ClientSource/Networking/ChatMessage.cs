@@ -150,6 +150,9 @@ namespace Barotrauma.Networking
                     styleSetting = msg.ReadString();
                     txt = TextManager.GetServerMessage(txt).Value;
                     break;
+                case ChatMessageType.BlockedBySpamFilter:
+                    GameMain.Client.BlockedBySpamFilterTimer = BlockedBySpamFilterTime;
+                    break;
             }
 
             if (NetIdUtils.IdMoreRecent(id, LastID))

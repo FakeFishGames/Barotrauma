@@ -197,14 +197,16 @@ namespace Barotrauma.Items.Components
             };
 
             LocalizedString labelText = GetUILabel();
-            GUITextBlock label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter),
-                labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft, wrap: true)
+            GUITextBlock label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopLeft),
+                labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopLeft, wrap: true)
                 {
                     IgnoreLayoutGroups = true
                 };
             
             int buttonSize = GUIStyle.ItemFrameTopBarHeight;
             Point margin = new Point(buttonSize / 4, buttonSize / 6);
+
+            int buttonCount = 0;
 
             GUILayoutGroup buttonArea = new GUILayoutGroup(new RectTransform(new Point(content.Rect.Width, buttonSize - margin.Y * 2), content.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(0, margin.Y) }, 
                 isHorizontal: true, childAnchor: Anchor.TopRight)
@@ -213,24 +215,37 @@ namespace Barotrauma.Items.Components
             };
             if (Inventory.Capacity > 1)
             {
-                new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "SortItemsButton")
+                if (ShowSortButton)
                 {
-                    ToolTip = TextManager.Get("SortItemsAlphabetically"),
-                    OnClicked = (btn, userdata) =>
+                    buttonCount++;
+                    new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "SortItemsButton")
                     {
-                        SortItems();
-                        return true;
-                    }
-                };
-                new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "MergeStacksButton")
+                        ToolTip = TextManager.Get("SortItemsAlphabetically"),
+                        OnClicked = (btn, userdata) =>
+                        {
+                            SortItems();
+                            return true;
+                        }
+                    };
+                }
+                if (ShowMergeButton)
                 {
-                    ToolTip = TextManager.Get("MergeItemStacks"),
-                    OnClicked = (btn, userdata) =>
+                    buttonCount++;
+                    new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "MergeStacksButton")
                     {
-                        MergeStacks();
-                        return true;
-                    }
-                };
+                        ToolTip = TextManager.Get("MergeItemStacks"),
+                        OnClicked = (btn, userdata) =>
+                        {
+                            MergeStacks();
+                            return true;
+                        }
+                    };
+                }
+            }
+
+            if (buttonCount > 0)
+            {
+                label.RectTransform.MaxSize = new Point(label.Parent.Rect.Width - buttonCount * buttonSize, int.MaxValue);
             }
 
             float minInventoryAreaSize = 0.5f;
@@ -474,11 +489,22 @@ namespace Barotrauma.Items.Components
             int i = 0;
             foreach (ContainedItem contained in containedItems)
             {
-                Vector2 itemPos = currentItemPos;
-
                 if (contained.Item?.Sprite == null) { continue; }
-
                 if (contained.Hide) { continue; }
+
+                Vector2 itemPos = transformedItemPos;
+                int targetSlotIndex = ItemsUseInventoryPlacement ? Inventory.FindIndex(contained.Item) : i;
+                //interval set on both axes -> use a grid layout
+                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
+                {
+                    itemPos += transformedItemIntervalHorizontal * (targetSlotIndex % ItemsPerRow);
+                    itemPos += transformedItemIntervalVertical * (targetSlotIndex / ItemsPerRow);                    
+                }
+                else
+                {
+                    itemPos += (transformedItemIntervalHorizontal + transformedItemIntervalVertical) * targetSlotIndex;
+                }
+
                 if (contained.ItemPos.HasValue)
                 {
                     Vector2 pos = contained.ItemPos.Value;
@@ -531,7 +557,7 @@ namespace Barotrauma.Items.Components
                     containedSpriteDepth = containedSpriteDepths[i];
                 }
                 containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
-
+                
                 SpriteEffects spriteEffects = SpriteEffects.None;
                 float spriteRotation = ItemRotation;
                 if (contained.Rotation != 0)
@@ -542,12 +568,12 @@ namespace Barotrauma.Items.Components
                 bool flipX = rootBody is { Dir: -1 } || flippedX;
                 if (flipX)
                 {
-                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
+                    spriteEffects |= SpriteEffects.FlipHorizontally;
                 }
                 bool flipY = flippedY;
                 if (flipY)
                 {
-                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
+                    spriteEffects |= SpriteEffects.FlipVertically;
                 }
 
                 contained.Item.Sprite.Draw(
@@ -570,20 +596,6 @@ namespace Barotrauma.Items.Components
                 }
 
                 i++;
-                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
-                {
-                    //interval set on both axes -> use a grid layout
-                    currentItemPos += transformedItemIntervalHorizontal;
-                    if (i % ItemsPerRow == 0)
-                    {
-                        currentItemPos = transformedItemPos;
-                        currentItemPos += transformedItemIntervalVertical * (i / ItemsPerRow);
-                    }
-                }
-                else
-                {
-                    currentItemPos += transformedItemIntervalHorizontal + transformedItemIntervalVertical;
-                }
             }
         }
 

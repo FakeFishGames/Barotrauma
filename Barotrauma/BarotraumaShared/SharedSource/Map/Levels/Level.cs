@@ -207,11 +207,17 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// The top of the abyss area (the y-coordinate at which the abyss starts)
+        /// </summary>
         public int AbyssStart
         {
             get { return AbyssArea.Y + AbyssArea.Height; }
         }
 
+        /// <summary>
+        /// The bottom of the abyss area (the y-coordinate at which the abyss ends, below which there's nothing but the ocean floor)
+        /// </summary>
         public int AbyssEnd
         {
             get { return AbyssArea.Y; }
@@ -547,11 +553,7 @@ namespace Barotrauma
             Mirrored = mirror;
 
 #if CLIENT
-            if (backgroundCreatureManager == null)
-            {
-                var files = ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<BackgroundCreaturePrefabsFile>()).ToArray();
-                backgroundCreatureManager = files.Any() ? new BackgroundCreatureManager(files) : new BackgroundCreatureManager("Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml");
-            }
+            backgroundCreatureManager ??= new BackgroundCreatureManager();            
 #endif
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -2170,7 +2172,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!MathUtils.GetLineRectangleIntersection(closestParentNode.ToVector2(), cavePos.ToVector2(), new Rectangle(caveArea.X, caveArea.Y + caveArea.Height, caveArea.Width, caveArea.Height), out Vector2 caveStartPosVector))
+            if (!MathUtils.GetLineWorldRectangleIntersection(closestParentNode.ToVector2(), cavePos.ToVector2(), new Rectangle(caveArea.X, caveArea.Y + caveArea.Height, caveArea.Width, caveArea.Height), out Vector2 caveStartPosVector))
             {
                 caveStartPosVector = caveArea.Location.ToVector2();
             }
@@ -3361,7 +3363,7 @@ namespace Barotrauma
                         if (r.Contains(e.Point2)) { return true; }
                         if (r.Contains(eCenter)) { return true; }
 
-                        if (MathUtils.GetLineRectangleIntersection(e.Point1, e.Point2, r, out _))
+                        if (MathUtils.GetLineWorldRectangleIntersection(e.Point1, e.Point2, r, out _))
                         {
                             return true;
                         }
@@ -3588,7 +3590,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Camera cam)
         {
-            LevelObjectManager.Update(deltaTime);
+            LevelObjectManager.Update(deltaTime, cam);
 
             foreach (LevelWall wall in ExtraWalls) { wall.Update(deltaTime); }
             for (int i = UnsyncedExtraWalls.Count - 1; i >= 0; i--)
@@ -4289,6 +4291,11 @@ namespace Barotrauma
                     {
                         placeableWrecks.RemoveAt(i);
                     }
+                    // Exclude wrecks that have mission tags, those can't show up randomly
+                    else if (wreckInfo.MissionTags.Count != 0)
+                    {
+                        placeableWrecks.RemoveAt(i);
+                    }
                 }
                 if (placeableWrecks.None())
                 {
@@ -4479,6 +4486,10 @@ namespace Barotrauma
                                 }
                             }
                         }
+
+                        bool onlyEntrance = LevelData.Type != LevelData.LevelType.Outpost;
+
+                        LocationType locationType = location?.Type;
                         if (missionForcedOutpostParamsId != null && 
                             OutpostGenerationParams.OutpostParams.TryGet(missionForcedOutpostParamsId, out var missionForcedOutpostParams))
                         {
@@ -4488,6 +4499,13 @@ namespace Barotrauma
                         {
                             outpostGenerationParams = LevelData.ForceOutpostGenerationParams;
                         }
+                        else if (locationType != null && 
+                            locationType.GetForcedOutpostGenerationParams() is { } forcedOutpostGenerationParams &&
+                            //do not use the forced parameters if we want to generate only the entrance, and the parameters define a full, pre-built outpost
+                            (!onlyEntrance || forcedOutpostGenerationParams.OutpostFilePath.IsNullOrEmpty()))
+                        {
+                            outpostGenerationParams = forcedOutpostGenerationParams;
+                        }
                         else
                         {
                             outpostGenerationParams =
@@ -4495,7 +4513,6 @@ namespace Barotrauma
                                 LevelData.GetSuitableOutpostGenerationParams(location, LevelData).GetRandom(Rand.RandSync.ServerAndClient);
                         }
 
-                        LocationType locationType = location?.Type;
                         if (locationType == null)
                         {
                             locationType = LocationType.Prefabs.GetRandom(Rand.RandSync.ServerAndClient);
@@ -4510,7 +4527,7 @@ namespace Barotrauma
                         if (location != null)
                         {
                             DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location: {location.DisplayName}, level type: {LevelData.Type})");
-                            outpost = OutpostGenerator.Generate(outpostGenerationParams, location, onlyEntrance: LevelData.Type != LevelData.LevelType.Outpost, LevelData.AllowInvalidOutpost);
+                            outpost = OutpostGenerator.Generate(outpostGenerationParams, location, onlyEntrance: onlyEntrance, LevelData.AllowInvalidOutpost);
                         }
                         else
                         {
@@ -4730,6 +4747,11 @@ namespace Barotrauma
                         {
                             beaconStationFiles.RemoveAt(i);
                         }
+                        // Exclude beacons that have mission tags, those can't show up randomly
+                        else if (beaconInfo.MissionTags.Count != 0)
+                        {
+                            beaconStationFiles.RemoveAt(i);
+                        }
                     }
                 }
                 if (beaconStationFiles.None())
@@ -4914,17 +4936,17 @@ namespace Barotrauma
             {
                 int corpseCount = Rand.Range(Loaded.GenerationParams.MinCorpseCount, Loaded.GenerationParams.MaxCorpseCount + 1);
                 var allSpawnPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == wreck && wp.CurrentHull != null);
-                var pathPoints = allSpawnPoints.FindAll(wp => wp.SpawnType == SpawnType.Path);
+                var humanSpawnPoints = allSpawnPoints.FindAll(wp => wp.SpawnType == SpawnType.Human);
                 var corpsePoints = allSpawnPoints.FindAll(wp => wp.SpawnType == SpawnType.Corpse);
-                if (!corpsePoints.Any() && !pathPoints.Any()) { continue; }
-                pathPoints.Shuffle(Rand.RandSync.ServerAndClient);
+                if (corpsePoints.None() && humanSpawnPoints.None()) { continue; }
+                humanSpawnPoints.Shuffle(Rand.RandSync.ServerAndClient);
                 // Sort by job so that we first spawn those with a predefined job (might have special id cards)
                 corpsePoints = corpsePoints.OrderBy(p => p.AssignedJob == null).ThenBy(p => Rand.Value()).ToList();
                 var usedJobs = new HashSet<JobPrefab>();
                 int spawnCounter = 0;
                 for (int j = 0; j < corpseCount; j++)
                 {
-                    WayPoint sp = corpsePoints.FirstOrDefault() ?? pathPoints.FirstOrDefault();
+                    WayPoint sp = corpsePoints.FirstOrDefault() ?? humanSpawnPoints.FirstOrDefault();
                     JobPrefab job = sp?.AssignedJob;
                     CorpsePrefab selectedPrefab;
                     if (job == null)
@@ -4937,8 +4959,8 @@ namespace Barotrauma
                         if (selectedPrefab == null)
                         {
                             corpsePoints.Remove(sp);
-                            pathPoints.Remove(sp);
-                            sp = corpsePoints.FirstOrDefault(sp => sp.AssignedJob == null) ?? pathPoints.FirstOrDefault(sp => sp.AssignedJob == null);
+                            humanSpawnPoints.Remove(sp);
+                            sp = corpsePoints.FirstOrDefault(sp => sp.AssignedJob == null) ?? humanSpawnPoints.FirstOrDefault(sp => sp.AssignedJob == null);
                             // Deduce the job from the selected prefab
                             selectedPrefab = GetCorpsePrefab(usedJobs);
                             if (selectedPrefab != null)
@@ -4960,7 +4982,7 @@ namespace Barotrauma
                     {
                         worldPos = sp.WorldPosition;
                         corpsePoints.Remove(sp);
-                        pathPoints.Remove(sp);
+                        humanSpawnPoints.Remove(sp);
                     }
 
                     job ??= selectedPrefab.GetJobPrefab(predicate: p => !usedJobs.Contains(p));
@@ -5081,6 +5103,11 @@ namespace Barotrauma
         public static bool IsPositionAboveLevel(Vector2 worldPosition)
         {
             return Loaded != null && worldPosition.Y > Loaded.Size.Y;
+        }
+
+        public static bool IsPositionInAbyss(Vector2 worldPosition)
+        {
+            return Loaded != null && worldPosition.Y < loaded.AbyssStart && worldPosition.Y > loaded.AbyssEnd;
         }
 
         public void DebugSetStartLocation(Location newStartLocation)

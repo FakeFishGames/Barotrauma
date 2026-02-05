@@ -1,78 +1,48 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.IO;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Barotrauma
 {
-    partial class MissionPrefab : PrefabWithUintIdentifier
+    internal sealed partial class MissionPrefab : PrefabWithUintIdentifier
     {
-        private ImmutableArray<Sprite> portraits = new ImmutableArray<Sprite>();
-
+        private ImmutableArray<Sprite> portraits = [];
         public bool HasPortraits => portraits.Length > 0;
 
-        public Sprite Icon
-        {
-            get;
-            private set;
-        }
+        public Sprite Icon { get; private set; }
+        public Color IconColor { get; private set; }
 
-        public Color IconColor
-        {
-            get;
-            private set;
-        }
-
-        public bool DisplayTargetHudIcons
-        {
-            get;
-            private set;
-        }
-
-        public float HudIconMaxDistance
-        {
-            get;
-            private set;
-        }
-
-        public Sprite HudIcon
-        {
-            get
-            {
-                return hudIcon ?? Icon;
-            }
-        }
-
-        public Color HudIconColor
-        {
-            get
-            {
-                return hudIconColor ?? IconColor;
-            }
-        }
-        public Color ProgressBarColor { get; private set; }
+        public bool DisplayTargetHudIcons { get; private set; }
+        public float HudIconMaxDistance { get; private set; }
 
         private Sprite hudIcon;
+        public Sprite HudIcon => hudIcon ?? Icon;
+
         private Color? hudIconColor;
+        public Color HudIconColor => hudIconColor ?? IconColor;
+
+        public Color ProgressBarColor { get; private set; }
 
         private ImmutableDictionary<int, Identifier> overrideMusicOnState;
 
-        partial void InitProjSpecific(ContentXElement element)
+        private void ParseConfigElementClient(ContentXElement element, MissionPrefab variantOf = null)
         {
             DisplayTargetHudIcons = element.GetAttributeBool("displaytargethudicons", false);
-            HudIconMaxDistance = element.GetAttributeFloat("hudiconmaxdistance", 1000.0f);
-            Dictionary<int, Identifier> overrideMusic = new Dictionary<int, Identifier>();
-            List<Sprite> portraits = new List<Sprite>();
-            foreach (var subElement in element.Elements())
+            HudIconMaxDistance = element.GetAttributeFloat("hudiconmaxdistance", 1000f);
+            Dictionary<int, Identifier> overrideMusic = [];
+            List<Sprite> portraits = [];
+            foreach (ContentXElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "icon":
-                        Icon = new Sprite(subElement);
+                        Icon = new Sprite(subElement, GetTexturePath(subElement, variantOf));
                         IconColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "hudicon":
-                        hudIcon = new Sprite(subElement);
+                        hudIcon = new Sprite(subElement, GetTexturePath(subElement, variantOf));
                         hudIconColor = subElement.GetAttributeColor("color");
                         break;
                     case "overridemusic":
@@ -81,7 +51,7 @@ namespace Barotrauma
                             subElement.GetAttributeIdentifier("type", Identifier.Empty));
                         break;
                     case "portrait":
-                        var portrait = new Sprite(subElement, lazyLoad: true);
+                        Sprite portrait = new(subElement, GetTexturePath(subElement, variantOf), lazyLoad: true);
                         if (portrait != null)
                         {
                             portraits.Add(portrait);
@@ -89,7 +59,7 @@ namespace Barotrauma
                         break;
                 }
             }
-            this.portraits = portraits.ToImmutableArray();
+            this.portraits = [.. portraits];
             overrideMusicOnState = overrideMusic.ToImmutableDictionary();
             ProgressBarColor = element.GetAttributeColor(nameof(ProgressBarColor), GUIStyle.Blue);
         }
@@ -108,6 +78,11 @@ namespace Barotrauma
             if (portraits.Length == 0) { return null; }
             return portraits[Math.Abs(randomSeed) % portraits.Length];
         }
+
+        public string GetTexturePath(ContentXElement subElement, MissionPrefab variantOf = null)
+            => subElement.DoesAttributeReferenceFileNameAlone("texture")
+                ? Path.GetDirectoryName(variantOf?.ContentFile.Path ?? ContentFile.Path)
+                : "";
 
         partial void DisposeProjectSpecific()
         {

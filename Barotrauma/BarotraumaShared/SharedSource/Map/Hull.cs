@@ -401,7 +401,11 @@ namespace Barotrauma
             private set;
         }
 
-        private readonly HashSet<int> pendingSectionUpdates = new HashSet<int>();
+
+        /// <summary>
+        /// Note that sector != section: a sector is a group of <see cref="BackgroundSectionsPerNetworkEvent"/> sections that are updated together in a single network event.
+        /// </summary>
+        private readonly HashSet<int> pendingSectorUpdates = new HashSet<int>();
 
         public int xBackgroundMax, yBackgroundMax;
 
@@ -413,8 +417,8 @@ namespace Barotrauma
             }
         }
 
-        private const int sectorWidth = 4;
-        private const int sectorHeight = 4;
+        private const int SectionWidth = 4;
+        private const int SectionHeight = 4;
 
         private const float minColorStrength = 0.0f;
         private const float maxColorStrength = 0.7f;
@@ -441,6 +445,8 @@ namespace Barotrauma
         /// Returns true if the blue component of the background color is twice as bright as the red and green. Can be used by StatusEffects.
         /// </summary>
         public bool IsBlue => ColorExtensions.IsBlueDominant(AveragePaintedColor, minimumAlpha: 100);
+
+        public const int MaxFireSources = 16;
 
         public List<FireSource> FireSources { get; private set; }
 
@@ -731,6 +737,10 @@ namespace Barotrauma
             }
             else
             {
+                if (FireSources.Count >= MaxFireSources)
+                {
+                    return;
+                }
                 FireSources.Add(fireSource);
             }
         }
@@ -779,10 +789,11 @@ namespace Barotrauma
         #region Shared network write
         private void SharedStatusWrite(IWriteMessage msg)
         {
-            msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+            msg.WriteSingle(waterVolume);
 
-            msg.WriteRangedInteger(Math.Min(FireSources.Count, 16), 0, 16);
-            for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
+            System.Diagnostics.Debug.Assert(FireSources.Count <= MaxFireSources, $"Too many fire sources ({FireSources.Count}) in hull {ID} (max {MaxFireSources}).");
+            msg.WriteRangedInteger(Math.Min(FireSources.Count, MaxFireSources), 0, MaxFireSources);
+            for (int i = 0; i < Math.Min(FireSources.Count, MaxFireSources); i++)
             {
                 var fireSource = FireSources[i];
                 Vector2 normalizedPos = new Vector2(
@@ -801,7 +812,7 @@ namespace Barotrauma
             int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
             int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
             msg.WriteRangedInteger(sectorToUpdate, 0, BackgroundSections.Count - 1);
-            for (int i = start; i < end; i++)
+            for (int i = start; i <= end; i++)
             {
                 msg.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
                 msg.WriteUInt32(BackgroundSections[i].Color.PackedValue);
@@ -826,9 +837,9 @@ namespace Barotrauma
 
         private void SharedStatusRead(IReadMessage msg, out float newWaterVolume, out NetworkFireSource[] newFireSources)
         {
-            newWaterVolume = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+            newWaterVolume = msg.ReadSingle();
 
-            int fireSourceCount = msg.ReadRangedInteger(0, 16);
+            int fireSourceCount = msg.ReadRangedInteger(0, MaxFireSources);
             newFireSources = new NetworkFireSource[fireSourceCount];
             for (int i = 0; i < fireSourceCount; i++)
             {
@@ -852,12 +863,12 @@ namespace Barotrauma
             }
         }
         
-        private void SharedBackgroundSectionRead(IReadMessage msg, Action<BackgroundSectionNetworkUpdate> action, out int sectorToUpdate)
+        private void SharedBackgroundSectionRead(IReadMessage msg, Action<BackgroundSectionNetworkUpdate> action, out int sectionToUpdate)
         {
-            sectorToUpdate = msg.ReadRangedInteger(0, BackgroundSections.Count - 1);
-            int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
-            int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
-            for (int i = start; i < end; i++)
+            sectionToUpdate = msg.ReadRangedInteger(0, BackgroundSections.Count - 1);
+            int start = sectionToUpdate * BackgroundSectionsPerNetworkEvent;
+            int end = Math.Min((sectionToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+            for (int i = start; i <= end; i++)
             {
                 float colorStrength = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                 Color color = new Color(msg.ReadUInt32());
@@ -1122,54 +1133,72 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
-        /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
+        /// Used in <see cref="GetApproximateDistance"/>
         /// </summary>
-        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0)
+        private static readonly Dictionary<Hull, float> cachedDistances = [];
+        /// <summary>
+        /// Used in <see cref="GetApproximateDistance"/>
+        /// </summary>
+        private static readonly PriorityQueue<(Hull hull, Vector2 pos), float> priorityQueue = new PriorityQueue<(Hull hull, Vector2 pos), float>();
+
+        /// <summary>
+        /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
+        /// Uses a Dijkstra's algorithm to find the shortest path.
+        /// </summary>
+        /// <param name="minimumGapOpenness">The gap's <see cref="Gap.Open">openness</see> must be larger than or equal to this to be considered valid for the path.</param>
+        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0, float minimumGapOpenness = 0.5f)
         {
-            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance, distanceMultiplierPerClosedDoor);
-        }
+            cachedDistances.Clear();
+            priorityQueue.Clear();
 
-        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance, float distanceMultiplierFromDoors = 0)
-        {
-            if (distance >= maxDistance) { return float.MaxValue; }
-            if (this == target)
+            cachedDistances[this] = 0f;
+            priorityQueue.Enqueue((this, startPos), 0f);
+
+            while (priorityQueue.TryDequeue(out var current, out float currentDist))
             {
-                return distance + Vector2.Distance(startPos, endPos);
-            }
+                Hull currentHull = current.hull;
+                Vector2 currentPos = current.pos;
 
-            connectedHulls.Add(this);
+                if (currentDist > maxDistance) { return float.MaxValue; }
 
-            foreach (Gap g in ConnectedGaps)
-            {
-                float distanceMultiplier = 1;
-                if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
+                // If we've reached the target, add the final segment from hull to endPos
+                if (currentHull == targetHull)
                 {
-                    //gap blocked if the door is closed, and we haven't made any predictions of it opening client-side
-                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.PredictedState.HasValue) || 
-                        //OR we've predicted that the door is closed client-side
-                        (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    return currentDist + Vector2.Distance(currentPos, endPos);
+                }
+
+                foreach (Gap g in ConnectedGaps)
+                {
+                    float distanceMultiplier = 1;
+                    if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                     {
-                        if (g.ConnectedDoor.OpenState < 0.1f)
+                        //gap blocked if the door is closed, and we haven't made any predictions of it opening client-side
+                        if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.PredictedState.HasValue) ||
+                            //OR we've predicted that the door is closed client-side
+                            (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                         {
-                            if (distanceMultiplierFromDoors <= 0) { continue; }
-                            distanceMultiplier *= distanceMultiplierFromDoors;
+                            if (g.ConnectedDoor.OpenState < 0.1f)
+                            {
+                                if (distanceMultiplierPerClosedDoor <= 0) { continue; }
+                                distanceMultiplier *= distanceMultiplierPerClosedDoor;
+                            }
                         }
                     }
-                }
-                else if (g.Open <= 0.0f)
-                {
-                    continue;
-                }
-
-                for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
-                {
-                    if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
+                    else if (g.Open < minimumGapOpenness)
                     {
-                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position) * distanceMultiplier, maxDistance);
-                        if (dist < float.MaxValue)
+                        continue;
+                    }
+
+                    for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
+                    {
+                        if (g.linkedTo[i] is Hull nextHull && nextHull != currentHull)
                         {
-                            return dist;
+                            float newDist = currentDist + Vector2.Distance(currentPos, g.Position) * distanceMultiplier;
+                            if (!cachedDistances.TryGetValue(nextHull, out float oldDist) || newDist < oldDist)
+                            {
+                                cachedDistances[nextHull] = newDist;
+                                priorityQueue.Enqueue((nextHull, g.Position), newDist);
+                            }
                         }
                     }
                 }
@@ -1260,6 +1289,23 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Recursively find all the hulls linked to the specified hull, including the hull itself.
+        /// </summary>
+        public void GetLinkedHulls(List<Hull> linkedHulls, bool includeHiddenHulls = false)
+        {
+            foreach (var linkedEntity in linkedTo)
+            {
+                if (linkedEntity is Hull linkedHull)
+                {
+                    if (linkedHulls.Contains(linkedHull)) { continue; }
+                    if (!includeHiddenHulls && linkedHull.IsHidden) { continue; }
+                    linkedHulls.Add(linkedHull);
+                    linkedHull.GetLinkedHulls(linkedHulls, includeHiddenHulls);
+                }
+            }
         }
 
         public static void DetectItemVisibility(Character c=null)
@@ -1436,14 +1482,14 @@ namespace Barotrauma
             BackgroundSections = new List<BackgroundSection>(xBackgroundMax * yBackgroundMax);
 
             int sections = xBackgroundMax * yBackgroundMax;
-            float xSectors = xBackgroundMax / (float)sectorWidth;
+            float xSectors = xBackgroundMax / (float)SectionWidth;
 
             for (int y = 0; y < yBackgroundMax; y++)
             {
                 for (int x = 0; x < xBackgroundMax; x++)
                 {
                     ushort index = (ushort)BackgroundSections.Count;
-                    int sector = (int)Math.Floor(index / (float)sectorWidth - xSectors * y) + y / sectorHeight * (int)Math.Ceiling(xSectors);
+                    int sector = (int)Math.Floor(index / (float)SectionWidth - xSectors * y) + y / SectionHeight * (int)Math.Ceiling(xSectors);
                     BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, (ushort)y));
                 }
             }
@@ -1478,6 +1524,12 @@ namespace Barotrauma
             if (yIndex < 0 || yIndex >= yBackgroundMax) { return null; }
 
             return BackgroundSections[xIndex + yIndex * xBackgroundMax];
+        }
+
+        public Vector2 GetBackgroundSectionWorldPos(BackgroundSection backgroundSection)
+        {
+            Vector2 subOffset = Submarine == null ? Vector2.Zero : Submarine.Position;
+            return Rect.Location.ToVector2() + subOffset + new Vector2(backgroundSection.Rect.X, backgroundSection.Rect.Y);
         }
 
         public IEnumerable<BackgroundSection> GetBackgroundSectionsViaContaining(Rectangle rectArea)
@@ -1549,7 +1601,7 @@ namespace Barotrauma
             if (sectionUpdated && GameMain.NetworkMember != null && requiresUpdate)
             {
                 networkUpdatePending = true;
-                pendingSectionUpdates.Add((int)Math.Floor(section.Index / (float)BackgroundSectionsPerNetworkEvent));
+                pendingSectorUpdates.Add((int)Math.Floor(section.Index / (float)BackgroundSectionsPerNetworkEvent));
 #if CLIENT
                 serverUpdateDelay = 0.5f;
 #endif

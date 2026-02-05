@@ -75,7 +75,7 @@ namespace Barotrauma
             get { return frozen; }
             set
             {
-                if (frozen == value) return;
+                if (frozen == value) { return; }
 
                 frozen = value;
 
@@ -830,9 +830,10 @@ namespace Barotrauma
         {
             if (character.DisableImpactDamageTimer > 0.0f) { return; }
 
-            if (f2.Body?.UserData is Item) 
+            if (f2.Body?.UserData is Item && 
+                f2.Body.BodyType != BodyType.Static) 
             { 
-                //no impact damage from items
+                //no impact damage from items with a non-static body
                 //items that can impact characters (melee weapons, projectiles) should handle the damage themselves
                 return; 
             }
@@ -1054,7 +1055,8 @@ namespace Barotrauma
             }
         }
 
-        public void FindHull(Vector2? worldPosition = null, bool setSubmarine = true)
+        /// <param name="setInWater">Should the character be immediately considered "in water" if it's outside hulls (normally checked in Update)</param>
+        public void FindHull(Vector2? worldPosition = null, bool setSubmarine = true, bool setInWater = false)
         {
             Vector2 findPos = worldPosition == null ? this.WorldPosition : (Vector2)worldPosition;
             if (!MathUtils.IsValid(findPos))
@@ -1067,6 +1069,10 @@ namespace Barotrauma
             }
 
             Hull newHull = Hull.FindHull(findPos, currentHull);
+            if (setInWater && newHull == null)
+            {
+                inWater = true;
+            }
 
             if (newHull == currentHull) { return; }
 
@@ -1084,7 +1090,7 @@ namespace Barotrauma
                     Vector2 moveDir = hullDiff.LengthSquared() < 0.001f ? Vector2.UnitY : Vector2.Normalize(hullDiff);
 
                     //find a position 32 units away from the hull
-                    if (MathUtils.GetLineRectangleIntersection(
+                    if (MathUtils.GetLineWorldRectangleIntersection(
                         newHull.WorldPosition,
                         newHull.WorldPosition + moveDir * Math.Max(newHull.Rect.Width, newHull.Rect.Height),
                         new Rectangle(newHull.WorldRect.X - 32, newHull.WorldRect.Y + 32, newHull.WorldRect.Width + 64, newHull.Rect.Height + 64),

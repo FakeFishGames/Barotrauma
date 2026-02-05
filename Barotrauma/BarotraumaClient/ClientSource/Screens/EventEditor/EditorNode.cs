@@ -233,7 +233,7 @@ namespace Barotrauma
 
         protected virtual Color BackgroundColor => new Color(150, 150, 150);
 
-        private void DrawBack(SpriteBatch spriteBatch)
+        protected virtual void DrawBack(SpriteBatch spriteBatch)
         {
             Color outlineColor = Color.White * 0.8f;
             Color fontColor = Color.White;
@@ -253,9 +253,19 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch, HeaderRectangle, outlineColor, isFilled: false, depth: 1.0f, thickness: (int) Math.Max(1, 1.25f / camZoom));
             GUI.DrawRectangle(spriteBatch, bodyRect, outlineColor, isFilled: false, depth: 1.0f, thickness: (int) Math.Max(1, 1.25f / camZoom));
 
+            DrawConnections(spriteBatch);
+
+            Vector2 headerSize = GUIStyle.SubHeadingFont.MeasureString(Name);
+            GUIStyle.SubHeadingFont.DrawString(spriteBatch, Name, HeaderRectangle.Location.ToVector2() + (HeaderRectangle.Size.ToVector2() / 2) - (headerSize / 2), fontColor);
+        }
+
+        protected virtual void DrawConnections(SpriteBatch spriteBatch)
+        {
             int x = 0, y = 0;
             foreach (EventEditorNodeConnection connection in Connections)
             {
+                if (!ShouldDrawConnection(connection)) { continue; }
+                
                 switch (connection.Type.NodeSide)
                 {
                     case NodeConnectionType.Side.Left:
@@ -268,9 +278,11 @@ namespace Barotrauma
                         break;
                 }
             }
+        }
 
-            Vector2 headerSize = GUIStyle.SubHeadingFont.MeasureString(Name);
-            GUIStyle.SubHeadingFont.DrawString(spriteBatch, Name, HeaderRectangle.Location.ToVector2() + (HeaderRectangle.Size.ToVector2() / 2) - (headerSize / 2), fontColor);
+        protected virtual bool ShouldDrawConnection(EventEditorNodeConnection connection)
+        {
+            return true; // Base implementation draws all connections
         }
 
         public void AddConnection(NodeConnectionType connectionType)
@@ -337,6 +349,11 @@ namespace Barotrauma
     {
         private readonly Type type;
 
+        protected override Color BackgroundColor => 
+            EventEditorScreen.ConversationMode && !IsInstanceOf(type, typeof(ConversationAction)) 
+                ? new Color(80, 80, 80)  // Darker for non-conversation nodes in conversation mode
+                : new Color(150, 150, 150); // Normal color
+
         public EventNode(Type type, string name) : base(name)
         {
             this.type = type;
@@ -387,8 +404,15 @@ namespace Barotrauma
 
             Type? t = Type.GetType(element.GetAttributeString("type", string.Empty));
             if (t == null) { return null; }
+            
+            string name = element.GetAttributeString("name", string.Empty);
+            int id = element.GetAttributeInt("i", -1);
 
-            EventNode newNode = new EventNode(t, element.GetAttributeString("name", string.Empty)) { ID = element.GetAttributeInt("i", -1) };
+            // Create the appropriate node type based on whether it's a conversation action
+            EditorNode newNode = IsInstanceOf(t, typeof(ConversationAction))
+                ? new EventConversationNode(t, name) { ID = id }
+                : new EventNode(t, name) { ID = id };
+            
             float posX = element.GetAttributeFloat("xpos", 0f);
             float posY = element.GetAttributeFloat("ypos", 0f);
             newNode.Position = new Vector2(posX, posY);

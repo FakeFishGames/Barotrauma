@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Networking;
@@ -53,7 +53,7 @@ static class EosSessionManager
                                 // If the session already exists then this failure is not a problem
                                 return;
                             }
-                            DebugConsole.ThrowError($"Failed to create session: {result}");
+                            DebugConsole.ThrowError($"Failed to create Epic Online Services session: {result}");
                             return;
                         }
                         CurrentOwnedSession = Option.Some(newOwnedSession);

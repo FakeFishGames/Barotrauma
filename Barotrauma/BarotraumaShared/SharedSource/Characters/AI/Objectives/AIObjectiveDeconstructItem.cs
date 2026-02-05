@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System.Linq;
 
 namespace Barotrauma
@@ -14,7 +15,7 @@ namespace Barotrauma
 
         private Deconstructor deconstructor;
 
-        private AIObjectiveDecontainItem decontainObjective;
+        private AIObjectiveMoveItem moveItemObjective;
         private AIObjectiveGoTo gotoObjective;
 
         public AIObjectiveDeconstructItem(Item item, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
@@ -37,8 +38,8 @@ namespace Barotrauma
                 }
             }
 
-            TryAddSubObjective(ref decontainObjective,
-                constructor: () => new AIObjectiveDecontainItem(character, Item, objectiveManager,
+            TryAddSubObjective(ref moveItemObjective,
+                constructor: () => new AIObjectiveMoveItem(character, Item, objectiveManager,
                     sourceContainer: Item.Container?.GetComponent<ItemContainer>(), targetContainer: deconstructor.InputContainer, priorityModifier: PriorityModifier)
                 {
                     Equip = true,
@@ -64,7 +65,7 @@ namespace Barotrauma
                                 Abandon = true;
                             });
                     }
-                    RemoveSubObjective(ref decontainObjective);
+                    RemoveSubObjective(ref moveItemObjective);
                 },
                 onAbandon: () =>
                 {
@@ -94,6 +95,7 @@ namespace Barotrauma
                 if (potentialDeconstructor?.InputContainer == null) { continue; }
                 if (!potentialDeconstructor.InputContainer.Inventory.CanBePut(Item)) { continue; }
                 if (!potentialDeconstructor.Item.HasAccess(character)) { continue; }
+                if (Item.Prefab.DeconstructItems.None(it => it.IsValidDeconstructor(otherItem))) { continue; }
                 float distFactor = GetDistanceFactor(Item.WorldPosition, potentialDeconstructor.Item.WorldPosition, factorAtMaxDistance: 0.2f);
                 if (distFactor > bestDistFactor)
                 {
@@ -125,7 +127,7 @@ namespace Barotrauma
         public override void Reset()
         {
             base.Reset();
-            decontainObjective = null;
+            moveItemObjective = null;
         }
 
         public void DropTarget()

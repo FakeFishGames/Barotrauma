@@ -69,6 +69,10 @@ public static class IEnumerableExtensionsCore
         }
     }
 
+    // Upgrading to .NET 8 seems to have caused a false positive on this line, disabled the warning for now. 
+    // See https://github.com/dotnet/roslyn-analyzers/pull/7488
+#pragma warning disable CA2021
+
     public static IEnumerable<TSuccess> Successes<TSuccess, TFailure>(
         this IEnumerable<Result<TSuccess, TFailure>> source)
         where TSuccess : notnull
@@ -84,4 +88,7 @@ public static class IEnumerableExtensionsCore
         => source
             .OfType<Failure<TSuccess, TFailure>>()
             .Select(f => f.Error);
+
+#pragma warning disable 2021
+
 }

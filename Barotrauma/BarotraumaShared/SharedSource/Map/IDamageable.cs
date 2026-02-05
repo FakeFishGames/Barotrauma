@@ -11,7 +11,6 @@ namespace Barotrauma
         
         AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = true);
         
-        
         public readonly struct AttackEventData
         {
             public readonly ISpatialEntity Attacker;

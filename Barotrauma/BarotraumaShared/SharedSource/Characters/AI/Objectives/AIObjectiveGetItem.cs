@@ -12,6 +12,7 @@ namespace Barotrauma
     class AIObjectiveGetItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "get item".ToIdentifier();
+        public override string DebugTag => $"{Identifier} ({(IdentifiersOrTags == null || IdentifiersOrTags.None() ? "none" : string.Join(", ", IdentifiersOrTags))})";
 
         public override bool AbandonWhenCannotCompleteSubObjectives => false;
         public override bool AllowMultipleInstances => true;
@@ -31,6 +32,10 @@ namespace Barotrauma
 
         private Item targetItem;
         private readonly Item originalTarget;
+        /// <summary>
+        /// ItemContainer the bot is trying to put the <see cref="TargetItem"/> into. Only set when the objective is a subobjective of a <see cref="AIObjectiveContainItem"/>.
+        /// </summary>
+        public ItemContainer ContainTarget;
         private ISpatialEntity moveToTarget;
         private bool isDoneSeeking;
         public Item TargetItem => targetItem;
@@ -43,6 +48,13 @@ namespace Barotrauma
 
         public const float DefaultReach = 100;
         public const float MaxReach = 150;
+
+        /// <summary>
+        /// Is the goal of this objective to get diving gear (i.e. has it been created by <see cref="AIObjectiveFindDivingGear"/>)? 
+        /// If so, the objective won't attempt to create another objective if the path requires diving gear 
+        /// (wouldn't make sense to start looking for diving gear so the bot can get to a room they're trying to get diving gear from!)
+        /// </summary>
+        public bool IsFindDivingGearSubObjective;
 
         public bool AllowToFindDivingGear { get; set; } = true;
         public bool MustBeSpecificItem { get; set; }
@@ -76,6 +88,12 @@ namespace Barotrauma
         }
 
         public InvSlotType? EquipSlotType { get; set; }
+        
+        /// <summary>
+        /// Tags of items that bots are allowed to take from outposts, when needed. For example when there's not enough oxygen in the room, or if they need to extinguish a fire.
+        /// The guards won't react if these items are taken by the bots.
+        /// </summary>
+        public static readonly Identifier[] AllowedItemsToTake = { Tags.OxygenSource, Tags.FireExtinguisher, Tags.LightDivingGear, Tags.HeavyDivingGear };
 
         public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -367,6 +385,7 @@ namespace Barotrauma
                     {
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear, closeEnough: DefaultReach)
                         {
+                            IsFindDivingGearSubObjective = IsFindDivingGearSubObjective,
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
                             AbortCondition = obj => targetItem == null || (targetItem.GetRootInventoryOwner() is Entity owner && owner != moveToTarget && owner != character),
                             SpeakIfFails = false,
@@ -477,7 +496,17 @@ namespace Barotrauma
                         //the item is inside an item inside an item (e.g. fuel tank in a welding tool in a cabinet -> reduce priority to prefer items that aren't inside a tool)
                         if (ownerItem != item.Container)
                         {
-                            itemPriority *= 0.1f;
+                            if (ContainTarget != null && ContainTarget.Item.Prefab.Identifier == item.Container.Prefab.Identifier)
+                            {
+                                // The item is identical to the item we are trying to contain the item to (e.g. trying to find an oxygen source to a mask -> allow to take oxygen sources from other masks)
+                                // Reduce the priority just a tiny bit, so that we choose items that are not inside the items first.
+                                // TODO: Doesn't solve the issue for items that are not the same type but that should be treated the same. E.g. diving mask and clown diving mask.
+                                itemPriority = 0.95f;
+                            }
+                            else
+                            {
+                                itemPriority *= 0.1f;
+                            }
                         }
                     }
                 }
@@ -645,6 +674,11 @@ namespace Barotrauma
                 if (prefab is not ItemPrefab itemPrefab) { continue; }
                 if (IdentifiersOrTags.Any(id => id == prefab.Identifier || prefab.Tags.Contains(id)))
                 {
+                    if (character.AIController.HasInfiniteItemSpawns(prefab.Identifier))
+                    {
+                        // If an item with infinite spawns is defined, let's use it.
+                        return itemPrefab;
+                    }
                     float cost = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
                         itemPrefab.DefaultPrice.Price :
                         float.MaxValue;

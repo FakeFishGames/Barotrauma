@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,6 +29,9 @@ namespace Barotrauma
 
         [Serialize(120.0f, IsPropertySaveable.Yes, description: "How long it takes for the NPC to \"cool down\" (stop attacking).")]
         public float CoolDown { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "The event actions reset when a GoTo action makes the event jump to a different point. Should the NPC revert back to a normal state when the event resets?")]
+        public bool AbandonOnReset { get; set; }
 
         private bool isFinished = false;
 
@@ -81,7 +84,7 @@ namespace Barotrauma
 
         public override void Reset()
         {
-            if (affectedNpcs != null)
+            if (affectedNpcs != null && AbandonOnReset)
             {
                 foreach (var npc in affectedNpcs)
                 {

@@ -138,10 +138,15 @@ namespace Barotrauma
             return allowedLocationTypes.None() || allowedLocationTypes.Contains("Any".ToIdentifier());
         }
 
-        public bool IsAllowedInLocationType(LocationType locationType)
+
+        /// <param name="requireLocationTypeSpecific">Does the module need to be explicitly configured as suitable for the location type, or is it ok if it's allowed for any location type?</param>
+        public bool IsAllowedInLocationType(LocationType locationType, bool requireLocationTypeSpecific = false)
         {
-            if (locationType == null || IsAllowedInAnyLocationType()) { return true; }
-            return allowedLocationTypes.Contains(locationType.Identifier);
+            if (locationType == null) { return true; }
+            if (!requireLocationTypeSpecific && IsAllowedInAnyLocationType()) { return true; }
+            return 
+                allowedLocationTypes.Contains(locationType.Identifier) || 
+                (!locationType.UseOutpostModulesOfLocationType.IsEmpty && allowedLocationTypes.Contains(locationType.UseOutpostModulesOfLocationType));
         }
 
         public void DetermineGapPositions(Submarine sub)

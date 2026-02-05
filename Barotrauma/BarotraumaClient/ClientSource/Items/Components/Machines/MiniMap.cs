@@ -1078,7 +1078,7 @@ namespace Barotrauma.Items.Components
                 if (hullData is null)
                 {
                     hullData = new HullData();
-                    GetLinkedHulls(hull, hullData.LinkedHulls);
+                    hull.GetLinkedHulls(hullData.LinkedHulls);
                     hullDatas.Add(hull, hullData);
                 }
 
@@ -1586,19 +1586,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public static void GetLinkedHulls(Hull hull, List<Hull> linkedHulls)
-        {
-            foreach (var linkedEntity in hull.linkedTo)
-            {
-                if (linkedEntity is Hull linkedHull)
-                {
-                    if (linkedHulls.Contains(linkedHull) || linkedHull.IsHidden) { continue; }
-                    linkedHulls.Add(linkedHull);
-                    GetLinkedHulls(linkedHull, linkedHulls);
-                }
-            }
-        }
-
         public static GUIFrame CreateMiniMap(Submarine sub, GUIComponent parent, MiniMapSettings settings)
         {
             return CreateMiniMap(sub, parent, settings, null, out _);
@@ -1791,7 +1778,7 @@ namespace Barotrauma.Items.Components
                 if (combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull))) { continue; }
 
                 List<Hull> linkedHulls = new List<Hull>();
-                GetLinkedHulls(hull, linkedHulls);
+                hull.GetLinkedHulls(linkedHulls);
 
                 linkedHulls.Remove(hull);
 

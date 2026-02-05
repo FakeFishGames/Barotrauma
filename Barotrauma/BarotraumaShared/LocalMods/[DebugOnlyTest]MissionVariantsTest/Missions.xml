@@ -1,0 +1,6 @@
+﻿<Missions>
+  <Mission identifier="missionvariant" variantof="killcrawlerswarm1" name="One Million Crawlers" description=":3" difficulty="4" commonness="100000000" reward="20000" sonarlabel="character.crawler">
+    <monster min="25" max="50"/>
+    <Reputation amount="10"/>
+  </Mission>
+</Missions>

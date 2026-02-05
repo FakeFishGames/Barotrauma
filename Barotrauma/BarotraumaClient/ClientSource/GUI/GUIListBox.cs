@@ -446,19 +446,22 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
-        public void Select(object userData, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled)
+        public bool Select(object userData, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled)
         {
             var children = Content.Children;
             int i = 0;
+            bool wasSelected = false;
             foreach (GUIComponent child in children)
             {
                 if (Equals(child.UserData, userData))
                 {
+                    wasSelected = true;
                     Select(i, force, autoScroll);
-                    if (!SelectMultiple) { return; }
+                    if (!SelectMultiple) { return true; }
                 }
                 i++;
             }
+            return wasSelected;
         }
 
         private Point CalculateFrameSize(bool isHorizontal, int scrollBarSize)
@@ -1030,7 +1033,7 @@ namespace Barotrauma
             while (index < Content.CountChildren)
             {
                 GUIComponent child = Content.GetChild(index);
-                if (child.Visible)
+                if (child.Visible && child.CanBeFocused)
                 {
                     Select(index, force, GetAutoScroll(!SmoothScroll && autoScroll == AutoScroll.Enabled), takeKeyBoardFocus, playSelectSound);
                     if (SmoothScroll)
@@ -1049,7 +1052,7 @@ namespace Barotrauma
             while (index >= 0)
             {
                 GUIComponent child = Content.GetChild(index);
-                if (child.Visible)
+                if (child.Visible && child.CanBeFocused)
                 {
                     Select(index, force, GetAutoScroll(!SmoothScroll && autoScroll == AutoScroll.Enabled), takeKeyBoardFocus, playSelectSound);
                     if (SmoothScroll)

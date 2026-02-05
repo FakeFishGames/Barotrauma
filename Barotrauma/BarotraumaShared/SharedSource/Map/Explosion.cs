@@ -396,12 +396,15 @@ namespace Barotrauma
                 }
             }
 
-            if (MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) && Attack.Afflictions.None())
+            if (Attack.Afflictions.None() &&
+                MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) &&
+                MathUtils.NearlyEqual(Attack.ItemDamage, 0.0f) && 
+                MathUtils.NearlyEqual(Attack.StructureDamage, 0.0f))
             {
                 return;
             }
 
-            DamageCharacters(worldPosition, Attack, force, damageSource, attacker);
+            DamageCharacters(worldPosition, Attack, force, damageSource, attacker, displayRange);
 
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
@@ -462,12 +465,12 @@ namespace Barotrauma
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
 
-        private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker)
+        private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker, float range)
         {
-            if (attack.Range <= 0.0f) { return; }
+            if (range <= 0.0f) { return; }
 
             //long range for the broad distance check, because large characters may still be in range even if their collider isn't
-            float broadRange = Math.Max(attack.Range * 10.0f, 10000.0f);
+            float broadRange = Math.Max(range * 10.0f, 10000.0f);
 
             foreach (Character c in Character.CharacterList)
             {
@@ -515,7 +518,7 @@ namespace Barotrauma
                     float limbRadius = limb.body.GetMaxExtent();
                     dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
 
-                    if (dist > attack.Range) { continue; }
+                    if (dist > range) { continue; }
 
                     float distFactor = 
                         DistanceFalloff ? 

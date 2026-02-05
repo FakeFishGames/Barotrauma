@@ -13,7 +13,7 @@ namespace Barotrauma.Networking
         protected ServerPeer(Callbacks callbacks, ServerSettings serverSettings) : base(callbacks)
         {
             this.serverSettings = serverSettings;
-            this.connectedClients = new List<ConnectedClient>();
+            this.connectedClients = new List<ClientConnectionData>();
             this.pendingClients = new List<PendingClient>();
 
             List<ContentPackage> contentPackageList = new List<ContentPackage>();
@@ -41,7 +41,7 @@ namespace Barotrauma.Networking
             public ConnectionInitialization InitializationStep;
             public double UpdateTime;
             public double TimeOut;
-            public int Retries;
+            public int PasswordRetries;
             public Int32? PasswordSalt;
             public bool AuthSessionStarted;
             
@@ -52,34 +52,70 @@ namespace Barotrauma.Networking
                 OwnerKey = Option.None;
                 Connection = conn;
                 InitializationStep = ConnectionInitialization.AuthInfoAndVersion;
-                Retries = 0;
+                PasswordRetries = 0;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime + Timing.Step * 3.0;
-                TimeOut = NetworkConnection.TimeoutThreshold;
+                TimeOut = NetworkConnection.TimeoutThresholdNotInGame;
                 AuthSessionStarted = false;
             }
 
             public void Heartbeat()
             {
-                TimeOut = NetworkConnection.TimeoutThreshold;
+                TimeOut = NetworkConnection.TimeoutThresholdNotInGame;
             }
         }
 
-        protected sealed class ConnectedClient
+        protected sealed class ClientConnectionData(TConnection connection)
         {
-            public readonly TConnection Connection;
-            public readonly MessageFragmenter Fragmenter;
-            public readonly MessageDefragmenter Defragmenter;
+            public readonly TConnection Connection = connection;
+            public readonly MessageFragmenter Fragmenter = new();
+            public readonly MessageDefragmenter Defragmenter = new();
 
-            public ConnectedClient(TConnection connection)
+            /// <summary>
+            /// Attempts to retrieve the name of the client associated with this connection
+            /// from a higher layer.
+            /// </summary>
+            /// <returns>Name of the client if found, null otherwise.</returns>
+            public string? TryGetClientName()
             {
-                Connection = connection;
-                Fragmenter = new();
-                Defragmenter = new();
+                if (GameMain.Server?.ConnectedClients is { } connClients)
+                {
+                    foreach (Client? client in connClients)
+                    {
+                        if (client?.Connection is not { } clientConnection) { continue; }
+
+                        if (clientConnection.EndpointMatches(Connection.Endpoint) )
+                        {
+                            return client.Name;
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            public void BanClient(ServerSettings settings, string banReason, TimeSpan? duration)
+            {
+                string clientName = TryGetClientName() ?? "Player";
+
+                Connection.AccountInfo.OtherMatchingIds.ForEach(BanAccountId);
+
+                if (Connection.AccountInfo.AccountId.TryUnwrap(out var accountId))
+                {
+                    BanAccountId(accountId);
+                }
+                else
+                {
+                    settings.BanList.BanPlayer(clientName, Connection.Endpoint, banReason, duration);
+                }
+                return;
+
+                void BanAccountId(AccountId id)
+                    => settings.BanList.BanPlayer(clientName, id, banReason, duration);
             }
         }
 
-        protected readonly List<ConnectedClient> connectedClients;
+        protected readonly List<ClientConnectionData> connectedClients;
         protected readonly List<PendingClient> pendingClients;
         protected readonly ServerSettings serverSettings;
 
@@ -88,7 +124,7 @@ namespace Barotrauma.Networking
 
         protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc, ConnectionInitialization initializationStep)
         {
-            pendingClient.TimeOut = NetworkConnection.TimeoutThreshold;
+            pendingClient.TimeOut = NetworkConnection.TimeoutThresholdNotInGame;
 
             if (pendingClient.InitializationStep != initializationStep) { return; }
 
@@ -156,8 +192,8 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        pendingClient.Retries++;
-                        if (serverSettings.BanAfterWrongPassword && pendingClient.Retries > serverSettings.MaxPasswordRetriesBeforeBan)
+                        pendingClient.PasswordRetries++;
+                        if (serverSettings.BanAfterWrongPassword && pendingClient.PasswordRetries > serverSettings.MaxPasswordRetriesBeforeBan)
                         {
                             const string banMsg = "Failed to enter correct password too many times";
                             BanPendingClient(pendingClient, banMsg, null);
@@ -235,7 +271,7 @@ namespace Barotrauma.Networking
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
                 TConnection newConnection = pendingClient.Connection;
-                connectedClients.Add(new ConnectedClient(newConnection));
+                connectedClients.Add(new ClientConnectionData(newConnection));
                 pendingClients.Remove(pendingClient);
 
                 callbacks.OnInitializationComplete.Invoke(newConnection, pendingClient.Name);
@@ -281,7 +317,7 @@ namespace Barotrauma.Networking
                     structToSend = new ServerPeerPasswordPacket
                     {
                         Salt = GetSalt(pendingClient),
-                        RetriesLeft = Option<int>.Some(pendingClient.Retries)
+                        RetriesLeft = Option<int>.Some(pendingClient.PasswordRetries)
                     };
 
                     static Option<int> GetSalt(PendingClient client)

@@ -106,12 +106,35 @@ namespace Barotrauma
         public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
         public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
         public static float RelativeVerticalAspectRatio => VerticalAspectRatio / (ReferenceResolution.Y / ReferenceResolution.X);
+        
+        /// <summary>
+        /// Returns the difference of the current aspect ratio to the reference aspect ratio (16:9).
+        /// E.g. if the aspect ratio is 16:9, returns 0; if it's 4:3, returns 0.444; if the aspect ratio is 12:5, returns -0.623.
+        /// </summary>
+        public static float AspectRatioDifference
+        {
+            get
+            {
+                // ~ 1.777
+                float referenceAspectRatio = ReferenceResolution.X / ReferenceResolution.Y;
+                float aspectRatioDifference = referenceAspectRatio - HorizontalAspectRatio;
+                if (MathUtils.NearlyEqual(aspectRatioDifference, 0))
+                {
+                    // Handle possible rounding errors, so that we can trust that this returns 0 when the aspect ratio matches the reference aspect ratio.
+                    return 0;
+                }
+                return aspectRatioDifference;
+            }
+        }
+            
         /// <summary>
         /// A horizontal scaling factor for low aspect ratios (small width relative to height)
         /// </summary>
         public static float AspectRatioAdjustment => HorizontalAspectRatio < 1.4f ? (1.0f - (1.4f - HorizontalAspectRatio)) : 1.0f;
 
         public static bool IsUltrawide => HorizontalAspectRatio > 2.3f;
+        
+        public static bool IsHUDScaled => GameSettings.CurrentConfig.Graphics.HUDScale > 1 || GameSettings.CurrentConfig.Graphics.InventoryScale > 1;
 
         public static int UIWidth
         {
@@ -625,9 +648,13 @@ namespace Barotrauma
 
                 DrawMessages(spriteBatch, cam);
 
-                if (MouseOn != null && !MouseOn.ToolTip.IsNullOrWhiteSpace())
-                {
-                    MouseOn.DrawToolTip(spriteBatch);
+                if (MouseOn != null)
+                { 
+                    if (!MouseOn.ToolTip.IsNullOrWhiteSpace())
+                    {
+                        MouseOn.DrawToolTip(spriteBatch);
+                    }
+                    MouseOn.OnDrawToolTip?.Invoke(MouseOn);
                 }
 
                 if (SubEditorScreen.IsSubEditor())
@@ -882,6 +909,15 @@ namespace Barotrauma
             else if (PauseMenuOpen)
             {
                 PauseMenu.AddToGUIUpdateList();
+            }
+
+            foreach (var openAccordion in GUIComponent.OpenAccordionPopups)
+            {
+                openAccordion.AddToGUIUpdateList(order: 1);
+            }
+            if (PlayerInput.PrimaryMouseButtonDown())
+            {
+                GUIComponent.OpenAccordionPopups.Clear();
             }
 
             SocialOverlay.Instance?.AddToGuiUpdateList();
@@ -2200,6 +2236,29 @@ namespace Barotrauma
             return textBox;
         }
 
+        /// <summary>
+        /// Creates a pre-built filter box.
+        /// </summary>
+        /// <remarks>
+        /// The filter function must be set using <see cref="GUITextBox.OnTextChanged"/>.<see langword="add"/>.
+        /// </remarks>
+        public static GUITextBox CreateFilterBox(RectTransform rectT)
+        {
+            GUITextBox textBox = new(rectT, createClearButton: true)
+            {
+                OnEnterPressed = (tb, _) =>
+                {
+                    tb.Deselect();
+                    return true;
+                }
+            };
+            GUITextBlock label = new(new RectTransform(Vector2.One, textBox.TextBlock.RectTransform, Anchor.CenterLeft), TextManager.Get("serverlog.filter"), GUIStyle.TextColorNormal * 0.75f);
+            textBox.OnSelected += (_, _) => label.Visible = false;
+            textBox.OnDeselected += (tb, _) => label.Visible = tb.Text.IsNullOrEmpty();
+            textBox.OnTextChanged += (tb, text) => label.Visible = !tb.Selected && text.IsNullOrEmpty();
+            return textBox;
+        }
+
         public static void NotifyPrompt(LocalizedString header, LocalizedString body)
         {
             GUIMessageBox msgBox = new GUIMessageBox(header, body, new[] { TextManager.Get("Ok") }, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
@@ -2259,9 +2318,61 @@ namespace Barotrauma
             return msgBox;
         }
 
-#endregion
+#nullable enable
+        #region Item UI
+        /// <summary>
+        /// Creates a 7-segment display.
+        /// </summary>
+        /// <param name="leftLabel">Returns <see langword="null"/> if <paramref name="leftLabelText"/> is <see langword="null"/> or empty.</param>
+        /// <param name="rightLabelText">Defaults to <c>TextManager.Get("kilowatt")</c>.</param>
+        /// <param name="leftLabelFont">Defaults to <see cref="GUIStyle.LargeFont"/>.</param>
+        public static GUITextBlock CreateDigitalDisplay(RectTransform rect, out GUITextBlock? leftLabel, out GUITextBlock rightLabel, LocalizedString? leftLabelText = null, LocalizedString? rightLabelText = null, LocalizedString? tooltip = null, GUIFont? leftLabelFont = null)
+        {
+            GUILayoutGroup textArea = new(rect, isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                CanBeFocused = true,
+                ToolTip = tooltip!,
+                AbsoluteSpacing = 5
+            };
 
-#region Element positioning
+            leftLabel = null;
+            if (!leftLabelText.IsNullOrEmpty())
+            {
+                leftLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1f), textArea.RectTransform), leftLabelText, textColor: GUIStyle.TextColorBright, font: leftLabelFont ?? GUIStyle.LargeFont, textAlignment: Alignment.CenterRight);
+            }
+
+            GUIFrame displayBackground = new(new RectTransform(new Vector2(0.55f, 0.8f), textArea.RectTransform), style: "DigitalFrameDark");
+            GUITextBlock displayText = new(new RectTransform(new Vector2(0.9f, 0.95f), displayBackground.RectTransform, Anchor.Center), "8888", font: GUIStyle.DigitalFont, textColor: GUIStyle.TextColorDark, textAlignment: Alignment.CenterRight);
+            displayText.TextScale = Math.Max((displayText.Rect.Height - 10) / GUIStyle.DigitalFont.LineHeight, 0.1f);
+
+            rightLabel = new GUITextBlock(new RectTransform(Vector2.Zero, textArea.RectTransform), rightLabelText ?? TextManager.Get("kilowatt"), textColor: GUIStyle.TextColorNormal, font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
+            {
+                Padding = Vector4.Zero
+            };
+            rightLabel.RectTransform.MinSize = rightLabel.TextSize.ToPoint();
+
+            textArea.GetAllChildren().ForEach(child => child.CanBeFocused = false);
+            return displayText;
+        }
+
+        /// <param name="labelFont">Defaults to <see cref="GUIStyle.SubHeadingFont"/>.</param>
+        public static GUITickBox CreateIndicatorLight(RectTransform rect, string style = "", LocalizedString? label = null, LocalizedString? tooltip = null, GUIFont? labelFont = null)
+        {
+            GUITickBox indicator = new(rect, label, font: labelFont ?? GUIStyle.SubHeadingFont, style: style)
+            {
+                Enabled = false,
+                ToolTip = tooltip!
+            };
+            indicator.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
+            return indicator;
+        }
+        #endregion
+#nullable restore
+
+        #endregion
+
+        #region Element positioning
         private static List<T> CreateElements<T>(int count, RectTransform parent, Func<RectTransform, T> constructor,
             Vector2? relativeSize = null, Point? absoluteSize = null,
             Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,
@@ -2495,7 +2606,12 @@ namespace Barotrauma
                 {
                     IgnoreLayoutGroups = true,
                     ToolTip = TextManager.Get("bugreportbutton") + $" (v{GameMain.Version})",
-                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+                    OnClicked = (btn, userdata) => 
+                    {
+                        if (PauseMenuOpen) { TogglePauseMenu(); }                       
+                        GameMain.Instance.ShowBugReporter();
+                        return true;
+                    }
                 };
 
                 CreateButton("PauseMenuResume", buttonContainer, null);
@@ -2531,23 +2647,37 @@ namespace Barotrauma
                             GameMain.GameSession?.EndRound("");
                         });
                     }
-                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null)
                     {
-                        bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel();
-                        if (canSave)
+                        //server owner (host) can't return to the lobby without ending the round for everyone
+                        if (!GameMain.Client.IsServerOwner)
                         {
-                            CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>
-                            {
-                                GameMain.Client?.RequestRoundEnd(save: true);
-                            });
+                            CreateButton("ReturnToServerlobby", buttonContainer,
+                                verificationTextTag: "PauseMenuReturnToServerLobbyVerificationSelf",
+                                action: () =>
+                                {
+                                    GameMain.Client?.EndRoundForSelf();
+                                });
                         }
 
-                        CreateButton(GameMain.GameSession.GameMode is CampaignMode ? "ReturnToServerlobby" : "EndRound", buttonContainer,
-                            verificationTextTag: GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd",
-                            action: () =>
+                        if (GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                        {
+                            bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel();
+                            if (canSave)
                             {
-                                GameMain.Client?.RequestRoundEnd(save: false);
-                            });
+                                CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>
+                                {
+                                    GameMain.Client?.RequestEndRound(save: true);
+                                }, color: GUIStyle.Red);
+                            }
+
+                            CreateButton("EndRound", buttonContainer,
+                                verificationTextTag: GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd",
+                                action: () =>
+                                {
+                                    GameMain.Client?.RequestEndRound(save: false);
+                                }, color: GUIStyle.Red);
+                        }
                     }
                 }
 
@@ -2575,9 +2705,9 @@ namespace Barotrauma
 
             }
 
-            void CreateButton(string textTag, GUIComponent parent, Action action, string verificationTextTag = null)
+            void CreateButton(string textTag, GUIComponent parent, Action action, string verificationTextTag = null, Color? color = null)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), TextManager.Get(textTag))
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), TextManager.Get(textTag))
                 {
                     OnClicked = (btn, userData) =>
                     {
@@ -2593,25 +2723,31 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                if (color.HasValue)
+                {
+                    button.Color = color.Value;
+                    button.HoverColor = Color.Lerp(color.Value, Color.White, 0.5f);
+                    button.PressedColor = Color.Lerp(color.Value, Color.Black, 0.5f);
+                }
             }
 
-            void CreateVerificationPrompt(string textTag, Action confirmAction)
+        }
+        public static void CreateVerificationPrompt(string textTag, Action confirmAction)
+        {
+            var msgBox = new GUIMessageBox("", TextManager.Get(textTag),
+                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
             {
-                var msgBox = new GUIMessageBox("", TextManager.Get(textTag),
-                    new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
-                {
-                    UserData = "verificationprompt",
-                    DrawOnTop = true
-                };
-                msgBox.Buttons[0].OnClicked = (_, __) =>
-                {
-                    PauseMenuOpen = false;
-                    confirmAction?.Invoke();
-                    return true;
-                };
-                msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked += msgBox.Close;
-            }
+                UserData = "verificationprompt",
+                DrawOnTop = true
+            };
+            msgBox.Buttons[0].OnClicked = (_, __) =>
+            {
+                PauseMenuOpen = false;
+                confirmAction?.Invoke();
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+            msgBox.Buttons[1].OnClicked += msgBox.Close;
         }
 
         private static bool TogglePauseMenu(GUIButton button, object obj)
@@ -2695,12 +2831,6 @@ namespace Barotrauma
             {
                 messages.Clear();
             }
-        }
-
-        public static bool IsFourByThree()
-        {
-            float aspectRatio = HorizontalAspectRatio;
-            return aspectRatio > 1.3f && aspectRatio < 1.4f;
         }
 
         public static void SetSavingIndicatorState(bool enabled)

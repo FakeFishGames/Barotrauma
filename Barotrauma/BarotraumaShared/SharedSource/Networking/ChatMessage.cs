@@ -21,6 +21,7 @@ namespace Barotrauma.Networking
         ServerMessageBox = 10,
         ServerMessageBoxInGame = 11,
         Team = 12,
+        BlockedBySpamFilter = 13,
     }
 
     public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
@@ -39,24 +40,26 @@ namespace Barotrauma.Networking
         /// </summary>
         public const float SpeakRangeVOIP = 1000.0f;
 
+        public const float BlockedBySpamFilterTime = 10.0f;
+
         private static readonly string dateTimeFormatLongTimePattern = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern;
 
         public static Color[] MessageColor = 
         {
             new Color(190, 198, 205),   //default
             new Color(204, 74, 78),     //error
-            new Color(136, 177, 255),     //dead
+            new Color(136, 177, 255),   //dead
             new Color(157, 225, 160),   //server
             new Color(238, 208, 0),     //radio
             new Color(64, 240, 89),     //private
             new Color(255, 255, 255),   //console
             new Color(255, 255, 255),   //messagebox
-            new Color(255, 128, 0),      //order
-            new Color(),                    // ServerLog
-            new Color(),                    // ServerMessageBox
-            new Color(),                    // ServerMessageBoxInGame
-            //new Color(128, 0, 255),     // team
-            new Color(86, 91, 205), // team
+            new Color(255, 128, 0),     //order
+            new Color(),                // ServerLog
+            new Color(),                // ServerMessageBox
+            new Color(),                // ServerMessageBoxInGame
+            new Color(86, 91, 205),     // team
+            new Color(255, 0, 0),       // blocked by spam filter
         };
 
         public readonly string Text;
@@ -230,15 +233,17 @@ namespace Barotrauma.Networking
 
         public static string ApplyDistanceEffect(string text, float garbleAmount)
         {
-            if (garbleAmount < 0.3f) return text;
-            if (garbleAmount >= 1.0f) return "";
+            if (garbleAmount < 0.3f) { return text; }
+            if (garbleAmount >= 1.0f) { return ""; }
 
-            int startIndex = Math.Max(text.IndexOf(':') + 1, 1);
+            string textWithoutColorTags = RichString.Rich(text).SanitizedValue;
+
+            int startIndex = Math.Max(textWithoutColorTags.IndexOf(':') + 1, 1);
 
             StringBuilder sb = new StringBuilder(text.Length);
-            for (int i = 0; i < text.Length; i++)
+            for (int i = 0; i < textWithoutColorTags.Length; i++)
             {
-                sb.Append((i > startIndex && Rand.Range(0.0f, 1.0f) < garbleAmount) ? '-' : text[i]);
+                sb.Append((i > startIndex && Rand.Range(0.0f, 1.0f) < garbleAmount) ? '-' : textWithoutColorTags[i]);
             }
 
             return sb.ToString();

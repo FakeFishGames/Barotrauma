@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "repair item".ToIdentifier();
 
+        public override string DebugTag => $"{Identifier} ({Item?.Name ?? "null"})";
+
         protected override bool AllowInFriendlySubs => true;
         public override bool KeepDivingGearOn => Item?.CurrentHull == null;
         protected override bool AllowWhileHandcuffed => false;
@@ -234,6 +236,7 @@ namespace Barotrauma
                     {
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
+                            DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachTarget,
                             TargetName = Item.Name,
                             SpeakCannotReachCondition = () => isPriority
                         };

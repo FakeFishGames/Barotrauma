@@ -182,7 +182,7 @@ namespace Barotrauma
         public float HandIKStrength { get; set; }
 
         public static string GetDefaultFileName(Identifier speciesName, AnimationType animType) => $"{speciesName.Value.CapitaliseFirstInvariant()}{animType}";
-        public static string GetDefaultFile(Identifier speciesName, AnimationType animType) => Barotrauma.IO.Path.Combine(GetFolder(speciesName), $"{GetDefaultFileName(speciesName, animType)}.xml");
+        public static string GetDefaultFilePath(Identifier speciesName, AnimationType animType) => Barotrauma.IO.Path.Combine(GetFolder(speciesName), $"{GetDefaultFileName(speciesName, animType)}.xml");
 
         public static string GetFolder(Identifier speciesName)
         {
@@ -314,25 +314,27 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified -> Get a matching animation from the specified folder.
-                        // First try to find a file that matches the default file name. If that fails, just take any file.
+                        // First try to find a file that matches the default file name. If that fails, just take any file of the matching type.
                         string defaultFileName = GetDefaultFileName(animSpecies, animType);
                         selectedFile = filteredFiles.FirstOrDefault(path => PathMatchesFile(path, defaultFileName)) ?? filteredFiles.First();
                     }
                     else
                     {
+                        // Try to get the specified file. If that fails, just take any file of the matching type.
                         selectedFile = filteredFiles.FirstOrDefault(path => PathMatchesFile(path, fileName));
                         if (selectedFile == null)
                         {
-                            errorMessages.Add($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.");
+                            errorMessages.Add($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the first file of the matching type.");
+                            selectedFile = filteredFiles.First();
                         }
-                    }   
+                    }
                 }
             }
             else
             {
                 errorMessages.Add($"[AnimationParams] Invalid directory: {folder}. Using the default animation.");
             }
-            selectedFile ??= GetDefaultFile(fallbackSpecies, animType);
+            selectedFile ??= GetDefaultFilePath(fallbackSpecies, animType);
             Debug.Assert(selectedFile != null);
             if (errorMessages.None())
             {

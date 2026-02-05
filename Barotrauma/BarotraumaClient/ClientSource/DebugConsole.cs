@@ -397,6 +397,8 @@ namespace Barotrauma
 
         private static void InitProjectSpecific()
         {
+            InitShowSoldItems();
+            
             commands.Add(new Command("eosStat", "Query and display all logged in EOS users. Normally this is at most two users, but in a developer environment it could be more.", args =>
             {
                 if (!EosInterface.Core.IsInitialized)
@@ -902,6 +904,14 @@ namespace Barotrauma
                     DebugConsole.ThrowError("The command 'wikiimage_sub' failed.", e);
                 }
             }));
+            
+            AssignOnExecute("loslightingfreecam", (string[] args) =>
+            {
+                ExecuteCommand("los");
+                ExecuteCommand("lighting");
+                ExecuteCommand("freecam");
+            });
+            AssignRelayToServer("loslightingfreecam", false);
 
             AssignRelayToServer("kick", false);
             AssignRelayToServer("kickid", false);
@@ -996,17 +1006,11 @@ namespace Barotrauma
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
             {
                 Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                TeleportCharacter(cursorWorldPos, Character.Controlled, args);
+                TeleportCharacter(cursorWorldPos, Character.Controlled, args);                
             });
 
-            AssignOnExecute("spawn|spawncharacter", (string[] args) =>
-            {
-                SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), out string errorMsg);
-                if (!string.IsNullOrWhiteSpace(errorMsg))
-                {
-                    ThrowError(errorMsg);
-                }
-            });
+            AssignOnExecute("spawn|spawncharacter", args => SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)));
+            AssignOnExecute("spawnnpc", args => SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), true));
 
             AssignOnExecute("los", (string[] args) =>
              {
@@ -1097,6 +1101,42 @@ namespace Barotrauma
                             (lightComponent.LightColor.A / 255.0f) * value.W);
                 }
             }, isCheat: false));
+            
+            commands.Add(new Command("steamtimelinetest", "steamtimelinetest: Test the Steamworks timeline feature.", (string[] args) =>
+            {
+                // Add an instantaneous event to the Steam timeline
+                var eventHandle = Steamworks.SteamTimeline.AddInstantaneousTimelineEvent(
+                    "Barotrauma Test Event", 
+                    "This is a test event created from the debug console", 
+                    "steam_marker", // Important: icon must be specified, or it does nothing :D
+                    1, // Priority
+                    0.0f, // Current time (no offset)
+                    Steamworks.TimelineEventClipPriority.Standard);
+                
+                NewMessage($"Steamworks timeline test: Added instantaneous event with handle: {eventHandle}", Color.Yellow);
+            }));
+            
+            commands.Add(new Command("setsteamtimelinegamemode", "setsteamtimelinegamemode [gamemode]: Sets the Steam timeline gamemode to the specified value.", args =>
+            {
+                if (args.Length == 0) 
+                {
+                    NewMessage("Please specify a gamemode. Available modes: " + string.Join(", ", Enum.GetNames(typeof(SteamTimelineManager.TimelineGameMode))), Color.Red);
+                    return; 
+                }
+
+                if (Enum.TryParse<SteamTimelineManager.TimelineGameMode>(args[0], ignoreCase: true, out var gameMode))
+                {
+                    SteamTimelineManager.SetTimelineGameMode(gameMode);
+                    NewMessage($"Timeline gamemode set to: {gameMode}", Color.Green);
+                }
+                else
+                {
+                    NewMessage($"Invalid gamemode '{args[0]}'. Available modes: " + string.Join(", ", Enum.GetNames(typeof(SteamTimelineManager.TimelineGameMode))), Color.Red);
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[] { Enum.GetNames(typeof(SteamTimelineManager.TimelineGameMode)) };
+            }));
 
             commands.Add(new Command("color|colour", "Change color (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
@@ -2531,6 +2571,85 @@ namespace Barotrauma
 
 #if DEBUG
 
+           commands.Add(new Command(
+                "listachievements",
+                "listachievements: Lists all achievement identifiers, names, descriptions, and their current Steam status (Locked/Unlocked).",
+                (string[] args) =>
+                {
+                    NewMessage("--- Achievement Status: Name - (Identifier) - [Status] - Description ---", Color.Cyan);
+
+                    var supportedIds = AchievementManager.SupportedAchievements;
+
+                    if (supportedIds == null || !supportedIds.Any())
+                    {
+                        NewMessage("No achievement identifiers found in AchievementManager.SupportedAchievements.", Color.Yellow);
+                        NewMessage("-------------------------------------------------------------------", Color.Cyan);
+                        return;
+                    }
+
+                    if (!SteamManager.IsInitialized || !Steamworks.SteamClient.IsValid)
+                    {
+                         NewMessage("Steam not initialized. Cannot fetch achievement status or texts.", Color.Red);
+                         foreach (Identifier id in supportedIds.OrderBy(i => i.Value))
+                         {
+                             NewMessage($"- Name N/A - ({id.Value}) - [Status Unknown] - Description N/A", Color.Red);
+                         }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var steamAchievements = Steamworks.SteamUserStats.Achievements
+                                                    .ToDictionary(a => a.Identifier, StringComparer.OrdinalIgnoreCase);
+
+                            foreach (Identifier id in supportedIds.OrderBy(i => i.Value))
+                            {
+                                string statusText;
+                                string nameText = "Name N/A";
+                                string descText = "Description N/A";
+                                Color statusColor;
+
+                                if (steamAchievements.TryGetValue(id.Value, out var steamAch))
+                                {
+                                    nameText = steamAch.Name ?? "Name N/A";
+                                    descText = steamAch.Description ?? "Description N/A";
+
+                                    if (steamAch.State)
+                                    {
+                                        statusText = "[Unlocked]";
+                                        statusColor = Color.LimeGreen;
+                                    }
+                                    else
+                                    {
+                                        statusText = "[Locked]";
+                                        statusColor = Color.Orange;
+                                    }
+                                }
+                                else
+                                {
+                                    statusText = "[Not Found on Steam]";
+                                    statusColor = Color.Red;
+                                }
+                                
+                                string output = $"- {nameText} - ({id.Value}) - {statusText} - {descText}";
+                                NewMessage(output, statusColor);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            ThrowError("Error retrieving achievement statuses/texts from Steam.", e);
+                             foreach (Identifier id in supportedIds.OrderBy(i => i.Value))
+                             {
+                                 NewMessage($"- Name N/A - ({id.Value}) - [Status Error] - Description N/A", Color.Red);
+                             }
+                        }
+                    }
+
+                    NewMessage("-------------------------------------------------------------------", Color.Cyan);
+                },
+                isCheat: true
+            ));
+            
             commands.Add(new Command("unlockachievement", "unlockachievement [identifier]: Unlocks the specified achievement.", (string[] args) =>
             {
                 if (args.Length < 1) 
@@ -2541,6 +2660,60 @@ namespace Barotrauma
                 NewMessage($"Unlocked \"{args[0]}\".");
                 AchievementManager.UnlockAchievement(args[0].ToIdentifier());
             }, isCheat: true));
+            
+            commands.Add(new Command(
+                "resetachievement",
+                "resetachievement [identifier]: Clears (locks) the specified Steam achievement for testing.",
+                args =>
+                {
+                    if (args.Length < 1)
+                    {
+                        ThrowError("Please specify the achievement identifier to reset.");
+                        return;
+                    }
+
+                    if (!SteamManager.IsInitialized || !Steamworks.SteamClient.IsValid)
+                    {
+                        ThrowError("Steam not initialized.");
+                        return;
+                    }
+
+                    string achievementId = args[0];
+                    bool found = false;
+                    bool success = false;
+
+                    try
+                    {
+                        var achievement = Steamworks.SteamUserStats.Achievements
+                                            .FirstOrDefault(a => a.Identifier.Equals(achievementId, StringComparison.OrdinalIgnoreCase));
+
+                        if (achievement.Identifier == null)
+                        {
+                             ThrowError($"Achievement with identifier \"{achievementId}\" not found.");
+                             return;
+                        }
+
+                        found = true;
+                        success = achievement.Clear();
+
+                        if (success)
+                        {
+                            // IMPORTANT: Store the stats to make the change persistent
+                            SteamManager.StoreStats();
+                            NewMessage($"Reset achievement \"{achievementId}\".", Color.Yellow);
+                        }
+                        else
+                        {
+                            ThrowError($"Failed to clear achievement \"{achievementId}\" (Steamworks returned false).");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                         ThrowError($"An error occurred while trying to reset achievement \"{achievementId}\". Found: {found}, Success: {success}", e);
+                    }
+                },
+                isCheat: true
+            ));
 
             commands.Add(new Command("deathprompt", "Shows the death prompt for testing purposes.", (string[] args) =>
             {
@@ -2702,7 +2875,14 @@ namespace Barotrauma
                 {
                     int amount = 1;
                     if (args.Length > 0) { int.TryParse(args[0], out amount); }
-                    GameMain.LevelEditorScreen.TestLevelGenerationForErrors(amount);
+                    try
+                    {
+                        GameMain.LevelEditorScreen.TestLevelGenerationForErrors(amount);
+                    }
+                    catch (Exception e)
+                    {
+                        ThrowError("Failed to generate levels", e);
+                    }
                 }
                 else
                 {
@@ -2927,33 +3107,60 @@ namespace Barotrauma
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             }));
 
-            commands.Add(new Command("dumpeventtexts", "dumpeventtexts [filepath]: gets the texts from event files and and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EventTexts.txt", (string[] args) =>
+            commands.Add(new Command("dumpeventtexts", "dumpeventtexts [sourcepath] [destinationpath]: gets the texts from event files and writes them into a file along with xml tags that can be used in translation files. If the filepath arguments are omitted, all event files are gone through and written to Content/Texts/EventTexts.txt", (string[] args) =>
             {
-                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EventTexts.txt";
+                string sourcePath = args.Length > 0 ? Path.GetFullPath(args[0]) : string.Empty;
+                string destinationPath = args.Length > 1 ? args[1] : "Content/Texts/EventTexts.txt";
                 List<string> lines = new List<string>();
                 HashSet<XDocument> docs = new HashSet<XDocument>();
                 HashSet<string> textIds = new HashSet<string>();
 
-                Dictionary<string, string> existingTexts = new Dictionary<string, string>();
-
+                Dictionary<string, string> existingTexts = new Dictionary<string, string>();             
                 foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs())
                 {
-                    if (eventPrefab.Identifier.IsEmpty) 
-                    {
-                        continue;
+                    string dir = Path.GetDirectoryName(eventPrefab.FilePath.FullPath);
+                    if (!sourcePath.IsNullOrEmpty() && 
+                        Path.GetFullPath(eventPrefab.FilePath.FullPath) != sourcePath &&
+                        Path.GetDirectoryName(eventPrefab.FilePath.FullPath) != sourcePath) 
+                    { 
+                        continue; 
                     }
+                    if (eventPrefab.Identifier.IsEmpty) { continue; }
                     docs.Add(eventPrefab.ConfigElement.Document);
                     getTextsFromElement(eventPrefab.ConfigElement, lines, eventPrefab.Identifier.Value);
+                    NewMessage($"Collecting event texts from event \"{eventPrefab.Identifier}\"...", Color.Cyan);
                 }
+
+                if (lines.None())
+                {
+                    if (sourcePath.IsNullOrEmpty())
+                    {
+                        ThrowError("Could not find any event texts. Have all the texts already been moved from the event files to the text files?");
+                    }
+                    else
+                    {
+                        ThrowError($"Could not find any event texts from \"{sourcePath}\". Are you sure the path is to a valid event xml file or a directory that contains event xml files?");
+                    }
+                    return;
+                }
+
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
-                File.WriteAllLines(filePath, lines);
                 try
                 {
-                    ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+                    File.WriteAllLines(destinationPath, lines);
                 }
                 catch (Exception e)
                 {
-                    ThrowError($"Failed to open the file \"{filePath}\".", e);
+                    ThrowError($"Failed to write to the file \"{destinationPath}\".", e);
+                }
+                try
+                {
+                    ToolBox.OpenFileWithShell(Path.GetFullPath(destinationPath));
+                    NewMessage($"Wrote the event texts to a text file in \"{destinationPath}\".", Color.Cyan);
+                }
+                catch (Exception e)
+                {
+                    ThrowError($"Failed to open the file \"{destinationPath}\".", e);
                 }
 
                 System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
@@ -2963,10 +3170,12 @@ namespace Barotrauma
                 };                
                 foreach (XDocument doc in docs)
                 {
-                    using (var writer = XmlWriter.Create(new System.Uri(doc.BaseUri).LocalPath, settings))
+                    string filePath = new System.Uri(doc.BaseUri).LocalPath;
+                    using (var writer = XmlWriter.Create(filePath, settings))
                     {
                         doc.WriteTo(writer);
                         writer.Flush();
+                        NewMessage($"Updated the event file \"{filePath}\".", Color.Cyan);
                     }
                 }
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
@@ -2984,10 +3193,6 @@ namespace Barotrauma
                             textAttribute = "tag";
                             text = subTextElement?.GetAttributeString(textAttribute, null);
                             textElement = subTextElement;
-                        }
-                        if (text == null)
-                        {
-                            AddWarning("Failed to find text from the element " + element.ToString());
                         }
                     }
 
@@ -3263,6 +3468,13 @@ namespace Barotrauma
                     }
                 }
             }));
+
+            commands.Add(new Command("multiclienttestmode", "Makes the client enable some special logic (such as using a client-specific folder for downloads) to prevent conflicts between multiple clients on the same machine. Useful for testing the campaign with multiple clients running locally.", (string[] args) =>
+            {
+                GameClient.MultiClientTestMode = !GameClient.MultiClientTestMode;
+                NewMessage($"{(GameClient.MultiClientTestMode ? "Enabled" : "Disabled")} MultiClientTestMode on the client.");                
+            }));
+            AssignRelayToServer("multiclienttestmode", false);
 #endif
 
             commands.Add(new Command("reloadcorepackage", "", (string[] args) =>
@@ -3750,6 +3962,29 @@ namespace Barotrauma
                 string fileName = args[1];
                 character.AnimController.TryLoadAnimation(animationType, Path.GetFileNameWithoutExtension(fileName), out _, throwErrors: true);
             }, isCheat: true));
+            
+            commands.Add(new Command("startlocalmptestsession", "startlocalmptestsession [(optional) number of clients, defaults to 2]: starts a new mp test session with multiple clients connected to local dedicated server", (string[] args) =>
+            {
+                // if we are not in main menu, exit out
+                if (Screen.Selected != GameMain.MainMenuScreen)
+                {
+                    ThrowError("Must be in main menu to start.");
+                    return;
+                }
+                
+                // try to parse the number of clients
+                int numClients = 2;
+                if (args.Length > 0)
+                {
+                    if (!int.TryParse(args[0], out numClients))
+                    {
+                        ThrowError("Failed to parse the number of clients.");
+                        return;
+                    }
+                }
+                
+                StartLocalMPSession(numClients);
+            }));
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
@@ -3978,7 +4213,11 @@ namespace Barotrauma
                     NewMessage("Minimum main path width: " + (Level.Loaded.LevelData?.MinMainPathWidth?.ToString() ?? "unknown"));
                 }
             });
+
+
         }
+
+
 
         private static void ReloadWearables(Character character, int variant = 0)
         {
@@ -4201,6 +4440,47 @@ namespace Barotrauma
             {
                 componentCost += itemPrefab.DefaultPrice.Price;
             }
+        }
+
+        public static void StartLocalMPSession(int numClients = 2)
+        {
+            try
+            {
+                if (Process.GetProcessesByName("DedicatedServer").Length == 0)
+                {
+#if WINDOWS
+                    Process.Start("DedicatedServer.exe", arguments: "-multiclienttestmode");
+#else
+                    Process.Start("./DedicatedServer", arguments: "-multiclienttestmode");
+#endif
+                    System.Threading.Thread.Sleep(1000);
+                }
+#if DEBUG
+                GameClient.MultiClientTestMode = true;
+#endif
+                GameMain.Client = new GameClient("client1",
+                    new LidgrenEndpoint(System.Net.IPAddress.Loopback, NetConfig.DefaultPort), "localhost", Option<int>.None());
+            
+                numClients = MathHelper.Clamp(numClients, 1, 4);
+            
+                if (numClients > 1)
+                {
+                    for (int i = 2; i <= numClients; i++)
+                    {
+                        System.Threading.Thread.Sleep(1000);
+#if WINDOWS
+                        Process.Start("Barotrauma.exe", arguments: "-connect server localhost -username client" + i + " -multiclienttestmode");
+#else
+                        Process.Start("./Barotrauma", arguments: "-connect server localhost -username client" + i + " -multiclienttestmode");
+#endif
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to start the local MP test session", e);
+            }
+            
         }
     }
 }

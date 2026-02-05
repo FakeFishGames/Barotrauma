@@ -93,7 +93,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(200.0f, IsPropertySaveable.Yes)]
+        [Serialize(200.0f, IsPropertySaveable.Yes, description: "The \"absolute\" maximum skill level with talents that increase the default maximum.")]
         public float MaximumSkillWithTalents
         {
             get;

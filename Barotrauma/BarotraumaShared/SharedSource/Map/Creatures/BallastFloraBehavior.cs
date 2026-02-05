@@ -570,11 +570,11 @@ namespace Barotrauma.MapCreatures.Behavior
 
             if (HasBrokenThrough)
             {
-                // I wasn't 100% sure what the performance impact on this so I decide to limit it to only check every 5 seconds
+                // I wasn't 100% sure what the performance impact on this so I decide to limit it to only check every 10 seconds
                 if (fireCheckCooldown <= 0)
                 {
                     UpdateFireSources();
-                    fireCheckCooldown = 5f;
+                    fireCheckCooldown = 10f;
                 }
                 else
                 {

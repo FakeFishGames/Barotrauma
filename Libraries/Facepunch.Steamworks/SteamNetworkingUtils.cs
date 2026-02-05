@@ -457,7 +457,7 @@ namespace Steamworks
 
 		internal unsafe static bool SetConfigString( NetConfig type, string value )
 		{
-			var bytes = Encoding.UTF8.GetBytes( value );
+			var bytes = Utility.Utf8NoBom.GetBytes( value );
 
 			fixed ( byte* ptr = bytes )
 			{
@@ -500,7 +500,7 @@ namespace Steamworks
 
 		internal unsafe static bool SetConnectionConfig( uint con, NetConfig type, string value )
 		{
-			var bytes = Encoding.UTF8.GetBytes( value );
+			var bytes = Utility.Utf8NoBom.GetBytes( value );
 
 			fixed ( byte* ptr = bytes )
 			{

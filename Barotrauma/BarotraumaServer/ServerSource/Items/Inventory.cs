@@ -59,7 +59,7 @@ namespace Barotrauma
             ServerLogRemovedItems();
             
             #region local functions
-            bool IsInventoryAccessible() => sender.Character.CanAccessInventory(this, IsDragAndDropGiveAllowed ? CharacterInventory.AccessLevel.Allowed : CharacterInventory.AccessLevel.Limited);
+            bool IsInventoryAccessible() => sender.Character.CanAccessInventory(this, IsDragAndDropGiveAllowed ? CharacterInventory.AccessLevel.AllowFriendly : CharacterInventory.AccessLevel.AllowBotsAndPets);
             
             void CreateCorrectiveNetworkEvent()
             {
@@ -177,7 +177,7 @@ namespace Barotrauma
                         if (item.GetComponent<Pickable>() is not Pickable pickable ||
                             (pickable.IsAttached && !pickable.PickingDone) || item.AllowedSlots.None() || !item.IsInteractable(sender.Character))
                         {
-                            DebugConsole.AddWarning($"Client {sender.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})",
+                            DebugConsole.AddWarning($"Client {sender.Name} failed to put \"{item}\" in the inventory of {Owner} (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})",
                                 item.Prefab.ContentPackage);
                             continue;
                         }
@@ -187,13 +187,20 @@ namespace Barotrauma
                             var holdable = item.GetComponent<Holdable>();
                             if (holdable != null && !holdable.CanBeDeattached()) { continue; }
 
+
                             bool itemAccessDenied = !prevItems.Contains(item) && !itemAccessibility[item] &&
                                                  (sender.Character == null || item.PreviousParentInventory == null || !sender.Character.CanAccessInventory(item.PreviousParentInventory));
                             
+                            //more restricted "adding" of handcuffs: we can't allow putting handcuffs on a player just because dragging and dropping is allowed
+                            if (item.HasTag(Tags.HandLockerItem) && !itemAccessDenied)
+                            {
+                                itemAccessDenied =
+                                    !sender.Character.CanAccessInventory(this, CharacterInventory.AccessLevel.AllowBotsAndPets);
+                            }
                             if (itemAccessDenied)
                             {
 #if DEBUG || UNSTABLE
-                                DebugConsole.NewMessage($"Client {sender.Name} failed to pick up item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"}). No access.", Color.Yellow);
+                                DebugConsole.NewMessage($"Client {sender.Name} failed to put \"{item}\" in the inventory of {Owner} (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"}). No access.", Color.Yellow);
 #endif
                                 if (item.body != null && !sender.PendingPositionUpdates.Contains(item))
                                 {

@@ -194,7 +194,7 @@ namespace Barotrauma
                 {
                     UseDistanceRelativeToAimSourcePos = true,
                     CloseEnough = reach,
-                    DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak".ToIdentifier() : Identifier.Empty,
+                    DialogueIdentifier = Leak.FlowTargetHull != null ? AIObjectiveGoTo.DialogCannotReachLeak : Identifier.Empty,
                     TargetName = Leak.FlowTargetHull?.DisplayName,
                     requiredCondition = () => 
                         Leak.Submarine == character.Submarine &&

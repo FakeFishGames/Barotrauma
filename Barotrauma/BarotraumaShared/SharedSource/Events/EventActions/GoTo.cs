@@ -1,7 +1,7 @@
 ﻿namespace Barotrauma
 {
     /// <summary>
-    /// Makes the event jump to a <see cref="Label"/> somewhere else in the event.
+    /// Makes the event jump to a <see cref="Label"/> somewhere else in the event. Note that using GoTo resets the effects of other, currently active EventActions (e.g. closing conversation prompts and stopping the objectives NPCs were forced to do using actions such as CombatAction or NPCWaitAction).
     /// </summary>
     class GoTo : EventAction
     {

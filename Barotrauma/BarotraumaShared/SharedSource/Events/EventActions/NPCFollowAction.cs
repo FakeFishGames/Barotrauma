@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,6 +23,20 @@ namespace Barotrauma
 
         [Serialize(true, IsPropertySaveable.Yes, description: "The event actions reset when a GoTo action makes the event jump to a different point. Should the NPC stop following the target when the event resets?")]
         public bool AbandonOnReset { get; set; }
+        
+        [Serialize(AIObjectiveManager.MaxObjectivePriority, IsPropertySaveable.Yes, description: "AI priority for the action. Uses 100 by default, which is the absolute maximum for any objectives, " +
+                                                                                                 "meaning nothing can be prioritized over it, including the emergency objectives, such as find safety and combat." +
+                                                                                                 "Setting the priority to 70 would function like a regular order, but with the highest priority." +
+                                                                                                 "A priority of 60 would make the objective work like a lowest priority order." +
+                                                                                                 "So, if we'll want the character to follow, but still be able to find safety, defend themselves when attacked, or flee from dangers," +
+                                                                                                 "it's better to use e.g. 70 instead of 100.")]
+        public float Priority
+        {
+            get => _priority;
+            set => _priority = Math.Clamp(value, AIObjectiveManager.LowestOrderPriority, AIObjectiveManager.MaxObjectivePriority);
+        }
+        
+        private float _priority;
 
         private bool isFinished = false;
 
@@ -39,7 +54,7 @@ namespace Barotrauma
             if (target == null) { return; }
 
             int targetCount = 0;
-            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character);
+            affectedNpcs = ParentEvent.GetTargets(NPCTag).OfType<Character>();
             foreach (var npc in affectedNpcs)
             {
                 if (npc.Removed) { continue; }
@@ -49,7 +64,7 @@ namespace Barotrauma
                 {
                     var newObjective = new AIObjectiveGoTo(target, npc, humanAiController.ObjectiveManager, repeat: true)
                     {
-                        OverridePriority = 100.0f,
+                        OverridePriority = Priority,
                         IsFollowOrder = true
                     };
                     humanAiController.ObjectiveManager.AddObjective(newObjective);

@@ -104,7 +104,7 @@ namespace Barotrauma.SpriteDeformations
 
         public virtual float Phase { get; set; }
 
-        protected Vector2[,] Deformation { get; private set; }
+        protected Vector2[,] Deformation { get; set; }
 
         public SpriteDeformationParams Params { get; set; }
 
@@ -141,7 +141,13 @@ namespace Barotrauma.SpriteDeformations
             {
                 typeName = element.GetAttributeString("typename", null) ?? element.GetAttributeString("type", "");
             }
-            
+
+            var resolution = element.GetAttributePoint(nameof(Resolution), new Point(0, 0));
+            if (resolution.X < 2|| resolution.Y < 2)
+            {
+                DebugConsole.AddWarning($"Potential error in sprite deformation ({parentDebugName}): resolution must be at least 2x2.");
+            }
+                        
             SpriteDeformation newDeformation = null;
             switch (typeName.ToLowerInvariant())
             {
@@ -195,12 +201,14 @@ namespace Barotrauma.SpriteDeformations
             Deformation = new Vector2[Params.Resolution.X, Params.Resolution.Y];
         }
 
-        protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse);
+        /// <param name="flippedHorizontally">Is the sprite flipped horizontally?</param>
+        /// <param name="inverseY">Should the y-coordinate of customdeformations be inverted? Legacy fix for mirroring deformable light sprites.</param>
+        protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier, bool flippedHorizontally, bool inverseY);
 
         public abstract void Update(float deltaTime);
 
         private static readonly List<int> yValues = new List<int>();
-        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale, bool inverseY = false)
+        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale, bool flippedHorizontally, bool inverseY = false)
         {
             foreach (SpriteDeformation animation in animations)
             {
@@ -231,7 +239,7 @@ namespace Barotrauma.SpriteDeformations
                 {
                     yValues.Reverse();
                 }
-                animation.GetDeformation(out Vector2[,] animDeformation, out float multiplier, inverseY);
+                animation.GetDeformation(out Vector2[,] animDeformation, out float multiplier, flippedHorizontally, inverseY);
                 for (int x = 0; x < resolution.X; x++)
                 {
                     for (int y = 0; y < resolution.Y; y++)

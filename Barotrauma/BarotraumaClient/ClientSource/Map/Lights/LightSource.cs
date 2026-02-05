@@ -89,7 +89,7 @@ namespace Barotrauma.Lights
         }
 
         private float pulseAmount;
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates. 0 = not at all, 1 = alternates between full brightness and off.")]
         public float PulseAmount
         {
             get { return pulseAmount; }
@@ -450,6 +450,8 @@ namespace Barotrauma.Lights
             set;
         }
 
+        public Vector2 OffsetFromBody;
+
         public DeformableSprite DeformableLightSprite
         {
             get;
@@ -561,9 +563,9 @@ namespace Barotrauma.Lights
                     //  center is in the opposite direction from the ray (cheapest check first)
                     if (Vector2.Dot(ray, convexHull.BoundingBox.Center.ToVector2() - lightPos) <= 0 &&
                         /*ray doesn't hit the convex hull*/
-                        !MathUtils.GetLineRectangleIntersection(lightPos, lightPos + ray, bounds, out _) &&
+                        !MathUtils.GetLineWorldRectangleIntersection(lightPos, lightPos + ray, bounds, out _) &&
                         /*normal vectors of the ray don't hit the convex hull */
-                        !MathUtils.GetLineRectangleIntersection(lightPos + normal, lightPos - normal, bounds, out _))
+                        !MathUtils.GetLineWorldRectangleIntersection(lightPos + normal, lightPos - normal, bounds, out _))
                     {
                         continue;
                     }

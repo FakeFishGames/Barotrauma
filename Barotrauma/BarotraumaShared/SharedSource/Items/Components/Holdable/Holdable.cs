@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -44,7 +45,12 @@ namespace Barotrauma.Items.Components
 
         private bool attachable, attached, attachedByDefault;
         private Voronoi2.VoronoiCell attachTargetCell;
-        private PhysicsBody body;
+
+        /// <summary>
+        /// The item's original physics body (if one exists). When the item is attached to a wall, it's <see cref="Item.body"/> gets set to null,
+        /// and we use this field to keep track of the original body.
+        /// </summary>
+        private PhysicsBody originalBody;
 
         public readonly ImmutableDictionary<StatTypes, float> HoldableStatValues;
 
@@ -62,7 +68,7 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody Body
         {
-            get { return item.body ?? body; }
+            get { return item.body ?? originalBody; }
         }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Is the item currently attached to a wall (only valid if Attachable is set to true).")]
@@ -83,6 +89,9 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "Camera offset to apply when aiming this item. Only valid if Aimable is set to true.")]
+        public float CameraAimOffset { get; set; }
 
         [Serialize(false, IsPropertySaveable.No, description: "Should the character adjust its pose when aiming with the item. Most noticeable underwater, where the character will rotate its entire body to face the direction the item is aimed at.")]
         public bool ControlPose
@@ -114,6 +123,39 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, IsPropertySaveable.No, description: "Can the item only be attached in limited amount? Uses permanent stat values to check for legibility.")]
         public bool LimitedAttachable
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.No, description: "When enabled, the item can only be attached to a position where it touches the floor.")]
+        public bool AttachesToFloor
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Can the item be attached inside doors?")]
+        public bool AllowAttachInsideDoors
+        {
+            get;
+            set;
+        }
+
+        private HashSet<Identifier> disallowAttachingOverTags = new HashSet<Identifier>();
+
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
+        public string DisallowAttachingOverTags
+        {
+            get => disallowAttachingOverTags.ConvertToString();
+            set
+            {
+                disallowAttachingOverTags = value.ToIdentifiers().ToHashSet();
+            }
+        }
+
+        [Serialize("0,0", IsPropertySaveable.Yes)]
+        public Point DisallowAttachingOverSize
         {
             get;
             set;
@@ -227,6 +269,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize("", IsPropertySaveable.Yes, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's been dropped on the floor (not attached to a wall).")]
+        public string MsgWhenDropped
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// For setting the handle positions using status effects
         /// </summary>
@@ -268,7 +317,7 @@ namespace Barotrauma.Items.Components
         public Holdable(Item item, ContentXElement element)
             : base(item, element)
         {
-            body = item.body;
+            originalBody = item.body;
 
             Pusher = null;
             if (element.GetAttributeBool("blocksplayers", false))
@@ -404,9 +453,9 @@ namespace Barotrauma.Items.Components
 
             if (attachable)
             {
-                if (body != null)
+                if (originalBody != null)
                 {
-                    item.body = body;
+                    item.body = originalBody;
                 }
                 DeattachFromWall();
             }
@@ -454,13 +503,19 @@ namespace Barotrauma.Items.Components
                         Vector2 diff = new Vector2(
                             (heldHand.SimPosition.X - arm.SimPosition.X) / 2f,
                             (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f);
-                        item.SetTransform(heldHand.SimPosition + diff, 0.0f);
+
+                        //we have forced the item to be in the same sub as the dropper above,
+                        //and are placing it to the position of the hands in "local" coordinates
+                        //which may be outside the sub if the character is e.g. standing half-way through the airlock
+                        // -> let's use the forceSubmarine argument ensure the item is still considered to be in the sub's coordinate space,
+                        //    or it will end up in a weird state and seemingly disappear
+                        item.SetTransform(heldHand.SimPosition + diff, 0.0f, forceSubmarine: picker.Submarine);
                     }
                     else
                     {
-                        item.SetTransform(picker.SimPosition, 0.0f);
-                    }     
-                }           
+                        item.SetTransform(picker.SimPosition, 0.0f, forceSubmarine: picker.Submarine);
+                    }
+                }
             }
 
             picker.Inventory.RemoveItem(item);
@@ -507,9 +562,9 @@ namespace Barotrauma.Items.Components
             if (character != null) { item.Submarine = character.Submarine; }
             if (item.body == null)
             {
-                if (body != null)
+                if (originalBody != null)
                 {
-                    item.body = body;
+                    item.body = originalBody;
                 }
                 else
                 {
@@ -558,12 +613,61 @@ namespace Barotrauma.Items.Components
 
         public bool CanBeAttached(Character user)
         {
+            return CanBeAttached(user, out _);
+        }
+
+        private static List<Item> tempOverlappingItems = new List<Item>();
+
+        private bool CanBeAttached(Character user, out IEnumerable<Item> overlappingItems)
+        {
+            tempOverlappingItems.Clear();
+            overlappingItems = tempOverlappingItems;
             if (!attachable || !Reattachable) { return false; }
 
             //can be attached anywhere in sub editor
             if (Screen.Selected == GameMain.SubEditorScreen) { return true; }
 
+            if (AttachesToFloor && item.CurrentHull == null) { return false; }
+
             Vector2 attachPos = user == null ? item.WorldPosition : GetAttachPosition(user, useWorldCoordinates: true);
+
+            if (disallowAttachingOverTags.Any() || !AllowAttachInsideDoors)
+            {
+                var connectedHulls = item.CurrentHull?.GetConnectedHulls(includingThis: true, searchDepth: 5, ignoreClosedGaps: true);
+
+                Vector2 size = DisallowAttachingOverSize == Point.Zero ? 
+                    item.Rect.Size.ToVector2() : 
+                    DisallowAttachingOverSize.ToVector2() * item.Scale;
+                size /= 2f;
+
+                foreach (Item otherItem in Item.ItemList)
+                {
+                    if (otherItem == item || otherItem.body is { BodyType: BodyType.Dynamic, Enabled: true }) { continue; }
+                    if (connectedHulls != null && !connectedHulls.Contains(otherItem.CurrentHull)) { continue; }
+                    if (disallowAttachingOverTags.None(otherItem.HasTag) &&
+                        (otherItem.GetComponent<Door>() == null || AllowAttachInsideDoors)) 
+                    { 
+                        continue; 
+                    }
+                    Rectangle worldRect = otherItem.WorldRect;
+
+                    if (otherItem.GetComponent<Holdable>() is Holdable otherHoldable)
+                    {
+                        if (!otherHoldable.attached) { continue; }
+                        if (otherHoldable.DisallowAttachingOverSize != Point.Zero)
+                        {
+                            Vector2 scaledSize = otherHoldable.DisallowAttachingOverSize.ToVector2() * item.Scale;
+                            worldRect = new Rectangle(
+                                otherItem.WorldPosition.ToPoint() - new Point((int)(scaledSize.X / 2), (int)(-scaledSize.Y / 2)),
+                                scaledSize.ToPoint());
+                        }
+                    }                        
+                    if (attachPos.X + size.X < worldRect.X || attachPos.X - size.X > worldRect.Right) { continue; }
+                    if (attachPos.Y - size.Y > worldRect.Y || attachPos.Y + size.Y < worldRect.Y - worldRect.Height) { continue; }
+                    tempOverlappingItems.Add(otherItem);
+                }
+                if (tempOverlappingItems.Any()) { return false; }
+            }
 
             //can be attached anywhere inside hulls
             if (item.CurrentHull != null && Submarine.RectContains(item.CurrentHull.WorldRect, attachPos)) { return true; }
@@ -663,14 +767,19 @@ namespace Barotrauma.Items.Components
         {
             if (!attachable) { return; }
 
-            if (body == null)
+            if (originalBody == null)
             {
                 throw new InvalidOperationException($"Tried to attach an item with no physics body to a wall ({item.Prefab.Identifier}).");
             }
 
-            body.Enabled = false;
-            body.SetTransformIgnoreContacts(body.SimPosition, rotation: 0.0f);
-            item.body = null;
+            originalBody.Enabled = false;
+            originalBody.SetTransformIgnoreContacts(originalBody.SimPosition, rotation: 0.0f);
+            if (item.body != null)
+            {
+                item.body.Dir = 1;
+                item.body = null;
+            }
+            item.GetComponents<LightComponent>().ForEach(static light => light.SetLightSourceTransform());
 
             //outside hulls/subs -> we need to check if the item is being attached on a structure outside the sub
             if (item.CurrentHull == null && item.Submarine == null)
@@ -682,7 +791,7 @@ namespace Barotrauma.Items.Components
                     {
                         //set to submarine-relative position
                         item.SetTransform(ConvertUnits.ToSimUnits(item.WorldPosition - attachTarget.Submarine.Position), 0.0f, false);
-                        body.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
+                        originalBody.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
                     }
                     item.Submarine = attachTarget.Submarine;
                 }
@@ -733,7 +842,19 @@ namespace Barotrauma.Items.Components
 #endif
             //make the item pickable with the default pick key and with no specific tools/items when it's deattached
             RequiredItems.Clear();
-            DisplayMsg = "";
+            if (MsgWhenDropped.IsNullOrEmpty())
+            {
+                DisplayMsg = "";
+            }
+            else
+            {
+                DisplayMsg = TextManager.Get(MsgWhenDropped);
+                DisplayMsg =
+                    DisplayMsg.Loaded ?
+                    TextManager.ParseInputTypes(DisplayMsg) :
+                    MsgWhenDropped;
+            }
+
             PickKey = InputType.Select;
 #if CLIENT
             item.DrawDepthOffset = SpriteDepthWhenDropped - item.SpriteDepth;
@@ -814,6 +935,9 @@ namespace Barotrauma.Items.Components
                 {
                     item.Drop(character);
                     item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f, findNewHull: false);
+                    //don't find the new hull in SetTransform, because that'd also potentially change the submarine (teleport the item outside if it's attached outside)
+                    //instead just find the hull, so the item is considered to be in the right hull
+                    item.CurrentHull = Hull.FindHull(item.WorldPosition, item.CurrentHull);
                     //the light source won't get properly updated if lighting is disabled (even though the light sprite is still drawn when lighting is disabled)
                     //so let's ensure the light source is up-to-date
                     RefreshLightSources(item);
@@ -850,34 +974,60 @@ namespace Barotrauma.Items.Components
             Vector2 mouseDiff = user.CursorWorldPosition - user.WorldPosition;
             mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
 
+            Vector2 submarinePos = useWorldCoordinates && user.Submarine != null ? user.Submarine.Position : Vector2.Zero;
             Vector2 userPos = useWorldCoordinates ? user.WorldPosition : user.Position;
             Vector2 attachPos = userPos + mouseDiff;
+
+            Vector2 halfSize = new Vector2(item.Rect.Width, item.Rect.Height) / 2;
 
             //offset the position by half the size of the grid to get the item to adhere to the grid in the same way as in the sub editor
             //in the sub editor, we align the top-left corner of the item with the grid
             //but here the origin of the item is placed at the attach position, so we need to offset it
             Vector2 offset = new Vector2(
-                -(item.Rect.Width / 2) % Submarine.GridSize.X,
-                (item.Rect.Height / 2) % Submarine.GridSize.Y);
+                -halfSize.X % Submarine.GridSize.X,
+                halfSize.Y % Submarine.GridSize.Y);
 
             if (user.Submarine != null)
             {
                 //we must add some "padding" to the raycast to ensure it reaches all the way to a wall
                 //otherwise the cursor might be outside a wall, but the grid cell it's in might be partially inside
-                Vector2 padding =  Submarine.GridSize * new Vector2(Math.Sign(mouseDiff.X), Math.Sign(mouseDiff.Y));
+                Vector2 padding = halfSize * new Vector2(Math.Sign(mouseDiff.X), Math.Sign(mouseDiff.Y));
 
                 if (Submarine.PickBody(
                     ConvertUnits.ToSimUnits(user.Position), 
-                    ConvertUnits.ToSimUnits(user.Position + mouseDiff + padding), collisionCategory: Physics.CollisionWall) != null)
+                    ConvertUnits.ToSimUnits(user.Position + mouseDiff + padding), collisionCategory: Physics.CollisionWall, 
+                    /*don't ignore sensors so the raycast can hit open doors or broken walls*/
+                    ignoreSensors: AllowAttachInsideDoors, customPredicate: (Fixture fixture) =>
+                    {
+                        if (fixture.UserData is Door) { return false; }
+                        return true;
+                    }) != null)
                 {
-                    attachPos = userPos + mouseDiff * Submarine.LastPickedFraction + offset;
-
+                    Vector2 pickedPos = userPos + mouseDiff * Submarine.LastPickedFraction + offset - submarinePos;
                     //round down if we're placing on the right side and vice versa: ensures we don't round the position inside a wall
-                    return
+                    attachPos =
                         new Vector2(
-                            (mouseDiff.X > 0 ? MathF.Floor(attachPos.X / Submarine.GridSize.X) : MathF.Ceiling(attachPos.X / Submarine.GridSize.X)) * Submarine.GridSize.X,
-                            (mouseDiff.Y > 0 ? MathF.Floor(attachPos.Y / Submarine.GridSize.Y) : MathF.Ceiling(attachPos.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y)
-                         - offset;
+                            RoundToGrid(pickedPos.X, Submarine.GridSize.X, roundingDir: -Math.Sign(mouseDiff.X)),
+                            RoundToGrid(pickedPos.Y, Submarine.GridSize.Y, roundingDir: -Math.Sign(mouseDiff.Y)))
+                         - offset + submarinePos;
+                }
+
+                if (AttachesToFloor)
+                {
+                    //if attaching to floor, do a raycast down and move the attach pos where it hits
+                    float size = item.Rect.Height / 2.0f;
+                    Vector2 rayStart = attachPos - submarinePos;
+                    Vector2 rayEnd = rayStart - Vector2.UnitY * MaxAttachDistance * 2;
+                    if (Submarine.PickBody(
+                        ConvertUnits.ToSimUnits(rayStart),
+                        ConvertUnits.ToSimUnits(rayEnd), collisionCategory: Physics.CollisionWall | Physics.CollisionPlatform) != null)
+                    {
+                        attachPos = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.UnitY * size + submarinePos;
+                    }
+                    else
+                    {
+                        return Vector2.Zero;
+                    }
                 }
             }
             else if (Level.Loaded != null)
@@ -900,9 +1050,30 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            return new Vector2(
-                    MathUtils.RoundTowardsClosest(attachPos.X + offset.X, Submarine.GridSize.X),
-                    MathUtils.RoundTowardsClosest(attachPos.Y + offset.Y, Submarine.GridSize.Y)) - offset;
+            //subtract the submarine position so we're doing the rounding in the sub's
+            //internal/local coordinate space regardless if we're using world coordinates
+            //(otherwise the rounding would behave differently depending on the value of useWorldCoordinates)
+            Vector2 offsetAttachPos = attachPos + offset - submarinePos;
+            return
+                new Vector2(
+                    RoundToGrid(offsetAttachPos.X, Submarine.GridSize.X),
+                    //don't round the vertical position if we're attaching to floor - we want the item to align with the floor, not the grid
+                    AttachesToFloor ? offsetAttachPos.Y : RoundToGrid(offsetAttachPos.Y, Submarine.GridSize.Y))
+                - offset + submarinePos;
+
+            ///<param name="roundingDir">If < 0, the method rounds down. If > 0, rounds up. If 0, rounds to the closest integer.</param>
+            static float RoundToGrid(float position, float gridSize, int roundingDir = 0)
+            {
+                if (roundingDir < 0)
+                {
+                    return MathF.Floor(position / gridSize) * gridSize;
+                }
+                else if (roundingDir > 0)
+                {
+                    return MathF.Ceiling(position / gridSize) * gridSize;
+                }
+                return MathUtils.RoundTowardsClosest(position, gridSize);
+            }
         }
 
         private Voronoi2.VoronoiCell GetAttachTargetCell(float maxDist)
@@ -958,7 +1129,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (picker == Character.Controlled && picker.IsKeyDown(InputType.Aim) && CanBeAttached(picker))
+            if (picker == Character.Controlled && picker.IsKeyDown(InputType.Aim) && attachable && Reattachable)
             {
                 Drawable = true;
             }
@@ -1096,11 +1267,11 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (body != null)
+                if (originalBody != null)
                 {
-                    body.SetTransformIgnoreContacts(item.SimPosition, item.Rotation);
-                    item.body = body;
-                    body.Enabled = item.ParentInventory == null;
+                    originalBody.SetTransformIgnoreContacts(item.SimPosition, item.Rotation);
+                    item.body = originalBody;
+                    originalBody.Enabled = item.ParentInventory == null;
                 }                
                 DeattachFromWall();
             }
@@ -1115,7 +1286,7 @@ namespace Barotrauma.Items.Components
                 Pusher.Remove();
                 Pusher = null;
             }
-            body = null; 
+            originalBody = null; 
         }
 
         public override XElement Save(XElement parentElement)

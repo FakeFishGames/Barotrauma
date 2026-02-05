@@ -8,6 +8,8 @@ namespace Barotrauma
         private Vector2 maxSize;
 
         public bool CausedByPsychosis;
+        
+        protected override float SpreadToOtherHullsProbability => 0.0f;
 
         public DummyFireSource(Vector2 maxSize, Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false) : 
             base(worldPosition, spawningHull, sourceCharacter: null, isNetworkMessage: isNetworkMessage)

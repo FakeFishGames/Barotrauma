@@ -170,7 +170,7 @@ namespace Barotrauma
 
         private readonly List<PathNode> sortedNodes;
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true, float outsideNodePenalty = 0)
         {
             foreach (PathNode node in nodes)
             {
@@ -206,19 +206,21 @@ namespace Barotrauma
             {
                 float xDiff = Math.Abs(start.X - node.TempPosition.X);
                 float yDiff = Math.Abs(start.Y - node.TempPosition.Y);
+                //higher cost for vertical movement when inside the sub
                 if (InsideSubmarine && !(node.Waypoint.Submarine?.Info?.IsRuin ?? false))
                 {
-                    //higher cost for vertical movement when inside the sub
                     if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
                     {
                         yDiff += 10.0f;
                     }
-                    node.TempDistance = xDiff + yDiff * 10.0f; 
+                    //only apply the higher cost for vertical movement if it's more than a meter
+                    //(small differences can be caused by non-meaningful variance in the vertical position of the waypoint, we only care about actually going up/down e.g. ladders or stairs)
+                    if (Math.Abs(yDiff) > 1.0f)
+                    {
+                        yDiff *= 10.0f;
+                    }
                 }
-                else
-                {
-                    node.TempDistance = xDiff + yDiff;
-                }
+                node.TempDistance = xDiff + yDiff;
 
                 //much higher cost to waypoints that are outside
                 if (node.Waypoint.CurrentHull == null && ApplyPenaltyToOutsideNodes) { node.TempDistance *= 10.0f; }
@@ -325,7 +327,12 @@ namespace Barotrauma
 #endif
                 return new SteeringPath(true);
             }
-            return FindPath(startNode, endNode, nodeFilter, errorMsgStr, minGapSize);
+            float outsideNodeCostPenalty = outsideNodePenalty;
+            if (ApplyPenaltyToOutsideNodes)
+            {
+                outsideNodeCostPenalty += 100;
+            }
+            return FindPath(startNode, endNode, nodeFilter, errorMsgStr, minGapSize, outsideNodeCostPenalty);
 
             bool IsValidStartNode(PathNode node) => IsValidNode(node, (isCharacter, start), startNodeFilter);
 
@@ -356,7 +363,7 @@ namespace Barotrauma
             }
         }
 
-        private SteeringPath FindPath(PathNode start, PathNode end, Func<PathNode, bool> filter = null, string errorMsgStr = "", float minGapSize = 0)
+        private SteeringPath FindPath(PathNode start, PathNode end, Func<PathNode, bool> filter = null, string errorMsgStr = "", float minGapSize = 0f, float outsideNodePenalty = 0f)
         {
             if (start == end)
             {
@@ -398,50 +405,65 @@ namespace Barotrauma
                 for (int i = 0; i < currNode.connections.Count; i++)
                 {
                     PathNode nextNode = currNode.connections[i];
-                    
-                    //a node that hasn't been searched yet
-                    if (nextNode.state == 0)
-                    {
-                        nextNode.H = Vector2.Distance(nextNode.Position, end.Position);
 
-                        float penalty = 0.0f;
-                        if (GetNodePenalty != null)
+                    switch (nextNode.state)
+                    {
+                        //a node that hasn't been searched yet
+                        case 0:
                         {
-                            float? nodePenalty = GetNodePenalty(currNode, nextNode);
-                            if (nodePenalty == null)
+                            nextNode.H = Vector2.Distance(nextNode.Position, end.Position);
+                            float cost = CalculateNodeCost();
+                            if (cost < float.PositiveInfinity)
                             {
-                                nextNode.state = -1;
-                                continue;
+                                nextNode.G = cost;
+                                nextNode.F = nextNode.G + nextNode.H;
+                                nextNode.Parent = currNode;
+                                nextNode.state = 1;
                             }
-                            penalty = nodePenalty.Value;
+                            else
+                            {
+                                // Set searched and invalid.
+                                nextNode.state = -1;
+                            }
+                            break;
                         }
-
-                        nextNode.G = currNode.G + currNode.distances[i] + penalty;
-                        nextNode.F = nextNode.G + nextNode.H;
-                        nextNode.Parent = currNode;
-                        nextNode.state = 1;
+                        //node that has been searched
+                        case 1 or -1:
+                        {
+                            float tempG = CalculateNodeCost();
+                            //only use if this new route is better than the 
+                            //route the node was a part of
+                            if (tempG < nextNode.G)
+                            {
+                                nextNode.G = tempG;
+                                nextNode.F = nextNode.G + nextNode.H;
+                                nextNode.Parent = currNode;
+                                nextNode.state = 1;
+                            }
+                            break;
+                        }
                     }
-                    //node that has been searched
-                    else if (nextNode.state == 1 || nextNode.state == -1)
+                    
+                    float CalculateNodeCost()
                     {
-                        float tempG = currNode.G + currNode.distances[i];
-                        
+                        float penalty = 0f;
                         if (GetNodePenalty != null)
                         {
                             float? nodePenalty = GetNodePenalty(currNode, nextNode);
-                            if (nodePenalty == null) { continue; }
-                            tempG += nodePenalty.Value;
+                            if (nodePenalty.HasValue)
+                            {
+                                penalty += nodePenalty.Value;
+                            }
+                            else
+                            {
+                                return float.PositiveInfinity;
+                            }
                         }
-
-                        //only use if this new route is better than the 
-                        //route the node was a part of
-                        if (tempG < nextNode.G)
+                        if (currNode.Waypoint.CurrentHull == null)
                         {
-                            nextNode.G = tempG;
-                            nextNode.F = nextNode.G + nextNode.H;
-                            nextNode.Parent = currNode;
-                            nextNode.state = 1;
+                            penalty += outsideNodePenalty;
                         }
+                        return currNode.G + currNode.distances[i] + penalty;
                     }
                 }
             }

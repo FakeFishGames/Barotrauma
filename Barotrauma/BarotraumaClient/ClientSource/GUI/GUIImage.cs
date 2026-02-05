@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Barotrauma
@@ -13,6 +12,24 @@ namespace Barotrauma
         private static readonly List<string> activeTextureLoads = new List<string>();
 
         private static bool loadingTextures;
+
+        public enum ScalingMode
+        {
+            /// <summary>
+            /// No automatic scaling, the image is drawn using <see cref="Scale"/>
+            /// </summary>
+            None,
+            /// <summary>
+            /// Automatically scales the image so it fits the smallest extent of the component 
+            /// (leaving empty space around the image if its aspect ratio is different than that of the GUIImage)
+            /// </summary>
+            ScaleToFitSmallestExtent,
+            /// <summary>
+            /// Automatically scales the image so it fits the largest extent of the component, 
+            /// cutting out the parts that go outside the bounds of the component.
+            /// </summary>
+            ScaleToFitLargestExtent,
+        }
 
         public static bool LoadingTextures
         {
@@ -30,7 +47,7 @@ namespace Barotrauma
 
         private bool crop;
 
-        private readonly bool scaleToFit;
+        private readonly ScalingMode scaleToFit;
 
         private bool lazyLoaded, loading;
 
@@ -89,7 +106,7 @@ namespace Barotrauma
                 sprite = value;
                 sourceRect = value == null ? Rectangle.Empty : value.SourceRect;
                 origin = value == null ? Vector2.Zero : value.size / 2;
-                if (scaleToFit) { RecalculateScale(); }        
+                if (scaleToFit != ScalingMode.None) { RecalculateScale(); }        
             }
         }
 
@@ -97,17 +114,27 @@ namespace Barotrauma
 
         public ComponentState? OverrideState = null;
 
-        public GUIImage(RectTransform rectT, string style, bool scaleToFit = false)
+        public GUIImage(RectTransform rectT, string style, bool scaleToFit)
+            : this(rectT, null, null, scaleToFit ? ScalingMode.ScaleToFitSmallestExtent : ScalingMode.None, style)
+        {
+        }
+
+        public GUIImage(RectTransform rectT, string style, ScalingMode scaleToFit = ScalingMode.None)
             : this(rectT, null, null, scaleToFit, style)
         {
         }
 
-        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, bool scaleToFit = false) 
+        public GUIImage(RectTransform rectT, Sprite sprite, bool scaleToFit, Rectangle? sourceRect = null)
+            : this(rectT, sprite, sourceRect, scaleToFit ? ScalingMode.ScaleToFitSmallestExtent : ScalingMode.None, null)
+        {
+        }
+
+        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, ScalingMode scaleToFit = ScalingMode.None) 
             : this(rectT, sprite, sourceRect, scaleToFit, null)
         {
         }
 
-        private GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect, bool scaleToFit, string style) : base(style, rectT)
+        private GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect, ScalingMode scaleToFit, string style) : base(style, rectT)
         {
             this.scaleToFit = scaleToFit;
             Sprite = sprite;
@@ -123,7 +150,7 @@ namespace Barotrauma
             {
                 color = hoverColor = selectedColor = pressedColor = disabledColor = Color.White;                
             }
-            if (!scaleToFit)
+            if (scaleToFit == ScalingMode.None)
             {
                 Scale = 1.0f;
             }
@@ -176,9 +203,11 @@ namespace Barotrauma
 
             Color currentColor = GetColor(State);
 
-            if (BlendState != null)
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            if (BlendState != null || scaleToFit == ScalingMode.ScaleToFitLargestExtent)
             {
                 spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Rect);
                 spriteBatch.Begin(blendState: BlendState, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
@@ -205,9 +234,10 @@ namespace Barotrauma
                     Scale, SpriteEffects, 0.0f);
             }
 
-            if (BlendState != null)
+            if (BlendState != null || scaleToFit == ScalingMode.ScaleToFitLargestExtent)
             {
                 spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
         }
@@ -219,9 +249,18 @@ namespace Barotrauma
                 sourceRect = sprite.SourceRect;
             }
 
-            Scale = sprite == null || sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
-                1.0f :
-                Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
+            if (sprite == null || sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0)
+            {
+                Scale = 1.0f;
+            }
+            else if (scaleToFit == ScalingMode.ScaleToFitLargestExtent)
+            {
+                Scale = Math.Max(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
+            }
+            else
+            {
+                Scale = Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
+            }
         }
 
         private async Task<bool> LoadTextureAsync()

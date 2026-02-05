@@ -301,6 +301,25 @@ namespace Barotrauma
         public bool PermanentlyDead;
         public bool RenamingEnabled = false;
 
+        private BotStatus botStatus = BotStatus.ActiveService;
+        
+        public BotStatus BotStatus
+        {
+            get => botStatus;
+            set
+            {
+                botStatus = value;
+                if (botStatus == BotStatus.ActiveService && character == null)
+                {
+                    //no character yet -> spawn is pending
+                    PendingSpawnToActiveService = true;
+                }
+            }
+        }
+
+        public bool IsOnReserveBench => BotStatus == BotStatus.ReserveBench;
+        public bool PendingSpawnToActiveService;
+
         private static ushort idCounter = 1;
         private const string disguiseName = "???";
 
@@ -312,7 +331,18 @@ namespace Barotrauma
         public LocalizedString Title;
 
         public (Identifier NpcSetIdentifier, Identifier NpcIdentifier) HumanPrefabIds;
-
+        
+        private HumanPrefab _humanPrefab;
+        public HumanPrefab HumanPrefab
+        {
+            get
+            {
+                if (HumanPrefabIds == default) { return null; }
+                _humanPrefab ??= NPCSet.Get(HumanPrefabIds.NpcSetIdentifier, HumanPrefabIds.NpcIdentifier);
+                return _humanPrefab;
+            }
+        }
+        
         public string DisplayName
         {
             get
@@ -340,10 +370,24 @@ namespace Barotrauma
 
         public Identifier SpeciesName { get; }
 
+        private Character character;
         /// <summary>
         /// Note: Can be null.
         /// </summary>
-        public Character Character;
+        public Character Character
+        {
+            get => character;
+            set
+            {
+                character = value;
+                if (character != null) 
+                { 
+                    //character spawned -> spawn no longer pending
+                    PendingSpawnToActiveService = false;
+                }
+            }
+
+        }
 
         public Job Job;
 
@@ -363,6 +407,11 @@ namespace Barotrauma
         }
 
         public HashSet<Identifier> UnlockedTalents { get; private set; } = new HashSet<Identifier>();
+
+        /// <summary>
+        /// Which of the character's extra talents (talents unlocked from outside their own talent tree) are reset when the talents are resetted using e.g. Mindwipe?
+        /// </summary>
+        public HashSet<Identifier> ResettableExtraTalents { get; private set; } = new HashSet<Identifier>();
 
         private int talentResetCount;
 
@@ -748,14 +797,6 @@ namespace Barotrauma
                 Salary = CalculateSalary();
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
-
-            TalentRefundPoints = CharacterConfigElement.GetAttributeInt("refundpoints", 0);
-
-            int loadedLastRewardDistribution = CharacterConfigElement.GetAttributeInt("lastrewarddistribution", -1);
-            if (loadedLastRewardDistribution >= 0)
-            {
-                LastRewardDistribution = Option.Some(loadedLastRewardDistribution);
-            }
         }
 
         private void SetPersonalityTrait()
@@ -766,6 +807,13 @@ namespace Barotrauma
             GetName(randSync, out string name);
 
             return name;
+        }
+
+        public void SetNameBasedOnJob()
+        {
+            if (Job == null) { return; }
+            Name = Job.Name.Value;
+            OriginalName = Name;
         }
 
         public static Color SelectRandomColor(in ImmutableArray<(Color Color, float Commonness)> array, Rand.RandSync randSync)
@@ -830,6 +878,7 @@ namespace Barotrauma
             LoadTagsBackwardsCompatibility(infoElement, tags);
             SpeciesName = infoElement.GetAttributeIdentifier("speciesname", "");
             PermanentlyDead = infoElement.GetAttributeBool("permanentlydead", false);
+            BotStatus = infoElement.GetAttributeBool(nameof(IsOnReserveBench), false) ? BotStatus.ReserveBench : BotStatus.ActiveService;
             RenamingEnabled = infoElement.GetAttributeBool("renamingenabled", false);
             ContentXElement element;
             if (!SpeciesName.IsEmpty)
@@ -964,8 +1013,20 @@ namespace Barotrauma
                         }
 
                         UnlockedTalents.Add(talentIdentifier);
+                        if (talentElement.GetAttributeBool("resettable", defaultValue: false))
+                        {
+                            ResettableExtraTalents.Add(talentIdentifier);
+                        }
                     }
                 }
+            }
+
+            TalentRefundPoints = infoElement.GetAttributeInt("refundpoints", 0);
+
+            int loadedLastRewardDistribution = infoElement.GetAttributeInt("lastrewarddistribution", -1);
+            if (loadedLastRewardDistribution >= 0)
+            {
+                LastRewardDistribution = Option.Some(loadedLastRewardDistribution);
             }
 
             LoadHeadAttachments();
@@ -1483,7 +1544,13 @@ namespace Barotrauma
             if (TalentRefundPoints <= 0) { return; }
 
             //e.g. talents from endocrine booster or extra talents some special NPC has
+            //stored in a list so we can re-unlock them on the character
             var talentsFromOutsideTree = GetUnlockedTalentsOutsideTree().ToList();
+            //remove resettable talents, so they DON'T get re-unlocked
+            foreach (var resettableExtraTalent in ResettableExtraTalents)
+            {
+                talentsFromOutsideTree.Remove(resettableExtraTalent);
+            }
 
             UnlockedTalents.Clear();
             SavedStatValues.Clear();
@@ -1518,6 +1585,9 @@ namespace Barotrauma
         public void Rename(string newName)
         {
             if (string.IsNullOrEmpty(newName)) { return; }
+
+            newName = Networking.Client.SanitizeName(newName);
+
             // Replace the name tag of any existing id cards or duffel bags
             foreach (var item in Item.ItemList)
             {
@@ -1570,6 +1640,7 @@ namespace Barotrauma
                 new XAttribute("refundpoints", TalentRefundPoints),
                 new XAttribute("lastrewarddistribution", LastRewardDistribution.Match(some: value => value, none: () => -1).ToString()),
                 new XAttribute("permanentlydead", PermanentlyDead),
+                new XAttribute(nameof(IsOnReserveBench), IsOnReserveBench),
                 new XAttribute("renamingenabled", RenamingEnabled)
             );
 
@@ -1620,7 +1691,10 @@ namespace Barotrauma
 
             foreach (Identifier talentIdentifier in UnlockedTalents)
             {
-                talentElement.Add(new XElement("Talent", new XAttribute("identifier", talentIdentifier)));
+                talentElement.Add(
+                    new XElement("Talent", 
+                        new XAttribute("identifier", talentIdentifier), 
+                        new XAttribute("resettable", ResettableExtraTalents.Contains(talentIdentifier))));
             }
 
             charElement.Add(savedStatElement);

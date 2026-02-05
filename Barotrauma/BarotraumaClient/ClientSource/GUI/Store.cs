@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
@@ -859,26 +860,22 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
-        private static KeyValuePair<Identifier, float>? GetReputationRequirement(PriceInfo priceInfo)
+        private static float GetReputationRequirement(PriceInfo priceInfo, Identifier faction)
         {
-            return GameMain.GameSession?.Campaign is not null
-               ? priceInfo.MinReputation.FirstOrNull()
-               : null;
+            return priceInfo.MinReputation.GetValueOrDefault(faction);
         }
 
-        private static KeyValuePair<Identifier, float>? GetTooLowReputation(PriceInfo priceInfo)
+        private static bool ReputationRequirementsMet(PriceInfo priceInfo, Identifier faction)
         {
+            if (priceInfo.MinReputation.None()) { return true; }
             if (GameMain.GameSession?.Campaign is CampaignMode campaign)
             {
-                foreach (var minRep in priceInfo.MinReputation)
+                if (priceInfo.MinReputation.TryGetValue(faction, out float requirement))
                 {
-                    if (MathF.Round(campaign.GetReputation(minRep.Key)) < minRep.Value)
-                    {
-                        return minRep;
-                    }
+                    return MathF.Round(campaign.GetReputation(faction)) >= requirement;
                 }
             }
-            return null;
+            return false;
         }
 
         int prevDailySpecialCount, prevRequestedGoodsCount, prevSubRequestedGoodsCount;
@@ -947,7 +944,7 @@ namespace Barotrauma
                         SetPriceGetters(itemFrame, true);
                     }
 
-                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && !GetTooLowReputation(priceInfo).HasValue);
+                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && ReputationRequirementsMet(priceInfo, ActiveStore.GetMerchantOrLocationFactionIdentifier()));
                     existingItemFrames.Add(itemFrame);
                 }
             }
@@ -1463,8 +1460,9 @@ namespace Barotrauma
                 PriceInfo priceInfo2 = item2.ItemPrefab.GetPriceInfo(ActiveStore);
                 if (priceInfo1 != null && priceInfo2 != null)
                 {
-                    var requiredReputation1 = GetTooLowReputation(priceInfo1)?.Value ?? 0.0f;
-                    var requiredReputation2 = GetTooLowReputation(priceInfo2)?.Value ?? 0.0f;
+                    Identifier faction = ActiveStore.GetMerchantOrLocationFactionIdentifier();
+                    float requiredReputation1 = ReputationRequirementsMet(priceInfo1, faction) ? 0.0f : GetReputationRequirement(priceInfo1, faction);
+                    float requiredReputation2 = ReputationRequirementsMet(priceInfo2, faction) ? 0.0f : GetReputationRequirement(priceInfo2, faction);
                     return requiredReputation1.CompareTo(requiredReputation2);
                 }
                 return 0;                
@@ -1573,15 +1571,24 @@ namespace Barotrauma
             if (locationHasDealOnItem)
             {
                 var relativeWidth = (0.9f * nameAndQuantityFrame.Rect.Height) / nameAndQuantityFrame.Rect.Width;
+                Vector2 dealIconSize = new Vector2(relativeWidth, 0.9f) * 0.5f;
                 var dealIcon = new GUIImage(
-                    new RectTransform(new Vector2(relativeWidth, 0.9f), nameAndQuantityFrame.RectTransform, anchor: Anchor.CenterLeft)
+                    new RectTransform(dealIconSize, nameAndQuantityFrame.RectTransform, anchor: Anchor.CenterRight)
                     {
                         AbsoluteOffset = new Point((int)nameBlock.Padding.X, 0)
                     },
                     "StoreDealIcon", scaleToFit: true)
                 {
-                    CanBeFocused = false
+                    CanBeFocused = false,
+                    UserData = "StoreDealIcon"
                 };
+                var dealIconColor = dealIcon.Color;
+                if (forceDisable)
+                {
+                    dealIconColor.A = 0;
+                }
+
+                dealIcon.Color = dealIconColor;
                 dealIcon.SetAsFirstChild();
             }
             bool isParentOnLeftSideOfInterface = parentComponent == storeBuyList || parentComponent == storeDailySpecialsGroup ||
@@ -1713,7 +1720,7 @@ namespace Barotrauma
             mainGroup.Recalculate();
             mainGroup.RectTransform.RecalculateChildren(true, true);
             amountInput?.LayoutGroup.Recalculate();
-            nameBlock.Text = ToolBox.LimitString(nameBlock.Text, nameBlock.Font, nameBlock.Rect.Width);
+            nameBlock.Text = ToolBox.LimitString(nameBlock.Text.SanitizedString, nameBlock.Font, nameBlock.Rect.Width);
             mainGroup.RectTransform.Children.ForEach(c => c.IsFixedSize = true);
 
             return frame;
@@ -1795,6 +1802,9 @@ namespace Barotrauma
 
         private void SetItemFrameStatus(GUIComponent itemFrame, bool enabled)
         {
+            float full = 1f;
+            float dim = 0.7f;
+            float alpha = (enabled ? full : dim);
             if (itemFrame?.UserData is not PurchasedItem pi) { return; }
             bool refreshFrameStatus = !pi.IsStoreComponentEnabled.HasValue || pi.IsStoreComponentEnabled.Value != enabled;
             if (!refreshFrameStatus) { return; }
@@ -1802,14 +1812,14 @@ namespace Barotrauma
             {
                 if (pi.ItemPrefab?.InventoryIcon != null)
                 {
-                    icon.Color = pi.ItemPrefab.InventoryIconColor * (enabled ? 1.0f : 0.5f);
+                    icon.Color = pi.ItemPrefab.InventoryIconColor * alpha;
                 }
                 else if (pi.ItemPrefab?.Sprite != null)
                 {
-                    icon.Color = pi.ItemPrefab.SpriteColor * (enabled ? 1.0f : 0.5f);
+                    icon.Color = pi.ItemPrefab.SpriteColor * alpha;
                 }
             };
-            var color = Color.White * (enabled ? 1.0f : 0.5f);
+            var color = Color.White * alpha;
             if (itemFrame.FindChild("name", recursive: true) is GUITextBlock name)
             {
                 name.TextColor = color;
@@ -1835,7 +1845,7 @@ namespace Barotrauma
             }
             if (itemFrame.FindChild("price", recursive: true) is GUITextBlock priceBlock)
             {
-                priceBlock.TextColor = isDiscounted ? storeSpecialColor * (enabled ? 1.0f : 0.5f) : color;
+                priceBlock.TextColor = isDiscounted ? storeSpecialColor * alpha : color;
             }
             if (itemFrame.FindChild("addbutton", recursive: true) is GUIButton addButton)
             {
@@ -1844,6 +1854,10 @@ namespace Barotrauma
             else if (itemFrame.FindChild("removebutton", recursive: true) is GUIButton removeButton)
             {
                 removeButton.Enabled = enabled;
+            }
+            if (itemFrame.FindChild("StoreDealIcon", recursive: true) is GUIImage dealIcon)
+            {
+                dealIcon.Color = dealIcon.Color * alpha;
             }
             pi.IsStoreComponentEnabled = enabled;
             itemFrame.UserData = pi;
@@ -1925,14 +1939,15 @@ namespace Barotrauma
                     var campaign = GameMain.GameSession?.Campaign;
                     if (priceInfo != null && campaign != null)
                     {
-                        var requiredReputation = GetReputationRequirement(priceInfo);
-                        if (requiredReputation != null)
+                        Identifier faction = ActiveStore.GetMerchantOrLocationFactionIdentifier();
+                        float requiredReputation = GetReputationRequirement(priceInfo, faction);
+                        if (requiredReputation > 0)
                         {
                             var repStr = TextManager.GetWithVariables(
                                             "campaignstore.reputationrequired",
-                                            ("[amount]", ((int)requiredReputation.Value.Value).ToString()),
-                                            ("[faction]", TextManager.Get("faction." + requiredReputation.Value.Key).Value));
-                            Color color = MathF.Round(campaign.GetReputation(requiredReputation.Value.Key)) < requiredReputation.Value.Value ?
+                                            ("[amount]", ((int)requiredReputation).ToString()),
+                                            ("[faction]", TextManager.Get("faction." + faction).Value));
+                            Color color = MathF.Round(campaign.GetReputation(faction)) < requiredReputation ?
                                 GUIStyle.Orange : GUIStyle.Green;
                             toolTip += $"\n‖color:{color.ToStringHex()}‖{repStr}‖color:end‖";
                         }
@@ -2270,6 +2285,15 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             updateStopwatch.Restart();
+
+            if (GameMain.DevMode)
+            {
+                if (PlayerInput.KeyDown(Keys.D0))
+                {
+                    CreateUI();
+                    needsRefresh = true;
+                }
+            }
 
             if (GameMain.GraphicsWidth != resolutionWhenCreated.X || GameMain.GraphicsHeight != resolutionWhenCreated.Y)
             {

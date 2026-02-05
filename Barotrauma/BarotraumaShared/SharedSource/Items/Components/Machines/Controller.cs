@@ -349,7 +349,7 @@ namespace Barotrauma.Items.Components
                 // Don't move lower body limbs if there's another selected secondary item that should control them
                 if (limb.IsLowerBody && user.HasSelectedAnotherSecondaryItem(Item)) { continue; }
                 // Don't move hands if there's a selected primary item that should control them
-                if (!limb.IsLowerBody && Item == user.SelectedSecondaryItem && user.SelectedItem != null) { continue; }
+                if (limb.IsArm && Item == user.SelectedSecondaryItem && user.SelectedItem != null) { continue; }
                 if (lb.AllowUsingLimb)
                 {
                     switch (lb.LimbType)
@@ -406,6 +406,7 @@ namespace Barotrauma.Items.Components
 
             if (IsOutOfPower()) { return false; }
 
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             if (IsToggle && (activator == null || lastUsed < Timing.TotalTime - 0.1))
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -421,8 +422,7 @@ namespace Barotrauma.Items.Components
                 item.SendSignal(new Signal(output, sender: user), "trigger_out");
             }
 
-            lastUsed = Timing.TotalTime;
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);          
+            lastUsed = Timing.TotalTime;       
             return true;
         }
                 
@@ -541,6 +541,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             PlaySound(ActionType.OnUse, picker);
 #endif
+            ApplyStatusEffects(ActionType.OnUse, 1f, picker);
             return true;
         }
 

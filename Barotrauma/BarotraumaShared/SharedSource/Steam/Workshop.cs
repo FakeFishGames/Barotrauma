@@ -130,7 +130,8 @@ namespace Barotrauma.Steam
                                 .WithFileId(
                                     ids
                                     .Select(id => (Steamworks.Data.PublishedFileId)id)
-                                    .ToArray()));
+                                    .ToArray())
+                                .WithChildren(true));
                         ids.Clear();
 
                         // Immediately clear the current batch so the next request starts a new one

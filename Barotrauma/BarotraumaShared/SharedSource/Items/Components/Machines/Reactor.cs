@@ -247,9 +247,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            bool fissionRateControlledBySignals = signalControlledTargetFissionRate.HasValue && lastReceivedFissionRateSignalTime > Timing.TotalTime - 1;
+            bool turbineOutputRateControlledBySignals = signalControlledTargetTurbineOutput.HasValue && lastReceivedTurbineOutputSignalTime > Timing.TotalTime - 1;
+
             //rapidly adjust the reactor in the first few seconds of the round to prevent overvoltages if the load changed between rounds
             //(unless the reactor is being operated by a player)
-            if (GameMain.GameSession is { RoundDuration: <5 } && lastUser is not { IsPlayer: true })
+            if (GameMain.GameSession is { RoundDuration: < 5 } && lastUser is not { IsPlayer: true } && PowerOn && AutoTemp &&
+                !fissionRateControlledBySignals && !turbineOutputRateControlledBySignals)
             {
                 UpdateAutoTemp(100.0f, (float)(Timing.Step * 10.0f));
             }
@@ -263,7 +267,7 @@ namespace Barotrauma.Items.Components
 
             float maxPowerOut = GetMaxOutput();
 
-            if (signalControlledTargetFissionRate.HasValue && lastReceivedFissionRateSignalTime > Timing.TotalTime - 1)
+            if (fissionRateControlledBySignals)
             {
                 TargetFissionRate = adjustValueWithoutOverShooting(TargetFissionRate, signalControlledTargetFissionRate.Value, deltaTime * 5.0f);
 #if CLIENT
@@ -274,7 +278,7 @@ namespace Barotrauma.Items.Components
             {
                 signalControlledTargetFissionRate = null;
             }
-            if (signalControlledTargetTurbineOutput.HasValue && lastReceivedTurbineOutputSignalTime > Timing.TotalTime - 1)
+            if (turbineOutputRateControlledBySignals)
             {
                 TargetTurbineOutput = adjustValueWithoutOverShooting(TargetTurbineOutput, signalControlledTargetTurbineOutput.Value, deltaTime * 5.0f);                
 #if CLIENT
@@ -564,7 +568,7 @@ namespace Barotrauma.Items.Components
             {
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
 #if SERVER
-                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedItem == item)
+                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character != null)
                 {
                     GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }

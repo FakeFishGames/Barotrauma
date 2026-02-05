@@ -18,7 +18,7 @@ namespace Barotrauma
         private GUIButton serverLogReverseButton;
         private GUIListBox serverLogBox, serverLogFilterTicks;
 
-        private GUIComponent jobVariantTooltip;
+        private static GUIComponent jobVariantTooltip;
 
         private GUIComponent playStyleIconContainer;
         
@@ -67,8 +67,9 @@ namespace Barotrauma
         public GUIButton ServerMessageButton { get; private set; }
         public static GUIButton JobInfoFrame { get; set; }
 
-        private GUITickBox spectateBox;
+        private GUITickBox spectateBox, afkBox;
         public bool Spectating => spectateBox is { Selected: true, Visible: true };
+        public bool AFKSelected => afkBox is { Selected: true, Visible: true };
 
         public bool PermadeathMode => GameMain.Client?.ServerSettings?.RespawnMode == RespawnMode.Permadeath;
         public bool PermanentlyDead => campaignCharacterInfo?.PermanentlyDead ?? false;
@@ -112,6 +113,8 @@ namespace Barotrauma
         private readonly List<GUIComponent> respawnSettings = new();
 
         public CharacterInfo.AppearanceCustomizationMenu CharacterAppearanceCustomizationMenu { get; set; }
+
+        private Point prevResolutionForJobSelectionFrame;
         public GUIFrame JobSelectionFrame { get; private set; }
 
         public GUIFrame JobPreferenceContainer { get; private set; }
@@ -209,6 +212,7 @@ namespace Barotrauma
         private CharacterTeamType TeamPreference => SelectedMode == GameModePreset.PvP ? MultiplayerPreferences.Instance.TeamPreference : CharacterTeamType.Team1;
 
         public GUIButton StartButton { get; private set; }
+        public GUIButton EndButton { get; private set; }
 
         public GUITickBox ReadyToStartBox { get; private set; }
 
@@ -224,7 +228,7 @@ namespace Barotrauma
 
         public bool UsingShuttle
         {
-            get { return shuttleTickBox.Selected && !PermadeathMode; }
+            get { return shuttleTickBox.Selected; }
             set { shuttleTickBox.Selected = value; }
         }
 
@@ -473,10 +477,20 @@ namespace Barotrauma
                 AbsoluteSpacing = GUI.IntScale(5)
             };
 
-            Favorite = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.5f), serverInfoContent.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothHeight),
+
+            var topRightContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), serverInfoContent.RectTransform, Anchor.TopRight), 
+                isHorizontal: true, childAnchor: Anchor.TopRight)
+            {
+                AbsoluteSpacing = GUI.IntScale(5),
+                CanBeFocused = true
+            };
+
+            SettingsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), topRightContainer.RectTransform, Anchor.TopRight),
+                TextManager.Get("ServerSettingsButton"), style: "GUIButtonFreeScale");
+
+            Favorite = new GUITickBox(new RectTransform(Vector2.One, topRightContainer.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothHeight),
                 "", null, "GUIServerListFavoriteTickBox")
             {
-                IgnoreLayoutGroups = true,
                 Selected = false,
                 ToolTip = TextManager.Get("addtofavorites"),
                 OnSelected = (tickbox) =>
@@ -496,8 +510,6 @@ namespace Barotrauma
                 }
             };
 
-            SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.4f), serverInfoContent.RectTransform, Anchor.TopRight),
-                TextManager.Get("ServerSettingsButton"), style: "GUIButtonFreeScale");
         }
 
         private void CreateServerMessagePopup(string serverName, string message)
@@ -698,11 +710,11 @@ namespace Barotrauma
                     if (GameMain.Client == null) { return false; }
                     if (GameMain.Client.GameStarted)
                     {
-                        GameMain.Client.RequestRoundEnd(save: false);
+                        GameMain.Client.RequestEndRound(save: false);
                     }
                     else
                     {
-                        GameMain.Client.RequestRoundEnd(save: false, quitCampaign: true);
+                        GameMain.Client.RequestEndRound(save: false, quitCampaign: true);
                     }
                     return true;
                 }
@@ -728,6 +740,30 @@ namespace Barotrauma
 
             List<Identifier> missionTypes = MissionPrefab.GetAllMultiplayerSelectableMissionTypes().ToList();
 
+            GUILayoutGroup buttonGroup = new(new RectTransform(Vector2.UnitX, missionTypeList.Content.RectTransform), true) { Stretch = true };
+            GUIButton selectAllMissionsButton = new(new RectTransform(new Vector2(0.5f, 1f), buttonGroup.RectTransform), TextManager.Get("selectall"))
+            {
+                OnClicked = (_, _) =>
+                {
+                    IEnumerable<Identifier> validMissions = GetValidMissions();
+                    validMissions.ForEach(missionType => GameMain.Client.ServerSettings?.ClientAdminWrite(ServerSettings.NetFlags.Misc, addedMissionType: missionType));
+                    return true;
+                }
+            };
+            GUIButton deselectAllMissionsButton = new(new RectTransform(new Vector2(0.5f, 1f), buttonGroup.RectTransform), TextManager.Get("deselectall"))
+            {
+                OnClicked = (_, _) =>
+                {
+                    IEnumerable<Identifier> validMissions = GetValidMissions();
+
+                    // The server must have at least one mission selected, so ensure the first in the list is enabled.
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, addedMissionType: validMissions.First());
+                    validMissions.Skip(1).ForEach(missionType => GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, removedMissionType: missionType));
+                    return true;
+                }
+            };
+            buttonGroup.RectTransform.MinSize = (0, buttonGroup.Children.Max(child => child.Rect.Height));
+
             missionTypeTickBoxes = new GUITickBox[missionTypes.Count];
             int index = 0;
             foreach (var missionType in missionTypes.OrderBy(t => TextManager.Get("MissionType." + t.Value).Value))
@@ -751,6 +787,13 @@ namespace Barotrauma
                         }
                         else
                         {
+                            Identifier firstValidMission = GetValidMissions().First();
+                            if (missionTypeTickBoxes.None(tickBox => tickBox.Selected && tickBox.Parent.Visible))
+                            {
+                                GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, addedMissionType: firstValidMission);
+                                if ((Identifier)tickbox.UserData == firstValidMission) { return true; }
+                            }
+
                             GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, removedMissionType: (Identifier)tickbox.UserData);
                         }
                         return true;
@@ -759,9 +802,16 @@ namespace Barotrauma
                 frame.RectTransform.MinSize = missionTypeTickBoxes[index].RectTransform.MinSize;
                 index++;
             }
+
+            clientDisabledElements.Add(selectAllMissionsButton);
+            clientDisabledElements.Add(deselectAllMissionsButton);
             clientDisabledElements.AddRange(missionTypeTickBoxes);
 
             return gameModeSpecificFrame;
+
+            IEnumerable<Identifier> GetValidMissions() => missionTypeTickBoxes
+                .Where(tickBox => tickBox.Parent.Visible)
+                .Select(tickBox => (Identifier)tickBox.UserData);
         }
         
         private GUIFrame gameModeSettingsContent;
@@ -1216,7 +1266,7 @@ namespace Barotrauma
             shuttleTickBox = new GUITickBox(new RectTransform(Vector2.One, shuttleHolder.RectTransform), TextManager.Get("RespawnShuttle"))
             {
                 ToolTip = TextManager.Get("RespawnShuttleExplanation"),
-                Selected = !PermadeathMode,
+                Selected = true,
                 OnSelected = (GUITickBox box) =>
                 {
                     GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
@@ -1241,7 +1291,10 @@ namespace Barotrauma
             {
                 OnSelected = (component, obj) =>
                 {
-                    SelectShuttle((SubmarineInfo)obj);
+                    SubmarineInfo subInfo = (SubmarineInfo)obj;
+                    ShuttleList.Text = subInfo.DisplayName;
+                    ShuttleList.ToolTip = subInfo.Description;
+                    SelectShuttle(subInfo);
                     return true;
                 }
             };
@@ -1539,8 +1592,8 @@ namespace Barotrauma
 
             foreach (var disembarkPerkPrefab in DisembarkPerkPrefab.Prefabs
                                                                    .OrderBy(static p => p.SortCategory)
-                                                                   .ThenBy(static p => p.Cost)
-                                                                   .ThenBy(static p => p.SortKey))
+                                                                   .ThenBy(static p => p.SortKey)
+                                                                   .ThenBy(static p => p.Cost))
             {
                 if (disembarkPerkCategory != disembarkPerkPrefab.SortCategory)
                 {
@@ -1888,13 +1941,25 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            spectateBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.06f), myCharacterContent.RectTransform),
+            var checkBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), myCharacterContent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            spectateBox = new GUITickBox(new RectTransform(new Vector2(0.6f, 1.0f), checkBoxContainer.RectTransform),
                 TextManager.Get("spectatebutton"))
             {
                 Selected = false,
                 OnSelected = ToggleSpectate,
                 UserData = "spectate"
             };
+            afkBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), checkBoxContainer.RectTransform),
+                TextManager.Get("afkbutton"))
+            {
+                Selected = false,
+                ToolTip = TextManager.Get("afkbutton.tooltip")
+            };
+            checkBoxContainer.RectTransform.MinSize = new Point(0, spectateBox.RectTransform.MinSize.Y);
 
             playerInfoContent = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), myCharacterContent.RectTransform))
             {
@@ -2025,7 +2090,10 @@ namespace Barotrauma
             };
 
             serverLogReverseButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), serverLogListboxLayout.RectTransform), style: "UIToggleButtonVertical");
-            serverLogBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), serverLogListboxLayout.RectTransform));
+            serverLogBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), serverLogListboxLayout.RectTransform))
+            {
+                AutoHideScrollBar = false
+            };
 
             //filter tickbox list ------------------------------------------------------------------
 
@@ -2125,6 +2193,25 @@ namespace Barotrauma
             joinOnGoingRoundButton = new GUIButton(new RectTransform(Vector2.One, roundControlsHolder.RectTransform),
                 TextManager.Get("ServerListJoin"));
 
+            EndButton = new GUIButton(new RectTransform(Vector2.One, roundControlsHolder.RectTransform),
+                TextManager.Get("endround"))
+            {
+                //spooky red color for a destructive action
+                Color = GUIStyle.Red,
+                OnClicked = (btn, obj) =>
+                {
+                    if (GameMain.Client == null) { return true; }
+                    GUI.CreateVerificationPrompt(GameMain.GameSession?.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd",
+                        () =>
+                        {
+                            GameMain.Client?.RequestEndRound(save: false);
+                        });
+                    return true;
+                },
+                Visible = false,
+                IgnoreLayoutGroups = true
+            };
+
             // Start button
             StartButton = new GUIButton(new RectTransform(Vector2.One, roundControlsHolder.RectTransform),
                 TextManager.Get("StartGameButton"))
@@ -2132,6 +2219,10 @@ namespace Barotrauma
                 OnClicked = (btn, obj) =>
                 {
                     if (GameMain.Client == null) { return true; }
+
+                    //the player presumably no longer wants to be afk if they clicked the start button
+                    SetAFKSelected(false);
+
                     if (CampaignSetupFrame.Visible && CampaignSetupUI != null)
                     {
                         CampaignSetupUI.StartGameClicked(btn, obj);
@@ -2146,6 +2237,7 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
+
             bottomBar.RectTransform.MinSize =
                 new Point(0, (int)Math.Max(ReadyToStartBox.RectTransform.MinSize.Y / 0.75f, StartButton.RectTransform.MinSize.Y));
 
@@ -2244,6 +2336,9 @@ namespace Barotrauma
 
             RefreshEnabledElements();
 
+            createPendingChangesText = false;
+            TabMenu.PendingChanges = false;
+
             if (GameMain.Client != null)
             {
                 joinOnGoingRoundButton.Visible = GameMain.Client.GameStarted;
@@ -2258,8 +2353,18 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
+                afkBox.Visible = GameMain.Client.IsServerOwner || GameMain.Client.ServerSettings.AllowAFK;
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
-                joinOnGoingRoundButton.OnClicked = GameMain.Client.JoinOnGoingClicked;
+                joinOnGoingRoundButton.OnClicked = (btn, userdata) =>
+                {
+                    if (afkBox is { Selected: true })
+                    {
+                        afkBox.Selected = false;
+                        afkBox.Flash(GUIStyle.Green);
+                    }
+                    GameMain.Client.SendJoinOngoingRequest(btn);
+                    return true;
+                };
                 ReadyToStartBox.OnSelected = GameMain.Client.SetReadyToStart;
             }
 
@@ -2293,7 +2398,7 @@ namespace Barotrauma
             traitorElements.ForEach(e => e.Enabled &= settings.TraitorProbability > 0);
             SetTraitorDangerIndicators(settings.TraitorDangerLevel);
             respawnModeSelection.Enabled = respawnModeLabel.Enabled = manageSettings && !gameStarted;
-            midRoundRespawnSettings.ForEach(e => e.Enabled &= settings.RespawnMode == RespawnMode.MidRound);
+            midRoundRespawnSettings.ForEach(e => e.Enabled &= settings.RespawnMode != RespawnMode.BetweenRounds);
             permadeathDisabledRespawnSettings.ForEach(e => e.Enabled &= settings.RespawnMode != RespawnMode.Permadeath);
             permadeathEnabledRespawnSettings.ForEach(e => e.Enabled &= settings.RespawnMode == RespawnMode.Permadeath && !gameStarted);
             ironmanDisabledRespawnSettings.ForEach(e => e.Enabled &= !settings.IronmanMode);
@@ -2366,6 +2471,7 @@ namespace Barotrauma
                 if (campaignCharacterInfo != newCampaignCharacterInfo)
                 {
                     campaignCharacterInfo = newCampaignCharacterInfo;
+                    SaveAppearance();
                     UpdatePlayerFrame(campaignCharacterInfo, false);
                 }
             }
@@ -2391,7 +2497,7 @@ namespace Barotrauma
                 createPendingText: createPendingText);
         }
 
-        private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing, GUIComponent parent, bool createPendingText = true)
+        private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing, GUIComponent parent, bool createPendingText = false)
         {
             if (GameMain.Client == null) { return; }
             
@@ -2402,7 +2508,7 @@ namespace Barotrauma
             if (characterInfo == null || CampaignCharacterDiscarded)
             {
                 characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, GameMain.Client.Name, null);
-                characterInfo.RecreateHead(MultiplayerPreferences.Instance);
+                characterInfo.RecreateHead(MultiplayerPreferences.Instance); // not necessarily the head of the last character
                 GameMain.Client.CharacterInfo = characterInfo;
                 characterInfo.OmitJobInMenus = true;
             }
@@ -2807,7 +2913,7 @@ namespace Barotrauma
             };
         }
 
-        private void CreateJobVariantTooltip(JobPrefab jobPrefab, CharacterTeamType team, int variant, bool isPvPMode, GUIComponent parentSlot)
+        private static void CreateJobVariantTooltip(JobPrefab jobPrefab, CharacterTeamType team, int variant, bool isPvPMode, GUIComponent parentSlot)
         {
             jobVariantTooltip = new GUIFrame(new RectTransform(new Point((int)(400 * GUI.Scale), (int)(180 * GUI.Scale)), GUI.Canvas, pivot: Pivot.BottomRight),
                 style: "GUIToolTip")
@@ -2815,6 +2921,11 @@ namespace Barotrauma
                 UserData = new JobVariant(jobPrefab, variant)
             };
             jobVariantTooltip.RectTransform.AbsoluteOffset = new Point(parentSlot.Rect.Right, parentSlot.Rect.Y);
+            if (jobVariantTooltip.Rect.X < 0)
+            {
+                jobVariantTooltip.RectTransform.SetPosition(anchor: Anchor.TopLeft, pivot: Pivot.BottomLeft);
+                jobVariantTooltip.RectTransform.AbsoluteOffset = new Point(parentSlot.Rect.X, parentSlot.Rect.Y);
+            }
 
             var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), jobVariantTooltip.RectTransform, Anchor.Center))
             {
@@ -2824,8 +2935,7 @@ namespace Barotrauma
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.GetWithVariable("startingequipmentname", "[number]", (variant + 1).ToString()), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
 
-            var itemIdentifiers = jobPrefab.JobItems[variant]
-                .Where(it => it.ShowPreview)
+            var itemIdentifiers = jobPrefab.GetJobItems(variant, it => it.ShowPreview)
                 .Select(it => it.GetItemIdentifier(team, isPvPMode))
                 .Distinct();
 
@@ -2958,6 +3068,25 @@ namespace Barotrauma
             spectateBox.Visible = allowSpectating;
         }
 
+        public void SetAllowAFK(bool allowAFK)
+        {
+            if (afkBox.Visible != allowAFK)
+            {
+                //reset selection when the AFK option becomes available or unavailable
+                afkBox.Selected = false;
+                afkBox.Visible = allowAFK;
+            }
+        }
+
+        public void SetAFKSelected(bool selected)
+        {
+            if (afkBox.Selected != selected)
+            {
+                afkBox.Flash(GUIStyle.Green);
+                afkBox.Selected = selected;
+            }
+        }
+
         public void SetAutoRestart(bool enabled, float timer = 0.0f)
         {
             autoRestartBox.Selected = enabled;
@@ -2971,6 +3100,8 @@ namespace Barotrauma
 
         private void RefreshOutpostDropdown()
         {
+            Identifier randomOutpostIdentifier = "Random".ToIdentifier();
+
             outpostDropdown.Parent.Visible = MissionTypeFrame.Visible;
             if (!outpostDropdown.Parent.Visible) { return; }
 
@@ -2979,7 +3110,7 @@ namespace Barotrauma
             Identifier prevSelected = GameMain.NetworkMember?.ServerSettings.SelectedOutpostName ?? Identifier.Empty;
 
             outpostDropdown.ClearChildren();
-            outpostDropdown.AddItem(TextManager.Get("Random"), "Random".ToIdentifier());
+            outpostDropdown.AddItem(TextManager.Get("Random"), randomOutpostIdentifier);
             HashSet<Identifier> validOutpostTagsForMissions = new HashSet<Identifier>();
 
             IEnumerable<Type> suitableMissionClasses = 
@@ -3003,12 +3134,22 @@ namespace Barotrauma
                 foreach (var submarineInfo in SubmarineInfo.SavedSubmarines.DistinctBy(s => s.Name))
                 {
                     if (submarineInfo.Type == SubmarineType.Outpost && 
-                        validOutpostTagsForMissions.Any(tag => submarineInfo.OutpostTags.Contains(tag)))
+                        validOutpostTagsForMissions.Any(submarineInfo.OutpostTags.Contains))
                     {
                         outpostDropdown.AddItem(submarineInfo.DisplayName, userData: submarineInfo.Name.ToIdentifier(), toolTip: submarineInfo.Description);
                     }
                 }
-                outpostDropdown.ListBox.Select(prevSelected);
+                if (!outpostDropdown.ListBox.Select(prevSelected))
+                {
+                    //could not select the previously selected outpost (not suitable for the selected missions)
+                    // -> choose random instead
+                    if (outpostDropdown.SelectedData is Identifier selectedIdentifier && 
+                        selectedIdentifier != randomOutpostIdentifier)
+                    {
+                        outpostDropdown.Flash(GUIStyle.Red);
+                    }
+                    outpostDropdown.ListBox.Select(randomOutpostIdentifier);
+                }
                 GameMain.Client.ServerSettings.AssignGUIComponent(nameof(ServerSettings.SelectedOutpostName), outpostDropdown);
             }
             else
@@ -3059,20 +3200,26 @@ namespace Barotrauma
             var subTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), frameLayout.RectTransform, Anchor.CenterLeft),
                 ToolBox.LimitString(sub.DisplayName.Value, GUIStyle.Font, subList.Rect.Width - 65), textAlignment: Alignment.CenterLeft)
             {
+                ToolTip = sub.Description,
                 UserData = "nametext",
                 CanBeFocused = true
             };
 
-            var pvpContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 1f), frameLayout.RectTransform, Anchor.CenterRight), style: null);
+            var pvpContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 1f), frameLayout.RectTransform, Anchor.CenterRight), style: null)
+            {
+                CanBeFocused = false
+            };
             var coalitionIcon = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), pvpContainer.RectTransform, Anchor.CenterLeft), style: "CoalitionIcon")
             {
                 Visible = false,
                 UserData = CoalitionIconUserData,
+                CanBeFocused = false
             };
             var separatistsIcon = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), pvpContainer.RectTransform, Anchor.CenterRight), style: "SeparatistIcon")
             {
                 Visible = false,
                 UserData = SeparatistsIconUserData,
+                CanBeFocused = false
             };
 
             var matchingSub = 
@@ -3165,11 +3312,17 @@ namespace Barotrauma
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
-                if (SelectedMode == GameModePreset.PvP && MultiplayerPreferences.Instance.TeamPreference is not (CharacterTeamType.Team1 or CharacterTeamType.Team2))
+                if (SelectedMode == GameModePreset.PvP && 
+                    MultiplayerPreferences.Instance.TeamPreference is not (CharacterTeamType.Team1 or CharacterTeamType.Team2))
                 {
+                    if (TeamPreferenceListBox == null)
+                    {
+                        //refresh player frame to ensure we create the team preference list box
+                        UpdatePlayerFrame(characterInfo: GameMain.Client?.CharacterInfo);
+                    }
+
                     // we are in PvP but don't have a team selected, so we can't select a sub
                     // and also highlight the team selection list
-
                     foreach (GUIComponent child in TeamPreferenceListBox.Content.Children)
                     {
                         if (child.UserData is CharacterTeamType.None) { continue; }
@@ -3973,7 +4126,7 @@ namespace Barotrauma
             JobInfoFrame?.AddToGUIUpdateList();
 
             CharacterAppearanceCustomizationMenu?.AddToGUIUpdateList();
-            JobSelectionFrame?.AddToGUIUpdateList();
+            JobSelectionFrame?.AddToGUIUpdateList(order: 1);
         }
 
         public override void Update(double deltaTime)
@@ -4027,20 +4180,28 @@ namespace Barotrauma
                 JobSelectionFrame.Visible = false;
             }
 
-            if (GUI.MouseOn?.UserData is JobVariant jobPrefab && 
+            UpdateJobVariantSelectionIfNeeded();
+        }
+
+        public static void UpdateJobVariantSelectionIfNeeded()
+        {
+            if (GUI.MouseOn?.UserData is JobVariant jobPrefab &&
                 GUI.MouseOn.Style?.Name == "JobVariantButton" &&
                 GUI.MouseOn.Parent != null)
             {
-                if (jobVariantTooltip?.UserData is not JobVariant prevVisibleVariant || 
-                    prevVisibleVariant.Prefab != jobPrefab.Prefab || 
+                bool isMultiplayer = GameMain.NetLobbyScreen != null && GameMain.NetworkMember != null;
+                var teamPreference = isMultiplayer ? GameMain.NetLobbyScreen.TeamPreference : CharacterTeamType.Team1;
+                var isPvPMode = isMultiplayer ? GameMain.NetLobbyScreen.SelectedMode == GameModePreset.PvP : false; 
+                if (jobVariantTooltip?.UserData is not JobVariant prevVisibleVariant ||
+                    prevVisibleVariant.Prefab != jobPrefab.Prefab ||
                     prevVisibleVariant.Variant != jobPrefab.Variant)
                 {
-                    CreateJobVariantTooltip(jobPrefab.Prefab, TeamPreference, jobPrefab.Variant, isPvPMode: SelectedMode == GameModePreset.PvP, GUI.MouseOn.Parent);
+                    CreateJobVariantTooltip(jobPrefab.Prefab, teamPreference, jobPrefab.Variant, isPvPMode, GUI.MouseOn.Parent);
                 }
             }
             if (jobVariantTooltip != null)
             {
-                jobVariantTooltip?.AddToGUIUpdateList();
+                jobVariantTooltip?.AddToGUIUpdateList(order: 1);
                 Rectangle mouseRect = jobVariantTooltip.MouseRect;
                 mouseRect.Inflate(60 * GUI.Scale, 60 * GUI.Scale);
                 if (!mouseRect.Contains(PlayerInput.MousePosition)) { jobVariantTooltip = null; }
@@ -4119,10 +4280,10 @@ namespace Barotrauma
             }
         }
 
-        private static void DrawJobVariantItems(SpriteBatch spriteBatch, GUICustomComponent component, JobVariant jobPrefab, CharacterTeamType team, bool isPvPMode, int itemsPerRow)
+        private static void DrawJobVariantItems(SpriteBatch spriteBatch, GUICustomComponent component, JobVariant jobVariant, CharacterTeamType team, bool isPvPMode, int itemsPerRow)
         {
-            var itemIdentifiers = jobPrefab.Prefab.JobItems[jobPrefab.Variant]
-                .Where(it => it.ShowPreview)
+            var allJobItems = jobVariant.Prefab.GetJobItems(jobVariant.Variant, it => it.ShowPreview);
+            var itemIdentifiers = allJobItems
                 .Select(it => it.GetItemIdentifier(team, isPvPMode))
                 .Distinct();
 
@@ -4162,7 +4323,7 @@ namespace Barotrauma
                 float iconScale = Math.Min(Math.Min(slotSize.X / icon.size.X, slotSize.Y / icon.size.Y), 2.0f) * 0.9f;
                 icon.Draw(spriteBatch, slotPos + slotSize.ToVector2() * 0.5f, scale: iconScale);
 
-                int count = jobPrefab.Prefab.JobItems[jobPrefab.Variant].Where(it => it.ShowPreview && it.ItemIdentifier == itemIdentifier).Sum(it => it.Amount);
+                int count = allJobItems.Where(it => it.GetItemIdentifier(team, isPvPMode) == itemIdentifier).Sum(it => it.Amount);
                 if (count > 1)
                 {
                     string itemCountText = "x" + count;
@@ -4352,57 +4513,93 @@ namespace Barotrauma
 
         private bool OpenJobSelection(GUIComponent _, object __)
         {
+            //recreate if resolution has changed
+            if (GameMain.GraphicsWidth != prevResolutionForJobSelectionFrame.X ||
+                GameMain.GraphicsHeight != prevResolutionForJobSelectionFrame.Y)
+            {
+                JobSelectionFrame = null;
+            }
+
+            prevResolutionForJobSelectionFrame = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
             if (JobSelectionFrame != null)
             {
                 JobSelectionFrame.Visible = true;
                 return true;
             }
 
-            Point frameSize = new Point(characterInfoFrame.Rect.Width, (int)(characterInfoFrame.Rect.Height * 2 * 0.6f));
-            JobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
-                { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, style:"GUIFrameListBox");
+            var allJobs = JobPrefab.Prefabs.Where(jobPrefab => !jobPrefab.HiddenJob && jobPrefab.MaxNumber > 0);
+
+            //find the jobs that aren't currently visible in the job list, create a preview of the first variant
+            var availableJobs = 
+                allJobs.Where(jobPrefab => JobList.Content.Children.All(c => c.UserData is not JobVariant prefab || prefab.Prefab != jobPrefab))
+                .Select(j => new JobVariant(j, 0));
+
+            //find the jobs that are currently visible in the job list, create a preview of the variant chosen in the list
+            availableJobs = availableJobs.Concat(
+                allJobs.Where(jobPrefab => JobList.Content.Children.Any(c => (c.UserData is JobVariant prefab) && prefab.Prefab == jobPrefab))
+                .Select(j => (JobVariant)JobList.Content.FindChild(c => (c.UserData is JobVariant prefab) && prefab.Prefab == j).UserData));
+
+            availableJobs = availableJobs.ToList();
+
+            const int JobsPerRow = 3;
+            const int MaxRows = 4;
+
+            int rowCount = (int)Math.Ceiling(availableJobs.Count() / (float)JobsPerRow);
+            int jobButtonSize = GUI.IntScale(150);
+
+            const float listBoxRelativeSize = 0.95f;
+
+            Point frameSize = new Point(characterInfoFrame.Rect.Width, (int)(jobButtonSize * Math.Min(rowCount, MaxRows) / listBoxRelativeSize));
+            JobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft), style: "GUIFrameListBox");
+
+            PositionJobSelectionFrame();
 
             characterInfoFrame.RectTransform.SizeChanged += () =>
             {
                 if (characterInfoFrame == null || JobSelectionFrame?.RectTransform == null) { return; }
-                Point size = new Point(characterInfoFrame.Rect.Width, (int)(characterInfoFrame.Rect.Height * 2 * 0.6f));
+                Point size = new Point(characterInfoFrame.Rect.Width, (int)(jobButtonSize * Math.Min(rowCount, MaxRows) / listBoxRelativeSize));
                 JobSelectionFrame.RectTransform.Resize(size);
-                JobSelectionFrame.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - size.X, characterInfoFrame.Rect.Bottom);
+                PositionJobSelectionFrame();
             };
 
-            new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), JobSelectionFrame.RectTransform, anchor: Anchor.Center), style: "OuterGlow", color: Color.Black)
+            void PositionJobSelectionFrame()
             {
-                UserData = "outerglow",
-                CanBeFocused = false
+                //move to the left side of the info frame
+                JobSelectionFrame.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.X - JobSelectionFrame.Rect.Width, JobList.Rect.Y);
+                if (JobSelectionFrame.Rect.X < 0)
+                {
+                    //scale if goes outside the screen horizontally
+                    JobSelectionFrame.RectTransform.Resize(new Point(characterInfoFrame.Rect.X, JobSelectionFrame.Rect.Height));
+                    JobSelectionFrame.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.X - JobSelectionFrame.Rect.Width, JobSelectionFrame.RectTransform.AbsoluteOffset.Y);
+                }                
+            }
+
+            var jobSelectionList = new GUIListBox(new RectTransform(Vector2.One * listBoxRelativeSize, JobSelectionFrame.RectTransform, Anchor.Center), style: "GUIFrameListBox")
+            {
+                Padding = Vector4.One * GUI.IntScale(10)
             };
 
-            var rows = new GUILayoutGroup(new RectTransform(Vector2.One, JobSelectionFrame.RectTransform)) { Stretch = true };
-            var row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
+            var row = new GUILayoutGroup(new RectTransform(new Point(jobSelectionList.Content.Rect.Width, jobButtonSize), jobSelectionList.Content.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
 
             GUIButton jobButton = null;
 
-            var availableJobs = JobPrefab.Prefabs.Where(jobPrefab =>
-                    !jobPrefab.HiddenJob && jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => c.UserData is not JobVariant prefab || prefab.Prefab != jobPrefab)
-            ).Select(j => new JobVariant(j, 0));
-
-            availableJobs = availableJobs.Concat(
-                JobPrefab.Prefabs.Where(jobPrefab =>
-                    !jobPrefab.HiddenJob && jobPrefab.MaxNumber > 0 && JobList.Content.Children.Any(c => (c.UserData is JobVariant prefab) && prefab.Prefab == jobPrefab)
-            ).Select(j => (JobVariant)JobList.Content.FindChild(c => (c.UserData is JobVariant prefab) && prefab.Prefab == j).UserData));
-
-            availableJobs = availableJobs.ToList();
-
             int itemsInRow = 0;
-
             foreach (var jobPrefab in availableJobs)
             {
-                if (itemsInRow >= 3)
+                if (itemsInRow >= JobsPerRow)
                 {
-                    row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
+                    row = new GUILayoutGroup(new RectTransform(new Point(jobSelectionList.Content.Rect.Width, jobButtonSize), jobSelectionList.Content.RectTransform), isHorizontal: true)
+                    {
+                        Stretch = true
+                    };
                     itemsInRow = 0;
                 }
 
-                jobButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), row.RectTransform), style: "ListBoxElementSquare")
+                jobButton = new GUIButton(new RectTransform(new Point(jobButtonSize), row.RectTransform), style: "ListBoxElementSquare")
                 {
                     UserData = jobPrefab,
                     OnClicked = (btn, usdt) =>
@@ -4417,7 +4614,7 @@ namespace Barotrauma
                     team: TeamPreference,
                     isPvPMode: SelectedMode == GameModePreset.PvP,
                     selectedByPlayer: false);
-                if (images != null && images.Length > 1)
+                if (images != null && images.Length > 0)
                 {
                     jobPrefab.Variant = Math.Min(jobPrefab.Variant, images.Length);
                     int currVisible = jobPrefab.Variant;
@@ -4725,6 +4922,7 @@ namespace Barotrauma
 
         public void RefreshStartButtonVisibility()
         {
+            bool campaignActive = GameMain.GameSession?.GameMode is CampaignMode;
             if (CampaignSetupUI != null && CampaignSetupFrame is { Visible: true })
             {
                 //setting up a campaign -> start button only visible if we're in the "new game" tab (load game menu not visible) 
@@ -4736,7 +4934,6 @@ namespace Barotrauma
             else
             {
                 //if a campaign is currently running, we must show the start button to allow continuing
-                bool campaignActive = GameMain.GameSession?.GameMode is CampaignMode;
                 StartButton.Visible =
                     (SelectedMode != GameModePreset.MultiPlayerCampaign || campaignActive) &&
                     !GameMain.Client.GameStarted && GameMain.Client.HasPermission(ClientPermissions.ManageRound);
@@ -4752,6 +4949,14 @@ namespace Barotrauma
                         ? TextManager.Get("DisembarkPointsNotValid")
                         : string.Empty;
             }
+
+            StartButton.IgnoreLayoutGroups = !StartButton.Visible;
+            //can end the round if round is running
+            EndButton.Visible = 
+                !StartButton.Visible && 
+                GameMain.Client is { GameStarted: true } &&
+                (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || (campaignActive && GameMain.Client.HasPermission(ClientPermissions.ManageCampaign)));
+            EndButton.IgnoreLayoutGroups = !EndButton.Visible;
         }
         
         public void RefreshChatrow()
@@ -4794,7 +4999,7 @@ namespace Barotrauma
                 };
 
                 micIcon = new GUIImage(new RectTransform(new Vector2(0.05f, 1.0f), chatRow.RectTransform), style: "GUIMicrophoneUnavailable");
-                chatInput.Select();
+                chatInput.Select(ignoreSelectSound: true);
             }
 
             //this needs to be done even if we're using the existing chatinput instance instead of creating a new one,
@@ -4917,9 +5122,8 @@ namespace Barotrauma
                     for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
                     {
                         int selectedVariantIndex = Math.Min(jobPrefab.Variant, images.Length);
-                        images[variantIndex].Visible = images.Length == 1 || selectedVariantIndex == variantIndex;
-                        
-                        if (images.Length > 1)
+                        images[variantIndex].Visible = images.Length == 1 || selectedVariantIndex == variantIndex;                        
+                        if (images.Length > 0)
                         {
                             var variantButton = CreateJobVariantButton(jobPrefab, variantIndex, images.Length, slot);
                             variantButton.OnClicked = (btn, obj) =>
@@ -4999,7 +5203,7 @@ namespace Barotrauma
 
         private static GUIButton CreateJobVariantButton(JobVariant jobPrefab, int variantIndex, int variantCount, GUIComponent slot)
         {
-            float relativeSize = 0.15f;
+            float relativeSize = 0.18f;
 
             var btn = new GUIButton(new RectTransform(new Vector2(relativeSize), slot.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothHeight)
                 { RelativeOffset = new Vector2(relativeSize * 1.3f * (variantIndex - (variantCount - 1) / 2.0f), 0.02f) },
@@ -5375,6 +5579,7 @@ namespace Barotrauma
                     text: sub.DisplayName)
                 {
                     UserData = "nametext",
+                    ToolTip = sub.Description,
                     CanBeFocused = false
                 };
                 

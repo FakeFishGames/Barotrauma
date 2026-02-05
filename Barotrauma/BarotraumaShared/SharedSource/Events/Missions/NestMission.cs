@@ -14,8 +14,8 @@ namespace Barotrauma
         private readonly List<Item> items = new List<Item>();
         private readonly Dictionary<Item, StatusEffect> statusEffectOnApproach = new Dictionary<Item, StatusEffect>();
 
-        //string = filename, point = min,max
-        private readonly HashSet<Tuple<CharacterPrefab, Point>> monsterPrefabs = new HashSet<Tuple<CharacterPrefab, Point>>();
+        //key = monster to spawn, point = min,max
+        private readonly List<Tuple<CharacterPrefab, Point>> monsterPrefabs = new List<Tuple<CharacterPrefab, Point>>();
 
         private float itemSpawnRadius = 800.0f;
         private readonly float approachItemsRadius = 1000.0f;
@@ -70,6 +70,8 @@ namespace Barotrauma
 
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
+                if (GameMain.NetworkMember == null && monsterElement.GetAttributeBool("multiplayeronly", false)) { continue; }
+
                 Identifier speciesName = monsterElement.GetAttributeIdentifier("character", Identifier.Empty);
                 int defaultCount = monsterElement.GetAttributeInt("count", -1);
                 if (defaultCount < 0)

@@ -133,49 +133,33 @@ namespace Barotrauma.Items.Components
         
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (FlowPercentage < 0.0f)
+            if (currFlow < 0f)
             {
                 foreach (var (position, emitter) in pumpOutEmitters)
                 {
-                    if (item.CurrentHull != null && item.CurrentHull.Surface < item.Rect.Location.Y + position.Y) { continue; }
-
                     //only emit "pump out" particles when underwater
-                    Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
-                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? item.RotationRad : -item.RotationRad);
-                    float angle = -item.RotationRad;
-                    if (item.FlippedX)
-                    {
-                        relativeParticlePos.X = -relativeParticlePos.X;
-                        angle += MathHelper.Pi;
-                    }
-                    if (item.FlippedY)
-                    {
-                        relativeParticlePos.Y = -relativeParticlePos.Y;
-                    }
-
-                    emitter.Emit(deltaTime, item.WorldPosition + relativeParticlePos, item.CurrentHull, angle,
-                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, -FlowPercentage / 100.0f));
+                    if (item.CurrentHull != null && item.CurrentHull.Surface < item.Rect.Location.Y + position.Y) { continue; }
+                    Emit(position, emitter);
                 }
             }
-            else if (FlowPercentage > 0.0f)
+            else if (currFlow > 0f)
             {
                 foreach (var (position, emitter) in pumpInEmitters)
                 {
-                    Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
-                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? item.RotationRad : -item.RotationRad);
-                    float angle = -item.RotationRad;
-                    if (item.FlippedX)
-                    {
-                        relativeParticlePos.X = -relativeParticlePos.X;
-                        angle += MathHelper.Pi;
-                    }
-                    if (item.FlippedY)
-                    {
-                        relativeParticlePos.Y = -relativeParticlePos.Y;
-                    }
-                    emitter.Emit(deltaTime, item.WorldPosition + relativeParticlePos, item.CurrentHull, angle,
-                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, FlowPercentage / 100.0f));
+                    Emit(position, emitter);
                 }
+            }
+
+            void Emit(Vector2 position, ParticleEmitter emitter)
+            {
+                Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
+                if (item.FlippedX) { relativeParticlePos.X = -relativeParticlePos.X; }
+                if (item.FlippedY) { relativeParticlePos.Y = -relativeParticlePos.Y; }
+                relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, -item.RotationRad);
+                float angle = -item.RotationRad;
+                if (item.FlippedX) { angle += MathHelper.Pi; }
+                emitter.Emit(deltaTime, item.WorldPosition + relativeParticlePos, item.CurrentHull, angle,
+                    velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, currFlow / maxFlow), mirrorAngle: item.FlippedX ^ item.FlippedY);
             }
         }
 
@@ -185,7 +169,7 @@ namespace Barotrauma.Items.Components
         {
             autoControlIndicator.Selected = IsAutoControlled;
             PowerButton.Enabled = isActiveLockTimer <= 0.0f;
-            if (HasPower)
+            if (HasPower && !Disabled)
             {
                 flickerTimer = 0;
                 powerLight.Selected = IsActive;
@@ -229,6 +213,7 @@ namespace Barotrauma.Items.Components
             float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             bool isActive = msg.ReadBoolean();
             bool hijacked = msg.ReadBoolean();
+            bool disabled = msg.ReadBoolean();
             float? targetLevel;
             if (msg.ReadBoolean())
             {
@@ -250,6 +235,7 @@ namespace Barotrauma.Items.Components
             FlowPercentage = flowPercentage;
             IsActive = isActive;
             Hijacked = hijacked;
+            Disabled = disabled;
             TargetLevel = targetLevel;
         }
     }

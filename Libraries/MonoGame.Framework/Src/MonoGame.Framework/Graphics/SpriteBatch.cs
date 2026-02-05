@@ -91,7 +91,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
 		Effect _spriteEffect;
 	    readonly EffectParameter _matrixTransform;
-        readonly EffectPass _spritePass;
+        EffectPass _spritePass;
 
 		Matrix? _matrix;
 	    private Viewport _lastViewport;
@@ -238,6 +238,7 @@ namespace Microsoft.Xna.Framework.Graphics
             else
                 _matrixTransform.SetValue(_projection);
 
+            _spritePass = _spriteEffect.CurrentTechnique.Passes[0];
             _spritePass.Apply();
 		}
 

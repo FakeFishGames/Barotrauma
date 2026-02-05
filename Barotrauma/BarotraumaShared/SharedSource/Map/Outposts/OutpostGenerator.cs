@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.RuinGeneration;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// How many times the generator retries generating an outpost with a different seed if it fails to generate a valid outpost with no overlaps.
+        /// </summary>
+        const int MaxOutpostGenerationRetries = 6;
+
         public static Submarine Generate(OutpostGenerationParams generationParams, LocationType locationType, bool onlyEntrance = false, bool allowInvalidOutpost = false)
         {
             return Generate(generationParams, locationType, location: null, onlyEntrance, allowInvalidOutpost);
@@ -86,7 +92,7 @@ namespace Barotrauma
                     generationParams = newParams;
                 }
 
-                locationType = location.GetLocationType();
+                locationType = location.Type;
             }
 
             Submarine sub = null;
@@ -105,6 +111,17 @@ namespace Barotrauma
                 }
             }
 
+            var prebuiltOutpostInfo = ChooseOutpost(generationParams);
+            prebuiltOutpostInfo.Type = SubmarineType.Outpost;            
+            sub = new Submarine(prebuiltOutpostInfo);
+            sub.Info.OutpostGenerationParams = generationParams;
+            location?.RemoveTakenItems();
+            EnableFactionSpecificEntities(sub, location);
+            return sub;
+        }
+
+        private static SubmarineInfo ChooseOutpost(OutpostGenerationParams generationParams)
+        {
             var outpostFiles = ContentPackageManager.EnabledPackages.All
                 .SelectMany(p => p.GetFiles<OutpostFile>())
                 .Where(f => !TutorialPrefab.Prefabs.Any(tp => tp.OutpostPath == f.Path))
@@ -115,6 +132,50 @@ namespace Barotrauma
             {
                 outpostInfos.Add(new SubmarineInfo(outpostFile.Path.Value));
             }
+
+
+            //if there's missions selected that allow outpost selection from some specific set of outposts,
+            //choose one of those outposts
+            List<SubmarineInfo> outpostInfosSuitableForMission = new List<SubmarineInfo>();
+            if (GameMain.GameSession?.GameMode is { } gameMode)
+            {
+                foreach (var mission in gameMode.Missions)
+                {
+                    if (!mission.Prefab.AllowOutpostSelectionFromTag.IsEmpty)
+                    {
+                        foreach (var outpostInfo in outpostInfos)
+                        {
+                            if (outpostInfo.OutpostTags.Contains(mission.Prefab.AllowOutpostSelectionFromTag) &&
+                                !outpostInfosSuitableForMission.Contains(outpostInfo))
+                            {
+                                outpostInfosSuitableForMission.Add(outpostInfo);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //if an outpost has been select in the server settings, choose that...
+            if (GameMain.NetworkMember?.ServerSettings is { } serverSettings &&
+                serverSettings.SelectedOutpostName != "Random")
+            {
+                var matchingOutpost = outpostInfos.FirstOrDefault(o => o.Name == serverSettings.SelectedOutpostName);
+                //...but only if the outpost is suitable for the mission (or if the mission has no specific requirements for the outpost)
+                if (outpostInfosSuitableForMission.Contains(matchingOutpost) || 
+                    outpostInfosSuitableForMission.None())
+                {
+                    if (matchingOutpost != null)
+                    {
+                        return matchingOutpost;
+                    }
+                }
+            }
+
+            if (outpostInfosSuitableForMission.Any())
+            {
+                return outpostInfosSuitableForMission.GetRandom(Rand.RandSync.ServerAndClient);
+            }
+
             if (generationParams.OutpostTag.IsEmpty)
             {
                 outpostInfos = outpostInfos.FindAll(o => o.OutpostTags.None());
@@ -134,24 +195,7 @@ namespace Barotrauma
             {
                 throw new Exception("Failed to generate an outpost. Could not generate an outpost from the available outpost modules and there are no pre-built outposts available.");
             }
-            var prebuiltOutpostInfo = outpostInfos.GetRandom(Rand.RandSync.ServerAndClient);
-
-            if (GameMain.NetworkMember?.ServerSettings is { } serverSettings && 
-                serverSettings.SelectedOutpostName != "Random")
-            {
-                var matchingOutpost = outpostInfos.FirstOrDefault(o => o.Name == serverSettings.SelectedOutpostName);
-                if (matchingOutpost != null)
-                {
-                    prebuiltOutpostInfo = matchingOutpost;
-                }
-            }
-
-            prebuiltOutpostInfo.Type = SubmarineType.Outpost;            
-            sub = new Submarine(prebuiltOutpostInfo);
-            sub.Info.OutpostGenerationParams = generationParams;
-            location?.RemoveTakenItems();
-            EnableFactionSpecificEntities(sub, location);
-            return sub;
+            return outpostInfos.GetRandom(Rand.RandSync.ServerAndClient);
         }
 
         private static Submarine GenerateFromModules(OutpostGenerationParams generationParams, OutpostModuleFile[] outpostModuleFiles, Submarine sub, LocationType locationType, Location location, bool onlyEntrance = false, bool allowInvalidOutpost = false)
@@ -182,8 +226,8 @@ namespace Barotrauma
 
             List<PlacedModule> selectedModules = new List<PlacedModule>();
             bool generationFailed = false;
-            int remainingTries = 5;
-            while (remainingTries > -1 && outpostModules.Any())
+            int remainingOutpostGenerationTries = MaxOutpostGenerationRetries;
+            while (remainingOutpostGenerationTries > -1 && outpostModules.Any())
             {
                 if (sub != null)
                 {
@@ -208,7 +252,7 @@ namespace Barotrauma
                     GameMain.Server.EntityEventManager.Events.RemoveRange(eventCount, GameMain.Server.EntityEventManager.Events.Count - eventCount);
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveRange(uniqueEventCount, GameMain.Server.EntityEventManager.UniqueEvents.Count - uniqueEventCount);
 #endif
-                    if (remainingTries <= 0)
+                    if (remainingOutpostGenerationTries <= 0)
                     {
                         generationFailed = true;
                         break;
@@ -255,13 +299,15 @@ namespace Barotrauma
 
                 if (hasForceOutpostWithInitialFlag)
                 {
-                    DebugConsole.NewMessage($"Using Force outpost module as initial in Outpost generation: {GameMain.GameSession.ForceOutpostModule.OutpostModuleInfo.Name}", Color.Yellow);
+                    DebugConsole.NewMessage($"Forcing module \"{GameMain.GameSession.ForceOutpostModule.OutpostModuleInfo.Name}\" as the initial module...", Color.Yellow);
                     usedForceOutpostModule = GameMain.GameSession.ForceOutpostModule;
-                    GameMain.GameSession.ForceOutpostModule = null;
                 }
 
                 if (initialModule == null)
                 {
+                    //reset the forced outpost module so that it won't be used
+                    //if we attempt to generate a new outpost later after this failed attempt
+                    GameMain.GameSession.ForceOutpostModule = null;
                     throw new Exception("Failed to generate an outpost (no airlock modules found).");
                 }
                 foreach (Identifier initialFlag in initialModule.OutpostModuleInfo.ModuleFlags)
@@ -269,7 +315,7 @@ namespace Barotrauma
                     if (pendingModuleFlags.Contains("initialFlag".ToIdentifier())) { pendingModuleFlags.Remove(initialFlag); }
                 }
 
-                if (remainingTries == 1)
+                if (remainingOutpostGenerationTries == 1)
                 {
                     //generation has failed and only one attempt left, try removing duplicate modules
                     pendingModuleFlags = pendingModuleFlags.Distinct().ToList();
@@ -283,34 +329,43 @@ namespace Barotrauma
                     selectedModules,
                     locationType,
                     allowExtendBelowInitialModule: generationParams is RuinGeneration.RuinGenerationParams,
-                    allowDifferentLocationType: remainingTries == 1);
+                    allowDifferentLocationType: remainingOutpostGenerationTries == 1);
 
                 if (GameMain.GameSession?.ForceOutpostModule != null)
                 {
-                    if (remainingTries > 0)
+                    if (remainingOutpostGenerationTries > 0)
                     {
-                        remainingTries--;
+                        remainingOutpostGenerationTries--;
                         continue;
                     }
-                    DebugConsole.ThrowError($"Could not place force outpost module: {GameMain.GameSession.ForceOutpostModule.OutpostModuleInfo.Name}");
-                    GameMain.GameSession.ForceOutpostModule = null;
+                    DebugConsole.ThrowError($"Could not force the outpost module \"{GameMain.GameSession.ForceOutpostModule.OutpostModuleInfo.Name}\" to the outpost. Loading the module as-is...");
                     return null;
+                }
+
+                if (GameMain.GameSession != null)
+                {
+                    GameMain.GameSession.ForceOutpostModule = null;
                 }
 
                 if (pendingModuleFlags.Any(flag => flag != "none"))
                 {
                     if (!allowInvalidOutpost)
                     {
-                        remainingTries--;
-                        if (remainingTries <= 0)
+                        remainingOutpostGenerationTries--;
+                        if (remainingOutpostGenerationTries > 0)
                         {
-                            DebugConsole.ThrowError("Could not generate an outpost with all of the required modules. Some modules may not have enough connections at the edges to generate a valid layout. Pending modules: " + string.Join(", ", pendingModuleFlags));
+                            //tries left -> don't finish generating the outpost, try generating another layout
+                            continue;
                         }
-                        continue;
+                        else
+                        {
+                            //out of tries, log an error, but let the method continue into loading the outpost (even if it doesn't have all the required modules)
+                            DebugConsole.AddSafeError("Could not generate an outpost with all of the required modules. Some modules may not have enough connections at the edges to generate a valid layout. Pending modules: " + string.Join(", ", pendingModuleFlags));
+                        }
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Could not generate an outpost with all of the required modules. Some modules may not have enough connections at the edges to generate a valid layout. Pending modules: " + string.Join(", ", pendingModuleFlags) + ". Won't retry because invalid outposts are allowed.");
+                        DebugConsole.AddSafeError("Could not generate an outpost with all of the required modules. Some modules may not have enough connections at the edges to generate a valid layout. Pending modules: " + string.Join(", ", pendingModuleFlags) + ". Won't retry because invalid outposts are allowed.");
                     }
                 }
 
@@ -346,10 +401,10 @@ namespace Barotrauma
                     EnableFactionSpecificEntities(sub, location);
                     return sub;
                 }
-                remainingTries--;
+                remainingOutpostGenerationTries--;
             }
 
-            DebugConsole.AddSafeError("Failed to generate an outpost without overlapping modules. Trying to use a pre-built outpost instead...");
+            DebugConsole.AddSafeError("Failed to generate an outpost with a valid layout and all the required modules. Trying to use a pre-built outpost instead...");
             return null;
 
             List<MapEntity> loadEntities(Submarine sub)
@@ -444,9 +499,12 @@ namespace Barotrauma
                         selectedModule.Offset =
                             (selectedModule.PreviousGap.WorldPosition + selectedModule.PreviousModule.Offset) -
                             selectedModule.ThisGap.WorldPosition;
-                        if (selectedModule.PreviousGap.ConnectedDoor != null || selectedModule.ThisGap.ConnectedDoor != null)
+                        if (generationParams.AlwaysGenerateHallways)
                         {
-                            selectedModule.Offset += moveDir * generationParams.MinHallwayLength;
+                            if (selectedModule.PreviousGap.ConnectedDoor != null || selectedModule.ThisGap.ConnectedDoor != null)
+                            {
+                                selectedModule.Offset += moveDir * generationParams.MinHallwayLength;
+                            }
                         }
                     }
                     entities[selectedModule] = moduleEntities;
@@ -455,10 +513,13 @@ namespace Barotrauma
                 int maxMoveAmount = Math.Max(2000, selectedModules.Max(m => Math.Max(m.Bounds.Width, m.Bounds.Height)));
 
                 bool overlapsFound = true;
+                PlacedModule overlappingModule1, overlappingModule2, moduleBelowAirlock;
                 int iteration = 0;
+                const int MaxIterations = 20;
                 while (overlapsFound)
                 {
                     overlapsFound = false;
+                    overlappingModule1 = overlappingModule2 = moduleBelowAirlock = null;
                     foreach (PlacedModule placedModule in selectedModules)
                     {
                         if (placedModule.PreviousModule == null) { continue; }
@@ -467,27 +528,59 @@ namespace Barotrauma
                         GetSubsequentModules(placedModule, selectedModules, ref subsequentModules);
                         List<PlacedModule> otherModules = selectedModules.Except(subsequentModules).ToList();
 
-                        int remainingTries = 10;
-                        while (FindOverlap(subsequentModules, otherModules, out var module1, out var module2) && remainingTries > 0)
+                        int remainingOverlapPreventionTries = 10;
+                        while (FindOverlap(subsequentModules, otherModules, out var module1, out var module2) && remainingOverlapPreventionTries > 0)
                         {
+                            overlappingModule1 = module1;
+                            overlappingModule2 = module2;
                             overlapsFound = true;
-                            if (FindOverlapSolution(subsequentModules, module1, module2, selectedModules, maxMoveAmount, out Dictionary<PlacedModule, Vector2> solution))
+                            if (FindOverlapSolution(subsequentModules, module1, module2, selectedModules, generationParams.MinHallwayLength, maxMoveAmount, out Dictionary<PlacedModule, Vector2> solution))
                             {
                                 foreach (KeyValuePair<PlacedModule, Vector2> kvp in solution)
                                 {
-                                    kvp.Key.Offset += kvp.Value;
+                                    kvp.Key.Offset += kvp.Value;                                    
                                 }
                             }
                             else
                             {
                                 break;
                             }
-                            remainingTries--;
+                            remainingOverlapPreventionTries--;
+                        }
+
+                        //check that the module doesn't extend below the airlock and potentially overlap with the sub
+                        if (generationParams is not RuinGenerationParams &&
+                            //if we've already exhausted half of the retries, accept potential overlaps
+                            remainingOutpostGenerationTries > MaxOutpostGenerationRetries / 2 &&
+                            //if the module is horizontally very far, it's ok to expand below the airlock
+                            (placedModule.Bounds.X + placedModule.Offset.X < 5000 && placedModule.Bounds.Right + placedModule.Offset.X > -5000) &&
+                            ModuleBelowInitialModule(placedModule, selectedModules.First()))
+                        {
+                            moduleBelowAirlock = placedModule;
+                            overlapsFound = true;
                         }
                     }
+
                     iteration++;
-                    if (iteration > 10)
+                    if (iteration > MaxIterations)
                     {
+#if DEBUG
+                        string warningMsg = "Failed to create an outpost layout with no overlaps."; 
+                        if (overlappingModule1 != null && overlappingModule2 != null)
+                        {
+                            warningMsg +=  $" Overlapping modules: {overlappingModule1.Info.Name}, {overlappingModule2.Info.Name}.";
+                        }
+                        if (moduleBelowAirlock != null)
+                        {
+                            warningMsg += $" Module below airlock: {moduleBelowAirlock.Info.Name}.";
+                        }                       
+                        if (remainingOutpostGenerationTries > 0)
+                        {
+                            warningMsg += " Retrying...";
+                        }
+
+                        DebugConsole.AddWarning(warningMsg);
+#endif
                         generationFailed = true;
                         break;
                     }
@@ -647,7 +740,8 @@ namespace Barotrauma
         /// <param name="selectedModules">The modules we've already selected to be used in the outpost.</param>
         /// <param name="locationType">The type of the location we're generating the outpost for.</param>
         /// <param name="tryReplacingCurrentModule">If we fail to append to the current module, should we try replacing it with something else and see if we can append to it then?</param>
-        /// <param name="allowExtendBelowInitialModule">Is the module allowed to be placed further down than the initial module (usually the airlock module)?</param>
+        /// <param name="allowExtendBelowInitialModule">Is the module allowed to be placed further down than the initial module (usually the airlock module)? 
+        /// Note that at this point we only determine which module to attach to which, but not the actual positions or bounds of the modules, so it's possible for a module to attach to the side of the airlock but still extend below the airlock if it's very tall for example.</param>
         /// <param name="allowDifferentLocationType">If we fail to find a module suitable for the location type, should we use a module that's meant for a different location type instead?</param>
         private static bool AppendToModule(PlacedModule currentModule,
             List<SubmarineInfo> availableModules,
@@ -886,7 +980,7 @@ namespace Barotrauma
                         Vector2 gapPos2 = otherModule.PreviousModule.Offset + otherModule.PreviousGap.Position + gapEdgeOffset + otherModule.PreviousModule.MoveOffset;
                         if (Submarine.RectContains(rect, gapPos1) || 
                             Submarine.RectContains(rect, gapPos2) || 
-                            MathUtils.GetLineRectangleIntersection(gapPos1, gapPos2, rect, out _))
+                            MathUtils.GetLineWorldRectangleIntersection(gapPos1, gapPos2, rect, out _))
                         {
                             return true;
                         }
@@ -905,6 +999,21 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Check if the lowest point of the module is below the lowest point of the initial (docking) module. 
+        /// This shouldn't happen, because it can cause modules to overlap with the docked sub.
+        /// </summary>
+        private static bool ModuleBelowInitialModule(PlacedModule module, PlacedModule initialModule)
+        {
+            Rectangle bounds = module.Bounds;
+            bounds.Location += (module.Offset + module.MoveOffset).ToPoint();
+
+            Rectangle initialModuleBounds = initialModule.Bounds;
+            initialModuleBounds.Location += (initialModule.Offset + initialModule.MoveOffset).ToPoint();
+
+            return bounds.Y < initialModuleBounds.Y;
+        }
+
+        /// <summary>
         /// Attempt to find a way to move the modules in a way that stops the 2 specific modules from overlapping.
         /// Done by iterating through the modules and testing how much the subsequent modules (i.e. modules that are further from the initial outpost) 
         /// would need to be moved further to solve the overlap. The solution that requires moving the modules the least is chosen.
@@ -919,6 +1028,7 @@ namespace Barotrauma
             IEnumerable<PlacedModule> movableModules, 
             PlacedModule module1, PlacedModule module2, 
             IEnumerable<PlacedModule> allmodules, 
+            float minMoveAmount,
             int maxMoveAmount,
             out Dictionary<PlacedModule, Vector2> solution)
         {
@@ -934,14 +1044,13 @@ namespace Barotrauma
             {
                 if (module.ThisGap.ConnectedDoor == null && module.PreviousGap.ConnectedDoor == null) { continue; }
                 Vector2 moveDir = GetMoveDir(module.ThisGapPosition);
-                Vector2 moveStep = moveDir * 50.0f;
-                Vector2 currentMove = Vector2.Zero;
+                const float moveStep = 50.0f;
+                Vector2 currentMove = moveDir * Math.Max(minMoveAmount, moveStep);
 
                 List<PlacedModule> subsequentModules2 = new List<PlacedModule>();
                 GetSubsequentModules(module, movableModules, ref subsequentModules2);
                 while (currentMove.LengthSquared() < maxMoveAmount * maxMoveAmount)
                 {
-                    currentMove += moveStep;
                     foreach (PlacedModule movedModule in subsequentModules2)
                     {
                         movedModule.MoveOffset = currentMove;
@@ -958,6 +1067,7 @@ namespace Barotrauma
                         }
                         break;
                     }
+                    currentMove += moveDir * moveStep;
                 }
                 foreach (PlacedModule movedModule in allmodules)
                 {
@@ -1022,8 +1132,8 @@ namespace Barotrauma
             }
             modulesWithCorrectFlags = modulesWithCorrectFlags.Where(m => m.OutpostModuleInfo.GapPositions.HasFlag(gapPosition) && m.OutpostModuleInfo.CanAttachToPrevious.HasFlag(gapPosition));
 
-            var suitableModules = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: true, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: true);
-            var suitableModulesForAnyOutpost = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: true, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: false);
+            var suitableModules = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: true, requireCorrectLocationType: true, requireLocationTypeSpecific: true);
+            var suitableModulesForAnyOutpost = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: true, requireCorrectLocationType: true, requireLocationTypeSpecific: false);
             if (!suitableModules.Any())
             {
                 //no suitable module found, see if we can find a "generic" module that's not meant for any specific type of outpost
@@ -1031,12 +1141,12 @@ namespace Barotrauma
                 //still not found, see if we can find something that's otherwise suitable but not meant to attach to the previous module
                 if (!suitableModules.Any())
                 {
-                    suitableModules = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: false, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: true);
+                    suitableModules = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: false, requireCorrectLocationType: true, requireLocationTypeSpecific: true);
                 }
                 //still not found! Try if we can find a generic module that's not meant to attach to the previous module
                 if (!suitableModules.Any())
                 {
-                    suitableModules = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: false, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: false);
+                    suitableModules = GetSuitableModules(modulesWithCorrectFlags, requireAllowAttachToPrevious: false, requireCorrectLocationType: true, requireLocationTypeSpecific: false);
                 }
             }
 
@@ -1078,20 +1188,12 @@ namespace Barotrauma
                 return suitableModule;
             }
 
-            IEnumerable<SubmarineInfo> GetSuitableModules(IEnumerable<SubmarineInfo> modules, bool requireAllowAttachToPrevious, bool requireCorrectLocationType, bool disallowNonLocationTypeSpecific)
+            IEnumerable<SubmarineInfo> GetSuitableModules(IEnumerable<SubmarineInfo> modules, bool requireAllowAttachToPrevious, bool requireCorrectLocationType, bool requireLocationTypeSpecific)
             {
                 IEnumerable<SubmarineInfo> suitable = modules;
                 if (requireCorrectLocationType)
                 {
-                    if (disallowNonLocationTypeSpecific)
-                    {
-                        //don't use OutpostModuleInfo.IsLocationTypeAllowed here - we're trying to choose a module specifically for this location type, not modules suitable for any location type
-                        suitable = modules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
-                    }
-                    else
-                    {
-                        suitable = modules.Where(m => m.OutpostModuleInfo.IsAllowedInLocationType(locationType));
-                    }
+                    suitable = modules.Where(m => m.OutpostModuleInfo.IsAllowedInLocationType(locationType, requireLocationTypeSpecific: requireLocationTypeSpecific));                    
                 }
                 if (requireAllowAttachToPrevious && prevModule != null)
                 {

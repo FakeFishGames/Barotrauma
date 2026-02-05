@@ -14,11 +14,11 @@ namespace Barotrauma
         private float crewListAnimDelay = 0.25f;
         private float missionIconAnimDelay;
 
-        private const float JobColumnWidthPercentage = 0.1f;
-        private const float CharacterColumnWidthPercentage = 0.4f;
-        private const float StatusColumnWidthPercentage = 0.12f;
-        private const float KillColumnWidthPercentage = 0.1f;
-        private const float DeathColumnWidthPercentage = 0.1f;
+        private const float JobColumnWidthPercentage = 0.05f;
+        private const float CharacterColumnWidthPercentage = 0.35f;
+        private const float StatusColumnWidthPercentage = 0.25f;
+        private const float KillColumnWidthPercentage = 0.05f;
+        private const float DeathColumnWidthPercentage = 0.05f;
 
         private int jobColumnWidth, characterColumnWidth, statusColumnWidth, killColumnWidth, deathColumnWidth;
 
@@ -173,7 +173,8 @@ namespace Barotrauma
             List<Mission> missionsToDisplay = new List<Mission>(selectedMissions.Where(m => m.Prefab.ShowInMenus));
             if (startLocation != null)
             {
-                foreach (Mission mission in startLocation.SelectedMissions)
+                //side objectives can't be selected manually (they're always selected), we need to add them separately from SelectedMissions
+                foreach (Mission mission in startLocation.SelectedMissions.Union(startLocation.AvailableMissions.Where(m => m.Prefab.IsSideObjective)))
                 {
                     if (missionsToDisplay.Contains(mission)) { continue; }
                     if (!mission.Prefab.ShowInMenus) { continue; }
@@ -467,7 +468,7 @@ namespace Barotrauma
             };
             if (icon != null)
             {
-                missionIcon = new GUIImage(new RectTransform(new Point(iconSize), content.RectTransform), icon, null, true)
+                missionIcon = new GUIImage(new RectTransform(new Point(iconSize), content.RectTransform), icon, scaleToFit: true)
                 {
                     Color = iconColor,
                     HoverColor = iconColor,
@@ -661,15 +662,18 @@ namespace Barotrauma
             GUIButton jobButton = new GUIButton(new RectTransform(new Vector2(JobColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("tabmenu.job"), style: "GUIButtonSmallFreeScale");
             GUIButton characterButton = new GUIButton(new RectTransform(new Vector2(CharacterColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale");
 
-            if (gameMode is PvPMode)
+            if (gameMode is PvPMode && GameMain.NetworkMember?.RespawnManager != null)
             {
                 var killButton = new GUIButton(new RectTransform(new Vector2(KillColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("killcount"), style: "GUIButtonSmallFreeScale");
                 killColumnWidth = killButton.Rect.Width;
                 var deathButton = new GUIButton(new RectTransform(new Vector2(DeathColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("deathcount"), style: "GUIButtonSmallFreeScale");
                 deathColumnWidth = deathButton.Rect.Width;
             }
-
-            GUIButton statusButton = new GUIButton(new RectTransform(new Vector2(StatusColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("label.statuslabel"), style: "GUIButtonSmallFreeScale");
+            else
+            {
+                GUIButton statusButton = new GUIButton(new RectTransform(new Vector2(StatusColumnWidthPercentage, 1f), headerFrame.RectTransform), TextManager.Get("label.statuslabel"), style: "GUIButtonSmallFreeScale");
+                statusColumnWidth = statusButton.Rect.Width;
+            }
 
             foreach (var btn in headerFrame.GetAllChildren<GUIButton>())
             {
@@ -680,7 +684,6 @@ namespace Barotrauma
 
             jobColumnWidth = jobButton.Rect.Width;
             characterColumnWidth = characterButton.Rect.Width;
-            statusColumnWidth = statusButton.Rect.Width;
 
             GUIListBox crewList = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform))
             {
@@ -758,7 +761,7 @@ namespace Barotrauma
             Character character = characterInfo.Character;
             if (character == null || character.IsDead)
             {
-                if (character == null && characterInfo.IsNewHire && characterInfo.CauseOfDeath == null)
+                if (character == null && (characterInfo.IsNewHire || characterInfo.BotStatus == BotStatus.ActiveService) && characterInfo.CauseOfDeath == null)
                 {
                     statusText = TextManager.Get("CampaignCrew.NewHire");
                     statusColor = GUIStyle.Blue;
@@ -798,19 +801,21 @@ namespace Barotrauma
                 }
             }
 
-            if (gameMode is PvPMode pvpMode)
+            if (gameMode is PvPMode && GameMain.NetworkMember?.RespawnManager != null)
             {
                 new GUITextBlock(new RectTransform(new Point(killColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
                     killCounts.GetValueOrDefault(characterInfo).ToString(), textAlignment: Alignment.Center);
                 new GUITextBlock(new RectTransform(new Point(deathColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
                     deathCounts.GetValueOrDefault(characterInfo).ToString(), textAlignment: Alignment.Center);
             }
-
-            GUITextBlock statusBlock = new GUITextBlock(new RectTransform(new Point(statusColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                ToolBox.LimitString(statusText.Value, GUIStyle.Font, statusColumnWidth), textAlignment: Alignment.Center, textColor: statusColor, font: GUIStyle.SmallFont)
+            else
             {
-                ToolTip = statusText.Value
-            };
+                GUITextBlock statusBlock = new GUITextBlock(new RectTransform(new Point(statusColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
+                    ToolBox.LimitString(statusText.Value, GUIStyle.SmallFont, statusColumnWidth), textAlignment: Alignment.Center, textColor: statusColor, font: GUIStyle.SmallFont)
+                {
+                    ToolTip = statusText.Value
+                };
+            }
 
             frame.FadeIn(animDelay, 0.15f);
             foreach (var child in frame.GetAllChildren())
@@ -903,7 +908,7 @@ namespace Barotrauma
             void SetReputationText(GUITextBlock textBlock)
             {
                 LocalizedString reputationText = Reputation.GetFormattedReputationText(reputation.NormalizedValue, reputation.Value, addColorTags: true);
-                int reputationChange = (int)Math.Round(reputation.Value - initialReputation);
+                int reputationChange = (int)reputation.Value - (int)initialReputation;
                 if (Math.Abs(reputationChange) > 0)
                 {
                     string changeText = $"{(reputationChange > 0 ? "+" : "") + reputationChange}";

@@ -77,6 +77,9 @@ namespace Barotrauma
         public Radiation Radiation;
 
         private bool trackedLocationDiscoveryAndVisitOrder = true;
+        
+        private IOrderedEnumerable<Biome> _orderedBiomes;
+        public IOrderedEnumerable<Biome> OrderedBiomes => _orderedBiomes ??= Biome.Prefabs.GetOrdered();
 
         public Map(CampaignSettings settings)
         {
@@ -232,18 +235,17 @@ namespace Barotrauma
 
             //backwards compatibility (or support for loading maps created with mods that modify the end biome setup):
             //if there's too few end locations, create more
-            int missingOutpostCount = endLocations.First().Biome.EndBiomeLocationCount - endLocations.Count;
-
             Location firstEndLocation = EndLocations[0];
+            Biome endBiome = firstEndLocation.Biome;
+            int missingOutpostCount = endBiome.EndBiomeLocationCount - endLocations.Count;
+
             for (int i = 0; i < missingOutpostCount; i++)
             {
                 Vector2 mapPos = new Vector2(
                     MathHelper.Lerp(firstEndLocation.MapPosition.X, Width, MathHelper.Lerp(0.2f, 0.8f, i / (float)missingOutpostCount)),
                     Height * MathHelper.Lerp(0.2f, 1.0f, (float)rand.NextDouble()));
-                var newEndLocation = new Location(mapPos, generationParams.DifficultyZones, rand, forceLocationType: firstEndLocation.Type, existingLocations: Locations)
-                {
-                    Biome = endLocations.First().Biome
-                };
+                var newEndLocation = new Location(mapPos, generationParams.DifficultyZones, endBiome.Identifier, rand, forceLocationType: firstEndLocation.Type, existingLocations: Locations);
+                newEndLocation.Biome = endBiome;
                 newEndLocation.LevelData = new LevelData(newEndLocation, this, difficulty: 100.0f);
                 Locations.Add(newEndLocation);
                 endLocations.Add(newEndLocation);
@@ -328,7 +330,7 @@ namespace Barotrauma
                 {
                     if (LocationType.Prefabs.TryGet("outpost".ToIdentifier(), out LocationType outpostLocationType))
                     {
-                        otherLocation.ChangeType(campaign, outpostLocationType);
+                        otherLocation.ChangeType(campaign, outpostLocationType, createStores: false);
                     }
                 }
 
@@ -365,6 +367,14 @@ namespace Barotrauma
             {
                 CurrentLocation.ChangeType(campaign, tutorialOutpost);
             }
+            else
+            {
+                var forceStartOutpostType = LocationType.Prefabs.Where(lt => lt.ForceAsStartOutpost).GetRandom(Rand.RandSync.ServerAndClient);
+                if (forceStartOutpostType != null)
+                {
+                    CurrentLocation.ChangeType(campaign, forceStartOutpostType);
+                }
+            }
             Discover(CurrentLocation);
             Visit(CurrentLocation);
             CurrentLocation.CreateStores();
@@ -396,13 +406,16 @@ namespace Barotrauma
                         y + generationParams.VoronoiSiteVariance.Y * Rand.Range(-0.5f, 0.5f, Rand.RandSync.ServerAndClient)));
                 }
             }
+            
+            // put some of this stuff in a helper class, this function is getting unwieldy
+            MapLocationTypeGenerator mapLocationTypeGenerator = new MapLocationTypeGenerator(campaign, this);
 
             Voronoi voronoi = new Voronoi(0.5f);
             List<GraphEdge> edges = voronoi.MakeVoronoiGraph(voronoiSites, Width, Height);
 
             Vector2 margin = new Vector2(
-               Math.Min(10, Width * 0.1f),
-               Math.Min(10, Height * 0.2f));
+                Math.Min(10, Width * 0.1f),
+                Math.Min(10, Height * 0.2f));
 
             float startX = margin.X, endX = Width - margin.X;
             float startY = margin.Y, endY = Height - margin.Y;
@@ -413,8 +426,6 @@ namespace Barotrauma
             }
 
             voronoiSites.Clear();
-            Dictionary<int, List<Location>> locationsPerZone = new Dictionary<int, List<Location>>();
-            bool possibleStartOutpostCreated = false;
             foreach (GraphEdge edge in edges)
             {
                 if (edge.Point1 == edge.Point2) { continue; }
@@ -442,33 +453,18 @@ namespace Barotrauma
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) { position = points[1 - positionIndex]; }
+                    
                     int zone = GetZoneIndex(position.X);
-                    if (!locationsPerZone.ContainsKey(zone))
-                    {
-                        locationsPerZone[zone] = new List<Location>();
-                    }
 
-                    LocationType forceLocationType = null;
-                    if (forceLocationType == null)
-                    {
-                        foreach (LocationType locationType in LocationType.Prefabs.OrderBy(lt => lt.Identifier))
-                        {
-                            if (locationType.MinCountPerZone.TryGetValue(zone, out int minCount) && locationsPerZone[zone].Count(l => l.Type == locationType) < minCount)
-                            {
-                                forceLocationType = locationType;
-                                break;
-                            }
-                        }
-                    }
-
-                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.ServerAndClient), 
-                        requireOutpost: false, forceLocationType: forceLocationType, existingLocations: Locations);
-                    locationsPerZone[zone].Add(newLocations[i]);
+                    newLocations[i] = Location.CreateRandom(position, zone, GetBiome(position.X)?.Identifier, Rand.GetRNG(Rand.RandSync.ServerAndClient),
+                        requireOutpost: false, forceLocationType: null, existingLocations: Locations);
+                    
+                    mapLocationTypeGenerator.AddToLocationsPerZone(zone, newLocations[i]);
                     Locations.Add(newLocations[i]);
                 }
 
                 var newConnection = new LocationConnection(newLocations[0], newLocations[1]);
-                Connections.Add(newConnection);                
+                Connections.Add(newConnection);
             }
 
             //remove connections that are too short
@@ -481,7 +477,6 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                
                 //locations.Remove(connection.Locations[0]);
                 Connections.Remove(connection);
 
@@ -572,7 +567,6 @@ namespace Barotrauma
                 {
                     (zone1, zone2) = (zone2, zone1);
                 }
-
                 if (generationParams.GateCount[zone1] == 0) { continue; }
 
                 if (!connectionsBetweenZones[zone1].Any())
@@ -589,7 +583,7 @@ namespace Barotrauma
                     }
                 }
                 else if (connectionsBetweenZones[zone1].Count() < generationParams.GateCount[zone1] && 
-                    connectionsBetweenZones[zone1].None(c => c.Locations.Contains(connection.Locations[0]) || c.Locations.Contains(connection.Locations[1])))
+                         connectionsBetweenZones[zone1].None(c => c.Locations.Contains(connection.Locations[0]) || c.Locations.Contains(connection.Locations[1])))
                 {
                     connectionsBetweenZones[zone1].Add(connection);
                 }
@@ -599,6 +593,8 @@ namespace Barotrauma
                 }
             }
 
+            var orderedPrefabs = LocationType.Prefabs.GetOrdered();
+            List<Location> forciblyReassignedGateLocations = new List<Location>();
             var gateFactions = campaign.Factions.Where(f => f.Prefab.ControlledOutpostPercentage > 0).OrderBy(f => f.Prefab.Identifier).ToList();
             for (int i = Connections.Count - 1; i >= 0; i--)
             {
@@ -617,20 +613,37 @@ namespace Barotrauma
                 {
                     var leftMostLocation =
                         Connections[i].Locations[0].MapPosition.X < Connections[i].Locations[1].MapPosition.X ?
-                        Connections[i].Locations[0] :
-                        Connections[i].Locations[1];
+                            Connections[i].Locations[0] :
+                            Connections[i].Locations[1];
                     if (!AllowAsBiomeGate(leftMostLocation.Type))
                     {
+                        var potentialGateLocationTypes = orderedPrefabs.Where(AllowAsBiomeGate);
+                        LocationType gateLocationType =
+                            //choose some location type that's allowed in this zone/biome, and has a non zero commonness (instead of some fixed count)
+                            potentialGateLocationTypes.Where(lt => lt.AreaSettings.Any(areaSettings => areaSettings.MatchesLocation(this, leftMostLocation) && areaSettings.Commonness > 0)).GetRandom(Rand.RandSync.ServerAndClient) ??
+                            //if not found, use something with a fixed count
+                            potentialGateLocationTypes.Where(lt => lt.AreaSettings.Any(areaSettings => areaSettings.MatchesLocation(this, leftMostLocation) && areaSettings.MinCount > 0)).GetRandom(Rand.RandSync.ServerAndClient) ??
+                            //if that's not found either, try finding a type that doesn't spawn in any biome, but is allowed as a biome gate
+                            //(a mod might have some special "biome gate" location types that are meant just for the gate locations)
+                            potentialGateLocationTypes.Where(lt => lt.AreaSettings.None(areaSettings => areaSettings.Commonness > 0.0f || areaSettings.HasCounts)).GetRandom(Rand.RandSync.ServerAndClient);
+
+                        if (gateLocationType == null)
+                        {
+                            DebugConsole.ThrowError($"Failed to find a suitable location type for a gate location between zones {zone1} and {zone2}.");
+                            continue;
+                        }
                         leftMostLocation.ChangeType(
                             campaign,
-                            LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => AllowAsBiomeGate(lt)),
-                            createStores: false);
+                            gateLocationType,
+                            createStores: false,
+                            unlockInitialMissions: false);
+                        forciblyReassignedGateLocations.Add(leftMostLocation);
                     }
                     static bool AllowAsBiomeGate(LocationType lt)
                     {
                         //checking for "abandoned" is not strictly necessary here because it's now configured to not be allowed as a biome gate
                         //but might be better to keep it for backwards compatibility (previously we relied only on that check)
-                        return lt.HasOutpost && lt.Identifier != "abandoned" && lt.AllowAsBiomeGate;
+                        return lt.HasOutpost && lt.Identifier != "abandoned" && lt.BiomeGate != LocationType.BiomeGateSetting.Deny;
                     }
 
                     leftMostLocation.IsGateBetweenBiomes = true;
@@ -663,8 +676,8 @@ namespace Barotrauma
                 if (!connection.Locked) { continue; }
                 var rightMostLocation =
                     connection.Locations[0].MapPosition.X > connection.Locations[1].MapPosition.X ?
-                    connection.Locations[0] :
-                    connection.Locations[1];
+                        connection.Locations[0] :
+                        connection.Locations[1];
 
                 //if all of the other connected locations are to the left (= if there's no path forwards from the outpost),
                 //create a new connection to the closest location to the right 
@@ -693,8 +706,18 @@ namespace Barotrauma
 
             //remove orphans
             Locations.RemoveAll(l => !Connections.Any(c => c.Locations.Contains(l)));
+            
+            AssignBiomes(Rand.GetRNG(Rand.RandSync.ServerAndClient));
 
-            AssignBiomes(new MTRandom(ToolBox.StringToInt(Seed)));
+            var gateLocations = Locations.Where(l => l.IsGateBetweenBiomes);
+            foreach (var gateLocation in forciblyReassignedGateLocations)
+            {
+                //remove the gate locations who's types we've reassigned from the remaining types left to assign,
+                //(i.e. if we want just 1 of some location type, and we were forced to choose it as a gate, don't use that type again)
+                //must be done after assigning biomes
+                mapLocationTypeGenerator.RemoveOneFromTotals(gateLocation.Type, gateLocation);
+            }
+            mapLocationTypeGenerator.AssignForcedBiomeGateTypes(gateLocations);
 
             foreach (LocationConnection connection in Connections)
             {
@@ -712,9 +735,14 @@ namespace Barotrauma
             Location startLocation = Locations.MinBy(l => l.MapPosition.X);
             if (LocationType.Prefabs.TryGet("outpost", out LocationType startLocationType))
             {
-                startLocation.ChangeType(campaign, startLocationType, createStores: false);
+                mapLocationTypeGenerator.ChangeLocationTypeAndName(campaign, startLocation, startLocationType);
+                mapLocationTypeGenerator.AddToFilled(startLocation);
             }
 
+            mapLocationTypeGenerator.AssignLocationTypesBasedOnDesiredPosition(gateLocations);
+
+            //create proper level data and stores for all locations
+            //(needs to be done before AssignLocationCounts, since LevelData may be required for the location type changes)
             foreach (Location location in Locations)
             {
                 location.LevelData = new LevelData(location, this, CalculateDifficulty(location.MapPosition.X, location.Biome));
@@ -732,8 +760,16 @@ namespace Barotrauma
                         location.SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.ServerAndClient);
                     }
                 }
-                location.CreateStores(force: true);
             }
+            //needs to be done after the LevelData has been assigned above
+            foreach (var gateLocation in forciblyReassignedGateLocations)
+            {
+                gateLocation.UnlockInitialMissions(Rand.RandSync.ServerAndClient);
+            }
+
+            List<Location> locationsToAssign = Locations.ToList();
+            locationsToAssign.Remove(GetPreviousToEndLocation());
+            mapLocationTypeGenerator.AssignLocationTypesBasedOnCount(gateLocations, locations: locationsToAssign);
 
             foreach (LocationConnection connection in Connections) 
             { 
@@ -741,7 +777,6 @@ namespace Barotrauma
             }
 
             CreateEndLocation(campaign);
-            
             float CalculateDifficulty(float mapPosition, Biome biome)
             {
                 float settingsFactor = campaign.Settings.LevelDifficultyMultiplier;
@@ -780,23 +815,27 @@ namespace Barotrauma
             float zoneWidth = Width / generationParams.DifficultyZones;
             int zoneIndex = (int)Math.Floor(xPos / zoneWidth) + 1;
             zoneIndex = Math.Clamp(zoneIndex, 1, generationParams.DifficultyZones - 1);
-            return Biome.Prefabs.FirstOrDefault(b => b.AllowedZones.Contains(zoneIndex));
+            return OrderedBiomes.FirstOrDefault(b => b.AllowedZones.Contains(zoneIndex));
         }
 
+        /// <summary>
+        /// Assign biomes for the connections between locations, ad for the locations that don't yet have a biome assigned.
+        /// </summary>
         private void AssignBiomes(Random rand)
         {
-            var biomes = Biome.Prefabs;
             float zoneWidth = Width / generationParams.DifficultyZones;
 
             List<Biome> allowedBiomes = new List<Biome>(10);
             for (int i = 0; i < generationParams.DifficultyZones; i++)
             {
+                int zoneIndex = i + 1;
                 allowedBiomes.Clear();
-                allowedBiomes.AddRange(biomes.Where(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i)));
-                float zoneX = zoneWidth * (generationParams.DifficultyZones - i);
+                allowedBiomes.AddRange(OrderedBiomes.Where(b => b.AllowedZones.Contains(zoneIndex)));
+                float zoneX = zoneWidth * (zoneIndex);
 
                 foreach (Location location in Locations)
                 {
+                    if (location.Biome != null) { continue; }
                     if (location.MapPosition.X < zoneX)
                     {
                         location.Biome = allowedBiomes[rand.Next() % allowedBiomes.Count];
@@ -813,6 +852,9 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Connections.All(c => c.Biome != null));
         }
 
+        /// <summary>
+        /// Returns the location prior to the final location. The type of this location is hard-coded just as that of the final location.
+        /// </summary>
         private Location GetPreviousToEndLocation()
         {
             Location previousToEndLocation = null;
@@ -971,9 +1013,8 @@ namespace Barotrauma
             }
         }
 
-
         #endregion Generation
-        
+
         public void MoveToNextLocation()
         {
             if (SelectedLocation == null && Level.Loaded?.EndLocation != null)
@@ -1020,11 +1061,11 @@ namespace Barotrauma
             }
 
             CurrentLocation = SelectedLocation;
+            CurrentLocation.CreateStores();
             Discover(CurrentLocation);
             Visit(CurrentLocation);
             SelectedLocation = null;
 
-            CurrentLocation.CreateStores();
             OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
 
             if (GameMain.GameSession is { Campaign.CampaignMetadata: { } metadata })
@@ -1168,7 +1209,6 @@ namespace Barotrauma
         {
             List<Location> nextLocations = CurrentLocation.Connections.Where(c => !c.Locked).Select(c => c.OtherLocation(CurrentLocation)).ToList();            
             List<Location> undiscoveredLocations = nextLocations.FindAll(l => !l.Discovered);
-            
             if (undiscoveredLocations.Count > 0 && preferUndiscovered)
             {
                 SelectLocation(undiscoveredLocations[Rand.Int(undiscoveredLocations.Count, Rand.RandSync.Unsynced)]);
@@ -1212,7 +1252,19 @@ namespace Barotrauma
         {
             foreach (Location location in Locations)
             {
-                location.LevelData.EventsExhausted = false;
+                if (location.Visited)
+                {
+                    location.WorldStepsSinceVisited++;
+                    if (location.WorldStepsSinceVisited > Location.ClearStoresDelay)
+                    {
+                        location.ClearStores();
+                    }
+                }
+                else
+                {
+                    location.ClearStores();
+                }
+                location.LevelData.ResetExhaustedEventSets();
                 if (location.Discovered)
                 {
                     if (furthestDiscoveredLocation == null ||
@@ -1224,7 +1276,7 @@ namespace Barotrauma
             }
             foreach (LocationConnection connection in Connections)
             {
-                connection.LevelData.EventsExhausted = false;
+                connection.LevelData.ResetExhaustedEventSets();
             }
 
             foreach (Location location in Locations)
@@ -1234,12 +1286,27 @@ namespace Barotrauma
                     continue;
                 }
 
-                if (location == CurrentLocation || location == SelectedLocation || location.IsGateBetweenBiomes) { continue; }
-
-                if (!ProgressLocationTypeChanges(campaign, location) && location.Discovered)
+                bool shouldUpdateStores = location.Discovered;
+                //don't allow the type of the current location or the destination to change (it'd be weird to arrive at a different type of location than the one you were travelling to)
+                //biome gates should also remain unchanged
+                bool shouldProcessLocationTypeChanges = location != CurrentLocation && location != SelectedLocation && !location.IsGateBetweenBiomes;
+                if (shouldProcessLocationTypeChanges &&
+                    ProgressLocationTypeChanges(campaign, location)) 
                 {
-                    location.UpdateStores();
+                    //don't update stores if the location type changed (that recreates the stores anyway)
+                    shouldUpdateStores = false;
                 }
+
+                if (shouldUpdateStores)
+                {
+                    location.UpdateStores(createStoresIfNotCreated: false);
+                }
+            }
+
+            if (CurrentLocation != null)
+            {
+                CurrentLocation.UpdateStores(createStoresIfNotCreated: true);
+                CurrentLocation.WorldStepsSinceVisited = 0;
             }
         }
 
@@ -1259,8 +1326,8 @@ namespace Barotrauma
                 {
                     location.PendingLocationTypeChange =
                         (location.PendingLocationTypeChange.Value.typeChange,
-                        location.PendingLocationTypeChange.Value.delay - 1,
-                        location.PendingLocationTypeChange.Value.parentMission);
+                            location.PendingLocationTypeChange.Value.delay - 1,
+                            location.PendingLocationTypeChange.Value.parentMission);
                     if (location.PendingLocationTypeChange.Value.delay <= 0)
                     {
                         return ChangeLocationType(campaign, location, location.PendingLocationTypeChange.Value.typeChange);
@@ -1291,8 +1358,8 @@ namespace Barotrauma
                     {
                         location.PendingLocationTypeChange = 
                             (selectedTypeChange,
-                            Rand.Range(selectedTypeChange.RequiredDurationRange.X, selectedTypeChange.RequiredDurationRange.Y),
-                            null);
+                                Rand.Range(selectedTypeChange.RequiredDurationRange.X, selectedTypeChange.RequiredDurationRange.Y),
+                                parentMission: null);
                     }
                     else
                     {
@@ -1338,7 +1405,7 @@ namespace Barotrauma
             {
                 location.ClearMissions();
             }
-            location.ChangeType(campaign, newType);
+            location.ChangeType(campaign, newType, createStores: false);
             ChangeLocationTypeProjSpecific(location, prevName, change);
             foreach (var requirement in change.Requirements)
             {
@@ -1409,9 +1476,13 @@ namespace Barotrauma
             }
         }
 
-        public void Visit(Location location)
+        public void Visit(Location location, bool resetTimeSinceVisited = true)
         {
             if (location is null) { return; }
+            if (resetTimeSinceVisited)
+            {
+                location.WorldStepsSinceVisited = 0;
+            }
             if (locationsVisited.Contains(location)) { return; }
             locationsVisited.Add(location);
             RemoveFogOfWarProjSpecific(location);
@@ -1510,23 +1581,22 @@ namespace Barotrauma
                         }
                         location.LoadLocationTypeChange(subElement);
 
+                        location.LoadChangingProperties(subElement, campaign);
+
                         // Backwards compatibility: if the discovery status is defined in the location element,
                         // the game was saved using when the discovery order still wasn't being tracked
                         if (subElement.GetAttributeBool("discovered", false))
                         {
                             Discover(location);
-                            Visit(location);
+                            Visit(location, resetTimeSinceVisited: false);
                             trackedLocationDiscoveryAndVisitOrder = false;
                         }
 
                         Identifier locationType = subElement.GetAttributeIdentifier("type", Identifier.Empty);
                         LocalizedString prevLocationName = location.DisplayName;
                         LocationType prevLocationType = location.Type;
-                        LocationType newLocationType = LocationType.Prefabs.Find(lt => lt.Identifier == locationType) ?? LocationType.Prefabs.First();
+                        LocationType newLocationType = LocationType.Prefabs.Find(lt => lt.Identifier == locationType) ?? LocationType.Prefabs.GetOrdered().First();
                         location.ChangeType(campaign, newLocationType);
-
-                        var factionIdentifier = subElement.GetAttributeIdentifier("faction", Identifier.Empty);
-                        location.Faction = factionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == factionIdentifier);
 
                         if (showNotifications && prevLocationType != location.Type)
                         {
@@ -1537,9 +1607,6 @@ namespace Barotrauma
                                 location.TimeSinceLastTypeChange = 0;
                             }
                         }
-
-                        var secondaryFactionIdentifier = subElement.GetAttributeIdentifier("secondaryfaction", Identifier.Empty);
-                        location.SecondaryFaction = secondaryFactionIdentifier.IsEmpty ? null : campaign.Factions.Find(f => f.Prefab.Identifier == secondaryFactionIdentifier);
 
                         location.LoadStores(subElement);
                         location.LoadMissions(subElement);
@@ -1563,16 +1630,24 @@ namespace Barotrauma
                         break;
                     case "discovered":
                         bool trackedVisitedEmptyLocations = subElement.GetAttributeBool("trackedvisitedemptylocations", false);
+                        int[] discoveredIndices = subElement.GetAttributeIntArray("indices", Array.Empty<int>());
+                        foreach (int discoveredIndex in discoveredIndices)
+                        {
+                            Discover(Locations[discoveredIndex]);
+                        }
+                        //backwards compatibility
                         foreach (var childElement in subElement.GetChildElements("location"))
                         {
                             if (GetLocation(childElement) is Location l)
                             {
                                 Discover(l);
+                                //even older backwards compatibility: previously we didn't track whether you've "visited" empty locations,
+                                //nor the order in which locations are visited - we need to handle that here
                                 if (!trackedVisitedEmptyLocations)
                                 {
                                     if (!l.HasOutpost())
                                     {
-                                        Visit(l);
+                                        Visit(l, resetTimeSinceVisited: false);
                                     }
                                     trackedLocationDiscoveryAndVisitOrder = false;
                                 }
@@ -1580,11 +1655,17 @@ namespace Barotrauma
                         }
                         break;
                     case "visited":
+                        int[] visitedIndices = subElement.GetAttributeIntArray("indices", Array.Empty<int>());
+                        foreach (int visitedIndex in visitedIndices)
+                        {
+                            Visit(Locations[visitedIndex], resetTimeSinceVisited: false);
+                        }
+                        //backwards compatibility
                         foreach (var childElement in subElement.GetChildElements("location"))
                         {
                             if (GetLocation(childElement) is Location l)
                             {
-                                Visit(l);
+                                Visit(l, resetTimeSinceVisited: false);
                             }
                         }
                         break;
@@ -1596,7 +1677,7 @@ namespace Barotrauma
                     if (index < 0) { return null; }
                     return Locations[index];
                 }
-
+                
             }
 
             void Discover(Location location)
@@ -1708,25 +1789,15 @@ namespace Barotrauma
             if (locationsDiscovered.Any())
             {
                 var discoveryElement = new XElement("discovered",
-                    new XAttribute("trackedvisitedemptylocations", true));
-                foreach (Location location in locationsDiscovered)
-                {
-                    int index = Locations.IndexOf(location);
-                    var locationElement = new XElement("location", new XAttribute("i", index));
-                    discoveryElement.Add(locationElement);
-                }
+                    new XAttribute("trackedvisitedemptylocations", true),
+                    new XAttribute("indices", string.Join(',', locationsDiscovered.Select(l => Locations.IndexOf(l)))));
                 mapElement.Add(discoveryElement);
             }
 
             if (locationsVisited.Any())
             {
-                var visitElement = new XElement("visited");
-                foreach (Location location in locationsVisited)
-                {
-                    int index = Locations.IndexOf(location);
-                    var locationElement = new XElement("location", new XAttribute("i", index));
-                    visitElement.Add(locationElement);
-                }
+                var visitElement = new XElement("visited",
+                    new XAttribute("indices", string.Join(',', locationsVisited.Select(l => Locations.IndexOf(l)))));
                 mapElement.Add(visitElement);
             }
 

@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private Vector3 velocity;
 
-        private float depth;
+        public float Depth { get; private set; }
 
         private float alpha = 1.0f;
         
@@ -41,6 +41,8 @@ namespace Barotrauma
         public Swarm Swarm;
 
         Vector2 drawPosition;
+
+        private bool flippedHorizontally;
 
         public Vector2[,] CurrentSpriteDeformation
         {
@@ -88,6 +90,8 @@ namespace Barotrauma
                 Rand.Range(-prefab.Speed, prefab.Speed, Rand.RandSync.ClientOnly),
                 Rand.Range(0.0f, prefab.WanderZAmount, Rand.RandSync.ClientOnly));
 
+            Depth = Rand.Range(prefab.MinDepth, prefab.MaxDepth, Rand.RandSync.ClientOnly);
+
             checkWallsTimer = Rand.Range(0.0f, CheckWallsInterval, Rand.RandSync.ClientOnly);
 
             foreach (var subElement in prefab.Config.Elements())
@@ -104,6 +108,7 @@ namespace Barotrauma
                     default:
                         continue;
                 }
+                int j = 0;
                 foreach (XElement animationElement in subElement.Elements())
                 {
                     SpriteDeformation deformation = null;
@@ -118,7 +123,21 @@ namespace Barotrauma
                         deformation = SpriteDeformation.Load(animationElement, prefab.Name);
                         if (deformation != null)
                         {
+                            deformation.Params = Prefab.SpriteDeformations[j].Params;
                             uniqueSpriteDeformations.Add(deformation);
+                            if (prefab.DeformableSprite != null)
+                            {
+                                if (deformation.Resolution.X > prefab.DeformableSprite.Subdivisions.X ||
+                                    deformation.Resolution.Y > prefab.DeformableSprite.Subdivisions.Y)
+                                {
+                                    DebugConsole.AddWarning(
+                                        $"Potential error in background creature {Prefab.Identifier}: deformation {deformation.GetType()} has a larger resolution ({deformation.Resolution})"+
+                                        $" than the amount of subdivisions on the deformable sprite ({prefab.DeformableSprite.Subdivisions}). Should the sprite be subdivided further to make full use of the deformation?",
+                                        contentPackage: Prefab.ContentPackage);
+                                }
+                            }
+
+                            j++;
                         }
                     }
                     if (deformation != null)
@@ -127,12 +146,14 @@ namespace Barotrauma
                     }
                 }
             }
+
+            flashTimer = Rand.Range(0.0f, prefab.FlashInterval, Rand.RandSync.Unsynced);
         }
         
         public void Update(float deltaTime)
         {
             position += new Vector2(velocity.X, velocity.Y) * deltaTime;
-            depth = MathHelper.Clamp(depth + velocity.Z * deltaTime, Prefab.MinDepth, Prefab.MaxDepth * 10);
+            Depth = MathHelper.Clamp(Depth + velocity.Z * deltaTime, Prefab.MinDepth, Prefab.MaxDepth);
 
             if (Prefab.FlashInterval > 0.0f)
             {
@@ -144,7 +165,7 @@ namespace Barotrauma
                 else
                 {
                     //value goes from 0 to 1 and back to 0 during the flash
-                    alpha = (float)Math.Sin(-flashTimer / Prefab.FlashDuration * MathHelper.Pi) * PerlinNoise.GetPerlin((float)Timing.TotalTime * 0.1f, (float)Timing.TotalTime * 0.2f);
+                    alpha = (float)Math.Sin(-flashTimer / Prefab.FlashDuration * MathHelper.Pi) * PerlinNoise.GetPerlin((float)Timing.TotalTime, (float)Timing.TotalTime * 0.5f);
                     if (flashTimer < -Prefab.FlashDuration)
                     {
                         flashTimer = Prefab.FlashInterval;
@@ -228,7 +249,13 @@ namespace Barotrauma
 
             velocity = Vector3.Lerp(velocity, new Vector3(Steering.X, Steering.Y, velocity.Z), deltaTime);
 
-            UpdateDeformations(deltaTime);            
+            //only flip if there's some horizontal movement speed (10% of the creature's speed)
+            //otherwise a creature swimming roughly up/down can flip around very frequently when the horizontal speed fluctuates around 0
+            if (Math.Abs(velocity.X) > Prefab.Speed * 0.1f)
+            {
+                flippedHorizontally = !Prefab.DisableFlipping && velocity.X < 0.0f;
+            }
+            UpdateDeformations(deltaTime, flippedHorizontally);            
         }
 
         public void DrawLightSprite(SpriteBatch spriteBatch, Camera cam)
@@ -238,12 +265,17 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            Draw(spriteBatch, 
-                cam, 
-                Prefab.Sprite, 
-                Prefab.DeformableSprite, 
-                CurrentSpriteDeformation,
-                Color.Lerp(Color.White, Level.Loaded.BackgroundColor, depth / Math.Max(MaxDepth, Prefab.MaxDepth)) * alpha);
+            Color color =
+                Prefab.FadeOut ?
+                Color.Lerp(Color.White, Level.Loaded.BackgroundColor, Depth / Prefab.FadeOutDepth) * alpha :
+                Color.White * alpha;
+
+            Draw(spriteBatch,
+                cam,
+                Prefab.Sprite,
+                Prefab.DeformableSprite,
+                CurrentSpriteDeformation, 
+                color);
         }
 
         private void Draw(SpriteBatch spriteBatch, Camera cam, Sprite sprite, DeformableSprite deformableSprite, Vector2[,] currentSpriteDeformation, Color color)
@@ -255,7 +287,7 @@ namespace Barotrauma
             if (!Prefab.DisableRotation)
             {
                 rotation = MathUtils.VectorToAngle(new Vector2(velocity.X, -velocity.Y));
-                if (velocity.X < 0.0f) { rotation -= MathHelper.Pi; }
+                if (flippedHorizontally) { rotation -= MathHelper.Pi; }
             }
 
             drawPosition = GetDrawPosition(cam);
@@ -266,8 +298,8 @@ namespace Barotrauma
                 color,
                 rotation, 
                 scale,
-                Prefab.DisableFlipping || velocity.X > 0.0f ? SpriteEffects.None : SpriteEffects.FlipHorizontally,
-                Math.Min(depth / MaxDepth, 1.0f));
+                flippedHorizontally ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                Math.Min(Depth / MaxDepth, 1.0f));
 
             if (deformableSprite != null)
             {
@@ -280,29 +312,29 @@ namespace Barotrauma
                     deformableSprite.Reset();
                 }
                 deformableSprite?.Draw(cam,
-                    new Vector3(drawPosition.X, drawPosition.Y, Math.Min(depth / 10000.0f, 1.0f)),
+                    new Vector3(drawPosition.X, drawPosition.Y, Math.Min(Depth / 10000.0f, 1.0f)),
                     deformableSprite.Origin,
                     rotation,
                     Vector2.One * scale,
                     color,
-                    mirror: Prefab.DisableFlipping || velocity.X <= 0.0f);
+                    mirror: flippedHorizontally);
             }
         }
 
         public Vector2 GetDrawPosition(Camera cam)
         {
             Vector2 drawPosition = WorldPosition;
-            if (depth >= 0)
+            if (Depth >= 0)
             {
                 Vector2 camOffset = drawPosition - cam.WorldViewCenter;
-                drawPosition -= camOffset * depth / MaxDepth;
+                drawPosition -= camOffset * Depth / MaxDepth;
             }
             return drawPosition;
         }
 
         public float GetScale()
         {
-            return Math.Max(1.0f - depth / MaxDepth, 0.05f) * Prefab.Scale;
+            return Math.Max(1.0f - Depth / MaxDepth, 0.05f) * Prefab.Scale;
         }
 
         public Rectangle GetExtents(Camera cam)
@@ -328,7 +360,7 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateDeformations(float deltaTime)
+        private void UpdateDeformations(float deltaTime, bool flippedHorizontally)
         {
             foreach (SpriteDeformation deformation in uniqueSpriteDeformations)
             {
@@ -336,11 +368,13 @@ namespace Barotrauma
             }
             if (spriteDeformations.Count > 0)
             {
-                CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, Prefab.DeformableSprite.Size);
+                CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, Prefab.DeformableSprite.Size, 
+                    flippedHorizontally: flippedHorizontally);
             }
             if (lightSpriteDeformations.Count > 0)
             {
-                CurrentLightSpriteDeformation = SpriteDeformation.GetDeformation(lightSpriteDeformations, Prefab.DeformableLightSprite.Size);
+                CurrentLightSpriteDeformation = SpriteDeformation.GetDeformation(lightSpriteDeformations, Prefab.DeformableLightSprite.Size, 
+                    flippedHorizontally: flippedHorizontally);
             }
         }
     }

@@ -77,7 +77,7 @@ namespace Barotrauma
                         ChangeItemTeam(Submarine.MainSub ?? Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamID), allowStealing: true);
                         if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
-                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamID, npc.Inventory.AllItems));
+                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamID, npc.Inventory.FindAllItems(recursive: true)));
                         }                  
                     }
                     else if (RemoveFromCrew && npc.TeamID is CharacterTeamType.Team1 or CharacterTeamType.Team2)
@@ -95,7 +95,7 @@ namespace Barotrauma
                         ChangeItemTeam(sub, false);
                         if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
-                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.RemoveFromCrewEventData(TeamID, npc.Inventory.AllItems));
+                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.RemoveFromCrewEventData(TeamID, npc.Inventory.FindAllItems(recursive: true)));
                         }
                     }   
                 }

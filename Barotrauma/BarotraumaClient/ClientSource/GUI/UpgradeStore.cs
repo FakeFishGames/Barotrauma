@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -127,9 +128,10 @@ namespace Barotrauma
             Campaign.OnMoneyChanged.RegisterOverwriteExisting(eventId, _ => RequestRefresh());
         }
 
-        public void RequestRefresh()
+        public void RequestRefresh(bool refreshUpgrades = false)
         {
             needsRefresh = true;
+            if (refreshUpgrades) { SelectTab(UpgradeTab.Upgrade); }           
         }
 
         private void RefreshAll()
@@ -673,6 +675,10 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (!upgrades.ContainsKey(category) && HasSwappableItems(category))
+                {
+                    upgrades.Add(category, new List<UpgradePrefab>());                    
+                }
             }
 
             foreach (var (category, prefabs) in upgrades)
@@ -771,20 +777,28 @@ namespace Barotrauma
         {
             if (Submarine.MainSub == null) { return false; }
             subItems ??= GetSubItems();
-            return subItems.Any(i =>
-                i.Prefab.SwappableItem != null &&
-                !i.IsHidden && i.AllowSwapping &&
-                (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) &&
-                Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
+            return subItems.Any(item => HasSwappableItems(category, item));
         }
 
+        private static bool HasSwappableItems(UpgradeCategory category, Item item)
+        {
+            if (Submarine.MainSub == null) { return false; }
+            return 
+                item.Prefab.SwappableItem != null &&
+                !item.IsHidden && item.AllowSwapping &&
+                (item.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == item.Prefab.Identifier)) &&
+                Submarine.MainSub.IsEntityFoundOnThisSub(item, true) && category.ItemTags.Any(t => item.HasTag(t));
+        }
         private static List<Item> GetSubItems() => Submarine.MainSub?.GetItems(true) ?? new List<Item>();
 
         private void SelectUpgradeCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine)
         {
             if (selectedUpgradeCategoryLayout == null) { return; }
 
-            customizeTabOpen = false;
+            bool hasSwappableItems = HasSwappableItems(category);
+            bool hasUpgradeModules = prefabs.Count > 0;
+
+            customizeTabOpen = !hasUpgradeModules && hasSwappableItems;
 
             GUIComponent[] categoryFrames = GetFrames(category);
             foreach (GUIComponent itemFrame in itemPreviews.Values)
@@ -799,9 +813,7 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(rectT(1.0f, 0.4f, selectedUpgradeCategoryLayout));
             GUIFrame paddedFrame = new GUIFrame(rectT(0.93f, 0.9f, frame, Anchor.Center), style: null);
 
-            bool hasSwappableItems = HasSwappableItems(category);
-
-            float listHeight = hasSwappableItems ? 0.9f : 1.0f;
+            float listHeight = hasSwappableItems && hasUpgradeModules ? 0.9f : 1.0f;
 
             GUIListBox prefabList = new GUIListBox(rectT(1.0f, listHeight, paddedFrame, Anchor.BottomLeft))
             {
@@ -810,7 +822,8 @@ namespace Barotrauma
                 ScrollBarVisible = true
             };
 
-            if (hasSwappableItems)
+            //both swappable items and upgrade modules -> create 2 tabs
+            if (hasSwappableItems && hasUpgradeModules)
             {
                 GUILayoutGroup buttonLayout = new GUILayoutGroup(rectT(1.0f, 0.1f, paddedFrame, anchor: Anchor.TopLeft), isHorizontal: true);
 
@@ -852,8 +865,15 @@ namespace Barotrauma
                     return true;
                 };
             }
-
-            CreateUpgradePrefabList(prefabList, category, prefabs, submarine);
+            //only either upgrade modules or swappable items -> just create the list
+            else if (hasUpgradeModules)
+            {
+                CreateUpgradePrefabList(prefabList, category, prefabs, submarine);
+            }
+            else if (hasSwappableItems)
+            {
+                CreateSwappableItemList(prefabList, category, submarine);
+            }
         }
 
         private void CreateUpgradePrefabList(GUIListBox parent, UpgradeCategory category, List<UpgradePrefab> prefabs, Submarine submarine)
@@ -930,7 +950,7 @@ namespace Barotrauma
             GUILayoutGroup buttonLayout = new GUILayoutGroup(rectT(1f, 1f, toggleButton.Frame), isHorizontal: true);
 
             LocalizedString slotText = "";
-            if (linkedItems.Count() > 1)
+            if (linkedItems.Count > 1)
             {
                 slotText = TextManager.GetWithVariable("weaponslot", "[number]", string.Join(", ", linkedItems.Select(it => (swappableEntities.IndexOf(it) + 1).ToString())));
             }
@@ -959,7 +979,7 @@ namespace Barotrauma
             List<GUIFrame> frames = new List<GUIFrame>();
             if (currentOrPending != null)
             {
-                bool canUninstall = item.PendingItemSwap != null || !(currentOrPending.SwappableItem?.ReplacementOnUninstall.IsEmpty ?? true);
+                bool canUninstall = HasPermission && (item.PendingItemSwap != null || !(currentOrPending.SwappableItem?.ReplacementOnUninstall.IsEmpty ?? true));
 
                 bool isUninstallPending = item.Prefab.SwappableItem != null && item.PendingItemSwap?.Identifier == item.Prefab.SwappableItem.ReplacementOnUninstall;
                 if (isUninstallPending) { canUninstall = false; }
@@ -1011,7 +1031,8 @@ namespace Barotrauma
                     buttonStyle: isPurchased ? "WeaponInstallButton" : "StoreAddToCrateButton").Frame);
 
                 if (!(frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton buyButton)) { continue; }
-                if (PlayerBalance >= price)
+
+                if (HasPermission && PlayerBalance >= price)
                 {
                     buyButton.Enabled = true;
                     buyButton.OnClicked += (button, o) =>
@@ -1253,7 +1274,7 @@ namespace Barotrauma
 
             if (!prefabFrame.BuyButton.TryUnwrap(out BuyButtonFrame buyButtonFrame)) { return; }
 
-            if (!HasPermission || !prefab.IsApplicable(submarine.Info) || (itemsOnSubmarine != null && !itemsOnSubmarine.Any(it => category.CanBeApplied(it, prefab))))
+            if (!prefab.IsApplicable(submarine.Info) || (itemsOnSubmarine != null && !itemsOnSubmarine.Any(it => category.CanBeApplied(it, prefab))))
             {
                 prefabFrame.Frame.Enabled = false;
                 prefabFrame.Description.Enabled = false;
@@ -1270,12 +1291,14 @@ namespace Barotrauma
                     ("[amount]", prefab.Price.GetBuyPrice(prefab, Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation, characterList).ToString()));
                 currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
                 {
-                    if (GameMain.NetworkMember != null)
+                    if (Campaign.UpgradeManager.TryPurchaseUpgrade(prefab, category))
                     {
-                        WaitForServerUpdate = true;
+                        if (GameMain.NetworkMember != null)
+                        {
+                            WaitForServerUpdate = true;
+                        }
+                        GameMain.Client?.SendCampaignState();
                     }
-                    Campaign.UpgradeManager.PurchaseUpgrade(prefab, category);
-                    GameMain.Client?.SendCampaignState();
                     return true;
                 }, overrideConfirmButtonSound: GUISoundType.ConfirmTransaction);
 
@@ -1370,9 +1393,10 @@ namespace Barotrauma
             Item[] entitiesOnSub = drawnSubmarine.GetItems(true).Where(i => drawnSubmarine.IsEntityFoundOnThisSub(i, true)).ToArray();
             foreach (UpgradeCategory category in UpgradeCategory.Categories)
             {
-                //hide categories with no upgrades in them
-                if (UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category))) { continue; }
-                if (entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
+                //hide categories with no upgrades or swappables in them
+                bool hasSwappableItems = HasSwappableItems(category);
+                if (!hasSwappableItems && UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category))) { continue; }
+                if (hasSwappableItems || entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
                 {
                     yield return category;
                 }
@@ -1534,7 +1558,7 @@ namespace Barotrauma
 
             description.Padding = new Vector4(description.Padding.X, 24 * GUI.Scale, description.Padding.Z, description.Padding.W);
             List<Entity> pointsOfInterest = (from category in UpgradeCategory.Categories from item in submarine.GetItems(UpgradeManager.UpgradeAlsoConnectedSubs)
-                                             where category.CanBeApplied(item, null) && item.IsPlayerTeamInteractable select item).Cast<Entity>().Distinct().ToList();
+                                             where (category.CanBeApplied(item, null) || HasSwappableItems(category, item)) && item.IsPlayerTeamInteractable select item).Cast<Entity>().Distinct().ToList();
 
             List<ushort> ids = GameMain.GameSession.SubmarineInfo?.LeftBehindDockingPortIDs ?? new List<ushort>();
             pointsOfInterest.AddRange(submarine.GetItems(UpgradeManager.UpgradeAlsoConnectedSubs).Where(item => ids.Contains(item.ID)));
@@ -1702,7 +1726,7 @@ namespace Barotrauma
 
             if (buttonParent.FindChild(UpgradeStoreUserData.BuyButton, recursive: true) is GUIButton button)
             {
-                bool canBuy = !WaitForServerUpdate && !isMax && campaign.GetBalance() >= price && prefab.HasResourcesToUpgrade(Character.Controlled, currentLevel + 1);
+                bool canBuy = !WaitForServerUpdate && HasPermission && !isMax && campaign.GetBalance() >= price && prefab.HasResourcesToUpgrade(Character.Controlled, currentLevel + 1);
 
                 button.Enabled = canBuy;
             }
@@ -1719,12 +1743,12 @@ namespace Barotrauma
                 }
             }
 
-            static void CreateMaterialCosts(GUIListBox list, UpgradePrefab prefab, int targetLevel)
+            static void CreateMaterialCosts(GUIListBox list, UpgradePrefab upgradePrefab, int targetLevel)
             {
                 list.Content.ClearChildren();
                 var allItems = CargoManager.FindAllItemsOnPlayerAndSub(Character.Controlled);
 
-                var resources = prefab.GetApplicableResources(targetLevel);
+                var resources = upgradePrefab.GetApplicableResources(targetLevel);
 
                 foreach (ApplicableResourceCollection collection in resources)
                 {
@@ -1745,7 +1769,7 @@ namespace Barotrauma
 
                     bool hasItems = collection.Cost.Amount <= allItems.Count(collection.Cost.MatchesItem);
 
-                    Sprite icon = defaultItemPrefab.InventoryIcon ?? prefab.Sprite;
+                    Sprite icon = defaultItemPrefab.InventoryIcon ?? defaultItemPrefab.Sprite;
                     Color iconColor = defaultItemPrefab.InventoryIcon is null ? defaultItemPrefab.SpriteColor : defaultItemPrefab.InventoryIconColor;
 
                     GUIImage itemIcon = new GUIImage(new RectTransform(Vector2.One, itemFrame.RectTransform, scaleBasis: ScaleBasis.Smallest, anchor: Anchor.Center), sprite: icon, scaleToFit: true)
@@ -1774,7 +1798,7 @@ namespace Barotrauma
                         if (index > length) { index = 0; }
 
                         ItemPrefab currentPrefab = collection.MatchingItems[(int)MathF.Floor(index)];
-                        Sprite icon = currentPrefab.InventoryIcon ?? prefab.Sprite;
+                        Sprite icon = currentPrefab.InventoryIcon ?? currentPrefab.Sprite;
                         Color iconColor = currentPrefab.InventoryIcon is null ? currentPrefab.SpriteColor : currentPrefab.InventoryIconColor;
                         itemIcon.Sprite = icon;
                         itemIcon.Color = hasItems ? iconColor : iconColor * 0.9f;
@@ -1799,7 +1823,7 @@ namespace Barotrauma
             // Disables the parent and only re-enables if the submarine contains valid items
             if (!category.IsWallUpgrade && drawnSubmarine?.Info != null)
             {
-                if (UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category) && p.GetMaxLevel(drawnSubmarine.Info) > 0))
+                if (UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category) && p.GetMaxLevel(drawnSubmarine.Info) > 0) && !HasSwappableItems(category))
                 {
                     parent.ToolTip = TextManager.Get("upgradecategorynotapplicable");
                     parent.Enabled = false;
@@ -1915,7 +1939,7 @@ namespace Barotrauma
             return frames.ToArray();
         }
 
-        private bool HasPermission => true;
+        private static bool HasPermission => CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageCampaign);
 
         // just a shortcut to create new RectTransforms since all the new RectTransform and new Vector2 confuses my IDE (and me)
         private static RectTransform rectT(float x, float y, GUIComponent parentComponent, Anchor anchor = Anchor.TopLeft, ScaleBasis scaleBasis = ScaleBasis.Normal)

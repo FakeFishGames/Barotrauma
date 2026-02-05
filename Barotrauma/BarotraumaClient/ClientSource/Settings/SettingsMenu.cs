@@ -811,9 +811,14 @@ namespace Barotrauma
             DropdownEnum(leftColumn, v => TextManager.Get($"InteractionLabels.{v}"), null, unsavedConfig.InteractionLabelDisplayMode, v => unsavedConfig.InteractionLabelDisplayMode = v);
 
             Label(rightColumn, TextManager.Get("HUDScale"), GUIStyle.SubHeadingFont);
-            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
+            // Restricts the max scale to 110% on 16:9, and to 100% on 4:3.
+            // Higher scales are allowed for wide aspect ratios, up to 125%.
+            //float scalar = MathUtils.InverseLerp(0f, 1.0f, 0.4f - GUI.AspectRatioDifference);
+            //float maxScale = MathHelper.Lerp(1.0f, 1.25f, scalar);
+            const float maxScale = 1.25f;
+            Slider(rightColumn, (0.75f, maxScale), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
             Label(rightColumn, TextManager.Get("InventoryScale"), GUIStyle.SubHeadingFont);
-            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
+            Slider(rightColumn, (0.75f, maxScale), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
             Label(rightColumn, TextManager.Get("TextScale"), GUIStyle.SubHeadingFont);
             Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.TextScale, v => unsavedConfig.Graphics.TextScale = v);
             Spacer(rightColumn);

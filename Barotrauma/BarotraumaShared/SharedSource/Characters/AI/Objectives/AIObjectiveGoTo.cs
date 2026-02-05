@@ -10,8 +10,16 @@ namespace Barotrauma
     class AIObjectiveGoTo : AIObjective
     {
         public override Identifier Identifier { get; set; } = "go to".ToIdentifier();
+        public override string DebugTag => $"{Identifier} ({Target?.ToString() ?? "none"})";
 
         public override bool KeepDivingGearOn => GetTargetHull() == null;
+
+        /// <summary>
+        /// Is the goal of this objective to get diving gear (i.e. has it been created by <see cref="AIObjectiveFindDivingGear"/>)? 
+        /// If so, the objective won't attempt to create another objective if the path requires diving gear 
+        /// (wouldn't make sense to start looking for diving gear so the bot can get to a room they're trying to get diving gear from!)
+        /// </summary>
+        public bool IsFindDivingGearSubObjective;
 
         private AIObjectiveFindDivingGear findDivingGear;
         private readonly bool repeat;
@@ -95,7 +103,32 @@ namespace Barotrauma
         protected override bool AllowOutsideSubmarine => AllowGoingOutside;
         protected override bool AllowInAnySub => true;
 
-        public Identifier DialogueIdentifier { get; set; } = "dialogcannotreachtarget".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a target. 
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the target.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachTarget = "dialogcannotreachtarget".ToIdentifier();
+        /// <summary>
+        /// Generic NPC line for when the NPC fails to find a path to some place/target.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachPlace = "dialogcannotreachplace".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a patient they're trying to treat. 
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the target.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachPatient = "dialogcannotreachpatient".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a fire they're trying to extinguish.
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the room the NPC is trying to get to.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachFire = "dialogcannotreachfire".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to a leak they're trying to fix.
+        /// Note that this line includes the tag [name], which needs to be replaced with the name of the room the NPC is trying to get to.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachLeak = "dialogcannotreachleak".ToIdentifier();
+
+        public Identifier DialogueIdentifier { get; set; } = DialogCannotReachPlace;
         private readonly Identifier ExoSuitRefuel = "dialog.exosuit.refuel".ToIdentifier();
         private readonly Identifier ExoSuitOutOfFuel = "dialog.exosuit.outoffuel".ToIdentifier();
             
@@ -116,12 +149,12 @@ namespace Barotrauma
                 Abandon = !isOrder;
                 return Priority;
             }
-            if (Target == null || Target is Entity e && e.Removed)
+            if (Target is null or Entity { Removed: true })
             {
                 Priority = 0;
                 Abandon = !isOrder;
             }
-            if (IgnoreIfTargetDead && Target is Character character && character.IsDead)
+            if (IgnoreIfTargetDead && Target is Character { IsDead: true })
             {
                 Priority = 0;
                 Abandon = !isOrder;
@@ -182,6 +215,17 @@ namespace Barotrauma
             if (DialogueIdentifier == null) { return; }
             if (!SpeakIfFails) { return; }
             if (SpeakCannotReachCondition != null && !SpeakCannotReachCondition()) { return; }
+
+            if (TargetName == null && DialogueIdentifier == DialogCannotReachTarget)
+            {
+#if DEBUG
+                DebugConsole.ThrowError(
+                    $"Error in {nameof(SpeakCannotReach)}: "+
+                    $"attempted to use a dialog line that mentions the target (dialogue identifier: {DialogueIdentifier}), but the name of the target ({(Target?.ToString() ?? "null")}) isn't set.");
+#endif
+                DialogueIdentifier = DialogCannotReachPlace;
+            }
+
             LocalizedString msg = TargetName == null ?
                 TextManager.Get(DialogueIdentifier) :
                 TextManager.GetWithVariable(DialogueIdentifier, "[name]".ToIdentifier(), TargetName, formatCapitals: Target is Character ? FormatCapitals.No : FormatCapitals.Yes);
@@ -342,12 +386,13 @@ namespace Barotrauma
                 }
             }
             if (Abandon) { return; }
-            if (getDivingGearIfNeeded)
+
+            if (!IsFindDivingGearSubObjective)
             {
-                Character followTarget = Target as Character;
                 bool needsDivingSuit = (!isInside || hasOutdoorNodes) && !character.IsImmuneToPressure;
                 bool tryToGetDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
                 bool tryToGetDivingSuit = needsDivingSuit;
+                Character followTarget = Target as Character;
                 if (Mimic && !character.IsImmuneToPressure)
                 {
                     if (HumanAIController.HasDivingSuit(followTarget))
@@ -370,48 +415,60 @@ namespace Barotrauma
                 {
                     needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
                 }
-                if (character.LockHands)
+                if (!getDivingGearIfNeeded)
                 {
-                    cantFindDivingGear = true;
+                    if (needsEquipment)
+                    {
+                        // Don't try to reach the target without proper equipment.
+                        Abandon = true;
+                        return;
+                    }
                 }
-                if (cantFindDivingGear && needsDivingSuit)
+                else
                 {
-                    // Don't try to reach the target without a suit because it's lethal.
-                    Abandon = true;
-                    return;
-                }
-                if (needsEquipment && !cantFindDivingGear)
-                {
-                    SteeringManager.Reset();
-                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: tryToGetDivingSuit, objectiveManager),
-                        onAbandon: () =>
-                        {
-                            cantFindDivingGear = true;
-                            if (needsDivingSuit)
+                    if (character.LockHands)
+                    {
+                        cantFindDivingGear = true;
+                    }
+                    if (cantFindDivingGear && needsDivingSuit)
+                    {
+                        // Don't try to reach the target without a suit because it's lethal.
+                        Abandon = true;
+                        return;
+                    }
+                    if (needsEquipment && !cantFindDivingGear)
+                    {
+                        SteeringManager.Reset();
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: tryToGetDivingSuit, objectiveManager),
+                            onAbandon: () =>
                             {
-                                // Shouldn't try to reach the target without a suit, because it's lethal.
-                                Abandon = true;
-                            }
-                            else
-                            {
-                                // Try again without requiring the diving suit (or mask)
-                                RemoveSubObjective(ref findDivingGear);
-                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: !tryToGetDivingSuit, objectiveManager),
-                                    onAbandon: () =>
-                                    {
-                                        Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
-                                        RemoveSubObjective(ref findDivingGear);
-                                    },
-                                    onCompleted: () =>
-                                    {
-                                        RemoveSubObjective(ref findDivingGear);
-                                    });
-                            }
-                        },
-                        onCompleted: () => RemoveSubObjective(ref findDivingGear));
-                    return;
+                                cantFindDivingGear = true;
+                                if (needsDivingSuit)
+                                {
+                                    // Shouldn't try to reach the target without a suit, because it's lethal.
+                                    Abandon = true;
+                                }
+                                else
+                                {
+                                    // Try again without requiring the diving suit (or mask)
+                                    RemoveSubObjective(ref findDivingGear);
+                                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: !tryToGetDivingSuit, objectiveManager),
+                                        onAbandon: () =>
+                                        {
+                                            Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
+                                            RemoveSubObjective(ref findDivingGear);
+                                        },
+                                        onCompleted: () =>
+                                        {
+                                            RemoveSubObjective(ref findDivingGear);
+                                        });
+                                }
+                            },
+                            onCompleted: () => RemoveSubObjective(ref findDivingGear));
+                        return;
+                    }
                 }
-            }
+            }            
             if (IsDoneFollowing())
             {
                 OnCompleted();
@@ -794,6 +851,11 @@ namespace Barotrauma
                             // Going through a hatch
                             return false;
                         }
+                        if (Target is Item targetItem && targetItem.GetComponent<Pickable>() == null)
+                        {
+                            // Targeting a static item, such as a reactor or a controller -> Don't complete, until we are no longer climbing.
+                            return false;
+                        }
                     }
                 }
                 if (!AlwaysUseEuclideanDistance && !character.AnimController.InWater)
@@ -892,6 +954,36 @@ namespace Barotrauma
             {
                 pathSteering.ResetPath();
             }
+        }
+        
+        public bool ShouldRun(bool run)
+        {
+            if (run && objectiveManager.ForcedOrder == this && IsWaitOrder && !character.IsOnPlayerTeam)
+            {
+                // NPCs with a wait order don't run.
+                run = false;
+            }
+            else if (Target != null)
+            {
+                if (character.CurrentHull == null)
+                {
+                    run = Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition) > 300 * 300;
+                }
+                else
+                {
+                    float yDiff = Target.WorldPosition.Y - character.WorldPosition.Y;
+                    if (Math.Abs(yDiff) > 100)
+                    {
+                        run = true;
+                    }
+                    else
+                    {
+                        float xDiff = Target.WorldPosition.X - character.WorldPosition.X;
+                        run = Math.Abs(xDiff) > 500;
+                    }
+                }
+            }
+            return run;
         }
     }
 }

@@ -48,6 +48,8 @@ namespace Barotrauma
         public int? RemoveMax { get; set; }
 
         public bool MoveWholeStack { get; set; }
+        
+        public bool AllowStealing { get; set; }
 
         private int _itemCount = 1;
         public int ItemCount
@@ -147,11 +149,11 @@ namespace Barotrauma
 
                     if (RemoveExisting || (RemoveExistingWhenNecessary && !CanBePut(container.Inventory, TargetSlot, ItemToContain)))
                     {
-                        HumanAIController.UnequipContainedItems(container.Item, predicate: RemoveExistingPredicate, unequipMax: RemoveMax);
+                        HumanAIController.UnequipContainedItems(container.Item, predicate: RemoveExistingPredicate, unequipMax: RemoveMax, allowDestroying: spawnItemIfNotFound);
                     }
                     else if (RemoveEmpty)
                     {
-                        HumanAIController.UnequipEmptyItems(container.Item);
+                        HumanAIController.UnequipEmptyItems(container.Item, allowDestroying: spawnItemIfNotFound);
                     }
                     Inventory originalInventory = ItemToContain.ParentInventory;
                     var slots = originalInventory?.FindIndices(ItemToContain);
@@ -195,6 +197,7 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
+                        DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachTarget,
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
                             container?.Item == null || container.Item.Removed || !container.Item.HasAccess(character) || 
@@ -231,7 +234,9 @@ namespace Barotrauma
                                 return (RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)) && container.ShouldBeContained(potentialItem, out _);
                             },
                             ItemCount = ItemCount,
-                            TakeWholeStack = MoveWholeStack
+                            TakeWholeStack = MoveWholeStack,
+                            ContainTarget = container,
+                            AllowStealing = AllowStealing
                         }, onAbandon: () =>
                         {
                             Abandon = true;

@@ -53,6 +53,16 @@ namespace Barotrauma
         const float LeakThreshold = 0.1f;
         const float BigGapThreshold = 0.7f;
 
+        /// <summary>
+        /// How <see cref="Gap.open">open</see> the gap on a partially broken wall section is at most (when it's below <see cref="BigGapThreshold"/>, after which it lerps up to <see cref="LargeGapOpenness"/>).
+        /// </summary>
+        public const float SmallGapOpenness = 0.35f;
+
+        /// <summary>
+        /// How <see cref="Gap.open">open</see> the gap on a fully broken wall section is.
+        /// </summary>
+        public const float LargeGapOpenness = 0.75f;
+
         public override ContentPackage ContentPackage => Prefab?.ContentPackage;
 
 #if CLIENT
@@ -63,6 +73,9 @@ namespace Barotrauma
         private readonly Dictionary<Body, Vector2> bodyDimensions = new Dictionary<Body, Vector2>();
 
         private static Explosion explosionOnBroken;
+
+        public delegate void OnHealthChangedHandler(Character attacker, float damage);
+        public OnHealthChangedHandler OnHealthChanged;
 
         [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody)]
         public bool Indestructible
@@ -98,10 +111,19 @@ namespace Barotrauma
         {
             get { return base.Prefab.Name.Value; }
         }
-
         public bool HasBody
         {
-            get { return Prefab.Body; }
+            get { return Prefab.Body && !DisableCollision; }
+        }
+
+        [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBodyByDefault)]
+        /// <summary>
+        /// Note that changing the value mid-round will not have an effect: this is only intended for disabling the collisions on a structure in the sub editor.
+        /// </summary>
+        public bool DisableCollision
+        {
+            get;
+            set;
         }
 
         public List<Body> Bodies { get; private set; }
@@ -242,19 +264,18 @@ namespace Barotrauma
             }
         }
 
-        protected float rotationRad = 0f;
         [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, DecimalCount = 3, ForceShowPlusMinusButtons = true, ValueStep = 0.1f), Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Rotation
         {
-            get => MathHelper.ToDegrees(rotationRad);
+            get => MathHelper.ToDegrees(RotationRad);
             set
             {
-                rotationRad = MathHelper.WrapAngle(MathHelper.ToRadians(value));
+                RotationRad = MathHelper.WrapAngle(MathHelper.ToRadians(value));
                 if (StairDirection != Direction.None)
                 {
                     CreateStairBodies();
                 }
-                else if (Prefab.Body)
+                else if (HasBody)
                 {
                     CreateSections();
                     UpdateSections();
@@ -325,7 +346,7 @@ namespace Barotrauma
             {
                 Rectangle oldRect = Rect;
                 base.Rect = value;
-                if (Prefab.Body)
+                if (HasBody)
                 {
                     CreateSections();
                     UpdateSections();
@@ -364,7 +385,7 @@ namespace Barotrauma
         {
             get
             {
-                float rotation = MathHelper.ToRadians(Prefab.BodyRotation) + this.rotationRad;
+                float rotation = MathHelper.ToRadians(Prefab.BodyRotation) + this.RotationRad;
                 if (IsHorizontal)
                 {
                     if (FlippedX) { rotation = -MathHelper.Pi - rotation; }
@@ -387,9 +408,9 @@ namespace Barotrauma
             get
             {
                 Vector2 bodyOffset = Prefab.BodyOffset;
-                if (rotationRad != 0f)
+                if (RotationRad != 0f)
                 {
-                    bodyOffset = MathUtils.RotatePoint(bodyOffset, -rotationRad);
+                    bodyOffset = MathUtils.RotatePoint(bodyOffset, -RotationRad);
                 }
                 if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
                 if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
@@ -506,10 +527,16 @@ namespace Barotrauma
                 Indestructible = Prefab.ConfigElement.GetAttributeBool(nameof(Indestructible), false);
             }
 
+            //if the prefab normally has a body, but it has been disabled by DisableCollision,
+            //we still want the item in the wall list to render it correctly
             if (Prefab.Body)
             {
-                Bodies = new List<Body>();
                 WallList.Add(this);
+            }
+
+            if (HasBody)
+            {
+                Bodies = new List<Body>();
                 CreateSections();
                 UpdateSections();
             }
@@ -612,7 +639,7 @@ namespace Barotrauma
 
             Body newBody = GameMain.World.CreateRectangle(bodyWidth, bodyHeight, 1.5f);
 
-            var rotationWithFlip = FlippedX ^ FlippedY ? -rotationRad : rotationRad;
+            float rotationWithFlip = RotationRadWithFlipping;
             
             newBody.BodyType = BodyType.Static;
             Vector2 stairRectHeightDiff = new Vector2(0f, stairHeight / 2.0f - rect.Height / 2.0f);
@@ -749,8 +776,8 @@ namespace Barotrauma
         public override Quad2D GetTransformedQuad()
             => Quad2D.FromSubmarineRectangle(rect).Rotated(
                 FlippedX != FlippedY
-                    ? rotationRad
-                    : -rotationRad);
+                    ? RotationRad
+                    : -RotationRad);
 
         /// <summary>
         /// Checks if there's a structure items can be attached to at the given position and returns it.
@@ -969,7 +996,7 @@ namespace Barotrauma
 
         public void AddDamage(int sectionIndex, float damage, Character attacker = null, bool emitParticles = true, bool createWallDamageProjectiles = false)
         {
-            if (!Prefab.Body || Prefab.Platform || Indestructible) { return; }
+            if (!HasBody || Prefab.Platform || Indestructible) { return; }
 
             if (sectionIndex < 0 || sectionIndex > Sections.Length - 1) { return; }
 
@@ -1115,7 +1142,7 @@ namespace Barotrauma
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) { return new AttackResult(0.0f, null); }
-            if (!Prefab.Body || Prefab.Platform || Indestructible) { return new AttackResult(0.0f, null); }
+            if (!HasBody || Prefab.Platform || Indestructible) { return new AttackResult(0.0f, null); }
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) { transformedPos -= Submarine.Position; }
@@ -1177,7 +1204,7 @@ namespace Barotrauma
             bool createWallDamageProjectiles = false)
         {
             if (Submarine != null && Submarine.GodMode || (Indestructible && !isNetworkEvent)) { return; }
-            if (!Prefab.Body) { return; }
+            if (!HasBody) { return; }
             if (!MathUtils.IsValid(damage)) { return; }
 
             damage = MathHelper.Clamp(damage, 0.0f, MaxHealth - Prefab.MinHealth);
@@ -1219,7 +1246,9 @@ namespace Barotrauma
                     Sections[sectionIndex].gap = null;
                 }
             }
-            else
+            //do not create gaps on damaged walls in editors,
+            //they're created at the start of a round and "pre-creating" them in the editors causes issues (see #12998)
+            else if (Screen.Selected is not { IsEditor: true })
             {
                 float prevGapOpenState = Sections[sectionIndex].gap?.Open ?? 0.0f;
                 if (Sections[sectionIndex].gap == null)
@@ -1263,7 +1292,7 @@ namespace Barotrauma
                     gapRect.Width += 20;
                     gapRect.Height += 20;
 
-                    bool rotatedEnoughToChangeOrientation = (MathUtils.WrapAngleTwoPi(rotationRad - MathHelper.PiOver4) % MathHelper.Pi < MathHelper.PiOver2);
+                    bool rotatedEnoughToChangeOrientation = (MathUtils.WrapAngleTwoPi(RotationRad - MathHelper.PiOver4) % MathHelper.Pi < MathHelper.PiOver2);
                     if (rotatedEnoughToChangeOrientation)
                     {
                         var center = gapRect.Location + gapRect.Size.FlipY() / new Point(2);
@@ -1316,11 +1345,11 @@ namespace Barotrauma
                 float gapOpen = 0;
                 if (damageRatio > BigGapThreshold)
                 {
-                    gapOpen = MathHelper.Lerp(0.35f, 0.75f, MathUtils.InverseLerp(BigGapThreshold, 1.0f, damageRatio));
+                    gapOpen = MathHelper.Lerp(SmallGapOpenness, LargeGapOpenness, MathUtils.InverseLerp(BigGapThreshold, 1.0f, damageRatio));
                 }
                 else if (damageRatio > LeakThreshold)
                 {
-                    gapOpen = MathHelper.Lerp(0f, 0.35f, MathUtils.InverseLerp(LeakThreshold, BigGapThreshold, damageRatio));
+                    gapOpen = MathHelper.Lerp(0f, SmallGapOpenness, MathUtils.InverseLerp(LeakThreshold, BigGapThreshold, damageRatio));
                 }
                 gap.Open = gapOpen;
 
@@ -1328,6 +1357,9 @@ namespace Barotrauma
                 if (gapOpen - prevGapOpenState > 0.25f && createExplosionEffect && !gap.IsRoomToRoom)
                 {
                     CreateWallDamageExplosion(gap, attacker, createWallDamageProjectiles);
+#if CLIENT
+                    SteamTimelineManager.OnHullBreached(this);
+#endif
                 }
             }
 
@@ -1336,16 +1368,20 @@ namespace Barotrauma
             Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, MaxHealth);
             HasDamage = Sections.Any(s => s.damage > 0.0f);
 
-            if (attacker != null && damageDiff != 0.0f)
+            if (damageDiff != 0.0f)
             {
-                HumanAIController.StructureDamaged(this, damageDiff, attacker);
-                OnHealthChangedProjSpecific(attacker, damageDiff);
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                OnHealthChanged?.Invoke(attacker, damageDiff);
+                if (attacker != null)
                 {
-                    if (damageDiff < 0.0f)
+                    HumanAIController.StructureDamaged(this, damageDiff, attacker);
+                    OnHealthChangedProjSpecific(attacker, damageDiff);
+                    if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                     {
-                        attacker.Info?.ApplySkillGain(Barotrauma.Tags.MechanicalSkill,
-                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage);
+                        if (damageDiff < 0.0f)
+                        {
+                            attacker.Info?.ApplySkillGain(Barotrauma.Tags.MechanicalSkill,
+                                -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage);
+                        }
                     }
                 }
             }
@@ -1361,7 +1397,7 @@ namespace Barotrauma
         {
             const float explosionRange = 500.0f;
             float explosionStrength = gap.Open;
-
+            
             var linkedHull = gap.linkedTo.FirstOrDefault() as Hull;
             if (linkedHull != null)
             {
@@ -1578,7 +1614,7 @@ namespace Barotrauma
 
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation);
 
-        public override void FlipX(bool relativeToSub)
+        public override void FlipX(bool relativeToSub, bool force = false)
         {
             base.FlipX(relativeToSub);
 
@@ -1606,7 +1642,7 @@ namespace Barotrauma
             }
         }
 
-        public override void FlipY(bool relativeToSub)
+        public override void FlipY(bool relativeToSub, bool force = false)
         {
             base.FlipY(relativeToSub);
 
@@ -1727,7 +1763,7 @@ namespace Barotrauma
             //structures with a body drop a shadow by default
             if (element.GetAttribute(nameof(UseDropShadow)) == null)
             {
-                s.UseDropShadow = prefab.Body;
+                s.UseDropShadow = s.HasBody;
             }
 
             if (element.GetAttribute(nameof(NoAITarget)) == null)
@@ -1756,9 +1792,9 @@ namespace Barotrauma
                 //3. not found, attempt to find a prefab that uses the previous name as an identifier
                 if (prefab == null) { prefab = MapEntityPrefab.Find(null, name) as StructurePrefab; }
             }
-            else
+            else if (StructurePrefab.Prefabs.TryGet(identifier, out StructurePrefab structurePrefab))
             {
-                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
+                prefab = structurePrefab;
             }
             return prefab;
         }

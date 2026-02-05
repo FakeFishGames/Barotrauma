@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Barotrauma.Extensions;
 
@@ -9,18 +10,9 @@ public static class EnumerableExtensionsCore
     public static ImmutableDictionary<TKey, TValue> ToImmutableDictionary<TKey, TValue>(this IEnumerable<(TKey, TValue)> enumerable)
         where TKey : notnull
     {
-        return enumerable.ToDictionary().ToImmutableDictionary();
-    }
-        
-    public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey, TValue)> enumerable)
-        where TKey : notnull
-    {
-        var dictionary = new Dictionary<TKey, TValue>();
-        foreach (var (k,v) in enumerable)
-        {
-            dictionary.Add(k, v);
-        }
-        return dictionary;
+        return enumerable
+               .ToDictionary(static pair => pair.Item1, static pair => pair.Item2)
+               .ToImmutableDictionary();
     }
 
     [return: NotNullIfNotNull("immutableDictionary")]

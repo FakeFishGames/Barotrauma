@@ -7,8 +7,9 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal unsafe class ISteamUtils : SteamInterface
+	internal unsafe partial class ISteamUtils : SteamInterface
 	{
+		public const string Version = "SteamUtils010";
 		
 		internal ISteamUtils( bool IsGameServer )
 		{
@@ -216,24 +217,27 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_CheckFileSignature", CallingConvention = Platform.CC)]
-		private static extern SteamAPICall_t _CheckFileSignature( IntPtr self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string szFileName );
+		private static extern SteamAPICall_t _CheckFileSignature( IntPtr self, IntPtr szFileName );
 		
 		#endregion
-		internal CallResult<CheckFileSignature_t> CheckFileSignature( [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string szFileName )
+		internal CallResult<CheckFileSignature_t> CheckFileSignature( string szFileName )
 		{
-			var returnValue = _CheckFileSignature( Self, szFileName );
+			using var str__szFileName = new Utf8StringToNative( szFileName );
+			var returnValue = _CheckFileSignature( Self, str__szFileName.Pointer );
 			return new CallResult<CheckFileSignature_t>( returnValue, IsServer );
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_ShowGamepadTextInput", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _ShowGamepadTextInput( IntPtr self, GamepadTextInputMode eInputMode, GamepadTextInputLineMode eLineInputMode, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchDescription, uint unCharMax, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchExistingText );
+		private static extern bool _ShowGamepadTextInput( IntPtr self, GamepadTextInputMode eInputMode, GamepadTextInputLineMode eLineInputMode, IntPtr pchDescription, uint unCharMax, IntPtr pchExistingText );
 		
 		#endregion
-		internal bool ShowGamepadTextInput( GamepadTextInputMode eInputMode, GamepadTextInputLineMode eLineInputMode, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchDescription, uint unCharMax, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchExistingText )
+		internal bool ShowGamepadTextInput( GamepadTextInputMode eInputMode, GamepadTextInputLineMode eLineInputMode, string pchDescription, uint unCharMax, string pchExistingText )
 		{
-			var returnValue = _ShowGamepadTextInput( Self, eInputMode, eLineInputMode, pchDescription, unCharMax, pchExistingText );
+			using var str__pchDescription = new Utf8StringToNative( pchDescription );
+			using var str__pchExistingText = new Utf8StringToNative( pchExistingText );
+			var returnValue = _ShowGamepadTextInput( Self, eInputMode, eLineInputMode, str__pchDescription.Pointer, unCharMax, str__pchExistingText.Pointer );
 			return returnValue;
 		}
 		
@@ -256,9 +260,9 @@ namespace Steamworks
 		#endregion
 		internal bool GetEnteredGamepadTextInput( out string pchText )
 		{
-			using var mempchText = Helpers.TakeMemory();
-			var returnValue = _GetEnteredGamepadTextInput( Self, mempchText, (1024 * 32) );
-			pchText = Helpers.MemoryToString( mempchText );
+			using var mem__pchText = Helpers.TakeMemory();
+			var returnValue = _GetEnteredGamepadTextInput( Self, mem__pchText, (1024 * 32) );
+			pchText = Helpers.MemoryToString( mem__pchText );
 			return returnValue;
 		}
 		
@@ -365,14 +369,15 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_FilterText", CallingConvention = Platform.CC)]
-		private static extern int _FilterText( IntPtr self, TextFilteringContext eContext, SteamId sourceSteamID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchInputMessage, IntPtr pchOutFilteredText, uint nByteSizeOutFilteredText );
+		private static extern int _FilterText( IntPtr self, TextFilteringContext eContext, SteamId sourceSteamID, IntPtr pchInputMessage, IntPtr pchOutFilteredText, uint nByteSizeOutFilteredText );
 		
 		#endregion
-		internal int FilterText( TextFilteringContext eContext, SteamId sourceSteamID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchInputMessage, out string pchOutFilteredText )
+		internal int FilterText( TextFilteringContext eContext, SteamId sourceSteamID, string pchInputMessage, out string pchOutFilteredText )
 		{
-			using var mempchOutFilteredText = Helpers.TakeMemory();
-			var returnValue = _FilterText( Self, eContext, sourceSteamID, pchInputMessage, mempchOutFilteredText, (1024 * 32) );
-			pchOutFilteredText = Helpers.MemoryToString( mempchOutFilteredText );
+			using var str__pchInputMessage = new Utf8StringToNative( pchInputMessage );
+			using var mem__pchOutFilteredText = Helpers.TakeMemory();
+			var returnValue = _FilterText( Self, eContext, sourceSteamID, str__pchInputMessage.Pointer, mem__pchOutFilteredText, (1024 * 32) );
+			pchOutFilteredText = Helpers.MemoryToString( mem__pchOutFilteredText );
 			return returnValue;
 		}
 		
@@ -430,6 +435,18 @@ namespace Steamworks
 		internal bool DismissFloatingGamepadTextInput()
 		{
 			var returnValue = _DismissFloatingGamepadTextInput( Self );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_DismissGamepadTextInput", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _DismissGamepadTextInput( IntPtr self );
+		
+		#endregion
+		internal bool DismissGamepadTextInput()
+		{
+			var returnValue = _DismissGamepadTextInput( Self );
 			return returnValue;
 		}
 		

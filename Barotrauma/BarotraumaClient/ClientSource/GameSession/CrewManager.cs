@@ -47,7 +47,7 @@ namespace Barotrauma
 
         /// <summary>
         /// This property stores the preference in settings. Don't use for automatic logic.
-        /// Use AutoShowCrewList(), AutoHideCrewList(), and ResetCrewList().
+        /// Use AutoHideCrewList(), and ResetCrewList().
         /// </summary>
         public bool IsCrewMenuOpen
         {
@@ -62,11 +62,9 @@ namespace Barotrauma
 
         public static bool PreferCrewMenuOpen = true;
 
-        public bool AutoShowCrewList() => _isCrewMenuOpen = true;
-
         public void AutoHideCrewList() => _isCrewMenuOpen = false;
 
-        public void ResetCrewList() => _isCrewMenuOpen = PreferCrewMenuOpen;
+        public void ResetCrewListOpenState() => _isCrewMenuOpen = PreferCrewMenuOpen;
 
         const float CommandNodeAnimDuration = 0.2f;
 
@@ -195,6 +193,12 @@ namespace Barotrauma
 
                 ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
             }
+            else if (GameMain.Client == null)
+            {
+                //this method would throw a non-descriptive nullref exception later when trying to access the chatbox
+                //if we'd try to continue from here, better to throw a more descriptive one at this point
+                throw new InvalidOperationException($"Attempted to initialize {nameof(CrewManager)} for multiplayer, but no multiplayer client is active. Are you trying to load a multiplayer save in singleplayer?");
+            }
 
             #endregion
 
@@ -307,6 +311,14 @@ namespace Barotrauma
         #endregion
 
         #region Character list management
+
+        /// <summary>
+        /// Note: this is only works client-side. TODO: make it work server-side too?
+        /// </summary>
+        public IEnumerable<Character> GetCharacters()
+        {
+            return characters;
+        }
 
         public Rectangle GetActiveCrewArea()
         {
@@ -580,8 +592,7 @@ namespace Barotrauma
         public bool CharacterClicked(GUIComponent component, object selection)
         {
             if (!AllowCharacterSwitch) { return false; }
-            if (selection is not Character character || character.IsDead || character.IsUnconscious) { return false; }
-            if (!character.IsOnPlayerTeam) { return false; }
+            if (selection is not Character character || !character.IsOnPlayerTeam) { return false; }
 
             if (GameMain.IsMultiplayer)
             {
@@ -592,6 +603,8 @@ namespace Barotrauma
                 }
                 return true;
             }
+
+            if (character.IsDead || character.IsUnconscious) { return false; }
 
             SelectCharacter(character);
             if (GUI.KeyboardDispatcher.Subscriber == crewList) { GUI.KeyboardDispatcher.Subscriber = null; }
@@ -1357,6 +1370,16 @@ namespace Barotrauma
             {
                 GameSession.TabMenuInstance.SelectInfoFrameTab(TabMenu.SelectedTab);
             }
+            if (character.SelectedItem?.GetComponent<Controller>() == null && character.SelectedCharacter == null)
+            {
+                ResetCrewListOpenState();
+                ChatBox.ResetChatBoxOpenState();
+            }
+            else
+            {
+                AutoHideCrewList();
+                ChatBox.AutoHideChatBox();
+            }
         }
 
         private int TryAdjustIndex(int amount)
@@ -1919,7 +1942,7 @@ namespace Barotrauma
         {
             get
             {
-                if (GameMain.GameSession?.CrewManager == null)
+                if (GameMain.GameSession?.CrewManager == null || Screen.Selected is { IsEditor: true })
                 {
                     return false;
                 }
@@ -2843,10 +2866,11 @@ namespace Barotrauma
             }
             contextualOrders.RemoveAll(o => !IsOrderAvailable(o));
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, contextualOrders.Count, MathHelper.ToRadians(90f + 180f / contextualOrders.Count));
-            bool disableNode = !CanCharacterBeHeard();
+            bool canCharacterBeHeard = CanCharacterBeHeard();
             for (int i = 0; i < contextualOrders.Count; i++)
             {
                 var order = contextualOrders[i];
+                bool disableNode = !canCharacterBeHeard && !order.TargetAllCharacters;
                 int hotkey = (i + 1) % 10;
                 var component = order.Option.IsEmpty ?
                     CreateOrderNode(nodeSize, commandFrame.RectTransform, offsets[i].ToPoint(), order, hotkey, disableNode: disableNode, checkIfOrderCanBeHeard: false) :
@@ -3314,7 +3338,13 @@ namespace Barotrauma
                     if (!CanIssueOrders) { return false; }
                     var character = userData as Character;
                     int priority = GetManualOrderPriority(character, order);
-                    SetCharacterOrder(character, order.WithManualPriority(priority).WithOrderGiver(Character.Controlled));
+                    Item targetEntity = null;
+                    if (order.MustSetTarget && order.TargetEntity == null)
+                    {
+                        var matchingItems = order.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: characterContext ?? Character.Controlled);
+                        targetEntity = matchingItems.FirstOrDefault();
+                    }
+                    SetCharacterOrder(character, order.WithItemComponent(targetEntity).WithManualPriority(priority).WithOrderGiver(Character.Controlled));
                     DisableCommandUI();
                     return true;
                 }
@@ -3681,7 +3711,8 @@ namespace Barotrauma
                 canIssueOrders = 
                     ChatMessage.CanUseRadio(Character.Controlled) &&
                     Character.Controlled?.CurrentHull?.Submarine?.TeamID == Character.Controlled.TeamID &&
-                    !Character.Controlled.CurrentHull.Submarine.Info.IsWreck;
+                    !Character.Controlled.CurrentHull.Submarine.Info.IsWreck &&
+                    GameMain.Client is not { IsBlockedBySpamFilter: true };
             }
 
             if (canIssueOrders)
@@ -3700,7 +3731,7 @@ namespace Barotrauma
                 bool hasLeaks = Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
                 ToggleReportButton("reportbreach", hasLeaks);
 
-                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(c, Character.Controlled, false));
+                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(c, Character.Controlled, targetCharactersInOtherSubs: false));
                 ToggleReportButton("reportintruders", hasIntruders);
 
                 foreach (GUIComponent reportButton in ReportButtonFrame.Children)
@@ -3825,6 +3856,73 @@ namespace Barotrauma
                 }
                 GameMain.GameSession?.CrewManager?.AddOrder(order, fadeOutTime);
             }
+        }
+        
+        private class CharacterInfoComparer : IEqualityComparer<CharacterInfo>
+        {
+            public bool Equals(CharacterInfo x, CharacterInfo y)
+            {
+                if (ReferenceEquals(x, y))
+                {
+                    return true;
+                }
+                
+                if (x is null || y is null)
+                {
+                    return false;
+                }
+                
+                return x.ID == y.ID;
+            }
+            
+            public int GetHashCode(CharacterInfo obj)
+            {
+                return obj.ID;
+            }
+        }
+        
+        public bool UpdateReserveBenchIfNeeded(IEnumerable<CharacterInfo> updatedReserveBench)
+        {
+            var newBench = updatedReserveBench.ToHashSet(new CharacterInfoComparer());
+            var currentBench = reserveBench.ToHashSet(new CharacterInfoComparer());
+
+            bool updateNeeded = !newBench.SetEquals(currentBench);
+            if (updateNeeded)
+            {
+                reserveBench.Clear(); // since this is the reserve bench (characters not instantiated), there's no need to retain any references etc
+                reserveBench.AddRange(updatedReserveBench);
+            }
+            
+            return updateNeeded;
+        }
+        
+        /// <summary>
+        /// This will update which CharacterInfos should be in CrewManager and which shouldn't, excluding the reserve bench.
+        /// The CharacterInfos themselves aren't updated, they will only be either added, removed, or kept as-is. 
+        /// </summary>
+        public bool UpdateCrewManagerIfNecessary(List<CharacterInfo> updatedCrewManager)
+        {
+            // CharacterInfos no longer in the server's CrewManager
+            var toRemove = characterInfos.Where(original => updatedCrewManager.None(updated => updated.ID == original.ID)).ToList();
+            // CharacterInfos that are in the server's CrewManager but not on the client yet
+            var toAdd = updatedCrewManager.Where(updated => characterInfos.None(original => original.ID == updated.ID)).ToList();
+            
+            foreach (CharacterInfo characterInfo in toRemove)
+            {
+                if (characterInfo.Character is Character existingCharacter)
+                {
+                    if (!existingCharacter.IsBot) { continue; } // on client side players are also stored here, we should skip those in this case
+                    RemoveCharacter(characterInfo.Character, removeInfo: true, resetCrewListIndex: true);
+                }
+                else
+                {
+                    characterInfos.Remove(characterInfo);
+                }
+            }
+            
+            characterInfos.AddRange(toAdd);
+            
+            return toRemove.Count > 0 || toAdd.Count > 0;
         }
     }
 }

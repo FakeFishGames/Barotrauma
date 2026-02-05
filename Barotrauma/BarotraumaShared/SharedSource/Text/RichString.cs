@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Immutable;
-using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -29,6 +28,8 @@ namespace Barotrauma
         private readonly LocalizedString originalStr;
         public LocalizedString NestedStr { get; private set; }
         public readonly LocalizedString SanitizedString;
+
+        public bool Loaded => loaded;
 
 #if CLIENT
         private readonly GUIFont? font;

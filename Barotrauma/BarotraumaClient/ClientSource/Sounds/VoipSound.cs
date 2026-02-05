@@ -8,6 +8,8 @@ namespace Barotrauma.Sounds
 {
     class VoipSound : Sound
     {
+        public override double? DurationSeconds => null;
+
         public override SoundManager.SourcePoolIndex SourcePoolIndex
         {
             get
@@ -81,7 +83,7 @@ namespace Barotrauma.Sounds
 
             soundChannel = null;
 
-            SoundChannel chn = new SoundChannel(this, 1.0f, null, 1.0f, 0.4f, 1.0f, "voip", false);
+            SoundChannel chn = new SoundChannel(this, 1.0f, null, 1.0f, 0.4f, 1.0f, SoundManager.SoundCategoryVoip, false);
             soundChannel = chn;
             Gain = 1.0f;
         }

@@ -84,6 +84,8 @@ namespace Barotrauma
         //an identifier the server uses to identify which ConversationAction a client is responding to
         public readonly UInt16 Identifier;
 
+        private float startDelay;
+
         private int selectedOption = -1;
         private bool dialogOpened = false;
 
@@ -167,7 +169,11 @@ namespace Barotrauma
 #else
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
-                        if (c.InGame && c.Character != null) { ServerWrite(Speaker, c, interrupt); }
+                        if (c.InGame && c.Character != null)
+                        {
+                            DebugConsole.Log($"Conversation {ParentEvent.Prefab.Identifier} finished, communicating to clients...");
+                            ServerWrite(Speaker, c, interrupt); 
+                        }
                     }
 #endif
                     ResetSpeaker();
@@ -209,6 +215,16 @@ namespace Barotrauma
             interrupt = false;
             dialogOpened = false;
             Speaker = null;
+        }
+
+        /// <summary>
+        /// Retriggers the conversation after the specified delay.
+        /// </summary>
+        public void RetriggerAfter(float delay)
+        {
+            startDelay = delay;
+            dialogOpened = false;
+            selectedOption = -1;
         }
 
         public override bool SetGoToTarget(string goTo)
@@ -264,6 +280,9 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            startDelay -= deltaTime;
+            if (startDelay > 0) { return; }
+
             if (interrupt)
             {
                 Interrupted?.Update(deltaTime);
@@ -400,9 +419,22 @@ namespace Barotrauma
             {
                 targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e));
                 if (!targets.Any() || IsBlockedByAnotherConversation(targets, BlockOtherConversationsDuration)) { return; }
+                //some specific character tried to start the convo, but not included in the targets for this conversation -> disallow
+                if (targetCharacter != null && !targets.Contains(targetCharacter)) { return; }
+            }
+            else 
+            {
+#if SERVER
+                if (GameMain.NetworkMember != null)
+                {
+                    //conversation targeted to everyone, but no-one present yet who could potentially hear it -> don't start yet
+                    UpdateIgnoredClients();
+                    if (GameMain.NetworkMember.ConnectedClients.None(c => CanClientReceive(c))) { return; }
+                }
+#endif
+                if (IsBlockedByAnotherConversation(targetCharacter?.ToEnumerable(), BlockOtherConversationsDuration)) { return; }
             }
 
-            if (IsBlockedByAnotherConversation(targetCharacter?.ToEnumerable(), BlockOtherConversationsDuration)) { return; }
 
             if (speaker?.AIController is HumanAIController humanAI)
             {

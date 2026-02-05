@@ -316,9 +316,6 @@ namespace Barotrauma
             if (worldPosition.X + extents.X > worldView.Right || worldPosition.X + extents.Width < worldView.X) { return false; }
             if (worldPosition.Y + extents.Height < worldView.Y - worldView.Height || worldPosition.Y + extents.Y > worldView.Y) { return false; }
 
-            if (extents.Width * Screen.Selected.Cam.Zoom < 1.0f) { return false; }
-            if (extents.Height * Screen.Selected.Cam.Zoom < 1.0f) { return false; }
-
             return true;
         }
 
@@ -327,7 +324,7 @@ namespace Barotrauma
             Draw(spriteBatch, editing, back, overrideColor: null);
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Color? overrideColor = null)
+        public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Color? overrideColor = null, float? overrideDepth = null)
         {
             if (!Visible || (!editing && IsHidden) || !SubEditorScreen.IsLayerVisible(this)) { return; }
 
@@ -395,7 +392,7 @@ namespace Barotrauma
                 }
             }
 
-            float depth = GetDrawDepth();
+            float depth = overrideDepth ?? GetDrawDepth();
             if (isWiringMode && isLogic && !PlayerInput.IsShiftDown()) { depth = 0.01f; }
             if (activeSprite != null)
             {
@@ -427,7 +424,7 @@ namespace Barotrauma
                                     textureScale: Vector2.One * Scale,
                                     depth: d);
                             }
-                            DrawDecorativeSprites(spriteBatch, DrawPosition, flippedX && Prefab.CanSpriteFlipX, flippedY && Prefab.CanSpriteFlipY, rotation: 0, depth, overrideColor);
+                            DrawDecorativeSprites(spriteBatch, DrawPosition, FlippedX && Prefab.CanSpriteFlipX, FlippedY && Prefab.CanSpriteFlipY, rotation: 0, depth, overrideColor);
                         }
                     }
                     else
@@ -448,7 +445,7 @@ namespace Barotrauma
                             Prefab.DamagedInfectedSprite?.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, Infector.HealthColor, Prefab.DamagedInfectedSprite.Origin, RotationRad, Scale, activeSprite.effects, depth - 0.002f);
                         }
 
-                        DrawDecorativeSprites(spriteBatch, DrawPosition, flippedX && Prefab.CanSpriteFlipX, flippedY && Prefab.CanSpriteFlipY, -RotationRad, depth, overrideColor);
+                        DrawDecorativeSprites(spriteBatch, DrawPosition, FlippedX && Prefab.CanSpriteFlipX, FlippedY && Prefab.CanSpriteFlipY, -RotationRad, depth, overrideColor);
                     }
                 }
                 else if (body.Enabled)
@@ -524,8 +521,8 @@ namespace Barotrauma
                         if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
                         Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -RotationRad) * Scale;
-                        if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
-                        if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
+                        if (FlippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
+                        if (FlippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                         decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, decorativeSprite.Sprite.Origin,
                             rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
                             depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
@@ -543,7 +540,7 @@ namespace Barotrauma
             //causing them to be removed from the list
             for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                drawableComponents[i].Draw(spriteBatch, editing, depth, overrideColor);
+                drawableComponents[i].Draw(spriteBatch, editing && !GameMain.SubEditorScreen.TransformWidgetSelected, depth, overrideColor);
             }
 
             if (GameMain.DebugDraw)
@@ -676,12 +673,6 @@ namespace Barotrauma
                         origin.Y = -origin.Y + decorativeSprite.Sprite.size.Y;
                         spriteEffects |= SpriteEffects.FlipVertically;
                     }
-                    if (body != null)
-                    {
-                        var ca = MathF.Cos(-body.DrawRotation);
-                        var sa = MathF.Sin(-body.DrawRotation);
-                        offset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
-                    }
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(drawPos.X + offset.X, -(drawPos.Y + offset.Y)), decorativeSpriteColor, origin,
                         -rotation + spriteRotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffects,
                         depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
@@ -742,7 +733,7 @@ namespace Barotrauma
                 {
                     updateableComponents.Add(ic);
                 }
-                isActive = true;
+                IsActive = true;
             }
         }
 
@@ -798,6 +789,11 @@ namespace Barotrauma
                     }
                 }
             }
+
+            foreach (var containedItem in ContainedItems)
+            {
+                containedItem.UpdateSpriteStates(deltaTime);
+            }
         }
 
         public override void UpdateEditing(Camera cam, float deltaTime)
@@ -814,6 +810,8 @@ namespace Barotrauma
             }
 
             if (Screen.Selected != GameMain.SubEditorScreen) { return; }
+            if (Character.Controlled == null) { activeHUDs.Clear(); }
+            if (GameMain.SubEditorScreen.TransformWidgetSelected) { return; }
 
             if (GetComponent<ElectricalDischarger>() is { } discharger)
             {
@@ -826,8 +824,6 @@ namespace Barotrauma
                     discharger.IsActive = false;
                 }
             }
-
-            if (Character.Controlled == null) { activeHUDs.Clear(); }
 
             foreach (ItemComponent ic in components)
             {
@@ -1762,7 +1758,7 @@ namespace Barotrauma
             if (texts.Any() && !recreateHudTexts) { return texts; }
             texts.Clear();
 
-            string nameText = Name;
+            string nameText = RichString.Rich(Prefab.Name).SanitizedValue;
             if (Prefab.Tags.Contains("identitycard") || Tags.Contains("despawncontainer"))
             {
                 string[] readTags = Tags.Split(',');
@@ -2174,7 +2170,7 @@ namespace Barotrauma
                 return;
             }
 
-            isActive = true;
+            IsActive = true;
 
             if (positionBuffer.Count > 0)
             {
@@ -2342,6 +2338,7 @@ namespace Barotrauma
                 }
             }
 
+            bool onInsertedEffectsAppliedOnPreviousRound = msg.ReadBoolean();
             byte bodyType           = msg.ReadByte();
             bool spawnedInOutpost   = msg.ReadBoolean();
             bool allowStealing      = msg.ReadBoolean();
@@ -2454,6 +2451,10 @@ namespace Barotrauma
                     AllowStealing = allowStealing,
                     Quality = quality
                 };
+                if (onInsertedEffectsAppliedOnPreviousRound)
+                {
+                    item.OnInsertedEffectsApplied = item.OnInsertedEffectsAppliedOnPreviousRound = true;
+                }
             }
             catch (Exception e)
             {
@@ -2502,18 +2503,23 @@ namespace Barotrauma
 
             if (inventory != null)
             {
-                if (inventorySlotIndex is >= 0 and < 255)
+                if (inventorySlotIndex is >= 0 and < 255 &&
+                    !inventory.TryPutItem(item, inventorySlotIndex, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false, ignoreCondition: true) &&
+                    inventory.IsSlotEmpty(inventorySlotIndex))
                 {
-                    if (!inventory.TryPutItem(item, inventorySlotIndex, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false, ignoreCondition: true) &&
-                        inventory.IsSlotEmpty(inventorySlotIndex))
-                    {
-                        //If the item won't go nicely, force it to the slot. If the server says the item is in the slot, it should go in the slot.
-                        //May happen e.g. when a character is configured to spawn with an item that won't normally go in its inventory slots.
-                        inventory.ForceToSlot(item, index: inventorySlotIndex);
-                        return item;
-                    }
+                    //If the item won't go nicely, force it to the slot. If the server says the item is in the slot, it should go in the slot.
+                    //May happen e.g. when a character is configured to spawn with an item that won't normally go in its inventory slots.
+                    inventory.ForceToSlot(item, index: inventorySlotIndex);
                 }
-                inventory.TryPutItem(item, user: null, allowedSlots: item.AllowedSlots, createNetworkEvent: false);
+                else
+                {
+                    inventory.TryPutItem(item, user: null, allowedSlots: item.AllowedSlots, createNetworkEvent: false);
+                }
+                item.SetTransform(inventory.Owner.SimPosition, 0.0f, forceSubmarine: inventory.Owner.Submarine);
+                if (inventory.Owner is Character { Enabled: false } && item.body != null)
+                {
+                    item.body.Enabled = false;
+                }                
             }
 
             return item;

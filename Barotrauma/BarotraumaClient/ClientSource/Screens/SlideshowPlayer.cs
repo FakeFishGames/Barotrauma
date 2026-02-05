@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
@@ -42,6 +43,8 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
+            if (slideshowPrefab.Slides.IsEmpty) { return; }
+
             var slide = slideshowPrefab.Slides[Math.Min(state, slideshowPrefab.Slides.Length - 1)];
             if (!Visible || (Finished && timer > slide.FadeOutDuration)) { return; }
 
@@ -104,6 +107,7 @@ namespace Barotrauma
 
         private void RefreshText()
         {
+            if (slideshowPrefab.Slides.IsEmpty) { return; }
             var slide = slideshowPrefab.Slides[Math.Min(state, slideshowPrefab.Slides.Length - 1)];
             currentText = slide.Text
                 .Replace("[submarine]", Submarine.MainSub?.Info.Name ?? GameMain.GameSession?.SubmarineInfo?.Name ?? "Unknown")

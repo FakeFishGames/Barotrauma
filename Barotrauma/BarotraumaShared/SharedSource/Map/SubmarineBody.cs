@@ -29,7 +29,7 @@ namespace Barotrauma
         const float VerticalDrag = 0.05f;
         const float MaxDrag = 0.1f;
 
-        private const float ImpactDamageMultiplier = 10.0f;
+        private const float ImpactDamageMultiplier = 3.0f;
 
         //limbs with a mass smaller than this won't cause an impact when they hit the sub
         private const float MinImpactLimbMass = 10.0f;
@@ -515,7 +515,7 @@ namespace Barotrauma
 
                     //cast a line from the position of the character to the same direction as the translation of the sub
                     //and see where it intersects with the bounding box
-                    if (!MathUtils.GetLineRectangleIntersection(limb.WorldPosition,
+                    if (!MathUtils.GetLineWorldRectangleIntersection(limb.WorldPosition,
                         limb.WorldPosition + translateDir * 100000.0f, worldBorders, out Vector2 intersection))
                     {
                         //should never happen when casting a line out from inside the bounding box
@@ -579,13 +579,16 @@ namespace Barotrauma
             Body.SetTransform(ConvertUnits.ToSimUnits(position), 0.0f);
         }
 
+        /// <summary>
+        /// Camera shake and sounds start playing 500 meters before crush depth
+        /// </summary>
+        public const float CosmeticDamageEffectThreshold = -500.0f;
+
         private void UpdateDepthDamage(float deltaTime)
         {
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
             if (Level.Loaded == null) { return; }
 
-            //camera shake and sounds start playing 500 meters before crush depth
-            const float CosmeticEffectThreshold = -500.0f;
             //breaches won't get any more severe 500 meters below crush depth
             const float MaxEffectThreshold = 500.0f;
             const float MinWallDamageProbability = 0.1f;
@@ -598,7 +601,7 @@ namespace Barotrauma
             //(gives you a bit of time to react and return if you start the round in a level that's too deep)
             const float MinRoundDuration = 60.0f;
 
-            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth + CosmeticEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)
+            if (!Submarine.AtCosmeticDamageDepth)
             {
                 return;
             }
@@ -606,9 +609,9 @@ namespace Barotrauma
             damageSoundTimer -= deltaTime;
             if (damageSoundTimer <= 0.0f)
             {
-                const float PressureSoundRange = -CosmeticEffectThreshold;
+                const float PressureSoundRange = -CosmeticDamageEffectThreshold;
                 //Ratio between 0 (where the 'approaching crush depth' indication starts) and 1 (at crush depth or past it)
-                float closenessToCrushDepthRatio = Math.Clamp((Submarine.RealWorldDepth - (Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)) / PressureSoundRange, 0f, 1f);
+                float closenessToCrushDepthRatio = Math.Clamp((Submarine.RealWorldDepth - (Submarine.RealWorldCrushDepth + CosmeticDamageEffectThreshold)) / PressureSoundRange, 0f, 1f);
 #if CLIENT
                 SoundPlayer.PlayDamageSound("pressure", MathHelper.Lerp(0f, 100f, closenessToCrushDepthRatio), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f, gain: 1f + closenessToCrushDepthRatio * 2);
 #endif
@@ -883,6 +886,11 @@ namespace Barotrauma
             }
 
             float wallImpact = Vector2.Dot(impact.Velocity, -impact.Normal);
+            if (wallImpact < MinCollisionImpact) { return; }
+
+            //magic number to make wall impacts on par with monster impacts (the latter are affected by the mass of the monster)
+            const float WallImpactMultiplier = 3.0f;
+            wallImpact *= WallImpactMultiplier;
 
             ApplyImpact(wallImpact, -impact.Normal, impact.ImpactPos);
             foreach (Submarine dockedSub in submarine.DockedTo)
@@ -1066,11 +1074,21 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != submarine || item.CurrentHull == null || item.body == null || !item.body.Enabled) { continue; }
-                if (item.body.Mass > impulseMagnitude) { continue; }
+                if (item.Submarine != submarine) { continue; }
+                if (Timing.TotalTimeUnpaused < item.LastSubmarineImpactTime + Item.SubmarineImpactCooldown) { continue; }
+
+                if (item.body is not { BodyType: BodyType.Dynamic })
+                {
+                    if (!item.Prefab.ReceiveSubmarineImpacts) { continue; }
+                    item.ReceiveImpact(impact, recursive: false);
+                    item.LastSubmarineImpactTime = Timing.TotalTimeUnpaused;
+                }
+
+                if (!item.body.Enabled || item.CurrentHull == null || item.body.Mass > impulseMagnitude) { continue; }
 
                 item.body.ApplyLinearImpulse(impulse, 10.0f);
                 item.PositionUpdateInterval = 0.0f;
+                item.LastSubmarineImpactTime = Timing.TotalTimeUnpaused;
             }
 
             float dmg = applyDamage ? impact * ImpactDamageMultiplier : 0.0f;

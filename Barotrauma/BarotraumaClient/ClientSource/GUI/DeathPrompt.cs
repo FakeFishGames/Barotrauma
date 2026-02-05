@@ -11,13 +11,14 @@ internal class DeathPrompt
 {
     private static CoroutineHandle? createPromptCoroutine;
 
+    private GUIFrame? deathPromptFrame;
     private GUIComponent? skillPanel;
     private GUIComponent? newCharacterPanel;
     private GUIComponent? takeOverBotPanel;
 
     private GUIComponent? content;
-    
-    public static GUIComponent? takeOverBotPanelFrame;
+
+    private static GUIComponent? takeOverBotPanelFrame;
 
     /// <summary>
     /// Private constructor, because these should only be created using the Show method
@@ -73,11 +74,11 @@ internal class DeathPrompt
         foreground.FadeIn(wait: 0, duration: 5.0f);
         foreground.Pulsate(startScale: Vector2.One, Vector2.One * 0.8f, duration: 25.0f);
 
-        var frame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.3f), background.RectTransform, Anchor.Center))
+        deathPromptFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.3f), background.RectTransform, Anchor.Center))
         {
             UserData = this
         };
-        frame.FadeIn(wait: 0, duration: FadeInDuration);
+        deathPromptFrame.FadeIn(wait: 0, duration: FadeInDuration);
 
         new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), background.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.2f) }, string.Empty, font: GUIStyle.LargeFont, textAlignment: Alignment.TopCenter)
         {
@@ -90,7 +91,7 @@ internal class DeathPrompt
             }
         };
 
-        var content = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center))
+        var content = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.8f), deathPromptFrame.RectTransform, Anchor.Center))
         {
             Stretch = true,
             RelativeSpacing = 0.05f
@@ -188,7 +189,7 @@ internal class DeathPrompt
                         {
                             if (takeOverBotPanel == null)
                             {
-                                CreateTakeOverBotPanel(frame, this);
+                                CreateTakeOverBotPanel(deathPromptFrame, this);
                             }
                             else
                             {
@@ -202,7 +203,7 @@ internal class DeathPrompt
             }
             else
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), buttonContainerRight.RectTransform), TextManager.Get("deathprompt.respawnnow"))
+                var respawnNowButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), buttonContainerRight.RectTransform), TextManager.Get("deathprompt.respawnnow"))
                 {
                     OnClicked = (btn, userdata) =>
                     {
@@ -211,7 +212,13 @@ internal class DeathPrompt
                         return true;
                     },
                     Enabled = GameMain.NetworkMember is { ServerSettings.RespawnMode: RespawnMode.MidRound }
-                }.FadeIn(wait: FadeInInterval * 4, duration: FadeInDuration, alsoChildren: true);
+                };
+                if (GameMain.NetworkMember is { ServerSettings.RespawnMode: RespawnMode.BetweenRounds })
+                {
+                    respawnNowButton.ToolTip = TextManager.Get("respawnnotavailable.respawnmode.betweenrounds");
+                }
+
+                respawnNowButton.FadeIn(wait: FadeInInterval * 4, duration: FadeInDuration, alsoChildren: true);
             }
 
             //"info buttons" at the bottom
@@ -249,7 +256,7 @@ internal class DeathPrompt
                     {
                         if (skillPanel == null)
                         {
-                            CreateSkillPanel(frame, GameMain.Client?.Character?.Info ?? GameMain.Client?.CharacterInfo);
+                            CreateSkillPanel(deathPromptFrame, GameMain.Client?.Character?.Info ?? GameMain.Client?.CharacterInfo);
                         }
                         else
                         {
@@ -266,7 +273,7 @@ internal class DeathPrompt
                     {
                         if (newCharacterPanel == null)
                         {
-                            CreateNewCharacterPanel(frame);
+                            CreateNewCharacterPanel(deathPromptFrame);
                         }
                         else
                         {
@@ -278,15 +285,6 @@ internal class DeathPrompt
                 }.FadeIn(wait: FadeInInterval * 5, duration: FadeInDuration, alsoChildren: true);
             }
         }
-
-        //TODO
-        /*new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), infoButtonContainer.RectTransform), "Respawn settings", style: "GUIButtonSmall")
-        {
-            OnClicked = (btn, userdata) =>
-            {
-                return true;
-            }
-        }.FadeIn(wait: FadeInInterval * 5, duration: FadeInDuration, alsoChildren: true);*/
 
         this.content = background;
     }
@@ -382,8 +380,10 @@ internal class DeathPrompt
         {
             OnClicked = (btn, userdata) =>
             {
-                GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(onYes: () => 
-                { 
+                GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(onYes: () =>
+                {
+                    GameMain.Client?.SendCharacterInfo(GameMain.Client.PendingName);
+                    GameMain.NetLobbyScreen.CampaignCharacterDiscarded = false;
                     frame.Parent?.RemoveChild(frame);
                     newCharacterPanel = null;
                 });
@@ -465,6 +465,11 @@ internal class DeathPrompt
             {
                 if (botList.SelectedData is CharacterInfo selectedCharacter && GameMain.Client is GameClient client)
                 {
+                    if (!GetAvailableBots().Contains(selectedCharacter)) // Someone may have taken over the bot while the list was open, etc
+                    {
+                        CreateTakeOverBotPanel(frame, deathPrompt); // Update
+                        return true;
+                    }
                     client.SendTakeOverBotRequest(selectedCharacter);
                     GUIMessageBox.MessageBoxes.Remove(frame.Parent);
                     deathPrompt?.Close();
@@ -484,15 +489,26 @@ internal class DeathPrompt
         return frame;
     }
 
+    public void UpdateBotList()
+    {
+        if (deathPromptFrame != null && takeOverBotPanelFrame != null)
+        {
+            CloseBotPanel();
+            CreateTakeOverBotPanel(deathPromptFrame, deathPrompt: this);
+        }
+    }
+    
     private static IEnumerable<CharacterInfo> GetAvailableBots()
     {
         if (GameMain.GameSession?.CrewManager is { } crewManager)
         {
-            return crewManager.GetCharacterInfos().Where(c => 
-                /*either an alive bot */
-                c is { Character.IsBot: true, Character.IsDead: false } || 
-                /* or a newly hired bot that hasn't spawned yet */
-                (c.IsNewHire && c.Character == null));
+            return crewManager.GetCharacterInfos(includeReserveBench: true).Where(c =>
+                // a bot on reserve bench
+                c.IsOnReserveBench ||
+                // an alive bot
+                (c.Character != null && c.Character is { IsBot: true, IsDead: false }) ||
+                // a newly hired bot that hasn't spawned yet
+                (c.Character == null && c.IsNewHire));
         }
         else
         {

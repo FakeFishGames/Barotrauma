@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
             return msg;
         }
 #endif
-        public static void WriteNetSerializableStruct(this IWriteMessage msg, INetSerializableStruct serializableStruct)
+        public static void WriteNetSerializableStruct<T>(this IWriteMessage msg, T serializableStruct) where T : INetSerializableStruct
         {
             serializableStruct.Write(msg);
         }

@@ -21,6 +21,9 @@
         [Serialize(0, IsPropertySaveable.Yes, description: "The state to set the mission to, or how much to add to the state of the mission.")]
         public int State { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "If set to true, the mission is forced to fail without a chance of retrying it.")]
+        public bool ForceFailure { get; set; }
+
         private bool isFinished;
 
         public MissionStateAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
@@ -31,7 +34,7 @@
                 DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": MissionIdentifier has not been configured.",
                     contentPackage: element.ContentPackage);
             }
-            if (Operation == OperationType.Add && State == 0)
+            if (Operation == OperationType.Add && State == 0 && !ForceFailure)
             {
                 DebugConsole.AddWarning($"Potential error in event \"{parentEvent.Prefab.Identifier}\": {nameof(MissionStateAction)} is set to add 0 to the mission state, which will do nothing.",
                     contentPackage: element.ContentPackage);
@@ -54,6 +57,11 @@
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
                 if (mission.Prefab.Identifier != MissionIdentifier) { continue; }
+                if (ForceFailure)
+                { 
+                    mission.ForceFailure = true;
+                }
+
                 switch (Operation)
                 {
                     case OperationType.Set:

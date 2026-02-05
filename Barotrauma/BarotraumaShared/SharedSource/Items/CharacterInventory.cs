@@ -17,15 +17,21 @@ namespace Barotrauma
     {
         /// <summary>
         /// How much access other characters have to the inventory?
-        /// <see cref="Restricted"/> = Only accessible when character is knocked down or handcuffed.
-        /// <see cref="Limited"/> = Can also access inventories of bots on the same team and friendly pets.
-        /// <see cref="Allowed"/> = Can also access other players in the same team (used for drag and drop give).
         /// </summary>
         public enum AccessLevel
         {
-            Restricted,
-            Limited,
-            Allowed
+            /// <summary>
+            /// Only accessible when character is knocked down or handcuffed.
+            /// </summary>
+            OnlyIfIncapacitated,
+            /// <summary>
+            /// Can also access inventories of bots on the same team and friendly pets.
+            /// </summary>
+            AllowBotsAndPets,
+            /// <summary>
+            /// Can also access other players in the same team (used for drag and drop give).
+            /// </summary>
+            AllowFriendly
         }
         
         private readonly Character character;
@@ -220,6 +226,30 @@ namespace Barotrauma
             return false;
         }
 
+        public bool IsSlotEmpty(InvSlotType limbSlot)
+        {
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (SlotTypes[i] == limbSlot && slots[i].Empty()) { return true; }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Can the item be put in the inventory in a slot of the specified type (i.e. is there a suitable free slot or a stack the item can be put in).
+        /// </summary>
+        public bool CanBePut(Item item, InvSlotType slotType)
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (slotType.HasFlag(SlotTypes[i]))
+                {
+                    if (CanBePutInSlot(item, i)) { return true; }
+                }
+            }
+            return false;
+        }
+
         public override bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
         {
             return 
@@ -326,8 +356,9 @@ namespace Barotrauma
                     {
                         foreach (Item existingItem in slots[slot].Items.ToList())
                         {
+                            if (!existingItem.IsInteractable(character)) { continue; }
                             existingItem.Drop(user);
-                            if (existingItem.ParentInventory != null) { existingItem.ParentInventory.RemoveItem(existingItem); }
+                            existingItem.ParentInventory?.RemoveItem(existingItem);
                         }
                     }
                 }
@@ -415,7 +446,8 @@ namespace Barotrauma
             }
 
             int placedInSlot = -1;
-            foreach (InvSlotType allowedSlot in allowedSlots)
+            //order by whether the slot is empty, i.e. try putting in free slots first before trying to unequip items from occupied slots
+            foreach (InvSlotType allowedSlot in allowedSlots.OrderBy(slotType => IsSlotEmpty(slotType) ? 0 : 1))
             {
                 if (allowedSlot.HasFlag(InvSlotType.RightHand) && character.AnimController.GetLimb(LimbType.RightHand) == null) { continue; }
                 if (allowedSlot.HasFlag(InvSlotType.LeftHand) && character.AnimController.GetLimb(LimbType.LeftHand) == null) { continue; }

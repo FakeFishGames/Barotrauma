@@ -35,7 +35,7 @@ namespace Barotrauma
         /// </summary>
         public const float HighestOrderPriority = 70;
         /// <summary>
-        /// Maximum priority of an order given to the character (rightmost order in the crew list)
+        /// Minimum priority of an order given to the character (rightmost order in the crew list)
         /// </summary>
         public const float LowestOrderPriority = 60;
         /// <summary>
@@ -443,6 +443,10 @@ namespace Barotrauma
                 newCurrentObjective.Abandoned += () => DismissSelf(order);
                 CurrentOrders.Add(order.WithObjective(newCurrentObjective));
             }
+            else if (!order.IsDismissal)
+            {
+                DebugConsole.ThrowError($"Failed to create an objective for the order: {order.Name}");
+            }
             if (!HasOrders())
             {
                 // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
@@ -458,6 +462,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Creates an AI objective based on the order. Note that the method can return null in the case of e.g. Dismissal orders or orders that erroneously target something non-interactable.
+        /// </summary>
         public AIObjective CreateObjective(Order order, float priorityModifier = 1)
         {
             if (order == null || order.IsDismissal) { return null; }
@@ -476,7 +483,7 @@ namespace Barotrauma
                         IgnoreIfTargetDead = true,
                         IsFollowOrder = true,
                         Mimic = character.IsOnPlayerTeam,
-                        DialogueIdentifier = "dialogcannotreachplace".ToIdentifier()
+                        DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachPlace
                     };
                     break;
                 case "wait":
@@ -715,6 +722,11 @@ namespace Barotrauma
         /// </summary>
         public bool HasObjectiveOrOrder<T>() where T : AIObjective =>  Objectives.Any(o => o is T) || HasOrder<T>();
 
+        /// <summary>
+        /// Returns the current objective or its currently active subobjective (first in chain), regadless of the type.
+        /// Note: Not recursive, and thus doesn't work for deeper hierarchy!
+        /// For seeking objectives of specific type and in a deep hierarchy, use <see cref="GetLastActiveObjective{T}"/> or with looping objectives <see cref="GetFirstActiveObjective{T}"/>
+        /// </summary>
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
 
         /// <summary>
@@ -731,7 +743,8 @@ namespace Barotrauma
         /// Returns the last active objective of the specified objective type.
         /// Should generally be used to get the active objective (or subobjective) of objectives that don't sort their subobjectives by priority (see <see cref="AIObjective.AllowSubObjectiveSorting"/>.
         /// </summary>
-        /// <returns>The last active objective of the specified type if found.
+        /// <returns>
+        /// The last active objective of the specified type if found.
         /// </returns>
         public T GetLastActiveObjective<T>() where T : AIObjective
             => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
@@ -754,7 +767,12 @@ namespace Barotrauma
             if (CurrentObjective == null) { return Enumerable.Empty<T>(); }
             return CurrentObjective.GetSubObjectivesRecursive(includingSelf: true).OfType<T>();
         }
-
+        
+        /// <summary>
+        /// Is the current objective or any of its subobjectives of the given type?
+        /// Useful for checking whether the bot has a certain type of objective active in the hierarchy.
+        /// </summary>
+        /// <returns>False for objectives and orders that are not currently active.</returns>
         public bool HasActiveObjective<T>() where T : AIObjective => CurrentObjective is T || CurrentObjective != null && CurrentObjective.GetSubObjectivesRecursive().Any(so => so is T);
 
         public bool IsOrder(AIObjective objective)

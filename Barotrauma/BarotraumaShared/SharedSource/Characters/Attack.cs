@@ -225,7 +225,12 @@ namespace Barotrauma
         public float ImpactMultiplier { get; set; } = 1;
 
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much damage the attack does to level walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
-        public float LevelWallDamage { get; set; }
+        public float LevelWallDamage
+        {
+            get => _levelWallDamage * DamageMultiplier;
+            set => _levelWallDamage = value;
+        }
+        private float _levelWallDamage;
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Sets whether or not the attack is ranged or not."), Editable]
         public bool Ranged { get; set; }
@@ -398,14 +403,19 @@ namespace Barotrauma
             return (Duration == 0.0f) ? dmg : dmg * deltaTime;
         }
 
-        public float GetTotalDamage(bool includeStructureDamage = false)
+        /// <summary>
+        /// Returns the total damage (vitality decrease) this attack causes on characters.
+        /// </summary>
+        public float GetTotalCharacterDamage()
         {
-            float totalDamage = includeStructureDamage ? StructureDamage : 0.0f;
+            float totalDamage = 0.0f;
             foreach (Affliction affliction in Afflictions.Keys)
             {
-                totalDamage += affliction.GetVitalityDecrease(null);
+                float afflictionVitalityDecrease =  affliction.GetVitalityDecrease(null);
+                if (affliction.AffectedByAttackMultipliers) { afflictionVitalityDecrease *= DamageMultiplier; }
+                totalDamage += afflictionVitalityDecrease;
             }
-            return totalDamage * DamageMultiplier;
+            return totalDamage;
         }
 
         public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f)
@@ -439,10 +449,9 @@ namespace Barotrauma
             }
 
             //if level wall damage is not defined, default to the structure damage
-            if (element.GetAttribute("LevelWallDamage") == null && 
-                element.GetAttribute("levelwalldamage") == null)
+            if (element.GetAttribute("LevelWallDamage") == null)
             {
-                LevelWallDamage = StructureDamage;
+                LevelWallDamage = _structureDamage;
             }
 
             InitProjSpecific(element);

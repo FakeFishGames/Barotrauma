@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using static Barotrauma.MissionPrefab;
 
 namespace Barotrauma
 {
@@ -127,6 +126,7 @@ namespace Barotrauma
                 return string.Empty;
             }
         }
+        
         partial void DistributeExperienceToCrew(IEnumerable<Character> crew, int experienceGain)
         {
             foreach (Character character in crew)

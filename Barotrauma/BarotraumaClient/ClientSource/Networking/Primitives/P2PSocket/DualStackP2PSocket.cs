@@ -10,30 +10,31 @@ sealed class DualStackP2PSocket : P2PSocket
     private DualStackP2PSocket(
         Callbacks callbacks,
         Option<EosP2PSocket> eosSocket,
-        Option<SteamListenSocket> steamSocket) :
-        base(callbacks)
+        Option<SteamListenSocket> steamSocket,
+        OwnerOrClient type) :
+        base(callbacks, type)
     {
         this.eosSocket = eosSocket;
         this.steamSocket = steamSocket;
     }
 
-    public static Result<P2PSocket, Error> Create(Callbacks callbacks)
+    public static Result<P2PSocket, Error> Create(Callbacks callbacks, OwnerOrClient type)
     {
-        var eosP2PSocketResult = EosP2PSocket.Create(callbacks);
-        var steamP2PSocketResult = SteamListenSocket.Create(callbacks);
+        var eosP2PSocketResult = EosP2PSocket.Create(callbacks, type);
+        var steamP2PSocketResult = SteamListenSocket.Create(callbacks, type);
         if (eosP2PSocketResult.TryUnwrapFailure(out var eosError)
             && steamP2PSocketResult.TryUnwrapFailure(out var steamError))
         {
             return Result.Failure(new Error(eosError, steamError));
         }
-        return Result.Success((P2PSocket)new DualStackP2PSocket(
-            callbacks,
-            eosP2PSocketResult.TryUnwrapSuccess(out var eosP2PSocket)
-                ? Option.Some((EosP2PSocket)eosP2PSocket)
-                : Option.None,
-            steamP2PSocketResult.TryUnwrapSuccess(out var steamP2PSocket)
-                ? Option.Some((SteamListenSocket)steamP2PSocket)
-                : Option.None));
+        return Result.Success<P2PSocket>(new DualStackP2PSocket(
+                                            callbacks,
+                                            eosP2PSocketResult.TryUnwrapSuccess(out var eosP2PSocket)
+                                                ? Option.Some((EosP2PSocket)eosP2PSocket)
+                                                : Option.None,
+                                            steamP2PSocketResult.TryUnwrapSuccess(out var steamP2PSocket)
+                                                ? Option.Some((SteamListenSocket)steamP2PSocket)
+                                                : Option.None, type));
     }
 
     public override void ProcessIncomingMessages()

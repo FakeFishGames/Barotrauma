@@ -53,7 +53,7 @@ namespace Barotrauma
         {
             if (!Enabled) { return 1000.0f; }
 
-            Vector2 comparePosition = recipient.SpectatePos == null ? recipient.Character.WorldPosition : recipient.SpectatePos.Value;
+            Vector2 comparePosition = recipient.SpectatePos ?? recipient.Character.WorldPosition;
 
             float distance = Vector2.Distance(comparePosition, WorldPosition);
             if (recipient.Character?.ViewTarget != null)
@@ -85,7 +85,8 @@ namespace Barotrauma
 
         partial void UpdateNetInput()
         {
-            if (!(this is AICharacter) || IsRemotePlayer)
+            //non-ai character (a character that was previously controlled by a player) or a remote player (which can be an AI character controlled by a player)
+            if (this is not AICharacter || IsRemotePlayer)
             {
                 if (!CanMove)
                 {
@@ -198,7 +199,9 @@ namespace Barotrauma
             UInt16 networkUpdateID = msg.ReadUInt16();
             byte inputCount = msg.ReadByte();
 
-            if (AllowInput) { Enabled = true; }
+            // Doesn't seem to work consistently (at least with simulated long loading time 120), because sometimes there's some stun on the character. Anyway, can't see why we'd have to check AllowInput here.
+            //if (AllowInput) { Enabled = true; }
+            Enabled = true;
 
             for (int i = 0; i < inputCount; i++)
             {
@@ -443,12 +446,7 @@ namespace Barotrauma
             if (!fixedRotation)
             {
                 tempBuffer.WriteSingle(AnimController.Collider.Rotation);
-                float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
-                AnimController.Collider.AngularVelocity =
-                    AnimController.Collider.PhysEnabled ?
-                    0.0f :
-                    NetConfig.Quantize(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
-                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
+                tempBuffer.WriteSingle(AnimController.Collider.AngularVelocity);
             }
 
 
@@ -493,6 +491,7 @@ namespace Barotrauma
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);
+                    msg.WriteBoolean(GodMode);
                     break;
                 case UpdateSkillsEventData updateSkillsData:
                     if (Info?.Job is { } job)
@@ -528,7 +527,14 @@ namespace Barotrauma
                     }
                     break;
                 case AssignCampaignInteractionEventData _:
-                    msg.WriteByte((byte)CampaignInteractionType);
+
+                    bool canClientInteract = true;
+                    if (CampaignInteractionType == CampaignMode.InteractionType.Talk &&
+                        ActiveConversation != null)
+                    {
+                        canClientInteract = ActiveConversation.CanClientStartConversation(c);
+                    }
+                    msg.WriteByte((byte)(canClientInteract ? CampaignInteractionType : CampaignMode.InteractionType.None));
                     msg.WriteBoolean(RequireConsciousnessForCustomInteract);
                     break;
                 case ObjectiveManagerStateEventData objectiveManagerStateEventData:
@@ -669,6 +675,7 @@ namespace Barotrauma
                 {
                     msg.WriteUInt32(CauseOfDeath.Affliction.UintIdentifier);
                 }
+                msg.WriteUInt16(CauseOfDeath.Killer?.ID ?? NullEntityID);
                 msg.WriteBoolean(forceAfflictionData);
                 if (forceAfflictionData)
                 {
@@ -679,6 +686,7 @@ namespace Barotrauma
             {
                 CharacterHealth.ServerWrite(msg);
             }
+
             if (AnimController?.LimbJoints == null)
             {
                 //0 limbs severed
@@ -734,7 +742,7 @@ namespace Barotrauma
                 return;
             }
 
-            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this && (!c.SpectateOnly || !GameMain.Server.ServerSettings.AllowSpectating));
             if (ownerClient != null)
             {
                 msg.WriteBoolean(true);
@@ -792,9 +800,7 @@ namespace Barotrauma
 
             if (msg.LengthBytes - initialMsgLength >= 255 && restrictMessageSize)
             {
-                string errorMsg = $"Error when writing character spawn data for  \"{Name}\": data exceeded 255 bytes (info: {infoLength}, orders: {ordersLength}, total: {msg.LengthBytes - initialMsgLength})";
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchData", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                DebugConsole.AddWarning($"Character spawn data for \"{Name}\" exceeded 255 bytes (info: {infoLength}, orders: {ordersLength}, total: {msg.LengthBytes - initialMsgLength})");
             }
 
             TryWriteStatus(msg);
@@ -810,9 +816,7 @@ namespace Barotrauma
                     msg.WriteBoolean(false);
                     if (msgLengthBeforeStatus < 255)
                     {
-                        string errorMsg = $"Error when writing character spawn data for \"{Name}\": status data caused the length of the message to exceed 255 bytes ({msgLengthBeforeStatus} + {tempBuffer.LengthBytes})";
-                        DebugConsole.ThrowError(errorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchDataForStatus", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        DebugConsole.ThrowError($"Character spawn data for \"{Name}\" caused the length of the message to exceed 255 bytes ({msgLengthBeforeStatus} + {tempBuffer.LengthBytes})");
                     }
                 }
                 else

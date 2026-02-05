@@ -102,12 +102,12 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Index of the slot the target must be in when targeting a Contained item
+        /// Index of the slot the target must be in when targeting a Contained item or a character inventory.
         /// </summary>
         public int TargetSlot = -1;
 
         /// <summary>
-        /// The slot type the target must be in when targeting an item contained inside a character's inventory
+        /// The slot type the target must be in when targeting an item contained inside a character's inventory.
         /// </summary>
         public InvSlotType CharacterInventorySlotType;
 
@@ -329,7 +329,6 @@ namespace Barotrauma
             IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
             MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
             TargetSlot = element.GetAttributeInt("targetslot", -1);
-
         }
 
         public bool CheckRequirements(Character character, Item parentItem)
@@ -344,22 +343,21 @@ namespace Barotrauma
                     return CheckItem(parentItem.Container, this);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
-                    var heldItems = character.HeldItems;
-                    if (RequireOrMatchOnEmpty && heldItems.None()) { return true; }
-                    foreach (Item equippedItem in heldItems)
+                    foreach (var item in character.Inventory.AllItemsMod)
                     {
-                        if (equippedItem == null) { continue; }
-                        if (CheckItem(equippedItem, this))
+                        if (character.HasEquippedItem(item) && CheckItem(item, this))
                         {
-                            if (RequireEmpty && equippedItem.Condition > 0) { return false; }
+                            if (RequireEmpty && item.Condition > 0) { return false; }
                             return true;
                         }
                     }
-                    break;
+                    //got this far -> no matching item was equipped
+                    //return true if we require or want to match "empty" (no matching item), otherwise false
+                    return RequireOrMatchOnEmpty;
                 case RelationType.Picked:
                     if (character == null) { return false; }
                     if (character.Inventory == null) { return MatchOnEmpty || RequireEmpty; }
-                    var allItems = character.Inventory.AllItems;
+                    var allItems = TargetSlot == -1 ? character.Inventory.AllItems : character.Inventory.GetItemsAt(TargetSlot);
                     if (RequireOrMatchOnEmpty && allItems.None()) { return true; }
                     foreach (Item pickedItem in allItems)
                     {

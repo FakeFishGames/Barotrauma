@@ -45,6 +45,20 @@ namespace Barotrauma
         {
             OnSort = onSort;
         }
+        
+        /// <summary>
+        /// For iterating through the Prefabs in a deterministic order (e.g. for map generation). Sorting is not cached, so use sparingly.
+        /// </summary>
+        public IOrderedEnumerable<T> GetOrdered()
+        {
+            // UintIdentifier comparison is preferred to Identifier comparison that uses strings
+            if ((typeof(T).IsAssignableFrom(typeof(PrefabWithUintIdentifier))))
+            {
+                return this.OrderBy(p => (p as PrefabWithUintIdentifier)!.UintIdentifier);
+            }
+            
+            return this.OrderBy(p => p.Identifier);
+        }
 
         /// <summary>
         /// Method to be called when calling Add(T prefab, bool override).

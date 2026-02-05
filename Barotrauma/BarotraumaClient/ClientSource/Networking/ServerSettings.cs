@@ -12,6 +12,8 @@ namespace Barotrauma.Networking
         private static readonly LocalizedString packetAmountTooltip = TextManager.Get("ServerSettingsMaxPacketAmountTooltip");
         private static readonly RichString packetAmountTooltipWarning = RichString.Rich($"{packetAmountTooltip}\n\n‖color:gui.red‖{TextManager.Get("PacketLimitWarning")}‖end‖");
 
+        public static bool SuppressNetworkMessages;
+
         partial class NetPropertyData
         {
             public GUIComponent GUIComponent;
@@ -94,6 +96,14 @@ namespace Barotrauma.Networking
                 get
                 {
                     if (GUIComponent == null) { return false; }
+                    if (GUIComponent is GUIDropDown dropDown && 
+                        dropDown.SelectedIndex == -1)
+                    {
+                        //nothing selected in the dropdown
+                        //it's not possible to select nothing via the UI, which means the client cannot have selected anything locally
+                        //(so this must mean that either nothing has been selected yet or that there's nothing in the dropdown)
+                        return false;
+                    }
                     return !PropEquals(TempValue, GUIComponentValue);
                 }
             }
@@ -238,6 +248,7 @@ namespace Barotrauma.Networking
                 int traitorDangerLevel = 0)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) { return; }
+            if (SuppressNetworkMessages) { return; }
 
             IWriteMessage outMsg = new WriteOnlyMessage();
 

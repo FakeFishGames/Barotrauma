@@ -94,6 +94,18 @@ namespace Barotrauma
                 return null;
             }
         }
+        
+        /// <summary>
+        /// Note: Does not automatically filter items by team or by game mode. See <see cref="JobItem.GetItemIdentifier(CharacterTeamType, bool)"/>
+        /// </summary>
+        public IEnumerable<JobItem> GetJobItems(int jobVariant, Func<JobItem, bool> predicate)
+            => JobItems.TryGetValue(jobVariant, out ImmutableArray<JobItem> items) ? items.Where(predicate) : Enumerable.Empty<JobItem>();
+        
+        /// <summary>
+        /// Note: Does not automatically filter items by team or by game mode. See <see cref="JobItem.GetItemIdentifier(CharacterTeamType, bool)"/>
+        /// </summary>
+        public bool HasJobItem(int jobVariant, Func<JobItem, bool> predicate) 
+            => JobItems.TryGetValue(jobVariant, out ImmutableArray<JobItem> items) && items.Any(predicate);
 
         public class JobItem
         {
@@ -107,7 +119,8 @@ namespace Barotrauma
             public readonly bool ShowPreview;
             public readonly bool Equip;
             public readonly bool Outfit;
-            public readonly int Amount = 1;
+            public readonly int Amount;
+            public readonly bool Infinite;
 
             public readonly JobItem ParentItem;
 
@@ -117,14 +130,15 @@ namespace Barotrauma
             {
                 ItemIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
                 ItemIdentifierTeam2 = element.GetAttributeIdentifier("identifierteam2", Identifier.Empty);
-                ShowPreview = element.GetAttributeBool("showpreview", true);
-                GameMode = element.GetAttributeEnum("gamemode", parentItem?.GameMode ?? GameModeType.Any);
-                Amount = element.GetAttributeInt("amount", 1);
-                Equip = element.GetAttributeBool("equip", false);
-                Outfit = element.GetAttributeBool("outfit", false);
+                ShowPreview = element.GetAttributeBool(nameof(ShowPreview), true);
+                GameMode = element.GetAttributeEnum(nameof(GameMode), parentItem?.GameMode ?? GameModeType.Any);
+                Amount = element.GetAttributeInt(nameof(Amount), 1);
+                Equip = element.GetAttributeBool(nameof(Equip), false);
+                Outfit = element.GetAttributeBool(nameof(Outfit), false);
+                Infinite = element.GetAttributeBool(nameof(Infinite), false);
                 ParentItem = parentItem;
             }
-
+            
             public Identifier GetItemIdentifier(CharacterTeamType team, bool isPvPMode)
             {
                 switch (GameMode)
@@ -136,11 +150,10 @@ namespace Barotrauma
                         if (isPvPMode) { return Identifier.Empty; }
                         break;
                 }
-
                 return 
                     team == CharacterTeamType.Team2 && !ItemIdentifierTeam2.IsEmpty ? 
-                    ItemIdentifierTeam2 : 
-                    ItemIdentifier;
+                        ItemIdentifierTeam2 : 
+                        ItemIdentifier;
             }
         }
 

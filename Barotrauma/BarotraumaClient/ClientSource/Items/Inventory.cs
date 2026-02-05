@@ -357,6 +357,18 @@ namespace Barotrauma
 #if DEBUG
                 toolTip += $" ({item.Prefab.Identifier})";
 #endif           
+                if (!item.Prefab.UnlockedRecipeInToolTip.IsEmpty && GameMain.GameSession is { } GameSession)
+                {
+                    if (GameSession.HasUnlockedRecipe(Character.Controlled, item.Prefab.UnlockedRecipeInToolTip))
+                    {
+                        toolTip += TextManager.Get("unlockedrecipe.true");
+                    }
+                    else
+                    {
+                        toolTip += $"\n‖color:{XMLExtensions.ToStringHex(GUIStyle.Yellow)}‖{TextManager.Get("unlockedrecipe.false")}‖color:end‖";
+                    }
+                }
+
                 if (PlayerInput.KeyDown(InputType.ContextualCommand))
                 {
                     toolTip += $"\n‖color:gui.blue‖{TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders"))}‖color:end‖";
@@ -365,7 +377,8 @@ namespace Barotrauma
                 {
                     var colorStr = XMLExtensions.ToStringHex(Color.LightGray * 0.7f);
                     toolTip += $"\n‖color:{colorStr}‖{TextManager.Get("itemmsg.morreoptionsavailable")}‖color:end‖";
-                }                
+                }
+
 
                 return RichString.Rich(toolTip);
             }
@@ -425,9 +438,9 @@ namespace Barotrauma
             }
         }
 
-        public Inventory GetReplacementOrThiS()
+        public Inventory GetReplacementOrThis()
         {
-            return ReplacedBy?.GetReplacementOrThiS() ?? this;
+            return ReplacedBy?.GetReplacementOrThis() ?? this;
         }
 
         public virtual void CreateSlots()
@@ -1255,7 +1268,7 @@ namespace Barotrauma
                                                  container.AllowDragAndDrop &&
                                                  inventory.CanBePut(DraggingItems.FirstOrDefault());
 
-                bool isTargetingValidCharacter = IsValidTargetForDragDropGive(Character.Controlled, Character.Controlled.FocusedCharacter);
+                bool isTargetingValidCharacter = IsValidTargetForDragDropGive(Character.Controlled, Character.Controlled.FocusedCharacter, DraggingItems);
 
                 if (DraggingItemToWorld && (isTargetingValidContainer || isTargetingValidCharacter))
                 {
@@ -1418,11 +1431,25 @@ namespace Barotrauma
             }
         }
         
-        private static bool IsValidTargetForDragDropGive(Character giver, Character receiver)
+        private static bool IsValidTargetForDragDropGive(Character giver, Character receiver, IEnumerable<Item> draggedItems)
         {
-            if (giver == null || receiver == null) { return false; }
+            if (giver == null || receiver == null || draggedItems.None()) { return false; }
             if (receiver == giver) { return false; }
-            return receiver.IsInventoryAccessibleTo(giver, IsDragAndDropGiveAllowed ? CharacterInventory.AccessLevel.Allowed : CharacterInventory.AccessLevel.Limited);
+
+            CharacterInventory.AccessLevel accessLevel;
+            if (draggedItems.Any(it => it.HasTag(Tags.HandLockerItem)))
+            {
+                //handcuffs can't be given to players by dragging and dropping (because it can allow handcuffing them)
+                accessLevel = CharacterInventory.AccessLevel.AllowBotsAndPets;
+            }
+            else
+            {
+                accessLevel = IsDragAndDropGiveAllowed ? CharacterInventory.AccessLevel.AllowFriendly : CharacterInventory.AccessLevel.AllowBotsAndPets;
+            }
+
+            return 
+                receiver.IsInventoryAccessibleTo(giver, accessLevel) &&
+                receiver.Inventory.CanBePut(draggedItems.FirstOrDefault(), InvSlotType.Any);
         }
 
         private static bool CanSelectSlot(SlotReference selectedSlot)
@@ -1603,7 +1630,8 @@ namespace Barotrauma
                         shadowSprite.Draw(spriteBatch,
                             new Rectangle(itemPos.ToPoint() - new Point((iconSize / 2 - shadowPadding.X) * textDir - shadowSize.X * textOffset, iconSize / 2 + shadowPadding.Y), shadowSize), Color.Black * 0.8f);
 
-                        GUI.DrawString(spriteBatch, textPos + new Vector2(nameSize.X * textOffset, -iconSize / 2), DraggingItems.First().Name, Color.White);
+                        var richString = RichString.Rich(DraggingItems.First().Name);
+                        GUI.DrawStringWithColors(spriteBatch, textPos + new Vector2(nameSize.X * textOffset, -iconSize / 2), richString.SanitizedValue, Color.White, richString.RichTextData);
                         GUI.DrawString(spriteBatch, textPos + new Vector2(toolTipSize.X * textOffset, 0), toolTip,
                             color: toolTipColor,
                             font: GUIStyle.SmallFont);
@@ -1650,7 +1678,7 @@ namespace Barotrauma
 
             (LocalizedString, Color) GetDragLabelTextAndColor(bool mouseOnHealthInterface)
             {
-                bool useDragDropGive = IsValidTargetForDragDropGive(Character.Controlled, Character.Controlled.FocusedCharacter);
+                bool useDragDropGive = IsValidTargetForDragDropGive(Character.Controlled, Character.Controlled.FocusedCharacter, DraggingItems);
                 
                 Color toolTipColor = Color.LightGreen;
                 

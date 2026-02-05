@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
 using System.Linq;
 
 namespace Barotrauma.Items.Components
@@ -47,7 +48,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             //actual throwing logic is handled in Update
-            return characterUsable || character == null;
+            return (characterUsable && !UsageDisabledByRangedWeapon(character)) || character == null;
         }
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
@@ -111,24 +112,28 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (throwState != ThrowState.Throwing)
+            bool aim = false;
+            if (!UsageDisabledByRangedWeapon(picker))
             {
-                if (picker.IsKeyDown(InputType.Aim)) 
+                if (throwState != ThrowState.Throwing)
                 {
-                    if (picker.IsKeyDown(InputType.Shoot)) { throwState = ThrowState.Initiated; }
+                    if (picker.IsKeyDown(InputType.Aim)) 
+                    {
+                        if (picker.IsKeyDown(InputType.Shoot)) { throwState = ThrowState.Initiated; }
+                    }
+                    else if (throwState != ThrowState.Initiated)
+                    { 
+                        throwAngle = ThrowAngleStart; 
+                    }
                 }
-                else if (throwState != ThrowState.Initiated)
-                { 
-                    throwAngle = ThrowAngleStart; 
-                }
-            }
 
-            bool aim = picker.IsKeyDown(InputType.Aim) && picker.CanAim;
+                aim = picker.IsKeyDown(InputType.Aim) && picker.CanAim;
+            }
             if (picker.IsDead || !picker.AllowInput)
             {
                 throwState = ThrowState.None;
                 aim = false;
-            }
+            }            
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
             //return if the status effect got rid of the picker somehow
@@ -193,7 +198,16 @@ namespace Barotrauma.Items.Components
 
                     item.Drop(CurrentThrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
                     item.WaterDragCoefficient = WaterDragCoefficient;
-                    item.body.ApplyLinearImpulse(throwVector * ThrowForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+
+                    float throwForce = ThrowForce;
+                    //Reduce force when aiming down
+                    float downwardsDotProduct = Vector2.Dot(-Vector2.UnitY, throwVector); //1 when pointing directly down, 0 when sideways, -1 when up
+                    if (downwardsDotProduct > 0)
+                    {
+                        throwForce *= (1.0f - downwardsDotProduct * 0.7f);
+                    }
+
+                    item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
                     //disable platform collisions until the item comes back to rest again
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;

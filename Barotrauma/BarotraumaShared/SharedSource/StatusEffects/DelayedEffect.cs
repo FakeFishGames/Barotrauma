@@ -1,10 +1,8 @@
-﻿using System;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -12,7 +10,11 @@ namespace Barotrauma
     {
         public readonly DelayedEffect Parent;
         public readonly Entity Entity;
-        public readonly Vector2? WorldPosition;
+        public Vector2? WorldPosition;
+        /// <summary>
+        /// Should the delayed effect attempt to determine the position of the effect based on the targets, or just use the position that was passed to the constructor.
+        /// </summary>
+        public bool GetPositionBasedOnTargets;
         public readonly Vector2? StartPosition;
         public readonly List<ISerializableEntity> Targets;
         public float Delay;
@@ -62,7 +64,10 @@ namespace Barotrauma
             {
                 foreach (var existingEffect in DelayList)
                 {
-                    if (existingEffect.Parent == this && existingEffect.Targets.FirstOrDefault() == target) { return; }
+                    if (existingEffect.Parent == this && existingEffect.Targets.FirstOrDefault() == target) 
+                    {
+                        return; 
+                    }
                 }
             }
             if (!IsValidTarget(target)) { return; }
@@ -74,7 +79,11 @@ namespace Barotrauma
             switch (delayType)
             {
                 case DelayTypes.Timer:
-                    DelayList.Add(new DelayedListElement(this, entity, currentTargets, delay, worldPosition, null));
+                    var newDelayListElement = new DelayedListElement(this, entity, currentTargets, delay, worldPosition ?? GetPosition(entity, currentTargets, worldPosition), startPosition: null)
+                    {
+                        GetPositionBasedOnTargets = worldPosition == null
+                    };
+                    DelayList.Add(newDelayListElement);
                     break;
                 case DelayTypes.ReachCursor:
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();
@@ -104,6 +113,7 @@ namespace Barotrauma
         public override void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (this.type != type) { return; }
+            if (Disabled) { return; }
             if (ShouldWaitForInterval(entity, deltaTime)) { return; }
             if (!HasRequiredItems(entity)) { return; }
             if (delayType == DelayTypes.ReachCursor && Character.Controlled == null) { return; }
@@ -171,7 +181,16 @@ namespace Barotrauma
                 {
                     case DelayTypes.Timer:
                         element.Delay -= deltaTime;
-                        if (element.Delay > 0.0f) { continue; }
+                        if (element.Delay > 0.0f) 
+                        { 
+                            //if the delayed effect is supposed to get the position from the targets,
+                            //keep refreshing the position until the effect runs (so e.g. a delayed effect runs at the last known position of a monster before it despawned)
+                            if (element.GetPositionBasedOnTargets && element.Entity is { Removed: false })
+                            {
+                                element.WorldPosition = element.Parent.GetPosition(element.Entity, element.Parent.currentTargets);
+                            }
+                            continue; 
+                        }
                         break;
                     case DelayTypes.ReachCursor:
                         if (Vector2.Distance(element.Entity.WorldPosition, element.StartPosition.Value) < element.Delay) { continue; }

@@ -103,6 +103,9 @@ namespace Barotrauma.Particles
             if (prefab == null || prefab.Sprites.Count == 0) { return null; }
             if (particleCount >= MaxParticles)
             {
+                //maximum number of particles reached, and this is not a high-prio particle or something that should always draw
+                // -> the particle won't be created, we can return early
+                if (particleCount >= MaxParticles && prefab.Priority == 0 && !prefab.DrawAlways) { return null; }
                 for (int i = 0; i < particleCount; i++)
                 {
                     if (particles[i].Prefab.Priority < prefab.Priority ||

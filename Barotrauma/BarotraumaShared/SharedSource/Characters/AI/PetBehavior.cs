@@ -1,10 +1,11 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using static Barotrauma.CharacterParams;
 
@@ -160,7 +161,8 @@ namespace Barotrauma
                         aggregate += Items[i].Commonness;
                         if (aggregate >= r && Items[i].Prefab != null)
                         {
-                            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetProducedItem:" + pet.AIController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
+                            //disabled to reduce the amount of data we collect through GA
+                            //GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetProducedItem:" + pet.AIController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
                             Entity.Spawner?.AddItemToSpawnQueue(Items[i].Prefab, pet.AIController.Character.WorldPosition);
                             break;
                         }
@@ -293,10 +295,15 @@ namespace Barotrauma
             return false;
         }
 
+        public bool CanPlayWith(Character player)
+        {
+            return AIController.Character.IsOnFriendlyTeam(player);
+        }
+
         public void Play(Character player)
         {
             if (PlayTimer > 0.0f) { return; }
-            if (!AIController.Character.IsFriendly(player)) { return; }
+            if (!CanPlayWith(player)) { return; }
             if (ToggleOwner)
             {
                 Owner = Owner == player ? null : player;
@@ -427,6 +434,21 @@ namespace Barotrauma
 
                 var petBehavior = (c.AIController as EnemyAIController)?.PetBehavior;
                 if (petBehavior == null) { continue; }
+
+                //never save hostile pets or pets left outside
+                if (c.TeamID == CharacterTeamType.None ||
+                    c.TeamID == CharacterTeamType.Team2 ||
+                    c.Submarine == null)
+                {
+                    continue;
+                }
+
+                //pets must be in a player sub or owned by someone to be persistent
+                if (c.Submarine is not { Info.IsPlayer: true } && 
+                    petBehavior.Owner is not { IsOnPlayerTeam: true }) 
+                { 
+                    continue; 
+                }
 
                 XElement petElement = new XElement("pet", 
                     new XAttribute("speciesname", c.SpeciesName), 

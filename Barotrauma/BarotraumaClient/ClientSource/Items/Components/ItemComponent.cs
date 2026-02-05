@@ -236,7 +236,11 @@ namespace Barotrauma.Items.Components
 
         public ItemComponent GetReplacementOrThis()
         {
-            return ReplacedBy?.GetReplacementOrThis() ?? this;
+            if (ReplacedBy != null && ReplacedBy != this)
+            {
+                return ReplacedBy.GetReplacementOrThis();
+            }
+            return this;
         }
 
         public bool NeedsSoundUpdate()
@@ -261,6 +265,7 @@ namespace Barotrauma.Items.Components
                 float gainDiff = targetGain - loopingSoundChannel.Gain;
                 loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
                 loopingSoundChannel.Position = new Vector3(item.WorldPosition, 0.0f);
+                loopingSound.RoundSound.LastStreamSeekPos = loopingSoundChannel.StreamSeekPos;
             }
             for (int i = 0; i < playingOneshotSoundChannels.Count; i++)
             {
@@ -316,11 +321,13 @@ namespace Barotrauma.Items.Components
                         0.01f,
                         loopingSound.RoundSound.GetRandomFrequencyMultiplier(),
                         SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull));
-                    loopingSoundChannel.Looping = true;
-                    item.CheckNeedsSoundUpdate(this);
-                    //TODO: tweak
-                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
-                    loopingSoundChannel.Far = loopingSound.Range;
+                    if (loopingSoundChannel != null) 
+                    { 
+                        loopingSoundChannel.Looping = true;
+                        item.CheckNeedsSoundUpdate(this);
+                        loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                        loopingSoundChannel.Far = loopingSound.Range;
+                    }
                 }
 
                 // Looping sound with manual selection mode should be changed if value of ManuallySelectedSound has changed
@@ -397,10 +404,16 @@ namespace Barotrauma.Items.Components
                     if (volume <= 0.0001f) { return; }
                     loopingSound = itemSound;
                     loopingSoundChannel = SoundPlayer.PlaySound(loopingSound.RoundSound, position, volume: 0.01f, hullGuess: item.CurrentHull);
-                    loopingSoundChannel.Looping = true;
-                    //TODO: tweak
-                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
-                    loopingSoundChannel.Far = loopingSound.Range;
+                    if (loopingSoundChannel != null)
+                    {
+                        loopingSoundChannel.Looping = true;
+                        loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                        loopingSoundChannel.Far = loopingSound.Range;
+                        if (loopingSound.RoundSound.Stream)
+                        {
+                            loopingSoundChannel.StreamSeekPos = loopingSound.RoundSound.LastStreamSeekPos;
+                        }
+                    }
                 }
             }
             else
@@ -507,7 +520,7 @@ namespace Barotrauma.Items.Components
                 if (HUDOverlay is SpriteSheet spriteSheet)
                 {
                     spriteSheet.Draw(spriteBatch,
-                        spriteIndex: (int)(Math.Floor(Timing.TotalTimeUnpaused * HUDOverlayAnimSpeed) % spriteSheet.FrameCount),
+                        spriteIndex: spriteSheet.GetAnimatedSpriteIndex(HUDOverlayAnimSpeed),
                         pos: screenSize / 2, color: Color.White, origin: HUDOverlay.Origin, rotate: 0, scale: screenSize / spriteSheet.FrameSize.ToVector2());
                 }
                 else
@@ -740,6 +753,9 @@ namespace Barotrauma.Items.Components
                             }),
                             new ContextMenuOption(TextManager.Get(LockGuiFramePosition ? "item.unlockuiposition" : "item.lockuiposition"), isEnabled: true, onSelected: () =>
                             {
+                                //ensure the offset is set to where the frame is now
+                                //(it may have been repositioned by the overlap prevention logic, which doesn't set this offset)
+                                GuiFrameOffset = GuiFrame.RectTransform.ScreenSpaceOffset;
                                 LockGuiFramePosition = !LockGuiFramePosition;
                                 guiFrameDragHandle.Enabled = !LockGuiFramePosition;
                                 if (SerializableProperties.TryGetValue(nameof(LockGuiFramePosition).ToIdentifier(), out var property))

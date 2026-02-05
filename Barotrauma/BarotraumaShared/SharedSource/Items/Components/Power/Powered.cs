@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 #if CLIENT
 using Barotrauma.Sounds;
 #endif
@@ -93,7 +94,22 @@ namespace Barotrauma.Items.Components
         /// </summary>
         protected float powerConsumption;
 
-        protected Connection powerIn, powerOut;
+        protected Connection powerIn;
+        protected List<Connection> powerOuts = new List<Connection>();
+        /// <summary>
+        /// Throws an error if there is more than one power out connection.<br/>
+        /// Use <see cref="powerOuts"/> if a component should handle multiple outputs.
+        /// </summary>
+        protected Connection powerOut
+        {
+            get
+            {
+                if (powerOuts.Count > 1) { DebugConsole.ThrowErrorOnce($"{item.ID}.multiplePowerOut", $"Item {item.Name} ({item.Prefab.Identifier}) has multiple power outputs, but only supports one!"); }
+                return powerOuts.FirstOrDefault();
+            }
+        }
+
+        protected bool powerInIsPowerOut => powerOuts.Contains(powerIn);
 
         /// <summary>
         /// Maximum voltage factor when the device is being overvolted. I.e. how many times more effectively the device can function when it's being overvolted
@@ -153,9 +169,10 @@ namespace Barotrauma.Items.Components
                 {
                     if (powerIn?.Grid != null) { return powerIn.Grid.Voltage; }
                 }
-                else if (powerOut != null)
+                else if (powerOuts.Any())
                 {
-                    if (powerOut?.Grid != null) { return powerOut.Grid.Voltage; }
+                    IEnumerable<Connection> gridConnections = powerOuts.Where(static conn => conn.Grid != null);
+                    if (gridConnections.Any()) { return gridConnections.Average(static conn => conn.Grid.Voltage); }
                 }
                 
                 if (this is PowerTransfer && item.Condition <= 0.0f)
@@ -245,18 +262,19 @@ namespace Barotrauma.Items.Components
                     {
                         powerIn = c;
                     }
-                    else if (c.Name == "power_out")
-                    {
-                        powerOut = c;
-                        // Connection takes the lowest priority
-                        if (Priority > powerOut.Priority)
-                        {
-                            powerOut.Priority = Priority;
-                        }
-                    }
                     else if (c.Name == "power")
                     {
-                        powerIn = powerOut = c;
+                        powerIn = c;
+                        powerOuts.Add(c);
+                    }
+                    else if (c.IsOutput)
+                    {
+                        powerOuts.Add(c);
+                        // Connection takes the lowest priority
+                        if (Priority > c.Priority)
+                        {
+                            c.Priority = Priority;
+                        }
                     }
                 }
                 else
@@ -271,11 +289,11 @@ namespace Barotrauma.Items.Components
                             DebugConsole.NewMessage($"Item \"{item.Name}\" has a power output connection called power_in. If the item is supposed to receive power through the connection, change it to an input connection.", Color.Orange);
 #endif
                         }
-                        powerOut = c;
+                        powerOuts.Add(c);
                         // Connection takes the lowest priority
-                        if (Priority > powerOut.Priority)
+                        if (Priority > c.Priority)
                         {
-                            powerOut.Priority = Priority;
+                            c.Priority = Priority;
                         }
                     }
                     else
@@ -335,9 +353,9 @@ namespace Barotrauma.Items.Components
                     {
                         powered.powerIn.Grid = null;
                     }
-                    if (powered.powerOut != null)
+                    foreach (Connection powerOut in powered.powerOuts)
                     {
-                        powered.powerOut.Grid = null;
+                        powerOut.Grid = null;
                     }
                 }
 
@@ -345,8 +363,10 @@ namespace Barotrauma.Items.Components
 
                 foreach (Powered powered in poweredList)
                 {
+                    if (powered.Item.Condition <= 0f) { continue; }
+
                     //Probe through all connections that don't have a gridID
-                    if (powered.powerIn != null && powered.powerIn.Grid == null && powered.powerIn != powered.powerOut && powered.Item.Condition > 0.0f)
+                    if (powered.powerIn != null && powered.powerIn.Grid == null && !powered.powerInIsPowerOut)
                     {
                         // Only create grids for networks with more than 1 device
                         if (powered.powerIn.Recipients.Count > 0)
@@ -356,13 +376,16 @@ namespace Barotrauma.Items.Components
                         }
                     }
 
-                    if (powered.powerOut != null && powered.powerOut.Grid == null && powered.Item.Condition > 0.0f)
+                    foreach (Connection powerOut in powered.powerOuts)
                     {
-                        //Only create grids for networks with more than 1 device
-                        if (powered.powerOut.Recipients.Count > 0)
+                        if (powerOut != null && powerOut.Grid == null)
                         {
-                            GridInfo grid = PropagateGrid(powered.powerOut);
-                            Grids[grid.ID] = grid;
+                            //Only create grids for networks with more than 1 device
+                            if (powerOut.Recipients.Count > 0)
+                            {
+                                GridInfo grid = PropagateGrid(powerOut);
+                                Grids[grid.ID] = grid;
+                            }
                         }
                     }
                 }
@@ -479,7 +502,7 @@ namespace Barotrauma.Items.Components
                 powered.Voltage -= deltaTime;
 
                 //Handle the device if it's got a power connection
-                if (powered.powerIn != null && powered.powerOut != powered.powerIn)
+                if (powered.powerIn != null && !powered.powerInIsPowerOut)
                 {
                     //Get the new load for the connection
                     float currLoad = powered.GetCurrentPowerConsumption(powered.powerIn);
@@ -507,10 +530,10 @@ namespace Barotrauma.Items.Components
                 }
 
                 //Handle the device power depending on if its powerout
-                if (powered.powerOut != null)
+                foreach (Connection powerOut in powered.powerOuts)
                 {
                     //Get the connection's load
-                    float currLoad = powered.GetCurrentPowerConsumption(powered.powerOut);
+                    float currLoad = powered.GetCurrentPowerConsumption(powerOut);
 
                     //Update the device's output load to the correct variable
                     if (powered is PowerTransfer pt)
@@ -529,20 +552,20 @@ namespace Barotrauma.Items.Components
                     if (currLoad >= 0)
                     {
                         //Add to the grid load if possible
-                        if (powered.powerOut.Grid != null)
+                        if (powerOut.Grid != null)
                         {
-                            powered.powerOut.Grid.Load += currLoad;
+                            powerOut.Grid.Load += currLoad;
                         }
                     }
-                    else if (powered.powerOut.Grid != null)
+                    else if (powerOut.Grid != null)
                     {
                         //Add connection as a source to be processed
-                        powered.powerOut.Grid.AddSrc(powered.powerOut);
+                        powerOut.Grid.AddSrc(powerOut);
                     }
                     else
                     {
                         //Perform power calculations for the singular connection
-                        float loadOut = -powered.GetConnectionPowerOut(powered.powerOut, 0, powered.MinMaxPowerOut(powered.powerOut, 0), 0);
+                        float loadOut = -powered.GetConnectionPowerOut(powerOut, 0, powered.MinMaxPowerOut(powerOut, 0), 0);
                         if (powered is PowerTransfer pt2)
                         {
                             pt2.PowerLoad = loadOut;
@@ -557,7 +580,7 @@ namespace Barotrauma.Items.Components
                         }
 
                         //Indicate grid is resolved as it was the only device
-                        powered.GridResolved(powered.powerOut);
+                        powered.GridResolved(powerOut);
                     }
                 }
             }
@@ -625,7 +648,7 @@ namespace Barotrauma.Items.Components
         public virtual float GetCurrentPowerConsumption(Connection connection = null)
         {
             // If a handheld device there is no consumption
-            if (powerIn == null && powerOut == null)
+            if (powerIn == null && powerOuts.None())
             {
                 return 0;
             }
@@ -664,7 +687,7 @@ namespace Barotrauma.Items.Components
         /// <returns>Power pushed to the grid</returns>
         public virtual float GetConnectionPowerOut(Connection conn, float power, PowerRange minMaxPower, float load)
         {
-            return conn == powerOut ? MathHelper.Max(-CurrPowerConsumption, 0) : 0;
+            return powerOuts.Contains(conn) ? MathHelper.Max(-CurrPowerConsumption, 0) : 0;
         }
 
         /// <summary>

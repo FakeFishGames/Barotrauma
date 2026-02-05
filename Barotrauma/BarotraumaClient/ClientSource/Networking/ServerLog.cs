@@ -9,6 +9,8 @@ namespace Barotrauma.Networking
 {
     public partial class ServerLog
     {
+        const int MaxLines = 500;
+
         public GUIButton LogFrame;
         private GUIListBox listBox;
         private GUIButton reverseButton;
@@ -16,6 +18,8 @@ namespace Barotrauma.Networking
         private string msgFilter;
 
         private bool reverseOrder = false;
+
+        private readonly bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
 
         private bool OnReverseClicked(GUIButton btn, object obj)
         {
@@ -105,7 +109,10 @@ namespace Barotrauma.Networking
             reverseButton.Children.ForEach(c => c.SpriteEffects = reverseOrder ? SpriteEffects.FlipVertically : SpriteEffects.None);
             reverseButton.OnClicked = OnReverseClicked;
 
-            listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), listBoxLayout.RectTransform));
+            listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), listBoxLayout.RectTransform))
+            {
+                AutoHideScrollBar = false
+            };
 
             GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), rightColumn.RectTransform), TextManager.Get("Close"))
             {
@@ -127,7 +134,8 @@ namespace Barotrauma.Networking
 
             listBox.UpdateScrollBarSize();
 
-            if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) { listBox.BarScroll = 1.0f; }
+            //scrolled all the way down by default
+            listBox.BarScroll = 1.0f;             
             
             msgFilter = "";
         }
@@ -189,11 +197,19 @@ namespace Barotrauma.Networking
         {
             float prevSize = listBox.BarSize;
 
+            GUIComponent firstVisibleLine = listBox.Content.Children.FirstOrDefault(c => c.Rect.Y > listBox.Content.Rect.Y);
+            int firstVisibileYPos = firstVisibleLine?.Rect.Y ?? 0;
+
+            while (listBox.Content.CountChildren > MaxLines)
+            {
+                listBox.Content.RemoveChild(reverseOrder ? listBox.Content.Children.Last() : listBox.Content.Children.First());                
+            }
+
             GUIFrame textContainer = null;
 
             Anchor anchor = Anchor.TopLeft;
             Pivot pivot = Pivot.TopLeft;
-            RichString richString = line.Text as RichString;
+            RichString richString = line.Text;
             if (richString != null && richString.RichTextData.HasValue)
             {
                 foreach (var data in richString.RichTextData.Value)
@@ -217,7 +233,7 @@ namespace Barotrauma.Networking
                 line.Text, wrap: true, font: GUIStyle.SmallFont)
             {
                 TextColor = messageColor[line.Type],
-                Visible = !msgTypeHidden[(int)line.Type],
+                Visible = !ShouldFilterMessage(line),
                 CanBeFocused = false,
                 UserData = line
             };
@@ -247,29 +263,45 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if ((prevSize == 1.0f && listBox.BarScroll == 0.0f) || (prevSize < 1.0f && listBox.BarScroll == 1.0f)) listBox.BarScroll = 1.0f;
+            //if the list was scrolled to the bottom, or to the top while the list wasn't full yet,
+            //keep it scrolled to the bottom
+            if ((MathUtils.NearlyEqual(prevSize, 1.0f) && MathUtils.NearlyEqual(listBox.BarScroll, 0.0f)) || 
+                (prevSize < 1.0f && MathUtils.NearlyEqual(listBox.BarScroll, 1.0f)))
+            {
+                listBox.BarScroll = 1.0f;
+            }
+            //otherwise modify the scroll so the topmost element stays where it was (list doesn't jump as new lines are added when scrolled up)
+            else if (firstVisibleLine != null)
+            {
+                listBox.UpdateScrollBarSize();
+                listBox.RecalculateChildren();
+                int diff = firstVisibleLine.Rect.Y - firstVisibileYPos;
+                if (diff != 0)
+                {
+                    listBox.BarScroll += diff / listBox.TotalSize * (prevSize / listBox.BarSize);
+                }
+            }
         }
 
         private bool FilterMessages()
         {
-            string filter = msgFilter == null ? "" : msgFilter.ToLower();
-
             foreach (GUIComponent child in listBox.Content.Children)
             {
-                if (!(child is GUITextBlock textBlock)) { continue; }
+                if (child is not GUITextBlock) { continue; }
                 child.Visible = true;
-                if (msgTypeHidden[(int)((LogMessage)child.UserData).Type])
-                {
-                    child.Visible = false;
-                    continue;
-                }
-
-                textBlock.Visible = string.IsNullOrEmpty(filter) || textBlock.Text.ToLower().Contains(filter);
+                child.Visible = !ShouldFilterMessage((LogMessage)child.UserData);
             }
             listBox.UpdateScrollBarSize();
-            listBox.BarScroll = 0.0f;
+            listBox.BarScroll = 1.0f;
 
             return true;
+        }
+
+        private bool ShouldFilterMessage(LogMessage message)
+        {
+            if (msgTypeHidden[(int)message.Type]) { return true; }
+            string text = message.Text.SanitizedValue;
+            return !string.IsNullOrEmpty(msgFilter) && !text.Contains(msgFilter, StringComparison.InvariantCultureIgnoreCase);
         }
 
         private void SetMessageReversal(bool reverse)

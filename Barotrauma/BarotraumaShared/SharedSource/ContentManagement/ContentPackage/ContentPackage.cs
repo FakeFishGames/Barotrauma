@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml;
 using Barotrauma.IO;
+using Steamworks.Data;
 
 namespace Barotrauma
 {
@@ -44,6 +45,27 @@ namespace Barotrauma
 
         public readonly Version GameVersion;
         public readonly string ModVersion;
+
+        public enum UgcStatus
+        {
+            NotFetched = 0,
+            Fetching = 1,
+            Fetched = 2,
+            Unavailable = 3
+        }
+
+        public UgcStatus UgcItemStatus { get; private set; }
+
+        /// <summary>
+        /// Ugc item (workshop item) data that this content package corresponds to. Needs to be fetched with <see cref="TryFetchUgcItem(Action)"/>.
+        /// You can also check <see cref="UgcItemStatus"/> to see if the item is available or not.
+        /// </summary>
+        public Option<Steamworks.Ugc.Item> UgcItem
+        {
+            get;
+            private set;
+        }
+
         public Md5Hash Hash { get; private set; }
         public readonly Option<SerializableDateTime> InstallTime;
 
@@ -65,8 +87,15 @@ namespace Barotrauma
         /// </summary>
         public Option<ContentPackageManager.LoadProgress.Error> EnableError { get; private set; }
             = Option.None;
-        
-        public bool HasAnyErrors => FatalLoadErrors.Length > 0 || EnableError.IsSome();
+
+        private readonly HashSet<PublishedFileId> missingDependencies = new HashSet<PublishedFileId>();
+        /// <summary>
+        /// An error caused by missing dependencies (Workshop items required by the package).
+        /// Can be safe to ignore.
+        /// </summary>
+        public IEnumerable<PublishedFileId> MissingDependencies => missingDependencies;
+
+        public bool HasAnyErrors => FatalLoadErrors.Length > 0 || EnableError.IsSome() || missingDependencies.Any();
 
         public async Task<bool> IsUpToDate()
         {
@@ -232,6 +261,16 @@ namespace Barotrauma
             }
         }
 
+        public void AddMissingDependency(PublishedFileId missingItemID)
+        {
+            missingDependencies.Add(missingItemID);
+        }
+
+        public void ClearMissingDependencies()
+        {
+            missingDependencies.Clear();
+        }
+
         public void LoadFilesOfType<T>() where T : ContentFile
         {
             Files.Where(f => f is T).ForEach(f => f.LoadFile());
@@ -326,6 +365,76 @@ namespace Barotrauma
                 yield return p;
             }
             errorCatcher.Dispose();
+        }
+
+        public void TryFetchUgcDescription(Action<string?> onFinished)
+        {
+            TryFetchUgcItem((Steamworks.Ugc.Item? item) =>
+            {
+                onFinished?.Invoke(item?.Description ?? string.Empty);
+            });
+        }
+
+        public void TryFetchUgcChildren(Action<PublishedFileId[]?> onFinished)
+        {
+            TryFetchUgcItem((Steamworks.Ugc.Item? item) =>
+            {
+                onFinished?.Invoke(item?.Children ?? Array.Empty<PublishedFileId>());
+            });
+        }
+
+        private void TryFetchUgcItem(Action<Steamworks.Ugc.Item?> onFinished)
+        {
+            switch (UgcItemStatus)
+            {
+                case UgcStatus.NotFetched:
+                    TryFetchUgcItem(onFinished: () =>
+                    {
+                        if (UgcItemStatus == UgcStatus.Fetched &&
+                            UgcItem.TryUnwrap(out var cachedItem))
+                        {
+                            onFinished?.Invoke(cachedItem);
+                        }
+                    });
+                    break;
+                case UgcStatus.Fetched when UgcItem.TryUnwrap(out var cachedItem):
+                    onFinished?.Invoke(cachedItem);
+                    break;
+                default:
+                    onFinished?.Invoke(null);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to fetch the UgcItem (workshop item) data from Steamworks, and if successful, caches it in <see cref="UgcItem"/>.
+        /// </summary>
+        /// <param name="onFinished">Triggers when the query finishes or fails (or immediately if the item has been already cached)</param>
+        public void TryFetchUgcItem(Action onFinished)
+        {
+            if (UgcItemStatus != UgcStatus.NotFetched)
+            {
+                onFinished?.Invoke();
+            }
+            if (!UgcId.TryUnwrap(out var ugcId) || ugcId is not SteamWorkshopId workshopId) 
+            {
+                UgcItemStatus = UgcStatus.Unavailable;
+                return;
+            }
+            
+            UgcItemStatus = UgcStatus.Fetching;
+            TaskPool.Add($"PrepareToShow{UgcId}Info", SteamManager.Workshop.GetItem(workshopId.Value),
+                task =>
+                {
+                    if (!task.TryGetResult(out Option<Steamworks.Ugc.Item> itemOption) || !itemOption.TryUnwrap(out var item))
+                    {
+                        UgcItemStatus = UgcStatus.Unavailable;
+                        return;
+                    }
+                    UgcItem = Option<Steamworks.Ugc.Item>.Some(item);
+                    UgcItemStatus = UgcStatus.Fetched;
+                    onFinished?.Invoke();
+                });
         }
 
         public void UnloadContent()

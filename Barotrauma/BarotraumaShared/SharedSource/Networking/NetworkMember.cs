@@ -1,8 +1,6 @@
-﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -27,6 +25,8 @@ namespace Barotrauma.Networking
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
 
+        ENDROUND_SELF, //the client wants to end the round for themselves only and return to the lobby
+
         EVENTMANAGER_RESPONSE,
 
         REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
@@ -43,6 +43,7 @@ namespace Barotrauma.Networking
         READY_CHECK,
         READY_TO_SPAWN,
         TAKEOVERBOT,
+        TOGGLE_RESERVE_BENCH,
 
         REQUEST_BACKUP_INDICES, // client wants a list of available backups for a save file
 
@@ -102,6 +103,7 @@ namespace Barotrauma.Networking
         CIRCUITBOX,
         MONEY,
         READY_CHECK,        //start, end and update a ready check
+        UNLOCKRECIPE,       //unlocking a fabrication recipe
 
         SEND_BACKUP_INDICES, // the server sends a list of available backups for a save file
 
@@ -183,6 +185,8 @@ namespace Barotrauma.Networking
 
     abstract partial class NetworkMember
     {
+        protected const int MaxSubNameLengthInErrorMessages = 16;
+
         public UInt16 LastClientListUpdateID
         {
             get;

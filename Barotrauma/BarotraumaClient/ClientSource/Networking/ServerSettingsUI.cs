@@ -465,6 +465,12 @@ namespace Barotrauma.Networking
             var allowSpecBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform), TextManager.Get("ServerSettingsAllowSpectating"));
             AssignGUIComponent(nameof(AllowSpectating), allowSpecBox);
 
+            var allowAfkBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform), TextManager.Get("ServerSettingsAllowAFK"))
+            {
+                ToolTip = TextManager.Get("ServerSettingsAllowAFK.tooltip")
+            };
+            AssignGUIComponent(nameof(AllowAFK), allowAfkBox);
+
             var losModeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform),
                 TextManager.Get("LosEffect"));
             var losModeSelection = new GUISelectionCarousel<LosMode>(new RectTransform(new Vector2(0.5f, 0.6f), losModeLabel.RectTransform, Anchor.CenterRight));

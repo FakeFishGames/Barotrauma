@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
                 int connectorIntervalLeft = GetConnectorIntervalLeft(height, panel);
                 int connectorIntervalRight = GetConnectorIntervalRight(height, panel);
 
-                foreach (Connection c in panel.Connections)
+                foreach (Connection c in panel.Connections.OrderBy(static c => c.DisplayOrder))
                 {
                     //if dragging a wire, let the Inventory know so that the wire can be
                     //dropped or dragged from the panel to the players inventory
@@ -192,7 +192,7 @@ namespace Barotrauma.Items.Components
                 {
                     DrawWire(spriteBatch, equippedWire, new Vector2(x + width / 2, y + height - 150 * GUI.Scale),
                         new Vector2(x + width / 2, y + height),
-                        null, panel, "");
+                        null, panel, label: GetWireLabel(connection: null, wire: equippedWire));
 
                     if (DraggingConnected == equippedWire) 
                     {
@@ -209,13 +209,9 @@ namespace Barotrauma.Items.Components
             {
                 if (wire == DraggingConnected && mouseInRect) { continue; }
                 if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
-
-                Connection recipient = wire.OtherConnection(null);
-                LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
-                if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
                 DrawWire(spriteBatch, wire, new Vector2(x, y + height - 100 * GUI.Scale),
                     new Vector2(x, y + height),
-                    null, panel, label);
+                    null, panel, label: GetWireLabel(connection: null, wire));
                 x += (int)step;
             }
 
@@ -290,21 +286,7 @@ namespace Barotrauma.Items.Components
             {
                 if (wire.Hidden || (DraggingConnected == wire && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
                 if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
-
-                Connection recipient = wire.OtherConnection(this);
-                LocalizedString label;
-                if (wire.Item.IsLayerHidden)
-                {
-                    label = TextManager.Get("ConnectionLocked");
-                }
-                else
-                {
-                    label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
-                    if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
-                }
-
-                DrawWire(spriteBatch, wire, position, wirePosition, equippedWire, panel, label);
-
+                DrawWire(spriteBatch, wire, position, wirePosition, equippedWire, panel, label: GetWireLabel(connection: this, wire: wire));
                 wirePosition.Y += wireInterval;
             }
 
@@ -360,6 +342,22 @@ namespace Barotrauma.Items.Components
                 int screwIndex = (int)Math.Floor(position.Y / 30.0f) % screwSprites.Count;
                 screwSprites[screwIndex].Draw(spriteBatch, position, scale: connectorSpriteScale);
             }
+        }
+
+        private static LocalizedString GetWireLabel(Connection connection, Wire wire)
+        {
+            Connection recipient = wire.OtherConnection(connection);
+            LocalizedString label;
+            if (wire.Item.IsLayerHidden)
+            {
+                label = TextManager.Get("ConnectionLocked");
+            }
+            else
+            {
+                label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+            }
+            return label;
         }
 
         public void Flash(Color? color = null, float flashDuration = 1.5f)

@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 
@@ -298,7 +299,7 @@ namespace Barotrauma
                                 case null:
                                     continue;
                                 case ItemContainer { Inventory: not null } newContainer when ic is ItemContainer { Inventory: not null } itemContainer:
-                                    itemContainer.Inventory.GetReplacementOrThiS().ReplacedBy = newContainer.Inventory;
+                                    itemContainer.Inventory.GetReplacementOrThis().ReplacedBy = newContainer.Inventory;
                                     goto default;
                                 default:
                                     ic.GetReplacementOrThis().ReplacedBy = component;
@@ -321,7 +322,7 @@ namespace Barotrauma
                         {
                             if (slotRef.Item == receiver)
                             {
-                                inventory.GetReplacementOrThiS().TryPutItem(it, slotRef.Slot, false, false, null, createNetworkEvent: false);
+                                inventory.GetReplacementOrThis().TryPutItem(it, slotRef.Slot, false, false, null, createNetworkEvent: false);
                             }
                         }
                     }
@@ -416,7 +417,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Inventory.GetReplacementOrThiS().TryPutItem(item, slot, false, false, null, createNetworkEvent: false);
+                    Inventory.GetReplacementOrThis().TryPutItem(item, slot, false, false, null, createNetworkEvent: false);
                 }
             }
         }
@@ -609,7 +610,7 @@ namespace Barotrauma
         {
             if (targetItem.GetReplacementOrThis() is Item item)
             {
-                newInventory?.GetReplacementOrThiS().TryPutItem(item, newSlot, true, false, null, createNetworkEvent: false);
+                newInventory?.GetReplacementOrThis().TryPutItem(item, newSlot, true, false, null, createNetworkEvent: false);
             }
         }
 
@@ -617,7 +618,7 @@ namespace Barotrauma
         {
             if (targetItem.GetReplacementOrThis() is Item item)
             {
-                oldInventory?.GetReplacementOrThiS().TryPutItem(item, oldSlot, true, false, null, createNetworkEvent: false);
+                oldInventory?.GetReplacementOrThis().TryPutItem(item, oldSlot, true, false, null, createNetworkEvent: false);
             }
         }
 
@@ -627,5 +628,87 @@ namespace Barotrauma
         {
             return TextManager.GetWithVariable("Undo.MovedItem", "[item]", targetItem.Name);
         }
+    }
+
+    /// <summary>
+    /// A command for applying changes from the <see cref="SubEditorScreen.TransformWidget"/>.
+    /// </summary>
+    internal class TransformToolCommand : Command
+    {
+        private readonly Dictionary<MapEntity, SubEditorScreen.TransformData> originalData;
+        public float? ScaleMult, RotationRad;
+        public readonly Vector2 Pivot;
+        private readonly Vector2 wirePivot;
+        public float MinScale, MaxScale;
+
+        public TransformToolCommand(Dictionary<MapEntity, SubEditorScreen.TransformData> data, Vector2 pivot)
+        {
+            originalData = data;
+            Pivot = pivot;
+            wirePivot = Pivot - Submarine.MainSub.HiddenSubPosition;
+
+            MinScale = 0.01f / Math.Max(data.Values.Min(data => data.Scale), 0.01f);
+            MaxScale = 10f / Math.Min(data.Values.Max(data => data.Scale), 10f);
+        }
+
+        public override void Execute() => UpdateTransforms(RotationRad ?? 0f, ScaleMult ?? 1f);
+        public override void UnExecute() => UpdateTransforms(0f, 1f);
+
+        public override void Cleanup() => originalData.Clear();
+
+        private void UpdateTransforms(float rotationRad, float scaleMult)
+        {
+            foreach ((MapEntity receiver, SubEditorScreen.TransformData data) in originalData)
+            {
+                if (RotationRad.HasValue && receiver is Item { Prefab.AllowRotatingInEditor: true } or Structure { Prefab.AllowRotatingInEditor: true })
+                {
+                    int rotationDir = receiver is Structure && receiver.FlippedX ^ receiver.FlippedY ? -1 : 1;
+                    float newRotation = MathHelper.ToDegrees(data.RotationRad + rotationRad * rotationDir);
+                    switch (receiver)
+                    {
+                        case Item item:
+                            item.Rotation = newRotation;
+                            break;
+                        case Structure structure:
+                            structure.Rotation = newRotation;
+                            break;
+                    }
+                    data.TurretLimits?.ForEach(pair => pair.Key.RotationLimits = pair.Value + new Vector2(MathHelper.ToDegrees(rotationRad)));
+                }
+
+                if (ScaleMult.HasValue)
+                {
+                    receiver.Scale = data.Scale * scaleMult;
+                    if (receiver.ResizeVertical || receiver.ResizeHorizontal)
+                    {
+                        if (receiver.ResizeVertical)
+                        {
+                            receiver.RectHeight = (int)(data.Rect.Height * scaleMult);
+                        }
+                        if (receiver.ResizeHorizontal)
+                        {
+                            receiver.RectWidth = (int)(data.Rect.Width * scaleMult);
+                        }
+                        if (receiver is Structure structure && data.TexOffset.HasValue)
+                        {
+                            structure.TextureOffset = data.TexOffset.Value * scaleMult;
+                        }
+                    }
+                    data.TextScales?.ForEach(pair => pair.Key.TextScale = pair.Value * scaleMult);
+                    data.LightRanges?.ForEach(pair => pair.Key.Range = pair.Value * scaleMult);
+                    data.Wires?.ForEach(pair => pair.Key.Width = pair.Value.Width * scaleMult);
+                }
+
+                Vector2 newEntityPos = MathUtils.RotatePoint((data.Pos - Pivot) * scaleMult, -rotationRad) + Pivot;
+                receiver.Move(newEntityPos - receiver.DrawPosition);
+
+                data.Wires?.ForEach(pair => pair.Key.SetNodes(pair.Value.Nodes.Select(TransformWireNode)));
+                Vector2 TransformWireNode(Vector2 node) => MathUtils.RotatePoint((node - wirePivot) * scaleMult, -rotationRad) + wirePivot;
+            }
+        }
+
+        public override LocalizedString GetDescription() => originalData.Count > 1
+            ? TextManager.GetWithVariable("Undo.ChangedTransformMultiple", "[amount]", originalData.Count.ToString())
+            : TextManager.GetWithVariable("Undo.ChangedTransform", "[item]", originalData.First().Key.Name);
     }
 }

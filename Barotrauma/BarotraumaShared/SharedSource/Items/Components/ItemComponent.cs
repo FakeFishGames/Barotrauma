@@ -483,6 +483,9 @@ namespace Barotrauma.Items.Components
 
         public virtual bool UpdateWhenInactive => false;
 
+        [Serialize(false, IsPropertySaveable.No, "If true, the component will retain its normal functionality when the item reaches 0 condition.")]
+        public bool UpdateWhenBroken { get; set; }
+
         //called when isActive is true and condition > 0.0f
         public virtual void Update(float deltaTime, Camera cam) 
         {
@@ -917,7 +920,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float afflictionMultiplier = 1.0f)
+        /// <param name="attackMultiplier">Multiplier used on afflictions caused by the status effects, except ones that <see cref="AfflictionPrefab.AffectedByAttackMultipliers">have been configured to not be affected by attack multipliers.</see></param>
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float attackMultiplier = 1.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -929,7 +933,7 @@ namespace Barotrauma.Items.Components
             {
                 if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
-                effect.AfflictionMultiplier = afflictionMultiplier;
+                effect.AttackMultiplier = attackMultiplier;
                 var c = character;
                 if (user != null && effect.HasTargetType(StatusEffect.TargetType.Character) && !effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
@@ -937,7 +941,7 @@ namespace Barotrauma.Items.Components
                     c = user;
                 }
                 item.ApplyStatusEffect(effect, type, deltaTime, c, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
-                effect.AfflictionMultiplier = 1.0f;
+                effect.AttackMultiplier = 1.0f;
                 reducesCondition |= effect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
@@ -997,6 +1001,13 @@ namespace Barotrauma.Items.Components
         /// Called when all the components of the item have been loaded. Use to initialize connections between components and such.
         /// </summary>
         public virtual void OnItemLoaded() { }
+
+        /// <summary>
+        /// Implement in a base class if the instances of the component contain some sort of data that isn't serialized using the normal serializable properties
+        /// (i.e. some data that changes per-item and isn't loaded from the prefab, but that isn't a property marked with [Serialize] either),
+        /// but that must be copied when cloning the item.
+        /// </summary>
+        public virtual void Clone(ItemComponent original) { }
 
         public virtual void OnScaleChanged() { }
 
@@ -1092,7 +1103,6 @@ namespace Barotrauma.Items.Components
                 ri.Save(newElement);
                 componentElement.Add(newElement);
             }
-
 
             SerializableProperty.SerializeProperties(this, componentElement);
 

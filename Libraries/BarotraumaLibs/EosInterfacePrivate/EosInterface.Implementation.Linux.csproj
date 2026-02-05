@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>EosInterface.Implementation.Linux</AssemblyName>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>EosInterfacePrivate</RootNamespace>
     <ImplicitUsings>false</ImplicitUsings>
     <Nullable>disable</Nullable>

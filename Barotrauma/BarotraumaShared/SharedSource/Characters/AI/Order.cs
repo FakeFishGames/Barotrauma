@@ -341,6 +341,8 @@ namespace Barotrauma
             {
                 if (component?.GetType() is Type componentType)
                 {
+                    // Items used via a controller (i.e. turrets) are not selectable but should still be valid targets.
+                    if (!UseController && !component.CanBeSelected) { continue; }
                     if (componentType == ItemComponentType) { return component; }
                     if (CanTypeBeSubclass && componentType.IsSubclassOf(ItemComponentType)) { return component; }
                 }
@@ -435,8 +437,26 @@ namespace Barotrauma
         public bool TargetItemsMatchItem(Item item, Identifier option = default)
         {
             if (item == null) { return false; }
-            if (Identifier == Tags.DeconstructThis && item.AllowDeconstruct && !Item.DeconstructItems.Contains(item)) { return true; }
-            if (Identifier == Tags.DontDeconstructThis && Item.DeconstructItems.Contains(item)) { return true; }
+
+            if (Identifier == Tags.DeconstructThis && item.AllowDeconstruct)
+            {
+                if (item.AllowDeconstruct && !Item.DeconstructItems.Contains(item) &&
+                    //only allow deconstructing if there are no deconstruction recipes (= deconstructing yields nothing), or deconstruction recipes that
+                    (item.Prefab.DeconstructItems.None() ||
+                    item.Prefab.DeconstructItems.Any(deconstructItem =>
+                        //1. don't require any additional items (bots can't handle that)
+                        deconstructItem.RequiredOtherItem.None() &&
+                        //2. don't require a research station (bots don't know how to use those)
+                        (deconstructItem.RequiredDeconstructor.Length == 0 || deconstructItem.RequiredDeconstructor.Any(d => d != Tags.GeneticResearchStation)))))
+                { 
+                    return true;
+                }
+            }
+            else if (Identifier == Tags.DontDeconstructThis)
+            {
+                if (Item.DeconstructItems.Contains(item)) { return true; }
+            }
+
             ImmutableArray<Identifier> targetItems = GetTargetItems(option);
             return TargetItemsMatchItem(targetItems, item);
         }

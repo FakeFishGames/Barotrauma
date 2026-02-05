@@ -66,21 +66,28 @@ namespace Barotrauma
         private static readonly string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
 
 #if OSX
-        //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
-        public static readonly string DefaultSaveFolder = Path.Combine(
+        /// <summary>
+        /// These exist because we used to have a workaround here that set the save folder to 
+        /// Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "Daedalic Entertainment GmbH", "Barotrauma")
+        /// on Mac, because apparently LocalApplicationData returned something different than the expected path. That seems to have changed in .NET8, and now we
+        /// can use the same LocalApplicationData on all platforms. We however still check the old path in case someone has their saves there.
+        /// </summary>
+        public static readonly string LegacyMacSaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
             "Library",
             "Application Support",
             "Daedalic Entertainment GmbH",
             "Barotrauma");
-#else
-        //"C:/Users/*user*/AppData/Local/Daedalic Entertainment GmbH/" on Windows
-        //"/home/*user*/.local/share/Daedalic Entertainment GmbH/" on Linux
+        public static string LegacyMacMultiplayerSaveFolder = Path.Combine(LegacyMacSaveFolder, "Multiplayer");
+#endif
+
+        //C:/Users/*user*/AppData/Local/Daedalic Entertainment GmbH/ on Windows
+        ///home/*user*/.local/share/Daedalic Entertainment GmbH/ on Linux
+        ///Users/*user*/Library/Application Support/Daedalic Entertainment GmbH/ on Mac
         public static readonly string DefaultSaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Daedalic Entertainment GmbH",
             "Barotrauma");
-#endif
 
         public static string DefaultMultiplayerSaveFolder = Path.Combine(DefaultSaveFolder, "Multiplayer");
 
@@ -116,8 +123,35 @@ namespace Barotrauma
 #if SERVER
             get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp_server"); }
 #else
-            get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp"); }
+            get            
+
+            {
+                string tempFolder = Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp");
+#if DEBUG
+                if (GameClient.MultiClientTestMode && GameMain.Client != null)
+                {
+                    //append the name of the client to the download folder to avoid multiple clients
+                    //from trying to download a file into the same path at the same time
+                    tempFolder += "_" + GameMain.Client.Name;
+                }
 #endif
+                return tempFolder;
+            }
+#endif
+        }
+
+        public static void EnsureSaveFolderExists()
+        {
+            try
+            {
+                // Create the default save folder (only) if it doesn't exist yet.
+                // note, uses System.IO.Directory.CreateDirectory instead of Directory.CreateDirectory from Baro namespace on purpose.
+                System.IO.Directory.CreateDirectory(DefaultSaveFolder);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Failed to create the default save folder \"{DefaultSaveFolder}\"!", e);
+            }
         }
 
         public enum SaveType
@@ -383,6 +417,13 @@ namespace Barotrauma
                 files.AddRange(Directory.GetFiles(legacyFolder, "*.save", System.IO.SearchOption.TopDirectoryOnly));
             }
 
+#if OSX
+            string legacyMacFolder = saveType == SaveType.Singleplayer ? LegacyMacSaveFolder : LegacyMacMultiplayerSaveFolder;
+            if (Directory.Exists(legacyMacFolder))
+            {
+                files.AddRange(Directory.GetFiles(legacyMacFolder, "*.save", System.IO.SearchOption.TopDirectoryOnly));
+            }
+#endif
             files = files.Distinct().ToList();
 
             List<CampaignMode.SaveInfo> saveInfos = new List<CampaignMode.SaveInfo>();   

@@ -25,6 +25,9 @@ namespace Barotrauma
 
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool ShowOverlay { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "When enabled, locations that have an active store (= a store whose stocks are kept track of in the save file) are displayed in green, locations with no active store (due to not having been visited in a long time, or not having a store in the first place) are displayed in blue, and everything else in yellow."), Editable]
+        public bool ShowStoreInfo { get; set; }
 #else
         public readonly bool ShowLocations = true;
         public readonly bool ShowLevelTypeNames = false;

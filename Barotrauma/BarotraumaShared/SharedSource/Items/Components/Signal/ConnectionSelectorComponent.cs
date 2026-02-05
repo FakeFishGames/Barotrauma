@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Networking;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +8,7 @@ namespace Barotrauma.Items.Components;
 /// <summary>
 /// Base class for signal components that can select between input/output connections (e.g. multiplexer and demultiplexer components)
 /// </summary>
-abstract class ConnectionSelectorComponent : ItemComponent
+abstract partial class ConnectionSelectorComponent : ItemComponent, IServerSerializable
 {
     protected int selectedConnectionIndex;
     protected string selectedConnectionIndexStr;
@@ -22,6 +23,8 @@ abstract class ConnectionSelectorComponent : ItemComponent
         get { return selectedConnectionIndex; }
         set
         {
+            int prevIndex = selectedConnectionIndex; // store original, so we know if the state has changed and can sync it in MP
+            
             selectedConnectionIndex = Math.Max(0, value);
             //don't clamp until we've determined how many connections the item has
             //(can't be done until the connection panel component has been loaded too)
@@ -31,6 +34,11 @@ abstract class ConnectionSelectorComponent : ItemComponent
             }
             selectedConnectionName = GetConnectionName(selectedConnectionIndex);
             selectedConnectionIndexStr = selectedConnectionIndex.ToString();
+            
+            if (prevIndex != selectedConnectionIndex)
+            {
+                OnStateChanged();
+            }
         }
     }
 
@@ -54,6 +62,8 @@ abstract class ConnectionSelectorComponent : ItemComponent
         : base(item, element)
     {
     }
+
+    partial void OnStateChanged();
 
     protected abstract string GetConnectionName(int connectionIndex);
 

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -53,15 +54,29 @@ namespace Barotrauma
             get { return controlled; }
             set
             {
-                if (controlled == value) return;
-                if ((!(controlled is null)) && (!(Screen.Selected?.Cam is null)) && value is null)
+                if (controlled == value && controlled == null)
                 {
-                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
-                    Lights.LightManager.ViewTarget = null;
+                    // Return early, but only when setting the controlled to null, because on controlling a character, we'll want to ensure that the target is both enabled and unfrozen.
+                    return;
+                }
+                if (controlled != value)
+                {
+                    CharacterHealth.OpenHealthWindow = null;
+                    if (controlled != null && value == null)
+                    {
+                        if (Screen.Selected?.Cam is Camera camera)
+                        {
+                            camera.TargetPos = Vector2.Zero;;
+                        }
+                        Lights.LightManager.ViewTarget = null;
+                    }
                 }
                 controlled = value;
-                if (controlled != null) controlled.Enabled = true;
-                CharacterHealth.OpenHealthWindow = null;                
+                if (controlled != null)
+                {
+                    controlled.Enabled = true;
+                    controlled.AnimController.Frozen = false;
+                }
             }
         }
 
@@ -251,6 +266,8 @@ namespace Barotrauma
             public Vector2 DrawPosition;
             public float MoveUpAmount;
             public readonly RichString Text;
+            public ImmutableArray<RichTextData>? RichTextData { get; private set; }
+
             public readonly Character Character;
             public readonly Submarine Submarine;
             public readonly Vector2 TextSize;
@@ -260,8 +277,10 @@ namespace Barotrauma
 
             public SpeechBubble(Character character, float lifeTime, Color color, string text = "")
             {
-                Text = RichString.Rich(ToolBox.WrapText(text, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text)));
+                var richStr = RichString.Rich(text);
+                Text = ToolBox.WrapText(richStr.SanitizedValue, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text));
                 TextSize = GUIStyle.SmallFont.MeasureString(Text);
+                RichTextData = richStr.RichTextData;
 
                 Character = character;
                 Position = GetDesiredPosition();
@@ -329,7 +348,7 @@ namespace Barotrauma
                     if (key == null) { continue; }
                     key.Reset();
                 }
-                if (GUI.InputBlockingMenuOpen)
+                if (GUI.InputBlockingMenuOpen || ConversationAction.IsDialogOpen)
                 {
                     cursorPosition = 
                         Position + PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
@@ -430,7 +449,14 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
                 }
-                else if (SelectedItem != null && ViewTarget == null &&
+                else if (HeldItems.SelectMany(static item => item.GetComponents<Holdable>())
+                                  .Where(static holdable => holdable.Aimable)
+                                  .MaxOrNull(static holdable => holdable.CameraAimOffset) is float maxOffset
+                    && maxOffset > 0f && IsKeyDown(InputType.Aim))
+                {
+                    cam.OffsetAmount = targetOffsetAmount = maxOffset;
+                }
+                else if (SelectedItem != null && ViewTarget == null && !IsIncapacitated &&
                     SelectedItem.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
@@ -444,7 +470,7 @@ namespace Barotrauma
                 }
                 else if (Lights.LightManager.ViewTarget == this)
                 {
-                    if (GUI.PauseMenuOpen || IsUnconscious)
+                    if (GUI.PauseMenuOpen || IsIncapacitated)
                     {
                         if (deltaTime > 0.0f)
                         {
@@ -1193,7 +1219,7 @@ namespace Barotrauma
                     Vector2 bubbleSize = bubble.TextSize + Vector2.One * GUI.IntScale(15);
                     speechBubbleIconSliced.Draw(spriteBatch, new RectangleF(iconPos - bubbleSize / 2, bubbleSize), bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha);
                 }
-                GUI.DrawStringWithColors(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text.SanitizedValue, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, bubble.Text.RichTextData, font: GUIStyle.SmallFont);
+                GUI.DrawStringWithColors(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text.SanitizedValue, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, bubble.RichTextData, font: GUIStyle.SmallFont);
             }
             spriteBatch.End();
         }

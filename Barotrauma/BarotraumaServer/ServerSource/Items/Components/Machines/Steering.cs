@@ -14,11 +14,15 @@ namespace Barotrauma.Items.Components
                 DockingButtonClicked = dockingButtonClicked;
             }
         }
-        
-        // TODO: an enumeration would be much cleaner
-        public bool MaintainPos;
-        public bool LevelStartSelected;
-        public bool LevelEndSelected;
+
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
+        public bool MaintainPos { get; set; }
+
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
+        public bool LevelStartSelected { get; set; }
+
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
+        public bool LevelEndSelected { get; set; }
 
         public bool UnsentChanges
         {

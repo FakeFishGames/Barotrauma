@@ -95,6 +95,12 @@ namespace Barotrauma.Networking
     }
 
     [NetworkSerialize]
+    internal readonly record struct DoSProtectionPacket(string EndpointStr, bool ShouldBan) : INetSerializableStruct
+    {
+        public Option<P2PEndpoint> Endpoint => P2PEndpoint.Parse(EndpointStr);
+    }
+
+    [NetworkSerialize]
     internal readonly struct PeerDisconnectPacket : INetSerializableStruct
     {
         public readonly DisconnectReason DisconnectReason;
@@ -109,19 +115,24 @@ namespace Barotrauma.Networking
             AdditionalInformation = additionalInformation;
         }
 
-        public LocalizedString ChatMessage(Client c)
+        public LocalizedString ChatMessage(string? name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                name = TextManager.Get("ServerMessage.UnknownClient").Value;
+            }
+
             LocalizedString message = DisconnectReason switch
             {
                 DisconnectReason.Disconnected => TextManager.GetWithVariable("ServerMessage.ClientLeftServer",
-                        "[client]", c.Name),
-                DisconnectReason.Banned => TextManager.GetWithVariable("servermessage.bannedfromserver", "[client]", c.Name),
-                DisconnectReason.Kicked => TextManager.GetWithVariable("servermessage.kickedfromserver", "[client]", c.Name),
+                        "[client]", name),
+                DisconnectReason.Banned => TextManager.GetWithVariable("servermessage.bannedfromserver", "[client]", name),
+                DisconnectReason.Kicked => TextManager.GetWithVariable("servermessage.kickedfromserver", "[client]", name),
                 _ => TextManager.GetWithVariables("ChatMsg.DisconnectedWithReason",
-                        ("[client]", c.Name),
+                        ("[client]", name),
                         ("[reason]", TextManager.Get($"ChatMsg.DisconnectReason.{DisconnectReason}")))
             };
-            if (!string.IsNullOrEmpty(AdditionalInformation) && 
+            if (!string.IsNullOrEmpty(AdditionalInformation) &&
                 DisconnectReason is DisconnectReason.Banned or DisconnectReason.Kicked)
             {
                 message += " "+ TextManager.Get("banreason") + " " + TextManager.GetServerMessage(AdditionalInformation);

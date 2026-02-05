@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -749,7 +749,7 @@ namespace Barotrauma
         {
             new GUICustomComponent(new RectTransform(Vector2.One, parent.RectTransform, scaleBasis: ScaleBasis.BothHeight), (spriteBatch, component) =>
             {
-                info.DrawPortrait(spriteBatch, component.Rect.Location.ToVector2(), Vector2.Zero, component.Rect.Width);
+                info.DrawIcon(spriteBatch, component.Rect.Center.ToVector2(), component.Rect.Size.ToVector2());
             });
 
             GUILayoutGroup textGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.8f), parent.RectTransform));

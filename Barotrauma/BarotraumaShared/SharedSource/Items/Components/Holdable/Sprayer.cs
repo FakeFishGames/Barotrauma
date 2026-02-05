@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -12,8 +13,8 @@ namespace Barotrauma.Items.Components
         [Serialize(1.0f, IsPropertySaveable.No, description: "How fast the item changes the color of the walls.")]
         public float SprayStrength { get; set; }
 
-        private readonly Dictionary<Identifier, Color> liquidColors;
-        private ItemContainer liquidContainer;
+        public readonly ImmutableDictionary<Identifier, Color> LiquidColors;
+        public ItemContainer LiquidContainer { get; private set; }
 
         public Sprayer(Item item, ContentXElement element) : base(item, element)
         {
@@ -26,7 +27,7 @@ namespace Barotrauma.Items.Components
                 {
                     case "paintcolors":
                         {
-                            liquidColors = new Dictionary<Identifier, Color>();
+                            var liquidColors = new Dictionary<Identifier, Color>();
                             foreach (XElement paintElement in subElement.Elements())
                             {
                                 Identifier paintName = paintElement.GetAttributeIdentifier("paintitem", Identifier.Empty);
@@ -37,6 +38,7 @@ namespace Barotrauma.Items.Components
                                     liquidColors.Add(paintName, paintColor);
                                 }
                             }
+                            LiquidColors = liquidColors.ToImmutableDictionary();
                         }
                         break;
                 }
@@ -46,7 +48,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            liquidContainer = item.GetComponent<ItemContainer>();
+            LiquidContainer = item.GetComponent<ItemContainer>();
         }
 
         partial void InitProjSpecific(ContentXElement element);

@@ -57,24 +57,42 @@ namespace Barotrauma.Items.Components
         private GUIMessageBox enterOutpostPrompt, exitOutpostPrompt;
 
         private bool levelStartSelected;
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool LevelStartSelected
         {
-            get { return levelStartTickBox.Selected; }
-            set { levelStartTickBox.Selected = value; }
+            get 
+            { 
+                return levelStartTickBox?.Selected ?? levelStartSelected; 
+            }
+            set
+            {
+                TrySetTickBoxSelected(levelStartTickBox, ref levelStartSelected, value);
+            }
         }
 
         private bool levelEndSelected;
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool LevelEndSelected
         {
-            get { return levelEndTickBox.Selected; }
-            set { levelEndTickBox.Selected = value; }
+            get { return levelEndTickBox?.Selected ?? levelEndSelected; }
+            set
+            {
+                TrySetTickBoxSelected(levelEndTickBox, ref levelEndSelected, value);
+            }
         }
 
         private bool maintainPos;
+        [Serialize(defaultValue: false, isSaveable: IsPropertySaveable.Yes, AlwaysUseInstanceValues = true)]
         public bool MaintainPos
         {
-            get { return maintainPosTickBox.Selected; }
-            set { maintainPosTickBox.Selected = value; }
+            get 
+            { 
+                return maintainPosTickBox?.Selected ?? maintainPos; 
+            }
+            set
+            {
+                TrySetTickBoxSelected(maintainPosTickBox, ref maintainPos, value);
+            }
         }
 
         private float steerRadius;
@@ -924,6 +942,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Sets the value of the specified tickbox, or if it hasn't been instantiated (yet?), just the value of the backing field.
+        /// </summary>
+        private void TrySetTickBoxSelected(GUITickBox tickBox, ref bool backingValue, bool newValue)
+        {
+            if (tickBox == null)
+            {
+                backingValue = newValue;
+            }
+            else
+            {
+                tickBox.Selected = newValue;
+            }
+        }
+
         private bool NudgeButtonClicked(GUIButton btn, object userdata)
         {
             if (!MaintainPos || !AutoPilot)
@@ -940,6 +973,7 @@ namespace Barotrauma.Items.Components
                 }
                 PosToMaintain += nudgeAmount;
             }
+            unsentChanges = true;
             return true;
         }
 

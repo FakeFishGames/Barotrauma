@@ -67,6 +67,15 @@ namespace Barotrauma.Extensions
         }
 
         /// <summary>
+        /// Converts the y-coordinate of the rectangle so that up is greater and down is lower 
+        /// (i.e. so the Location of the rectangle is at the top-left corner in world coordinates).
+        /// </summary>
+        public static Rectangle ToWorldRect(this Rectangle rect)
+        {
+            return new Rectangle(rect.X, rect.Y - rect.Height, rect.Size.X, rect.Size.Y);
+        }
+
+        /// <summary>
         /// Like the XNA method, but treats the y-coordinate so that up is greater and down is lower.
         /// </summary>
         public static bool ContainsWorld(this Rectangle rect, Rectangle other)

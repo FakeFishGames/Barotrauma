@@ -18,17 +18,40 @@ namespace Barotrauma
         public readonly ChatManager ChatManager = new ChatManager();
 
         public bool IsSinglePlayer { get; private set; }
-
+        
         private bool _toggleOpen = true;
         public bool ToggleOpen
         {
-            get { return _toggleOpen; }
-            set
-            {
-                _toggleOpen = PreferChatBoxOpen = value;
-                if (value) { hideableElements.Visible = true; }
-            }
+            get => _toggleOpen;
+            set => SetToggleOpenState(value, setPreference: true);
         }
+        
+        public static ChatBox GetChatBox()
+        {
+            if (GameMain.GameSession?.GameMode is not GameMode gameMode) { return null; }
+            return gameMode.IsSinglePlayer ? GameMain.GameSession.CrewManager?.ChatBox : GameMain.Client?.ChatBox;
+        }
+        
+        public static void AutoHideChatBox() => SetChatBoxOpen(false);
+        
+        private void SetToggleOpenState(bool value, bool setPreference = true)
+        {
+            _toggleOpen = value;
+            if (setPreference)
+            {
+                PreferChatBoxOpen = value;
+            }
+            if (value) { hideableElements.Visible = true; }
+        }
+        
+        public static void ResetChatBoxOpenState() => GetChatBox()?.ResetOpenState();
+        
+        public void ResetOpenState() => SetOpen(PreferChatBoxOpen);
+        
+        private static void SetChatBoxOpen(bool isOpen) => GetChatBox()?.SetOpen(isOpen);
+        
+        private void SetOpen(bool value) => SetToggleOpenState(value, setPreference: false);
+        
         private float openState;
 
         public static bool PreferChatBoxOpen = true;
@@ -199,7 +222,7 @@ namespace Barotrauma
                             if (channelMemPending)
                             {
                                 int.TryParse(channelText.Text, out int newChannel);
-                                radio.SetChannelMemory(index, newChannel);
+                                SetChannelMemory(index, newChannel);
                                 btn.ToolTip = TextManager.GetWithVariables("radiochannelpreset",
                                     ("[index]", index.ToString()),
                                     ("[channel]", radio.GetChannelMemory(index).ToString()));
@@ -330,7 +353,7 @@ namespace Barotrauma
             };
 
             showNewMessagesButton.Visible = false;
-            ToggleOpen = PreferChatBoxOpen = GameSettings.CurrentConfig.ChatOpen;
+            SetToggleOpenState(GameSettings.CurrentConfig.ChatOpen, setPreference: true);
         }
 
         public void Toggle()
@@ -794,6 +817,15 @@ namespace Barotrauma
                         channelButton.Selected = radio.GetChannelMemory(buttonIndex) == channel;
                     }
                 }
+            }
+        }
+        
+        private void SetChannelMemory(int index, int channel)
+        {
+            if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+            {
+                radio.SetChannelMemory(index, channel);
+                radio.Item.CreateClientEvent(radio);
             }
         }
 

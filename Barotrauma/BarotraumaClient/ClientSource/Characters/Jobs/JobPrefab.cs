@@ -8,23 +8,41 @@ namespace Barotrauma
     {
         public GUIButton CreateInfoFrame(bool isPvP, out GUIComponent buttonContainer)
         {
-            int width = 500, height = 400;
-
+            int windowPixelWidth = 500, windowPixelHeight = 400;
+            Point absoluteWindowSize = new Point((int)(windowPixelWidth * GUI.xScale), (int)(windowPixelHeight * GUI.yScale));
+            
             GUIButton frameHolder = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
             new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, frameHolder.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), frameHolder.RectTransform, Anchor.Center));
+            GUIFrame frame = new GUIFrame(new RectTransform(absoluteWindowSize, frameHolder.RectTransform, Anchor.Center));
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Name, font: GUIStyle.LargeFont)
+            {
+                CanBeFocused = false
+            };
+            
+            var contentList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            {
+                ScrollBarVisible = true,
+                AutoHideScrollBar = true,
+                CurrentSelectMode = GUIListBox.SelectMode.None,
+                Padding = new Vector4(0, GUI.Scale * 10, 0, 0),
+                Spacing = (int)(GUI.Scale * 5)
+            };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Name, font: GUIStyle.LargeFont);
-
-            var descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) },
-                Description, font: GUIStyle.SmallFont, wrap: true);
-
-            var skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.5f), paddedFrame.RectTransform)
-                { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) });
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillContainer.RectTransform),
-                TextManager.Get("Skills"), font: GUIStyle.LargeFont);
+            var descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), contentList.Content.RectTransform),
+                Description, font: GUIStyle.SmallFont, wrap: true, textAlignment: Alignment.TopLeft)
+            {
+                CanBeFocused = false,
+            };
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), contentList.Content.RectTransform),
+                TextManager.Get("Skills"), font: GUIStyle.LargeFont)
+            {
+                CanBeFocused = false
+            };
+            
             foreach (SkillPrefab skill in Skills)
             {
                 var levelRange = skill.GetLevelRange(isPvP);
@@ -33,9 +51,12 @@ namespace Barotrauma
                     levelRange.End > levelRange.Start ? 
                     (int)levelRange.Start + " - " + (int)levelRange.End : 
                     ((int)levelRange.Start).ToString();
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillContainer.RectTransform),
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), contentList.Content.RectTransform),
                     "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), levelStr), 
-                    font: GUIStyle.SmallFont);
+                    font: GUIStyle.SmallFont, wrap: true)
+                {
+                    CanBeFocused = false
+                };
             }
 
             buttonContainer = paddedFrame;

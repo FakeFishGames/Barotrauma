@@ -25,6 +25,9 @@ namespace Barotrauma
 
         [Serialize("", IsPropertySaveable.Yes, description: "A tag to apply to the hull the target is currently in when the check succeeds.")]
         public Identifier ApplyTagToHull { get; set; }
+        
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the target (or all targets if there's multiple) when the check succeeds.")]
+        public Identifier ApplyTagToTarget { get; set; }
 
         public CheckConditionalAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
@@ -84,7 +87,7 @@ namespace Barotrauma
             {
                 foreach (var target in targets)
                 {
-                    ApplyTagsToHulls(target as Entity, ApplyTagToHull, ApplyTagToLinkedHulls);
+                    ApplyTagsToTarget(target);
                 }
                 return true;
             }
@@ -95,11 +98,20 @@ namespace Barotrauma
                 {
                     if (ConditionalsMatch(target))
                     {
+                        ApplyTagsToTarget(target);
                         success = true;
-                        ApplyTagsToHulls(target as Entity, ApplyTagToHull, ApplyTagToLinkedHulls);
                     }
                 }
                 return success;
+            }
+
+            void ApplyTagsToTarget(ISerializableEntity target)
+            {
+                if (!ApplyTagToTarget.IsEmpty)
+                {
+                    ParentEvent.AddTarget(ApplyTagToTarget, target as Entity);
+                }
+                ApplyTagsToHulls(target as Entity, ApplyTagToHull, ApplyTagToLinkedHulls);
             }
         }
 

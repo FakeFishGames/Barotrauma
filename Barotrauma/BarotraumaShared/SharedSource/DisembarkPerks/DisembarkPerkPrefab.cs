@@ -39,7 +39,7 @@ namespace Barotrauma
             SortCategory = element.GetAttributeIdentifier("sortcategory", Identifier);
             Prerequisite = element.GetAttributeIdentifier("prerequisite", Identifier.Empty);
             MutuallyExclusivePerks = element.GetAttributeIdentifierImmutableHashSet("mutuallyexclusiveperks", ImmutableHashSet<Identifier>.Empty);
-            SortKey = element.GetAttributeInt("sortkey", ToolBox.IdentifierToInt(Identifier));
+            SortKey = element.GetAttributeInt("sortkey", 0);
 
             var builder = ImmutableArray.CreateBuilder<PerkBase>();
             foreach (var child in element.Elements())

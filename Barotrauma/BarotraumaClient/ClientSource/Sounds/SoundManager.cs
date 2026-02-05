@@ -12,11 +12,11 @@ namespace Barotrauma.Sounds
     class SoundManager : IDisposable
     {
         public const int SourceCount = 32;
-        public const string SoundCategoryDefault = "default";
-        public const string SoundCategoryUi = "ui";
-        public const string SoundCategoryWaterAmbience = "waterambience";
-        public const string SoundCategoryMusic = "music";
-        public const string SoundCategoryVoip = "voip";
+        public static readonly Identifier SoundCategoryDefault = "default".ToIdentifier();
+        public static readonly Identifier SoundCategoryUi = "ui".ToIdentifier();
+        public static readonly Identifier SoundCategoryWaterAmbience = "waterambience".ToIdentifier();
+        public static readonly Identifier SoundCategoryMusic = "music".ToIdentifier();
+        public static readonly Identifier SoundCategoryVoip = "voip".ToIdentifier();
 
         public bool Disabled
         {
@@ -201,7 +201,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private readonly Dictionary<string, CategoryModifier> categoryModifiers = new Dictionary<string, CategoryModifier>();
+        private readonly Dictionary<Identifier, CategoryModifier> categoryModifiers = new Dictionary<Identifier, CategoryModifier>();
 
         public SoundManager()
         {
@@ -548,10 +548,9 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryGainMultiplier(string category, float gain, int index=0)
+        public void SetCategoryGainMultiplier(Identifier category, float gain, int index=0)
         {
             if (Disabled) { return; }
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (!categoryModifiers.ContainsKey(category))
@@ -579,10 +578,9 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public float GetCategoryGainMultiplier(string category, int index = -1)
+        public float GetCategoryGainMultiplier(Identifier category, int index = -1)
         {
             if (Disabled) { return 0.0f; }
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return 1.0f; }
@@ -602,11 +600,10 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryMuffle(string category, bool muffle)
+        public void SetCategoryMuffle(Identifier category, bool muffle)
         {
             if (Disabled) { return; }
 
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (!categoryModifiers.ContainsKey(category))
@@ -627,18 +624,17 @@ namespace Barotrauma.Sounds
                     {
                         if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
                         {
-                            if (playingChannels[i][j]?.Category.ToLower() == category) { playingChannels[i][j].Muffled = muffle; }
+                            if (playingChannels[i][j]?.Category == category) { playingChannels[i][j].Muffled = muffle; }
                         }
                     }
                 }
             }
         }
 
-        public bool GetCategoryMuffle(string category)
+        public bool GetCategoryMuffle(Identifier category)
         {
             if (Disabled) { return false; }
 
-            category = category.ToLower();
             lock (categoryModifiers)
             {
                 if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return false; }
@@ -782,34 +778,36 @@ namespace Barotrauma.Sounds
             while (!killThread)
             {
                 killThread = true;
-                for (int i = 0; i < playingChannels.Length; i++)
+                for (int sourcePoolIndex = 0; sourcePoolIndex < playingChannels.Length; sourcePoolIndex++)
                 {
-                    lock (playingChannels[i])
+                    lock (playingChannels[sourcePoolIndex])
                     {
-                        for (int j = 0; j < playingChannels[i].Length; j++)
+                        for (int channelIndex = 0; channelIndex < playingChannels[sourcePoolIndex].Length; channelIndex++)
                         {
-                            if (playingChannels[i][j] == null) { continue; }
-                            if (playingChannels[i][j].IsStream)
+                            var channel = playingChannels[sourcePoolIndex][channelIndex];
+
+                            if (channel == null) { continue; }
+                            if (channel.FadingOutAndDisposing)
                             {
-                                if (playingChannels[i][j].IsPlaying)
+                                killThread = false;
+                                channel.Gain -= 0.1f;
+                                if (channel.Gain <= 0.0f)
+                                {
+                                    channel.Dispose();
+                                    playingChannels[sourcePoolIndex][channelIndex] = null;
+                                }
+                            }
+                            else if (channel.IsStream)
+                            {
+                                if (channel.IsPlaying)
                                 {
                                     killThread = false;
-                                    playingChannels[i][j].UpdateStream();
+                                    channel.UpdateStream();
                                 }
                                 else
                                 {
-                                    playingChannels[i][j].Dispose();
-                                    playingChannels[i][j] = null;
-                                }
-                            }
-                            else if (playingChannels[i][j].FadingOutAndDisposing)
-                            {
-                                killThread = false;
-                                playingChannels[i][j].Gain -= 0.1f;
-                                if (playingChannels[i][j].Gain <= 0.0f)
-                                {
-                                    playingChannels[i][j].Dispose();
-                                    playingChannels[i][j] = null;
+                                    channel.Dispose();
+                                    playingChannels[sourcePoolIndex][channelIndex] = null;
                                 }
                             }
                         }

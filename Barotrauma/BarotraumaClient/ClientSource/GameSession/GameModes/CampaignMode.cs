@@ -93,7 +93,7 @@ namespace Barotrauma
 
         public override void ShowStartMessage()
         {
-            foreach (Mission mission in Missions.ToList())
+            foreach (Mission mission in Missions.OrderBy(m => m.Prefab.IsSideObjective).ToList())
             {
                 if (!mission.Prefab.ShowStartMessage) { continue; }
                 new GUIMessageBox(
@@ -366,7 +366,7 @@ namespace Barotrauma
                 default:
                     ShowCampaignUI = true;
                     CampaignUI.SelectTab(npc.CampaignInteractionType, npc);
-                    CampaignUI.UpgradeStore?.RequestRefresh();
+                    CampaignUI.UpgradeStore?.RequestRefresh(refreshUpgrades: true);
                     break;
             }
 

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -23,10 +24,12 @@ namespace Barotrauma
         private bool swarmSpawned;
         private readonly List<MonsterSet> monsterSets = new List<MonsterSet>();
         private readonly LocalizedString sonarLabel;
+        private readonly ImmutableArray<Identifier> beaconTags;
 
         public BeaconMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
             swarmSpawned = false;
+            beaconTags = prefab.ConfigElement.GetAttributeIdentifierArray("beacontags", []).ToImmutableArray();
 
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
@@ -185,6 +188,29 @@ namespace Barotrauma
         {
             levelData.HasBeaconStation = true;
             levelData.IsBeaconActive = false;
+            
+            if (beaconTags.Length > 0)
+            {
+                var selectedBeacon = GetRandomBeaconByTags(beaconTags, levelData);
+                if (selectedBeacon != null)
+                {
+                    levelData.ForceBeaconStation = selectedBeacon;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Beacon mission \"{Prefab.Identifier}\" could not find a suitable beacon station with beacontags \"{string.Join(", ", beaconTags)}\" for level difficulty {levelData.Difficulty:F1}.",
+                        contentPackage: Prefab.ContentPackage);
+                }
+            }
+        }
+
+        private static SubmarineInfo GetRandomBeaconByTags(ImmutableArray<Identifier> tags, LevelData levelData)
+        {
+            return GetRandomSubmarineByTagsAndDifficulty(
+                tags,
+                levelData,
+                s => s.IsBeacon,
+                "beacon station");
         }
     }
 }

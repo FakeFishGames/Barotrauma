@@ -35,6 +35,7 @@ namespace Barotrauma.Items.Components
         {
             Light.SpriteScale = Vector2.One * item.Scale;
             Light.Position = ParentBody != null ? ParentBody.Position : item.Position;
+            SetLightSourceTransformProjSpecific();
         }
 
         partial void SetLightSourceState(bool enabled, float brightness)
@@ -51,27 +52,42 @@ namespace Barotrauma.Items.Components
 
         partial void SetLightSourceTransformProjSpecific()
         {
+            Vector2 offset = Vector2.Zero;
+            if (LightOffset != Vector2.Zero)
+            {
+                offset = Vector2.Transform(LightOffset, Matrix.CreateRotationZ(item.FlippedY ? -item.RotationRad - MathHelper.Pi : -item.RotationRad)) * item.Scale;
+            }
+
             if (ParentBody != null)
             {
                 Light.ParentBody = ParentBody;
+                Light.OffsetFromBody = offset;
             }
             else if (turret != null)
             {
-                Light.Position = new Vector2(item.Rect.X + turret.TransformedBarrelPos.X, item.Rect.Y - turret.TransformedBarrelPos.Y);
+                Light.Position = new Vector2(item.Rect.X + turret.TransformedBarrelPos.X, item.Rect.Y - turret.TransformedBarrelPos.Y) + offset;
             }
             else if (item.body != null)
             {
                 Light.ParentBody = item.body;
+                Light.OffsetFromBody = offset;
             }
             else
             {
-                Light.Position = item.Position;
+                Light.Position = item.Position + offset;
             }
             PhysicsBody body = Light.ParentBody;
-             if (body != null && body.Enabled)
+            if (body != null)
             {
                 Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
-                Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
+                if (body.Enabled)
+                {
+                    Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;                    
+                }
+                else
+                {
+                    Light.LightSpriteEffect = item.SpriteEffects;
+                }
             }
             else
             {
@@ -85,11 +101,13 @@ namespace Barotrauma.Items.Components
             if (Light?.LightSprite == null) { return; }
             if ((item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
             {
+                Vector2 offset = Vector2.Transform(LightOffset, Matrix.CreateRotationZ(item.FlippedY ? -item.RotationRad - MathHelper.Pi : -item.RotationRad)) * item.Scale;
+
                 Vector2 origin = Light.LightSprite.Origin;
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = Light.LightSprite.SourceRect.Width - origin.X; }
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = Light.LightSprite.SourceRect.Height - origin.Y; }
 
-                Vector2 drawPos = item.body?.DrawPosition ?? item.DrawPosition;
+                Vector2 drawPos = item.body?.DrawPosition ?? item.DrawPosition + offset;
 
                 Color color = lightColor;
                 if (Light.OverrideLightSpriteAlpha.HasValue)

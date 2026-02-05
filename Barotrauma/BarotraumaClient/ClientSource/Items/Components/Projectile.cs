@@ -180,7 +180,11 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "particleemitter":
-                        particleEmitters.Add(new ParticleEmitter(subElement));
+                        var emitter = new ParticleEmitter(subElement);
+                        //backwards compatibility: previously it was not possible to change if the particles use tracer points, they were always used on projectiles
+                        //now emitters don't use them by default, except on projectiles
+                        emitter.Prefab.Properties.UseTracerPoints = subElement.GetAttributeBool(nameof(emitter.Prefab.Properties.UseTracerPoints), true);
+                        particleEmitters.Add(emitter);                        
                         break;
                 }
             }

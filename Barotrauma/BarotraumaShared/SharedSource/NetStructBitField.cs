@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -99,7 +99,7 @@ namespace Barotrauma
             {
                 if (inc.BitPosition >= inc.LengthBits)
                 {
-                    throw new Exception("Failed to find the end of the bit field: end of the message reached.");
+                    throw new NetStructReadException("Failed to find the end of the bit field: end of the message reached.");
                 }
                 currentByte = inc.ReadByte();
                 bytes.Add(currentByte);

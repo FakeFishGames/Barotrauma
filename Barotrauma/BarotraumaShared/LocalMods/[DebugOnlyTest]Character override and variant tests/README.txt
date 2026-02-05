@@ -21,6 +21,11 @@
     - Note that the character is configured incorrectly: it's defined to be an override, but there's no character (Testcyborgworm_m) it'd override. 
     It works regardless, so this can be used as a test case for checking that these incorrectly defined characters still load.
 
+- Testcrawlerhatchling: overrides crawler hatchling with an identical version.
+	- Expected behavior: crawler hatchling looks normal, the same way as in vanilla game.
+	- This has previously caused issues, because we incorrectly tried to fetch the texture path from the root <override> element instead 
+	of the <character> element under it.
+
 - Spineling_morbusine_m: adds a variant of Spineling_morbusine (identical to the normal Spineling_morbusine).
 	- Expected behavior: Spineling_morbusine_m looks identical to Spineling_morbusine.
 	- This has previously caused issues, because Spineling_morbusine defines the ragdoll slightly differently than other monsters 

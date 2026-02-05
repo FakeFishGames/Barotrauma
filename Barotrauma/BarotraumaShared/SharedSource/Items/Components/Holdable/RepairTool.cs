@@ -248,7 +248,7 @@ namespace Barotrauma.Items.Components
                 var barrelHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(rayStartWorld), item.CurrentHull, useWorldCoordinates: true);
                 if (barrelHull != null && barrelHull != item.CurrentHull)
                 {
-                    if (MathUtils.GetLineRectangleIntersection(ConvertUnits.ToDisplayUnits(sourcePos), ConvertUnits.ToDisplayUnits(rayStart), item.CurrentHull.Rect, out Vector2 hullIntersection))
+                    if (MathUtils.GetLineWorldRectangleIntersection(ConvertUnits.ToDisplayUnits(sourcePos), ConvertUnits.ToDisplayUnits(rayStart), item.CurrentHull.Rect, out Vector2 hullIntersection))
                     {
                         if (!item.CurrentHull.ConnectedGaps.Any(g => g.Open > 0.0f && Submarine.RectContains(g.Rect, hullIntersection))) 
                         { 
@@ -522,7 +522,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                                     float barOffset = 10f * GUI.Scale;
                                     Vector2 offset = planter.PlantSlots.ContainsKey(i) ? planter.PlantSlots[i].Offset : Vector2.Zero;
-                                    user?.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUIStyle.Blue, GUIStyle.Blue, "progressbar.watering");
+                                    user?.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxWater, GUIStyle.Blue, GUIStyle.Blue, "progressbar.watering");
 #endif
                                 }
                             }

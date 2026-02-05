@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using RestSharp.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -12,6 +13,10 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Is the value of the property saved when saving (serializing) the entity? 
+    /// Can be set to false if e.g. the value doesn't ever change from the prefab value, or if changes to it shouldn't persist between rounds.
+    /// </summary>
     public enum IsPropertySaveable
     {
         Yes,
@@ -871,7 +876,18 @@ namespace Barotrauma
             Dictionary<Identifier, SerializableProperty> dictionary = new Dictionary<Identifier, SerializableProperty>();
             foreach (var property in properties)
             {
-                var serializableProperty = new SerializableProperty(property);
+                //if the getter is private, we must get it from the declaring type to access it and check if it exists
+                SerializableProperty serializableProperty = null;
+                try
+                {
+                    serializableProperty = new SerializableProperty(property);
+                }
+                catch (AmbiguousMatchException)
+                {
+                    //can happen e.g. with AnimController.CurrentGroundedParams, which is of an abstract type -
+                    //let's just ignore these types of properties (you can't really do anything with SerializableProperties that are reference types anyway)
+                    continue;
+                }
                 dictionary.Add(serializableProperty.Name.ToIdentifier(), serializableProperty);
             }
 
@@ -883,7 +899,16 @@ namespace Barotrauma
         public static Dictionary<Identifier, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
         {
             Dictionary<Identifier, SerializableProperty> dictionary = GetProperties(obj);
-
+#if DEBUG
+            var nonPublicProperties = obj.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var property in nonPublicProperties)
+            {
+                if (property.GetAttribute<Serialize>() != null)
+                {
+                    DebugConsole.ThrowError($"The property {property.Name} in class {obj.GetType()} is set as serializable, but isn't public. Serializable properties must have at least a public getter.");
+                }
+            }
+#endif
             foreach (var property in dictionary.Values)
             {
                 //set the value of the property to the default value if there is one
@@ -1050,6 +1075,15 @@ namespace Barotrauma
                                     item.Rect.Width,
                                     (int)(item.Prefab.Size.Y * item.Prefab.Scale));
                             }
+                        }
+                    }
+                    else if (attributeName == "unlockrecipe" || attributeName == "unlockrecipes")
+                    {
+                        var recipes = subElement.GetAttributeIdentifierImmutableHashSet("unlockrecipes",
+                            def: subElement.GetAttributeIdentifierImmutableHashSet("unlockrecipe", ImmutableHashSet<Identifier>.Empty));
+                        foreach (var recipe in recipes)
+                        {
+                            GameMain.GameSession?.UnlockRecipe(CharacterTeamType.Team1, recipe, showNotifications: false);
                         }
                     }
 

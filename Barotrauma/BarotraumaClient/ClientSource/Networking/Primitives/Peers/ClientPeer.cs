@@ -41,6 +41,9 @@ namespace Barotrauma.Networking
         protected bool IsOwner => ownerKey.IsSome();
         protected readonly Option<int> ownerKey;
 
+        /// <summary>
+        /// Has the ClientPeer been started? Set to true in <see cref="Start"/>, set to false when shutting the client down <see cref="Close(PeerDisconnectPacket)"/>.
+        /// </summary>
         public bool IsActive => isActive;
 
         protected bool isActive;
@@ -104,8 +107,11 @@ namespace Barotrauma.Networking
 
                     TaskPool.Add($"{GetType().Name}.{nameof(GetAccountId)}", GetAccountId(), t =>
                     {
-                        // FIXME what to do with this?
-                        //if (GameMain.Client?.ClientPeer is null) { return; }
+                        if (!IsActive)
+                        {
+                            //client has become inactive (cancelled/disconnected while waiting for initialization)
+                            return;
+                        }
 
                         if (!t.TryGetResult(out Option<AccountId> accountId))
                         {

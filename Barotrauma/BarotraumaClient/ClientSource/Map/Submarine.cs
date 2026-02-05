@@ -159,45 +159,39 @@ namespace Barotrauma
         }
 
         public static float DamageEffectCutoff;
-        public static Color DamageEffectColor;
+
+        private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
 
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            if (!editing && visibleEntities != null)
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
+
+            depthSortedDamageable.Clear();
+
+            //insertion sort according to draw depth
+            foreach (MapEntity e in entitiesToRender)
             {
-                foreach (MapEntity e in visibleEntities)
+                if (e is Structure structure && structure.DrawDamageEffect)
                 {
-                    if (e is Structure structure && structure.DrawDamageEffect)
+                    if (predicate != null)
                     {
-                        if (predicate != null)
-                        {
-                            if (!predicate(structure)) { continue; }
-                        }
-                        structure.DrawDamage(spriteBatch, damageEffect, editing);
+                        if (!predicate(e)) { continue; }
                     }
-                }
-            }
-            else
-            {
-                foreach (Structure structure in Structure.WallList)
-                {
-                    if (structure.DrawDamageEffect)
+                    float drawDepth = structure.GetDrawDepth();
+                    int i = 0;
+                    while (i < depthSortedDamageable.Count)
                     {
-                        if (predicate != null)
-                        {
-                            if (!predicate(structure)) { continue; }
-                        }
-                        structure.DrawDamage(spriteBatch, damageEffect, editing);
+                        float otherDrawDepth = depthSortedDamageable[i].GetDrawDepth();
+                        if (otherDrawDepth < drawDepth) { break; }
+                        i++;
                     }
+                    depthSortedDamageable.Insert(i, structure);
                 }
             }
 
-
-            if (damageEffect != null)
+            foreach (Structure s in depthSortedDamageable)
             {
-                damageEffect.Parameters["aCutoff"].SetValue(0.0f);
-                damageEffect.Parameters["cCutoff"].SetValue(0.0f);
-                DamageEffectCutoff = 0.0f;
+                s.DrawDamage(spriteBatch, damageEffect, editing);
             }
         }
 
@@ -238,30 +232,28 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f)
+        public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f, Color? color = null)
         {
             Vector2 topLeft = roundedGridCenter - Vector2.One * GridSize * gridCells / 2;
             Vector2 bottomRight = roundedGridCenter + Vector2.One * GridSize * gridCells / 2;
 
             for (int i = 0; i < gridCells; i++)
             {
-                float distFromGridX = (MathUtils.RoundTowardsClosest(gridCenter.X, GridSize.X) - gridCenter.X) / GridSize.X;
-                float distFromGridY = (MathUtils.RoundTowardsClosest(gridCenter.Y, GridSize.Y) - gridCenter.Y) / GridSize.Y;
+                float middleIndex = (gridCells - 1) / 2.0f;
+                float normalizedPos = Math.Abs((i - middleIndex) / middleIndex);
+                float expandX = MathHelper.Lerp(30.0f, 0.0f, normalizedPos);
+                float expandY = expandX;
 
-                float normalizedDistX = Math.Abs(i + distFromGridX - gridCells / 2) / (gridCells / 2);
-                float normalizedDistY = Math.Abs(i - distFromGridY - gridCells / 2) / (gridCells / 2);
-
-                float expandX = MathHelper.Lerp(30.0f, 0.0f, normalizedDistY);
-                float expandY = MathHelper.Lerp(30.0f, 0.0f, normalizedDistX);
+                Color lineColor = color ?? Color.White;
 
                 GUI.DrawLine(spriteBatch,
                     new Vector2(topLeft.X - expandX, -bottomRight.Y + i * GridSize.Y),
                     new Vector2(bottomRight.X + expandX, -bottomRight.Y + i * GridSize.Y),
-                    Color.White * (1.0f - normalizedDistY) * alpha, depth: 0.6f, width: 3);
+                    lineColor * (1.0f - normalizedPos) * alpha, depth: 0.6f, width: 3);
                 GUI.DrawLine(spriteBatch,
                     new Vector2(topLeft.X + i * GridSize.X, -topLeft.Y + expandY),
                     new Vector2(topLeft.X + i * GridSize.X, -bottomRight.Y - expandY),
-                    Color.White * (1.0f - normalizedDistX) * alpha, depth: 0.6f, width: 3);
+                    lineColor * (1.0f - normalizedPos) * alpha, depth: 0.6f, width: 3);
             }
         }
 
@@ -297,7 +289,7 @@ namespace Barotrauma
                 if (combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull))) { continue; }
 
                 List<Hull> linkedHulls = new List<Hull>();
-                MiniMap.GetLinkedHulls(hull, linkedHulls);
+                hull.GetLinkedHulls(linkedHulls);
 
                 linkedHulls.Remove(hull);
 
@@ -307,7 +299,6 @@ namespace Barotrauma
                     {
                         combinedHulls.Add(hull, new HashSet<Hull>());
                     }
-
                     combinedHulls[hull].Add(linkedHull);
                 }
             }
@@ -576,6 +567,8 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.GetComponent<OxygenGenerator>() is not OxygenGenerator oxygenGenerator) { continue; }
+
+                    oxygenGenerator.GetVents();
 
                     Dictionary<Hull, float> hullOxygenFlow = new Dictionary<Hull, float>();
 

@@ -1874,5 +1874,24 @@ namespace Barotrauma
             }
             return true;
         }
+
+        /// <summary>
+        /// Normalizes a string by replacing all homoglyph characters with their ASCII equivalents.
+        /// This allows for efficient homoglyph-aware string comparisons using standard string operations.
+        /// </summary>
+        public static string Normalize(string input)
+        {
+            if (string.IsNullOrEmpty(input)) { return input; }
+
+            var normalized = new char[input.Length];
+            for (int i = 0; i < input.Length; i++)
+            {
+                uint charCode = (uint)input[i];
+                uint[] glyphGroup = homoglyphs.Find(g => g.Contains(charCode));
+                // The first element in each homoglyph group is the canonical ASCII character
+                normalized[i] = glyphGroup != null ? (char)glyphGroup[0] : input[i];
+            }
+            return new string(normalized);
+        }
     }
 }

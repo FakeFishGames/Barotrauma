@@ -108,6 +108,9 @@ namespace Barotrauma.Items.Components
         [Serialize(100, IsPropertySaveable.No, description: "How many items are placed in a row before starting a new row.")]
         public int ItemsPerRow { get; set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Should items be drawn based on their position within the inventory?")]
+        public bool ItemsUseInventoryPlacement { get; set; }
+
         [Serialize(true, IsPropertySaveable.No, description: "Should the inventory of this item be visible when the item is selected. Note that this does not prevent dragging and dropping items to the item.")]
         public bool DrawInventory
         {
@@ -128,6 +131,12 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Should a button that allows sorting the items alphabetically be shown in the container's UI panel?")]
+        public bool ShowSortButton { get; set; }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Should a button that merges items into stacks be shown in the container's UI panel?")]
+        public bool ShowMergeButton { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes, description: "When this item is equipped, and you 'quick use' (double click / equip button) another equippable item, should the game attempt to move that item inside this one?")]
         public bool QuickUseMovesItemsInside { get; set; }
@@ -435,9 +444,14 @@ namespace Barotrauma.Items.Components
                             ActiveContainedItem activeContainedItem = new(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition, containableItem.BlameEquipperForDeath);
                             activeContainedItems.Add(activeContainedItem);
 
-                            if (!ShouldApplyEffects(activeContainedItem)) { continue; }
+                            if (!ShouldApplyEffects(activeContainedItem) || item.Submarine is { Loading: true} || initializingLoadedItems || 
+                                containedItem.OnInsertedEffectsApplied) 
+                            { 
+                                continue; 
+                            }
                             activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, deltaTime: 1, item, targets);
                         }
+                        containedItem.OnInsertedEffectsApplied = true;
                     }
                 }
             }
@@ -507,6 +521,8 @@ namespace Barotrauma.Items.Components
                 if (activeContainedItem.Item != containedItem || !ShouldApplyEffects(activeContainedItem)) { continue; }
                 activeContainedItem.StatusEffect.Apply(ActionType.OnRemoved, deltaTime: 1, item, targets);
             }
+
+            containedItem.OnInsertedEffectsApplied = false;
 
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
             containedItems.RemoveAll(i => i.Item == containedItem);
@@ -632,6 +648,8 @@ namespace Barotrauma.Items.Components
                     autoInjectCooldown -= deltaTime;
                     if (autoInjectCooldown <= 0.0f &&
                         ownerInventory?.Owner is Character ownerCharacter && 
+                        //no point in trying to heal if the character is already dead
+                        !ownerCharacter.IsDead &&
                         ownerCharacter.HealthPercentage / 100f <= AutoInjectThreshold &&
                         ownerCharacter.HasEquippedItem(item))
                     {
@@ -675,7 +693,7 @@ namespace Barotrauma.Items.Components
 
             foreach (ActiveContainedItem activeContainedItem in activeContainedItems)
             {
-                if (!ShouldApplyEffects(activeContainedItem)) continue;
+                if (!ShouldApplyEffects(activeContainedItem)) { continue; }
 
                 StatusEffect effect = activeContainedItem.StatusEffect;
                 effect.Apply(ActionType.OnActive, deltaTime, item, targets);
@@ -988,6 +1006,8 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
+                            //flip if flipped on one axis but not both (flipping on both axes is basically "double negative" and makes the rotation normal again)
+                            if (flippedX ^ flippedY) { rotation = -rotation; }
                             rotation += -item.RotationRad;
                         }
                         contained.Item.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, rotation);
@@ -1012,6 +1032,11 @@ namespace Barotrauma.Items.Components
                 contained.Item.Submarine = item.Submarine;
                 contained.Item.CurrentHull = item.CurrentHull;
                 contained.Item.SetContainedItemPositions();
+
+                foreach (var lightComponent in contained.Item.GetComponents<LightComponent>())
+                {
+                    lightComponent.SetLightSourceTransform();
+                }
 
                 i++;
                 if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
@@ -1040,8 +1065,17 @@ namespace Barotrauma.Items.Components
             transformedItemIntervalHorizontal = new Vector2(transformedItemInterval.X, 0.0f);
             transformedItemIntervalVertical = new Vector2(0.0f, transformedItemInterval.Y);
 
-            flippedX = item.RootContainer?.FlippedX ?? item.FlippedX;
-            flippedY = item.RootContainer?.FlippedY ?? item.FlippedY;
+            if (item.RootContainer != null)
+            {
+                flippedX = item.RootContainer.FlippedX && item.RootContainer.Prefab.CanSpriteFlipX;
+                flippedY = item.RootContainer.FlippedY && item.RootContainer.Prefab.CanSpriteFlipY;
+            }
+            else
+            {
+                flippedX = item.FlippedX && item.Prefab.CanSpriteFlipX;
+                flippedY = item.FlippedY && item.Prefab.CanSpriteFlipY;
+            }
+
             var rootBody = item.RootContainer?.body ?? item.body;
             bool bodyFlipped = rootBody is { Dir: -1 };
 
@@ -1113,10 +1147,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool initializingLoadedItems;
+
         public override void OnMapLoaded()
         {
             if (itemIds != null)
             {
+                initializingLoadedItems = true;
                 for (ushort i = 0; i < itemIds.Length; i++)
                 {
                     if (i >= Inventory.Capacity) 
@@ -1128,10 +1165,11 @@ namespace Barotrauma.Items.Components
                     }
                     foreach (ushort id in itemIds[i])
                     {
-                        if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
+                        if (Entity.FindEntityByID(id) is not Item item) { continue; }
                         Inventory.TryPutItem(item, i, false, false, null, createNetworkEvent: false, ignoreCondition: true);
                     }
                 }
+                initializingLoadedItems = false;
                 itemIds = null;
             }
 

@@ -63,6 +63,7 @@ namespace Barotrauma.Networking
                 var teamId = (CharacterTeamType)msg.ReadByte();
 
                 bool respawnPromptPending = false;
+                bool clientHasChosenNewBotViaShuttle = false;
                 var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
                 switch (newState)
                 {
@@ -70,18 +71,20 @@ namespace Barotrauma.Networking
                         teamSpecificState.ReturnCountdownStarted = msg.ReadBoolean();
                         maxTransportTime        = msg.ReadSingle();
                         float transportTimeLeft = msg.ReadSingle();
-
                         teamSpecificState.ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(transportTimeLeft * 1000.0f));
                         teamSpecificState.RespawnCountdownStarted = false;
+                        SetShuttleBodyType(teamSpecificState.TeamID, FarseerPhysics.BodyType.Dynamic);
                         break;
                     case State.Waiting:
                         teamSpecificState.PendingRespawnCount = msg.ReadUInt16();
                         teamSpecificState.RequiredRespawnCount = msg.ReadUInt16();
                         respawnPromptPending = msg.ReadBoolean();
+                        clientHasChosenNewBotViaShuttle = msg.ReadBoolean();
                         teamSpecificState.RespawnCountdownStarted = msg.ReadBoolean();
                         ResetShuttle(teamSpecificState);
                         float newRespawnTime = msg.ReadSingle();
                         teamSpecificState.RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(newRespawnTime * 1000.0f));
+                        SetShuttleBodyType(teamSpecificState.TeamID, FarseerPhysics.BodyType.Static);
                         break;
                     case State.Returning:
                         teamSpecificState.RespawnCountdownStarted = false;
@@ -89,7 +92,7 @@ namespace Barotrauma.Networking
                 }
                 teamSpecificState.CurrentState = newState;
 
-                if (respawnPromptPending)
+                if (respawnPromptPending && !clientHasChosenNewBotViaShuttle)
                 {
                     GameMain.Client.HasSpawned = true;
                     DeathPrompt.Create(delay: 1.0f);

@@ -15,7 +15,8 @@ namespace Barotrauma
         private readonly static HashSet<StatusEffect> ActiveLoopingSounds = new HashSet<StatusEffect>();
         private static double LastMuffleCheckTime;
         private readonly List<RoundSound> sounds = new List<RoundSound>();
-        public IEnumerable<RoundSound> Sounds { get { return sounds; } }
+        public IEnumerable<RoundSound> Sounds => sounds;
+
         private SoundSelectionMode soundSelectionMode;
         private SoundChannel soundChannel;
         private Entity soundEmitter;
@@ -64,6 +65,16 @@ namespace Barotrauma
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
         {
+            if (steamTimeLineEventToTrigger != default)
+            {
+                SteamTimelineManager.AddTimelineEvent(
+                    steamTimeLineEventToTrigger.title,
+                    steamTimeLineEventToTrigger.description,
+                    steamTimeLineEventToTrigger.icon,
+                    priority: 1,
+                    submarine: entity?.Submarine);
+            }
+
             if (playSound)
             {
                 PlaySound(entity, hull, worldPosition);
@@ -141,6 +152,8 @@ namespace Barotrauma
 
         private bool ignoreMuffling;
 
+        private RoundSound lastPlayingSound;
+
         private void PlaySound(Entity entity, Hull hull, Vector2 worldPosition)
         {
             if (sounds.Count == 0) { return; }
@@ -193,6 +206,7 @@ namespace Barotrauma
             else
             {
                 soundChannel.Position = new Vector3(worldPosition, 0.0f);
+                if (lastPlayingSound != null && lastPlayingSound.Stream) { lastPlayingSound.LastStreamSeekPos = soundChannel.StreamSeekPos; }
             }
 
             KeepLoopingSoundAlive(soundChannel);
@@ -222,6 +236,7 @@ namespace Barotrauma
                 {
                     PlaySound(selectedSound);
                 }
+                playSoundAfterLoadedCoroutine = null;
                 yield return CoroutineStatus.Success;
             }
 
@@ -236,6 +251,11 @@ namespace Barotrauma
                 ignoreMuffling = selectedSound.IgnoreMuffling;
                 if (soundChannel != null)
                 {
+                    if (soundChannel.IsStream && lastPlayingSound == selectedSound)
+                    {
+                        soundChannel.StreamSeekPos = lastPlayingSound.LastStreamSeekPos;
+                    }
+                    lastPlayingSound = selectedSound;
                     soundChannel.Looping = loopSound;
                     KeepLoopingSoundAlive(soundChannel);
                 }

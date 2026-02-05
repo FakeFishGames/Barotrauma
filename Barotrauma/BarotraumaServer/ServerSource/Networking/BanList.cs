@@ -195,7 +195,11 @@ namespace Barotrauma.Networking
         
         public void BanPlayer(string name, Either<Address, AccountId> addressOrAccountId, string reason, TimeSpan? duration)
         {
-            if (addressOrAccountId.TryGet(out Address address) && address.IsLocalHost) { return; }
+            if (addressOrAccountId.TryGet(out Address address) && address.IsLocalHost) 
+            {
+                DebugConsole.AddWarning($"Cannot ban localhost ({address.StringRepresentation})");
+                return;
+            }
             
             var existingBan = bannedPlayers.Find(bp => bp.AddressOrAccountId == addressOrAccountId);
             if (existingBan != null) { bannedPlayers.Remove(existingBan); }

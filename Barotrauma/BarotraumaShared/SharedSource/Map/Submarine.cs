@@ -343,12 +343,27 @@ namespace Barotrauma
         }
 
 
+        /// <summary>
+        /// Is the sub at the depth where it starts to take damage to appear due to the pressure?
+        /// </summary>
         public bool AtDamageDepth
         {
             get
             {
                 if (Level.Loaded == null || subBody == null) { return false; }
                 return RealWorldDepth > Level.Loaded.RealWorldCrushDepth && RealWorldDepth > RealWorldCrushDepth;
+            }
+        }
+
+        /// <summary>
+        /// Is the sub at the depth where cosmetic effects (e.g. camera shake) start to appear due to the pressure?
+        /// </summary>
+        public bool AtCosmeticDamageDepth
+        {
+            get
+            {
+                if (Level.Loaded == null || subBody == null) { return false; }
+                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth + SubmarineBody.CosmeticDamageEffectThreshold && RealWorldDepth > RealWorldCrushDepth + SubmarineBody.CosmeticDamageEffectThreshold;
             }
         }
 
@@ -1141,6 +1156,17 @@ namespace Barotrauma
                 }
             }
 
+            foreach (var dockingPort in DockingPort.List)
+            {
+                //a little hacky: undock and redock to ensure the hulls and gaps between docking ports are correct
+                //after all the parts of the submarine have been flipped and moved to correct places.
+                if (dockingPort.DockingTarget is { } dockingTarget) 
+                {
+                    dockingPort.Undock(); 
+                    dockingPort.Dock(dockingTarget); 
+                }
+            }
+
             Item.UpdateHulls();
             Gap.UpdateHulls();
 #if CLIENT
@@ -1374,6 +1400,8 @@ namespace Barotrauma
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
                 if (pump == null || item.CurrentHull == null) { continue; }
+                //if the pump has no connection panel, it must be something else than a ballast pump (e.g. a weak point which uses a pump component to pump water in)
+                if (item.GetComponent<ConnectionPanel>() == null) { continue; }
                 if (!item.HasTag(Tags.Ballast) && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);
@@ -1917,6 +1945,7 @@ namespace Barotrauma
             }
             element.Add(new XAttribute("tags", Info.Tags.ToString()));
             element.Add(new XAttribute("outposttags", Info.OutpostTags.ConvertToString()));
+            element.Add(new XAttribute("triggeroutpostmissionevents", Info.TriggerOutpostMissionEvents.ConvertToString()));
             element.Add(new XAttribute("gameversion", GameMain.Version.ToString()));
 
             Rectangle dimensions = VisibleBorders;
@@ -2089,6 +2118,10 @@ namespace Barotrauma
                 foreach (Submarine sub in _loaded)
                 {
                     sub.Remove();
+                    if (sub.Info.LazyLoad)
+                    {
+                        sub.Info.UnloadSubmarineElement();
+                    }
                 }
 
                 loaded.Clear();

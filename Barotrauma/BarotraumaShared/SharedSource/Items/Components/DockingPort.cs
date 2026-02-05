@@ -87,6 +87,13 @@ namespace Barotrauma.Items.Components
              "Normally there's no need to touch this setting, but if you notice the docking position is incorrect (for example due to some unusual docking port configuration without hulls or doors), you can use this to enforce the direction.")]
         public DirectionType ForceDockingDirection { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Was the docking port docked at the end of the previous round.")]
+        public bool WasDocked
+        {
+            get;
+            set;
+        }
+
         public DockingPort DockingTarget { get; private set; }
 
         /// <summary>
@@ -179,7 +186,8 @@ namespace Barotrauma.Items.Components
                 var prevDockingTarget = DockingTarget;
                 Undock(applyEffects: false);
                 Dock(prevDockingTarget);
-                Lock(isNetworkMessage: true, applyEffects: false);
+                //don't move subs at this point, it will mess up the placement logic when flipping multi-part subs
+                Lock(isNetworkMessage: true, applyEffects: false, moveSubs: false);
             }
         }
 
@@ -279,9 +287,12 @@ namespace Barotrauma.Items.Components
 
             OnDocked?.Invoke();
             OnDocked = null;
+
+            WasDocked = true;
+            DockingTarget.Docked = true;
         }
 
-        public void Lock(bool isNetworkMessage, bool applyEffects = true)
+        public void Lock(bool isNetworkMessage, bool applyEffects = true, bool moveSubs = true)
         {
 #if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) { return; }
@@ -312,16 +323,19 @@ namespace Barotrauma.Items.Components
                     ApplyStatusEffects(ActionType.OnUse, 1.0f);
                 }
 
-                Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
-                if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
-                    DockingTarget.item.Submarine.Info.IsOutpost)
+                if (moveSubs)
                 {
-                    item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
-                }
-                else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
-                   item.Submarine.Info.IsOutpost)
-                {
-                    DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                    Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
+                    if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
+                        DockingTarget.item.Submarine.Info.IsOutpost)
+                    {
+                        item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
+                    }
+                    else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
+                       item.Submarine.Info.IsOutpost)
+                    {
+                        DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                    }
                 }
 
                 ConnectWireBetweenPorts();
@@ -984,6 +998,8 @@ namespace Barotrauma.Items.Components
             Item.Submarine.EnableObstructedWaypoints(DockingTarget.Item.Submarine);
             obstructedWayPointsDisabled = false;
 
+            WasDocked = false;
+            DockingTarget.WasDocked = false;
             DockingTarget.Undock();
             DockingTarget = null;
 
@@ -1048,6 +1064,16 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            //PRETTY HACKY:
+            //the docking port was docked on the previous round, but not any more - 
+            //must mean that whatever it was docked to (e.g. some enemy sub or respawn shuttle) no longer exists
+            //let's send an "on_undock" signal so circuits can react to the undocking that never "actually" happened
+            if (!docked && WasDocked)
+            {
+                item.SendSignal("1", "on_undock");
+                WasDocked = false;
+            }
+
             dockingCooldown -= deltaTime;
             if (DockingTarget == null)
             {
@@ -1204,19 +1230,21 @@ namespace Barotrauma.Items.Components
                 }                
             }
 
-            if (!item.linkedTo.Any()) { return; }
-
-            List<MapEntity> linked = new List<MapEntity>(item.linkedTo);
-            foreach (MapEntity entity in linked)
-            {
-                if (!(entity is Item linkedItem)) { continue; }
-
-                var dockingPort = linkedItem.GetComponent<DockingPort>();
-                if (dockingPort != null)
+            if (item.linkedTo.Any())             
+            { 
+                List<MapEntity> linked = new List<MapEntity>(item.linkedTo);
+                foreach (MapEntity entity in linked)
                 {
-                    Dock(dockingPort);
-                }
+                    if (entity is not Item linkedItem) { continue; }
+
+                    var dockingPort = linkedItem.GetComponent<DockingPort>();
+                    if (dockingPort != null)
+                    {
+                        Dock(dockingPort);
+                    }
+                }            
             }
+
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)

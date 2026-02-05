@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading;
+
 #if CLIENT
 using Barotrauma.Networking;
 using Barotrauma.Steam;
@@ -99,7 +101,8 @@ namespace Barotrauma.IO
             this System.Xml.Linq.XDocument doc,
             string path,
             System.Xml.Linq.SaveOptions saveOptions = System.Xml.Linq.SaveOptions.None,
-            bool throwExceptions = false)
+            bool throwExceptions = false,
+            int maxRetries = 0)
         {
             if (!Validation.CanWrite(path, false))
             {
@@ -114,7 +117,21 @@ namespace Barotrauma.IO
                 }
                 return;
             }
-            doc.Save(path, saveOptions);
+
+            for (int i = 0; i <= maxRetries; i++)
+            {
+                try
+                {
+                    doc.Save(path, saveOptions);
+                    break;
+                }
+                catch (IOException e)
+                {
+                    if (i >= maxRetries) { throw; }
+                    DebugConsole.NewMessage("Failed save XML document {" + e.Message + "}, retrying in 250 ms...");
+                    Thread.Sleep(250);
+                }
+            }
         }
 
         public static void SaveSafe(this System.Xml.Linq.XElement element, string path, bool throwExceptions = false)

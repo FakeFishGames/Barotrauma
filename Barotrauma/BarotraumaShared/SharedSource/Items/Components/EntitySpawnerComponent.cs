@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Linq;
@@ -70,6 +70,19 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(false, IsPropertySaveable.Yes, "")]
         public bool PreloadCharacter { get; set; }
 
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "Should the \"spawn monsters\" setting affect this item in the PvP mode?")]
+        public bool AffectedByPvPSpawnMonstersSetting { get; set; }
+
+        /// <summary>
+        /// Implemented as a property and checked on the fly instead of disabling the component, 
+        /// because the signals sent by the component might be necessary even if it can't spawn anything.
+        /// </summary>
+        private bool DisabledByByPvPSpawnMonstersSetting =>
+            !SpeciesName.IsNullOrEmpty() &&
+            AffectedByPvPSpawnMonstersSetting && 
+            GameMain.GameSession?.GameMode is PvPMode &&
+            GameMain.NetworkMember is { ServerSettings.PvPSpawnMonsters: false };
+
         private float spawnTimer;
         private float? spawnTimerGoal;
 
@@ -114,15 +127,24 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (PreloadCharacter && !Screen.Selected.IsEditor && !preloadInitiated)
+            if (DisabledByByPvPSpawnMonstersSetting)
             {
-                SpawnCharacter(Vector2.Zero, onSpawn: (Character c) =>
+                CanSpawn = false;
+                //in most cases we could probably just disable the component here and return,
+                //but the state_out signal might be needed for something even if the spawning is disabled
+            }
+            else
+            {
+                if (PreloadCharacter && !Screen.Selected.IsEditor && !preloadInitiated)
                 {
-                    preloadedCharacter = c;
-                    c.DisabledByEvent = true;
-                });
-                preloadInitiated = true;
-                return;
+                    SpawnCharacter(Vector2.Zero, onSpawn: (Character c) =>
+                    {
+                        preloadedCharacter = c;
+                        c.DisabledByEvent = true;
+                    });
+                    preloadInitiated = true;
+                    return;
+                }
             }
 
             base.Update(deltaTime, cam);
@@ -182,7 +204,7 @@ namespace Barotrauma.Items.Components
 
         private bool CanSpawnMore()
         {
-            if (!CanSpawn) { return false; }
+            if (!CanSpawn || DisabledByByPvPSpawnMonstersSetting) { return false; }
             if (MaximumAmount > 0 && spawnedAmount >= MaximumAmount) { return false; }
 
             if (OnlySpawnWhenCrewInRange)

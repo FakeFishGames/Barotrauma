@@ -392,6 +392,7 @@ namespace Barotrauma
                     foreach (var target in mission.HudIconTargets)
                     {
                         if (target.Submarine != character.Submarine) { continue; }
+                        if (target.Removed) { continue; }
                         float alpha = GetDistanceBasedIconAlpha(target, maxDistance: mission.Prefab.HudIconMaxDistance);
                         if (alpha <= 0.0f) { continue; }
                         GUI.DrawIndicator(spriteBatch, target.DrawPosition, cam, 100.0f, mission.Prefab.HudIcon, mission.Prefab.HudIconColor * alpha);
@@ -652,7 +653,10 @@ namespace Barotrauma
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)), character.Info.IsDisguisedAsAnother);
                         float yOffset = (GameMain.GameSession?.Campaign is MultiPlayerCampaign ? -10 : 4) * GUI.Scale;
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, yOffset), targetWidth: HUDLayoutSettings.PortraitArea.Width, true, character.Info.IsDisguisedAsAnother);
+
+                        character.Info?.DrawIcon(spriteBatch, 
+                            new Vector2(HUDLayoutSettings.PortraitArea.Center.X - 12 * GUI.Scale, HUDLayoutSettings.PortraitArea.Center.Y), HUDLayoutSettings.PortraitArea.Size.ToVector2(),
+                            flip: true);
                         character.Info.DrawForeground(spriteBatch);
                     }
                     mouseOnPortrait = MouseOnCharacterPortrait() && !character.ShouldLockHud();
@@ -732,8 +736,9 @@ namespace Barotrauma
 
             string focusName = character.FocusedCharacter.Info == null ? character.FocusedCharacter.DisplayName : character.FocusedCharacter.Info.DisplayName;
             Vector2 textPos = startPos;
-            Vector2 textSize = GUIStyle.Font.MeasureString(focusName);
-            Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString(focusName);
+            //measure arbitrary one-line text instead of the potentially-multi-line name
+            Vector2 textSize = GUIStyle.Font.MeasureString("T");
+            Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString("T");
 
             textPos -= new Vector2(textSize.X / 2, textSize.Y);
 
@@ -750,7 +755,8 @@ namespace Barotrauma
             }
             textPos.X += 10.0f * GUI.Scale;
 
-            if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet && character.IsFriendly(character.FocusedCharacter))
+            if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet &&
+                character.FocusedCharacter.AIController is EnemyAIController enemyAI && enemyAI.PetBehavior.CanPlayWith(character))
             {
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText("PlayHint", InputType.Use),
                     GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);
@@ -811,7 +817,7 @@ namespace Barotrauma
         private static void AddBossProgressBar(ProgressBar progressBar)
         {
             var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
-            if (healthBarMode == EnemyHealthBarMode.HideAll)
+            if (healthBarMode == EnemyHealthBarMode.HideAll && progressBar is not MissionProgressBar)
             {
                 return;
             }
@@ -885,7 +891,7 @@ namespace Barotrauma
             for (int i = bossProgressBars.Count - 1; i >= 0 ; i--)
             {
                 var bossHealthBar = bossProgressBars[i];
-                if (bossHealthBar.FadeTimer <= 0 || healthBarMode == EnemyHealthBarMode.HideAll)
+                if (bossHealthBar.FadeTimer <= 0 || (healthBarMode == EnemyHealthBarMode.HideAll && bossHealthBar is not MissionProgressBar))
                 {
                     bossHealthBar.SideContainer.Parent?.RemoveChild(bossHealthBar.SideContainer);
                     bossHealthBar.TopContainer.Parent?.RemoveChild(bossHealthBar.TopContainer);

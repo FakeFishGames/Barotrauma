@@ -52,6 +52,7 @@ public static class Tags
     public static readonly Identifier ChairItem = "chair".ToIdentifier();
     public static readonly Identifier ArtifactHolder = "artifactholder".ToIdentifier();
     public static readonly Identifier Thalamus = "thalamus".ToIdentifier();
+    public static readonly Identifier GeneticResearchStation = "geneticresearchstation".ToIdentifier();
 
     public static readonly Identifier IgnoreThis = "ignorethis".ToIdentifier();
     public static readonly Identifier UnignoreThis = "unignorethis".ToIdentifier();
@@ -71,7 +72,7 @@ public static class Tags
 
     public static readonly Identifier CargoMissionItem = "cargomission".ToIdentifier();
 
-    public static readonly Identifier ItemIgnoredByAI = "ignorebyai".ToIdentifier();
+    public static readonly Identifier IgnoredByAI = "ignorebyai".ToIdentifier();
 
     public static readonly Identifier GuardianShelter = "guardianshelter".ToIdentifier();
 
@@ -163,5 +164,10 @@ public static class Tags
     public static readonly Identifier Nasonov = "nasonov".ToIdentifier();
     public static readonly Identifier Decoy = "decoy".ToIdentifier();
     public static readonly Identifier Provocative = "provocative".ToIdentifier();
+
+    /// <summary>
+    /// Tag used on status effects that mark the entity as being on fire.
+    /// </summary>
+    public static readonly Identifier OnFireStatusEffectTag = "onfire".ToIdentifier();
 }
 

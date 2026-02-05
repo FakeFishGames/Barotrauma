@@ -542,6 +542,10 @@ namespace Barotrauma.Items.Components
             }
 
             IsActive = false;
+#if CLIENT
+            //stop any sounds that may have been looping while wearing the item
+            StopSounds(ActionType.OnWearing);
+#endif
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

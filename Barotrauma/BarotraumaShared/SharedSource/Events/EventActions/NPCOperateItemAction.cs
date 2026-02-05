@@ -2,6 +2,7 @@
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Barotrauma
 {
@@ -31,8 +32,19 @@ namespace Barotrauma
         [Serialize(-1, IsPropertySaveable.Yes, description: "Maximum number of NPCs the action can target. For example, you could only make a specific number of security officers man a periscope.")]
         public int MaxTargets { get; set; }
 
-        [Serialize(100, IsPropertySaveable.Yes, description: "Priority of operating the item (0-100). Higher values will make the AI prefer operating the item over other orders (priority 60-70) or e.g. reacting to emergencies (priority 90).")]
-        public int Priority { get; set; }
+
+        [Serialize(AIObjectiveManager.MaxObjectivePriority, IsPropertySaveable.Yes, description: "AI priority for the action. Uses 100 by default, which is the absolute maximum for any objectives, " +
+                                                                                                 "meaning nothing can be prioritized over it, including the emergency objectives, such as find safety and combat." +
+                                                                                                 "Setting the priority to 70 would function like a regular order, but with the highest priority." +
+                                                                                                 "A priority of 60 would make the objective work like a lowest priority order." +
+                                                                                                 "So, if we'll want the character to operate the item, but still be able to find safety, defend themselves when attacked, or flee from dangers," +
+                                                                                                 "it's better to use e.g. 70 instead of 100.")]
+        public float Priority
+        {
+            get => _priority;
+            set => _priority = Math.Clamp(value, AIObjectiveManager.LowestOrderPriority, AIObjectiveManager.MaxObjectivePriority);
+        }
+        private float _priority;
 
         [Serialize(true, IsPropertySaveable.Yes, description: "The event actions reset when a GoTo action makes the event jump to a different point. Should the NPC stop operating the item when the event resets?")]
         public bool AbandonOnReset { get; set; }

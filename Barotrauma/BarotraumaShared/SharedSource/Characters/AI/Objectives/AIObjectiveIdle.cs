@@ -185,134 +185,161 @@ namespace Barotrauma
                 IsForbidden(currentTarget) ||
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-            if (behavior == BehaviorType.StayInHull && TargetHull != null && !IsForbidden(TargetHull) && !currentTargetIsInvalid && !HumanAIController.UnsafeHulls.Contains(TargetHull))
+            if (behavior == BehaviorType.StayInHull && TargetHull != null && !currentTargetIsInvalid && !IsForbidden(TargetHull))
             {
-                currentTarget = TargetHull;
-                bool stayInHull = character.CurrentHull == currentTarget && IsSteeringFinished() && !character.IsClimbing;
-                if (stayInHull)
+                if (HumanAIController.UnsafeHulls.Contains(TargetHull))
                 {
-                    Wander(deltaTime);
-                }
-                else if (currentTarget != null)
-                {
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    // Ask to refresh, because otherwise we can't get back to the hull.
+                    HumanAIController.AskToRecalculateHullSafety(TargetHull);
                 }
                 else
                 {
-                    PathSteering.ResetPath();
-                    PathSteering.Reset();
+                    currentTarget = TargetHull;
+                    NavigateTo(currentTarget);
+                    return;
                 }
+            }
+            if (currentTarget != null && !currentTargetIsInvalid)
+            {
+                if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
+                {
+                    if (currentTarget.Submarine.TeamID != character.TeamID)
+                    {
+                        currentTargetIsInvalid = true;
+                    }
+                }
+                else
+                {
+                    if (currentTarget.Submarine != character.Submarine)
+                    {
+                        currentTargetIsInvalid = true;
+                    }
+                }
+            }
+
+            if (currentTargetIsInvalid || currentTarget == null || IsForbidden(character.CurrentHull) && IsSteeringFinished())
+            {
+                if (newTargetTimer > timerMargin)
+                {
+                    //don't reset to zero, otherwise the character will keep calling FindTargetHulls 
+                    //almost constantly when there's a small number of potential hulls to move to
+                    SetTargetTimerLow();
+                }
+            }
+            else if (character.IsClimbing)
+            {
+                if (currentTarget == null)
+                {
+                    SetTargetTimerLow();
+                }
+                else if (Math.Abs(character.AnimController.TargetMovement.Y) > 0.9f)
+                {
+                    // Don't allow new targets when climbing straight up or down
+                    SetTargetTimerHigh();
+                }
+            }
+            else if (character.AnimController.InWater)
+            {
+                if (currentTarget == null)
+                {
+                    SetTargetTimerLow();
+                }
+            }
+            if (newTargetTimer <= 0.0f)
+            {
+                if (!searchingNewHull)
+                {
+                    //find all available hulls first
+                    searchingNewHull = true;
+                    FindTargetHulls();
+                }
+                else if (targetHulls.Any())
+                {
+                    //choose a random available hull
+                    currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
+                    bool isInWrongSub = (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted) && character.Submarine.TeamID != character.TeamID;
+                    bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
+                    Vector2 targetPos = character.GetRelativeSimPosition(currentTarget);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, targetPos, character.Submarine, nodeFilter: node =>
+                    {
+                        if (node.Waypoint.CurrentHull == null) { return false; }
+                        // Check that there is no unsafe hulls on the way to the target
+                        if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
+                        return true;
+                        //don't stop at ladders when idling
+                    }, endNodeFilter: node => node.Waypoint.Stairs == null && node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
+                    if (path.Unreachable)
+                    {
+                        //can't go to this room, remove it from the list and try another room
+                        int index = targetHulls.IndexOf(currentTarget);
+                        targetHulls.RemoveAt(index);
+                        hullWeights.RemoveAt(index);
+                        PathSteering.Reset();
+                        currentTarget = null;
+                        SetTargetTimerLow();
+                        return;
+                    }
+                    character.AIController.SelectTarget(currentTarget.AiTarget);
+                    PathSteering.SetPath(targetPos, path);
+                    SetTargetTimerNormal();
+                    searchingNewHull = false;
+                }
+                else
+                {
+                    // Couldn't find a valid hull
+                    SetTargetTimerHigh();
+                    searchingNewHull = false;
+                }
+            }
+            newTargetTimer -= deltaTime;
+            if (currentTarget == null || PathSteering.CurrentPath == null)
+            {
+                Wander(deltaTime);
             }
             else
             {
-                if (currentTarget != null && !currentTargetIsInvalid)
+                NavigateTo(currentTarget);
+            }
+            
+            void NavigateTo(Hull target)
+            {
+                bool isAtTarget = character.CurrentHull == target && IsSteeringFinished();
+                if (isAtTarget)
                 {
-                    if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
+                    if (character.IsClimbing)
                     {
-                        if (currentTarget.Submarine.TeamID != character.TeamID)
+                        StopMoving();
+                        if (character.AnimController.GetHeightFromFloor() < character.AnimController.ImpactTolerance / 2)
                         {
-                            currentTargetIsInvalid = true;
+                            character.StopClimbing();
                         }
                     }
                     else
                     {
-                        if (currentTarget.Submarine != character.Submarine)
-                        {
-                            currentTargetIsInvalid = true;
-                        }
+                        Wander(deltaTime);
                     }
                 }
-
-                if (currentTargetIsInvalid || currentTarget == null || IsForbidden(character.CurrentHull) && IsSteeringFinished())
+                else if (target != null)
                 {
-                    if (newTargetTimer > timerMargin)
-                    {
-                        //don't reset to zero, otherwise the character will keep calling FindTargetHulls 
-                        //almost constantly when there's a small number of potential hulls to move to
-                        SetTargetTimerLow();
-                    }
-                }
-                else if (character.IsClimbing)
-                {
-                    if (currentTarget == null)
-                    {
-                        SetTargetTimerLow();
-                    }
-                    else if (Math.Abs(character.AnimController.TargetMovement.Y) > 0.9f)
-                    {
-                        // Don't allow new targets when climbing straight up or down
-                        SetTargetTimerHigh();
-                    }
-                }
-                else if (character.AnimController.InWater)
-                {
-                    if (currentTarget == null)
-                    {
-                        SetTargetTimerLow();
-                    }
-                }
-                if (newTargetTimer <= 0.0f)
-                {
-                    if (!searchingNewHull)
-                    {
-                        //find all available hulls first
-                        searchingNewHull = true;
-                        FindTargetHulls();
-                    }
-                    else if (targetHulls.Any())
-                    {
-                        //choose a random available hull
-                        currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-                        bool isInWrongSub = (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted) && character.Submarine.TeamID != character.TeamID;
-                        bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
-                        Vector2 targetPos = character.GetRelativeSimPosition(currentTarget);
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, targetPos, character.Submarine, nodeFilter: node =>
-                        {
-                            if (node.Waypoint.CurrentHull == null) { return false; }
-                            // Check that there is no unsafe hulls on the way to the target
-                            if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
-                            return true;
-                            //don't stop at ladders when idling
-                        }, endNodeFilter: node => node.Waypoint.Stairs == null && node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
-                        if (path.Unreachable)
-                        {
-                            //can't go to this room, remove it from the list and try another room
-                            int index = targetHulls.IndexOf(currentTarget);
-                            targetHulls.RemoveAt(index);
-                            hullWeights.RemoveAt(index);
-                            PathSteering.Reset();
-                            currentTarget = null;
-                            SetTargetTimerLow();
-                            return;
-                        }
-                        character.AIController.SelectTarget(currentTarget.AiTarget);
-                        PathSteering.SetPath(targetPos, path);
-                        SetTargetTimerNormal();
-                        searchingNewHull = false;
-                    }
-                    else
-                    {
-                        // Couldn't find a valid hull
-                        SetTargetTimerHigh();
-                        searchingNewHull = false;
-                    }
-                }
-                newTargetTimer -= deltaTime;
-                if (!character.IsClimbing && (PathSteering == null || PathSteering.CurrentPath == null || IsSteeringFinished()))
-                {
-                    Wander(deltaTime);
-                }
-                else if (currentTarget != null)
-                {
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, 
-                        nodeFilter: node => node.Waypoint.CurrentHull != null, 
-                        endNodeFilter: node => node.Waypoint.Ladders == null && node.Waypoint.Stairs == null);
+                    PathTo(target);
                 }
                 else
                 {
-                    PathSteering.ResetPath();
-                    PathSteering.Reset();
+                    StopMoving();
                 }
+            }
+            
+            void StopMoving()
+            {
+                SteeringManager.Reset();
+                PathSteering.ResetPath();
+            }
+            
+            void PathTo(ISpatialEntity target)
+            {
+                PathSteering.SteeringSeek(character.GetRelativeSimPosition(target), weight: 1, 
+                    nodeFilter: node => node.Waypoint.CurrentHull != null, 
+                    endNodeFilter: node => node.Waypoint.Ladders == null && node.Waypoint.Stairs == null);
             }
         }
 

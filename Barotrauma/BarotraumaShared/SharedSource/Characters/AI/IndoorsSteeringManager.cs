@@ -119,10 +119,13 @@ namespace Barotrauma
             steering += base.DoSteeringSeek(targetSimPos, weight);
         }
         
-        public void SteeringSeek(Vector2 target, float weight, float minGapWidth = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
+        /// <summary>
+        /// </summary>
+        /// <param name="outsideNodePenalty">Additional cost applied to outside nodes. When the character is inside an extra cost of 100 is also automatically added for outside nodes, unless the character is protected from the pressure. Used for example to prevent monsters from preferring outside nodes when they already are inside.</param>
+        public void SteeringSeek(Vector2 target, float weight, float minGapWidth = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true, float outsideNodePenalty = 0)
         {
             // Have to use a variable here or resetting doesn't work.
-            Vector2 addition = CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
+            Vector2 addition = CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity, outsideNodePenalty);
             steering += addition;
         }
 
@@ -139,9 +142,9 @@ namespace Barotrauma
             return null;
         }
 
-        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
+        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true, float outsideNodePenalty = 0)
         {
-            bool needsNewPath = currentPath == null || currentPath.Unreachable || currentPath.Finished || currentPath.CurrentNode == null;
+            bool needsNewPath = currentPath == null || currentPath.Unreachable || currentPath.Finished || currentPath.IsAtEndNode || currentPath.CurrentNode == null;
             if (!needsNewPath && character.Submarine != null && character.Params.PathFinderPriority > 0.5f)
             {
                 // If the target has moved, we need a new path.
@@ -182,7 +185,7 @@ namespace Barotrauma
                     Vector2 currentPos = host.SimPosition;
                     pathFinder.InsideSubmarine = character.Submarine != null && !character.Submarine.Info.IsRuin;
                     pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && !character.IsProtectedFromPressure;
-                    var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
+                    var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility, outsideNodePenalty);
                     bool useNewPath = needsNewPath;
                     if (!useNewPath && currentPath?.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                     {
@@ -792,7 +795,7 @@ namespace Barotrauma
             float? penalty = GetSingleNodePenalty(nextNode);
             if (penalty == null) { return null; }
             bool nextNodeAboveWaterLevel = nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y;
-            if (!character.CanClimb)
+            if (!character.CanClimb && node.Waypoint.Stairs == null && nextNode.Waypoint.Stairs == null)
             {
                 if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (!nextNode.Waypoint.Ladders.Item.IsInteractable(character) || character.LockHands) ||
                     (nextNode.Position.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
@@ -888,6 +891,7 @@ namespace Barotrauma
             return penalty;
         }
 
+        // TODO: Long and complex. Consider refactoring.
         public static float smallRoomSize = 500;
         public void Wander(float deltaTime, float wallAvoidDistance = 150, bool stayStillInTightSpace = true)
         {
@@ -915,36 +919,92 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float leftDist = character.Position.X - currentHull.Rect.X;
-                    float rightDist = currentHull.Rect.Right - character.Position.X;
-                    if (leftDist < wallAvoidDistance && rightDist < wallAvoidDistance)
+                    bool isVerySmallRoom = roomWidth < smallRoomSize;
+                    Hull nextRoom = null;
+                    if (!stayStillInTightSpace && isVerySmallRoom)
                     {
-                        if (Math.Abs(rightDist - leftDist) > wallAvoidDistance / 2)
+                        float closestDistance = 0;
+                        // Try to steer to the next room
+                        foreach (Gap gap in currentHull.ConnectedGaps)
                         {
-                            SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
-                            return;
-                        }
-                        else if (stayStillInTightSpace)
-                        {
-                            Reset();
-                            return;
+                            if (gap.Open < 1.0f) { continue; }
+                            float feetPos = ConvertUnits.ToDisplayUnits(character.AnimController.FloorY);
+                            float gapTop = gap.Rect.Y;
+                            float gapBottom = gap.Rect.Y - gap.Rect.Height;
+                            const float margin = 25;
+                            if (character.Position.Y > gapTop || feetPos < gapBottom - margin)
+                            {
+                                // If the character is above or below the gap, they can't walk through it.
+                                continue;
+                            }
+                            Hull room = null;
+                            foreach (var entity in gap.linkedTo)
+                            {
+                                if (entity is not Hull hull) { continue; }
+                                if (hull.Submarine != character.Submarine) { continue; }
+                                if (hull.Rect.Width < smallRoomSize) { continue; }
+                                if (hull != currentHull)
+                                {
+                                    room = hull;
+                                    break;
+                                }
+                            }
+                            if (room == null) { continue; }
+                            Vector2 toGap = gap.Position - character.Position;
+                            float distance = Math.Abs(toGap.X);
+                            if (nextRoom == null || distance < closestDistance)
+                            {
+                                closestDistance = distance;
+                                nextRoom = room;
+                            }
                         }
                     }
-                    if (leftDist < wallAvoidDistance)
+                    if (nextRoom != null)
                     {
-                        float speed = (wallAvoidDistance - leftDist) / wallAvoidDistance;
-                        SteeringManual(deltaTime, Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
+                        float toNextRoom = nextRoom.Position.X - character.Position.X;
+                        SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(toNextRoom));
                         WanderAngle = 0.0f;
-                    }
-                    else if (rightDist < wallAvoidDistance)
-                    {
-                        float speed = (wallAvoidDistance - rightDist) / wallAvoidDistance;
-                        SteeringManual(deltaTime, -Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
-                        WanderAngle = MathHelper.Pi;
                     }
                     else
                     {
-                        wander = true;
+                        if (!stayStillInTightSpace && isVerySmallRoom)
+                        {
+                            // Reset regardless, because moving inside the room would look glitchy.
+                            Reset();
+                            return;
+                        }
+                        float leftDist = character.Position.X - currentHull.Rect.X;
+                        float rightDist = currentHull.Rect.Right - character.Position.X;
+                        if (leftDist < wallAvoidDistance && rightDist < wallAvoidDistance)
+                        {
+                            float diff = rightDist - leftDist;
+                            if (Math.Abs(diff) > wallAvoidDistance / 2)
+                            {
+                                SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(diff));
+                                return;
+                            }
+                            else if (stayStillInTightSpace)
+                            {
+                                Reset();
+                                return;
+                            }
+                        }
+                        if (leftDist < wallAvoidDistance)
+                        {
+                            float speed = (wallAvoidDistance - leftDist) / wallAvoidDistance;
+                            SteeringManual(deltaTime, Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
+                            WanderAngle = 0.0f;
+                        }
+                        else if (rightDist < wallAvoidDistance)
+                        {
+                            float speed = (wallAvoidDistance - rightDist) / wallAvoidDistance;
+                            SteeringManual(deltaTime, -Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
+                            WanderAngle = MathHelper.Pi;
+                        }
+                        else
+                        {
+                            wander = true;
+                        }
                     }
                 }
             }

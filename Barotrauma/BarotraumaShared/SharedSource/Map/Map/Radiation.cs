@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +22,6 @@ namespace Barotrauma
 
         public readonly Map Map;
         public readonly RadiationParams Params;
-
-        private Affliction? radiationAffliction;
 
         private float radiationTimer;
 
@@ -62,7 +60,7 @@ namespace Barotrauma
 
             int amountOfOutposts = Map.Locations.Count(location => location.Type.HasOutpost && !location.IsCriticallyRadiated());
 
-            foreach (Location location in Map.Locations.Where(Contains))
+            foreach (Location location in Map.Locations.Where(l => DepthInRadiation(l) > 0))
             {
                 if (location.IsGateBetweenBiomes)
                 {
@@ -96,8 +94,6 @@ namespace Barotrauma
             increasedAmount = lastIncrease = amount;
         }
 
-
-
         public void UpdateRadiation(float deltaTime)
         {
             if (!(GameMain.GameSession?.IsCurrentLocationRadiated() ?? false)) { return; }
@@ -110,55 +106,66 @@ namespace Barotrauma
                 return;
             }
 
-            if (radiationAffliction == null)
-            {
-                float radiationStrengthChange = AfflictionPrefab.RadiationSickness.Effects.FirstOrDefault()?.StrengthChange ?? 0.0f;
-                radiationAffliction = new Affliction(
-                    AfflictionPrefab.RadiationSickness, 
-                    (Params.RadiationDamageAmount - radiationStrengthChange) * Params.RadiationDamageDelay);
-            }
-
             radiationTimer = Params.RadiationDamageDelay;
 
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead || character.Removed || !(character.CharacterHealth is { } health)) { continue; }
-
-                if (IsEntityRadiated(character))
+                
+                float depthInRadiation = DepthInRadiation(character);
+                if (depthInRadiation > 0)
                 {
-                    var limb = character.AnimController.MainLimb;
-                    AttackResult attackResult = limb.AddDamage(limb.SimPosition, radiationAffliction.ToEnumerable(), playSound: false);
-                    character.CharacterHealth.ApplyDamage(limb, attackResult);
+                    AfflictionPrefab afflictionPrefab;
+                    // Get the related affliction (if necessary, fall back to the traditional radiation sickness for slightly better backwards compatibility)
+                    afflictionPrefab = AfflictionPrefab.JovianRadiation ?? AfflictionPrefab.RadiationSickness;
+                    float currentAfflictionStrength = character.CharacterHealth.GetAfflictionStrengthByIdentifier(afflictionPrefab.Identifier);
+                    
+                    // Get Jovian radiation strength, and cancel out the affliction's strength change (meant for decaying it)
+                    // (for simplicity, let's assume each Effect of the Affliction has the same strengthchange)
+                    float addedStrength = Params.RadiationDamageAmount - afflictionPrefab.Effects.FirstOrDefault()?.StrengthChange ?? 0.0f;
+                    
+                    // Damage is applied periodically, so we must apply the total damage for the full period at once (after deducting strengthchange)
+                    addedStrength *= Params.RadiationDamageDelay;
+                    
+                    // The JovianRadiation affliction has brackets of 25 strength determined by the multiplier (1x = 0-25, 2x = 25-50 etc.)
+                    int multiplier = (int)Math.Ceiling(depthInRadiation / Params.RadiationEffectMultipliedPerPixelDistance);
+                    float growthPotentialInBracket = (multiplier * 25) - currentAfflictionStrength;
+                    if (growthPotentialInBracket > 0)
+                    {
+                        addedStrength = Math.Min(addedStrength, growthPotentialInBracket);
+                        character.CharacterHealth.ApplyAffliction(
+                            character.AnimController?.MainLimb,
+                            afflictionPrefab.Instantiate(addedStrength));
+                    }
                 }
             }
         }
 
-        public bool Contains(Location location)
+        public float DepthInRadiation(Location location)
         {
-            return Contains(location.MapPosition);
+            return DepthInRadiation(location.MapPosition);
+        }
+        
+        private float DepthInRadiation(Vector2 pos)
+        {
+            return Amount - pos.X;
         }
 
-        public bool Contains(Vector2 pos)
+        public float DepthInRadiation(Entity entity)
         {
-            return pos.X < Amount;
-        }
-
-        public bool IsEntityRadiated(Entity entity)
-        {
-            if (!Enabled) { return false; }
+            if (!Enabled) { return 0; }
             if (Level.Loaded is { Type: LevelData.LevelType.LocationConnection, StartLocation: { } startLocation, EndLocation: { } endLocation } level)
             {
-                if (Contains(startLocation) && Contains(endLocation)) { return true; }
-
-                float distance = MathHelper.Clamp((entity.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X), 0.0f, 1.0f);
+                // Approximate how far between the level start and end points the entity is on the map
+                float distanceNormalized = MathHelper.Clamp((entity.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X), 0.0f, 1.0f);
                 var (startX, startY) = startLocation.MapPosition;
                 var (endX, endY) = endLocation.MapPosition;
-                Vector2 mapPos = new Vector2(startX + (endX - startX), startY + (endY - startY)) * distance;
+                Vector2 mapPos = new Vector2(startX, startY) + (new Vector2(endX - startX, endY - startY) * distanceNormalized);
 
-                return Contains(mapPos);
+                return DepthInRadiation(mapPos);
             }
 
-            return false;
+            return 0;
         }
 
         public XElement Save()

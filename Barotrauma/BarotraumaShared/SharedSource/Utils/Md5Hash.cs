@@ -11,7 +11,9 @@ namespace Barotrauma
 {
     public class Md5Hash
     {
-        public static readonly Md5Hash Blank = new Md5Hash(new string('0', 32));
+        public const int MaxHashLength = 32;
+
+        public static readonly Md5Hash Blank = new Md5Hash(new string('0', MaxHashLength));
 
         private static string RemoveWhitespace(string s)
         {

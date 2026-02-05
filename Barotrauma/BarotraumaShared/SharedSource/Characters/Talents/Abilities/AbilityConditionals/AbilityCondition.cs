@@ -77,7 +77,7 @@ namespace Barotrauma.Abilities
                 case TargetType.Alive:
                     return !targetCharacter.IsDead;
                 case TargetType.Monster:
-                    return !targetCharacter.IsHuman;
+                    return !targetCharacter.IsHuman && !targetCharacter.IsPet;
                 case TargetType.InFriendlySubmarine:
                     return targetCharacter.Submarine != null && targetCharacter.Submarine.TeamID == character.TeamID;
                 default:

@@ -120,6 +120,7 @@ namespace Barotrauma
         private readonly GameTime fixedTime;
 
         public Option<ConnectCommand> ConnectCommand = Option<ConnectCommand>.None();
+        private string clientName;
 
         private static SpriteBatch spriteBatch;
 
@@ -252,6 +253,16 @@ namespace Barotrauma
             try
             {
                 ConnectCommand = Barotrauma.Networking.ConnectCommand.Parse(ConsoleArguments);
+                
+                string clientNameFlagArg = args.FirstOrDefault(arg => arg.StartsWith("-username"));
+                if (clientNameFlagArg != null)
+                {
+                    int nextIndex = args.IndexOf(clientNameFlagArg) + 1;
+                    if (nextIndex < args.Length)
+                    {
+                        clientName = args[nextIndex];
+                    }
+                }
             }
             catch (IndexOutOfRangeException e)
             {
@@ -259,6 +270,13 @@ namespace Barotrauma
                 ConnectCommand = Option<ConnectCommand>.None();
             }
 
+#if DEBUG
+            if (ConsoleArguments.Contains("-multiclienttestmode"))
+            {
+                DebugConsole.NewMessage("Enabled MultiClientTestMode on the client");
+                GameClient.MultiClientTestMode = true;
+            }
+#endif
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
             PerformanceCounter = new PerformanceCounter();
@@ -447,7 +465,10 @@ namespace Barotrauma
 
             Eos.EosAccount.LoginPlatformSpecific();
 
-            initialLoadingThread = new Thread(Load);
+            initialLoadingThread = new Thread(Load)
+            {
+                Name = "Load"
+            };
             initialLoadingThread.Start();
         }
 
@@ -669,6 +690,7 @@ namespace Barotrauma
 
         private void OnInvitedToSteamGame(string connectCommand)
         {
+            DebugConsole.NewMessage($"Invited to Steam game, connect command: {connectCommand}", Color.Lime);
             try
             {
                 ConnectCommand = Barotrauma.Networking.ConnectCommand.Parse(ToolBox.SplitCommand(connectCommand));
@@ -734,7 +756,7 @@ namespace Barotrauma
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
-                fixedTime.TotalGameTime.Add(addTime);
+                fixedTime.TotalGameTime = fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
 
                 PlayerInput.Update(Timing.Step);
@@ -808,6 +830,7 @@ namespace Barotrauma
                 {
                     if (ConnectCommand.TryUnwrap(out var connectCommand))
                     {
+                        DebugConsole.NewMessage($"Processing connect command: {connectCommand}...", Color.Lime);
                         if (Client != null)
                         {
                             Client.Quit();
@@ -815,19 +838,34 @@ namespace Barotrauma
                         }
                         MainMenuScreen.Select();
 
+                        string clientNameString = clientName ?? MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername());
+
                         if (connectCommand.SteamLobbyIdOption.TryUnwrap(out var lobbyId))
                         {
+                            DebugConsole.NewMessage($"Connecting to lobby ID {lobbyId}...", Color.Lime);
                             SteamManager.JoinLobby(lobbyId.Value, joinServer: true);
                         }
-                        else if (connectCommand.NameAndP2PEndpointsOption.TryUnwrap(out var nameAndEndpoint)
-                                 && nameAndEndpoint is { ServerName: var serverName, Endpoints: var endpoints })
+                        else if ((connectCommand.NameAndP2PEndpointsOption.TryUnwrap(out var nameAndEndpoint) && nameAndEndpoint is { ServerName: var serverName, Endpoints: var endpoints }))
                         {
-                            Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()),
+                            Client = new GameClient(clientNameString,
                                 endpoints.Cast<Endpoint>().ToImmutableArray(),
                                 string.IsNullOrWhiteSpace(serverName) ? endpoints.First().StringRepresentation : serverName,
                                 Option<int>.None());
+                            DebugConsole.NewMessage($"Connecting to endpoint {endpoints.First().StringRepresentation}...", Color.Lime);
                         }
-                        
+                        else if ((connectCommand.NameAndLidgrenEndpointOption.TryUnwrap(out var nameAndLidgrenEndpoint) && nameAndLidgrenEndpoint is { ServerName: var lidgrenServerName, Endpoint: var endpoint }))
+                        {
+                            Client = new GameClient(
+                                clientNameString,
+                                endpoint,
+                                string.IsNullOrWhiteSpace(lidgrenServerName) ? endpoint.StringRepresentation : lidgrenServerName,
+                                Option<int>.None());
+                        }
+                        else
+                        {
+                            DebugConsole.NewMessage($"Cannot connect: unrecognized connect command.", Color.Lime);
+                        }
+
                         ConnectCommand = Option<ConnectCommand>.None();
                     }
 
@@ -1167,17 +1205,19 @@ namespace Barotrauma
 
             CoroutineManager.StopCoroutines("EndCinematic");
 
-            if (GameSession != null)
+            if (GameSession != null && GameSession.IsRunning)
             {
+                AchievementManager.OnRoundEnded(GameSession, roundInterrupted: true);                
                 GameAnalyticsManager.AddProgressionEvent(GameAnalyticsManager.ProgressionStatus.Fail,
                     GameSession.GameMode?.Preset.Identifier.Value ?? "none",
                     GameSession.RoundDuration);
                 string eventId = "QuitRound:" + (GameSession.GameMode?.Preset.Identifier.Value ?? "none") + ":";
-                GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
+                //disabled to reduce the amount of data we collect through GA
+                /*GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
                 foreach (var activeEvent in GameSession.EventManager.ActiveEvents)
                 {
                     GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:ActiveEvents:" + activeEvent.Prefab.Identifier);
-                }
+                }*/
                 GameSession.LogEndRoundStats(eventId);
                 if (GameSession.GameMode is TutorialMode tutorialMode)
                 {

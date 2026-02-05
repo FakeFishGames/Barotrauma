@@ -76,10 +76,12 @@ namespace Barotrauma
         public string GetAttributeStringUnrestricted(string key, string def) => Element.GetAttributeStringUnrestricted(key, def);
         public string[]? GetAttributeStringArray(string key, string[]? def, bool convertToLowerInvariant = false) => Element.GetAttributeStringArray(key, def, convertToLowerInvariant);
         public ContentPath? GetAttributeContentPath(string key) => Element.GetAttributeContentPath(key, ContentPackage);
+        public int? GetAttributeNullableInt(string key) => Element.GetAttributeNullableInt(key);
         public int GetAttributeInt(string key, int def) => Element.GetAttributeInt(key, def);
         public ushort GetAttributeUInt16(string key, ushort def) => Element.GetAttributeUInt16(key, def);
         public int[]? GetAttributeIntArray(string key, int[]? def) => Element.GetAttributeIntArray(key, def);
         public ushort[]? GetAttributeUshortArray(string key, ushort[]? def) => Element.GetAttributeUshortArray(key, def);
+        public float? GetAttributeNullableFloat(string key) => Element.GetAttributeNullableFloat(key);
         public float GetAttributeFloat(string key, float def) => Element.GetAttributeFloat(key, def);
         public float[]? GetAttributeFloatArray(string key, float[]? def) => Element.GetAttributeFloatArray(key, def);
         public float GetAttributeFloat(float def, params string[] keys) => Element.GetAttributeFloat(def, keys);

@@ -1,25 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using RestSharp;
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using RestSharp;
 
 namespace Barotrauma.Networking;
 
 sealed class SteamAuthTicketForEosHostAuthenticator : Authenticator
 {
-    #warning FIXME change URL back to the non-experimental one once this passes QA
-    private const string consentServerUrl = "https://barotraumagame.com/baromaster/experimental/";
-    private const string consentServerFile = "getOwnerSteamId.php";
+    private const string ServerUrl = "https://barotraumagame.com/baromaster/";
+    private const string ServerFile = "getOwnerSteamId.php";
     private const int RemoteRequestVersion = 1;
     
     public override async Task<AccountInfo> VerifyTicket(AuthenticationTicket ticket)
     {
         string ticketData = ToolBoxCore.ByteArrayToHexString(ticket.Data);
 
-        var client = new RestClient(consentServerUrl);
+        var client = new RestClient(ServerUrl);
 
-        var request = new RestRequest(consentServerFile, Method.GET);
+        var request = new RestRequest(ServerFile, Method.GET);
         request.AddParameter("authticket", ticketData);
         request.AddParameter("request_version", RemoteRequestVersion);
 

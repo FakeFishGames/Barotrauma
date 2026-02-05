@@ -113,7 +113,7 @@ namespace Barotrauma.Networking
             Task<int> readTask = readStream?.ReadAsync(readTempBytes, 0, readTempBytes.Length, readCancellationToken.Token);
             if (readTask is null) { return Option<int>.None(); }
 
-            int timeOutMilliseconds = 100;
+            int timeOutMilliseconds = 150;
             for (int i = 0; i < 150; i++)
             {
                 if (status is StatusEnum.ShutDown)

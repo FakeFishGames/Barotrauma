@@ -527,6 +527,10 @@ namespace Barotrauma
 
         public static void Init()
         {
+            // Ensure the save folder exists early. Otherwise the game will crash on macOS,
+            // attempting to read the non-existent folder in SafeIO.CanWrite() when saving initial user config.
+            SaveUtil.EnsureSaveFolderExists();
+            
             XDocument? currentConfigDoc = null;
 
             if (File.Exists(PlayerConfigPath))
@@ -538,6 +542,7 @@ namespace Barotrauma
             {
                 currentConfig = Config.FromElement(currentConfigDoc.Root ?? throw new NullReferenceException("Config XML element is invalid: document is null."));
 #if CLIENT
+                MainMenuScreen.DismissedNotifications = currentConfigDoc.Root.GetAttributeIdentifierArray(nameof(MainMenuScreen.DismissedNotifications), defaultValue: Array.Empty<Identifier>()).ToHashSet();
                 ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
                 MultiplayerPreferences.Init(
                     currentConfigDoc.Root.GetChildElement("player"),
@@ -627,7 +632,7 @@ namespace Barotrauma
 
             GameMain.SoundManager?.ApplySettings();
 #endif
-            if (languageChanged) { TextManager.ClearCache(); }
+            if (languageChanged) { TextManager.LanguageChanged(); }
         }
 
         public static void SaveCurrentConfig()
@@ -656,6 +661,8 @@ namespace Barotrauma
             }
 
 #if CLIENT
+            root.Add(new XAttribute(nameof(MainMenuScreen.DismissedNotifications), string.Join(',', MainMenuScreen.DismissedNotifications.Select(n => n.Value))));
+
             XElement serverFiltersElement = new XElement("serverfilters"); root.Add(serverFiltersElement);
             ServerListFilters.Instance.SaveTo(serverFiltersElement);
 
@@ -689,7 +696,8 @@ namespace Barotrauma
             root.Add(CampaignSettings.CurrentSettings.Save());
 #endif
 
-            configDoc.SaveSafe(PlayerConfigPath);
+            //allow retrying a few times because the file may be in use if the player is running multiple instances of the game on the same machine
+            configDoc.SaveSafe(PlayerConfigPath, maxRetries: 4);
             
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {

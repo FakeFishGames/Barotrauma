@@ -212,13 +212,24 @@ namespace Barotrauma
                                 {
                                     npc.CampaignInteractionType = CampaignMode.InteractionType.Examine;
                                     npc.RequireConsciousnessForCustomInteract = DisableIfTargetIncapacitated;
-#if CLIENT
                                     npc.SetCustomInteract(
-                                        (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } },
+                                        (Character npc, Character interactor) => 
+                                        { 
+                                            //the first character in the CustomInteract callback is always the NPC and the 2nd the character who interacted with it
+                                            //but the TriggerAction can configure the 1st and 2nd entity in either order,
+                                            //let's make sure we pass the NPC and the interactor in the intended order
+                                            if (e1 == npc && ParentEvent.GetTargets(Target2Tag).Contains(interactor)) 
+                                            { 
+                                                Trigger(npc, interactor); 
+                                            } 
+                                            else if (ParentEvent.GetTargets(Target1Tag).Contains(interactor) && e2 == npc)
+                                            { 
+                                                Trigger(interactor, npc); 
+                                            } 
+                                        },
+#if CLIENT
                                         TextManager.GetWithVariable("CampaignInteraction.Examine", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)));
 #else
-                                    npc.SetCustomInteract(
-                                        (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } }, 
                                         TextManager.Get("CampaignInteraction.Talk"));
                                     GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AssignCampaignInteractionEventData());
 #endif

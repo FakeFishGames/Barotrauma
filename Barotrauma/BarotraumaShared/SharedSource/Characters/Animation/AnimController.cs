@@ -8,8 +8,15 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    abstract class AnimController : Ragdoll
+    abstract class AnimController : Ragdoll, ISerializableEntity
     {
+        /// <summary>
+        /// Most of the properties in this class are read-only, but can be useful for conditionals
+        /// </summary>
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
+
+        public string Name => nameof(AnimController);
+
         public Vector2 RightHandIKPos { get; protected set; }
         public Vector2 LeftHandIKPos { get; protected set; }
 
@@ -200,12 +207,16 @@ namespace Barotrauma
 
         public float WalkPos { get; protected set; }
 
-        public AnimController(Character character, string seed, RagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
+        public AnimController(Character character, string seed, RagdollParams ragdollParams = null) : base(character, seed, ragdollParams) 
+        {
+            SerializableProperties = SerializableProperty.GetProperties(this);
+        }
         
         public void UpdateAnimations(float deltaTime)
         {
             UpdateTemporaryAnimations();
             UpdateAnim(deltaTime);
+            CheckRopeState();
         }
 
         protected abstract void UpdateAnim(float deltaTime);
@@ -347,7 +358,10 @@ namespace Barotrauma
             useItemTimer = 0.05f;
             StartUsingItem();
 
-            if (!allowMovement)
+            //make the character move towards the item they're using...
+            if (!allowMovement && 
+                //...except if they've selected an item that controls the character's direction (e.g. a periscope)
+                character.SelectedSecondaryItem?.GetComponent<Controller>() is not { Direction: Direction.Left or Direction.Right })
             {
                 TargetMovement = Vector2.Zero;
                 TargetDir = handWorldPos.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
@@ -608,7 +622,7 @@ namespace Barotrauma
                 {
                     if (!character.Inventory.IsInLimbSlot(item, i == 0 ? InvSlotType.RightHand : InvSlotType.LeftHand)) { continue; }
 #if DEBUG
-                    if (handlePos[i].LengthSquared() > ArmLength)
+                    if (ArmLength > 0 && handlePos[i].LengthSquared() > ArmLength)
                     {
                         DebugConsole.AddWarning($"Aim position for the item {item.Name} may be incorrect (further than the length of the character's arm)",
                             item.Prefab.ContentPackage);
@@ -1041,8 +1055,16 @@ namespace Barotrauma
             Limb rightHand = GetLimb(LimbType.RightHand);
             if (rightHand == null) { return; }
 
-            rightShoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm) ?? GetJointBetweenLimbs(LimbType.Head, LimbType.RightArm) ?? GetJoint(LimbType.RightArm, new LimbType[] { LimbType.RightHand, LimbType.RightForearm });
-            leftShoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.LeftArm) ?? GetJointBetweenLimbs(LimbType.Head, LimbType.LeftArm) ?? GetJoint(LimbType.LeftArm, new LimbType[] { LimbType.LeftHand, LimbType.LeftForearm });
+            rightShoulder = 
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm) ?? 
+                GetJointBetweenLimbs(LimbType.Head, LimbType.RightArm) ?? 
+                GetJoint(LimbType.RightArm, new LimbType[] { LimbType.RightHand, LimbType.RightForearm }) ??
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.RightHand);
+            leftShoulder = 
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.LeftArm) ?? 
+                GetJointBetweenLimbs(LimbType.Head, LimbType.LeftArm) ?? 
+                GetJoint(LimbType.LeftArm, new LimbType[] { LimbType.LeftHand, LimbType.LeftForearm }) ??
+                GetJointBetweenLimbs(LimbType.Torso, LimbType.LeftHand);
 
             Vector2 localAnchorShoulder = Vector2.Zero;
             Vector2 localAnchorElbow = Vector2.Zero;
@@ -1111,6 +1133,25 @@ namespace Barotrauma
             Vector2 pos = character.WorldPosition;
             Recreate(ragdollParams);
             character.TeleportTo(pos);
+        }
+
+        protected void CheckRopeState()
+        {
+            if (!shouldHangWithRope)
+            {
+                StopHangingWithRope();
+            }
+            if (!shouldHoldToRope)
+            {
+                StopHoldingToRope();
+            }
+            if (!shouldBeDraggedWithRope)
+            {
+                StopGettingDraggedWithRope();
+            }
+            shouldHoldToRope = false;
+            shouldHangWithRope = false;
+            shouldBeDraggedWithRope = false;
         }
 
         private void StartAnimation(Animation animation)

@@ -89,9 +89,13 @@ namespace Barotrauma
                 newRect = Submarine.AbsRect(placePosition, placeSize);
             }
 
-            Sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height), textureScale: TextureScale * Scale);
-            GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X - GameMain.GraphicsWidth, -newRect.Y, newRect.Width + GameMain.GraphicsWidth * 2, newRect.Height), Color.White);
-            GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X, -newRect.Y - GameMain.GraphicsHeight, newRect.Width, newRect.Height + GameMain.GraphicsHeight * 2), Color.White);
+            Sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height), textureScale: TextureScale * Scale, color: SpriteColor);
+
+            float thickness = Math.Max(1.0f / cam.Zoom, 1.0f);
+            int zoomInvariantWidth = (int)(GameMain.GraphicsWidth / cam.Zoom);
+            int zoomInvariantHeight = (int)(GameMain.GraphicsHeight / cam.Zoom);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X - zoomInvariantWidth, -newRect.Y, newRect.Width + zoomInvariantWidth * 2, newRect.Height), Color.White, thickness: thickness);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X, -newRect.Y - zoomInvariantHeight, newRect.Width, newRect.Height + zoomInvariantHeight * 2), Color.White, thickness: thickness);
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, float rotation = 0.0f, SpriteEffects spriteEffects = SpriteEffects.None)
@@ -103,7 +107,7 @@ namespace Barotrauma
                 spriteBatch, 
                 position, 
                 placeRect.Size.ToVector2(), 
-                color: Color.White * 0.8f,
+                color: SpriteColor * 0.8f,
                 origin: placeRect.Size.ToVector2() * 0.5f,
                 rotation: rotation,
                 textureScale: TextureScale * scale,
