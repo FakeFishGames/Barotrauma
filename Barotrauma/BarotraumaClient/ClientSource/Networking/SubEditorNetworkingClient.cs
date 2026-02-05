@@ -125,11 +125,18 @@ namespace Barotrauma.Networking
         /// </summary>
         private void SendCursorPosition(Vector2 worldPos)
         {
-            if (GameMain.Client == null) return;
+            if (GameMain.Client?.ClientPeer == null) return;
 
-            // TODO: Implement actual network message sending
-            // For now, update local state
+            // Update local state
             CursorPositions[localSessionId] = worldPos;
+
+            // Send to server for relay
+            var cursorData = new SubEditorCursorData(localSessionId, worldPos.X, worldPos.Y);
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.CursorPosition);
+            msg.WriteNetSerializableStruct(cursorData);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Unreliable);
         }
 
         /// <summary>
@@ -142,8 +149,16 @@ namespace Barotrauma.Networking
             // Try to lock locally first
             if (TryLockEntity(entity.ID, localSessionId))
             {
-                // Send selection to others
-                // TODO: Implement network message
+                // Send selection to server for relay
+                if (GameMain.Client?.ClientPeer != null)
+                {
+                    var selectionData = new SubEditorSelectionData(localSessionId, entity.ID);
+                    IWriteMessage msg = new WriteOnlyMessage();
+                    msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+                    msg.WriteByte((byte)SubEditorPacketHeader.EntitySelection);
+                    msg.WriteNetSerializableStruct(selectionData);
+                    GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+                }
                 DebugConsole.NewMessage($"[SubEditor] Selected entity {entity.ID}", Color.Gray);
             }
             else
@@ -160,8 +175,17 @@ namespace Barotrauma.Networking
             if (!IsActive || entity == null) return;
 
             UnlockEntity(entity.ID, localSessionId);
-            // Send deselection to others
-            // TODO: Implement network message
+
+            // Send deselection to server for relay
+            if (GameMain.Client?.ClientPeer != null)
+            {
+                var selectionData = new SubEditorSelectionData(localSessionId, entity.ID);
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.EntityDeselection);
+                msg.WriteNetSerializableStruct(selectionData);
+                GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+            }
         }
 
         /// <summary>

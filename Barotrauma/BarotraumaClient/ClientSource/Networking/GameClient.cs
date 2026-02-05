@@ -910,7 +910,71 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.SEND_BACKUP_INDICES:
                     GameMain.NetLobbyScreen?.CampaignSetupUI?.OnBackupIndicesReceived(inc);
                     break;
+                case ServerPacketHeader.SUBEDITOR:
+                    ReadSubEditorMessage(inc);
+                    break;
             }
+        }
+
+        /// <summary>
+        /// Handle incoming SubEditor messages from the server.
+        /// </summary>
+        private void ReadSubEditorMessage(IReadMessage inc)
+        {
+            SubEditorPacketHeader subHeader = (SubEditorPacketHeader)inc.ReadByte();
+            
+            switch (subHeader)
+            {
+                case SubEditorPacketHeader.CursorPosition:
+                    var cursorData = INetSerializableStruct.Read<SubEditorCursorData>(inc);
+                    SubEditorNetworkingClient.Instance?.ReceiveCursorPosition(cursorData);
+                    break;
+                case SubEditorPacketHeader.EntitySelection:
+                    var selectData = INetSerializableStruct.Read<SubEditorSelectionData>(inc);
+                    SubEditorNetworkingClient.Instance?.ReceiveEntitySelection(selectData);
+                    break;
+                case SubEditorPacketHeader.EntityDeselection:
+                    var deselectData = INetSerializableStruct.Read<SubEditorSelectionData>(inc);
+                    SubEditorNetworkingClient.Instance?.ReceiveEntityDeselection(deselectData);
+                    break;
+                case SubEditorPacketHeader.ClientList:
+                    ReadSubEditorClientList(inc);
+                    break;
+                case SubEditorPacketHeader.SyncSubmarine:
+                    string submarineXml = inc.ReadString();
+                    SubEditorNetworkingClient.Instance?.ReceiveSubmarineSync(submarineXml);
+                    break;
+                case SubEditorPacketHeader.StartTestMode:
+                    SubEditorNetworkingClient.Instance?.ReceiveTestModeStart();
+                    break;
+                case SubEditorPacketHeader.EndTestMode:
+                    SubEditorNetworkingClient.Instance?.ReceiveTestModeEnd();
+                    break;
+                case SubEditorPacketHeader.EditConfirm:
+                    ushort confirmedEntityId = inc.ReadUInt16();
+                    DebugConsole.NewMessage($"[SubEditor] Edit confirmed for entity {confirmedEntityId}", Microsoft.Xna.Framework.Color.Green);
+                    break;
+                case SubEditorPacketHeader.EditDeny:
+                    ushort deniedEntityId = inc.ReadUInt16();
+                    DebugConsole.NewMessage($"[SubEditor] Edit denied for entity {deniedEntityId} - locked by another user", Microsoft.Xna.Framework.Color.Orange);
+                    // Unlock locally since server denied
+                    SubEditorNetworkingClient.Instance?.EntityLocks.Remove(deniedEntityId);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Read the list of connected editors from server.
+        /// </summary>
+        private void ReadSubEditorClientList(IReadMessage inc)
+        {
+            byte count = inc.ReadByte();
+            var users = new List<SubEditorUser>();
+            for (int i = 0; i < count; i++)
+            {
+                users.Add(INetSerializableStruct.Read<SubEditorUser>(inc));
+            }
+            SubEditorNetworkingClient.Instance?.ReceiveClientList(users);
         }
 
         private void ReadStartGameFinalize(IReadMessage inc)

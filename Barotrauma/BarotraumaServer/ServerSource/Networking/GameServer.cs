@@ -15,7 +15,7 @@ using Barotrauma.PerkBehaviors;
 
 namespace Barotrauma.Networking
 {
-    sealed class GameServer : NetworkMember
+    sealed partial class GameServer : NetworkMember
     {
         public override bool IsServer => true;
         public override bool IsClient => false;
@@ -999,6 +999,9 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPacketHeader.REQUEST_BACKUP_INDICES:
                     SendBackupIndices(inc, connectedClient);
+                    break;
+                case ClientPacketHeader.SUBEDITOR:
+                    ReadSubEditorMessage(inc, connectedClient);
                     break;
                 case ClientPacketHeader.ERROR:
                     HandleClientError(inc, connectedClient);
