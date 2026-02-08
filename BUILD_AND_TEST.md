@@ -101,9 +101,9 @@ If you delete a branch and need it back:
 When ready to submit to FakeFishGames/Barotrauma:
 
 1. Close all old PRs (#2–#5) and delete their branches
-2. Create a new PR from `copilot/consolidate-copilot-branches` → `master`
-   (this cleans up the master pollution from PR #2)
-3. Then fork FakeFishGames/Barotrauma if you haven't already
+2. Merge `copilot/consolidate-copilot-branches` into your `master` to clean up
+   the pollution from PR #2 (TimeTrialMission, COPILOT BUILD TEST, etc.)
+3. Fork FakeFishGames/Barotrauma on GitHub if you haven't already
 4. Push the clean branch to your fork
 5. Open a PR from your fork's branch → FakeFishGames/Barotrauma `master`
 
