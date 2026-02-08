@@ -30,8 +30,7 @@ namespace Barotrauma
             { "GoTo".ToIdentifier(), typeof(GoToMission) },
             { "ScanAlienRuins".ToIdentifier(), typeof(ScanMission) },
             { "EliminateTargets".ToIdentifier(), typeof(EliminateTargetsMission) },
-            { "End".ToIdentifier(), typeof(EndMission) },
-            { "TimeTrial".ToIdentifier(), typeof(TimeTrialMission) }
+            { "End".ToIdentifier(), typeof(EndMission) }
         };
 
         /// <summary>
