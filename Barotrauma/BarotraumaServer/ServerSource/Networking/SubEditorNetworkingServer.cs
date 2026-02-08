@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
@@ -13,6 +16,19 @@ namespace Barotrauma.Networking
         private SubEditorNetworkingShared subEditorSession;
         private bool isSubEditorSessionActive;
         private Client subEditorHost;
+        private string subEditorCurrentSubPath;
+        private string subEditorCurrentSubName;
+        private string subEditorStoredSubmarineXml;
+
+        /// <summary>
+        /// Whether a collaborative SubEditor session is currently active.
+        /// </summary>
+        public bool IsSubEditorSessionActive => isSubEditorSessionActive;
+        
+        /// <summary>
+        /// The client who is the host of the SubEditor session.
+        /// </summary>
+        public Client SubEditorHost => subEditorHost;
 
         /// <summary>
         /// Handle incoming SUBEDITOR packets from clients.
@@ -43,9 +59,170 @@ namespace Barotrauma.Networking
                 case SubEditorPacketHeader.SyncSubmarine:
                     HandleSubmarineSync(inc, sender);
                     break;
+                case SubEditorPacketHeader.SubmarineInfo:
+                    HandleSubmarineInfo(inc, sender);
+                    break;
+                case SubEditorPacketHeader.EntityPlaced:
+                    HandleEntityPlaced(inc, sender);
+                    break;
+                case SubEditorPacketHeader.EntityRemoved:
+                    HandleEntityRemoved(inc, sender);
+                    break;
+                case SubEditorPacketHeader.EntityMoved:
+                    HandleEntityMoved(inc, sender);
+                    break;
+                case SubEditorPacketHeader.EntityPropertyChanged:
+                    HandleEntityPropertyChanged(inc, sender);
+                    break;
+                case SubEditorPacketHeader.EntityUpdated:
+                    HandleEntityUpdated(inc, sender);
+                    break;
+                case SubEditorPacketHeader.CursorMoved:
+                    HandleCursorMoved(inc, sender);
+                    break;
+                case SubEditorPacketHeader.RequestSubmarineFile:
+                    HandleRequestSubmarineFile(inc, sender);
+                    break;
                 default:
                     DebugConsole.AddWarning($"Unknown SubEditor packet header: {subHeader}");
                     break;
+            }
+        }
+
+        private void HandleEntityPlaced(IReadMessage inc, Client sender)
+        {
+            string entityXml = inc.ReadString();
+            DebugConsole.Log($"[SubEditor] Entity placed by {sender.Name}, XML length: {entityXml?.Length ?? 0}");
+
+            // Relay to all other clients
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.EntityPlaced);
+                msg.WriteByte((byte)sender.SessionId);
+                msg.WriteString(entityXml);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
+        private void HandleEntityRemoved(IReadMessage inc, Client sender)
+        {
+            ushort entityId = inc.ReadUInt16();
+
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.EntityRemoved);
+                msg.WriteByte((byte)sender.SessionId);
+                msg.WriteUInt16(entityId);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
+        private void HandleEntityMoved(IReadMessage inc, Client sender)
+        {
+            ushort entityId = inc.ReadUInt16();
+            float posX = inc.ReadSingle();
+            float posY = inc.ReadSingle();
+
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.EntityMoved);
+                msg.WriteByte((byte)sender.SessionId);
+                msg.WriteUInt16(entityId);
+                msg.WriteSingle(posX);
+                msg.WriteSingle(posY);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
+        private void HandleEntityPropertyChanged(IReadMessage inc, Client sender)
+        {
+            ushort entityId = inc.ReadUInt16();
+            string propName = inc.ReadString();
+            string propValue = inc.ReadString();
+
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.EntityPropertyChanged);
+                msg.WriteByte((byte)sender.SessionId);
+                msg.WriteUInt16(entityId);
+                msg.WriteString(propName);
+                msg.WriteString(propValue);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
+        private void HandleEntityUpdated(IReadMessage inc, Client sender)
+        {
+            ushort entityId = inc.ReadUInt16();
+            string entityXml = inc.ReadString();
+
+            // Relay full entity state to all other clients (absolute sync)
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.EntityUpdated);
+                msg.WriteByte((byte)sender.SessionId);
+                msg.WriteUInt16(entityId);
+                msg.WriteString(entityXml);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
+        private void HandleCursorMoved(IReadMessage inc, Client sender)
+        {
+            float posX = inc.ReadSingle();
+            float posY = inc.ReadSingle();
+
+            byte senderSessionId = (byte)sender.SessionId;
+
+            // Update stored cursor position
+            if (subEditorSession != null)
+            {
+                subEditorSession.CursorPositions[senderSessionId] = new Vector2(posX, posY);
+            }
+
+            // Relay to all other clients
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.CursorMoved);
+                msg.WriteByte(senderSessionId);
+                msg.WriteSingle(posX);
+                msg.WriteSingle(posY);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Unreliable);
+            }
+        }
+
+        private void HandleRequestSubmarineFile(IReadMessage inc, Client sender)
+        {
+            string subName = inc.ReadString();
+            
+            // Find the submarine file — check saved subs, then stored temp path
+            var subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+            if (subInfo != null && System.IO.File.Exists(subInfo.FilePath))
+            {
+                FileSender.StartTransfer(sender.Connection, FileTransferType.Submarine, subInfo.FilePath);
+                DebugConsole.Log($"[SubEditor] Sending submarine file '{subName}' to {sender.Name}");
+            }
+            else if (!string.IsNullOrEmpty(subEditorCurrentSubPath) && System.IO.File.Exists(subEditorCurrentSubPath))
+            {
+                // Use the stored temp file path from HandleSubmarineInfo
+                FileSender.StartTransfer(sender.Connection, FileTransferType.Submarine, subEditorCurrentSubPath);
+                DebugConsole.Log($"[SubEditor] Sending temp submarine file '{subEditorCurrentSubPath}' to {sender.Name}");
+            }
+            else
+            {
+                DebugConsole.AddWarning($"[SubEditor] Could not find submarine '{subName}' to send to {sender.Name}");
             }
         }
 
@@ -63,6 +240,9 @@ namespace Barotrauma.Networking
             subEditorSession = new SubEditorNetworkingShared();
             subEditorHost = host;
             isSubEditorSessionActive = true;
+            
+            // Ensure voice chat is enabled for SubEditor sessions
+            ServerSettings.VoiceChatEnabled = true;
 
             // Add the host as the first editor
             byte hostColorIndex = 0;
@@ -106,15 +286,50 @@ namespace Barotrauma.Networking
         {
             if (!isSubEditorSessionActive || subEditorSession == null) return;
 
+            byte sessionId = (byte)client.SessionId;
+            
+            // Prevent duplicate entries - remove existing entry for this session ID first
+            if (subEditorSession.ConnectedEditors.ContainsKey(sessionId))
+            {
+                subEditorSession.RemoveUser(sessionId);
+            }
+
             // Assign next available color
             byte colorIndex = (byte)(subEditorSession.ConnectedEditors.Count % SubEditorUser.UserColors.Length);
-            var user = new SubEditorUser((byte)client.SessionId, client.Name, colorIndex);
+            var user = new SubEditorUser(sessionId, client.Name, colorIndex);
             subEditorSession.AddUser(user);
 
             DebugConsole.Log($"[SubEditor] {client.Name} joined the session");
 
             // Send updated client list to everyone
             SendSubEditorClientList();
+            
+            // Send current submarine state to the new client
+            // Prefer sending the full XML state (includes unsaved edits)
+            if (!string.IsNullOrEmpty(subEditorStoredSubmarineXml))
+            {
+                IWriteMessage subMsg = new WriteOnlyMessage();
+                subMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                subMsg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
+                subMsg.WriteString(subEditorStoredSubmarineXml);
+                serverPeer?.Send(subMsg, client.Connection, DeliveryMethod.Reliable);
+                DebugConsole.Log($"[SubEditor] Sent stored submarine XML ({subEditorStoredSubmarineXml.Length} chars) to new client {client.Name}");
+            }
+            else
+            {
+                // Fallback: send submarine file info so client can request the file
+                var selectedSub = GameMain.NetLobbyScreen?.SelectedSub;
+                if (selectedSub != null)
+                {
+                    IWriteMessage subMsg = new WriteOnlyMessage();
+                    subMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                    subMsg.WriteByte((byte)SubEditorPacketHeader.SubmarineInfo);
+                    subMsg.WriteString(selectedSub.Name);
+                    subMsg.WriteString(selectedSub.MD5Hash.StringRepresentation);
+                    serverPeer?.Send(subMsg, client.Connection, DeliveryMethod.Reliable);
+                    DebugConsole.Log($"[SubEditor] Sent submarine info ({selectedSub.Name}) to new client {client.Name}");
+                }
+            }
         }
 
         /// <summary>
@@ -147,6 +362,7 @@ namespace Barotrauma.Networking
             if (subEditorSession == null) return;
 
             var users = subEditorSession.ConnectedEditors.Values.ToList();
+            byte hostSessionId = subEditorHost != null ? (byte)subEditorHost.SessionId : (byte)0;
 
             foreach (var client in connectedClients)
             {
@@ -154,6 +370,7 @@ namespace Barotrauma.Networking
                 msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                 msg.WriteByte((byte)SubEditorPacketHeader.ClientList);
                 msg.WriteByte((byte)users.Count);
+                msg.WriteByte(hostSessionId);  // Tell clients who the host is
 
                 foreach (var user in users)
                 {
@@ -173,9 +390,16 @@ namespace Barotrauma.Networking
 
             var cursorData = INetSerializableStruct.Read<SubEditorCursorData>(inc);
 
+            // Use the sender's actual server-assigned SessionId (the client may have sent
+            // a stale localSessionId, e.g. 0 before the host's ID was updated)
+            byte senderSessionId = (byte)sender.SessionId;
+
             // Update server's tracking
-            subEditorSession.CursorPositions[(byte)sender.SessionId] = 
+            subEditorSession.CursorPositions[senderSessionId] = 
                 new Microsoft.Xna.Framework.Vector2(cursorData.WorldX, cursorData.WorldY);
+
+            // Rebuild the struct with the authoritative SessionId
+            var correctedCursorData = new SubEditorCursorData(senderSessionId, cursorData.WorldX, cursorData.WorldY);
 
             // Relay to other clients
             foreach (var client in connectedClients)
@@ -185,7 +409,7 @@ namespace Barotrauma.Networking
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                 msg.WriteByte((byte)SubEditorPacketHeader.CursorPosition);
-                msg.WriteNetSerializableStruct(cursorData);
+                msg.WriteNetSerializableStruct(correctedCursorData);
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Unreliable);
             }
         }
@@ -258,7 +482,99 @@ namespace Barotrauma.Networking
         }
 
         /// <summary>
+        /// Force all clients to return from test mode to SubEditor.
+        /// Called by the subeditor_endtest console command.
+        /// </summary>
+        public void ReturnToSubEditor()
+        {
+            Level.IsSubEditorTestMode = false;
+            if (!isSubEditorSessionActive)
+            {
+                DebugConsole.ThrowError("[SubEditor] No SubEditor session is active");
+                return;
+            }
+
+            DebugConsole.Log("[SubEditor] Forcing return to SubEditor...");
+
+            // End the current game session properly
+            if (GameStarted)
+            {
+                string endMessage = "Returning to SubEditor";
+                
+                // Send ENDGAME message to all clients BEFORE ending the round
+                if (connectedClients.Count > 0)
+                {
+                    IWriteMessage endMsg = new WriteOnlyMessage();
+                    endMsg.WriteByte((byte)ServerPacketHeader.ENDGAME);
+                    endMsg.WriteByte((byte)CampaignMode.TransitionType.None);
+                    endMsg.WriteBoolean(false); // wasSaved
+                    endMsg.WriteString(endMessage);
+                    endMsg.WriteByte(0); // mission count
+                    endMsg.WriteByte(0); // winning team
+                    endMsg.WriteBoolean(false); // no traitor results
+
+                    foreach (Client c in connectedClients)
+                    {
+                        serverPeer.Send(endMsg, c.Connection, DeliveryMethod.Reliable);
+                    }
+                }
+                
+                GameMain.GameSession?.EndRound(endMessage);
+                
+                EndRoundTimer = 0.0f;
+                entityEventManager.Clear();
+                
+                foreach (Client c in connectedClients)
+                {
+                    c.ResetSync();
+                    c.Character = null;
+                    c.HasSpawned = false;
+                    c.InGame = false;
+                }
+                
+                RespawnManager = null;
+                GameStarted = false;
+                
+                entityEventManager.Clear();
+                Submarine.Unload();
+            }
+
+            // Restore SubEditor mode
+            GameMain.IsSubEditorMode = true;
+
+            // Notify all clients to return to SubEditor
+            foreach (var client in connectedClients)
+            {
+                SendSubEditorModeMessage(client);
+            }
+            
+            // Resend client list so everyone knows the session is still active
+            SendSubEditorClientList();
+            
+            // Send stored submarine XML to NON-HOST clients so they can restore the pre-test sub state.
+            // The HOST restores from its own preTestSubmarineXml snapshot, then re-syncs to server.
+            // We skip the host to prevent overwriting its restored entities.
+            if (!string.IsNullOrEmpty(subEditorStoredSubmarineXml))
+            {
+                foreach (var client in connectedClients)
+                {
+                    if (client == subEditorHost) continue; // Host restores from local snapshot
+                    IWriteMessage subMsg = new WriteOnlyMessage();
+                    subMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                    subMsg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
+                    subMsg.WriteString(subEditorStoredSubmarineXml);
+                    serverPeer?.Send(subMsg, client.Connection, DeliveryMethod.Reliable);
+                }
+                DebugConsole.Log($"[SubEditor] Sent stored submarine XML to non-host clients ({subEditorStoredSubmarineXml.Length} chars)");
+            }
+
+            DebugConsole.Log("[SubEditor] All clients returned to SubEditor");
+            Log("Returned to SubEditor.", ServerLog.MessageType.ServerMessage);
+        }
+
+        /// <summary>
         /// Handle test mode start request (host only).
+        /// Starts a proper multiplayer test round so all clients can play together.
         /// </summary>
         private void HandleStartTestMode(IReadMessage inc, Client sender)
         {
@@ -271,20 +587,125 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            // Notify all clients to enter test mode
+            DebugConsole.Log("[SubEditor] Host requested test mode - starting multiplayer test round");
+            
+            // Start a proper multiplayer test round
+            // This uses the existing game infrastructure
+            StartSubEditorTestRound();
+        }
+
+        /// <summary>
+        /// Starts a SubEditor test round using the standard TestMode game flow.
+
+        /// Uses TryStartGame() which handles everything: file transfers, level generation,
+        /// character spawning, entity sync, etc. This is the same path as normal multiplayer.
+        /// </summary>
+        private void StartSubEditorTestRound()
+        {
+            try
+            {
+                Level.IsSubEditorTestMode = true;
+                
+            DebugConsole.Log("[SubEditor] Starting test mode");
+            
+            // The HOST has already saved the current in-memory submarine to this temp file
+            // via Submarine.MainSub.TrySaveAs() — this includes ALL current unsaved edits.
+            // We just need to read it and create a SubmarineInfo from it.
+            string tempPath = Path.Combine("Submarines", "_SubEditorTestMode.sub");
+            
+            if (!System.IO.File.Exists(tempPath))
+            {
+                DebugConsole.ThrowError($"[SubEditor] Temp sub file not found: {tempPath}. Host must save before requesting test mode.");
+                return;
+            }
+            
+            try
+            {
+                var testSubInfo = new SubmarineInfo(tempPath);
+                GameMain.NetLobbyScreen.SelectedSub = testSubInfo;
+                SubmarineInfo.AddToSavedSubs(testSubInfo);
+                DebugConsole.Log($"[SubEditor] Loaded temp sub for test mode: {tempPath} (hash: {testSubInfo.MD5Hash})");
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("[SubEditor] Failed to load temp sub for test mode", e);
+                return;
+            }
+            
+            // Mark that we're leaving SubEditor mode to start a game round
+            GameMain.IsSubEditorMode = false;
+            
+            // Set mode to Sandbox (standard multiplayer mode, handles all server/client sync)
+            GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModePreset.Sandbox.Identifier;
+            
+            // Disable voting so TryStartGame uses our SelectedSub and SelectedMode directly
+            ServerSettings.AllowSubVoting = false;
+            ServerSettings.AllowModeVoting = false;
+            
+            // Set low difficulty for minimal level generation
+            ServerSettings.SelectedLevelDifficulty = 0;
+            
+            // Don't force a custom biome — custom biome XML lacks texture sprites which crashes LevelRenderer.
+            // Instead, let the game pick any default biome. Our code-based zeroing in Level.Generate()
+            // handles removing structures/wrecks/ruins/caves/outposts via IsSubEditorTestMode flag.
+            
+            // Ensure a shuttle is selected (TryStartGame requires it)
+            if (GameMain.NetLobbyScreen.SelectedShuttle == null)
+            {
+                // Use the test sub itself as shuttle, or find any available shuttle
+                var shuttle = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.HasTag(SubmarineTag.Shuttle))
+                    ?? GameMain.NetLobbyScreen.SelectedSub;
+                GameMain.NetLobbyScreen.SelectedShuttle = shuttle;
+                DebugConsole.Log($"[SubEditor] Auto-selected shuttle: {shuttle?.Name ?? "none"}");
+            }
+            
+            // Clear any votes so TryStartGame picks our selections
             foreach (var client in connectedClients)
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.StartTestMode);
-                serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
+                client.SetVote(VoteType.Mode, null);
+                client.SetVote(VoteType.Sub, null);
             }
+            
+            // Reset game state flags so TryStartGame doesn't refuse to start
+            if (GameStarted)
+            {
+                DebugConsole.Log("[SubEditor] Game already running, ending it first...");
+                EndGame(CampaignMode.TransitionType.None, wasSaved: false, missions: Enumerable.Empty<Mission>());
+            }
+            initiatedStartGame = false;
+            
+            // Log pre-start state for debugging
+            DebugConsole.NewMessage($"[SubEditor Test] Pre-TryStartGame: GameStarted={GameStarted}, initiated={initiatedStartGame}", Color.Lime);
+            DebugConsole.NewMessage($"[SubEditor Test] Sub={GameMain.NetLobbyScreen.SelectedSub?.Name}, Shuttle={GameMain.NetLobbyScreen.SelectedShuttle?.Name}, Mode={GameMain.NetLobbyScreen.SelectedMode?.Name}", Color.Lime);
+            
 
-            DebugConsole.Log("[SubEditor] Test mode started");
+            // Use the standard game start flow — it handles everything correctly
+            var result = TryStartGame();
+            if (result != TryStartGameResult.Success)
+            {
+                DebugConsole.ThrowError($"[SubEditor] Failed to start test mode: {result}");
+                GameMain.IsSubEditorMode = true; // restore if failed
+                return;
+            }
+            
+            // Enable cheats and disable achievements for test mode
+            DebugConsole.CheatsEnabled = true;
+            AchievementManager.CheatsEnabled = true;
+            UpdateCheatsEnabled();
+            
+            DebugConsole.NewMessage("[SubEditor] Test mode started (Sandbox, no structures, cheats enabled)", Color.Green);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("[SubEditor] StartSubEditorTestRound crashed!", e);
+                GameMain.IsSubEditorMode = true;
+                Level.IsSubEditorTestMode = false;
+            }
         }
 
         /// <summary>
         /// Handle test mode end request (host only).
+        /// Ends the current round and returns all clients to SubEditor mode.
         /// </summary>
         private void HandleEndTestMode(IReadMessage inc, Client sender)
         {
@@ -297,16 +718,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            // Notify all clients to return to editor
-            foreach (var client in connectedClients)
-            {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EndTestMode);
-                serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
-
-            DebugConsole.Log("[SubEditor] Test mode ended");
+            ReturnToSubEditor();
         }
 
         /// <summary>
@@ -326,6 +738,9 @@ namespace Barotrauma.Networking
             // Read the submarine XML
             string submarineXml = inc.ReadString();
 
+            // Store it so we can send to newly joining clients
+            subEditorStoredSubmarineXml = submarineXml;
+
             // Relay to all other clients
             foreach (var client in connectedClients)
             {
@@ -339,6 +754,114 @@ namespace Barotrauma.Networking
             }
 
             DebugConsole.Log($"[SubEditor] Submarine synced from host ({submarineXml.Length} chars)");
+        }
+
+        /// <summary>
+        /// Handle submarine info message from host.
+        /// This tells clients which submarine is being edited so they can request it if needed.
+        /// Uses the existing FileSender system for submarine file transfer.
+        /// </summary>
+        private void HandleSubmarineInfo(IReadMessage inc, Client sender)
+        {
+            if (!isSubEditorSessionActive) return;
+
+            // Only host can announce submarine info
+            if (sender != subEditorHost)
+            {
+                DebugConsole.AddWarning($"[SubEditor] Non-host {sender.Name} tried to set submarine info");
+                return;
+            }
+
+            // Read submarine name and hash
+            string subName = inc.ReadString();
+            string subHash = inc.ReadString();
+
+            DebugConsole.Log($"[SubEditor] Host is editing submarine: {subName} (hash: {subHash})");
+
+            // Store the sub name for file requests
+            subEditorCurrentSubName = subName;
+
+            // Try to find in saved subs first, then check temp file path
+            var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
+            if (matchingSub != null)
+            {
+                subEditorCurrentSubPath = matchingSub.FilePath;
+                GameMain.NetLobbyScreen.SelectedSub = matchingSub;
+                DebugConsole.Log($"[SubEditor] Updated lobby submarine to: {matchingSub.Name}");
+            }
+            else
+            {
+                // Host may have saved to a temp file — check common temp paths
+                // The host saves to SubmarineDownloadFolder/_SubEditorTemp_{name}.sub
+                string tempPath = System.IO.Path.Combine(
+                    SaveUtil.SubmarineDownloadFolder,
+                    $"_SubEditorTemp_{subName}.sub");
+                if (System.IO.File.Exists(tempPath))
+                {
+                    subEditorCurrentSubPath = tempPath;
+                    DebugConsole.Log($"[SubEditor] Found temp submarine file: {tempPath}");
+                    // Register it so the file sender can find it
+                    var tempSubInfo = new SubmarineInfo(tempPath);
+                    SubmarineInfo.AddToSavedSubs(tempSubInfo);
+                    GameMain.NetLobbyScreen.SelectedSub = tempSubInfo;
+                }
+                else
+                {
+                    // Also check without the temp prefix (host may have saved it normally)
+                    var fallback = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                    if (fallback != null)
+                    {
+                        subEditorCurrentSubPath = fallback.FilePath;
+                        GameMain.NetLobbyScreen.SelectedSub = fallback;
+                    }
+                }
+            }
+
+            // Relay to all other clients - they will request the file if they don't have it
+            foreach (var client in connectedClients)
+            {
+                if (client == sender) continue;
+
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.SubmarineInfo);
+                msg.WriteString(subName);
+                msg.WriteString(subHash);
+                serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
+        /// <summary>
+        /// Set a new host for the SubEditor session. Used by console command.
+        /// </summary>
+        public void SetSubEditorHost(Client newHost)
+        {
+            if (!isSubEditorSessionActive)
+            {
+                StartSubEditorSession(newHost);
+                return;
+            }
+            
+            subEditorHost = newHost;
+            DebugConsole.Log($"[SubEditor] Host changed to {newHost.Name}");
+            SendSubEditorClientList();
+        }
+
+        /// <summary>
+        /// Force all clients to start test mode. Used by console command when testing without a proper host.
+        /// </summary>
+        public void ForceSubEditorTestMode()
+        {
+            if (!isSubEditorSessionActive)
+            {
+                DebugConsole.AddWarning("[SubEditor] Cannot start test mode - no active session");
+                return;
+            }
+
+            DebugConsole.Log("[SubEditor] Server forcing test mode for all clients");
+            
+            // Start the actual multiplayer test round
+            StartSubEditorTestRound();
         }
     }
 }

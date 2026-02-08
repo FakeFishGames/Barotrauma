@@ -17,6 +17,9 @@ namespace Barotrauma
 {
     partial class Level : Entity, IServerSerializable
     {
+        /// <summary>When true, level generation skips ruins, wrecks, beacons, and cave items (SubEditor test mode).</summary>
+        public static bool IsSubEditorTestMode { get; set; }
+
         public enum PlacementType
         {
             Top, Bottom
@@ -527,6 +530,28 @@ namespace Barotrauma
             Loaded?.Remove();
             Loaded = this;
             Generating = true;
+            // SubEditor test mode: zero out structure/creature/item counts in the selected params.
+            // This is the programmatic equivalent of having a custom biome XML with all counts at 0.
+            // The game's own level generation code then naturally skips these (e.g. 0 ruins = no ruin loop).
+            if (IsSubEditorTestMode)
+            {
+                GenerationParams.CaveCount = 0;
+                GenerationParams.MinWreckCount = 0;
+                GenerationParams.MaxWreckCount = 0;
+                GenerationParams.RuinCount = 0;
+                GenerationParams.MinRuinCount = 0;
+                GenerationParams.MaxRuinCount = 0;
+                GenerationParams.MinCorpseCount = 0;
+                GenerationParams.MaxCorpseCount = 0;
+                GenerationParams.ItemCount = 0;
+                GenerationParams.BackgroundCreatureAmount = 0;
+                GenerationParams.IslandCount = 0;
+                GenerationParams.AbyssIslandCount = 0;
+                GenerationParams.IceSpireCount = 0;
+                // Also disable beacon stations, hunting grounds (which aren't in GenerationParams but in LevelData)
+                LevelData.HasBeaconStation = false;
+                LevelData.HasHuntingGrounds = false;
+            }
 #if CLIENT
             Debug.Assert(GenerationParams.Identifier != "coldcavernstutorial" || GameMain.GameSession?.GameMode == null || GameMain.GameSession.GameMode is TutorialMode);
 #endif
@@ -1338,7 +1363,7 @@ namespace Barotrauma
             // create outposts at the start and end of the level
             //----------------------------------------------------------------------------------
 
-            CreateOutposts();
+            if (!IsSubEditorTestMode) { CreateOutposts(); }
 
             GenerateEqualityCheckValue(LevelGenStage.Outposts);
 
@@ -4930,6 +4955,7 @@ namespace Barotrauma
 
         public void SpawnCorpses()
         {
+            if (IsSubEditorTestMode) { return; }
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             foreach (Submarine wreck in Wrecks)

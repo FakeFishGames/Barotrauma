@@ -16,6 +16,7 @@ namespace Barotrauma
         public static GameModePreset TestMode;
         public static GameModePreset Sandbox;
         public static GameModePreset DevSandbox;
+        public static GameModePreset SubEditor;
 
         public readonly Type GameModeType;
 
@@ -55,6 +56,9 @@ namespace Barotrauma
             Mission = new GameModePreset("mission".ToIdentifier(), typeof(CoOpMode), isSinglePlayer: false);
             PvP = new GameModePreset("pvp".ToIdentifier(), typeof(PvPMode), isSinglePlayer: false);
             MultiPlayerCampaign = new GameModePreset("multiplayercampaign".ToIdentifier(), typeof(MultiPlayerCampaign), isSinglePlayer: false);
+            // SubEditor uses base GameMode because it doesn't run rounds - it switches to SubEditorScreen instead.
+            // Not votable because clients shouldn't vote to interrupt gameplay with editing.
+            SubEditor = new GameModePreset("subeditor".ToIdentifier(), typeof(GameMode), isSinglePlayer: false, votable: false);
         }
     }
 }

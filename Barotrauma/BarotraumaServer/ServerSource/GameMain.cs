@@ -52,7 +52,7 @@ namespace Barotrauma
         /// When true, the server is running in SubEditor collaborative mode.
         /// Players connecting will be placed in SubEditor instead of the lobby.
         /// </summary>
-        public static bool IsSubEditorMode { get; private set; }
+        public static bool IsSubEditorMode { get; internal set; }
 
         //only screens the server implements
         public static GameScreen GameScreen;
@@ -238,6 +238,8 @@ namespace Barotrauma
                         if (IsSubEditorMode)
                         {
                             DebugConsole.NewMessage("[SubEditor] Server starting in collaborative SubEditor mode", Color.Cyan);
+                            // Enable cheats in SubEditor mode - this is expected for editing
+                            DebugConsole.CheatsEnabled = true;
                         }
                         i++;
                         break;
@@ -258,6 +260,23 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 ownerEndpoint);
+            
+            // Process authentication settings before starting the server
+            for (int i = 0; i < CommandLineArgs.Length; i++)
+            {
+                switch (CommandLineArgs[i].Trim().ToLowerInvariant())
+                {
+                    case "-requireauthentication":
+                        bool.TryParse(CommandLineArgs[i + 1], out bool requireAuth);
+                        Server.ServerSettings.RequireAuthentication = requireAuth;
+                        if (!requireAuth)
+                        {
+                            DebugConsole.NewMessage("Authentication disabled - allowing unauthenticated LAN connections", Color.Yellow);
+                        }
+                        i++;
+                        break;
+                }
+            }
             
             // In SubEditor mode, don't register to public server list
             Server.StartServer(registerToServerList: !IsSubEditorMode && publiclyVisible);
@@ -284,6 +303,10 @@ namespace Barotrauma
                     case "-karmapreset":
                         string karmaPresetName = CommandLineArgs[i + 1];
                         Server.ServerSettings.KarmaPreset = karmaPresetName;
+                        i++;
+                        break;
+                    case "-requireauthentication":
+                        // Already processed above
                         i++;
                         break;
                     case "-language":

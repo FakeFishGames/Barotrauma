@@ -383,6 +383,30 @@ namespace Barotrauma.Networking
             if (GameMain.IsSubEditorMode)
             {
                 SendSubEditorModeMessage(newClient);
+                
+                // Start session if not active, or add client to existing session
+                if (!isSubEditorSessionActive)
+                {
+                    StartSubEditorSession(newClient);
+                    // Host gets ALL permissions (kick, ban, console, etc.)
+                    newClient.GivePermission(ClientPermissions.All);
+                    foreach (var command in DebugConsole.Commands)
+                    {
+                        if (!newClient.PermittedConsoleCommands.Contains(command))
+                        {
+                            newClient.PermittedConsoleCommands.Add(command);
+                        }
+                    }
+                    UpdateClientPermissions(newClient);
+                    DebugConsole.NewMessage($"[SubEditor] {newClient.Name} started as HOST (SessionId: {newClient.SessionId})", Color.Yellow);
+                }
+                else
+                {
+                    AddClientToSubEditorSession(newClient);
+                    // Non-host clients start with no special permissions
+                    // Host can grant permissions through the standard permission UI
+                    DebugConsole.NewMessage($"[SubEditor] {newClient.Name} joined as collaborator (SessionId: {newClient.SessionId})", Color.Cyan);
+                }
             }
         }
         
@@ -2575,6 +2599,22 @@ namespace Barotrauma.Networking
             {
                 return TryStartGameResult.GameModeNotSelected;
             }
+            
+            // Special handling for SubEditor mode - switch to SubEditor instead of starting a game round
+            if (selectedMode == GameModePreset.SubEditor)
+            {
+                Log("Starting SubEditor collaborative mode...", ServerLog.MessageType.ServerMessage);
+                GameMain.IsSubEditorMode = true;
+                
+                // Tell all connected clients to enter SubEditor
+                foreach (var client in connectedClients)
+                {
+                    SendSubEditorModeMessage(client);
+                }
+                
+                return TryStartGameResult.Success;
+            }
+            
             if (selectedMode == GameModePreset.MultiPlayerCampaign && GameMain.GameSession?.GameMode is not MultiPlayerCampaign)
             {
                 //DebugConsole.ThrowError($"{nameof(TryStartGame)} failed. Cannot start a multiplayer campaign via {nameof(TryStartGame)} - use {nameof(MultiPlayerCampaign.StartNewCampaign)} or {nameof(MultiPlayerCampaign.LoadCampaign)} instead.");
@@ -3336,11 +3376,14 @@ namespace Barotrauma.Networking
         private void WriteRoundStartFinalize(IWriteMessage msg, Client client)
         {
             //tell the client what content files they should preload
-            var contentToPreload = GameMain.GameSession.EventManager.GetFilesToPreload();
-            msg.WriteUInt16((ushort)contentToPreload.Count());
-            foreach (ContentFile contentFile in contentToPreload)
+            var contentToPreload = GameMain.GameSession?.EventManager?.GetFilesToPreload();
+            msg.WriteUInt16((ushort)(contentToPreload?.Count() ?? 0));
+            if (contentToPreload != null)
             {
-                msg.WriteString(contentFile.Path.Value);
+                foreach (ContentFile contentFile in contentToPreload)
+                {
+                    msg.WriteString(contentFile.Path.Value);
+                }
             }
             msg.WriteByte((GameMain.GameSession.Campaign as MultiPlayerCampaign)?.RoundID ?? 0);
             msg.WriteInt32(Submarine.MainSub?.Info.EqualityCheckVal ?? 0);
@@ -3351,7 +3394,7 @@ namespace Barotrauma.Networking
             }
             foreach (Level.LevelGenStage stage in Enum.GetValues(typeof(Level.LevelGenStage)).OfType<Level.LevelGenStage>().OrderBy(s => s))
             {
-                msg.WriteInt32(GameMain.GameSession.Level.EqualityCheckValues[stage]);
+                msg.WriteInt32(GameMain.GameSession?.Level?.EqualityCheckValues[stage] ?? 0);
             }
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
@@ -3379,7 +3422,7 @@ namespace Barotrauma.Networking
             }
 
             string endMessage = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded");
-            missions ??= GameMain.GameSession.Missions.ToList();
+            missions ??= GameMain.GameSession?.Missions?.ToList() ?? Enumerable.Empty<Mission>();
             if (GameMain.GameSession is { IsRunning: true })
             {
                 GameMain.GameSession.EndRound(endMessage);
@@ -3407,7 +3450,8 @@ namespace Barotrauma.Networking
 
             if (GameStarted)
             {
-                KarmaManager.OnRoundEnded();
+                try { KarmaManager.OnRoundEnded(); }
+                catch (Exception e) { DebugConsole.ThrowError("KarmaManager.OnRoundEnded failed: " + e.Message); }
             }
 
             RespawnManager = null;
@@ -3446,10 +3490,27 @@ namespace Barotrauma.Networking
 
             entityEventManager.Clear();
             Submarine.Unload();
-            GameMain.NetLobbyScreen.Select();
+            
+            // In SubEditor mode, return to SubEditor instead of the lobby
+            if (isSubEditorSessionActive)
+            {
+                GameMain.IsSubEditorMode = true;
+                foreach (var client in connectedClients)
+                {
+                    SendSubEditorModeMessage(client);
+                }
+                SendSubEditorClientList();
+            }
+            else
+            {
+                GameMain.NetLobbyScreen.Select();
+            }
             Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
-            GameMain.NetLobbyScreen.RandomizeSettings();
+            if (!isSubEditorSessionActive)
+            {
+                GameMain.NetLobbyScreen.RandomizeSettings();
+            }
         }
 
         public override void AddChatMessage(ChatMessage message)
@@ -3754,6 +3815,12 @@ namespace Barotrauma.Networking
             serverPeer.Disconnect(client.Connection, peerDisconnectPacket);
 
             KarmaManager.OnClientDisconnected(client);
+            
+            // Remove from SubEditor session if active
+            if (isSubEditorSessionActive)
+            {
+                RemoveClientFromSubEditorSession(client);
+            }
             
             // A player disconnecting might impact PvP team assignments if still in the lobby
             if (!GameStarted)

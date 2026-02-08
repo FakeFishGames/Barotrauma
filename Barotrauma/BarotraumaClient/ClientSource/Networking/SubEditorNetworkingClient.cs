@@ -27,6 +27,10 @@ namespace Barotrauma.Networking
         private float cursorSyncTimer;
         private Vector2 lastSentCursorPos;
         private byte localSessionId;
+        private byte lastKnownHostSessionId;
+        private bool wasInitiallyHost;
+        private bool isRequestingSubmarineFile;
+        private string requestedSubmarineName = "";
 
         /// <summary>
         /// The local user's session ID.
@@ -54,6 +58,48 @@ namespace Barotrauma.Networking
         public event Action OnClientListUpdated;
 
         /// <summary>
+        /// Event fired when host notifies us of which submarine is being edited.
+        /// Arg1: submarine name, Arg2: submarine hash
+        /// </summary>
+        public event Action<string, string> OnSubmarineInfoReceived;
+
+        /// <summary>
+        /// Event fired when another user places an entity.
+        /// Args: senderSessionId, entityXml (full XML element with all properties)
+        /// </summary>
+        public event Action<byte, string> OnEntityPlaced;
+
+        /// <summary>
+        /// Event fired when another user removes an entity.
+        /// Args: senderSessionId, entityId
+        /// </summary>
+        public event Action<byte, ushort> OnEntityRemoved;
+
+        /// <summary>
+        /// Event fired when another user moves an entity.
+        /// Args: senderSessionId, entityId, x, y
+        /// </summary>
+        public event Action<byte, ushort, float, float> OnEntityMoved;
+
+        /// <summary>
+        /// Event fired when another user changes an entity property.
+        /// Args: senderSessionId, entityId, propertyName, propertyValue
+        /// </summary>
+        public event Action<byte, ushort, string, string> OnEntityPropertyChanged;
+
+        /// <summary>
+        /// Event fired when another user sends a full entity state update (absolute sync).
+        /// Args: senderSessionId, entityId, entityXml
+        /// </summary>
+        public event Action<byte, ushort, string> OnEntityUpdated;
+
+        /// <summary>
+        /// Event fired when another user moves their cursor.
+        /// Args: senderSessionId, x, y
+        /// </summary>
+        public event Action<byte, float, float> OnCursorMoved;
+
+        /// <summary>
         /// Initialize the client networking instance.
         /// </summary>
         public static void Initialize()
@@ -69,6 +115,7 @@ namespace Barotrauma.Networking
             localSessionId = sessionId;
             IsActive = true;
             IsHost = false;
+            wasInitiallyHost = false;
             
             var localUser = new SubEditorUser(sessionId, playerName, colorIndex);
             AddUser(localUser);
@@ -84,11 +131,53 @@ namespace Barotrauma.Networking
             localSessionId = sessionId;
             IsActive = true;
             IsHost = true;
+            wasInitiallyHost = true;
             
             var localUser = new SubEditorUser(sessionId, playerName, 0);
             AddUser(localUser);
             
             DebugConsole.Log($"[SubEditor] Hosting collaborative session as {playerName}");
+        }
+
+        /// <summary>
+        /// Update the local session ID to match what the server assigned.
+        /// Called when host receives their actual session ID from the server.
+        /// </summary>
+        public void UpdateLocalSessionId(byte newSessionId)
+        {
+            if (localSessionId == newSessionId) return;
+            
+            byte oldId = localSessionId;
+            
+            // Remove old entry and add with new ID
+            if (ConnectedEditors.TryGetValue(localSessionId, out var localUser))
+            {
+                ConnectedEditors.Remove(localSessionId);
+                CursorPositions.Remove(localSessionId);
+                
+                // Update user's session ID and re-add
+                var updatedUser = new SubEditorUser(newSessionId, localUser.Name, localUser.ColorIndex);
+                ConnectedEditors[newSessionId] = updatedUser;
+                CursorPositions[newSessionId] = Vector2.Zero;
+            }
+            
+            localSessionId = newSessionId;
+            
+            // Re-evaluate host status: if we were initially the host, stay host regardless
+            // This handles the race condition where the server-assigned ID arrives before ClientList
+            if (wasInitiallyHost)
+            {
+                IsHost = true;
+                lastKnownHostSessionId = newSessionId;  // Our new ID IS the host ID
+            }
+            else
+            {
+                IsHost = (localSessionId == lastKnownHostSessionId);
+            }
+            DebugConsole.Log($"[SubEditor] Updated local session ID from {oldId} to {newSessionId}. Host ID: {lastKnownHostSessionId}, IsHost: {IsHost}, wasInitiallyHost: {wasInitiallyHost}");
+            
+            // Notify UI to refresh (shows correct "(You)" and host status)
+            OnClientListUpdated?.Invoke();
         }
 
         /// <summary>
@@ -125,7 +214,7 @@ namespace Barotrauma.Networking
         /// </summary>
         private void SendCursorPosition(Vector2 worldPos)
         {
-            if (GameMain.Client?.ClientPeer == null) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             // Update local state
             CursorPositions[localSessionId] = worldPos;
@@ -150,7 +239,7 @@ namespace Barotrauma.Networking
             if (TryLockEntity(entity.ID, localSessionId))
             {
                 // Send selection to server for relay
-                if (GameMain.Client?.ClientPeer != null)
+                if (GameMain.Client?.ClientPeer != null && GameMain.Client.ClientPeer.IsActive)
                 {
                     var selectionData = new SubEditorSelectionData(localSessionId, entity.ID);
                     IWriteMessage msg = new WriteOnlyMessage();
@@ -177,7 +266,7 @@ namespace Barotrauma.Networking
             UnlockEntity(entity.ID, localSessionId);
 
             // Send deselection to server for relay
-            if (GameMain.Client?.ClientPeer != null)
+            if (GameMain.Client?.ClientPeer != null && GameMain.Client.ClientPeer.IsActive)
             {
                 var selectionData = new SubEditorSelectionData(localSessionId, entity.ID);
                 IWriteMessage msg = new WriteOnlyMessage();
@@ -273,14 +362,86 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Handle receiving client list update.
         /// </summary>
-        public void ReceiveClientList(List<SubEditorUser> users)
+        public void ReceiveClientList(List<SubEditorUser> users, byte hostSessionId)
         {
             ConnectedEditors.Clear();
             foreach (var user in users)
             {
                 AddUser(user);
             }
+            
+            // Store the host ID so we can re-evaluate if our session ID changes later
+            lastKnownHostSessionId = hostSessionId;
+            
+            // Set IsHost based on server's designation
+            IsHost = (localSessionId == hostSessionId);
+            DebugConsole.Log($"[SubEditor] Client list updated. Local ID: {localSessionId}, Host ID: {hostSessionId}, IsHost: {IsHost}");
+            
             OnClientListUpdated?.Invoke();
+        }
+
+        /// <summary>
+        /// Send submarine info to server when host loads a submarine.
+        /// This allows clients to request the file if they don't have it.
+        /// </summary>
+        public void NotifySubmarineLoaded(SubmarineInfo subInfo)
+        {
+            if (!IsActive || !IsHost) return;
+            if (subInfo == null) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.SubmarineInfo);
+            msg.WriteString(subInfo.Name);
+            msg.WriteString(subInfo.MD5Hash.StringRepresentation);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+
+            DebugConsole.Log($"[SubEditor] Notified server of submarine: {subInfo.Name}");
+        }
+
+        /// <summary>
+        /// Handle receiving submarine info from host (via server).
+        /// If we don't have the submarine, request it via FileSender.
+        /// </summary>
+        public void ReceiveSubmarineInfo(string subName, string subHash)
+        {
+            // Prevent spam - don't request if we're already requesting this sub
+            if (isRequestingSubmarineFile && requestedSubmarineName == subName)
+            {
+                return;
+            }
+
+            DebugConsole.Log($"[SubEditor] Host is editing submarine: {subName} (hash: {subHash})");
+
+            // Check if we have this submarine locally
+            var localSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
+            
+            if (localSub != null)
+            {
+                DebugConsole.Log($"[SubEditor] Already have submarine {subName}, loading it...");
+                isRequestingSubmarineFile = false;
+                requestedSubmarineName = "";
+                OnSubmarineInfoReceived?.Invoke(subName, subHash);
+            }
+            else
+            {
+                DebugConsole.Log($"[SubEditor] Don't have submarine {subName}, requesting file...");
+                isRequestingSubmarineFile = true;
+                requestedSubmarineName = subName;
+                // Request the file via existing file transfer system
+                GameMain.Client?.RequestFile(FileTransferType.Submarine, subName, subHash);
+                OnSubmarineInfoReceived?.Invoke(subName, subHash);
+            }
+        }
+
+        /// <summary>
+        /// Called when submarine file transfer completes.
+        /// </summary>
+        public void OnSubmarineFileTransferComplete()
+        {
+            isRequestingSubmarineFile = false;
+            requestedSubmarineName = "";
         }
 
         /// <summary>
@@ -299,12 +460,196 @@ namespace Barotrauma.Networking
             OnTestModeEnded?.Invoke();
         }
 
+        /// <summary>
+        /// Request the server to start test mode for all clients.
+        /// Only the host can do this.
+        /// </summary>
+        public void RequestStartTestMode()
+        {
+            if (!IsActive || !IsHost) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.StartTestMode);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+
+            DebugConsole.Log("[SubEditor] Requested server to start test mode");
+        }
+
+        /// <summary>
+        /// Request the server to end test mode and return all clients to SubEditor.
+        /// </summary>
+        public void RequestEndTestMode()
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EndTestMode);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+
+            DebugConsole.Log("[SubEditor] Requested server to end test mode");
+        }
+
         public override void Clear()
         {
             base.Clear();
             cursorSyncTimer = 0;
             lastSentCursorPos = Vector2.Zero;
             localSessionId = 0;
+            isRequestingSubmarineFile = false;
+            requestedSubmarineName = "";
+        }
+
+        /// <summary>
+        /// Notify server that an entity was placed.
+        /// Sends full XML element so all properties (scale, sprite offset, color, etc.) are synced.
+        /// </summary>
+        public void NotifyEntityPlaced(string entityXml)
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EntityPlaced);
+            msg.WriteString(entityXml);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        /// <summary>
+        /// Notify server that an entity was removed.
+        /// </summary>
+        public void NotifyEntityRemoved(ushort entityId)
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EntityRemoved);
+            msg.WriteUInt16(entityId);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        /// <summary>
+        /// Notify server that an entity was moved.
+        /// </summary>
+        public void NotifyEntityMoved(ushort entityId, float x, float y)
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EntityMoved);
+            msg.WriteUInt16(entityId);
+            msg.WriteSingle(x);
+            msg.WriteSingle(y);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        /// <summary>
+        /// Notify server that an entity property was changed.
+        /// </summary>
+        public void NotifyEntityPropertyChanged(ushort entityId, string propertyName, string value)
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EntityPropertyChanged);
+            msg.WriteUInt16(entityId);
+            msg.WriteString(propertyName);
+            msg.WriteString(value);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        /// <summary>
+        /// Notify server of a full entity state update (absolute sync).
+        /// Sends the complete entity XML like a .sub file entry.
+        /// Use this after property changes, moves, or any modification that should be authoritative.
+        /// </summary>
+        public void NotifyEntityUpdated(ushort entityId, string entityXml)
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EntityUpdated);
+            msg.WriteUInt16(entityId);
+            msg.WriteString(entityXml);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        /// <summary>
+        /// Request submarine file from server (when we don't have it locally).
+        /// </summary>
+        public void RequestSubmarineFile(string subName)
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.RequestSubmarineFile);
+            msg.WriteString(subName);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+
+            DebugConsole.Log($"[SubEditor] Requested submarine file: {subName}");
+        }
+
+        /// <summary>
+        /// Handle receiving an entity placed event from another user.
+        /// </summary>
+        public void ReceiveEntityPlaced(byte senderSessionId, string entityXml)
+        {
+            OnEntityPlaced?.Invoke(senderSessionId, entityXml);
+        }
+
+        /// <summary>
+        /// Handle receiving an entity removed event from another user.
+        /// </summary>
+        public void ReceiveEntityRemoved(byte senderSessionId, ushort entityId)
+        {
+            OnEntityRemoved?.Invoke(senderSessionId, entityId);
+        }
+
+        /// <summary>
+        /// Handle receiving an entity moved event from another user.
+        /// </summary>
+        public void ReceiveEntityMoved(byte senderSessionId, ushort entityId, float x, float y)
+        {
+            OnEntityMoved?.Invoke(senderSessionId, entityId, x, y);
+        }
+
+        /// <summary>
+        /// Handle receiving an entity property changed event from another user.
+        /// </summary>
+        public void ReceiveEntityPropertyChanged(byte senderSessionId, ushort entityId, string propName, string propValue)
+        {
+            OnEntityPropertyChanged?.Invoke(senderSessionId, entityId, propName, propValue);
+        }
+
+        /// <summary>
+        /// Handle receiving a full entity state update from another user (absolute sync).
+        /// </summary>
+        public void ReceiveEntityUpdated(byte senderSessionId, ushort entityId, string entityXml)
+        {
+            OnEntityUpdated?.Invoke(senderSessionId, entityId, entityXml);
+        }
+
+        /// <summary>
+        /// Handle receiving a cursor moved event from another user.
+        /// </summary>
+        public void ReceiveCursorMoved(byte senderSessionId, float x, float y)
+        {
+            CursorPositions[senderSessionId] = new Vector2(x, y);
+            OnCursorMoved?.Invoke(senderSessionId, x, y);
         }
     }
 }

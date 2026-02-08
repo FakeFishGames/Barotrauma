@@ -374,10 +374,17 @@ namespace Barotrauma.Networking
 
         private bool ReturnToPreviousMenu(GUIButton button, object obj)
         {
+            // If we were in SubEditor mode, return to SubEditor instead of main menu/server list
+            bool wasInSubEditor = Screen.Selected is SubEditorScreen;
+            
             Submarine.Unload();
             GameMain.Client = null;
             GameMain.GameSession = null;
-            if (IsServerOwner)
+            if (wasInSubEditor)
+            {
+                GameMain.SubEditorScreen.Select();
+            }
+            else if (IsServerOwner)
             {
                 GameMain.MainMenuScreen.Select();
             }
@@ -537,7 +544,14 @@ namespace Barotrauma.Networking
                 };
                 Quit();
                 GUI.DisableHUD = false;
-                GameMain.ServerListScreen.Select();
+                if (Screen.Selected is SubEditorScreen)
+                {
+                    GameMain.SubEditorScreen.Select();
+                }
+                else
+                {
+                    GameMain.ServerListScreen.Select();
+                }
                 return;
             }
 
@@ -734,7 +748,14 @@ namespace Barotrauma.Networking
                     if (campaign != null) { campaign.PendingSubmarineSwitch = null; }
                     GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
                     bool readyToStart;
-                    if (campaign == null && campaignID == 0)
+                    
+                    // In SubEditor test mode, the sub is synced via XML - always ready
+                    if (SubEditorScreen.IsSubEditorConnected())
+                    {
+                        Level.IsSubEditorTestMode = true;
+                        readyToStart = true;
+                    }
+                    else if (campaign == null && campaignID == 0)
                     {
                         readyToStart = GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, SelectedSubType.Sub, GameMain.NetLobbyScreen.SubList) &&
                                        GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, SelectedSubType.Shuttle, GameMain.NetLobbyScreen.ShuttleList.ListBox);
@@ -808,7 +829,10 @@ namespace Barotrauma.Networking
                     {
                         //reselect to refresh the state of the screen (to indicate the round is running)
                         GameStarted = true;
-                        GameMain.NetLobbyScreen?.Select();
+                        if (Screen.Selected is not SubEditorScreen)
+                        {
+                            GameMain.NetLobbyScreen?.Select();
+                        }
                     }
                     break;
                 case ServerPacketHeader.STARTGAMEFINALIZE:
@@ -958,17 +982,26 @@ namespace Barotrauma.Networking
             switch (subHeader)
             {
                 case SubEditorPacketHeader.EnterSubEditor:
-                    // Server is in SubEditor mode - switch to SubEditor screen
-                    // Use the same cleanup as the "editsubs" console command
                     DebugConsole.Log("[SubEditor] Server requested SubEditor mode - switching screens");
-                    Entity.Spawner?.Remove();
-                    Entity.Spawner = null;
-                    GameMain.SubEditorScreen.Select(enableAutoSave: false);
                     
-                    // Initialize collaborative editing
-                    SubEditorNetworkingClient.Initialize();
-                    byte colorIndex = (byte)(SessionId % SubEditorUser.UserColors.Length);
-                    SubEditorNetworkingClient.Instance.JoinSession((byte)SessionId, Name, colorIndex);
+                    if (Screen.Selected != GameMain.SubEditorScreen)
+                    {
+                        Entity.Spawner?.Remove();
+                        Entity.Spawner = null;
+                        GameMain.SubEditorScreen.Select(enableAutoSave: false);
+                    }
+                    
+                    if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive)
+                    {
+                        SubEditorNetworkingClient.Initialize();
+                        byte colorIndex = (byte)(SessionId % SubEditorUser.UserColors.Length);
+                        SubEditorNetworkingClient.Instance.JoinSession((byte)SessionId, Name, colorIndex);
+                    }
+                    else
+                    {
+                        SubEditorNetworkingClient.Instance.UpdateLocalSessionId((byte)SessionId);
+                    }
+                    GameMain.SubEditorScreen.UpdateCollaborativeSessionUI();
                     break;
                 case SubEditorPacketHeader.CursorPosition:
                     var cursorData = INetSerializableStruct.Read<SubEditorCursorData>(inc);
@@ -995,6 +1028,41 @@ namespace Barotrauma.Networking
                 case SubEditorPacketHeader.EndTestMode:
                     SubEditorNetworkingClient.Instance?.ReceiveTestModeEnd();
                     break;
+                case SubEditorPacketHeader.SubmarineInfo:
+                    string subName = inc.ReadString();
+                    string subHash = inc.ReadString();
+                    SubEditorNetworkingClient.Instance?.ReceiveSubmarineInfo(subName, subHash);
+                    break;
+                case SubEditorPacketHeader.EntityPlaced:
+                    byte placedSender = inc.ReadByte();
+                    string placedXml = inc.ReadString();
+                    SubEditorNetworkingClient.Instance?.ReceiveEntityPlaced(placedSender, placedXml);
+                    break;
+                case SubEditorPacketHeader.EntityRemoved:
+                    byte removedSender = inc.ReadByte();
+                    ushort removedId = inc.ReadUInt16();
+                    SubEditorNetworkingClient.Instance?.ReceiveEntityRemoved(removedSender, removedId);
+                    break;
+                case SubEditorPacketHeader.EntityMoved:
+                    byte movedSender = inc.ReadByte();
+                    ushort movedId = inc.ReadUInt16();
+                    float movedX = inc.ReadSingle();
+                    float movedY = inc.ReadSingle();
+                    SubEditorNetworkingClient.Instance?.ReceiveEntityMoved(movedSender, movedId, movedX, movedY);
+                    break;
+                case SubEditorPacketHeader.EntityPropertyChanged:
+                    byte propSender = inc.ReadByte();
+                    ushort propEntityId = inc.ReadUInt16();
+                    string propName = inc.ReadString();
+                    string propValue = inc.ReadString();
+                    SubEditorNetworkingClient.Instance?.ReceiveEntityPropertyChanged(propSender, propEntityId, propName, propValue);
+                    break;
+                case SubEditorPacketHeader.CursorMoved:
+                    byte cursorSender = inc.ReadByte();
+                    float cursorX = inc.ReadSingle();
+                    float cursorY = inc.ReadSingle();
+                    SubEditorNetworkingClient.Instance?.ReceiveCursorMoved(cursorSender, cursorX, cursorY);
+                    break;
                 case SubEditorPacketHeader.EditConfirm:
                     ushort confirmedEntityId = inc.ReadUInt16();
                     DebugConsole.NewMessage($"[SubEditor] Edit confirmed for entity {confirmedEntityId}", Microsoft.Xna.Framework.Color.Green);
@@ -1005,6 +1073,15 @@ namespace Barotrauma.Networking
                     // Unlock locally since server denied
                     SubEditorNetworkingClient.Instance?.EntityLocks.Remove(deniedEntityId);
                     break;
+                case SubEditorPacketHeader.EntityUpdated:
+                    byte updatedSender = inc.ReadByte();
+                    ushort updatedId = inc.ReadUInt16();
+                    string updatedXml = inc.ReadString();
+                    SubEditorNetworkingClient.Instance?.ReceiveEntityUpdated(updatedSender, updatedId, updatedXml);
+                    break;
+                case SubEditorPacketHeader.ReturnToEditor:
+                    SubEditorNetworkingClient.Instance?.ReceiveTestModeEnd();
+                    break;
             }
         }
 
@@ -1014,17 +1091,21 @@ namespace Barotrauma.Networking
         private void ReadSubEditorClientList(IReadMessage inc)
         {
             byte count = inc.ReadByte();
+            byte hostSessionId = inc.ReadByte();  // Who is the host
             var users = new List<SubEditorUser>();
             for (int i = 0; i < count; i++)
             {
                 users.Add(INetSerializableStruct.Read<SubEditorUser>(inc));
             }
-            SubEditorNetworkingClient.Instance?.ReceiveClientList(users);
+            SubEditorNetworkingClient.Instance?.ReceiveClientList(users, hostSessionId);
         }
 
         private void ReadStartGameFinalize(IReadMessage inc)
         {
             TaskPool.ListTasks(DebugConsole.Log);
+            
+            bool isSubEditorTest = SubEditorNetworkingClient.Instance?.IsActive == true;
+            
             ushort contentToPreloadCount = inc.ReadUInt16();
             List<ContentFile> contentToPreload = new List<ContentFile>();
             for (int i = 0; i < contentToPreloadCount; i++)
@@ -1052,10 +1133,10 @@ namespace Barotrauma.Networking
 
             }            
 
-            GameMain.GameSession.EventManager.PreloadContent(contentToPreload);
+            GameMain.GameSession?.EventManager?.PreloadContent(contentToPreload);
 
             int subEqualityCheckValue = inc.ReadInt32();
-            if (subEqualityCheckValue != (Submarine.MainSub?.Info?.EqualityCheckVal ?? 0))
+            if (!isSubEditorTest && subEqualityCheckValue != (Submarine.MainSub?.Info?.EqualityCheckVal ?? 0))
             {
                 string errorMsg =
                     "Submarine equality check failed. The submarine loaded at your end doesn't match the one loaded by the server. " +
@@ -1070,7 +1151,7 @@ namespace Barotrauma.Networking
             {
                 serverMissionIdentifiers.Add(inc.ReadIdentifier());
             }
-            if (missionCount != GameMain.GameSession.GameMode.Missions.Count())
+            if (!isSubEditorTest && missionCount != GameMain.GameSession.GameMode.Missions.Count())
             {
                 string errorMsg =
                     $"Mission equality check failed. Mission count doesn't match the server. " +
@@ -1081,7 +1162,7 @@ namespace Barotrauma.Networking
                 throw new Exception(errorMsg);
             }
 
-            if (missionCount > 0)
+            if (!isSubEditorTest && missionCount > 0)
             {
                 if (!GameMain.GameSession.GameMode.Missions.Select(m => m.Prefab.Identifier).OrderBy(id => id).SequenceEqual(serverMissionIdentifiers.OrderBy(id => id)))
                 {
@@ -1102,21 +1183,24 @@ namespace Barotrauma.Networking
                 levelEqualityCheckValues.Add(stage, inc.ReadInt32());
             }
 
-            foreach (var stage in levelEqualityCheckValues.Keys)
+            if (!isSubEditorTest && Level.Loaded != null)
             {
-                if (Level.Loaded.EqualityCheckValues[stage] != levelEqualityCheckValues[stage])
+                foreach (var stage in levelEqualityCheckValues.Keys)
                 {
-                    string errorMsg = "Level equality check failed. The level generated at your end doesn't match the level generated by the server, " +
-                        $"(client value {stage}:{Level.Loaded.EqualityCheckValues[stage].ToString("X")}, " +
-                        $"server value {stage}: {levelEqualityCheckValues[stage].ToString("X")}, "  +
-                        $"level value count: {levelEqualityCheckValues.Count}, " +
-                        $"seed: {Level.Loaded.Seed}, " +
-                        $"missions: {string.Join(", ", GameMain.GameSession.GameMode.Missions.Select(m => m.Prefab.Identifier))}, " +
-                        $"sub: {(Submarine.MainSub == null ? "null" : (Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash.ShortRepresentation))}, " +
-                        $"mirrored: {Level.Loaded.Mirrored}). Round init status: {roundInitStatus}." + 
-                        campaignErrorInfo;
-                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                    throw new Exception(errorMsg);
+                    if (Level.Loaded.EqualityCheckValues[stage] != levelEqualityCheckValues[stage])
+                    {
+                        string errorMsg = "Level equality check failed. The level generated at your end doesn't match the level generated by the server, " +
+                            $"(client value {stage}:{Level.Loaded.EqualityCheckValues[stage].ToString("X")}, " +
+                            $"server value {stage}: {levelEqualityCheckValues[stage].ToString("X")}, "  +
+                            $"level value count: {levelEqualityCheckValues.Count}, " +
+                            $"seed: {Level.Loaded.Seed}, " +
+                            $"missions: {string.Join(", ", GameMain.GameSession.GameMode.Missions.Select(m => m.Prefab.Identifier))}, " +
+                            $"sub: {(Submarine.MainSub == null ? "null" : (Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash.ShortRepresentation))}, " +
+                            $"mirrored: {Level.Loaded.Mirrored}). Round init status: {roundInitStatus}." + 
+                            campaignErrorInfo;
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        throw new Exception(errorMsg);
+                    }
                 }
             }
 
@@ -1180,7 +1264,14 @@ namespace Barotrauma.Networking
             {
                 if (disconnectPacket.IsEventSyncError)
                 {
-                    GameMain.NetLobbyScreen.Select();
+                    if (Screen.Selected is SubEditorScreen)
+                    {
+                        GameMain.SubEditorScreen.Select();
+                    }
+                    else
+                    {
+                        GameMain.NetLobbyScreen.Select();
+                    }
                     GameMain.GameSession?.EndRound("");
                     GameStarted = false;
                     myCharacter = null;
@@ -1633,31 +1724,41 @@ namespace Barotrauma.Networking
                 }
                 if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, SelectedSubType.Sub, GameMain.NetLobbyScreen.SubList))
                 {
-                    roundInitStatus = RoundInitStatus.Interrupted;
-                    startGameCoroutine = null;
-                    yield return CoroutineStatus.Success;
+                    // In SubEditor test mode, the temp sub won't be in the SubList — that's OK
+                    if (!SubEditorScreen.IsSubEditorConnected())
+                    {
+                        roundInitStatus = RoundInitStatus.Interrupted;
+                        startGameCoroutine = null;
+                        yield return CoroutineStatus.Success;
+                    }
                 }
 
                 if (hasEnemySub)
                 {
                     if (!GameMain.NetLobbyScreen.TrySelectSub(enemySubName, enemySubHash, SelectedSubType.EnemySub, GameMain.NetLobbyScreen.SubList))
                     {
-                        roundInitStatus = RoundInitStatus.Interrupted;
-                        yield return CoroutineStatus.Success;
+                        if (!SubEditorScreen.IsSubEditorConnected())
+                        {
+                            roundInitStatus = RoundInitStatus.Interrupted;
+                            yield return CoroutineStatus.Success;
+                        }
                     }
                 }
 
                 if (!GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, SelectedSubType.Shuttle, GameMain.NetLobbyScreen.ShuttleList.ListBox))
                 {
-                    roundInitStatus = RoundInitStatus.Interrupted;
-                    startGameCoroutine = null;
-                    yield return CoroutineStatus.Success;
+                    if (!SubEditorScreen.IsSubEditorConnected())
+                    {
+                        roundInitStatus = RoundInitStatus.Interrupted;
+                        startGameCoroutine = null;
+                        yield return CoroutineStatus.Success;
+                    }
                 }
 
                 //this shouldn't happen, TrySelectSub should stop the coroutine if the correct sub/shuttle cannot be found
-                if (GameMain.NetLobbyScreen.SelectedSub == null ||
+                if (!SubEditorScreen.IsSubEditorConnected() && (GameMain.NetLobbyScreen.SelectedSub == null ||
                     GameMain.NetLobbyScreen.SelectedSub.Name != subName ||
-                    GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.StringRepresentation != subHash)
+                    GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.StringRepresentation != subHash))
                 {
                     string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
                     if (GameMain.NetLobbyScreen.SelectedSub == null)
@@ -1683,9 +1784,9 @@ namespace Barotrauma.Networking
                     startGameCoroutine = null;
                     yield return CoroutineStatus.Failure;
                 }
-                if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
+                if (!SubEditorScreen.IsSubEditorConnected() && (GameMain.NetLobbyScreen.SelectedShuttle == null ||
                     GameMain.NetLobbyScreen.SelectedShuttle.Name != shuttleName ||
-                    GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.StringRepresentation != shuttleHash)
+                    GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.StringRepresentation != shuttleHash))
                 {
                     GameStarted = true;
                     GameMain.NetLobbyScreen.Select();
@@ -1695,6 +1796,15 @@ namespace Barotrauma.Networking
                     roundInitStatus = RoundInitStatus.Interrupted;
                     startGameCoroutine = null;
                     yield return CoroutineStatus.Failure;
+                }
+
+                // In SubEditor test mode, use the current in-memory sub instead of the GUI selection
+                if (SubEditorScreen.IsSubEditorConnected())
+                {
+                    var tempSubInfo = new SubmarineInfo(Submarine.MainSub);
+                    tempSubInfo.Name = subName;
+                    GameMain.NetLobbyScreen.SelectedSub = tempSubInfo;
+                    DebugConsole.Log($"[SubEditor] Using in-memory sub for test mode: {tempSubInfo.Name}");
                 }
 
                 var selectedMissions = missionHashes.Select(i => MissionPrefab.Prefabs.Find(p => p.UintIdentifier == i));
@@ -2041,7 +2151,16 @@ namespace Barotrauma.Networking
             Submarine.Unload();
             if (transitionType == CampaignMode.TransitionType.None)
             {
-                GameMain.NetLobbyScreen.Select();
+                // If we're in SubEditor collaborative mode, return to SubEditor instead of lobby
+                if (SubEditorNetworkingClient.Instance?.IsActive == true)
+                {
+                    GameMain.SubEditorScreen.Select(enableAutoSave: false);
+                    DebugConsole.Log("[SubEditor] Returned to SubEditor from test mode");
+                }
+                else
+                {
+                    GameMain.NetLobbyScreen.Select();
+                }
             }
             myCharacter = null;
             foreach (Client c in otherClients)
@@ -2056,6 +2175,13 @@ namespace Barotrauma.Networking
         private void ReadInitialUpdate(IReadMessage inc)
         {
             SessionId = inc.ReadByte();
+
+            // Update SubEditor SessionId if it was initialized before the server assigned our ID
+            if (SubEditorNetworkingClient.Instance?.IsActive == true)
+            {
+                SubEditorNetworkingClient.Instance.UpdateLocalSessionId((byte)SessionId);
+                GameMain.SubEditorScreen.UpdateCollaborativeSessionUI();
+            }
 
             UInt16 subListCount = inc.ReadUInt16();
             ServerSubmarines.Clear();
@@ -2802,6 +2928,14 @@ namespace Barotrauma.Networking
                         existingSub.Dispose();
                     }
                     SubmarineInfo.AddToSavedSubs(newSub);
+                    
+                    // In SubEditor collaborative mode, load the received submarine (but not during test mode)
+                    if (Screen.Selected == GameMain.SubEditorScreen && SubEditorNetworkingClient.Instance?.IsActive == true
+                        && !Level.IsSubEditorTestMode && GameMain.GameSession?.IsRunning != true)
+                    {
+                        DebugConsole.NewMessage($"[SubEditor] Submarine file received, loading: {newSub.Name}", Microsoft.Xna.Framework.Color.Green);
+                        GameMain.SubEditorScreen.LoadSub(newSub);
+                    }
 
                     for (int i = 0; i < 2; i++)
                     {

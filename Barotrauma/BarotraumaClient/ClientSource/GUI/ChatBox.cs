@@ -625,7 +625,7 @@ namespace Barotrauma
             GUIFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
             GUIFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
 
-            popupMessageOffset = GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width + (int)(35 * GUI.Scale);
+            popupMessageOffset = (GameMain.GameSession?.CrewManager?.ReportButtonFrame?.Rect.Width ?? 0) + GUIFrame.Rect.Width + (int)(35 * GUI.Scale);
         }
 
         public void Update(float deltaTime)

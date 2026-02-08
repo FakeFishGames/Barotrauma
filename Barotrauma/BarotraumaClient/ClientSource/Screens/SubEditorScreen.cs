@@ -221,6 +221,12 @@ namespace Barotrauma
         private Vector2 camTargetFocus = Vector2.Zero;
 
         private SubmarineInfo backedUpSubInfo;
+        
+        /// <summary>
+        /// The name of the submarine being edited in collaborative mode.
+        /// Used to auto-reload the sub when returning from test mode.
+        /// </summary>
+        private string collaborativeEditingSubName;
 
         private readonly HashSet<ulong> publishedWorkshopItemIds = new HashSet<ulong>();
 
@@ -285,6 +291,28 @@ namespace Barotrauma
         private GUIButton joinButton;
         private GUIFrame collaborativeUsersPanel;
         private GUIListBox collaborativeUsersList;
+        private GUIButton collaborativeToggleButton;
+        
+        // Collaborative editing state
+        private SubmarineInfo collaborativeEditingSubInfo;
+        private Dictionary<ushort, Vector2> collaborativeEntityPositions = new Dictionary<ushort, Vector2>();
+        /// <summary>Track serializable property values per entity for fast-sync change detection.</summary>
+        private Dictionary<ushort, Dictionary<string, string>> collaborativePropertySnapshots = new Dictionary<ushort, Dictionary<string, string>>();
+        /// <summary>Track entity flip states for Ctrl+M/Ctrl+N sync.</summary>
+        private Dictionary<ushort, (bool flipX, bool flipY)> collaborativeFlipStates = new Dictionary<ushort, (bool, bool)>();
+        /// <summary>Owner key used to authenticate host with the SubEditor server.</summary>
+        private int collaborativeOwnerKey;
+        /// <summary>Snapshot of in-memory sub XML before entering test mode, for restoring on return.</summary>
+        private string preTestSubmarineXml;
+        /// <summary>Time when we last restored from preTestSubmarineXml, to block incoming syncs briefly.</summary>
+        private double preTestRestoreTime;
+        /// <summary>Track if an entity was being dragged last frame to detect drag-end.</summary>
+
+        /// <summary>
+        /// Guard flag to prevent re-sending entity changes that were received from the network.
+        /// Set to true when applying remote changes, so StoreCommand/EntityAddedOrDeleted won't re-broadcast.
+        /// </summary>
+        private bool isApplyingRemoteChange;
 
         private static GUIComponent autoSaveLabel;
         private static int MaxAutoSaves => GameSettings.CurrentConfig.MaxAutoSaves;
@@ -521,23 +549,6 @@ namespace Barotrauma
                 OnClicked = TestSubmarine
             };
 
-            // Collaborative editing buttons
-            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
-
-            hostButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
-                TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
-            {
-                ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
-                OnClicked = ShowHostSessionPrompt
-            };
-
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
-                TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
-            {
-                ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
-                OnClicked = ShowJoinSessionPrompt
-            };
-
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
             visibilityButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SetupVisibilityButton")
@@ -600,6 +611,21 @@ namespace Barotrauma
 
             subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("unspecifiedsubfilename"), font: GUIStyle.LargeFont, textAlignment: Alignment.CenterLeft);
+
+            // Collaborative editing buttons - placed before Add Submarine dropdown
+            hostButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform), 
+                TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
+                OnClicked = ShowHostSessionPrompt
+            };
+
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform), 
+                TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
+                OnClicked = ShowJoinSessionPrompt
+            };
 
             linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform),
                 TextManager.Get("AddSubButton"), elementCount: 20)
@@ -1269,8 +1295,42 @@ namespace Barotrauma
 
             backedUpSubInfo = new SubmarineInfo(MainSub);
 
-            // Check if we're in collaborative mode
-            bool isCollaborativeTest = SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost;
+            // Check if we're hosting a collaborative session
+            bool isCollaborativeHost = SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost;
+            
+            // If hosting collaborative session, start multiplayer test mode via server
+            if (isCollaborativeHost && GameMain.Client != null)
+            {
+                // Store the submarine name for reload after test
+                collaborativeEditingSubName = MainSub?.Info?.Name;
+                
+                Level.IsSubEditorTestMode = true;
+                
+                // Snapshot entity state before TrySaveAs modifies MainSub.Info
+                preTestSubmarineXml = backedUpSubInfo.SubmarineElement.ToString();
+                DebugConsole.NewMessage($"[SubEditor] Saved pre-test snapshot from backedUpSubInfo ({preTestSubmarineXml.Length} chars)", Microsoft.Xna.Framework.Color.Lime);
+                
+                // Save current submarine to a temp file for test mode
+                string tempSubPath = System.IO.Path.Combine("Submarines", "_SubEditorTestMode.sub");
+                try
+                {
+                    System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(tempSubPath));
+                    MainSub.TrySaveAs(tempSubPath);
+                    DebugConsole.NewMessage($"[SubEditor] Saved current sub to temp file: {tempSubPath}", Microsoft.Xna.Framework.Color.Lime);
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.ThrowError($"[SubEditor] Failed to save temp sub for test mode: {ex.Message}");
+                }
+                
+                // Sync the current XML to the server so it has the latest state
+                SyncSubmarineToClients();
+                
+                // Request test mode immediately — no delay needed since the file is already saved
+                SubEditorNetworkingClient.Instance?.RequestStartTestMode();
+                
+                return true;
+            }
 
             GameSession gameSession = new GameSession(backedUpSubInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
             
@@ -1293,15 +1353,6 @@ namespace Barotrauma
             
             if (gameSession.GameMode is TestGameMode testGameMode)
             {
-                // Store if this is a collaborative test
-                if (isCollaborativeTest)
-                {
-                    testGameMode.IsCollaborativeTest = true;
-                    
-                    // Spawn additional characters for connected editors
-                    SpawnCollaborativeEditorCharacters();
-                }
-
                 testGameMode.OnRoundEnd = () =>
                 {
                     Submarine.Unload();
@@ -1381,28 +1432,9 @@ namespace Barotrauma
         /// </summary>
         private bool ShowHostSessionPrompt(GUIButton button, object obj)
         {
-            // Check if already in a multiplayer game
-            if (GameMain.Client != null)
-            {
-                // Already connected to a server - enable collaborative mode
-                SubEditorNetworkingClient.Initialize();
-                string playerName = GameMain.Client.Name ?? "Editor";
-                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
-                
-                // Populate with existing connected clients
-                foreach (var client in GameMain.Client.ConnectedClients)
-                {
-                    byte colorIndex = (byte)(client.SessionId % SubEditorUser.UserColors.Length);
-                    var user = new SubEditorUser((byte)client.SessionId, client.Name, colorIndex);
-                    SubEditorNetworkingClient.Instance.AddUser(user);
-                }
-                
-                UpdateCollaborativeSessionUI();
-                DebugConsole.Log("[SubEditor] Collaborative mode enabled - using existing multiplayer connection");
-                return true;
-            }
+            SubEditorNetworkingClient.Instance?.LeaveSession();
+            collaborativeEventHandlersSetup = false;
             
-            // Not in a multiplayer game - show host dialog
             var msgBox = new GUIMessageBox(
                 TextManager.Get("SubEditorHostSession").Fallback("Host Collaborative Session"), "",
                 new LocalizedString[] { TextManager.Get("Start").Fallback("Start"), TextManager.Get("Cancel") },
@@ -1465,28 +1497,8 @@ namespace Barotrauma
         /// </summary>
         private bool ShowJoinSessionPrompt(GUIButton button, object obj)
         {
-            // Check if already in a multiplayer game
-            if (GameMain.Client != null)
-            {
-                // Already connected to a server - enable collaborative mode as client
-                SubEditorNetworkingClient.Initialize();
-                string playerName = GameMain.Client.Name ?? "Editor";
-                byte sessionId = (byte)(GameMain.Client.SessionId % 256);
-                byte colorIndex = (byte)(sessionId % SubEditorUser.UserColors.Length);
-                SubEditorNetworkingClient.Instance.JoinSession(sessionId, playerName, colorIndex);
-                
-                // Populate with existing connected clients
-                foreach (var client in GameMain.Client.ConnectedClients)
-                {
-                    byte clientColorIndex = (byte)(client.SessionId % SubEditorUser.UserColors.Length);
-                    var user = new SubEditorUser((byte)client.SessionId, client.Name, clientColorIndex);
-                    SubEditorNetworkingClient.Instance.AddUser(user);
-                }
-                
-                UpdateCollaborativeSessionUI();
-                DebugConsole.Log("[SubEditor] Joined collaborative session - using existing multiplayer connection");
-                return true;
-            }
+            SubEditorNetworkingClient.Instance?.LeaveSession();
+            collaborativeEventHandlersSetup = false;
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("SubEditorJoinSession").Fallback("Join Collaborative Session"), "",
@@ -1539,13 +1551,17 @@ namespace Barotrauma
 
         /// <summary>
         /// Start hosting a collaborative editing session.
-        /// Starts a DedicatedServer in SubEditor mode. Host stays in SubEditor
-        /// and clients connecting will be told to enter SubEditor.
+        /// Starts a DedicatedServer in SubEditor mode, then connects to it as a client.
         /// </summary>
         private void StartHostingSession(string sessionName, int port)
         {
             try
             {
+                // Disconnect any existing client and kill any existing server first
+                GameMain.Client?.Quit();
+                GameMain.Client = null;
+                ChildServerRelay.AttemptGracefulShutDown();
+                
                 string playerName = MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor");
                 
                 // Determine the server executable path
@@ -1554,6 +1570,10 @@ namespace Barotrauma
 #else
                 string serverFileName = "./DedicatedServer";
 #endif
+                
+                // Generate owner key for host identification
+                int ownerKey = Math.Max(Lidgren.Network.CryptoRandom.Instance.Next(), 1);
+                collaborativeOwnerKey = ownerKey;
                 
                 // Build command line arguments for the server
                 var arguments = new List<string>
@@ -1567,7 +1587,8 @@ namespace Barotrauma
                     "-language", GameSettings.CurrentConfig.Language.ToString(),
                     "-nopassword",
                     "-requireauthentication", "false",  // Allow LAN connections without Steam/EOS auth
-                    "-subeditormode", "true"  // Server enters SubEditor mode
+                    "-subeditormode", "true",
+                    "-ownerkey", ownerKey.ToString()
                 };
                 
                 // Configure the server process
@@ -1588,11 +1609,6 @@ namespace Barotrauma
                 
                 DebugConsole.Log($"[SubEditor] Started SubEditor server: {sessionName} on port {port}");
                 
-                // Initialize local SubEditor networking (host doesn't need GameClient)
-                SubEditorNetworkingClient.Initialize();
-                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
-                
-                // Show connection info dialog
                 var connectionInfo = new List<string>();
                 try
                 {
@@ -1607,16 +1623,14 @@ namespace Barotrauma
                 catch { /* Ignore */ }
                 connectionInfo.Add($"Localhost: 127.0.0.1:{port}");
                 
-                // Note: Steam P2P joining would require the host to also be a GameClient
-                // For now, only direct IP connection is supported for SubEditor
-                
                 new GUIMessageBox(
                     TextManager.Get("SubEditorSessionStarted").Fallback("SubEditor Session Started"),
                     TextManager.Get("SubEditorShareConnectionInfo").Fallback("Share this with others to join via direct connect:") + 
                     "\n\n" + string.Join("\n", connectionInfo) +
-                    "\n\nNote: Use 'Join Game' > 'Direct Connect' to join.");
+                    "\n\nNote: Others can use 'Join' button or 'Join Game' > 'Direct Connect'.");
                 
-                UpdateCollaborativeSessionUI();
+                // Connect to own server after brief startup delay
+                CoroutineManager.StartCoroutine(ConnectToHostedServer(port, playerName), "SubEditorHostConnect");
             }
             catch (Exception e)
             {
@@ -1627,33 +1641,57 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Connect to the locally hosted SubEditor server after a brief delay.
+        /// </summary>
+        private IEnumerable<CoroutineStatus> ConnectToHostedServer(int port, string playerName)
+        {
+            yield return new WaitForSeconds(1.0f);
+            
+            try
+            {
+                var endpoint = new LidgrenEndpoint(System.Net.IPAddress.Loopback, port);
+                
+                SubEditorNetworkingClient.Initialize();
+                SubEditorNetworkingClient.Instance.HostSession(0, playerName);
+                
+                GameMain.Client = new GameClient(
+                    playerName,
+                    ImmutableArray.Create<Endpoint>(endpoint),
+                    serverName: "SubEditor Host",
+                    Option.Some(collaborativeOwnerKey));
+                
+                DebugConsole.Log($"[SubEditor] Host connecting to own server at 127.0.0.1:{port}");
+                
+                UpdateCollaborativeSessionUI();
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("[SubEditor] Host failed to connect to own server", e);
+            }
+            
+            yield return CoroutineStatus.Success;
+        }
+
+        /// <summary>
         /// Join an existing collaborative editing session.
-        /// Connects using the game's standard GameClient, then enters SubEditor.
+        /// Connects using the game's standard GameClient, then the server sends EnterSubEditor message.
         /// </summary>
         private void JoinCollaborativeSession(Endpoint endpoint)
         {
             try
             {
+                GameMain.Client?.Quit();
+                GameMain.Client = null;
+                
                 string playerName = MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor");
                 
-                // Connect to the server using standard GameClient
-                // The server is already running in SubEditor mode
                 GameMain.Client = new GameClient(
                     playerName,
                     ImmutableArray.Create(endpoint),
-                    string.Empty,  // Server name not known yet
-                    Option.None);  // Not the owner
-                
-                // Initialize SubEditor networking layer
-                SubEditorNetworkingClient.Initialize();
-                
-                byte sessionId = (byte)(1 + (Rand.Int(15) % 15));
-                byte colorIndex = sessionId;
-                SubEditorNetworkingClient.Instance.JoinSession(sessionId, playerName, colorIndex);
+                    string.Empty,
+                    Option.None);
                 
                 DebugConsole.Log($"[SubEditor] Connecting to session at {endpoint}");
-                
-                UpdateCollaborativeSessionUI();
             }
             catch (Exception e)
             {
@@ -1666,15 +1704,13 @@ namespace Barotrauma
         /// <summary>
         /// Update UI elements based on collaborative session state.
         /// </summary>
-        private void UpdateCollaborativeSessionUI()
+        internal void UpdateCollaborativeSessionUI()
         {
             if (SubEditorNetworkingClient.Instance?.IsActive == true)
             {
-                // Disable host/join buttons when in session
                 hostButton.Enabled = false;
                 joinButton.Enabled = false;
                 
-                // Change button text to indicate active session
                 if (SubEditorNetworkingClient.Instance.IsHost)
                 {
                     hostButton.Text = TextManager.Get("SubEditorHosting").Fallback("Hosting...");
@@ -1683,11 +1719,26 @@ namespace Barotrauma
                 {
                     joinButton.Text = TextManager.Get("SubEditorConnected").Fallback("Connected");
                 }
+                
+                SetupCollaborativeEventHandlers();
 
-                // Show users panel and refresh list
+                if (SubEditorNetworkingClient.Instance.IsHost && MainSub != null)
+                {
+                    CoroutineManager.Invoke(() => {
+                        if (GameMain.Client?.ClientPeer?.IsActive == true)
+                        {
+                            SyncCurrentSubmarineToServer();
+                        }
+                    }, delay: 2.0f);
+                }
+
+                if (collaborativeToggleButton != null)
+                {
+                    collaborativeToggleButton.Visible = true;
+                }
                 if (collaborativeUsersPanel != null)
                 {
-                    collaborativeUsersPanel.Visible = true;
+                    collaborativeUsersPanel.Visible = false;
                     RefreshCollaborativeUsersList();
                 }
             }
@@ -1698,7 +1749,10 @@ namespace Barotrauma
                 hostButton.Text = TextManager.Get("SubEditorHostButton").Fallback("Host");
                 joinButton.Text = TextManager.Get("SubEditorJoinButton").Fallback("Join");
 
-                // Hide users panel
+                if (collaborativeToggleButton != null)
+                {
+                    collaborativeToggleButton.Visible = false;
+                }
                 if (collaborativeUsersPanel != null)
                 {
                     collaborativeUsersPanel.Visible = false;
@@ -1712,6 +1766,15 @@ namespace Barotrauma
         private void LeaveCollaborativeSession()
         {
             SubEditorNetworkingClient.Instance?.LeaveSession();
+            collaborativeEventHandlersSetup = false;
+            isApplyingRemoteChange = false;
+            
+            GameMain.Client?.Quit();
+            GameMain.Client = null;
+            
+            // If we were the host, kill the server process too
+            ChildServerRelay.AttemptGracefulShutDown();
+            
             UpdateCollaborativeSessionUI();
         }
 
@@ -1725,12 +1788,477 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Save the current in-memory submarine to a temp file and notify the server,
+        /// so clients can receive the current state including unsaved changes.
+        /// </summary>
+        private void SyncCurrentSubmarineToServer()
+        {
+            // Use the XML-based sync which sends the full in-memory state
+            // This handles unsaved edits correctly (unlike file-based sync)
+            SyncSubmarineToClients();
+        }
+
+        /// <summary>
+        /// Save current in-memory submarine to a temp file and notify the server.
+        /// Used before test mode so TryStartGame() has a file to send to clients.
+        /// </summary>
+        private void SaveSubToTempAndNotifyServer()
+        {
+            if (MainSub == null) return;
+            try
+            {
+                string baseName = MainSub.Info?.Name ?? "Unnamed";
+                // Strip any existing temp prefixes to prevent stacking
+                while (baseName.StartsWith("_SubEditorTemp_"))
+                {
+                    baseName = baseName.Substring("_SubEditorTemp_".Length);
+                }
+                string tempName = $"_SubEditorTemp_{baseName}";
+                string tempPath = System.IO.Path.Combine(
+                    SaveUtil.SubmarineDownloadFolder, $"{tempName}.sub");
+                
+                MainSub.TrySaveAs(tempPath);
+                var savedSubInfo = new SubmarineInfo(tempPath);
+                SubEditorNetworkingClient.Instance?.NotifySubmarineLoaded(savedSubInfo);
+                DebugConsole.Log($"[SubEditor] Saved temp sub for test mode: {tempPath}");
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("[SubEditor] Failed to save temp sub for test mode", e);
+            }
+        }
+
+        /// <summary>
         /// Get the selection color for an entity (colored if selected by another user).
         /// </summary>
         public Color GetEntitySelectionColor(MapEntity entity)
         {
             if (SubEditorNetworkingClient.Instance?.IsActive != true) return Color.White;
             return SubEditorNetworkingClient.Instance.GetEntitySelectionColor(entity.ID) ?? Color.White;
+        }
+        
+        /// <summary>
+        /// Hook up event handlers for collaborative editing events.
+        /// Only hooks up once - safe to call multiple times.
+        /// </summary>
+        private bool collaborativeEventHandlersSetup = false;
+        private void SetupCollaborativeEventHandlers()
+        {
+            if (SubEditorNetworkingClient.Instance == null) return;
+            if (collaborativeEventHandlersSetup) return;
+            
+            SubEditorNetworkingClient.Instance.OnSubmarineReceived += OnCollaborativeSubmarineReceived;
+            SubEditorNetworkingClient.Instance.OnSubmarineInfoReceived += OnCollaborativeSubmarineInfoReceived;
+            SubEditorNetworkingClient.Instance.OnClientListUpdated += RefreshCollaborativeUsersList;
+            SubEditorNetworkingClient.Instance.OnTestModeStarted += OnCollaborativeTestModeStarted;
+            SubEditorNetworkingClient.Instance.OnTestModeEnded += OnCollaborativeTestModeEnded;
+            SubEditorNetworkingClient.Instance.OnEntityPlaced += OnCollaborativeEntityPlaced;
+            SubEditorNetworkingClient.Instance.OnEntityRemoved += OnCollaborativeEntityRemoved;
+            SubEditorNetworkingClient.Instance.OnEntityMoved += OnCollaborativeEntityMoved;
+            SubEditorNetworkingClient.Instance.OnEntityPropertyChanged += OnCollaborativeEntityPropertyChanged;
+            SubEditorNetworkingClient.Instance.OnEntityUpdated += OnCollaborativeEntityUpdated;
+            collaborativeEventHandlersSetup = true;
+        }
+
+        private void OnCollaborativeEntityPlaced(byte senderSessionId, string entityXml)
+        {
+            DebugConsole.Log($"[SubEditor] Remote entity placed by session {senderSessionId}");
+            
+            try
+            {
+                // Parse XML and wrap in ContentXElement for Load methods
+                var doc = System.Xml.Linq.XDocument.Parse(entityXml);
+                var xElement = doc.Root;
+                if (xElement == null) return;
+
+                // Wrap in ContentXElement with null content package
+                var contentElement = new ContentXElement(contentPackage: null, xElement);
+                string elemName = xElement.Name.LocalName.ToLowerInvariant();
+                
+                // Use IdRemap that preserves the sender's entity IDs (offset=0 means IDs pass through unchanged)
+                // This is critical: subsequent EntityMoved/EntityUpdated messages reference entities by ID,
+                // so the receiver must use the same IDs as the sender.
+                // If an ID collision occurs, the entity will get the existing ID's slot (replacing it).
+                // First check if the ID exists and remove it to prevent dictionary conflicts.
+                ushort xmlId = (ushort)xElement.GetAttributeInt("ID", 0);
+                if (xmlId != 0)
+                {
+                    var existing = Entity.FindEntityByID(xmlId);
+                    if (existing is MapEntity existingMapEntity)
+                    {
+                        existingMapEntity.Remove();
+                    }
+                }
+                var idRemap = new IdRemap(null, 0);
+                
+                MapEntity loadedEntity = null;
+                switch (elemName)
+                {
+                    case "item":
+                        loadedEntity = Item.Load(contentElement, Submarine.MainSub, createNetworkEvent: false, idRemap: idRemap);
+                        break;
+                    case "structure":
+                        loadedEntity = Structure.Load(contentElement, Submarine.MainSub, idRemap: idRemap);
+                        break;
+                    case "hull":
+                        loadedEntity = Hull.Load(contentElement, Submarine.MainSub, idRemap);
+                        break;
+                    case "waypoint":
+                        loadedEntity = WayPoint.Load(contentElement, Submarine.MainSub, idRemap);
+                        break;
+                    case "gap":
+                        loadedEntity = Gap.Load(contentElement, Submarine.MainSub, idRemap);
+                        break;
+                    case "linkedsubmarine":
+                        loadedEntity = LinkedSubmarine.Load(contentElement, Submarine.MainSub, idRemap);
+                        break;
+                    default:
+                        DebugConsole.AddWarning($"[SubEditor] Unknown entity type in XML: {elemName}");
+                        break;
+                }
+
+                // Add to host's undo stack so host can undo client changes
+                if (loadedEntity != null && SubEditorNetworkingClient.Instance?.IsHost == true)
+                {
+                    isApplyingRemoteChange = true;
+                    StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { loadedEntity }, wasDeleted: false));
+                    isApplyingRemoteChange = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                isApplyingRemoteChange = false;
+                DebugConsole.ThrowError($"[SubEditor] Failed to load entity from XML: {ex.Message}");
+            }
+        }
+
+        private void OnCollaborativeEntityRemoved(byte senderSessionId, ushort entityId)
+        {
+            DebugConsole.Log($"[SubEditor] Remote entity removed: {entityId} by session {senderSessionId}");
+            
+            var entity = Entity.FindEntityByID(entityId) as MapEntity;
+            if (entity != null)
+            {
+                // Add to host's undo stack BEFORE removing so the clone can be created
+                if (SubEditorNetworkingClient.Instance?.IsHost == true)
+                {
+                    isApplyingRemoteChange = true;
+                    StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { entity }, wasDeleted: true));
+                    isApplyingRemoteChange = false;
+                }
+                
+                entity.Remove();
+            }
+        }
+
+        private void OnCollaborativeEntityMoved(byte senderSessionId, ushort entityId, float x, float y)
+        {
+            // Don't apply our own moves back to ourselves (prevents jitter during rapid moves)
+            if (SubEditorNetworkingClient.Instance != null && senderSessionId == SubEditorNetworkingClient.Instance.LocalSessionId)
+            {
+                return;
+            }
+            
+            var entity = Entity.FindEntityByID(entityId) as MapEntity;
+            if (entity != null)
+            {
+                entity.Move(new Vector2(x, y) - entity.WorldPosition);
+            }
+        }
+
+        private void OnCollaborativeEntityPropertyChanged(byte senderSessionId, ushort entityId, string propName, string propValue)
+        {
+            // Don't apply our own property changes back to ourselves (prevents jitter during rapid edits)
+            if (SubEditorNetworkingClient.Instance != null && senderSessionId == SubEditorNetworkingClient.Instance.LocalSessionId)
+            {
+                return;
+            }
+            
+            isApplyingRemoteChange = true;
+            try
+            {
+                var entity = Entity.FindEntityByID(entityId);
+                if (entity == null) return;
+
+                ISerializableEntity target = entity as ISerializableEntity;
+                if (target?.SerializableProperties == null) return;
+
+                var propIdentifier = new Identifier(propName);
+                if (target.SerializableProperties.TryGetValue(propIdentifier, out SerializableProperty prop))
+                {
+                    try { prop.TrySetValue(target, propValue); }
+                    catch { /* skip invalid values like scale=0 that crash CreateRectBody */ }
+                }
+                else if (entity is Item item)
+                {
+                    // Check if propName includes a component prefix like "Turret.Rotation"
+                    string componentPrefix = null;
+                    string actualPropName = propName;
+                    int dotIndex = propName.IndexOf('.');
+                    if (dotIndex > 0)
+                    {
+                        componentPrefix = propName.Substring(0, dotIndex);
+                        actualPropName = propName.Substring(dotIndex + 1);
+                    }
+                    
+                    var actualIdentifier = new Identifier(actualPropName);
+                    foreach (var component in item.Components)
+                    {
+                        // If we have a component prefix, match the type name
+                        if (componentPrefix != null && component.GetType().Name != componentPrefix) continue;
+                        
+                        if (component.SerializableProperties != null &&
+                            component.SerializableProperties.TryGetValue(actualIdentifier, out SerializableProperty compProp))
+                        {
+                            try { compProp.TrySetValue(component, propValue); }
+                            catch { /* skip invalid values */ }
+                            break;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                isApplyingRemoteChange = false;
+            }
+        }
+
+        /// <summary>
+        /// Handle receiving a full entity state update from another user (absolute sync).
+        /// This replaces the entity's state completely with the received XML, like loading from a .sub file.
+        /// The sender serialized the entity with entity.Save() after making changes.
+        /// </summary>
+        private void OnCollaborativeEntityUpdated(byte senderSessionId, ushort entityId, string entityXml)
+        {
+            // Don't apply our own updates back
+            if (SubEditorNetworkingClient.Instance != null && senderSessionId == SubEditorNetworkingClient.Instance.LocalSessionId)
+            {
+                return;
+            }
+
+            isApplyingRemoteChange = true;
+            try
+            {
+                var existingEntity = Entity.FindEntityByID(entityId) as MapEntity;
+                if (existingEntity == null)
+                {
+                    DebugConsole.Log($"[SubEditor] EntityUpdated: entity {entityId} not found, ignoring");
+                    return;
+                }
+
+                var doc = System.Xml.Linq.XDocument.Parse(entityXml);
+                var element = doc.Root;
+                if (element == null) return;
+
+                // Apply all serializable properties from the XML to the existing entity
+                if (existingEntity is ISerializableEntity serializableEntity && serializableEntity.SerializableProperties != null)
+                {
+                    foreach (var prop in serializableEntity.SerializableProperties)
+                    {
+                        if (!prop.Value.Attributes.OfType<Serialize>().Any()) { continue; }
+                        if (prop.Value.PropertyInfo?.SetMethod == null) { continue; }
+                        string attrValue = element.GetAttributeString(prop.Key.Value, null);
+                        if (attrValue != null)
+                        {
+                            try { prop.Value.TrySetValue(serializableEntity, attrValue); }
+                            catch { /* skip read-only properties */ }
+                        }
+                    }
+                }
+
+                // Apply position from XML rect attribute (using Barotrauma's GetAttributeRect)
+                // Note: entity.Save() writes rect MINUS Submarine.HiddenSubPosition for file storage.
+                // To apply back to entity.Rect (which is in local coords), we need to ADD HiddenSubPosition back.
+                var savedRect = element.GetAttributeRect("rect", Rectangle.Empty);
+                if (savedRect != Rectangle.Empty && savedRect.Width > 0 && savedRect.Height > 0)
+                {
+                    var hiddenPos = existingEntity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
+                    var newRect = new Rectangle(
+                        (int)(savedRect.X + hiddenPos.X),
+                        (int)(savedRect.Y + hiddenPos.Y),
+                        Math.Max(1, savedRect.Width),
+                        Math.Max(1, savedRect.Height));
+                    existingEntity.Rect = newRect;
+                }
+
+                // For Items, also update ItemComponent properties
+                if (existingEntity is Item item)
+                {
+                    foreach (var component in item.Components)
+                    {
+                        if (component.SerializableProperties == null) continue;
+                        foreach (var prop in component.SerializableProperties)
+                        {
+                            if (prop.Value.PropertyInfo?.SetMethod == null) { continue; }
+                            string attrValue = element.GetAttributeString(prop.Key.Value, null);
+                            if (attrValue != null)
+                            {
+                                try { prop.Value.TrySetValue(component, attrValue); }
+                                catch { /* skip read-only properties */ }
+                            }
+                        }
+                    }
+                }
+
+                // Apply flip state from XML (FlippedX/FlippedY are not serializable properties,
+                // they're saved as "flippedx"/"flippedy" bool attributes and applied via FlipX()/FlipY())
+                bool xmlFlipX = element.GetAttributeBool("flippedx", false);
+                bool xmlFlipY = element.GetAttributeBool("flippedy", false);
+                if (existingEntity.FlippedX != xmlFlipX)
+                {
+                    isApplyingRemoteChange = true;
+                    existingEntity.FlipX(relativeToSub: false);
+                    isApplyingRemoteChange = false;
+                }
+                if (existingEntity.FlippedY != xmlFlipY)
+                {
+                    isApplyingRemoteChange = true;
+                    existingEntity.FlipY(relativeToSub: false);
+                    isApplyingRemoteChange = false;
+                }
+                // Update flip state tracker so property change detection doesn't re-trigger
+                collaborativeFlipStates[existingEntity.ID] = (existingEntity.FlippedX, existingEntity.FlippedY);
+
+                // Apply linked entities (waypoints, hull gaps, etc.)
+                string linkedToStr = element.GetAttributeString("linkedto", null);
+                if (linkedToStr != null && existingEntity != null)
+                {
+                    // Clear existing links
+                    existingEntity.linkedTo.Clear();
+                    
+                    // Parse and re-link
+                    string[] linkedIds = linkedToStr.Split(',');
+                    foreach (string idStr in linkedIds)
+                    {
+                        if (ushort.TryParse(idStr.Trim(), out ushort linkedId))
+                        {
+                            var linkedEntity = Entity.FindEntityByID(linkedId) as MapEntity;
+                            if (linkedEntity != null && !existingEntity.linkedTo.Contains(linkedEntity))
+                            {
+                                existingEntity.linkedTo.Add(linkedEntity);
+                            }
+                        }
+                    }
+                }
+
+                // Update tracking position
+                if (collaborativeEntityPositions != null)
+                {
+                    collaborativeEntityPositions[entityId] = existingEntity.WorldPosition;
+                }
+
+                DebugConsole.Log($"[SubEditor] Applied full entity update for {entityId} from session {senderSessionId}");
+            }
+            catch (Exception ex)
+            {
+                DebugConsole.ThrowError($"[SubEditor] Failed to apply entity update: {ex.Message}");
+            }
+            finally
+            {
+                isApplyingRemoteChange = false;
+            }
+        }
+        /// If we don't have it, the SubEditorNetworkingClient.ReceiveSubmarineInfo() already
+        /// requests the file via GameMain.Client.RequestFile(), and the file will be loaded
+        /// when the transfer completes via OnFileReceived in GameClient.
+        /// </summary>
+        private void OnCollaborativeSubmarineInfoReceived(string subName, string subHash)
+        {
+            DebugConsole.Log($"[SubEditor] Host is editing submarine: {subName} (hash: {subHash})");
+            
+            // Check if we have this submarine locally
+            var localSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
+            
+            if (localSub != null)
+            {
+                DebugConsole.Log($"[SubEditor] Already have submarine {subName}, loading it...");
+                LoadSub(localSub);
+            }
+            else
+            {
+                DebugConsole.Log($"[SubEditor] Waiting for submarine file transfer: {subName}");
+                // The file request was already sent by SubEditorNetworkingClient.ReceiveSubmarineInfo()
+                // The file will be loaded when transfer completes via OnFileReceived in GameClient
+            }
+        }
+
+        /// <summary>
+        /// Handle the server starting test mode - switch to game screen.
+        /// </summary>
+        private void OnCollaborativeTestModeStarted()
+        {
+            DebugConsole.NewMessage("[SubEditor] Server started test mode - switching to game screen", Microsoft.Xna.Framework.Color.Green);
+            // The server is starting a proper multiplayer round
+            // The client should receive STARTGAME message from the server which will handle the transition
+            // This callback is just for logging/notification
+        }
+
+        /// <summary>
+        /// Handle the server ending test mode - return to SubEditor.
+        /// </summary>
+        private void OnCollaborativeTestModeEnded()
+        {
+            DebugConsole.NewMessage("[SubEditor] Server ended test mode - returning to SubEditor", Microsoft.Xna.Framework.Color.Green);
+            
+            // DON't restore here! The round-end flow calls Submarine.Unload() which destroys
+            // any entities we create. Instead, keep preTestSubmarineXml alive and let Select()
+            // restore from it (at line ~2783) AFTER the round cleanup is complete.
+            // Also clear backedUpSubInfo so Select() doesn't load the saved file.
+            backedUpSubInfo = null;
+            Level.IsSubEditorTestMode = false;
+        }
+        
+        /// <summary>
+        /// Handle receiving a submarine from the host.
+        /// </summary>
+        private void OnCollaborativeSubmarineReceived(string submarineXml)
+        {
+            // Don't load synced subs during test mode — it would overwrite the test round's state
+            if (Level.IsSubEditorTestMode) { return; }
+            // Don't overwrite entities that were just restored from pre-test snapshot (3 second cooldown)
+            if (Timing.TotalTime - preTestRestoreTime < 3.0) { return; }
+            LoadSubmarineFromXml(submarineXml, "sync");
+        }
+        
+        /// <summary>
+        /// Load a submarine's entities from XML string.
+        /// Uses the same approach as .sub file loading: parse XML → SubmarineInfo → LoadSub().
+        /// </summary>
+        private void LoadSubmarineFromXml(string submarineXml, string source)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(submarineXml))
+                {
+                    DebugConsole.ThrowError($"[SubEditor] Received empty submarine XML from {source}");
+                    return;
+                }
+                
+                DebugConsole.Log($"[SubEditor] Loading submarine from XML ({source}, {submarineXml.Length} chars)");
+                
+                // Parse the XML  
+                XDocument doc = XDocument.Parse(submarineXml);
+                XElement rootElement = doc.Root;
+                if (rootElement == null)
+                {
+                    DebugConsole.ThrowError($"[SubEditor] Invalid submarine XML from {source} - no root element");
+                    return;
+                }
+                
+                // Create SubmarineInfo from the XML element using the proper pattern
+                SubmarineInfo subInfo = new SubmarineInfo(filePath: string.Empty, element: rootElement);
+                
+                // Use LoadSub which handles everything properly (ID conflicts, dummy character, camera, etc.)
+                LoadSub(subInfo, checkIdConflicts: false);
+                
+                ReconstructLayers();
+                
+                DebugConsole.NewMessage($"[SubEditor] Loaded submarine from {source}: {subInfo.Name}", Microsoft.Xna.Framework.Color.Green);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"[SubEditor] Failed to load submarine from {source}", e);
+            }
         }
 
         /// <summary>
@@ -1746,10 +2274,31 @@ namespace Barotrauma
         /// </summary>
         private void CreateCollaborativeUsersPanel()
         {
+            // Small toggle button pinned to the top-right, always visible when in a session
+            collaborativeToggleButton = new GUIButton(new RectTransform(new Vector2(0.06f, 0.025f), GUI.Canvas, Anchor.TopRight)
+            {
+                MinSize = new Point((int)(80 * GUI.Scale), (int)(20 * GUI.Scale)),
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(5 * GUI.Scale))
+            }, TextManager.Get("SubEditorCollaborators").Fallback("Editors ▼"), style: "GUIButtonSmall")
+            {
+                Visible = false,
+                OnClicked = (btn, userData) =>
+                {
+                    if (collaborativeUsersPanel != null)
+                    {
+                        collaborativeUsersPanel.Visible = !collaborativeUsersPanel.Visible;
+                        btn.Text = collaborativeUsersPanel.Visible
+                            ? TextManager.Get("SubEditorCollaborators").Fallback("Editors ▲")
+                            : TextManager.Get("SubEditorCollaborators").Fallback("Editors ▼");
+                    }
+                    return true;
+                }
+            };
+
             collaborativeUsersPanel = new GUIFrame(new RectTransform(new Vector2(0.12f, 0.3f), GUI.Canvas, Anchor.TopRight)
             {
                 MinSize = new Point((int)(150 * GUI.Scale), (int)(100 * GUI.Scale)),
-                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(10 * GUI.Scale))
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(5 * GUI.Scale) + collaborativeToggleButton.Rect.Height + (int)(2 * GUI.Scale))
             }, "InnerFrame")
             {
                 Visible = false
@@ -1811,8 +2360,14 @@ namespace Barotrauma
                     displayName, font: GUIStyle.SmallFont);
             }
 
-            // Show/hide panel based on active session
-            collaborativeUsersPanel.Visible = SubEditorNetworkingClient.Instance.IsActive;
+            // Update toggle button text to show user count
+            if (collaborativeToggleButton != null)
+            {
+                int userCount = SubEditorNetworkingClient.Instance.ConnectedEditors.Count;
+                string arrow = collaborativeUsersPanel?.Visible == true ? "▲" : "▼";
+                collaborativeToggleButton.Text = $"Editors ({userCount}) {arrow}";
+                collaborativeToggleButton.Visible = SubEditorNetworkingClient.Instance.IsActive;
+            }
         }
 
         #endregion Collaborative Editing
@@ -2159,7 +2714,23 @@ namespace Barotrauma
             rotateToolToggle.Selected = false;
             scaleToolToggle.Selected = false;
 
-            if (backedUpSubInfo != null)
+            // Collaborative test mode: restore from pre-test XML snapshot FIRST (preserves unsaved edits)
+            if (!string.IsNullOrEmpty(preTestSubmarineXml))
+            {
+                DebugConsole.NewMessage("[SubEditor] Restoring from pre-test XML snapshot in Select()", Microsoft.Xna.Framework.Color.Lime);
+                LoadSubmarineFromXml(preTestSubmarineXml, "pre-test restore");
+                preTestSubmarineXml = null;
+                backedUpSubInfo = null;
+                collaborativeEditingSubName = null;
+                preTestRestoreTime = Timing.TotalTime;
+                
+                // Re-sync to clients after restore
+                if (SubEditorNetworkingClient.Instance?.IsHost == true && MainSub != null)
+                {
+                    CoroutineManager.Invoke(() => SyncSubmarineToClients(), delay: 1.0f);
+                }
+            }
+            else if (backedUpSubInfo != null)
             {
                 MainSub = new Submarine(backedUpSubInfo);
                 if (previewImage != null && backedUpSubInfo.PreviewImage?.Texture != null && !backedUpSubInfo.PreviewImage.Texture.IsDisposed)
@@ -2167,6 +2738,18 @@ namespace Barotrauma
                     previewImage.Sprite = backedUpSubInfo.PreviewImage;
                 }
                 backedUpSubInfo = null;
+            }
+            // Auto-reload submarine after collaborative test mode
+            else if (!string.IsNullOrEmpty(collaborativeEditingSubName) && MainSub == null)
+            {
+                var subToLoad = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == collaborativeEditingSubName);
+                if (subToLoad != null)
+                {
+                    DebugConsole.Log($"[SubEditor] Auto-reloading submarine: {collaborativeEditingSubName}");
+                    MainSub = new Submarine(subToLoad);
+                    ReconstructLayers();
+                }
+                collaborativeEditingSubName = null;
             }
             else if (MainSub == null)
             {
@@ -2349,9 +2932,12 @@ namespace Barotrauma
 
             if (dummyCharacter != null)
             {
-                dummyCharacter.Remove();
+                if (!dummyCharacter.Removed)
+                {
+                    dummyCharacter.Remove();
+                    GameMain.World.ProcessChanges();
+                }
                 dummyCharacter = null;
-                GameMain.World.ProcessChanges();
             }
 
             GUIMessageBox.MessageBoxes.ForEachMod(component =>
@@ -4694,6 +5280,53 @@ namespace Barotrauma
             }
 
             ReconstructLayers();
+            
+            // If we're the host in a collaborative session, sync the full sub state to clients
+            // Use XML sync so clients get all entity data immediately (not just a file reference)
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost)
+            {
+                // Delay to ensure LoadSub is fully complete (MainSub, entity IDs, etc.)
+                CoroutineManager.Invoke(() =>
+                {
+                    if (MainSub != null)
+                    {
+                        SyncSubmarineToClients();
+                    }
+                }, delay: 1.0f);
+            }
+        }
+        
+        /// <summary>
+        /// Send the current submarine XML to all connected clients for sync.
+        /// </summary>
+        private void SyncSubmarineToClients()
+        {
+            if (MainSub == null) return;
+            // Check connection is fully established (not just active, but actually connected)
+            var client = GameMain.Client;
+            if (client?.ClientPeer == null || !client.ClientPeer.IsActive || client.SessionId == 0) return;
+            
+            try
+            {
+                // Serialize the submarine to XML
+                XElement submarineElement = new XElement("Submarine");
+                MainSub.SaveToXElement(submarineElement);
+                string submarineXml = submarineElement.ToString();
+                
+                // Send to server for relay
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
+                msg.WriteString(submarineXml);
+                client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+                
+                DebugConsole.Log($"[SubEditor] Sent submarine sync ({submarineXml.Length} chars)");
+            }
+            catch (Exception e)
+            {
+                // Silently ignore send failures during connection establishment
+                DebugConsole.Log("[SubEditor] Sync deferred - connection not ready yet");
+            }
         }
 
         private static ContentPackage GetPackageThatOwnsSub(SubmarineInfo sub, IEnumerable<ContentPackage> packages)
@@ -6038,6 +6671,12 @@ namespace Barotrauma
             layerPanel.AddToGUIUpdateList();
             TopPanel.AddToGUIUpdateList();
             collaborativeUsersPanel?.AddToGUIUpdateList();
+            collaborativeToggleButton?.AddToGUIUpdateList();
+
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && GameMain.Client?.ChatBox != null)
+            {
+                GameMain.Client.ChatBox.GUIFrame.AddToGUIUpdateList();
+            }
 
             if (WiringMode)
             {
@@ -6086,12 +6725,46 @@ namespace Barotrauma
 
         private static void Redo(int amount)
         {
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && !SubEditorNetworkingClient.Instance.IsHost)
+            {
+                DebugConsole.NewMessage("[SubEditor] Only the host can redo changes in collaborative mode", Color.Orange);
+                return;
+            }
+            
             for (int i = 0; i < amount; i++)
             {
                 if (commandIndex < Commands.Count)
                 {
                     Command command = Commands[commandIndex++];
+                    
+                    HashSet<ushort> entityIdsBefore = null;
+                    bool isCollaborative = command is AddOrDeleteCommand && SubEditorNetworkingClient.Instance?.IsActive == true;
+                    if (isCollaborative)
+                    {
+                        entityIdsBefore = new HashSet<ushort>(MapEntity.MapEntityList.Select(e => e.ID));
+                    }
+                    
                     command.Execute();
+                    
+                    if (isCollaborative && entityIdsBefore != null)
+                    {
+                        var currentIds = new HashSet<ushort>(MapEntity.MapEntityList.Where(e => !e.Removed).Select(e => e.ID));
+                        
+                        foreach (var entity in MapEntity.MapEntityList.Where(e => !e.Removed && !entityIdsBefore.Contains(e.ID)))
+                        {
+                            try
+                            {
+                                var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                                SubEditorNetworkingClient.Instance.NotifyEntityPlaced(element.ToString());
+                            }
+                            catch { }
+                        }
+                        
+                        foreach (ushort removedId in entityIdsBefore.Where(id => !currentIds.Contains(id)))
+                        {
+                            SubEditorNetworkingClient.Instance.NotifyEntityRemoved(removedId);
+                        }
+                    }
                 }
             }
             GameMain.SubEditorScreen.UpdateUndoHistoryPanel();
@@ -6099,12 +6772,46 @@ namespace Barotrauma
 
         private static void Undo(int amount)
         {
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && !SubEditorNetworkingClient.Instance.IsHost)
+            {
+                DebugConsole.NewMessage("[SubEditor] Only the host can undo changes in collaborative mode", Color.Orange);
+                return;
+            }
+            
             for (int i = 0; i < amount; i++)
             {
                 if (commandIndex > 0)
                 {
                     Command command = Commands[--commandIndex];
+                    
+                    HashSet<ushort> entityIdsBefore = null;
+                    bool isCollaborative = command is AddOrDeleteCommand && SubEditorNetworkingClient.Instance?.IsActive == true;
+                    if (isCollaborative)
+                    {
+                        entityIdsBefore = new HashSet<ushort>(MapEntity.MapEntityList.Select(e => e.ID));
+                    }
+                    
                     command.UnExecute();
+                    
+                    if (isCollaborative && entityIdsBefore != null)
+                    {
+                        var currentIds = new HashSet<ushort>(MapEntity.MapEntityList.Where(e => !e.Removed).Select(e => e.ID));
+                        
+                        foreach (var entity in MapEntity.MapEntityList.Where(e => !e.Removed && !entityIdsBefore.Contains(e.ID)))
+                        {
+                            try
+                            {
+                                var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                                SubEditorNetworkingClient.Instance.NotifyEntityPlaced(element.ToString());
+                            }
+                            catch { }
+                        }
+                        
+                        foreach (ushort removedId in entityIdsBefore.Where(id => !currentIds.Contains(id)))
+                        {
+                            SubEditorNetworkingClient.Instance.NotifyEntityRemoved(removedId);
+                        }
+                    }
                 }
             }
             GameMain.SubEditorScreen.UpdateUndoHistoryPanel();
@@ -6141,12 +6848,24 @@ namespace Barotrauma
 
             if (command is AddOrDeleteCommand addOrDelete)
             {
-                GameMain.SubEditorScreen.EntityAddedOrDeleted(addOrDelete.Receivers);
+                GameMain.SubEditorScreen.EntityAddedOrDeleted(addOrDelete.Receivers, addOrDelete.IsDeleteOperation);
+            }
+
+            // Sync property changes to other collaborative editors
+            if (command is PropertyCommand propertyCommand)
+            {
+                GameMain.SubEditorScreen.SendCollaborativePropertyChange(propertyCommand);
+            }
+
+            // Sync transform updates to other collaborative editors
+            if (command is TransformCommand transformCommand)
+            {
+                GameMain.SubEditorScreen.SendCollaborativeTransformUpdate(transformCommand);
             }
         }
 
         private string prevSelectedLayer;
-        private void EntityAddedOrDeleted(IEnumerable<MapEntity> entities)
+        private void EntityAddedOrDeleted(IEnumerable<MapEntity> entities, bool wasDeleted)
         {
             if (layerList?.SelectedData is string selectedLayer)
             {
@@ -6160,6 +6879,256 @@ namespace Barotrauma
                 }
                 var layerElement = layerList.Content.FindChild(selectedLayer);
                 layerElement?.Flash(GUIStyle.Green);
+            }
+            
+            // Send network notifications for collaborative editing
+            SendCollaborativeEntityChanges(entities, wasDeleted);
+        }
+
+        private void SendCollaborativeEntityChanges(IEnumerable<MapEntity> entities, bool wasDeleted)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (isApplyingRemoteChange) return;
+            
+            foreach (var entity in entities)
+            {
+                if (wasDeleted)
+                {
+                    // Entity was deleted
+                    DebugConsole.Log($"[SubEditor] Sending entity removed: {entity.ID} ({entity.Name})");
+                    SubEditorNetworkingClient.Instance.NotifyEntityRemoved(entity.ID);
+                }
+                else
+                {
+                    // Entity was added - serialize to XML to capture all properties
+                    try
+                    {
+                        var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                        string xml = element.ToString();
+                        DebugConsole.Log($"[SubEditor] Sending entity placed: {entity.ID} ({entity.Name}), XML length: {xml.Length}");
+                        SubEditorNetworkingClient.Instance.NotifyEntityPlaced(xml);
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugConsole.ThrowError($"[SubEditor] Failed to serialize entity: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Send property changes to other collaborative editors via full entity state sync.
+        /// </summary>
+        internal void SendCollaborativePropertyChange(PropertyCommand propertyCommand)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (isApplyingRemoteChange) return;
+
+            // Collect unique entities affected by this property change
+            var processedEntities = new HashSet<ushort>();
+            foreach (var receiver in propertyCommand.AffectedEntities)
+            {
+                MapEntity mapEntity = null;
+                if (receiver is MapEntity me) mapEntity = me;
+                else if (receiver is ItemComponent ic) mapEntity = ic.Item;
+                
+                if (mapEntity == null || !processedEntities.Add(mapEntity.ID)) continue;
+
+                // Serialize the full entity state (absolute sync)
+                try
+                {
+                    var element = mapEntity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(mapEntity.ID, element.ToString());
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.ThrowError($"[SubEditor] Failed to serialize entity for property sync: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Send transform (move/resize) updates to other collaborative editors via full entity state sync.
+        /// </summary>
+        internal void SendCollaborativeTransformUpdate(TransformCommand transformCommand)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (isApplyingRemoteChange) return;
+
+            foreach (var entity in transformCommand.AffectedEntities)
+            {
+                if (entity == null || entity.Removed) continue;
+
+                try
+                {
+                    var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
+                    // Update our tracking position
+                    collaborativeEntityPositions[entity.ID] = entity.WorldPosition;
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.ThrowError($"[SubEditor] Failed to serialize entity for transform sync: {ex.Message}");
+                }
+            }
+        }
+        
+        private void UpdateCollaborativeEntityMoves()
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (MainSub == null) return;
+            
+            // Send real-time EntityMoved updates for any selected entities whose position changed
+            if (MapEntity.SelectedList.Count == 0) return;
+            
+            foreach (var entity in MapEntity.SelectedList)
+            {
+                if (entity == null || entity.Removed) continue;
+                if (entity.Submarine != MainSub) continue;
+                
+                ushort entityId = entity.ID;
+                Vector2 currentPos = entity.WorldPosition;
+                
+                if (collaborativeEntityPositions.TryGetValue(entityId, out Vector2 lastPos))
+                {
+                    if (Vector2.DistanceSquared(currentPos, lastPos) > 1f)
+                    {
+                        SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, currentPos.X, currentPos.Y);
+                        collaborativeEntityPositions[entityId] = currentPos;
+                    }
+                }
+                else
+                {
+                    collaborativeEntityPositions[entityId] = currentPos;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Convert a property value to an XML-compatible string format.
+        /// </summary>
+        private static string PropertyValueToXmlString(object value)
+        {
+            if (value == null) return "";
+            if (value is float f) return f.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+            if (value is Vector2 v2) return XMLExtensions.Vector2ToString(v2);
+            if (value is Vector3 v3) return XMLExtensions.Vector3ToString(v3);
+            if (value is Vector4 v4) return XMLExtensions.Vector4ToString(v4);
+            if (value is Color c) return XMLExtensions.ColorToString(c);
+            if (value is Rectangle r) return XMLExtensions.RectToString(r);
+            if (value is Point p) return XMLExtensions.PointToString(p);
+            if (value is string[] sa) return string.Join(';', sa);
+            if (value is Identifier[] ia) return string.Join(';', ia);
+            return value.ToString() ?? "";
+        }
+        
+        private void UpdateCollaborativePropertyChanges()
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (MainSub == null || isApplyingRemoteChange) return;
+            if (MapEntity.SelectedList.Count == 0) return;
+            
+            foreach (var entity in MapEntity.SelectedList)
+            {
+                if (entity == null || entity.Removed) continue;
+                if (entity.Submarine != MainSub) continue;
+                
+                ushort entityId = entity.ID;
+                
+                // Check flip state changes
+                bool currentFlipX = entity.FlippedX;
+                bool currentFlipY = entity.FlippedY;
+                if (collaborativeFlipStates.TryGetValue(entityId, out var lastFlip))
+                {
+                    if (currentFlipX != lastFlip.flipX || currentFlipY != lastFlip.flipY)
+                    {
+                        // Flip changed — send full entity XML
+                        try
+                        {
+                            var element = entity.Save(new XElement("EntityRoot"));
+                            SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entityId, element.ToString());
+                        }
+                        catch { }
+                        collaborativeFlipStates[entityId] = (currentFlipX, currentFlipY);
+                    }
+                }
+                else
+                {
+                    collaborativeFlipStates[entityId] = (currentFlipX, currentFlipY);
+                }
+                
+                // Check SerializableProperty values for changes
+                if (entity is not ISerializableEntity serializable) continue;
+                
+                if (!collaborativePropertySnapshots.TryGetValue(entityId, out var snapshot))
+                {
+                    snapshot = new Dictionary<string, string>();
+                    collaborativePropertySnapshots[entityId] = snapshot;
+                }
+                
+                bool anyChanged = false;
+                foreach (var kvp in serializable.SerializableProperties)
+                {
+                    if (kvp.Value.PropertyInfo?.SetMethod == null) continue; // Skip read-only
+                    
+                    // Skip non-serializable types (Hull, Character, Item, etc.)
+                    var propType = kvp.Value.PropertyInfo.PropertyType;
+                    if (propType != typeof(string) && propType != typeof(bool) && propType != typeof(int) && 
+                        propType != typeof(float) && propType != typeof(double) && propType != typeof(Color) &&
+                        propType != typeof(Vector2) && propType != typeof(Vector4) && propType != typeof(Rectangle) &&
+                        propType != typeof(Point) && propType != typeof(Identifier) && !propType.IsEnum) continue;
+                    
+                    string propName = kvp.Key.Value;
+                    string currentValue;
+                    try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(serializable)); }
+                    catch { continue; }
+                    
+                    if (snapshot.TryGetValue(propName, out string lastValue))
+                    {
+                        if (currentValue != lastValue)
+                        {
+                            // Property changed — send individual property update
+                            SubEditorNetworkingClient.Instance.NotifyEntityPropertyChanged(entityId, propName, currentValue);
+                            snapshot[propName] = currentValue;
+                            anyChanged = true;
+                        }
+                    }
+                    else
+                    {
+                        snapshot[propName] = currentValue;
+                    }
+                }
+                
+                // Also check ItemComponent properties for Items
+                if (entity is Item item)
+                {
+                    foreach (var component in item.Components)
+                    {
+                        foreach (var kvp in component.SerializableProperties)
+                        {
+                            if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
+                            
+                            string propName = $"{component.GetType().Name}.{kvp.Key.Value}";
+                            string currentValue;
+                            try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(component)); }
+                            catch { continue; }
+                            
+                            if (snapshot.TryGetValue(propName, out string lastValue))
+                            {
+                                if (currentValue != lastValue)
+                                {
+                                    SubEditorNetworkingClient.Instance.NotifyEntityPropertyChanged(entityId, propName, currentValue);
+                                    snapshot[propName] = currentValue;
+                                    anyChanged = true;
+                                }
+                            }
+                            else
+                            {
+                                snapshot[propName] = currentValue;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -6322,6 +7291,41 @@ namespace Barotrauma
             {
                 Vector2 worldPos = cam.ScreenToWorld(PlayerInput.MousePosition);
                 SubEditorNetworkingClient.Instance.UpdateCursor(worldPos, (float)deltaTime);
+                
+                UpdateCollaborativeEntityMoves();
+                UpdateCollaborativePropertyChanges();
+                
+                if (GameMain.Client?.ChatBox != null)
+                {
+                    GameMain.Client.ChatBox.Update((float)deltaTime);
+                    
+                    var chatFrame = GameMain.Client.ChatBox.GUIFrame;
+                    if (chatFrame != null)
+                    {
+                        int chatW = (int)(GameMain.GraphicsWidth * 0.25f);
+                        int chatH = (int)(GameMain.GraphicsHeight * 0.30f);
+                        chatFrame.RectTransform.NonScaledSize = new Point(chatW, chatH);
+                        
+                        int bottomMargin = 5;
+                        if (EntityMenu != null && EntityMenu.Visible)
+                        {
+                            bottomMargin = GameMain.GraphicsHeight - EntityMenu.Rect.Top + 5;
+                        }
+                        chatFrame.RectTransform.AbsoluteOffset = new Point(
+                            10,
+                            GameMain.GraphicsHeight - chatH - bottomMargin);
+                        chatFrame.RectTransform.RelativeOffset = Vector2.Zero;
+                    }
+                    
+                    if (GUI.KeyboardDispatcher.Subscriber == null && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.T))
+                    {
+                        GameMain.Client.ChatBox.ToggleOpen = !GameMain.Client.ChatBox.ToggleOpen;
+                        if (GameMain.Client.ChatBox.ToggleOpen)
+                        {
+                            GameMain.Client.ChatBox.InputBox.Select();
+                        }
+                    }
+                }
             }
 
             Hull.UpdateCheats((float)deltaTime, cam);
@@ -7142,6 +8146,9 @@ namespace Barotrauma
                 TransformWidget.Draw(spriteBatch, (float)deltaTime);
             }
 
+            // Draw collaborative cursors from other users
+            SubEditorNetworkingClient.Instance?.DrawCursors(spriteBatch, cam);
+
             GUI.Draw(Cam, spriteBatch);
 
             if (MeasurePositionStart != Vector2.Zero)
@@ -7319,7 +8326,13 @@ namespace Barotrauma
         }
 
         public static bool IsSubEditor() => Screen.Selected is SubEditorScreen && !Submarine.Unloading;
+        public static bool IsSubEditorConnected() => IsSubEditor() && SubEditorNetworkingClient.Instance?.IsActive == true;
         public static bool IsWiringMode() => Screen.Selected == GameMain.SubEditorScreen && GameMain.SubEditorScreen.WiringMode && !Submarine.Unloading;
+        
+        public static Vector2 GetCursorWorldPosition()
+        {
+            return GameMain.SubEditorScreen?.cam?.ScreenToWorld(PlayerInput.MousePosition) ?? PlayerInput.MousePosition;
+        }
 
         public static bool IsLayerVisible(MapEntity entity)
         {

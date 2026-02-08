@@ -372,9 +372,9 @@ namespace Barotrauma
                 foreach (Limb limb in Limbs)
                 {
                     if (limb.IsSevered) { continue; }
-                    limb.body.Submarine = currSubmarine;
+                    if (limb?.body != null) { limb.body.Submarine = currSubmarine; }
                 }
-                Collider.Submarine = currSubmarine;
+                if (Collider != null) { Collider.Submarine = currSubmarine; }
             }
         }
 

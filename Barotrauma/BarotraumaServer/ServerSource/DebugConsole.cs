@@ -1051,6 +1051,87 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("***************", client, Color.Cyan);
             });
 
+            // SubEditor collaborative mode commands
+            commands.Add(new Command("subeditor_status", "subeditor_status: Show the status of the collaborative SubEditor session.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                
+                NewMessage("=== SubEditor Status ===", Color.Cyan);
+                NewMessage($"IsSubEditorMode: {GameMain.IsSubEditorMode}", Color.White);
+                NewMessage($"Session Active: {GameMain.Server.IsSubEditorSessionActive}", Color.White);
+                
+                if (GameMain.Server.IsSubEditorSessionActive)
+                {
+                    var host = GameMain.Server.SubEditorHost;
+                    NewMessage($"Host: {(host != null ? $"{host.Name} (SessionId: {host.SessionId})" : "None")}", Color.Yellow);
+                    
+                    NewMessage("Connected Editors:", Color.Cyan);
+                    foreach (var client in GameMain.Server.ConnectedClients)
+                    {
+                        bool isHost = (client == host);
+                        NewMessage($"  - {client.Name} (SessionId: {client.SessionId}) {(isHost ? "[HOST]" : "")}", 
+                            isHost ? Color.Yellow : Color.White);
+                    }
+                }
+                NewMessage("========================", Color.Cyan);
+            }));
+
+            commands.Add(new Command("subeditor_sethost", "subeditor_sethost [clientname]: Set a specific client as the SubEditor host.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (!GameMain.IsSubEditorMode)
+                {
+                    NewMessage("Server is not in SubEditor mode.", Color.Red);
+                    return;
+                }
+                if (args.Length < 1)
+                {
+                    NewMessage("Usage: subeditor_sethost [clientname]", Color.Red);
+                    return;
+                }
+                
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                if (client == null)
+                {
+                    NewMessage($"Client '{args[0]}' not found.", Color.Red);
+                    return;
+                }
+                
+                GameMain.Server.SetSubEditorHost(client);
+                NewMessage($"Set {client.Name} as the SubEditor host.", Color.Green);
+            }));
+
+            commands.Add(new Command("subeditor_starttest", "subeditor_starttest: Force all clients to start test mode (server acts as host).", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (!GameMain.IsSubEditorMode)
+                {
+                    NewMessage("Server is not in SubEditor mode.", Color.Red);
+                    return;
+                }
+                
+                GameMain.Server.ForceSubEditorTestMode();
+                NewMessage("Sent test mode start signal to all clients.", Color.Green);
+            }));
+
+            commands.Add(new Command("subeditor_endtest", "subeditor_endtest: End test mode and return all clients to SubEditor.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (!GameMain.Server.IsSubEditorSessionActive)
+                {
+                    NewMessage("No SubEditor session is active.", Color.Red);
+                    return;
+                }
+                if (!GameMain.Server.GameStarted)
+                {
+                    NewMessage("No game is currently running.", Color.Red);
+                    return;
+                }
+                
+                GameMain.Server.ReturnToSubEditor();
+                NewMessage("Returning all clients to SubEditor...", Color.Green);
+            }));
+
             commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
             {
                 CheatsEnabled = true;

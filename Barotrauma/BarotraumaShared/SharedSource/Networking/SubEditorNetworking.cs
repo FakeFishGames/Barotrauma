@@ -39,7 +39,27 @@ namespace Barotrauma.Networking
         /// <summary>Host confirms edit is allowed</summary>
         EditConfirm,
         /// <summary>Host denies edit (entity locked by another user)</summary>
-        EditDeny
+        EditDeny,
+        /// <summary>Host notifies clients of which submarine is being edited (name + hash)</summary>
+        SubmarineInfo,
+        /// <summary>Server tells client to return to SubEditor from test mode</summary>
+        ReturnToEditor,
+        /// <summary>Entity was placed by a user</summary>
+        EntityPlaced,
+        /// <summary>Entity was removed by a user</summary>
+        EntityRemoved,
+        /// <summary>Entity was moved by a user</summary>
+        EntityMoved,
+        /// <summary>Entity property was changed</summary>
+        EntityPropertyChanged,
+        /// <summary>Cursor position update</summary>
+        CursorMoved,
+        /// <summary>Request submarine file transfer</summary>
+        RequestSubmarineFile,
+        /// <summary>Full entity state update (absolute sync, like .sub file format)</summary>
+        EntityUpdated,
+        /// <summary>Full submarine state as XML (all entities, like loading a .sub file)</summary>
+        FullState
     }
 
     /// <summary>

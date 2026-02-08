@@ -46,6 +46,11 @@ namespace Barotrauma
         private readonly bool Resized;
 
         /// <summary>
+        /// Gets the entities affected by this transform command (for collaborative sync).
+        /// </summary>
+        public IReadOnlyList<MapEntity> AffectedEntities => Receivers;
+
+        /// <summary>
         /// A command for setting and reverting a MapEntity rectangle
         /// </summary>
         /// <param name="receivers">Entities whose rectangle has been altered</param>
@@ -116,6 +121,7 @@ namespace Barotrauma
         public readonly List<MapEntity> Receivers;
         private readonly List<MapEntity> CloneList;
         private readonly bool WasDeleted;
+        public bool IsDeleteOperation => WasDeleted;
         private readonly List<AddOrDeleteCommand> ContainedItemsCommand = new List<AddOrDeleteCommand>();
 
         // We need to 'snapshot' the state of the circuit box and the best way to do that is to save it to XML. 
@@ -454,6 +460,21 @@ namespace Barotrauma
         private string sanitizedProperty;
 
         public readonly int PropertyCount;
+
+        /// <summary>
+        /// The entities affected by this property change.
+        /// </summary>
+        public IReadOnlyList<ISerializableEntity> AffectedEntities => Receivers;
+
+        /// <summary>
+        /// The name of the property that was changed.
+        /// </summary>
+        public Identifier ChangedPropertyName => PropertyName;
+
+        /// <summary>
+        /// String representation of the new property value.
+        /// </summary>
+        public string SanitizedPropertyValue => sanitizedProperty;
 
         /// <summary>
         /// A command that sets item properties

@@ -2647,6 +2647,15 @@ namespace Barotrauma
                             GameMain.GameSession?.EndRound("");
                         });
                     }
+                    // Collaborative SubEditor multiplayer test mode - return to SubEditor for all clients
+                    else if (Networking.SubEditorNetworkingClient.Instance?.IsActive == true && GameMain.Client != null)
+                    {
+                        CreateButton("PauseMenuReturnToEditor", buttonContainer, action: () =>
+                        {
+                            // Send EndTestMode request to server, which will return everyone to SubEditor
+                            Networking.SubEditorNetworkingClient.Instance?.RequestEndTestMode();
+                        });
+                    }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null)
                     {
                         //server owner (host) can't return to the lobby without ending the round for everyone
