@@ -581,109 +581,74 @@ namespace Barotrauma.Networking
         }
 
         /// <summary>
-        /// Starts a SubEditor test round using the standard TestMode game flow.
+        /// Starts a SubEditor test round using the standard Sandbox game flow.
         /// </summary>
         private void StartSubEditorTestRound()
         {
-            try
-            {
-                Level.IsSubEditorTestMode = true;
-                
-            DebugConsole.Log("[SubEditor] Starting test mode");
-            
-            // The HOST has already saved the current in-memory submarine to this temp file
-            // via Submarine.MainSub.TrySaveAs() — this includes ALL current unsaved edits.
-            // We just need to read it and create a SubmarineInfo from it.
+            Level.IsSubEditorTestMode = true;
+
             string tempPath = Path.Combine("Submarines", "_SubEditorTestMode.sub");
-            
             if (!System.IO.File.Exists(tempPath))
             {
-                DebugConsole.ThrowError($"[SubEditor] Temp sub file not found: {tempPath}. Host must save before requesting test mode.");
+                DebugConsole.ThrowError($"[SubEditor] Temp sub file not found: {tempPath}");
+                Level.IsSubEditorTestMode = false;
                 return;
             }
-            
+
+            SubmarineInfo testSubInfo;
             try
             {
-                var testSubInfo = new SubmarineInfo(tempPath);
-                GameMain.NetLobbyScreen.SelectedSub = testSubInfo;
-                SubmarineInfo.AddToSavedSubs(testSubInfo);
-                DebugConsole.Log($"[SubEditor] Loaded temp sub for test mode: {tempPath} (hash: {testSubInfo.MD5Hash})");
+                testSubInfo = new SubmarineInfo(tempPath);
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("[SubEditor] Failed to load temp sub for test mode", e);
+                Level.IsSubEditorTestMode = false;
                 return;
             }
-            
-            // Mark that we're leaving SubEditor mode to start a game round
+
+            GameMain.NetLobbyScreen.SelectedSub = testSubInfo;
+            SubmarineInfo.AddToSavedSubs(testSubInfo);
+
             GameMain.IsSubEditorMode = false;
-            
-            // Set mode to Sandbox (standard multiplayer mode, handles all server/client sync)
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModePreset.Sandbox.Identifier;
-            
-            // Disable voting so TryStartGame uses our SelectedSub and SelectedMode directly
             ServerSettings.AllowSubVoting = false;
             ServerSettings.AllowModeVoting = false;
-            
-            // Set low difficulty for minimal level generation
             ServerSettings.SelectedLevelDifficulty = 0;
-            
-            // Don't force a custom biome — custom biome XML lacks texture sprites which crashes LevelRenderer.
-            // Instead, let the game pick any default biome. Our code-based zeroing in Level.Generate()
-            // handles removing structures/wrecks/ruins/caves/outposts via IsSubEditorTestMode flag.
-            
-            // Ensure a shuttle is selected (TryStartGame requires it)
+
             if (GameMain.NetLobbyScreen.SelectedShuttle == null)
             {
-                // Use the test sub itself as shuttle, or find any available shuttle
-                var shuttle = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.HasTag(SubmarineTag.Shuttle))
+                GameMain.NetLobbyScreen.SelectedShuttle =
+                    SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.HasTag(SubmarineTag.Shuttle))
                     ?? GameMain.NetLobbyScreen.SelectedSub;
-                GameMain.NetLobbyScreen.SelectedShuttle = shuttle;
-                DebugConsole.Log($"[SubEditor] Auto-selected shuttle: {shuttle?.Name ?? "none"}");
             }
-            
-            // Clear any votes so TryStartGame picks our selections
+
             foreach (var client in connectedClients)
             {
                 client.SetVote(VoteType.Mode, null);
                 client.SetVote(VoteType.Sub, null);
             }
-            
-            // Reset game state flags so TryStartGame doesn't refuse to start
+
             if (GameStarted)
             {
-                DebugConsole.Log("[SubEditor] Game already running, ending it first...");
                 EndGame(CampaignMode.TransitionType.None, wasSaved: false, missions: Enumerable.Empty<Mission>());
             }
             initiatedStartGame = false;
-            
-            // Log pre-start state for debugging
-            DebugConsole.NewMessage($"[SubEditor Test] Pre-TryStartGame: GameStarted={GameStarted}, initiated={initiatedStartGame}", Color.Lime);
-            DebugConsole.NewMessage($"[SubEditor Test] Sub={GameMain.NetLobbyScreen.SelectedSub?.Name}, Shuttle={GameMain.NetLobbyScreen.SelectedShuttle?.Name}, Mode={GameMain.NetLobbyScreen.SelectedMode?.Name}", Color.Lime);
-            
 
-            // Use the standard game start flow — it handles everything correctly
             var result = TryStartGame();
             if (result != TryStartGameResult.Success)
             {
                 DebugConsole.ThrowError($"[SubEditor] Failed to start test mode: {result}");
-                GameMain.IsSubEditorMode = true; // restore if failed
+                GameMain.IsSubEditorMode = true;
+                Level.IsSubEditorTestMode = false;
                 return;
             }
-            
-            // Enable cheats and disable achievements for test mode
+
             DebugConsole.CheatsEnabled = true;
             AchievementManager.CheatsEnabled = true;
             UpdateCheatsEnabled();
-            
-            DebugConsole.NewMessage("[SubEditor] Test mode started (Sandbox, no structures, cheats enabled)", Color.Green);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("[SubEditor] StartSubEditorTestRound crashed!", e);
-                GameMain.IsSubEditorMode = true;
-                Level.IsSubEditorTestMode = false;
-            }
+
+            DebugConsole.Log("[SubEditor] Test mode started");
         }
 
         /// <summary>

@@ -47,3 +47,30 @@ The previous cleanup was superficial - only removed verbose comments. The real p
 - Reverted `MissionPrefab.cs` to upstream (removed TimeTrial entry)
 - Reverted `MainMenuScreen.cs` to upstream (restored QuitButton text)
 - Reverted `TestGameMode.cs` to upstream (removed unused IsCollaborativeTest)
+
+### Shotgun null-check reverts (all reverted to match upstream exactly)
+- `GameServer.cs WriteRoundStartFinalize`: reverted EventManager?.GetFilesToPreload() back to .EventManager.GetFilesToPreload()
+- `GameServer.cs WriteRoundStartFinalize`: reverted Level?.EqualityCheckValues back to .Level.EqualityCheckValues
+- `GameServer.cs EndGame`: reverted missions null-coalesce back to upstream `.ToList()`
+- `GameServer.cs EndGame`: reverted KarmaManager try-catch back to bare call
+- `Ragdoll.cs`: reverted limb?.body and Collider null-checks back to direct access
+- `NetLobbyScreen.cs`: reverted traitorDangerGroup null-check back to no check
+- REASONING: These "just in case" changes were made by AI agents when they hit crashes during
+  SubEditor test mode development. Instead of fixing the SubEditor flow that caused the crash,
+  they wrapped existing upstream code in null-checks. The SubEditor flow was later fixed properly
+  (e.g. EndGame skips NetLobbyScreen.Select() in SubEditor mode) making these null-checks
+  unnecessary. Keeping them modifies upstream files for no reason and masks real bugs.
+
+### Anti-pattern fixes
+- `GameMain.cs`: removed duplicate CLI loop for `-requireauthentication`, moved it into the
+  standard post-start loop where it belongs
+- `SubEditorNetworkingServer.cs StartSubEditorTestRound`: rewrote with proper indentation,
+  removed outer try-catch (only kept try-catch around SubmarineInfo loading), removed debug
+  state dump logging
+
+### Dead code removal
+- `VoipSound.cs`: removed `SetRelativePosition()` method - defined but never called anywhere
+
+### Build verification
+- Server: Build succeeded, 0 errors, 150 warnings (all pre-existing EOS warnings)
+- Client: Build succeeded, 0 errors, 446 warnings (all pre-existing)

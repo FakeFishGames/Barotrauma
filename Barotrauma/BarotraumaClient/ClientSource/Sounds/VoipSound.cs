@@ -98,21 +98,6 @@ namespace Barotrauma.Sounds
             soundChannel.Position = pos;
         }
 
-        /// <summary>
-        /// Set position relative to the listener for stereo panning.
-        /// Unlike SetPosition (which uses absolute world coords), this uses
-        /// OpenAL source-relative mode: (1,0,0) = right, (-1,0,0) = left, (0,0,0) = center.
-        /// </summary>
-        public void SetRelativePosition(float pan)
-        {
-            if (soundChannel?.ALSourceIndex >= 0)
-            {
-                uint alSource = Owner.GetSourceFromIndex(SourcePoolIndex, soundChannel.ALSourceIndex);
-                Al.Sourcei(alSource, Al.SourceRelative, Al.True);
-                Al.Source3f(alSource, Al.Position, Math.Clamp(pan, -1f, 1f), 0f, 0f);
-            }
-        }
-
         public void SetRange(float near, float far)
         {
             soundChannel.Near = Near = near;

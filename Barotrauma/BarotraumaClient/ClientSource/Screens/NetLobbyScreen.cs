@@ -2950,7 +2950,6 @@ namespace Barotrauma
 
         private void SetTraitorDangerIndicators(int dangerLevel)
         {
-            if (traitorDangerGroup == null) { return; }
             int i = 0;
             foreach (var child in traitorDangerGroup.Children)
             {

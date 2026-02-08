@@ -3371,14 +3371,11 @@ namespace Barotrauma.Networking
         private void WriteRoundStartFinalize(IWriteMessage msg, Client client)
         {
             //tell the client what content files they should preload
-            var contentToPreload = GameMain.GameSession?.EventManager?.GetFilesToPreload();
-            msg.WriteUInt16((ushort)(contentToPreload?.Count() ?? 0));
-            if (contentToPreload != null)
+            var contentToPreload = GameMain.GameSession.EventManager.GetFilesToPreload();
+            msg.WriteUInt16((ushort)contentToPreload.Count());
+            foreach (ContentFile contentFile in contentToPreload)
             {
-                foreach (ContentFile contentFile in contentToPreload)
-                {
-                    msg.WriteString(contentFile.Path.Value);
-                }
+                msg.WriteString(contentFile.Path.Value);
             }
             msg.WriteByte((GameMain.GameSession.Campaign as MultiPlayerCampaign)?.RoundID ?? 0);
             msg.WriteInt32(Submarine.MainSub?.Info.EqualityCheckVal ?? 0);
@@ -3389,7 +3386,7 @@ namespace Barotrauma.Networking
             }
             foreach (Level.LevelGenStage stage in Enum.GetValues(typeof(Level.LevelGenStage)).OfType<Level.LevelGenStage>().OrderBy(s => s))
             {
-                msg.WriteInt32(GameMain.GameSession?.Level?.EqualityCheckValues[stage] ?? 0);
+                msg.WriteInt32(GameMain.GameSession.Level.EqualityCheckValues[stage]);
             }
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
@@ -3417,7 +3414,7 @@ namespace Barotrauma.Networking
             }
 
             string endMessage = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded");
-            missions ??= GameMain.GameSession?.Missions?.ToList() ?? Enumerable.Empty<Mission>();
+            missions ??= GameMain.GameSession.Missions.ToList();
             if (GameMain.GameSession is { IsRunning: true })
             {
                 GameMain.GameSession.EndRound(endMessage);
@@ -3445,8 +3442,7 @@ namespace Barotrauma.Networking
 
             if (GameStarted)
             {
-                try { KarmaManager.OnRoundEnded(); }
-                catch (Exception e) { DebugConsole.ThrowError("KarmaManager.OnRoundEnded failed: " + e.Message); }
+                KarmaManager.OnRoundEnded();
             }
 
             RespawnManager = null;

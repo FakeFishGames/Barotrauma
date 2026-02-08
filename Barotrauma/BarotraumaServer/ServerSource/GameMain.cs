@@ -261,23 +261,6 @@ namespace Barotrauma
                 ownerKey,
                 ownerEndpoint);
             
-            // Process authentication settings before starting the server
-            for (int i = 0; i < CommandLineArgs.Length; i++)
-            {
-                switch (CommandLineArgs[i].Trim().ToLowerInvariant())
-                {
-                    case "-requireauthentication":
-                        bool.TryParse(CommandLineArgs[i + 1], out bool requireAuth);
-                        Server.ServerSettings.RequireAuthentication = requireAuth;
-                        if (!requireAuth)
-                        {
-                            DebugConsole.NewMessage("Authentication disabled - allowing unauthenticated LAN connections", Color.Yellow);
-                        }
-                        i++;
-                        break;
-                }
-            }
-            
             // In SubEditor mode, don't register to public server list
             Server.StartServer(registerToServerList: !IsSubEditorMode && publiclyVisible);
 
@@ -306,7 +289,8 @@ namespace Barotrauma
                         i++;
                         break;
                     case "-requireauthentication":
-                        // Already processed above
+                        bool.TryParse(CommandLineArgs[i + 1], out bool requireAuth);
+                        Server.ServerSettings.RequireAuthentication = requireAuth;
                         i++;
                         break;
                     case "-language":
