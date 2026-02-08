@@ -92,7 +92,6 @@ namespace Barotrauma.Networking
         private void HandleEntityPlaced(IReadMessage inc, Client sender)
         {
             string entityXml = inc.ReadString();
-            DebugConsole.Log($"[SubEditor] Entity placed by {sender.Name}, XML length: {entityXml?.Length ?? 0}");
 
             // Relay to all other clients
             foreach (var client in connectedClients.Where(c => c != sender))
@@ -312,7 +311,7 @@ namespace Barotrauma.Networking
                 subMsg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
                 subMsg.WriteString(subEditorStoredSubmarineXml);
                 serverPeer?.Send(subMsg, client.Connection, DeliveryMethod.Reliable);
-                DebugConsole.Log($"[SubEditor] Sent stored submarine XML ({subEditorStoredSubmarineXml.Length} chars) to new client {client.Name}");
+                DebugConsole.Log($"[SubEditor] Sent stored submarine to new client {client.Name}");
             }
             else
             {
@@ -555,7 +554,7 @@ namespace Barotrauma.Networking
                     subMsg.WriteString(subEditorStoredSubmarineXml);
                     serverPeer?.Send(subMsg, client.Connection, DeliveryMethod.Reliable);
                 }
-                DebugConsole.Log($"[SubEditor] Sent stored submarine XML to non-host clients ({subEditorStoredSubmarineXml.Length} chars)");
+                DebugConsole.Log("[SubEditor] Sent stored submarine to non-host clients");
             }
 
             DebugConsole.Log("[SubEditor] All clients returned to SubEditor");
@@ -701,7 +700,7 @@ namespace Barotrauma.Networking
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
 
-            DebugConsole.Log($"[SubEditor] Submarine synced from host ({submarineXml.Length} chars)");
+            DebugConsole.Log("[SubEditor] Submarine synced from host");
         }
 
         /// <summary>

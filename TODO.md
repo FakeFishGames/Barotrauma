@@ -62,14 +62,22 @@ root cause in the SubEditor flow, plastered null-checks on existing upstream cod
   - REAL FIX: Removed it
 
 ## Files That Need Review For Sloppy Patterns
-- [ ] `SubEditorNetworkingServer.cs` - Full review for repetitive message-building patterns
-- [ ] `SubEditorNetworkingClient.cs` - Full review
-- [ ] `SubEditorScreen.cs` - Full review of collaborative additions
-- [ ] `GameClient.cs` - Review SubEditor-specific if-checks scattered in StartGame flow
+- [x] `SubEditorNetworkingServer.cs` - Cleaned up noisy debug logging (removed XML length dumps)
+- [x] `SubEditorNetworkingClient.cs` - Reviewed, follows patterns correctly
+- [x] `SubEditorScreen.cs` - Reviewed collaborative additions, clean
+- [x] `GameClient.cs` - Fixed remaining shotgun null-check (`EventManager?.PreloadContent`), rest is clean
+- [x] `Client.cs` - Reviewed voice positioning, follows existing if/else pattern
+- [x] `VoipClient.cs` - Reviewed radio filter skip, follows existing if/else pattern
+- [x] `GUI.cs` - Reviewed pause menu button, follows existing pattern
+- [x] `SubEditorCommands.cs` - Reviewed accessors, clean read-only wrappers
+- [x] `DebugConsole.cs` (server) - Reviewed commands, follows existing patterns
+- [x] `Level.cs` - Reviewed IsSubEditorTestMode, acceptable pattern for mod
+- [x] `ChatBox.cs` - Kept null-check (legitimate: SubEditor has ChatBox but no CrewManager)
+- [x] `EventManager.cs` - Reverted to upstream (SubEditor test mode creates a real level via TryStartGame, so fallback is unnecessary)
 
 ## Build Verification
-- [ ] Build server after all changes
-- [ ] Build client after all changes
+- [x] Build server after all changes: 0 errors
+- [x] Build client after all changes: 0 errors
 
 ## Documentation
-- [ ] Update MOD_INFO.md to match final state
+- [x] Update MOD_INFO.md to match final state

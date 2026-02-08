@@ -1133,7 +1133,7 @@ namespace Barotrauma.Networking
 
             }            
 
-            GameMain.GameSession?.EventManager?.PreloadContent(contentToPreload);
+            GameMain.GameSession.EventManager.PreloadContent(contentToPreload);
 
             int subEqualityCheckValue = inc.ReadInt32();
             if (!isSubEditorTest && subEqualityCheckValue != (Submarine.MainSub?.Info?.EqualityCheckVal ?? 0))

@@ -358,18 +358,6 @@ namespace Barotrauma
                     return;
                 }
 #endif
-#if SERVER
-                // SubEditor test mode also runs without a level
-                if (GameMain.IsSubEditorMode || GameMain.GameSession?.GameMode?.Preset == GameModePreset.Sandbox)
-                {
-                    settings = orderedByDifficulty.GetRandom(Rand.RandSync.ServerAndClient);
-                    if (settings != null)
-                    {
-                        eventThreshold = settings.DefaultEventThreshold;
-                    }
-                    return;
-                }
-#endif
                 throw new InvalidOperationException("Could not select EventManager settings (level not set).");
             }
 

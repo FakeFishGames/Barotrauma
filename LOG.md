@@ -74,3 +74,25 @@ The previous cleanup was superficial - only removed verbose comments. The real p
 ### Build verification
 - Server: Build succeeded, 0 errors, 150 warnings (all pre-existing EOS warnings)
 - Client: Build succeeded, 0 errors, 446 warnings (all pre-existing)
+
+### Additional reverts and cleanup
+- Reverted `EventManager.cs` to upstream: the `#if SERVER` fallback for SubEditor/Sandbox mode
+  was another "just in case" change. SubEditor test mode uses TryStartGame which creates a real
+  level via StartRound, so EventManager.level is never null. The fallback was never triggered.
+- Reverted `GameClient.cs ReadStartGameFinalize`: `GameMain.GameSession?.EventManager?.PreloadContent`
+  back to `GameMain.GameSession.EventManager.PreloadContent` (upstream pattern - GameSession is
+  always set when this method is called)
+- Cleaned up noisy debug logging in `SubEditorNetworkingServer.cs`: removed XML length/char count
+  dumps from log messages (these were debugging artifacts, not useful for normal operation)
+- Reviewed ALL remaining modified files vs upstream:
+  - Client.cs, VoipClient.cs: voice positioning adds SubEditor branch to existing if/else chain ✅
+  - GUI.cs: pause menu "Return to Editor" button follows existing button pattern ✅
+  - SubEditorCommands.cs: read-only accessors on existing command classes ✅
+  - DebugConsole.cs: server console commands follow existing command patterns ✅
+  - Level.cs: IsSubEditorTestMode flag and content zeroing is acceptable mod pattern ✅
+  - ChatBox.cs: null-check is legitimate (SubEditor has ChatBox but no CrewManager) ✅
+  - GameClient.cs: SubEditor hash-check skips are intentional (temp sub won't match) ✅
+
+### Build verification (after all changes)
+- Server: Build succeeded, 0 errors
+- Client: Build succeeded, 0 errors
