@@ -86,27 +86,21 @@ namespace Barotrauma.Networking
             float noiseGain = 0.0f;
             Vector3? position = null;
 
-            // In SubEditor collaborative mode, position voice relative to my cursor
-            // Use delta (remoteCursor - myCursor) so stereo matches on-screen positions
+            // In SubEditor mode, position voice relative to cursor positions
             var subEditorNet = SubEditorNetworkingClient.Instance;
             if (subEditorNet?.IsActive == true
                 && subEditorNet.CursorPositions.TryGetValue(SessionId, out Vector2 remoteCursorPos))
             {
-                // Get my cursor's world position from the SubEditor camera
                 Vector2 myCursorWorld = SubEditorScreen.IsSubEditor()
                     ? Submarine.MainSub != null
                         ? SubEditorScreen.GetCursorWorldPosition()
                         : new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y)
                     : new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
-                // Sound position = relative delta from me to them (listener at origin)
                 Vector2 delta = remoteCursorPos - myCursorWorld;
                 position = new Vector3(delta.X, delta.Y, 0f);
-                // Override listener to origin so 3D audio uses our delta correctly
                 GameMain.SoundManager.ListenerPosition = Vector3.Zero;
-                // Gentle attenuation: never go below 80% volume
                 float dist = delta.Length();
                 gain = Math.Max(0.8f, 1.0f - dist * 0.00005f);
-                // Set generous range so 3D audio doesn't cut off
                 VoipSound.SetRange(100000f, 200000f);
             }
             else if (character != null && !character.IsDead)

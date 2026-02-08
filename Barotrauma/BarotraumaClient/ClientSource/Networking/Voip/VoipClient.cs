@@ -111,14 +111,12 @@ namespace Barotrauma.Networking
                 GameMain.SoundManager.ForceStreamUpdate();
                 client.RadioNoise = 0.0f;
                 
-                // In SubEditor mode: let Client.UpdateVoipSound() handle positioning via SetPosition()
-                // Just set non-radio flags here so the sound doesn't get radio filter treatment
+                // In SubEditor mode, disable radio filters and set generous audio range
                 if (Screen.Selected is SubEditorScreen)
                 {
                     client.VoipSound.UsingRadio = false;
                     client.VoipSound.UseRadioFilter = false;
                     client.VoipSound.UseMuffleFilter = false;
-                    // Set generous range so voice is always audible in SubEditor
                     client.VoipSound.SetRange(100000f, 200000f);
                 }
                 else if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)

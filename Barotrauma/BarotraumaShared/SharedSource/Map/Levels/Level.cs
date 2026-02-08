@@ -530,9 +530,7 @@ namespace Barotrauma
             Loaded?.Remove();
             Loaded = this;
             Generating = true;
-            // SubEditor test mode: zero out structure/creature/item counts in the selected params.
-            // This is the programmatic equivalent of having a custom biome XML with all counts at 0.
-            // The game's own level generation code then naturally skips these (e.g. 0 ruins = no ruin loop).
+            // SubEditor test mode: disable level content generation
             if (IsSubEditorTestMode)
             {
                 GenerationParams.CaveCount = 0;
@@ -548,7 +546,6 @@ namespace Barotrauma
                 GenerationParams.IslandCount = 0;
                 GenerationParams.AbyssIslandCount = 0;
                 GenerationParams.IceSpireCount = 0;
-                // Also disable beacon stations, hunting grounds (which aren't in GenerationParams but in LevelData)
                 LevelData.HasBeaconStation = false;
                 LevelData.HasHuntingGrounds = false;
             }

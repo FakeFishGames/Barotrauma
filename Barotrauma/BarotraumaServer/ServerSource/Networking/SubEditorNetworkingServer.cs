@@ -288,7 +288,7 @@ namespace Barotrauma.Networking
 
             byte sessionId = (byte)client.SessionId;
             
-            // Prevent duplicate entries - remove existing entry for this session ID first
+            // Prevent duplicate entries
             if (subEditorSession.ConnectedEditors.ContainsKey(sessionId))
             {
                 subEditorSession.RemoveUser(sessionId);
@@ -305,7 +305,6 @@ namespace Barotrauma.Networking
             SendSubEditorClientList();
             
             // Send current submarine state to the new client
-            // Prefer sending the full XML state (includes unsaved edits)
             if (!string.IsNullOrEmpty(subEditorStoredSubmarineXml))
             {
                 IWriteMessage subMsg = new WriteOnlyMessage();
@@ -317,7 +316,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                // Fallback: send submarine file info so client can request the file
+                // Fallback: send submarine file info
                 var selectedSub = GameMain.NetLobbyScreen?.SelectedSub;
                 if (selectedSub != null)
                 {
@@ -390,15 +389,13 @@ namespace Barotrauma.Networking
 
             var cursorData = INetSerializableStruct.Read<SubEditorCursorData>(inc);
 
-            // Use the sender's actual server-assigned SessionId (the client may have sent
-            // a stale localSessionId, e.g. 0 before the host's ID was updated)
+            // Use the sender's actual server-assigned SessionId
             byte senderSessionId = (byte)sender.SessionId;
 
-            // Update server's tracking
             subEditorSession.CursorPositions[senderSessionId] = 
                 new Microsoft.Xna.Framework.Vector2(cursorData.WorldX, cursorData.WorldY);
 
-            // Rebuild the struct with the authoritative SessionId
+            // Rebuild with authoritative SessionId and relay
             var correctedCursorData = new SubEditorCursorData(senderSessionId, cursorData.WorldX, cursorData.WorldY);
 
             // Relay to other clients
@@ -496,22 +493,20 @@ namespace Barotrauma.Networking
 
             DebugConsole.Log("[SubEditor] Forcing return to SubEditor...");
 
-            // End the current game session properly
             if (GameStarted)
             {
                 string endMessage = "Returning to SubEditor";
                 
-                // Send ENDGAME message to all clients BEFORE ending the round
                 if (connectedClients.Count > 0)
                 {
                     IWriteMessage endMsg = new WriteOnlyMessage();
                     endMsg.WriteByte((byte)ServerPacketHeader.ENDGAME);
                     endMsg.WriteByte((byte)CampaignMode.TransitionType.None);
-                    endMsg.WriteBoolean(false); // wasSaved
+                    endMsg.WriteBoolean(false);
                     endMsg.WriteString(endMessage);
-                    endMsg.WriteByte(0); // mission count
-                    endMsg.WriteByte(0); // winning team
-                    endMsg.WriteBoolean(false); // no traitor results
+                    endMsg.WriteByte(0);
+                    endMsg.WriteByte(0);
+                    endMsg.WriteBoolean(false);
 
                     foreach (Client c in connectedClients)
                     {
@@ -539,26 +534,21 @@ namespace Barotrauma.Networking
                 Submarine.Unload();
             }
 
-            // Restore SubEditor mode
             GameMain.IsSubEditorMode = true;
 
-            // Notify all clients to return to SubEditor
             foreach (var client in connectedClients)
             {
                 SendSubEditorModeMessage(client);
             }
             
-            // Resend client list so everyone knows the session is still active
             SendSubEditorClientList();
             
-            // Send stored submarine XML to NON-HOST clients so they can restore the pre-test sub state.
-            // The HOST restores from its own preTestSubmarineXml snapshot, then re-syncs to server.
-            // We skip the host to prevent overwriting its restored entities.
+            // Send stored submarine XML to non-host clients for state restoration
             if (!string.IsNullOrEmpty(subEditorStoredSubmarineXml))
             {
                 foreach (var client in connectedClients)
                 {
-                    if (client == subEditorHost) continue; // Host restores from local snapshot
+                    if (client == subEditorHost) continue;
                     IWriteMessage subMsg = new WriteOnlyMessage();
                     subMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                     subMsg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
@@ -574,7 +564,6 @@ namespace Barotrauma.Networking
 
         /// <summary>
         /// Handle test mode start request (host only).
-        /// Starts a proper multiplayer test round so all clients can play together.
         /// </summary>
         private void HandleStartTestMode(IReadMessage inc, Client sender)
         {
@@ -588,17 +577,11 @@ namespace Barotrauma.Networking
             }
 
             DebugConsole.Log("[SubEditor] Host requested test mode - starting multiplayer test round");
-            
-            // Start a proper multiplayer test round
-            // This uses the existing game infrastructure
             StartSubEditorTestRound();
         }
 
         /// <summary>
         /// Starts a SubEditor test round using the standard TestMode game flow.
-
-        /// Uses TryStartGame() which handles everything: file transfers, level generation,
-        /// character spawning, entity sync, etc. This is the same path as normal multiplayer.
         /// </summary>
         private void StartSubEditorTestRound()
         {

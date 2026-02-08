@@ -384,11 +384,9 @@ namespace Barotrauma.Networking
             {
                 SendSubEditorModeMessage(newClient);
                 
-                // Start session if not active, or add client to existing session
                 if (!isSubEditorSessionActive)
                 {
                     StartSubEditorSession(newClient);
-                    // Host gets ALL permissions (kick, ban, console, etc.)
                     newClient.GivePermission(ClientPermissions.All);
                     foreach (var command in DebugConsole.Commands)
                     {
@@ -403,8 +401,6 @@ namespace Barotrauma.Networking
                 else
                 {
                     AddClientToSubEditorSession(newClient);
-                    // Non-host clients start with no special permissions
-                    // Host can grant permissions through the standard permission UI
                     DebugConsole.NewMessage($"[SubEditor] {newClient.Name} joined as collaborator (SessionId: {newClient.SessionId})", Color.Cyan);
                 }
             }
@@ -2600,13 +2596,12 @@ namespace Barotrauma.Networking
                 return TryStartGameResult.GameModeNotSelected;
             }
             
-            // Special handling for SubEditor mode - switch to SubEditor instead of starting a game round
             if (selectedMode == GameModePreset.SubEditor)
             {
                 Log("Starting SubEditor collaborative mode...", ServerLog.MessageType.ServerMessage);
                 GameMain.IsSubEditorMode = true;
                 
-                // Tell all connected clients to enter SubEditor
+                // Tell all clients to enter SubEditor
                 foreach (var client in connectedClients)
                 {
                     SendSubEditorModeMessage(client);

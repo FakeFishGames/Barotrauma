@@ -149,13 +149,11 @@ namespace Barotrauma.Networking
             
             byte oldId = localSessionId;
             
-            // Remove old entry and add with new ID
             if (ConnectedEditors.TryGetValue(localSessionId, out var localUser))
             {
                 ConnectedEditors.Remove(localSessionId);
                 CursorPositions.Remove(localSessionId);
                 
-                // Update user's session ID and re-add
                 var updatedUser = new SubEditorUser(newSessionId, localUser.Name, localUser.ColorIndex);
                 ConnectedEditors[newSessionId] = updatedUser;
                 CursorPositions[newSessionId] = Vector2.Zero;
@@ -163,12 +161,10 @@ namespace Barotrauma.Networking
             
             localSessionId = newSessionId;
             
-            // Re-evaluate host status: if we were initially the host, stay host regardless
-            // This handles the race condition where the server-assigned ID arrives before ClientList
             if (wasInitiallyHost)
             {
                 IsHost = true;
-                lastKnownHostSessionId = newSessionId;  // Our new ID IS the host ID
+                lastKnownHostSessionId = newSessionId;
             }
             else
             {
@@ -176,7 +172,6 @@ namespace Barotrauma.Networking
             }
             DebugConsole.Log($"[SubEditor] Updated local session ID from {oldId} to {newSessionId}. Host ID: {lastKnownHostSessionId}, IsHost: {IsHost}, wasInitiallyHost: {wasInitiallyHost}");
             
-            // Notify UI to refresh (shows correct "(You)" and host status)
             OnClientListUpdated?.Invoke();
         }
 
@@ -370,10 +365,7 @@ namespace Barotrauma.Networking
                 AddUser(user);
             }
             
-            // Store the host ID so we can re-evaluate if our session ID changes later
             lastKnownHostSessionId = hostSessionId;
-            
-            // Set IsHost based on server's designation
             IsHost = (localSessionId == hostSessionId);
             DebugConsole.Log($"[SubEditor] Client list updated. Local ID: {localSessionId}, Host ID: {hostSessionId}, IsHost: {IsHost}");
             
