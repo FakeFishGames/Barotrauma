@@ -2092,29 +2092,24 @@ namespace Barotrauma
 
         private void OnCollaborativeEntityMoved(byte senderSessionId, ushort entityId, float x, float y)
         {
-            // Don't apply our own moves back to ourselves (prevents jitter during rapid moves)
             if (SubEditorNetworkingClient.Instance != null && senderSessionId == SubEditorNetworkingClient.Instance.LocalSessionId)
             {
                 return;
             }
             
             var entity = Entity.FindEntityByID(entityId) as MapEntity;
-            if (entity != null)
+            if (entity == null) return;
+
+            // Items are synced via EntityUpdated (full XML) — ignore EntityMoved for items.
+            if (entity is Item) return;
+
+            // For non-items (structures, hulls, gaps, etc.), x/y are deltas.
+            float dx = x;
+            float dy = y;
+            if (dx != 0 || dy != 0)
             {
-                // x,y are DELTAS (movement amount) from the sender, NOT absolute positions.
-                // Absolute positions don't work because entity.Rect includes HiddenSubPosition
-                // which can differ between host and client (depends on number of loaded subs,
-                // level data size, etc.). Deltas are frame-of-reference independent.
-                float dx = x;
-                float dy = y;
-                if (dx != 0 || dy != 0)
-                {
-                    entity.Move(new Vector2(dx, dy));
-                    // Update tracking so UpdateCollaborativeEntityMoves won't re-broadcast
-                    // this remote move as if it were a local change (prevents echo loops
-                    // when both clients have the same entity selected).
-                    collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
-                }
+                entity.Move(new Vector2(dx, dy));
+                collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
             }
         }
 
@@ -2202,17 +2197,62 @@ namespace Barotrauma
                 var element = doc.Root;
                 if (element == null) return;
 
-                // Check if this is a transform-only sync (has transformSyncDX/DY attributes).
-                // Transform syncs include entity.Save() XML for completeness, but we must NOT
-                // re-apply serializable properties from it, because setting Scale triggers
-                // UpdateTransform() → FindHull() → Submarine reference corruption → body position
-                // offset by HiddenSubPosition → rect overwritten from body = teleportation.
-                bool isTransformSync = element.Attribute("transformSyncDX") != null;
-
-                // Only apply serializable properties when this is NOT a transform sync.
-                // Property changes are sent separately (without transformSyncDX/DY).
-                if (!isTransformSync)
+                // For Items: read the design-time rect from XML and set position directly.
+                // This is the same approach as loading from a .sub file — the XML contains
+                // design-time coordinates (rect - HiddenSubPosition), and we add our own HSP
+                // to convert back to runtime coordinates. No Move(), no FindHull(), no
+                // UpdateTransform(), no physics corruption. Immutable per-item XML sync.
+                if (existingEntity is Item existingItem)
                 {
+                    // Read rect from XML (design-time coordinates, same as .sub file)
+                    Rectangle xmlRect = element.GetAttributeRect("rect", Rectangle.Empty);
+                    if (xmlRect != Rectangle.Empty)
+                    {
+                        // Convert design-time to runtime by adding our HiddenSubPosition
+                        Vector2 hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
+                        int runtimeX = (int)(xmlRect.X + hsp.X);
+                        int runtimeY = (int)(xmlRect.Y + hsp.Y);
+
+                        // Set rect directly — no Move(), no FindHull()
+                        existingEntity.Rect = new Rectangle(runtimeX, runtimeY, xmlRect.Width, xmlRect.Height);
+
+                        // Update physics body to match new rect center (if item has a body)
+                        if (existingItem.body != null)
+                        {
+                            // Position = center of rect = (rect.X + width/2, rect.Y - height/2)
+                            Vector2 newCenter = new Vector2(
+                                runtimeX + xmlRect.Width / 2.0f,
+                                runtimeY - xmlRect.Height / 2.0f);
+                            existingItem.body.SetTransformIgnoreContacts(
+                                FarseerPhysics.ConvertUnits.ToSimUnits(newCenter), existingItem.body.Rotation);
+                        }
+
+                        // Update tracking to prevent re-broadcast
+                        collaborativeEntityPositions[existingEntity.ID] = new Vector2(runtimeX, runtimeY);
+                    }
+
+                    // Apply serializable properties from XML, but SKIP "scale" to avoid
+                    // UpdateTransform → FindHull → body corruption chain.
+                    if (existingEntity is ISerializableEntity serializableItem && serializableItem.SerializableProperties != null)
+                    {
+                        foreach (var prop in serializableItem.SerializableProperties)
+                        {
+                            if (!prop.Value.Attributes.OfType<Serialize>().Any()) { continue; }
+                            if (prop.Value.PropertyInfo?.SetMethod == null) { continue; }
+                            // Skip Scale — it triggers UpdateTransform → FindHull → teleportation
+                            if (prop.Key == "scale") { continue; }
+                            string attrValue = element.GetAttributeString(prop.Key.Value, null);
+                            if (attrValue != null)
+                            {
+                                try { prop.Value.TrySetValue(serializableItem, attrValue); }
+                                catch { /* skip read-only properties */ }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Non-items: apply serializable properties normally (structures, hulls, gaps work fine)
                     if (existingEntity is ISerializableEntity serializableEntity && serializableEntity.SerializableProperties != null)
                     {
                         foreach (var prop in serializableEntity.SerializableProperties)
@@ -2229,39 +2269,8 @@ namespace Barotrauma
                     }
                 }
 
-                // DON'T apply rect from entity XML here. entity.Save() writes the rect with
-                // HiddenSubPosition offset subtracted and defaultRect dimensions for non-resizable axes,
-                // which corrupts entity size when applied back.
-
-                // Apply transform sync (undo/redo resize/move) using DELTAS for position.
-                // Absolute Rect values include HiddenSubPosition which differs between clients.
-                // Width/Height are HiddenSubPosition-independent so they can be set directly.
-                float transformDX = element.GetAttributeFloat("transformSyncDX", float.NaN);
-                float transformDY = element.GetAttributeFloat("transformSyncDY", float.NaN);
-                int transformW = element.GetAttributeInt("transformSyncW", -1);
-                int transformH = element.GetAttributeInt("transformSyncH", -1);
-                if (!float.IsNaN(transformDX) && !float.IsNaN(transformDY))
-                {
-                    int w = transformW > 0 ? transformW : existingEntity.Rect.Width;
-                    int h = transformH > 0 ? transformH : existingEntity.Rect.Height;
-                    // Set rect dimensions directly for resize
-                    if (w != existingEntity.Rect.Width || h != existingEntity.Rect.Height)
-                    {
-                        existingEntity.Rect = new Rectangle(existingEntity.Rect.X, existingEntity.Rect.Y, w, h);
-                    }
-                    // Apply position delta
-                    int dx = (int)transformDX;
-                    int dy = (int)transformDY;
-                    if (dx != 0 || dy != 0)
-                    {
-                        existingEntity.Move(new Vector2(dx, dy));
-                    }
-                    // Update tracking so UpdateCollaborativeEntityMoves won't re-broadcast
-                    collaborativeEntityPositions[existingEntity.ID] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
-                }
-
-                // For Items, also update ItemComponent properties (only for property syncs, not transform syncs)
-                if (!isTransformSync && existingEntity is Item item)
+                // For Items, also update ItemComponent properties and wire data
+                if (existingEntity is Item item)
                 {
                     foreach (var component in item.Components)
                     {
@@ -7377,7 +7386,7 @@ namespace Barotrauma
                     {
                         try
                         {
-                            var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                            var element = SaveEntityForSync(entity);
                             element.SetAttributeValue("ID", entity.ID);
                             SubEditorNetworkingClient.Instance.NotifyEntityPlaced(element.ToString());
                         }
@@ -7412,13 +7421,13 @@ namespace Barotrauma
                     // Also sync the items that were connected to update their ConnectionPanel
                     if (wireCmd.TargetItemId != 0 && Entity.FindEntityByID(wireCmd.TargetItemId) is Item targetItem && !targetItem.Removed)
                     {
-                        var itemElement = targetItem.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                        var itemElement = SaveEntityForSync(targetItem);
                         itemElement.SetAttributeValue("wireSync", "true");
                         SubEditorNetworkingClient.Instance.NotifyEntityUpdated(targetItem.ID, itemElement.ToString());
                     }
                     if (wireCmd.OtherItemId != 0 && Entity.FindEntityByID(wireCmd.OtherItemId) is Item otherItem && !otherItem.Removed)
                     {
-                        var itemElement = otherItem.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                        var itemElement = SaveEntityForSync(otherItem);
                         itemElement.SetAttributeValue("wireSync", "true");
                         SubEditorNetworkingClient.Instance.NotifyEntityUpdated(otherItem.ID, itemElement.ToString());
                     }
@@ -7554,7 +7563,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                            element = SaveEntityForSync(entity);
                         }
                         // Ensure the entity ID is always present in the XML.
                         // Some entity types (e.g. LinkedSubmarine) don't write "ID" in Save().
@@ -7583,7 +7592,7 @@ namespace Barotrauma
 
             try
             {
-                var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                var element = SaveEntityForSync(entity);
                 string xml = element.ToString();
                 SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, xml);
             }
@@ -7647,7 +7656,7 @@ namespace Barotrauma
                 // Wires created in wiring mode bypass StoreCommand/NotifyEntityPlaced,
                 // so the receiver may not have this wire entity yet.
                 // Send it as EntityPlaced first, then send wireSync updates for connections.
-                var wireElement = wire.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                var wireElement = SaveEntityForSync(wire.Item);
                 SubEditorNetworkingClient.Instance.NotifyEntityPlaced(wireElement.ToString());
 
                 // Now sync connected items WITH wireSync flag so their ConnectionPanel data
@@ -7656,13 +7665,13 @@ namespace Barotrauma
                 // Entity.FindEntityByID(wireId) will succeed in the ConnectionPanel processing.
                 if (conn1?.Item != null && !conn1.Item.Removed)
                 {
-                    var itemElement = conn1.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    var itemElement = SaveEntityForSync(conn1.Item);
                     itemElement.SetAttributeValue("wireSync", "true");
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn1.Item.ID, itemElement.ToString());
                 }
                 if (conn2?.Item != null && !conn2.Item.Removed)
                 {
-                    var itemElement = conn2.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    var itemElement = SaveEntityForSync(conn2.Item);
                     itemElement.SetAttributeValue("wireSync", "true");
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn2.Item.ID, itemElement.ToString());
                 }
@@ -7715,7 +7724,7 @@ namespace Barotrauma
 
             try
             {
-                var element = wire.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                var element = SaveEntityForSync(wire.Item);
                 element.SetAttributeValue("wireSync", "true");
                 SubEditorNetworkingClient.Instance.NotifyEntityUpdated(wire.Item.ID, element.ToString());
             }
@@ -7746,7 +7755,7 @@ namespace Barotrauma
                 // Serialize the full entity state (absolute sync)
                 try
                 {
-                    var element = mapEntity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    var element = SaveEntityForSync(mapEntity);
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(mapEntity.ID, element.ToString());
                 }
                 catch (Exception ex)
@@ -7757,9 +7766,39 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Send transform (move/resize) updates to other collaborative editors via full entity state sync.
-        /// Also sends EntityMoved so the receiver gets the correct position (since EntityUpdated
-        /// no longer applies rect from XML to avoid dimension corruption).
+        /// Save entity to XML, ensuring Item.Submarine is set to MainSub so that
+        /// Save() produces correct design-time coordinates (rect - HiddenSubPosition).
+        /// FindHull() can null Submarine for items with physics bodies, which makes
+        /// Save() write runtime coordinates instead of design-time.
+        /// </summary>
+        private static System.Xml.Linq.XElement SaveEntityForSync(MapEntity entity)
+        {
+            // For items, ensure Submarine is set for Save()
+            Submarine prevSub = null;
+            bool fixedUp = false;
+            if (entity is Item item && item.Submarine == null && Submarine.MainSub != null)
+            {
+                prevSub = item.Submarine;
+                item.Submarine = Submarine.MainSub;
+                fixedUp = true;
+            }
+            try
+            {
+                return entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+            }
+            finally
+            {
+                if (fixedUp && entity is Item item2)
+                {
+                    item2.Submarine = prevSub;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Send transform (move/resize) updates to other collaborative editors via full entity XML sync.
+        /// For Items, the receiver reads the design-time rect from the XML and sets position directly
+        /// (no Move(), no FindHull(), no physics corruption).
         /// </summary>
         internal void SendCollaborativeTransformUpdate(TransformCommand transformCommand)
         {
@@ -7772,22 +7811,8 @@ namespace Barotrauma
 
                 try
                 {
-                    var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
-                    // For transform sync (undo/redo resize/move), compute DELTA from the entity's
-                    // tracked position. Absolute Rect values include HiddenSubPosition which can
-                    // differ between host and client.
-                    float dx = 0, dy = 0;
-                    if (collaborativeEntityPositions.TryGetValue(entity.ID, out Vector2 prevPos))
-                    {
-                        dx = entity.Rect.X - prevPos.X;
-                        dy = entity.Rect.Y - prevPos.Y;
-                    }
-                    element.SetAttributeValue("transformSyncDX", dx);
-                    element.SetAttributeValue("transformSyncDY", dy);
-                    element.SetAttributeValue("transformSyncW", entity.Rect.Width);
-                    element.SetAttributeValue("transformSyncH", entity.Rect.Height);
+                    var element = SaveEntityForSync(entity);
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
-                    // Update our tracking position
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
                 }
                 catch (Exception ex)
@@ -7802,7 +7827,6 @@ namespace Barotrauma
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (MainSub == null) return;
             
-            // Send real-time EntityMoved updates for any selected entities whose position changed
             if (MapEntity.SelectedList.Count == 0) return;
             
             foreach (var entity in MapEntity.SelectedList)
@@ -7813,10 +7837,6 @@ namespace Barotrauma
                 // Skip wire items — their position is determined by nodes, not rect.
                 if (entity is Item wireCheck && wireCheck.GetComponent<Items.Components.Wire>() != null) continue;
                 
-                // Send DELTAS (movement amount since last frame), NOT absolute positions.
-                // Absolute Rect.X/Y values include HiddenSubPosition which can differ between
-                // host and client (depends on number of loaded subs, level data, etc.).
-                // Deltas are frame-of-reference independent and work regardless of offset.
                 ushort entityId = entity.ID;
                 float currentX = entity.Rect.X;
                 float currentY = entity.Rect.Y;
@@ -7827,8 +7847,21 @@ namespace Barotrauma
                     float dy = currentY - lastPos.Y;
                     if (dx * dx + dy * dy > 1f)
                     {
-                        // Send delta (movement amount) — receiver applies directly via Move()
-                        SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, dx, dy);
+                        if (entity is Item)
+                        {
+                            // Items: send full XML with design-time rect (immutable sync)
+                            try
+                            {
+                                var element = SaveEntityForSync(entity);
+                                SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entityId, element.ToString());
+                            }
+                            catch { }
+                        }
+                        else
+                        {
+                            // Non-items: send deltas
+                            SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, dx, dy);
+                        }
                         collaborativeEntityPositions[entityId] = new Vector2(currentX, currentY);
                     }
                 }
@@ -7880,7 +7913,7 @@ namespace Barotrauma
                         // Flip changed — send full entity XML
                         try
                         {
-                            var element = entity.Save(new XElement("EntityRoot"));
+                            var element = SaveEntityForSync(entity);
                             SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entityId, element.ToString());
                         }
                         catch { }
