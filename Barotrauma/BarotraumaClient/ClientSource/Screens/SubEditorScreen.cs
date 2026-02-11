@@ -2213,6 +2213,12 @@ namespace Barotrauma
                         int runtimeX = (int)(xmlRect.X + hsp.X);
                         int runtimeY = (int)(xmlRect.Y + hsp.Y);
 
+                        // Debug: log what we're receiving
+                        DebugConsole.NewMessage($"[SYNC-RECV] Item {entityId} xmlRect=({xmlRect.X},{xmlRect.Y},{xmlRect.Width},{xmlRect.Height}) " +
+                            $"HSP=({hsp.X},{hsp.Y}) runtime=({runtimeX},{runtimeY}) " +
+                            $"currentRect=({existingEntity.Rect.X},{existingEntity.Rect.Y},{existingEntity.Rect.Width},{existingEntity.Rect.Height}) " +
+                            $"sub={existingItem.Submarine?.ID.ToString() ?? "null"}", Color.Yellow);
+
                         // Set rect directly — no Move(), no FindHull()
                         existingEntity.Rect = new Rectangle(runtimeX, runtimeY, xmlRect.Width, xmlRect.Height);
 
@@ -7784,7 +7790,16 @@ namespace Barotrauma
             }
             try
             {
-                return entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                // Debug: log what we're saving
+                if (entity is Item debugItem)
+                {
+                    var hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
+                    DebugConsole.NewMessage($"[SYNC-SAVE] Item {entity.ID} rect=({entity.Rect.X},{entity.Rect.Y},{entity.Rect.Width},{entity.Rect.Height}) " +
+                        $"sub={debugItem.Submarine?.ID.ToString() ?? "null"} fixedUp={fixedUp} HSP=({hsp.X},{hsp.Y}) " +
+                        $"xmlRect={element.Attribute("rect")?.Value ?? "MISSING"}", Color.Cyan);
+                }
+                return element;
             }
             finally
             {
@@ -7811,6 +7826,12 @@ namespace Barotrauma
 
                 try
                 {
+                    if (entity is Item debugItem)
+                    {
+                        DebugConsole.NewMessage($"[SYNC-XFORM] Item {entity.ID} rect=({entity.Rect.X},{entity.Rect.Y}) " +
+                            $"sub={debugItem.Submarine?.ID.ToString() ?? "null"} " +
+                            $"body={debugItem.body?.Position.ToString() ?? "nobody"}", Color.Lime);
+                    }
                     var element = SaveEntityForSync(entity);
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
@@ -7847,6 +7868,11 @@ namespace Barotrauma
                     float dy = currentY - lastPos.Y;
                     if (dx * dx + dy * dy > 1f)
                     {
+                        if (entity is Item debugItem2)
+                        {
+                            DebugConsole.NewMessage($"[SYNC-MOVE] Item {entityId} cur=({currentX},{currentY}) last=({lastPos.X},{lastPos.Y}) " +
+                                $"delta=({dx},{dy}) sub={debugItem2.Submarine?.ID.ToString() ?? "null"}", Color.Orange);
+                        }
                         if (entity is Item)
                         {
                             // Items: send full XML with design-time rect (immutable sync)
