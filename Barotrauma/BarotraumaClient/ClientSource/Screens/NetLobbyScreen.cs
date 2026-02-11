@@ -577,6 +577,7 @@ namespace Barotrauma
             foreach (GameModePreset mode in GameModePreset.List)
             {
                 if (mode.IsSinglePlayer) { continue; }
+                if (!mode.Votable) { continue; }
 
                 var modeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), ModeList.Content.RectTransform), style: null)
                 {

@@ -984,7 +984,10 @@ namespace Barotrauma.Networking
                 case SubEditorPacketHeader.EnterSubEditor:
                     DebugConsole.Log("[SubEditor] Server requested SubEditor mode - switching screens");
                     
-                    if (Screen.Selected != GameMain.SubEditorScreen)
+                    // Don't switch screens while EndGame coroutine is still running —
+                    // it will call Submarine.Unload() which destroys anything we restore,
+                    // then it calls Select() itself after unloading. Let EndGame handle it.
+                    if (Screen.Selected != GameMain.SubEditorScreen && !CoroutineManager.IsCoroutineRunning("EndGame"))
                     {
                         Entity.Spawner?.Remove();
                         Entity.Spawner = null;
@@ -1019,8 +1022,25 @@ namespace Barotrauma.Networking
                     ReadSubEditorClientList(inc);
                     break;
                 case SubEditorPacketHeader.SyncSubmarine:
-                    string submarineXml = inc.ReadString();
-                    SubEditorNetworkingClient.Instance?.ReceiveSubmarineSync(submarineXml);
+                    // Read compressed submarine data
+                    int compressedLen = inc.ReadInt32();
+                    int uncompressedLen = inc.ReadInt32();
+                    byte[] compressedData = inc.ReadBytes(compressedLen);
+                    string decompressedXml = "";
+                    try
+                    {
+                        using (var ms = new System.IO.MemoryStream(compressedData))
+                        using (var gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress))
+                        using (var reader = new System.IO.StreamReader(gzip, System.Text.Encoding.UTF8))
+                        {
+                            decompressedXml = reader.ReadToEnd();
+                        }
+                    }
+                    catch (Exception decompEx)
+                    {
+                        DebugConsole.AddWarning($"[SubEditor] Failed to decompress submarine sync: {decompEx.Message}");
+                    }
+                    SubEditorNetworkingClient.Instance?.ReceiveSubmarineSync(decompressedXml);
                     break;
                 case SubEditorPacketHeader.StartTestMode:
                     SubEditorNetworkingClient.Instance?.ReceiveTestModeStart();
@@ -1049,6 +1069,17 @@ namespace Barotrauma.Networking
                     float movedX = inc.ReadSingle();
                     float movedY = inc.ReadSingle();
                     SubEditorNetworkingClient.Instance?.ReceiveEntityMoved(movedSender, movedId, movedX, movedY);
+                    break;
+                case SubEditorPacketHeader.EntitiesMovedBatch:
+                    byte batchSender = inc.ReadByte();
+                    ushort batchCount = inc.ReadUInt16();
+                    for (int i = 0; i < batchCount; i++)
+                    {
+                        ushort batchEntityId = inc.ReadUInt16();
+                        float batchDx = inc.ReadSingle();
+                        float batchDy = inc.ReadSingle();
+                        SubEditorNetworkingClient.Instance?.ReceiveEntityMoved(batchSender, batchEntityId, batchDx, batchDy);
+                    }
                     break;
                 case SubEditorPacketHeader.EntityPropertyChanged:
                     byte propSender = inc.ReadByte();
@@ -1302,12 +1333,38 @@ namespace Barotrauma.Networking
 
                 characterInfo?.Remove();
 
+                // Clean up collaborative SubEditor session on disconnect, preserving submarine state
+                string preservedSubXml = null;
+                if (SubEditorNetworkingClient.Instance?.IsActive == true)
+                {
+                    // Snapshot submarine before disconnect destroys it
+                    if (Screen.Selected is SubEditorScreen && Submarine.MainSub != null)
+                    {
+                        try
+                        {
+                            var subElement = new System.Xml.Linq.XElement("Submarine");
+                            Submarine.MainSub.SaveToXElement(subElement);
+                            preservedSubXml = subElement.ToString();
+                        }
+                        catch { /* best-effort */ }
+                    }
+                    SubEditorNetworkingClient.Instance.LeaveSession();
+                    GameMain.SubEditorScreen.UpdateCollaborativeSessionUI();
+                }
+
                 VoipClient?.Dispose();
                 VoipClient = null;
                 GameMain.Client = null;
                 GameMain.GameSession = null;
 
                 ReturnToPreviousMenu(null, null);
+                
+                // Restore submarine after disconnect (ReturnToPreviousMenu calls Submarine.Unload + Select which creates empty sub)
+                if (!string.IsNullOrEmpty(preservedSubXml))
+                {
+                    GameMain.SubEditorScreen.LoadSubmarineFromXml(preservedSubXml, "disconnect restore");
+                }
+                
                 if (disconnectPacket.DisconnectReason != DisconnectReason.Disconnected)
                 {
                     new GUIMessageBox(TextManager.Get(wasConnected ? "ConnectionLost" : "CouldNotConnectToServer"), disconnectPacket.PopupMessage)
@@ -2118,7 +2175,10 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosEnabled = false;
             RespawnManager = null;
 
-            if (Screen.Selected == GameMain.GameScreen)
+            // Skip the slow end-round camera transition when returning from SubEditor test mode
+            bool skipEndCinematic = Level.IsSubEditorTestMode || SubEditorNetworkingClient.Instance?.IsActive == true;
+
+            if (Screen.Selected == GameMain.GameScreen && !skipEndCinematic)
             {
                 Submarine refSub = Submarine.MainSub;
                 if (Submarine.MainSubs[1] != null &&
@@ -2154,6 +2214,7 @@ namespace Barotrauma.Networking
                 // If we're in SubEditor collaborative mode, return to SubEditor instead of lobby
                 if (SubEditorNetworkingClient.Instance?.IsActive == true)
                 {
+                    Level.IsSubEditorTestMode = false;
                     GameMain.SubEditorScreen.Select(enableAutoSave: false);
                     DebugConsole.Log("[SubEditor] Returned to SubEditor from test mode");
                 }
@@ -2929,13 +2990,9 @@ namespace Barotrauma.Networking
                     }
                     SubmarineInfo.AddToSavedSubs(newSub);
                     
-                    // In SubEditor collaborative mode, load the received submarine (but not during test mode)
-                    if (Screen.Selected == GameMain.SubEditorScreen && SubEditorNetworkingClient.Instance?.IsActive == true
-                        && !Level.IsSubEditorTestMode && GameMain.GameSession?.IsRunning != true)
-                    {
-                        DebugConsole.NewMessage($"[SubEditor] Submarine file received, loading: {newSub.Name}", Microsoft.Xna.Framework.Color.Green);
-                        GameMain.SubEditorScreen.LoadSub(newSub);
-                    }
+                    // NOTE: We no longer auto-load submarine files into the SubEditor here.
+                    // Real-time sync uses XML-based SyncSubmarine packets instead of file transfers.
+                    // File transfers are only used for test mode (TryStartGame needs a .sub file).
 
                     for (int i = 0; i < 2; i++)
                     {

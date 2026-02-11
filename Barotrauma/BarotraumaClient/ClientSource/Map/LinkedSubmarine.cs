@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
@@ -10,8 +11,61 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    partial class LinkedSubmarinePrefab : MapEntityPrefab
+    {
+        partial void OnLinkedSubCreated(LinkedSubmarine linkedSub)
+        {
+            SubEditorScreen.StoreCommand(
+                new AddOrDeleteCommand(new List<MapEntity> { linkedSub }, false));
+        }
+    }
+
     partial class LinkedSubmarine : MapEntity
     {
+        private Sprite previewSprite;
+
+        /// <summary>
+        /// Loads the preview image from the saveElement's "previewimage" Base64 attribute,
+        /// or from the linked submarine file if the attribute is not present.
+        /// </summary>
+        private void LoadPreviewImage()
+        {
+            // Try to load from saveElement first (available when created from file path)
+            string previewData = saveElement?.GetAttributeString("previewimage", "") ?? "";
+
+            // If saveElement doesn't have a preview (e.g. received via network sync where it's stripped),
+            // try to load from the local submarine file
+            if (string.IsNullOrEmpty(previewData) && !string.IsNullOrEmpty(filePath))
+            {
+                try
+                {
+                    var doc = SubmarineInfo.OpenFile(filePath);
+                    previewData = doc?.Root?.GetAttributeString("previewimage", "") ?? "";
+                }
+                catch (Exception) { /* file may not exist locally — preview will just not show */ }
+            }
+
+            if (string.IsNullOrEmpty(previewData)) { return; }
+            try
+            {
+                using var mem = new System.IO.MemoryStream(Convert.FromBase64String(previewData));
+                var texture = TextureLoader.FromStream(mem, compress: false);
+                if (texture != null)
+                {
+                    previewSprite = new Sprite(texture, sourceRectangle: null, newOffset: null);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.AddWarning($"[LinkedSub] Failed to load preview image: {e.Message}");
+            }
+        }
+
+        partial void OnDummyCreated()
+        {
+            LoadPreviewImage();
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing || wallVertices == null) { return; }
@@ -37,6 +91,58 @@ namespace Barotrauma
             if (IsSelected) { color = GUIStyle.Red; }
 
             Vector2 pos = drawPos;
+
+            // Draw preview image scaled to match the real submarine proportions.
+            // The preview image covers allEntityBounds (all entities including waypoints).
+            // The wallVertices bounding box covers only structures.
+            // We compute the scale from image pixels to world units, then position the
+            // structure portion of the image to align with the wallVertices box.
+            if (previewSprite?.Texture != null && wallVertices != null && wallVertices.Count > 0
+                && allEntityBounds.Width > 0 && allEntityBounds.Height > 0)
+            {
+                float wallMinX = wallVertices.Min(v => v.X);
+                float wallMaxX = wallVertices.Max(v => v.X);
+                float wallMinY = wallVertices.Min(v => v.Y);
+                float wallMaxY = wallVertices.Max(v => v.Y);
+                float wallW = wallMaxX - wallMinX;
+                float wallH = wallMaxY - wallMinY;
+                
+                int imgW = previewSprite.Texture.Width;
+                int imgH = previewSprite.Texture.Height;
+                
+                // The image maps allEntityBounds to the full image.
+                // Scale: world units per pixel
+                float worldPerPixelX = (float)allEntityBounds.Width / imgW;
+                float worldPerPixelY = (float)allEntityBounds.Height / imgH;
+                // Use uniform scale (should be nearly equal)
+                float worldPerPixel = Math.Max(worldPerPixelX, worldPerPixelY);
+                
+                // Full image size in world units
+                float imgWorldW = imgW * worldPerPixel;
+                float imgWorldH = imgH * worldPerPixel;
+                
+                // Center of allEntityBounds in local coordinates
+                float allCenterX = allEntityBounds.X + allEntityBounds.Width / 2f;
+                float allCenterY = allEntityBounds.Y + allEntityBounds.Height / 2f;
+                
+                // Center of wall box in local coordinates  
+                float wallCenterX = (wallMinX + wallMaxX) / 2f;
+                float wallCenterY = (wallMinY + wallMaxY) / 2f;
+                
+                // Offset from image center to wall center (in world units)
+                float offsetX = wallCenterX - allCenterX;
+                float offsetY = wallCenterY - allCenterY;
+                
+                // Draw the full image centered at the wall center minus the offset
+                float drawCenterX = pos.X + wallCenterX - offsetX;
+                float drawCenterY = -(pos.Y + wallCenterY - offsetY);
+                
+                var destRect = new Rectangle(
+                    (int)(drawCenterX - imgWorldW / 2f),
+                    (int)(drawCenterY - imgWorldH / 2f),
+                    (int)imgWorldW, (int)imgWorldH);
+                spriteBatch.Draw(previewSprite.Texture, destRect, null, Color.White * 0.35f * alpha);
+            }
 
             for (int i = 0; i < wallVertices.Count; i++)
             {
@@ -168,6 +274,7 @@ namespace Barotrauma
             saveElement = doc.Root;
             saveElement.Name = "LinkedSubmarine";
             CargoCapacity = doc.Root.GetAttributeInt("cargocapacity", 0);
+            LoadPreviewImage();
 
             filePath = pathBox.Text;
 

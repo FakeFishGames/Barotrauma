@@ -36,10 +36,16 @@ namespace Barotrauma
             Aliases = Name.Value.ToEnumerable().ToImmutableHashSet();
         }
 
+        partial void OnLinkedSubCreated(LinkedSubmarine linkedSub);
+
         protected override void CreateInstance(Rectangle rect)
         {
             System.Diagnostics.Debug.Assert(Submarine.MainSub != null);
-            LinkedSubmarine.CreateDummy(Submarine.MainSub, subInfo.FilePath, rect.Location.ToVector2());
+            var linkedSub = LinkedSubmarine.CreateDummy(Submarine.MainSub, subInfo.FilePath, rect.Location.ToVector2());
+            if (linkedSub != null)
+            {
+                OnLinkedSubCreated(linkedSub);
+            }
         }
     }
 
@@ -48,6 +54,9 @@ namespace Barotrauma
         private List<Vector2> wallVertices;
 
         private string filePath;
+        public string FilePath => filePath;
+
+        partial void OnDummyCreated();
 
         private bool loadSub;
         public bool LoadSub => loadSub;
@@ -115,6 +124,7 @@ namespace Barotrauma
             sl.saveElement = doc.Root;
             sl.saveElement.Name = "LinkedSubmarine";
             sl.saveElement.SetAttributeValue("filepath", filePath);
+            sl.OnDummyCreated();
 
             return sl;
         }
@@ -157,12 +167,37 @@ namespace Barotrauma
             return sl;
         }
 
+        /// <summary>
+        /// Bounds of ALL entities in the sub XML (matches CalculateDimensions(false)).
+        /// Used to compute the correct scale ratio for the preview image.
+        /// </summary>
+        private Rectangle allEntityBounds;
+
         private void GenerateWallVertices(XElement rootElement)
         {
             List<Vector2> points = new List<Vector2>();
+            float allMinX = float.MaxValue, allMinY = float.MaxValue;
+            float allMaxX = float.MinValue, allMaxY = float.MinValue;
 
             foreach (XElement element in rootElement.Elements())
             {
+                // Compute all-entity bounds (for preview image scaling).
+                // Must match what CalculateDimensions(onlyHulls: false) includes:
+                // Items, Structures, Hulls — but NOT WayPoints, Gaps, LinkedSubmarines.
+                XName elemName = element.Name;
+                if (elemName == "Item" || elemName == "Structure" || elemName == "Hull")
+                {
+                    var r = element.GetAttributeVector4("rect", Vector4.Zero);
+                    if (r != Vector4.Zero)
+                    {
+                        allMinX = Math.Min(allMinX, r.X);
+                        allMaxX = Math.Max(allMaxX, r.X + r.Z);
+                        allMinY = Math.Min(allMinY, r.Y - r.W);
+                        allMaxY = Math.Max(allMaxY, r.Y);
+                    }
+                }
+
+                // Only structures contribute to wall vertices
                 if (element.Name != "Structure") { continue; }
 
                 string name = element.GetAttributeString("name", "");
@@ -173,17 +208,24 @@ namespace Barotrauma
 
                 float scale = element.GetAttributeFloat("scale", prefab.Scale);
 
-                var rect = element.GetAttributeVector4("rect", Vector4.Zero);
-                if (!prefab.ResizeHorizontal) { rect.Z *= scale / prefab.Scale; }
-                if (!prefab.ResizeVertical) { rect.W *= scale / prefab.Scale; }
+                var structRect = element.GetAttributeVector4("rect", Vector4.Zero);
+                if (!prefab.ResizeHorizontal) { structRect.Z *= scale / prefab.Scale; }
+                if (!prefab.ResizeVertical) { structRect.W *= scale / prefab.Scale; }
 
-                points.Add(new Vector2(rect.X, rect.Y));
-                points.Add(new Vector2(rect.X + rect.Z, rect.Y));
-                points.Add(new Vector2(rect.X, rect.Y - rect.W));
-                points.Add(new Vector2(rect.X + rect.Z, rect.Y - rect.W));
+                points.Add(new Vector2(structRect.X, structRect.Y));
+                points.Add(new Vector2(structRect.X + structRect.Z, structRect.Y));
+                points.Add(new Vector2(structRect.X, structRect.Y - structRect.W));
+                points.Add(new Vector2(structRect.X + structRect.Z, structRect.Y - structRect.W));
             }
 
             wallVertices = MathUtils.GiftWrap(points);
+            
+            if (allMinX < float.MaxValue)
+            {
+                allEntityBounds = new Rectangle(
+                    (int)allMinX, (int)allMinY,
+                    (int)(allMaxX - allMinX), (int)(allMaxY - allMinY));
+            }
         }
 
         // LinkedSubmarine.Load() is called from MapEntity.LoadAll()
@@ -191,12 +233,42 @@ namespace Barotrauma
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
             LinkedSubmarine linkedSub;
-            idRemap.AssignMaxId(out ushort id);
+            // In the SubEditor, use the ID from the XML if present (collaborative sync
+            // needs matching IDs between host and client). Outside the editor, or when
+            // no ID attribute exists, assign a new ID via IdRemap.
+            int xmlId = element.GetAttributeInt("ID", 0);
+            ushort id;
+            if (Screen.Selected == GameMain.SubEditorScreen && xmlId > 0)
+            {
+                id = (ushort)xmlId;
+            }
+            else
+            {
+                idRemap.AssignMaxId(out id);
+            }
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
-                linkedSub = CreateDummy(submarine, element, pos, id);
-                linkedSub.saveElement = new XElement(element);
+                // If this is a compact network sync (filepath but no child elements),
+                // load the submarine file locally to get Structure data for wallVertices.
+                XElement dummyElement = element;
+                string fp = element.GetAttributeContentPath("filepath")?.Value ?? string.Empty;
+                if (!element.HasElements && !string.IsNullOrEmpty(fp))
+                {
+                    try
+                    {
+                        var subDoc = SubmarineInfo.OpenFile(fp);
+                        if (subDoc?.Root != null)
+                        {
+                            dummyElement = new ContentXElement(element.ContentPackage, subDoc.Root);
+                            dummyElement?.SetAttributeValue("filepath", fp);
+                        }
+                    }
+                    catch { /* file may not exist locally — fallback to compact element */ }
+                }
+                linkedSub = CreateDummy(submarine, dummyElement, pos, id);
+                linkedSub.saveElement = new XElement(dummyElement);
                 linkedSub.purchasedLostShuttles = false;
+                linkedSub.OnDummyCreated();
             }
             else
             {
@@ -236,7 +308,9 @@ namespace Barotrauma
             linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
             linkedSub.CargoCapacity = element.GetAttributeInt("cargocapacity", 0);
 
-            return linkedSub.loadSub ? linkedSub : null;
+            // In the SubEditor, always return the entity (it's needed for collaborative sync + rendering).
+            // Outside the editor, only return if loadSub is true (gameplay load conditions met).
+            return (Screen.Selected is { IsEditor: true } || linkedSub.loadSub) ? linkedSub : null;
         }
 
         public void LinkDummyToMainSubmarine()
@@ -431,12 +505,12 @@ namespace Barotrauma
                 if (this.saveElement == null)
                 {
                     var doc = SubmarineInfo.OpenFile(filePath);
-                    saveElement = doc.Root;
+                    saveElement = new XElement(doc.Root);
                     saveElement.Add(new XAttribute("filepath", filePath));
                 }
                 else
                 {
-                    saveElement = this.saveElement;
+                    saveElement = new XElement(this.saveElement);
                 }
                 saveElement.Name = "LinkedSubmarine";
 

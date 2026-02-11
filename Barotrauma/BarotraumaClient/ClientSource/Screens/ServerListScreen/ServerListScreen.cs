@@ -537,7 +537,16 @@ namespace Barotrauma
             {
                 if (mode.IsSinglePlayer) { continue; }
 
-                var selectionTick = addTickBox(mode.Identifier, mode.Name, defaultState: true, addTooltip: true);
+                // Use a fallback display name for modes whose localization key doesn't exist (e.g. SubEditor)
+                LocalizedString displayName = mode.Name;
+                if (string.IsNullOrWhiteSpace(displayName.Value))
+                {
+                    displayName = new RawLString(mode.Identifier.Value.Length > 0
+                        ? char.ToUpper(mode.Identifier.Value[0]) + mode.Identifier.Value.Substring(1)
+                        : mode.Identifier.Value);
+                }
+
+                var selectionTick = addTickBox(mode.Identifier, displayName, defaultState: true, addTooltip: true);
                 selectionTick.UserData = mode.Identifier;
                 gameModeTickBoxes.Add(mode.Identifier, selectionTick);
             }
@@ -989,6 +998,22 @@ namespace Barotrauma
                 PutMsgInServerList(MsgUserData.NoMatchingServers);
             }
             serverList.UpdateScrollBarSize();
+        }
+
+        /// <summary>
+        /// Set game mode filters: uncheck all modes, then check only the specified ones.
+        /// Used by SubEditor's "Join" button to pre-filter for SubEditor mode servers.
+        /// </summary>
+        /// <param name="enabledModes">The game mode identifiers to enable in the filter.</param>
+        public void SetGameModeFilter(params Identifier[] enabledModes)
+        {
+            if (gameModeTickBoxes == null) { return; }
+            var enabledSet = new HashSet<Identifier>(enabledModes);
+            foreach (var kvp in gameModeTickBoxes)
+            {
+                kvp.Value.Selected = enabledSet.Contains(kvp.Key);
+            }
+            FilterServers();
         }
 
         private bool AllLanguagesVisible

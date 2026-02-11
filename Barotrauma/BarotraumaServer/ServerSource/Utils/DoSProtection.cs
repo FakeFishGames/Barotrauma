@@ -48,6 +48,11 @@ namespace Barotrauma
             public int PacketCount;
 
             /// <summary>
+            /// When true, packet counting is paused (e.g. during SubEditor processing).
+            /// </summary>
+            public bool SkipPacketCount;
+
+            /// <summary>
             /// Resets the strikes and packet count.
             /// </summary>
             public void ResetStrikes()
@@ -139,15 +144,32 @@ namespace Barotrauma
         {
             if (GetData(client) is not { } data) { return; }
 
-            data.PacketCount++;
+            if (!data.SkipPacketCount)
+            {
+                data.PacketCount++;
+            }
+            data.SkipPacketCount = false;
             data.Stopwatch.Stop();
             UpdateOffense(client, data);
         }
 
-        // stops the clock but doesn't update offenses
-        private void PauseFor(Client client) => GetData(client)?.Stopwatch.Stop();
+        // stops the clock and skips packet counting for this packet
+        private void PauseFor(Client client)
+        {
+            if (GetData(client) is { } data)
+            {
+                data.Stopwatch.Stop();
+                data.SkipPacketCount = true;
+            }
+        }
 
-        private void ResumeFor(Client client) => GetData(client)?.Stopwatch.Start();
+        private void ResumeFor(Client client)
+        {
+            if (GetData(client) is { } data)
+            {
+                data.Stopwatch.Start();
+            }
+        }
 
         private void UpdateOffense(Client client, OffenseData data)
         {

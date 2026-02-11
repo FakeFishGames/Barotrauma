@@ -19,6 +19,8 @@ namespace Barotrauma.Networking
         private string subEditorCurrentSubPath;
         private string subEditorCurrentSubName;
         private string subEditorStoredSubmarineXml;
+        private byte[] subEditorStoredSubmarineCompressed;
+        private int subEditorStoredSubmarineUncompressedLength;
 
         /// <summary>
         /// Whether a collaborative SubEditor session is currently active.
@@ -70,6 +72,9 @@ namespace Barotrauma.Networking
                     break;
                 case SubEditorPacketHeader.EntityMoved:
                     HandleEntityMoved(inc, sender);
+                    break;
+                case SubEditorPacketHeader.EntitiesMovedBatch:
+                    HandleEntitiesMovedBatch(inc, sender);
                     break;
                 case SubEditorPacketHeader.EntityPropertyChanged:
                     HandleEntityPropertyChanged(inc, sender);
@@ -135,6 +140,36 @@ namespace Barotrauma.Networking
                 msg.WriteUInt16(entityId);
                 msg.WriteSingle(posX);
                 msg.WriteSingle(posY);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
+        private void HandleEntitiesMovedBatch(IReadMessage inc, Client sender)
+        {
+            ushort count = inc.ReadUInt16();
+            // Read all moves first, then relay as a batch to each client
+            var moves = new List<(ushort entityId, float dx, float dy)>(count);
+            for (int i = 0; i < count; i++)
+            {
+                ushort entityId = inc.ReadUInt16();
+                float dx = inc.ReadSingle();
+                float dy = inc.ReadSingle();
+                moves.Add((entityId, dx, dy));
+            }
+
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.EntitiesMovedBatch);
+                msg.WriteByte((byte)sender.SessionId);
+                msg.WriteUInt16((ushort)moves.Count);
+                foreach (var (entityId, dx, dy) in moves)
+                {
+                    msg.WriteUInt16(entityId);
+                    msg.WriteSingle(dx);
+                    msg.WriteSingle(dy);
+                }
                 serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
         }
@@ -303,15 +338,17 @@ namespace Barotrauma.Networking
             // Send updated client list to everyone
             SendSubEditorClientList();
             
-            // Send current submarine state to the new client
-            if (!string.IsNullOrEmpty(subEditorStoredSubmarineXml))
+            // Send current submarine state to the new client (compressed)
+            if (subEditorStoredSubmarineCompressed != null && subEditorStoredSubmarineCompressed.Length > 0)
             {
                 IWriteMessage subMsg = new WriteOnlyMessage();
                 subMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                 subMsg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
-                subMsg.WriteString(subEditorStoredSubmarineXml);
+                subMsg.WriteInt32(subEditorStoredSubmarineCompressed.Length);
+                subMsg.WriteInt32(subEditorStoredSubmarineUncompressedLength);
+                subMsg.WriteBytes(subEditorStoredSubmarineCompressed, 0, subEditorStoredSubmarineCompressed.Length);
                 serverPeer?.Send(subMsg, client.Connection, DeliveryMethod.Reliable);
-                DebugConsole.Log($"[SubEditor] Sent stored submarine to new client {client.Name}");
+                DebugConsole.Log($"[SubEditor] Sent stored submarine to new client {client.Name} ({subEditorStoredSubmarineCompressed.Length} compressed bytes)");
             }
             else
             {
@@ -542,8 +579,8 @@ namespace Barotrauma.Networking
             
             SendSubEditorClientList();
             
-            // Send stored submarine XML to non-host clients for state restoration
-            if (!string.IsNullOrEmpty(subEditorStoredSubmarineXml))
+            // Send stored compressed submarine to non-host clients for state restoration
+            if (subEditorStoredSubmarineCompressed != null && subEditorStoredSubmarineCompressed.Length > 0)
             {
                 foreach (var client in connectedClients)
                 {
@@ -551,7 +588,9 @@ namespace Barotrauma.Networking
                     IWriteMessage subMsg = new WriteOnlyMessage();
                     subMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                     subMsg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
-                    subMsg.WriteString(subEditorStoredSubmarineXml);
+                    subMsg.WriteInt32(subEditorStoredSubmarineCompressed.Length);
+                    subMsg.WriteInt32(subEditorStoredSubmarineUncompressedLength);
+                    subMsg.WriteBytes(subEditorStoredSubmarineCompressed, 0, subEditorStoredSubmarineCompressed.Length);
                     serverPeer?.Send(subMsg, client.Connection, DeliveryMethod.Reliable);
                 }
                 DebugConsole.Log("[SubEditor] Sent stored submarine to non-host clients");
@@ -585,6 +624,17 @@ namespace Barotrauma.Networking
         private void StartSubEditorTestRound()
         {
             Level.IsSubEditorTestMode = true;
+
+            // Notify all clients BEFORE starting the round so they can snapshot their submarine state.
+            // Without this, non-host clients never save preTestSubmarineXml and lose their edits
+            // when returning from test mode.
+            foreach (var client in connectedClients)
+            {
+                IWriteMessage startTestMsg = new WriteOnlyMessage();
+                startTestMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                startTestMsg.WriteByte((byte)SubEditorPacketHeader.StartTestMode);
+                serverPeer?.Send(startTestMsg, client.Connection, DeliveryMethod.Reliable);
+            }
 
             string tempPath = Path.Combine("Submarines", "_SubEditorTestMode.sub");
             if (!System.IO.File.Exists(tempPath))
@@ -682,13 +732,31 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            // Read the submarine XML
-            string submarineXml = inc.ReadString();
+            // Read compressed submarine data
+            int compressedLength = inc.ReadInt32();
+            int uncompressedLength = inc.ReadInt32();
+            byte[] compressedBytes = inc.ReadBytes(compressedLength);
 
-            // Store it so we can send to newly joining clients
-            subEditorStoredSubmarineXml = submarineXml;
+            // Store compressed data for newly joining clients
+            subEditorStoredSubmarineCompressed = compressedBytes;
+            subEditorStoredSubmarineUncompressedLength = uncompressedLength;
+            // Also decompress and store XML string for backward compat
+            try
+            {
+                using (var ms = new System.IO.MemoryStream(compressedBytes))
+                using (var gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress))
+                using (var reader = new System.IO.StreamReader(gzip, System.Text.Encoding.UTF8))
+                {
+                    subEditorStoredSubmarineXml = reader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugConsole.AddWarning($"[SubEditor] Failed to decompress submarine XML for storage: {ex.Message}");
+                subEditorStoredSubmarineXml = "";
+            }
 
-            // Relay to all other clients
+            // Relay compressed data to all other clients
             foreach (var client in connectedClients)
             {
                 if (client == sender) continue;
@@ -696,11 +764,13 @@ namespace Barotrauma.Networking
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                 msg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
-                msg.WriteString(submarineXml);
+                msg.WriteInt32(compressedLength);
+                msg.WriteInt32(uncompressedLength);
+                msg.WriteBytes(compressedBytes, 0, compressedBytes.Length);
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
 
-            DebugConsole.Log("[SubEditor] Submarine synced from host");
+            DebugConsole.Log($"[SubEditor] Submarine synced from host ({compressedLength} compressed bytes, {uncompressedLength} uncompressed)");
         }
 
         /// <summary>

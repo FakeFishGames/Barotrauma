@@ -24,6 +24,24 @@ namespace Barotrauma.Items.Components
         public static Color editorHighlightColor = Color.Yellow;
         public static Color editorSelectedColor = Color.Red;
 
+        /// <summary>
+        /// Callback invoked when a wire node is moved in the SubEditor.
+        /// Parameters: wire, nodeIndex, oldPosition, newPosition.
+        /// </summary>
+        public static Action<Wire, int, Vector2, Vector2> OnSubEditorNodeMoved;
+
+        /// <summary>
+        /// Callback invoked when a wire node is added in the SubEditor.
+        /// Parameters: wire, nodeIndex, nodePosition.
+        /// </summary>
+        public static Action<Wire, int, Vector2> OnSubEditorNodeAdded;
+
+        /// <summary>
+        /// Callback invoked when a wire node is removed in the SubEditor.
+        /// Parameters: wire, nodeIndex, nodePosition.
+        /// </summary>
+        public static Action<Wire, int, Vector2> OnSubEditorNodeRemoved;
+
         public partial class WireSection
         {
             public VertexPositionColorTexture[] vertices;
@@ -105,6 +123,8 @@ namespace Barotrauma.Items.Components
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
+        /// <summary>Stores the node position at the start of a drag, for undo tracking.</summary>
+        private static Vector2 nodeDragStartPos;
 
         public Vector2 DrawSize
         {
@@ -192,7 +212,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (Width * wireSprite.size.Y * Screen.Selected.Cam.Zoom < 1.0f) { return; }
+            if (Screen.Selected is not { IsEditor: true } && Screen.Selected?.Cam != null && Width * wireSprite.size.Y * Screen.Selected.Cam.Zoom < 1.0f) { return; }
 
             Vector2 drawOffset = GetDrawOffset() + offset;
 
@@ -456,6 +476,15 @@ namespace Barotrauma.Items.Components
                 //cancel dragging
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
+                    // Fire node move event for undo tracking if a node was actually moved
+                    if (selectedNodeIndex.HasValue && selectedNodeIndex.Value < draggingWire.nodes.Count)
+                    {
+                        Vector2 finalPos = draggingWire.nodes[selectedNodeIndex.Value];
+                        if (finalPos != nodeDragStartPos)
+                        {
+                            OnSubEditorNodeMoved?.Invoke(draggingWire, selectedNodeIndex.Value, nodeDragStartPos, finalPos);
+                        }
+                    }
                     draggingWire = null;
                     selectedNodeIndex = null;
                 }
@@ -496,6 +525,11 @@ namespace Barotrauma.Items.Components
                             PlayerInput.IsShiftDown())
                         {
                             selectedNodeIndex = highlightedNodeIndex;
+                            // Capture start position for undo tracking
+                            if (selectedNodeIndex.HasValue && selectedNodeIndex.Value < draggingWire.nodes.Count)
+                            {
+                                nodeDragStartPos = draggingWire.nodes[selectedNodeIndex.Value];
+                            }
                         }
                     }
 
@@ -535,6 +569,7 @@ namespace Barotrauma.Items.Components
                             {
                                 selectedWire.nodes.Insert(closestSectionIndex + 1, mousePos);
                                 selectedWire.UpdateSections();
+                                OnSubEditorNodeAdded?.Invoke(selectedWire, closestSectionIndex + 1, mousePos);
                             }
                         }
                     }
@@ -567,8 +602,10 @@ namespace Barotrauma.Items.Components
                             //remove the node
                             else if (PlayerInput.SecondaryMouseButtonClicked() && closestIndex > 0 && closestIndex < selectedWire.nodes.Count - 1)
                             {
+                                Vector2 removedPos = selectedWire.nodes[closestIndex];
                                 selectedWire.nodes.RemoveAt(closestIndex);
                                 selectedWire.UpdateSections();
+                                OnSubEditorNodeRemoved?.Invoke(selectedWire, closestIndex, removedPos);
                             } 
                             // if only one end of the wire is disconnect pick it back up with double click
                             else if (doubleClicked && equippedWire == null && Character.Controlled != null && selectedWire.connections.Any(conn => conn != null))

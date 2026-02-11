@@ -152,13 +152,21 @@ namespace Barotrauma
                 if (entity.linkedTo.Contains(this) || linkedTo.Contains(entity) || rClick)
                 {
                     entity.linkedTo.Remove(this);
-                    linkedTo.Remove(entity);                    
+                    linkedTo.Remove(entity);
+                    // Store undo step for unlink
+                    SubEditorScreen.StoreCommand(new LinkCommand(LinkCommand.LinkCommandType.Unlink, this.ID, entity.ID));
                 }
                 else
                 {
                     if (!entity.linkedTo.Contains(this)) { entity.linkedTo.Add(this); }
-                    if (!linkedTo.Contains(this)) { linkedTo.Add(entity); }
+                    if (!linkedTo.Contains(entity)) { linkedTo.Add(entity); }
+                    // Store undo step for link
+                    SubEditorScreen.StoreCommand(new LinkCommand(LinkCommand.LinkCommandType.Link, this.ID, entity.ID));
                 }
+
+                // Sync link changes to other collaborative editors
+                GameMain.SubEditorScreen?.SyncLinkedEntityState(this);
+                GameMain.SubEditorScreen?.SyncLinkedEntityState(entity);
             }
         }
 
@@ -332,7 +340,9 @@ namespace Barotrauma
 
             float alpha = 1.0f;
             float hideTimeAfterEdit = 3.0f;
-            if (lastAmbientLightEditTime > Timing.TotalTime - hideTimeAfterEdit * 2.0f)
+            // Skip the gradual opacity fade-in when in the SubEditor — hulls should appear
+            // at full opacity immediately instead of slowly fading in after ambient light edits
+            if (Screen.Selected != GameMain.SubEditorScreen && lastAmbientLightEditTime > Timing.TotalTime - hideTimeAfterEdit * 2.0f)
             {
                 alpha = Math.Min((float)(Timing.TotalTime - lastAmbientLightEditTime) / hideTimeAfterEdit - 1.0f, 1.0f);
             }
@@ -442,10 +452,12 @@ namespace Barotrauma
                             (int)(Submarine.DrawPosition.Y + WorldPosition.Y),
                             WorldRect.Width, WorldRect.Height);
 
+                    // Scale link width with zoom so links stay visible when zoomed out (min 2px screen-space)
+                    float linkWidth = Math.Max(2f, 4f / Screen.Selected.Cam.Zoom);
                     GUI.DrawLine(spriteBatch,
                         new Vector2(currentHullRect.X, -currentHullRect.Y),
                         new Vector2(connectedHullRect.X, -connectedHullRect.Y),
-                        GUIStyle.Green, width: 2);
+                        GUIStyle.Green, width: linkWidth);
                 }
             }
         }

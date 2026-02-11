@@ -21,6 +21,18 @@ namespace Barotrauma.Items.Components
         public float FlashTimer { get; private set; }
         public static Wire DraggingConnected { get; private set; }
 
+        /// <summary>
+        /// Callback invoked when a wire is connected to a pin in the SubEditor.
+        /// Parameters: wire, thisConnection, otherConnection (may be null).
+        /// </summary>
+        public static Action<Wire, Connection, Connection> OnSubEditorWireConnected;
+
+        /// <summary>
+        /// Callback invoked when a wire is disconnected from a pin in the SubEditor.
+        /// Parameters: wire, disconnectedConnection.
+        /// </summary>
+        public static Action<Wire, Connection> OnSubEditorWireDisconnected;
+
         private static float ConnectionSpriteSize => 35.0f * GUI.Scale;
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Rectangle dragArea, Character character, 
@@ -163,6 +175,15 @@ namespace Barotrauma.Items.Components
                         if (DraggingConnected.Connections[0]?.ConnectionPanel == panel ||
                             DraggingConnected.Connections[1]?.ConnectionPanel == panel)
                         {
+                            // Capture connection info before disconnecting for undo tracking
+                            Connection disconnectedFrom = null;
+                            if (Screen.Selected == GameMain.SubEditorScreen)
+                            {
+                                disconnectedFrom = DraggingConnected.Connections[0]?.ConnectionPanel == panel
+                                    ? DraggingConnected.Connections[0]
+                                    : DraggingConnected.Connections[1];
+                            }
+
                             DraggingConnected.RemoveConnection(panel.Item);
                             if (DraggingConnected.Item.ParentInventory == null)
                             {
@@ -171,6 +192,12 @@ namespace Barotrauma.Items.Components
                             else if (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null)
                             {
                                 DraggingConnected.ClearConnections(user: Character.Controlled);
+                            }
+
+                            // Notify SubEditor of wire disconnection for undo tracking
+                            if (disconnectedFrom != null)
+                            {
+                                OnSubEditorWireDisconnected?.Invoke(DraggingConnected, disconnectedFrom);
                             }
                         }
                     }
@@ -313,6 +340,12 @@ namespace Barotrauma.Items.Components
                             {
                                 var otherConnection = DraggingConnected.OtherConnection(this);
                                 ConnectWire(DraggingConnected);
+
+                                // Notify SubEditor of wire connection for undo tracking
+                                if (Screen.Selected == GameMain.SubEditorScreen)
+                                {
+                                    OnSubEditorWireConnected?.Invoke(DraggingConnected, this, otherConnection);
+                                }
                             }
                         }
                     }

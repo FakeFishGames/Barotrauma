@@ -59,7 +59,9 @@ namespace Barotrauma.Networking
         /// <summary>Full entity state update (absolute sync, like .sub file format)</summary>
         EntityUpdated,
         /// <summary>Full submarine state as XML (all entities, like loading a .sub file)</summary>
-        FullState
+        FullState,
+        /// <summary>Batch of entity moves (multiple entities moved in one packet)</summary>
+        EntitiesMovedBatch
     }
 
     /// <summary>
@@ -157,6 +159,16 @@ namespace Barotrauma.Networking
         /// Current cursor positions of all users.
         /// </summary>
         public Dictionary<byte, Vector2> CursorPositions { get; } = new Dictionary<byte, Vector2>();
+
+        /// <summary>
+        /// Get the color for a user by color index.
+        /// </summary>
+        public static Color GetUserColor(byte colorIndex)
+        {
+            return colorIndex < SubEditorUser.UserColors.Length
+                ? SubEditorUser.UserColors[colorIndex]
+                : Color.White;
+        }
 
         /// <summary>
         /// Whether we are currently in a collaborative editing session.

@@ -121,12 +121,14 @@ namespace Barotrauma
             }
             else
             {
+                // Scale link width with zoom so links stay visible when zoomed out (min 5px screen-space)
+                float waypointLinkWidth = Math.Max(5f, 6f / Screen.Selected.Cam.Zoom);
                 foreach (MapEntity e in linkedTo)
                 {
                     GUI.DrawLine(spriteBatch,
                         drawPos,
                         new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                        (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: 5, depth: 0.002f);
+                        (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: waypointLinkWidth, depth: 0.002f);
                 }
             }
             
@@ -230,18 +232,28 @@ namespace Barotrauma
                         {
                             linkedTo.Remove(e);
                             e.linkedTo.Remove(this);
+                            // Store undo step for unlink
+                            SubEditorScreen.StoreCommand(new LinkCommand(LinkCommand.LinkCommandType.Unlink, this.ID, e.ID));
                         }
                         else
                         {
                             linkedTo.Add(e);
                             e.linkedTo.Add(this);
+                            // Store undo step for link
+                            SubEditorScreen.StoreCommand(new LinkCommand(LinkCommand.LinkCommandType.Link, this.ID, e.ID));
                         }
+
+                        // Sync link changes to other collaborative editors
+                        GameMain.SubEditorScreen?.SyncLinkedEntityState(this);
+                        GameMain.SubEditorScreen?.SyncLinkedEntityState(e);
                     }
                 }
                 else
                 {
                     FindHull();
                     // Update gaps, ladders, and stairs
+                    var prevGap = ConnectedGap;
+                    var prevLadders = Ladders;
                     UpdateLinkedEntity(position, Gap.GapList, gap => ConnectedGap = gap, gap =>
                     {
                         if (ConnectedGap == gap)
@@ -268,6 +280,11 @@ namespace Barotrauma
                         }
                     }, inflate: 5);
                     FindStairs();
+                    // Sync waypoint state if ladder or gap association changed
+                    if (ConnectedGap != prevGap || Ladders != prevLadders)
+                    {
+                        GameMain.SubEditorScreen?.SyncLinkedEntityState(this);
+                    }
                     // TODO: Cannot check the rectangle, since the rectangle is not rotated -> Need to use the collider.
                     //var stairList = mapEntityList.Where(me => me is Structure s && s.StairDirection != Direction.None).Select(me => me as Structure);
                     //UpdateLinkedEntity(position, stairList, s =>

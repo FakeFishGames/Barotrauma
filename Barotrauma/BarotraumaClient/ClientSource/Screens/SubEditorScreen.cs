@@ -283,6 +283,12 @@ namespace Barotrauma
         private GUIFrame undoBufferPanel;
         private GUIFrame undoBufferDisclaimer;
         private GUIListBox undoBufferList;
+        private GUILayoutGroup undoTabBar;
+        private GUILayoutGroup undoSubTabBar;
+        private string undoActiveTab = "all"; // "all", "local", or a session ID
+        private string undoActiveSubTab = "edits"; // "edits" or "wires"
+        /// <summary>Tracks all users who have ever been in the session, for persistent tabs.</summary>
+        private readonly Dictionary<string, string> undoTabUsers = new Dictionary<string, string>();
 
         private GUIDropDown linkedSubBox;
 
@@ -302,10 +308,14 @@ namespace Barotrauma
         private Dictionary<ushort, (bool flipX, bool flipY)> collaborativeFlipStates = new Dictionary<ushort, (bool, bool)>();
         /// <summary>Owner key used to authenticate host with the SubEditor server.</summary>
         private int collaborativeOwnerKey;
+        /// <summary>Password used for the hosted SubEditor server (so host auto-authenticates).</summary>
+        private string collaborativePassword = "";
         /// <summary>Snapshot of in-memory sub XML before entering test mode, for restoring on return.</summary>
         private string preTestSubmarineXml;
-        /// <summary>Time when we last restored from preTestSubmarineXml, to block incoming syncs briefly.</summary>
-        private double preTestRestoreTime;
+        /// <summary>Set to true after restoring from preTestSubmarineXml, blocks incoming SyncSubmarine until cleared.</summary>
+        private bool ignoreSubmarineSync;
+        /// <summary>Set to true to suppress the auto-sync in LoadSub (used during programmatic loads that handle sync separately).</summary>
+        private bool suppressLoadSubAutoSync;
         /// <summary>Track if an entity was being dragged last frame to detect drag-end.</summary>
 
         /// <summary>
@@ -866,44 +876,93 @@ namespace Barotrauma
 
             Vector2 subPanelSize = new Vector2(0.925f, 0.9f);
 
-            undoBufferPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.2f), GUI.Canvas) { MinSize = new Point(200, 200) })
+            undoBufferPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.55f), GUI.Canvas) { MinSize = new Point(650, 500) })
             {
                 Visible = false
             };
 
-            undoBufferList = new GUIListBox(new RectTransform(subPanelSize, undoBufferPanel.RectTransform, Anchor.Center))
+            var undoPanelLayout = new GUILayoutGroup(new RectTransform(subPanelSize, undoBufferPanel.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            // LEFT column: user tabs (scrollable, only visible in collaborative host mode)
+            undoTabBar = new GUILayoutGroup(new RectTransform(new Vector2(0.22f, 1.0f), undoPanelLayout.RectTransform), isHorizontal: false)
+            {
+                Stretch = false,
+                Visible = false,
+                RelativeSpacing = 0.005f
+            };
+
+            // RIGHT column: subtabs + list + undo button
+            var undoRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.78f, 1.0f), undoPanelLayout.RectTransform), isHorizontal: false)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            // Subtab bar: Edits / Wires (at top of right column)
+            undoSubTabBar = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), undoRightColumn.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            undoBufferList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.92f), undoRightColumn.RectTransform))
             {
                 PlaySoundOnSelect = true,
                 ScrollBarVisible = true,
                 OnSelected = (_, userData) =>
                 {
-                    int index;
-                    if (userData is Command command)
+                    if (userData is not Command command) 
                     {
-                        index = Commands.IndexOf(command);
+                        // Clicked "beginning" — undo everything
+                        Undo(commandIndex);
+                        return true;
+                    }
+
+                    bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
+                    
+                    // In collaborative mode: CAD-style selective removal
+                    if (isCollaborativeSession)
+                    {
+                        RemoveCommandFromStack(command);
                     }
                     else
                     {
-                        index = -1;
-                    }
+                        // Standard linear undo behavior for single-player
+                        int index = Commands.IndexOf(command);
+                        int diff = index - commandIndex;
+                        int amount = Math.Abs(diff);
 
-                    int diff = index- commandIndex;
-                    int amount = Math.Abs(diff);
-
-                    if (diff >= 0)
-                    {
-                        Redo(amount + 1);
+                        if (diff >= 0)
+                        {
+                            Redo(amount + 1);
+                        }
+                        else
+                        {
+                            Undo(amount - 1);
+                        }
                     }
-                    else
-                    {
-                        Undo(amount - 1);
-                    }
-
                     return true;
                 }
             };
 
-            undoBufferDisclaimer = new GUIFrame(new RectTransform(subPanelSize, undoBufferPanel.RectTransform, Anchor.Center), style: null)
+            // "Undo Latest" button at bottom of right column
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.04f), undoRightColumn.RectTransform), "Undo Latest")
+            {
+                Font = GUIStyle.SmallFont,
+                OnClicked = (btn, data) =>
+                {
+                    UndoLatestFromCurrentTab();
+                    return true;
+                }
+            };
+
+            // Disclaimer overlay: placed on the panel itself (NOT in the layout group)
+            // so it doesn't affect the layout calculations for the list.
+            undoBufferDisclaimer = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.5f), undoBufferPanel.RectTransform, Anchor.Center), style: null)
             {
                 Color = Color.Black,
                 Visible = false
@@ -1320,7 +1379,7 @@ namespace Barotrauma
                 }
                 catch (Exception ex)
                 {
-                    DebugConsole.ThrowError($"[SubEditor] Failed to save temp sub for test mode: {ex.Message}");
+                    DebugConsole.AddWarning($"[SubEditor] Failed to save temp sub for test mode: {ex.Message}");
                 }
                 
                 // Sync the current XML to the server so it has the latest state
@@ -1438,36 +1497,71 @@ namespace Barotrauma
             var msgBox = new GUIMessageBox(
                 TextManager.Get("SubEditorHostSession").Fallback("Host Collaborative Session"), "",
                 new LocalizedString[] { TextManager.Get("Start").Fallback("Start"), TextManager.Get("Cancel") },
-                relativeSize: new Vector2(0.3f, 0.35f), minSize: new Point(400, 250));
+                relativeSize: new Vector2(0.35f, 0.55f), minSize: new Point(450, 450));
             
             msgBox.Content.ChildAnchor = Anchor.TopCenter;
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter)
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.75f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.02f
             };
 
             // Server name
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform),
-                TextManager.Get("ServerName").Fallback("Session Name"), textAlignment: Alignment.CenterLeft);
-            var nameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+                TextManager.Get("ServerName").Fallback("Server Name"), textAlignment: Alignment.CenterLeft);
+            var nameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform))
             {
                 Text = $"{MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor")}'s Session",
                 MaxTextLength = NetConfig.ServerNameMaxLength
             };
 
+            // Password
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+                TextManager.Get("Password").Fallback("Password (optional)"), textAlignment: Alignment.CenterLeft);
+            var passwordBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform))
+            {
+                Censor = true,
+                OverflowClip = true
+            };
+
             // Port
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
                 TextManager.Get("Port").Fallback("Port"), textAlignment: Alignment.CenterLeft);
-            var portBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform))
+            var portBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform))
             {
                 Text = NetConfig.DefaultPort.ToString()
             };
 
+            // Max players
+            var maxPlayersGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), maxPlayersGroup.RectTransform),
+                TextManager.Get("MaxPlayers").Fallback("Max Players"), textAlignment: Alignment.CenterLeft);
+            var maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), maxPlayersGroup.RectTransform))
+            {
+                Text = "16"
+            };
+
+            // Public toggle
+            var publicGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), publicGroup.RectTransform),
+                TextManager.Get("PublicServer").Fallback("Public (visible in server browser)"), textAlignment: Alignment.CenterLeft);
+            var isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), publicGroup.RectTransform), "")
+            {
+                Selected = false
+            };
+
             // Info text
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), content.RectTransform),
-                TextManager.Get("SubEditorHostInfo").Fallback("Others can join using your IP address and port."), 
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform),
+                TextManager.Get("SubEditorHostInfo").Fallback("Others can join using your IP address and port, or find your server in the server browser if public."), 
                 textAlignment: Alignment.Center, wrap: true, font: GUIStyle.SmallFont)
             {
                 TextColor = Color.Gray
@@ -1482,7 +1576,13 @@ namespace Barotrauma
                     return false;
                 }
 
-                StartHostingSession(nameBox.Text, port);
+                if (!int.TryParse(maxPlayersBox.Text, out int maxPlayers) || maxPlayers < 1 || maxPlayers > NetConfig.MaxPlayers)
+                {
+                    maxPlayersBox.Flash(Color.Red);
+                    return false;
+                }
+
+                StartHostingSession(nameBox.Text, port, passwordBox.Text, isPublicBox.Selected, maxPlayers);
                 msgBox.Close();
                 return true;
             };
@@ -1499,53 +1599,15 @@ namespace Barotrauma
         {
             SubEditorNetworkingClient.Instance?.LeaveSession();
             collaborativeEventHandlersSetup = false;
+
+            // Open the server browser with SubEditor mode filter pre-checked
+            if (GameMain.ServerListScreen != null)
+            {
+                // Pre-filter to show only SubEditor-mode servers
+                GameMain.ServerListScreen.SetGameModeFilter("subeditor".ToIdentifier());
+                GameMain.ServerListScreen.Select();
+            }
             
-            var msgBox = new GUIMessageBox(
-                TextManager.Get("SubEditorJoinSession").Fallback("Join Collaborative Session"), "",
-                new LocalizedString[] { TextManager.Get("ServerListJoin").Fallback("Join"), TextManager.Get("Cancel") },
-                relativeSize: new Vector2(0.3f, 0.25f), minSize: new Point(400, 200));
-            
-            msgBox.Content.ChildAnchor = Anchor.TopCenter;
-
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.5f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
-
-            // Server address
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform),
-                TextManager.Get("ServerEndpoint").Fallback("Server IP:Port"), textAlignment: Alignment.CenterLeft);
-            var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.4f), content.RectTransform))
-            {
-                Text = $"127.0.0.1:{NetConfig.DefaultPort}"
-            };
-
-            var joinButton = msgBox.Buttons[0];
-            joinButton.OnClicked = (btn, userdata) =>
-            {
-                if (Endpoint.Parse(endpointBox.Text).TryUnwrap(out var endpoint))
-                {
-                    JoinCollaborativeSession(endpoint);
-                    msgBox.Close();
-                }
-                else if (LidgrenEndpoint.ParseFromWithHostNameCheck(endpointBox.Text, tryParseHostName: true).TryUnwrap(out var lidgrenEndpoint))
-                {
-                    JoinCollaborativeSession(lidgrenEndpoint);
-                    msgBox.Close();
-                }
-                else
-                {
-                    new GUIMessageBox(TextManager.Get("error"), 
-                        TextManager.GetWithVariable("invalidipaddress", "[serverip]:[port]", endpointBox.Text)
-                            .Fallback($"Invalid address: {endpointBox.Text}"));
-                    endpointBox.Flash(Color.Red);
-                }
-                return true;
-            };
-
-            msgBox.Buttons[1].OnClicked = msgBox.Close;
-
             return true;
         }
 
@@ -1553,7 +1615,7 @@ namespace Barotrauma
         /// Start hosting a collaborative editing session.
         /// Starts a DedicatedServer in SubEditor mode, then connects to it as a client.
         /// </summary>
-        private void StartHostingSession(string sessionName, int port)
+        private void StartHostingSession(string sessionName, int port, string password = "", bool isPublic = false, int maxPlayers = 16)
         {
             try
             {
@@ -1574,22 +1636,33 @@ namespace Barotrauma
                 // Generate owner key for host identification
                 int ownerKey = Math.Max(Lidgren.Network.CryptoRandom.Instance.Next(), 1);
                 collaborativeOwnerKey = ownerKey;
+                collaborativePassword = password ?? "";
                 
                 // Build command line arguments for the server
                 var arguments = new List<string>
                 {
                     "-name", sessionName,
                     "-port", port.ToString(),
-                    "-public", "false",  // SubEditor sessions are private
+                    "-public", isPublic.ToString().ToLowerInvariant(),
                     "-playstyle", PlayStyle.Casual.ToString(),
                     "-karmaenabled", "false",
-                    "-maxplayers", "16",
+                    "-maxplayers", maxPlayers.ToString(),
                     "-language", GameSettings.CurrentConfig.Language.ToString(),
-                    "-nopassword",
                     "-requireauthentication", "false",  // Allow LAN connections without Steam/EOS auth
                     "-subeditormode", "true",
                     "-ownerkey", ownerKey.ToString()
                 };
+
+                // Add password if provided
+                if (!string.IsNullOrEmpty(password))
+                {
+                    arguments.Add("-password");
+                    arguments.Add(password);
+                }
+                else
+                {
+                    arguments.Add("-nopassword");
+                }
                 
                 // Configure the server process
                 var processInfo = new System.Diagnostics.ProcessStartInfo
@@ -1623,18 +1696,26 @@ namespace Barotrauma
                 catch { /* Ignore */ }
                 connectionInfo.Add($"Localhost: 127.0.0.1:{port}");
                 
+                string connectionMessage = isPublic
+                    ? "Server is public - others can find it in the server browser.\nDirect connect also available:"
+                    : "Share this with others to join via direct connect:";
+                
+                if (!string.IsNullOrEmpty(password))
+                {
+                    connectionMessage += "\nPassword protected: Yes";
+                }
+                
                 new GUIMessageBox(
                     TextManager.Get("SubEditorSessionStarted").Fallback("SubEditor Session Started"),
-                    TextManager.Get("SubEditorShareConnectionInfo").Fallback("Share this with others to join via direct connect:") + 
-                    "\n\n" + string.Join("\n", connectionInfo) +
-                    "\n\nNote: Others can use 'Join' button or 'Join Game' > 'Direct Connect'.");
+                    connectionMessage + 
+                    "\n\n" + string.Join("\n", connectionInfo));
                 
                 // Connect to own server after brief startup delay
                 CoroutineManager.StartCoroutine(ConnectToHostedServer(port, playerName), "SubEditorHostConnect");
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("[SubEditor] Failed to start server", e);
+                DebugConsole.AddWarning("[SubEditor] Failed to start server: " + e.Message);
                 new GUIMessageBox(TextManager.Get("error"), 
                     TextManager.Get("SubEditorHostFailed").Fallback("Failed to start session: ") + e.Message);
             }
@@ -1660,13 +1741,19 @@ namespace Barotrauma
                     serverName: "SubEditor Host",
                     Option.Some(collaborativeOwnerKey));
                 
+                // Auto-authenticate with the server password so the host doesn't get a password prompt
+                if (!string.IsNullOrEmpty(collaborativePassword))
+                {
+                    GameMain.Client.ClientPeer.AutomaticallyAttemptedPassword = collaborativePassword;
+                }
+                
                 DebugConsole.Log($"[SubEditor] Host connecting to own server at 127.0.0.1:{port}");
                 
                 UpdateCollaborativeSessionUI();
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("[SubEditor] Host failed to connect to own server", e);
+                DebugConsole.AddWarning("[SubEditor] Host failed to connect to own server: " + e.Message);
             }
             
             yield return CoroutineStatus.Success;
@@ -1695,7 +1782,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("[SubEditor] Failed to join session", e);
+                DebugConsole.AddWarning("[SubEditor] Failed to join session: " + e.Message);
                 new GUIMessageBox(TextManager.Get("error"), 
                     TextManager.Get("SubEditorJoinFailed").Fallback("Failed to join: ") + e.Message);
             }
@@ -1765,6 +1852,19 @@ namespace Barotrauma
         /// </summary>
         private void LeaveCollaborativeSession()
         {
+            // Preserve the current submarine state so it's not lost when disconnecting.
+            string preservedSubXml = null;
+            if (MainSub != null)
+            {
+                try
+                {
+                    var element = new XElement("Submarine");
+                    MainSub.SaveToXElement(element);
+                    preservedSubXml = element.ToString();
+                }
+                catch { /* best-effort */ }
+            }
+
             SubEditorNetworkingClient.Instance?.LeaveSession();
             collaborativeEventHandlersSetup = false;
             isApplyingRemoteChange = false;
@@ -1775,6 +1875,13 @@ namespace Barotrauma
             // If we were the host, kill the server process too
             ChildServerRelay.AttemptGracefulShutDown();
             
+            // Restore submarine from snapshot — the disconnect flow calls Submarine.Unload()
+            // then Select() which creates an empty sub, so MainSub won't be null but it'll be empty.
+            if (!string.IsNullOrEmpty(preservedSubXml))
+            {
+                LoadSubmarineFromXml(preservedSubXml, "session-leave restore");
+            }
+
             UpdateCollaborativeSessionUI();
         }
 
@@ -1824,7 +1931,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("[SubEditor] Failed to save temp sub for test mode", e);
+                DebugConsole.AddWarning("[SubEditor] Failed to save temp sub for test mode: " + e.Message);
             }
         }
 
@@ -1921,14 +2028,44 @@ namespace Barotrauma
                 if (loadedEntity != null && SubEditorNetworkingClient.Instance?.IsHost == true)
                 {
                     isApplyingRemoteChange = true;
-                    StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { loadedEntity }, wasDeleted: false));
+                    var cmd = new AddOrDeleteCommand(new List<MapEntity> { loadedEntity }, wasDeleted: false);
+                    cmd.AuthorSessionId = senderSessionId.ToString();
+                    StoreCommand(cmd);
                     isApplyingRemoteChange = false;
+                }
+
+                // entity.Save() writes rect as (rect - HiddenSubPosition), i.e. design-time coordinates.
+                // Item.Load() creates the entity at those design-time coordinates.
+                // But all existing entities in the sub are at design-time + HiddenSubPosition
+                // (applied by the Submarine constructor during loading).
+                // So we must apply the same offset to match the submarine's coordinate space.
+                // This is the same thing the Submarine constructor does for all entities.
+                if (loadedEntity != null)
+                {
+                    if (Submarine.MainSub != null)
+                    {
+                        loadedEntity.Move(Submarine.MainSub.HiddenSubPosition);
+                    }
+                    
+                    // For wire items, ensure sections are created for rendering.
+                    // Wire.Load() adds nodes but does NOT call UpdateSections().
+                    if (loadedEntity is Item loadedItem)
+                    {
+                        var wire = loadedItem.GetComponent<Items.Components.Wire>();
+                        if (wire != null)
+                        {
+                            wire.UpdateSections();
+                        }
+                    }
+                    
+                    // Track position for movement sync
+                    collaborativeEntityPositions[loadedEntity.ID] = loadedEntity.WorldPosition;
                 }
             }
             catch (Exception ex)
             {
                 isApplyingRemoteChange = false;
-                DebugConsole.ThrowError($"[SubEditor] Failed to load entity from XML: {ex.Message}");
+                DebugConsole.AddWarning($"[SubEditor] Failed to load entity from XML: {ex.Message}");
             }
         }
 
@@ -1943,7 +2080,9 @@ namespace Barotrauma
                 if (SubEditorNetworkingClient.Instance?.IsHost == true)
                 {
                     isApplyingRemoteChange = true;
-                    StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { entity }, wasDeleted: true));
+                    var cmd = new AddOrDeleteCommand(new List<MapEntity> { entity }, wasDeleted: true);
+                    cmd.AuthorSessionId = senderSessionId.ToString();
+                    StoreCommand(cmd);
                     isApplyingRemoteChange = false;
                 }
                 
@@ -1960,30 +2099,22 @@ namespace Barotrauma
             }
             
             var entity = Entity.FindEntityByID(entityId) as MapEntity;
-            if (entity == null) return;
-            
-            // The sender sends design-time coordinates (rect minus MainSub.HSP).
-            // Convert back to runtime coordinates by adding our MainSub.HSP.
-            var hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
-            int runtimeX = (int)(x + hsp.X);
-            int runtimeY = (int)(y + hsp.Y);
-            
-            // Compute delta from current rect to target rect
-            var oldRect = entity.Rect;
-            Vector2 delta = new Vector2(runtimeX - oldRect.X, runtimeY - oldRect.Y);
-            
-            // Use Move() to update both rect and physics body position
-            entity.Move(delta);
-            
-            // Fix up Submarine reference: Move() calls FindHull() which can null entity.Submarine
-            // for items with physics bodies (due to HSP mismatch). Restore it to MainSub.
-            if (entity.Submarine == null && Submarine.MainSub != null)
+            if (entity != null)
             {
-                entity.Submarine = Submarine.MainSub;
-            }
-            if (entity is Item item && item.body != null)
-            {
-                item.body.Submarine = Submarine.MainSub;
+                // x,y are the sender's ABSOLUTE WorldPosition.
+                // Compute the delta needed to move our entity to match.
+                entity.Move(new Vector2(x, y) - entity.WorldPosition);
+                
+                // Fix up Submarine reference: Move() calls FindHull() which can null entity.Submarine
+                // for items with physics bodies. Restore it to MainSub so subsequent syncs work correctly.
+                if (entity.Submarine == null && Submarine.MainSub != null)
+                {
+                    entity.Submarine = Submarine.MainSub;
+                }
+                if (entity is Item item && item.body != null && item.body.Submarine == null)
+                {
+                    item.body.Submarine = Submarine.MainSub;
+                }
             }
         }
 
@@ -2071,7 +2202,7 @@ namespace Barotrauma
                 var element = doc.Root;
                 if (element == null) return;
 
-                // Apply all serializable properties from the XML to the existing entity
+                // Apply all serializable properties from the XML
                 if (existingEntity is ISerializableEntity serializableEntity && serializableEntity.SerializableProperties != null)
                 {
                     foreach (var prop in serializableEntity.SerializableProperties)
@@ -2087,28 +2218,10 @@ namespace Barotrauma
                     }
                 }
 
-                // Apply position from XML rect attribute (using Barotrauma's GetAttributeRect)
-                // Note: entity.Save() writes rect MINUS Submarine.HiddenSubPosition for file storage.
-                // To apply back to entity.Rect (which is in runtime coords), we ADD MainSub.HiddenSubPosition back.
-                // ALWAYS use MainSub.HSP, not entity.Submarine.HSP, because entity.Submarine can be null after FindHull.
-                var savedRect = element.GetAttributeRect("rect", Rectangle.Empty);
-                if (savedRect != Rectangle.Empty && savedRect.Width > 0 && savedRect.Height > 0)
-                {
-                    var hiddenPos = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
-                    var newRect = new Rectangle(
-                        (int)(savedRect.X + hiddenPos.X),
-                        (int)(savedRect.Y + hiddenPos.Y),
-                        Math.Max(1, savedRect.Width),
-                        Math.Max(1, savedRect.Height));
-                    existingEntity.Rect = newRect;
-                    
-                    // For Items with physics bodies, also update the body position to match the new rect
-                    if (existingEntity is Item itemForBody && itemForBody.body != null)
-                    {
-                        Vector2 simPos = FarseerPhysics.ConvertUnits.ToSimUnits(new Vector2(newRect.X + newRect.Width / 2f, newRect.Y - newRect.Height / 2f));
-                        itemForBody.body.SetTransformIgnoreContacts(simPos, itemForBody.body.Rotation);
-                    }
-                }
+                // DON'T apply rect from entity XML here. entity.Save() writes the rect with
+                // HiddenSubPosition offset subtracted and defaultRect dimensions for non-resizable axes,
+                // which corrupts entity size when applied back.
+                // Entity position changes are handled separately via EntityMoved packets.
 
                 // For Items, also update ItemComponent properties
                 if (existingEntity is Item item)
@@ -2124,6 +2237,132 @@ namespace Barotrauma
                             {
                                 try { prop.Value.TrySetValue(component, attrValue); }
                                 catch { /* skip read-only properties */ }
+                            }
+                        }
+                        
+                        // Update wire node positions from XML
+                        if (component is Items.Components.Wire wire)
+                        {
+                            // Find the Wire component element in the XML
+                            foreach (var subElem in element.Elements())
+                            {
+                                string nodesAttr = subElem.Attribute("nodes")?.Value;
+                                if (nodesAttr != null)
+                                {
+                                    var newNodes = Items.Components.Wire.ExtractNodes(subElem).ToList();
+                                    if (newNodes.Count > 0)
+                                    {
+                                        wire.SetNodes(newNodes);
+                                        wire.UpdateSections();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Wire node positions and connections are synced separately via
+                    // SyncWireAndConnectedItems which sets wireSync="true" flag.
+                    // Only process ConnectionPanel wire data when this flag is present.
+                    // Property-only updates (color, etc.) include stale ConnectionPanel data
+                    // that would corrupt wire state if applied.
+                    bool isWireSync = element.GetAttributeBool("wireSync", false);
+                    if (isWireSync)
+                    {
+                        // Find ConnectionPanel and apply wire connections from XML.
+                        // Item XML structure: <Item><ConnectionPanel><input name="..."><link w="id"/></input></ConnectionPanel></Item>
+                        // So we must navigate: element → ConnectionPanel element → input/output elements → link elements
+                        var connPanel = item.GetComponent<Items.Components.ConnectionPanel>();
+                        if (connPanel != null)
+                        {
+                            // Find the ConnectionPanel sub-element (input/output are nested inside it)
+                            foreach (var compElem in element.Elements())
+                            {
+                                string compName = compElem.Name.ToString().ToLowerInvariant();
+                                if (compName != "connectionpanel") continue;
+                                
+                                // Now iterate input/output elements inside ConnectionPanel
+                                foreach (var subElem in compElem.Elements())
+                                {
+                                    string elemName = subElem.Name.ToString().ToLowerInvariant();
+                                    if (elemName != "input" && elemName != "output") continue;
+                                    
+                                    string connName = subElem.GetAttributeString("name", "");
+                                    var conn = connPanel.Connections.FirstOrDefault(c => c.Name == connName);
+                                    if (conn == null) continue;
+                                    
+                                    // Collect wire IDs from XML links
+                                    var xmlWireIds = new HashSet<ushort>();
+                                    foreach (var linkElem in subElem.Elements("link"))
+                                    {
+                                        ushort wireId = (ushort)linkElem.GetAttributeInt("w", 0);
+                                        if (wireId > 0) xmlWireIds.Add(wireId);
+                                    }
+                                    
+                                    // Disconnect wires not in XML
+                                    foreach (var existingWire in conn.Wires.ToList())
+                                    {
+                                        if (!xmlWireIds.Contains(existingWire.Item.ID))
+                                        {
+                                            // Create WireCommand on host for undo tracking (wiring subtab)
+                                            if (SubEditorNetworkingClient.Instance?.IsHost == true)
+                                            {
+                                                var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn);
+                                                disconnCmd.AuthorSessionId = senderSessionId.ToString();
+                                                StoreCommand(disconnCmd);
+                                            }
+                                            conn.DisconnectWire(existingWire);
+                                            existingWire.RemoveConnection(conn);
+                                        }
+                                    }
+                                    
+                                    // Connect wires from XML that aren't already connected
+                                    foreach (ushort wireId in xmlWireIds)
+                                    {
+                                        if (Entity.FindEntityByID(wireId) is Item wireItem)
+                                        {
+                                            var wire = wireItem.GetComponent<Items.Components.Wire>();
+                                            if (wire != null && !conn.Wires.Contains(wire))
+                                            {
+                                                conn.ConnectWire(wire);
+                                                wire.TryConnect(conn, addNode: false);
+                                                // Update wire sections for rendering (Wire needs sections to draw)
+                                                wire.UpdateSections();
+                                                // Create WireCommand on host for undo tracking (wiring subtab)
+                                                if (SubEditorNetworkingClient.Instance?.IsHost == true)
+                                                {
+                                                    var otherConn = wire.OtherConnection(conn);
+                                                    var connectCmd = new WireCommand(WireCommandType.Connect, wire, conn, otherConn);
+                                                    connectCmd.AuthorSessionId = senderSessionId.ToString();
+                                                    StoreCommand(connectCmd);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break; // only one ConnectionPanel per item
+                            }
+                        }
+
+                        // Also apply wire node positions from XML when wireSync is set
+                        foreach (var component in item.Components)
+                        {
+                            if (component is Items.Components.Wire wire)
+                            {
+                                foreach (var subElem in element.Elements())
+                                {
+                                    string nodesAttr = subElem.Attribute("nodes")?.Value;
+                                    if (nodesAttr != null)
+                                    {
+                                        var newNodes = Items.Components.Wire.ExtractNodes(subElem).ToList();
+                                        if (newNodes.Count > 0)
+                                        {
+                                            wire.SetNodes(newNodes);
+                                            wire.UpdateSections();
+                                        }
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -2148,57 +2387,100 @@ namespace Barotrauma
                 // Update flip state tracker so property change detection doesn't re-trigger
                 collaborativeFlipStates[existingEntity.ID] = (existingEntity.FlippedX, existingEntity.FlippedY);
 
-                // Apply linked entities (waypoints, hull gaps, etc.)
-                string linkedToStr = element.GetAttributeString("linkedto", null);
-                if (linkedToStr != null && existingEntity != null)
+                // For WayPoints, apply special properties that aren't standard serializable properties
+                if (existingEntity is WayPoint wp)
                 {
-                    // Clear existing links
-                    existingEntity.linkedTo.Clear();
-                    
-                    // Parse and re-link
+                    // SpawnType
+                    string spawnStr = element.GetAttributeString("spawn", null);
+                    if (spawnStr != null && Enum.TryParse<SpawnType>(spawnStr, out SpawnType newSpawnType))
+                    {
+                        wp.SpawnType = newSpawnType;
+                    }
+                    // Ladder association
+                    int ladderId = element.GetAttributeInt("ladders", 0);
+                    if (ladderId > 0)
+                    {
+                        if (Entity.FindEntityByID((ushort)ladderId) is Item ladderItem)
+                        {
+                            wp.Ladders = ladderItem.GetComponent<Items.Components.Ladder>();
+                        }
+                    }
+                    else
+                    {
+                        wp.Ladders = null;
+                    }
+                    // Gap association
+                    int gapId = element.GetAttributeInt("gap", 0);
+                    if (gapId > 0)
+                    {
+                        wp.ConnectedGap = Entity.FindEntityByID((ushort)gapId) as Gap;
+                    }
+                    else
+                    {
+                        wp.ConnectedGap = null;
+                    }
+                }
+
+                // Apply linked entities (waypoints, hull gaps, etc.)
+                // Item.Save() writes: linked="id1,id2" (single attribute, comma-separated)
+                // WayPoint.Save() writes: linkedto0="id1", linkedto1="id2" (numbered attributes)
+                var newLinkedIds = new List<ushort>();
+                string linkedToStr = element.GetAttributeString("linked", null);
+                if (linkedToStr != null)
+                {
                     string[] linkedIds = linkedToStr.Split(',');
                     foreach (string idStr in linkedIds)
                     {
                         if (ushort.TryParse(idStr.Trim(), out ushort linkedId))
                         {
-                            var linkedEntity = Entity.FindEntityByID(linkedId) as MapEntity;
-                            if (linkedEntity != null && !existingEntity.linkedTo.Contains(linkedEntity))
-                            {
-                                existingEntity.linkedTo.Add(linkedEntity);
-                            }
+                            newLinkedIds.Add(linkedId);
+                        }
+                    }
+                }
+                // Also parse WayPoint-style linkedto0, linkedto1, linkedto2, ...
+                for (int li = 0; li < 100; li++)
+                {
+                    string attr = element.GetAttributeString($"linkedto{li}", null);
+                    if (attr == null) break;
+                    if (ushort.TryParse(attr.Trim(), out ushort wptLinkedId))
+                    {
+                        newLinkedIds.Add(wptLinkedId);
+                    }
+                }
+                // Determine if the XML contains link data at all (so we don't accidentally
+                // clear links from property-only updates that happen to have no link attributes)
+                bool xmlHasLinkData = linkedToStr != null || element.GetAttributeString("linkedto0", null) != null;
+                if (xmlHasLinkData)
+                {
+                    existingEntity.linkedTo.Clear();
+                    foreach (ushort linkedId in newLinkedIds)
+                    {
+                        var linkedEntity = Entity.FindEntityByID(linkedId) as MapEntity;
+                        if (linkedEntity != null && !existingEntity.linkedTo.Contains(linkedEntity))
+                        {
+                            existingEntity.linkedTo.Add(linkedEntity);
                         }
                     }
                 }
 
-                // Fix up Submarine reference: property application (e.g., Scale setter) can trigger
-                // UpdateTransform → FindHull which nulls entity.Submarine. Restore it to MainSub.
-                if (existingEntity.Submarine == null && Submarine.MainSub != null)
-                {
-                    existingEntity.Submarine = Submarine.MainSub;
-                }
-                if (existingEntity is Item fixItem && fixItem.body != null && fixItem.body.Submarine == null)
-                {
-                    fixItem.body.Submarine = Submarine.MainSub;
-                }
-
-                // Update tracking position in design-time coordinates (consistent with UpdateCollaborativeEntityMoves)
+                // Update tracking position
                 if (collaborativeEntityPositions != null)
                 {
-                    var trackHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
-                    collaborativeEntityPositions[entityId] = new Vector2(existingEntity.Rect.X - trackHSP.X, existingEntity.Rect.Y - trackHSP.Y);
+                    collaborativeEntityPositions[entityId] = existingEntity.WorldPosition;
                 }
 
                 DebugConsole.Log($"[SubEditor] Applied full entity update for {entityId} from session {senderSessionId}");
             }
             catch (Exception ex)
             {
-                DebugConsole.ThrowError($"[SubEditor] Failed to apply entity update: {ex.Message}");
+                DebugConsole.AddWarning($"[SubEditor] Failed to apply entity update: {ex.Message}");
             }
             finally
             {
                 isApplyingRemoteChange = false;
             }
         }
+
         /// If we don't have it, the SubEditorNetworkingClient.ReceiveSubmarineInfo() already
         /// requests the file via GameMain.Client.RequestFile(), and the file will be loaded
         /// when the transfer completes via OnFileReceived in GameClient.
@@ -2229,9 +2511,23 @@ namespace Barotrauma
         private void OnCollaborativeTestModeStarted()
         {
             DebugConsole.NewMessage("[SubEditor] Server started test mode - switching to game screen", Microsoft.Xna.Framework.Color.Green);
-            // The server is starting a proper multiplayer round
-            // The client should receive STARTGAME message from the server which will handle the transition
-            // This callback is just for logging/notification
+            // Save pre-test snapshot so we can restore when returning from test mode.
+            // The host already does this in TestSubmarine(), but non-host clients also need a snapshot
+            // to restore their submarine state after the round-end cleanup calls Submarine.Unload().
+            if (string.IsNullOrEmpty(preTestSubmarineXml) && MainSub != null)
+            {
+                try
+                {
+                    var snapshotInfo = new SubmarineInfo(MainSub);
+                    preTestSubmarineXml = snapshotInfo.SubmarineElement.ToString();
+                    collaborativeEditingSubName = MainSub.Info?.Name;
+                    DebugConsole.NewMessage($"[SubEditor] Saved pre-test snapshot for non-host ({preTestSubmarineXml.Length} chars)", Color.Lime);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.AddWarning("[SubEditor] Failed to save pre-test snapshot: " + e.Message);
+                }
+            }
         }
 
         /// <summary>
@@ -2256,8 +2552,10 @@ namespace Barotrauma
         {
             // Don't load synced subs during test mode — it would overwrite the test round's state
             if (Level.IsSubEditorTestMode) { return; }
-            // Don't overwrite entities that were just restored from pre-test snapshot (3 second cooldown)
-            if (Timing.TotalTime - preTestRestoreTime < 3.0) { return; }
+            // Don't load synced subs while EndGame coroutine is running — Submarine.Unload() will destroy them
+            if (CoroutineManager.IsCoroutineRunning("EndGame")) { return; }
+            // Don't overwrite entities that were just restored from pre-test snapshot
+            if (ignoreSubmarineSync) { return; }
             LoadSubmarineFromXml(submarineXml, "sync");
         }
         
@@ -2265,13 +2563,13 @@ namespace Barotrauma
         /// Load a submarine's entities from XML string.
         /// Uses the same approach as .sub file loading: parse XML → SubmarineInfo → LoadSub().
         /// </summary>
-        private void LoadSubmarineFromXml(string submarineXml, string source)
+        internal void LoadSubmarineFromXml(string submarineXml, string source)
         {
             try
             {
                 if (string.IsNullOrEmpty(submarineXml))
                 {
-                    DebugConsole.ThrowError($"[SubEditor] Received empty submarine XML from {source}");
+                    DebugConsole.AddWarning($"[SubEditor] Received empty submarine XML from {source}");
                     return;
                 }
                 
@@ -2282,15 +2580,102 @@ namespace Barotrauma
                 XElement rootElement = doc.Root;
                 if (rootElement == null)
                 {
-                    DebugConsole.ThrowError($"[SubEditor] Invalid submarine XML from {source} - no root element");
+                    DebugConsole.AddWarning($"[SubEditor] Invalid submarine XML from {source} - no root element");
                     return;
                 }
                 
-                // Create SubmarineInfo from the XML element using the proper pattern
-                SubmarineInfo subInfo = new SubmarineInfo(filePath: string.Empty, element: rootElement);
+                // Create SubmarineInfo from the XML element.
+                // Write to a temp .sub file so SubmarineInfo has a valid FilePath for MD5Hash
+                // computation (the game's networking layer calls SubmarineInfo.MD5Hash which
+                // tries to open FilePath + ".sub" — an empty path causes a crash on re-test).
+                string tempSubDir = System.IO.Path.Combine("Submarines");
+                System.IO.Directory.CreateDirectory(tempSubDir);
+                string tempSubPath = System.IO.Path.Combine(tempSubDir, "_CollaborativeSync.sub");
+                try
+                {
+                    var tempDoc = new XDocument(rootElement);
+                    SaveUtil.CompressStringToFile(tempSubPath, tempDoc.ToString());
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.AddWarning($"[SubEditor] Failed to write temp sub file: {ex.Message}");
+                }
+                SubmarineInfo subInfo = new SubmarineInfo(filePath: tempSubPath, element: rootElement);
                 
-                // Use LoadSub which handles everything properly (ID conflicts, dummy character, camera, etc.)
-                LoadSub(subInfo, checkIdConflicts: false);
+                // Suppress the auto-sync in LoadSub — this is a programmatic load (sync, pre-test restore, etc.)
+                // and the caller handles syncing separately when needed.
+                suppressLoadSubAutoSync = true;
+                
+                // CRITICAL: Use loadEntities callback to preserve entity IDs from the sender.
+                // The default Submarine constructor uses IdRemap.DetermineNewOffset() which
+                // remaps entity IDs to a new range, causing ID mismatches between host and client.
+                // MapEntity.LoadAll creates its own IdRemap(parentElement, offset) which compacts
+                // IDs into contiguous ranges — this also remaps IDs and breaks sync.
+                // Instead, we use IdRemap(null, 0) which has null srcRanges, so GetOffsetId(id)
+                // returns id + 0 = id unchanged. We load each entity via reflection (same as
+                // MapEntity.LoadAll) but with our ID-preserving remap.
+                Submarine.Unload();
+                var loadedSub = new Submarine(subInfo, loadEntities: (sub) =>
+                {
+                    if (subInfo.SubmarineElement == null) return new List<MapEntity>();
+                    // IdRemap with null srcRanges and offset 0: ids pass through unchanged
+                    var idRemap = new IdRemap(null, 0);
+                    var entities = new List<MapEntity>();
+                    foreach (var element in subInfo.SubmarineElement.Elements())
+                    {
+                        string typeName = element.Name.ToString();
+                        Type t;
+                        try
+                        {
+                            t = Type.GetType("Barotrauma." + typeName, true, true);
+                            if (t == null) continue;
+                        }
+                        catch { continue; }
+
+                        try
+                        {
+                            var loadMethod = t.GetMethod("Load", new[] { typeof(ContentXElement), typeof(Submarine), typeof(IdRemap) });
+                            if (loadMethod == null) continue;
+                            var contentElement = element.FromPackage(null);
+                            object newEntity = loadMethod.Invoke(t, new object[] { contentElement, sub, idRemap });
+                            if (newEntity is MapEntity me)
+                            {
+                                entities.Add(me);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            DebugConsole.AddWarning($"[SubEditor] Error loading entity {typeName}: {ex.InnerException?.Message ?? ex.Message}");
+                        }
+                    }
+                    return entities;
+                });
+                MainSub = loadedSub;
+                MainSub.UpdateTransform(interpolate: false);
+                
+                // Don't clear undo buffer when loading from collaborative sync
+                // This preserves undo history across test mode transitions and sub syncs
+                CreateDummyCharacter();
+                
+                // Initialize position tracking for all loaded entities so that
+                // delta-based movement sync works from the very first move.
+                collaborativeEntityPositions.Clear();
+                collaborativePropertySnapshots.Clear();
+                collaborativeFlipStates.Clear();
+                foreach (var me in MapEntity.MapEntityList)
+                {
+                    if (me.Submarine == MainSub)
+                    {
+                        collaborativeEntityPositions[me.ID] = me.WorldPosition;
+                    }
+                }
+                
+                string name = MainSub.Info.Name;
+                subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
+                cam.Position = MainSub.Position + MainSub.HiddenSubPosition;
+                loadFrame = null;
+                
+                suppressLoadSubAutoSync = false;
                 
                 ReconstructLayers();
                 
@@ -2298,7 +2683,8 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"[SubEditor] Failed to load submarine from {source}", e);
+                suppressLoadSubAutoSync = false;
+                DebugConsole.AddWarning($"[SubEditor] Failed to load submarine from {source}: {e.Message}");
             }
         }
 
@@ -2752,23 +3138,36 @@ namespace Barotrauma
             GUI.ForceMouseOn(null);
             SetMode(Mode.Default);
 
-            rotateToolToggle.Selected = false;
+            // Subscribe to wire editing callbacks for undo tracking
+            Connection.OnSubEditorWireConnected = OnWireConnected;
+            Connection.OnSubEditorWireDisconnected = OnWireDisconnected;
+            Wire.OnSubEditorNodeMoved = OnWireNodeMoved;
+            Wire.OnSubEditorNodeAdded = OnWireNodeAdded;
+            Wire.OnSubEditorNodeRemoved = OnWireNodeRemoved;
+
+            rotateToolToggle.Selected= false;
             scaleToolToggle.Selected = false;
 
             // Collaborative test mode: restore from pre-test XML snapshot FIRST (preserves unsaved edits)
             if (!string.IsNullOrEmpty(preTestSubmarineXml))
             {
                 DebugConsole.NewMessage("[SubEditor] Restoring from pre-test XML snapshot in Select()", Microsoft.Xna.Framework.Color.Lime);
+                Level.IsSubEditorTestMode = false;
                 LoadSubmarineFromXml(preTestSubmarineXml, "pre-test restore");
                 preTestSubmarineXml = null;
                 backedUpSubInfo = null;
                 collaborativeEditingSubName = null;
-                preTestRestoreTime = Timing.TotalTime;
+                // Block incoming SyncSubmarine packets temporarily — the server will send one
+                // with the old stored XML immediately after test mode ends, but we've already
+                // restored the correct pre-test state. Clear the flag after a brief delay so
+                // subsequent intentional syncs (from new edits) are accepted.
+                ignoreSubmarineSync = true;
+                CoroutineManager.Invoke(() => { ignoreSubmarineSync = false; }, delay: 2.0f);
                 
-                // Re-sync to clients after restore
+                // Host: re-sync the correct state to all clients after restore
                 if (SubEditorNetworkingClient.Instance?.IsHost == true && MainSub != null)
                 {
-                    CoroutineManager.Invoke(() => SyncSubmarineToClients(), delay: 1.0f);
+                    CoroutineManager.Invoke(() => SyncSubmarineToClients(), delay: 2.5f);
                 }
             }
             else if (backedUpSubInfo != null)
@@ -2796,6 +3195,14 @@ namespace Barotrauma
             {
                 var subInfo = new SubmarineInfo();
                 MainSub = new Submarine(subInfo, showErrorMessages: false);
+                ReconstructLayers();
+            }
+
+            // Safety: ensure MainSub is never null after all restore attempts
+            if (MainSub == null)
+            {
+                var fallbackInfo = new SubmarineInfo();
+                MainSub = new Submarine(fallbackInfo, showErrorMessages: false);
                 ReconstructLayers();
             }
 
@@ -2954,7 +3361,11 @@ namespace Barotrauma
             loadFrame = null;
 
             MapEntity.DeselectAll();
-            ClearUndoBuffer();
+            // Don't clear undo buffer when leaving for SubEditor test mode — persist across tests
+            if (!Level.IsSubEditorTestMode)
+            {
+                ClearUndoBuffer();
+            }
 
 #if !DEBUG
             DebugConsole.DeactivateCheats();
@@ -4856,6 +5267,15 @@ namespace Barotrauma
         
         private void CreateLoadScreen()
         {
+            // Block non-host clients from loading submarines — only the host's sub is authoritative.
+            // Clients loading a different sub would cause desync/corruption since the host
+            // doesn't know about it and keeps syncing its own version.
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost == false)
+            {
+                DebugConsole.NewMessage("[SubEditor] Only the host can load submarines in collaborative mode.", Microsoft.Xna.Framework.Color.Red);
+                return;
+            }
+
             CloseItem();
             SubmarineInfo.RefreshSavedSubs();
             SetMode(Mode.Default);
@@ -5288,8 +5708,29 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to load the submarine. The submarine file might be corrupted.", e);
                 return;
             }
-            ClearUndoBuffer();
+            // Don't clear undo buffer when loading from collaborative sync (LoadSubmarineFromXml)
+            // This preserves undo history across test mode transitions and sub syncs
+            if (!suppressLoadSubAutoSync)
+            {
+                ClearUndoBuffer();
+            }
             CreateDummyCharacter();
+
+            // Initialize position tracking for all loaded entities so that
+            // delta-based movement sync works from the very first move.
+            if (SubEditorNetworkingClient.Instance?.IsActive == true)
+            {
+                collaborativeEntityPositions.Clear();
+                collaborativePropertySnapshots.Clear();
+                collaborativeFlipStates.Clear();
+                foreach (var me in MapEntity.MapEntityList)
+                {
+                    if (me.Submarine == MainSub)
+                    {
+                        collaborativeEntityPositions[me.ID] = me.WorldPosition;
+                    }
+                }
+            }
 
             string name = MainSub.Info.Name;
             subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
@@ -5322,9 +5763,11 @@ namespace Barotrauma
 
             ReconstructLayers();
             
-            // If we're the host in a collaborative session, sync the full sub state to clients
-            // Use XML sync so clients get all entity data immediately (not just a file reference)
-            if (SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost)
+            // If we're the host in a collaborative session, sync the full sub state to clients.
+            // Skip if suppressLoadSubAutoSync is set (programmatic loads from LoadSubmarineFromXml
+            // handle syncing separately — auto-syncing here would cause infinite reload loops).
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost
+                && !suppressLoadSubAutoSync)
             {
                 // Delay to ensure LoadSub is fully complete (MainSub, entity IDs, etc.)
                 CoroutineManager.Invoke(() =>
@@ -5339,6 +5782,7 @@ namespace Barotrauma
         
         /// <summary>
         /// Send the current submarine XML to all connected clients for sync.
+        /// Large submarine XMLs are compressed to avoid exceeding message size limits.
         /// </summary>
         private void SyncSubmarineToClients()
         {
@@ -5354,19 +5798,40 @@ namespace Barotrauma
                 MainSub.SaveToXElement(submarineElement);
                 string submarineXml = submarineElement.ToString();
                 
-                // Send to server for relay
+                if (string.IsNullOrEmpty(submarineXml) || submarineXml.Length < 50)
+                {
+                    DebugConsole.AddWarning("[SubEditor] Submarine XML is empty or too short, skipping sync");
+                    return;
+                }
+                
+                // Compress the XML to reduce message size. Large submarine files (100KB+)
+                // can exceed network message limits without compression.
+                byte[] xmlBytes = System.Text.Encoding.UTF8.GetBytes(submarineXml);
+                byte[] compressedBytes;
+                using (var ms = new System.IO.MemoryStream())
+                {
+                    using (var gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Compress))
+                    {
+                        gzip.Write(xmlBytes, 0, xmlBytes.Length);
+                    }
+                    compressedBytes = ms.ToArray();
+                }
+                
+                // Send compressed data as byte array with length prefix
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
                 msg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
-                msg.WriteString(submarineXml);
+                msg.WriteInt32(compressedBytes.Length);
+                msg.WriteInt32(xmlBytes.Length); // uncompressed length for pre-allocation
+                msg.WriteBytes(compressedBytes, 0, compressedBytes.Length);
                 client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
                 
-                DebugConsole.Log($"[SubEditor] Sent submarine sync ({submarineXml.Length} chars)");
+                DebugConsole.Log($"[SubEditor] Sent submarine sync ({submarineXml.Length} chars, compressed to {compressedBytes.Length} bytes)");
             }
             catch (Exception e)
             {
                 // Silently ignore send failures during connection establishment
-                DebugConsole.Log("[SubEditor] Sync deferred - connection not ready yet");
+                DebugConsole.Log($"[SubEditor] Sync deferred - connection not ready yet: {e.Message}");
             }
         }
 
@@ -5518,6 +5983,10 @@ namespace Barotrauma
         public void SetMode(Mode newMode)
         {
             if (newMode == mode) { return; }
+            
+            // Wire changes are now tracked via WireCommand undo entries and
+            // synced individually. No need for full submarine sync on mode switch.
+            
             mode = newMode;
 
             lockMode = true;
@@ -5529,7 +5998,6 @@ namespace Barotrauma
 
             MapEntity.DeselectAll();
             MapEntity.FilteredSelectedList.Clear();
-            ClearUndoBuffer();
 
             CreateDummyCharacter();
             if (newMode == Mode.Wiring)
@@ -6766,45 +7234,42 @@ namespace Barotrauma
 
         private static void Redo(int amount)
         {
-            if (SubEditorNetworkingClient.Instance?.IsActive == true && !SubEditorNetworkingClient.Instance.IsHost)
-            {
-                DebugConsole.NewMessage("[SubEditor] Only the host can redo changes in collaborative mode", Color.Orange);
-                return;
-            }
-            
+            // In collaborative mode, non-host clients can only redo their own commands
+            bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
+            bool isNonHostCollaborative = isCollaborativeSession && !SubEditorNetworkingClient.Instance.IsHost;
+            string localAuthorId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+
             for (int i = 0; i < amount; i++)
             {
-                if (commandIndex < Commands.Count)
+                if (isNonHostCollaborative)
+                {
+                    // Find the next undone command authored by this client
+                    int targetIdx = -1;
+                    for (int j = commandIndex; j < Commands.Count; j++)
+                    {
+                        if (Commands[j].AuthorSessionId == localAuthorId)
+                        {
+                            targetIdx = j;
+                            break;
+                        }
+                    }
+                    if (targetIdx < 0) continue;
+
+                    // Execute all commands up to and including the target to maintain stack integrity
+                    while (commandIndex <= targetIdx && commandIndex < Commands.Count)
+                    {
+                        Command cmd = Commands[commandIndex++];
+                        cmd.Execute();
+                        BroadcastCommandChanges(cmd, isUndo: false);
+                    }
+                }
+                else if (commandIndex < Commands.Count)
                 {
                     Command command = Commands[commandIndex++];
-                    
-                    HashSet<ushort> entityIdsBefore = null;
-                    bool isCollaborative = command is AddOrDeleteCommand && SubEditorNetworkingClient.Instance?.IsActive == true;
-                    if (isCollaborative)
-                    {
-                        entityIdsBefore = new HashSet<ushort>(MapEntity.MapEntityList.Select(e => e.ID));
-                    }
-                    
                     command.Execute();
-                    
-                    if (isCollaborative && entityIdsBefore != null)
+                    if (isCollaborativeSession)
                     {
-                        var currentIds = new HashSet<ushort>(MapEntity.MapEntityList.Where(e => !e.Removed).Select(e => e.ID));
-                        
-                        foreach (var entity in MapEntity.MapEntityList.Where(e => !e.Removed && !entityIdsBefore.Contains(e.ID)))
-                        {
-                            try
-                            {
-                                var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
-                                SubEditorNetworkingClient.Instance.NotifyEntityPlaced(element.ToString());
-                            }
-                            catch { }
-                        }
-                        
-                        foreach (ushort removedId in entityIdsBefore.Where(id => !currentIds.Contains(id)))
-                        {
-                            SubEditorNetworkingClient.Instance.NotifyEntityRemoved(removedId);
-                        }
+                        BroadcastCommandChanges(command, isUndo: false);
                     }
                 }
             }
@@ -6813,49 +7278,115 @@ namespace Barotrauma
 
         private static void Undo(int amount)
         {
-            if (SubEditorNetworkingClient.Instance?.IsActive == true && !SubEditorNetworkingClient.Instance.IsHost)
-            {
-                DebugConsole.NewMessage("[SubEditor] Only the host can undo changes in collaborative mode", Color.Orange);
-                return;
-            }
-            
+            // In collaborative mode, non-host clients can only undo their own commands
+            bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
+            bool isNonHostCollaborative = isCollaborativeSession && !SubEditorNetworkingClient.Instance.IsHost;
+            string localAuthorId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+
             for (int i = 0; i < amount; i++)
             {
-                if (commandIndex > 0)
+                if (isNonHostCollaborative)
+                {
+                    // Find the most recent executed command authored by this client
+                    int targetIdx = -1;
+                    for (int j = commandIndex - 1; j >= 0; j--)
+                    {
+                        if (Commands[j].AuthorSessionId == localAuthorId)
+                        {
+                            targetIdx = j;
+                            break;
+                        }
+                    }
+                    if (targetIdx < 0) continue;
+
+                    // Undo all commands from current position down to the target to maintain stack integrity
+                    while (commandIndex > targetIdx)
+                    {
+                        Command cmd = Commands[--commandIndex];
+                        cmd.UnExecute();
+                        BroadcastCommandChanges(cmd, isUndo: true);
+                    }
+                }
+                else if (commandIndex > 0)
                 {
                     Command command = Commands[--commandIndex];
-                    
-                    HashSet<ushort> entityIdsBefore = null;
-                    bool isCollaborative = command is AddOrDeleteCommand && SubEditorNetworkingClient.Instance?.IsActive == true;
-                    if (isCollaborative)
-                    {
-                        entityIdsBefore = new HashSet<ushort>(MapEntity.MapEntityList.Select(e => e.ID));
-                    }
-                    
                     command.UnExecute();
-                    
-                    if (isCollaborative && entityIdsBefore != null)
+                    if (isCollaborativeSession)
                     {
-                        var currentIds = new HashSet<ushort>(MapEntity.MapEntityList.Where(e => !e.Removed).Select(e => e.ID));
-                        
-                        foreach (var entity in MapEntity.MapEntityList.Where(e => !e.Removed && !entityIdsBefore.Contains(e.ID)))
-                        {
-                            try
-                            {
-                                var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
-                                SubEditorNetworkingClient.Instance.NotifyEntityPlaced(element.ToString());
-                            }
-                            catch { }
-                        }
-                        
-                        foreach (ushort removedId in entityIdsBefore.Where(id => !currentIds.Contains(id)))
-                        {
-                            SubEditorNetworkingClient.Instance.NotifyEntityRemoved(removedId);
-                        }
+                        BroadcastCommandChanges(command, isUndo: true);
                     }
                 }
             }
             GameMain.SubEditorScreen.UpdateUndoHistoryPanel();
+        }
+
+        /// <summary>
+        /// Broadcast entity changes from an undo/redo operation to other collaborative editors.
+        /// </summary>
+        private static void BroadcastCommandChanges(Command command, bool isUndo)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+
+            if (command is AddOrDeleteCommand addOrDelete)
+            {
+                // After undo/redo of an add/delete, figure out which entities appeared/disappeared
+                foreach (var entity in addOrDelete.Receivers)
+                {
+                    if (entity.Removed)
+                    {
+                        SubEditorNetworkingClient.Instance.NotifyEntityRemoved(entity.ID);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                            element.SetAttributeValue("ID", entity.ID);
+                            SubEditorNetworkingClient.Instance.NotifyEntityPlaced(element.ToString());
+                        }
+                        catch { }
+                    }
+                }
+            }
+            else if (command is PropertyCommand propCmd)
+            {
+                GameMain.SubEditorScreen.SendCollaborativePropertyChange(propCmd);
+            }
+            else if (command is TransformCommand transformCmd)
+            {
+                GameMain.SubEditorScreen.SendCollaborativeTransformUpdate(transformCmd);
+            }
+            else if (command is WireCommand wireCmd)
+            {
+                // After undo/redo of a wire command, sync the wire and its connected items.
+                // The wire may have been removed (undo of connect removes the wire entity).
+                if (Entity.FindEntityByID(wireCmd.WireId) is Item wireItem)
+                {
+                    var wire = wireItem.GetComponent<Wire>();
+                    if (wire != null)
+                    {
+                        GameMain.SubEditorScreen.SyncWireAndConnectedItems(wire, wire.Connections[0], wire.Connections[1]);
+                    }
+                }
+                else
+                {
+                    // Wire was removed (e.g. undo of Connect removes the wire entity)
+                    SubEditorNetworkingClient.Instance.NotifyEntityRemoved(wireCmd.WireId);
+                    // Also sync the items that were connected to update their ConnectionPanel
+                    if (wireCmd.TargetItemId != 0 && Entity.FindEntityByID(wireCmd.TargetItemId) is Item targetItem && !targetItem.Removed)
+                    {
+                        var itemElement = targetItem.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                        itemElement.SetAttributeValue("wireSync", "true");
+                        SubEditorNetworkingClient.Instance.NotifyEntityUpdated(targetItem.ID, itemElement.ToString());
+                    }
+                    if (wireCmd.OtherItemId != 0 && Entity.FindEntityByID(wireCmd.OtherItemId) is Item otherItem && !otherItem.Removed)
+                    {
+                        var itemElement = otherItem.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                        itemElement.SetAttributeValue("wireSync", "true");
+                        SubEditorNetworkingClient.Instance.NotifyEntityUpdated(otherItem.ID, itemElement.ToString());
+                    }
+                }
+            }
         }
 
         private static void ClearUndoBuffer()
@@ -6870,6 +7401,22 @@ namespace Barotrauma
 
         public static void StoreCommand(Command command)
         {
+            // Don't store commands that are the result of applying a remote change —
+            // remote changes are already tracked by the originator's undo stack.
+            // BUT: allow storing when AuthorSessionId is already set (host storing
+            // client commands from OnCollaborativeEntityPlaced/Removed).
+            if (GameMain.SubEditorScreen?.isApplyingRemoteChange == true 
+                && string.IsNullOrEmpty(command.AuthorSessionId)) 
+            { 
+                return; 
+            }
+
+            // Tag command with the author's session ID for collaborative undo tracking
+            if (string.IsNullOrEmpty(command.AuthorSessionId))
+            {
+                command.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString() ?? "local";
+            }
+
             if (commandIndex != Commands.Count)
             {
                 Commands.RemoveRange(commandIndex, Commands.Count - commandIndex);
@@ -6941,19 +7488,203 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Entity was added - serialize to XML to capture all properties
+                    // Entity was added - serialize to XML to capture all properties.
+                    // entity.Save() writes the rect as design-time coordinates (rect - HiddenSubPosition),
+                    // which is the same format as .sub files. The receiver applies HiddenSubPosition
+                    // offset after loading to place the entity in the submarine's coordinate space.
                     try
                     {
-                        var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                        System.Xml.Linq.XElement element;
+                        if (entity is LinkedSubmarine linkedSub)
+                        {
+                            // LinkedSubmarine.Save() includes the FULL submarine XML, which can
+                            // exceed network buffer limits for large subs. Instead, send a compact
+                            // representation with just the filepath and position. The receiver
+                            // opens the sub file locally and generates its own preview/vertices.
+                            element = new System.Xml.Linq.XElement("LinkedSubmarine");
+                            element.SetAttributeValue("filepath", linkedSub.FilePath);
+                            element.SetAttributeValue("pos", XMLExtensions.Vector2ToString(
+                                entity.Position - Submarine.MainSub.HiddenSubPosition));
+                            if (linkedSub.linkedTo.Any())
+                            {
+                                var linkedPort = linkedSub.linkedTo.FirstOrDefault(
+                                    lt => lt is Item item && item.GetComponent<Items.Components.DockingPort>() != null);
+                                if (linkedPort != null)
+                                {
+                                    element.SetAttributeValue("linkedto", linkedPort.ID);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                        }
+                        // Ensure the entity ID is always present in the XML.
+                        // Some entity types (e.g. LinkedSubmarine) don't write "ID" in Save().
+                        element.SetAttributeValue("ID", entity.ID);
                         string xml = element.ToString();
                         DebugConsole.Log($"[SubEditor] Sending entity placed: {entity.ID} ({entity.Name}), XML length: {xml.Length}");
                         SubEditorNetworkingClient.Instance.NotifyEntityPlaced(xml);
                     }
                     catch (Exception ex)
                     {
-                        DebugConsole.ThrowError($"[SubEditor] Failed to serialize entity: {ex.Message}");
+                        DebugConsole.AddWarning($"[SubEditor] Failed to serialize entity: {ex.Message}");
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sync a single entity's full state (including linkedTo) to other collaborative editors.
+        /// Called when link relationships change (Space+Click linking in editor).
+        /// </summary>
+        internal void SyncLinkedEntityState(MapEntity entity)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (isApplyingRemoteChange) return;
+            if (entity == null || entity.Removed) return;
+
+            try
+            {
+                var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                string xml = element.ToString();
+                SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, xml);
+            }
+            catch (Exception ex)
+            {
+                DebugConsole.Log($"[SubEditor] Failed to sync linked entity state: {ex.Message}");
+            }
+        }
+
+        // ========================== Wire undo callbacks ==========================
+
+        private void OnWireConnected(Wire wire, Connection thisConnection, Connection otherConnection)
+        {
+            // If this is the second end of a wire connection (both ends now connected),
+            // remove the initial one-sided connection step since the full connection is
+            // what matters. Only keep the initial step if the wire never gets connected
+            // on the other end.
+            if (otherConnection != null)
+            {
+                // Find and remove the initial one-sided Connect command for this wire
+                for (int i = Commands.Count - 1; i >= 0; i--)
+                {
+                    if (Commands[i] is WireCommand wc && wc.Type == WireCommandType.Connect && wc.WireId == wire.Item.ID)
+                    {
+                        Commands.RemoveAt(i);
+                        if (i < commandIndex) commandIndex--;
+                        break;
+                    }
+                }
+            }
+
+            var cmd = new WireCommand(WireCommandType.Connect, wire, thisConnection, otherConnection);
+            cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+            StoreCommand(cmd);
+
+            // Immediately sync wire state to other clients
+            SyncWireAndConnectedItems(wire, thisConnection, otherConnection);
+        }
+
+        private void OnWireDisconnected(Wire wire, Connection disconnectedConnection)
+        {
+            var cmd = new WireCommand(WireCommandType.Disconnect, wire, disconnectedConnection);
+            cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+            StoreCommand(cmd);
+
+            // Immediately sync wire state to other clients
+            SyncWireAndConnectedItems(wire, disconnectedConnection, null);
+        }
+
+        /// <summary>
+        /// Sync wire item and its connected items' full state to other collaborative editors.
+        /// </summary>
+        internal void SyncWireAndConnectedItems(Wire wire, Connection conn1, Connection conn2)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (isApplyingRemoteChange) return;
+
+            try
+            {
+                // First, ensure the wire Item EXISTS on the receiver.
+                // Wires created in wiring mode bypass StoreCommand/NotifyEntityPlaced,
+                // so the receiver may not have this wire entity yet.
+                // Send it as EntityPlaced first, then send wireSync updates for connections.
+                var wireElement = wire.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                SubEditorNetworkingClient.Instance.NotifyEntityPlaced(wireElement.ToString());
+
+                // Now sync connected items WITH wireSync flag so their ConnectionPanel data
+                // is processed on the receiver (normally skipped to prevent corruption).
+                // The receiver now has the wire entity (from EntityPlaced above), so
+                // Entity.FindEntityByID(wireId) will succeed in the ConnectionPanel processing.
+                if (conn1?.Item != null && !conn1.Item.Removed)
+                {
+                    var itemElement = conn1.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    itemElement.SetAttributeValue("wireSync", "true");
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn1.Item.ID, itemElement.ToString());
+                }
+                if (conn2?.Item != null && !conn2.Item.Removed)
+                {
+                    var itemElement = conn2.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    itemElement.SetAttributeValue("wireSync", "true");
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn2.Item.ID, itemElement.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugConsole.Log($"[SubEditor] Failed to sync wire state: {ex.Message}");
+            }
+        }
+
+        private void OnWireNodeMoved(Wire wire, int nodeIndex, Vector2 oldPos, Vector2 newPos)
+        {
+            var cmd = new WireCommand(wire, nodeIndex, oldPos, newPos);
+            cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+            StoreCommand(cmd);
+            
+            // Sync wire node changes to other clients
+            SyncWireNodeState(wire);
+        }
+
+        private void OnWireNodeAdded(Wire wire, int nodeIndex, Vector2 nodePos)
+        {
+            var cmd = new WireCommand(WireCommandType.NodeAdd, wire, nodeIndex, nodePos);
+            cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+            StoreCommand(cmd);
+            
+            // Sync wire node changes to other clients
+            SyncWireNodeState(wire);
+        }
+
+        private void OnWireNodeRemoved(Wire wire, int nodeIndex, Vector2 nodePos)
+        {
+            var cmd = new WireCommand(WireCommandType.NodeRemove, wire, nodeIndex, nodePos);
+            cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+            StoreCommand(cmd);
+            
+            // Sync wire node changes to other clients
+            SyncWireNodeState(wire);
+        }
+
+        /// <summary>
+        /// Sync a wire's node positions to other collaborative editors.
+        /// Sends the wire item's full state with wireSync flag so the receiver updates nodes.
+        /// </summary>
+        private void SyncWireNodeState(Wire wire)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (isApplyingRemoteChange) return;
+            if (wire?.Item == null || wire.Item.Removed) return;
+
+            try
+            {
+                var element = wire.Item.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                element.SetAttributeValue("wireSync", "true");
+                SubEditorNetworkingClient.Instance.NotifyEntityUpdated(wire.Item.ID, element.ToString());
+            }
+            catch (Exception ex)
+            {
+                DebugConsole.AddWarning($"[SubEditor] Failed to sync wire node state: {ex.Message}");
             }
         }
 
@@ -6964,8 +7695,6 @@ namespace Barotrauma
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (isApplyingRemoteChange) return;
-
-            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
 
             // Collect unique entities affected by this property change
             var processedEntities = new HashSet<ushort>();
@@ -6981,78 +7710,36 @@ namespace Barotrauma
                 try
                 {
                     var element = mapEntity.Save(new System.Xml.Linq.XElement("EntityRoot"));
-                    
-                    // Fix rect if entity.Submarine was nulled by FindHull (same fix as transform sync)
-                    var entitySubHSP = mapEntity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
-                    if (entitySubHSP != mainSubHSP)
-                    {
-                        var rect = mapEntity.Rect;
-                        int width = element.GetAttributeRect("rect", Rectangle.Empty).Width;
-                        int height = element.GetAttributeRect("rect", Rectangle.Empty).Height;
-                        if (width <= 0) width = rect.Width;
-                        if (height <= 0) height = rect.Height;
-                        element.SetAttributeValue("rect",
-                            (int)(rect.X - mainSubHSP.X) + "," +
-                            (int)(rect.Y - mainSubHSP.Y) + "," +
-                            width + "," + height);
-                    }
-                    
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(mapEntity.ID, element.ToString());
                 }
                 catch (Exception ex)
                 {
-                    DebugConsole.ThrowError($"[SubEditor] Failed to serialize entity for property sync: {ex.Message}");
+                    DebugConsole.AddWarning($"[SubEditor] Failed to serialize entity for property sync: {ex.Message}");
                 }
             }
         }
 
         /// <summary>
         /// Send transform (move/resize) updates to other collaborative editors via full entity state sync.
-        /// Uses the same XML format as .sub files. Always uses MainSub.HiddenSubPosition for coordinate
-        /// conversion to ensure consistent design-time coordinates regardless of entity.Submarine state.
+        /// Also sends EntityMoved so the receiver gets the correct position (since EntityUpdated
+        /// no longer applies rect from XML to avoid dimension corruption).
         /// </summary>
         internal void SendCollaborativeTransformUpdate(TransformCommand transformCommand)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (isApplyingRemoteChange) return;
 
-            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
-
             foreach (var entity in transformCommand.AffectedEntities)
             {
                 if (entity == null || entity.Removed) continue;
 
-                try
-                {
-                    var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
-                    
-                    // entity.Save() uses entity.Submarine?.HiddenSubPosition for the rect offset.
-                    // If entity.Submarine was nulled by FindHull, Save() uses Vector2.Zero instead of HSP,
-                    // producing incorrect coordinates. Fix: replace the rect attribute with one that
-                    // always uses MainSub.HiddenSubPosition, matching what a .sub file would contain.
-                    var entitySubHSP = entity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
-                    if (entitySubHSP != mainSubHSP)
-                    {
-                        // The saved rect used the wrong HSP. Recalculate using MainSub.HSP.
-                        var rect = entity.Rect;
-                        int width = element.GetAttributeRect("rect", Rectangle.Empty).Width;
-                        int height = element.GetAttributeRect("rect", Rectangle.Empty).Height;
-                        if (width <= 0) width = rect.Width;
-                        if (height <= 0) height = rect.Height;
-                        element.SetAttributeValue("rect",
-                            (int)(rect.X - mainSubHSP.X) + "," +
-                            (int)(rect.Y - mainSubHSP.Y) + "," +
-                            width + "," + height);
-                    }
-                    
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
-                    // Update our tracking position in design-time coordinates (consistent with UpdateCollaborativeEntityMoves)
-                    collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X - mainSubHSP.X, entity.Rect.Y - mainSubHSP.Y);
-                }
-                catch (Exception ex)
-                {
-                    DebugConsole.ThrowError($"[SubEditor] Failed to serialize entity for transform sync: {ex.Message}");
-                }
+                // Only send position via EntityMoved. Do NOT send EntityUpdated (full XML) here.
+                // Transform changes only affect position/size, not properties.
+                // Property changes are handled separately by UpdateCollaborativePropertyChanges.
+                // Sending EntityUpdated here caused UpdateTransform() to corrupt entity rect
+                // when Scale or other property setters ran during XML application on the receiver.
+                SubEditorNetworkingClient.Instance.NotifyEntityMoved(entity.ID, entity.WorldPosition.X, entity.WorldPosition.Y);
+                collaborativeEntityPositions[entity.ID] = entity.WorldPosition;
             }
         }
         
@@ -7061,34 +7748,35 @@ namespace Barotrauma
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (MainSub == null) return;
             
-            // Send real-time EntityMoved updates for any selected entities whose position changed.
-            // Coordinates are sent as design-time (rect minus MainSub.HSP), matching .sub file format.
+            // Send real-time EntityMoved updates for any selected entities whose position changed
             if (MapEntity.SelectedList.Count == 0) return;
-
-            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
             
             foreach (var entity in MapEntity.SelectedList)
             {
                 if (entity == null || entity.Removed) continue;
+                // NOTE: Do NOT filter by entity.Submarine — FindHull() can null it after Move().
                 
+                // Skip wire items — their position is determined by nodes, not rect.
+                if (entity is Item wireCheck && wireCheck.GetComponent<Items.Components.Wire>() != null) continue;
+                
+                // Send ABSOLUTE WorldPosition. The receiver computes the delta needed
+                // to move its entity to match: entity.Move(receivedPos - entity.WorldPosition).
                 ushort entityId = entity.ID;
-                // Use Rect.Location (not WorldPosition) and always subtract MainSub.HSP to get design-time coords.
-                // This is HSP-independent and cannot be corrupted by FindHull nulling entity.Submarine.
-                float designX = entity.Rect.X - mainSubHSP.X;
-                float designY = entity.Rect.Y - mainSubHSP.Y;
-                Vector2 designPos = new Vector2(designX, designY);
+                Vector2 currentPos = entity.WorldPosition;
                 
                 if (collaborativeEntityPositions.TryGetValue(entityId, out Vector2 lastPos))
                 {
-                    if (Vector2.DistanceSquared(designPos, lastPos) > 1f)
+                    float dx = currentPos.X - lastPos.X;
+                    float dy = currentPos.Y - lastPos.Y;
+                    if (dx * dx + dy * dy > 1f)
                     {
-                        SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, designX, designY);
-                        collaborativeEntityPositions[entityId] = designPos;
+                        SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, currentPos.X, currentPos.Y);
+                        collaborativeEntityPositions[entityId] = currentPos;
                     }
                 }
                 else
                 {
-                    collaborativeEntityPositions[entityId] = designPos;
+                    collaborativeEntityPositions[entityId] = currentPos;
                 }
             }
         }
@@ -7116,12 +7804,11 @@ namespace Barotrauma
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (MainSub == null || isApplyingRemoteChange) return;
             if (MapEntity.SelectedList.Count == 0) return;
-
-            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
             
             foreach (var entity in MapEntity.SelectedList)
             {
                 if (entity == null || entity.Removed) continue;
+                // NOTE: Do NOT filter by entity.Submarine — FindHull() can null it.
                 
                 ushort entityId = entity.ID;
                 
@@ -7136,22 +7823,6 @@ namespace Barotrauma
                         try
                         {
                             var element = entity.Save(new XElement("EntityRoot"));
-                            
-                            // Fix rect if entity.Submarine was nulled by FindHull
-                            var entitySubHSP = entity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
-                            if (entitySubHSP != mainSubHSP)
-                            {
-                                var rect = entity.Rect;
-                                int width = element.GetAttributeRect("rect", Rectangle.Empty).Width;
-                                int height = element.GetAttributeRect("rect", Rectangle.Empty).Height;
-                                if (width <= 0) width = rect.Width;
-                                if (height <= 0) height = rect.Height;
-                                element.SetAttributeValue("rect",
-                                    (int)(rect.X - mainSubHSP.X) + "," +
-                                    (int)(rect.Y - mainSubHSP.Y) + "," +
-                                    width + "," + height);
-                            }
-                            
                             SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entityId, element.ToString());
                         }
                         catch { }
@@ -7338,31 +8009,330 @@ namespace Barotrauma
         {
             if (undoBufferPanel is null) { return; }
 
-            undoBufferDisclaimer.Visible = mode == Mode.Wiring;
+            undoBufferDisclaimer.Visible = false; // Wire undo is now supported
 
+            bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
+            bool isHost = isCollaborativeSession && SubEditorNetworkingClient.Instance.IsHost;
+            string localAuthorId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+
+            // Update tab bar visibility and contents
+            undoTabBar.Visible = isCollaborativeSession && isHost;
+            // Adjust right column width: full width when tabs hidden, 75% when shown
+            undoTabBar.RectTransform.RelativeSize = new Vector2(isHost ? 0.22f : 0.001f, 1.0f);
+            if (isCollaborativeSession)
+            {
+                // Register all currently connected users in the persistent tab tracker
+                var users = SubEditorNetworkingClient.Instance?.GetAllUsers();
+                if (users != null)
+                {
+                    foreach (var user in users)
+                    {
+                        string sessionId = user.SessionId.ToString();
+                        // Skip adding host's own session — "Me" tab covers it
+                        if (sessionId == localAuthorId) { continue; }
+                        if (!undoTabUsers.ContainsKey(sessionId))
+                        {
+                            undoTabUsers[sessionId] = user.Name;
+                        }
+                    }
+                }
+                RebuildUndoTabs(isHost, localAuthorId);
+            }
+            else
+            {
+                undoActiveTab = "all";
+            }
+
+            // Rebuild subtab bar
+            RebuildUndoSubTabs();
+
+            // Rebuild the command list
             undoBufferList.Content.Children.ForEachMod(component =>
             {
                 undoBufferList.Content.RemoveChild(component);
             });
 
-            for (int i = 0; i < Commands.Count; i++)
+            bool filterWires = undoActiveSubTab == "wires";
+
+            // Only show commands up to commandIndex (undone commands are hidden)
+            int limit = Math.Min(commandIndex, Commands.Count);
+            for (int i = 0; i < limit; i++)
             {
                 Command command = Commands[i];
+
+                // Filter by subtab (Edits vs Wires)
+                bool isWireCmd = command is WireCommand;
+                if (filterWires && !isWireCmd) continue;
+                if (!filterWires && isWireCmd) continue;
+
+                // Filter by active tab
+                if (isCollaborativeSession)
+                {
+                    if (!isHost)
+                    {
+                        // Non-host clients only see their own commands
+                        if (command.AuthorSessionId != localAuthorId) continue;
+                    }
+                    else if (undoActiveTab != "all" && command.AuthorSessionId != undoActiveTab)
+                    {
+                        // Host filtering by specific user tab
+                        continue;
+                    }
+                }
+
                 LocalizedString description = command.GetDescription();
-                CreateTextBlock(description, description, i + 1, command).RectTransform.SetAsFirstChild();
+                string prefix = "";
+                Color textColor = Color.White;
+                if (i == limit - 1) textColor = GUIStyle.Green;
+
+                // In collaborative mode, show author labels with user color
+                if (isCollaborativeSession && !string.IsNullOrEmpty(command.AuthorSessionId))
+                {
+                    var user = SubEditorNetworkingClient.Instance?.GetUserBySessionId(command.AuthorSessionId);
+                    if (user != null)
+                    {
+                        prefix = $"[{user.Value.Name}] ";
+                        if (command.AuthorSessionId != localAuthorId)
+                        {
+                            textColor = SubEditorNetworkingShared.GetUserColor(user.Value.ColorIndex);
+                        }
+                    }
+                }
+
+                CreateUndoEntry(prefix + description.Value, description, command, textColor);
             }
 
-            CreateTextBlock(TextManager.Get("undo.beginning"), TextManager.Get("undo.beginningtooltip"), 0, null);
+            // "Beginning" marker at the bottom
+            CreateUndoEntry(TextManager.Get("undo.beginning").Value, TextManager.Get("undo.beginningtooltip"), null, commandIndex == 0 ? GUIStyle.Green : Color.Gray);
 
-            GUITextBlock CreateTextBlock(LocalizedString name, LocalizedString description, int index, Command command)
+            void CreateUndoEntry(string name, LocalizedString tooltip, Command command, Color textColor)
             {
-                return new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), undoBufferList.Content.RectTransform) { MinSize = new Point(0, 15) },
-                    ToolBox.LimitString(name.Value, GUIStyle.SmallFont, undoBufferList.Content.Rect.Width), font: GUIStyle.SmallFont, textColor: index == commandIndex ? GUIStyle.Green : (Color?) null)
+                var btn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), undoBufferList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                    ToolBox.LimitString(name, GUIStyle.SmallFont, undoBufferList.Content.Rect.Width), textAlignment: Alignment.CenterLeft, style: "GUIButtonSmall")
                 {
+                    Font = GUIStyle.SmallFont,
+                    TextColor = textColor,
+                    HoverTextColor = Color.Red,
+                    HoverColor = new Color(80, 40, 40),
                     UserData = command,
-                    ToolTip = description
+                    ToolTip = tooltip,
+                    OnClicked = (btn, data) =>
+                    {
+                        if (data is Command cmd)
+                        {
+                            RemoveCommandFromStack(cmd);
+                        }
+                        return true;
+                    }
+                };
+                btn.RectTransform.SetAsFirstChild();
+            }
+        }
+
+        /// <summary>
+        /// Build Edits / Wires subtab buttons.
+        /// </summary>
+        private void RebuildUndoSubTabs()
+        {
+            undoSubTabBar.ClearChildren();
+
+            AddSubTabButton("Edits", "edits");
+            AddSubTabButton("Wires", "wires");
+
+            void AddSubTabButton(string label, string subTabId)
+            {
+                bool isActive = undoActiveSubTab == subTabId;
+                new GUIButton(
+                    new RectTransform(new Vector2(0.5f, 1.0f), undoSubTabBar.RectTransform),
+                    label, style: "GUIButtonSmall")
+                {
+                    Font = GUIStyle.SmallFont,
+                    TextColor = isActive ? Color.White : Color.Gray,
+                    Color = isActive ? new Color(60, 80, 120) : new Color(40, 40, 40),
+                    UserData = subTabId,
+                    OnClicked = (btn, data) =>
+                    {
+                        undoActiveSubTab = (string)data;
+                        UpdateUndoHistoryPanel();
+                        return true;
+                    }
                 };
             }
+        }
+
+        /// <summary>
+        /// Undo the most recent command from the currently selected tab and subtab.
+        /// </summary>
+        private void UndoLatestFromCurrentTab()
+        {
+            bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
+            bool isHost = isCollaborativeSession && SubEditorNetworkingClient.Instance.IsHost;
+            string localAuthorId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+            bool filterWires = undoActiveSubTab == "wires";
+
+            int limit = Math.Min(commandIndex, Commands.Count);
+            for (int i = limit - 1; i >= 0; i--)
+            {
+                Command cmd = Commands[i];
+                bool isWireCmd = cmd is WireCommand;
+                if (filterWires && !isWireCmd) continue;
+                if (!filterWires && isWireCmd) continue;
+
+                if (isCollaborativeSession)
+                {
+                    if (!isHost && cmd.AuthorSessionId != localAuthorId) continue;
+                    if (isHost && undoActiveTab != "all" && cmd.AuthorSessionId != undoActiveTab) continue;
+                }
+
+                RemoveCommandFromStack(cmd);
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Rebuild the tab buttons in the undo panel for collaborative mode.
+        /// Host sees: [All] [Me] [User1] [User2] ... (persistent — includes disconnected users)
+        /// Non-host sees: [My Changes] only (no tabs needed, just filter to own)
+        /// </summary>
+        private void RebuildUndoTabs(bool isHost, string localAuthorId)
+        {
+            undoTabBar.ClearChildren();
+
+            if (!isHost)
+            {
+                undoActiveTab = localAuthorId ?? "local";
+                return; // Non-host has no tabs, always shows own commands
+            }
+
+            // Use persistent undoTabUsers which includes disconnected users
+            var allUserIds = new List<string>(undoTabUsers.Keys);
+
+            // Host: "All" tab (global stack)
+            AddTabButton("All", "all");
+
+            // Host: "Me" tab (host's own commands)
+            if (localAuthorId != null)
+            {
+                AddTabButton("Me", localAuthorId);
+            }
+
+            // Other users' tabs
+            foreach (string authorId in allUserIds)
+            {
+                var currentUser = SubEditorNetworkingClient.Instance?.GetUserBySessionId(authorId);
+                string tabName;
+                if (currentUser != null)
+                {
+                    tabName = currentUser.Value.Name;
+                }
+                else
+                {
+                    // Disconnected user — show stored name with suffix
+                    tabName = undoTabUsers.TryGetValue(authorId, out string storedName)
+                        ? storedName + " (left)"
+                        : $"User {authorId}";
+                }
+                AddTabButton(tabName, authorId);
+            }
+
+            void AddTabButton(string label, string tabId)
+            {
+                bool isActive = undoActiveTab == tabId;
+                var btn = new GUIButton(
+                    new RectTransform(new Vector2(1.0f, 0.0f), undoTabBar.RectTransform) { MinSize = new Point(0, 28), MaxSize = new Point(int.MaxValue, 28) },
+                    ToolBox.LimitString(label, GUIStyle.SmallFont, undoTabBar.Rect.Width - 10), textAlignment: Alignment.CenterLeft, style: "GUIButtonSmall")
+                {
+                    Font = GUIStyle.SmallFont,
+                    TextColor = isActive ? Color.White : Color.LightGray,
+                    SelectedColor = isActive ? new Color(60, 110, 60) : Color.DarkGray,
+                    Color = isActive ? new Color(60, 110, 60) : Color.DarkGray,
+                    UserData = tabId,
+                    OnClicked = (btn, data) =>
+                    {
+                        undoActiveTab = (string)data;
+                        UpdateUndoHistoryPanel();
+                        return true;
+                    }
+                };
+            }
+        }
+
+        /// <summary>
+        /// CAD-style selective undo: remove a specific command from the stack.
+        /// If the command is an "add entity" command, any subsequent commands that reference
+        /// those entity IDs (property changes, transforms, etc.) are also removed since they
+        /// would be operating on non-existent entities.
+        /// </summary>
+        private static void RemoveCommandFromStack(Command command)
+        {
+            int index = Commands.IndexOf(command);
+            if (index < 0) return;
+
+            // Collect entity IDs that would no longer exist if we remove an "add" command
+            var removedEntityIds = new HashSet<ushort>();
+            bool isAddCommand = command is AddOrDeleteCommand addDel && !addDel.IsDeleteOperation;
+            if (isAddCommand)
+            {
+                foreach (var id in command.GetAffectedEntityIds())
+                {
+                    removedEntityIds.Add(id);
+                }
+            }
+
+            // UnExecute the command to revert its effect
+            if (index < commandIndex)
+            {
+                command.UnExecute();
+                
+                // Broadcast the undo to other editors
+                bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
+                if (isCollaborativeSession)
+                {
+                    BroadcastCommandChanges(command, isUndo: true);
+                }
+            }
+
+            // Remove from stack
+            Commands.RemoveAt(index);
+            if (index < commandIndex) commandIndex--;
+
+            // If we removed an "add" command, cascade-remove dependent commands
+            if (removedEntityIds.Count > 0)
+            {
+                for (int i = Commands.Count - 1; i >= 0; i--)
+                {
+                    var dep = Commands[i];
+                    var depIds = dep.GetAffectedEntityIds();
+                    if (depIds.Any(id => removedEntityIds.Contains(id)))
+                    {
+                        // UnExecute dependent commands too
+                        if (i < commandIndex)
+                        {
+                            dep.UnExecute();
+                            bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
+                            if (isCollaborativeSession)
+                            {
+                                BroadcastCommandChanges(dep, isUndo: true);
+                            }
+                        }
+
+                        // If this dependent command is also an "add", cascade its entities too
+                        if (dep is AddOrDeleteCommand depAdd && !depAdd.IsDeleteOperation)
+                        {
+                            foreach (var id in dep.GetAffectedEntityIds())
+                            {
+                                removedEntityIds.Add(id);
+                            }
+                        }
+
+                        Commands.RemoveAt(i);
+                        if (i < commandIndex) commandIndex--;
+                    }
+                }
+            }
+
+            command.Cleanup();
+            GameMain.SubEditorScreen.UpdateUndoHistoryPanel();
         }
 
         private static void CommitBulkItemBuffer()
@@ -7408,6 +8378,8 @@ namespace Barotrauma
                     var chatFrame = GameMain.Client.ChatBox.GUIFrame;
                     if (chatFrame != null)
                     {
+                        // Anchor to bottom-left and resize for SubEditor layout
+                        chatFrame.RectTransform.SetPosition(Anchor.BottomLeft);
                         int chatW = (int)(GameMain.GraphicsWidth * 0.25f);
                         int chatH = (int)(GameMain.GraphicsHeight * 0.30f);
                         chatFrame.RectTransform.NonScaledSize = new Point(chatW, chatH);
@@ -7417,9 +8389,7 @@ namespace Barotrauma
                         {
                             bottomMargin = GameMain.GraphicsHeight - EntityMenu.Rect.Top + 5;
                         }
-                        chatFrame.RectTransform.AbsoluteOffset = new Point(
-                            10,
-                            GameMain.GraphicsHeight - chatH - bottomMargin);
+                        chatFrame.RectTransform.AbsoluteOffset = new Point(10, bottomMargin);
                         chatFrame.RectTransform.RelativeOffset = Vector2.Zero;
                     }
                     
@@ -7685,7 +8655,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    cam.MoveCamera((float) deltaTime, allowMove: !CircuitBox.IsCircuitBoxSelected(dummyCharacter), allowZoom: GUI.MouseOn == null);
+                    cam.MoveCamera((float) deltaTime, allowMove: dummyCharacter == null || !CircuitBox.IsCircuitBoxSelected(dummyCharacter), allowZoom: GUI.MouseOn == null);
                 }
             }
             else
@@ -7693,7 +8663,7 @@ namespace Barotrauma
                 cam.MoveCamera((float) deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             }
 
-            if (PlayerInput.MidButtonHeld() && !CircuitBox.IsCircuitBoxSelected(dummyCharacter))
+            if (PlayerInput.MidButtonHeld() && (dummyCharacter == null || !CircuitBox.IsCircuitBoxSelected(dummyCharacter)))
             {
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 60.0f / cam.Zoom;
                 moveSpeed.X = -moveSpeed.X;

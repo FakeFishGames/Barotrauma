@@ -108,6 +108,26 @@ namespace Barotrauma.Networking
         }
 
         /// <summary>
+        /// Look up a user by their session ID string (for undo history display).
+        /// </summary>
+        public SubEditorUser? GetUserBySessionId(string sessionIdStr)
+        {
+            if (byte.TryParse(sessionIdStr, out byte sessionId) && ConnectedEditors.TryGetValue(sessionId, out var user))
+            {
+                return user;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Get all connected users.
+        /// </summary>
+        public IEnumerable<SubEditorUser> GetAllUsers()
+        {
+            return ConnectedEditors.Values;
+        }
+
+        /// <summary>
         /// Join a collaborative editing session.
         /// </summary>
         public void JoinSession(byte sessionId, string playerName, byte colorIndex)
@@ -192,6 +212,7 @@ namespace Barotrauma.Networking
         public void UpdateCursor(Vector2 worldPosition, float deltaTime)
         {
             if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             cursorSyncTimer -= deltaTime;
             
@@ -398,33 +419,10 @@ namespace Barotrauma.Networking
         /// </summary>
         public void ReceiveSubmarineInfo(string subName, string subHash)
         {
-            // Prevent spam - don't request if we're already requesting this sub
-            if (isRequestingSubmarineFile && requestedSubmarineName == subName)
-            {
-                return;
-            }
-
             DebugConsole.Log($"[SubEditor] Host is editing submarine: {subName} (hash: {subHash})");
-
-            // Check if we have this submarine locally
-            var localSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
-            
-            if (localSub != null)
-            {
-                DebugConsole.Log($"[SubEditor] Already have submarine {subName}, loading it...");
-                isRequestingSubmarineFile = false;
-                requestedSubmarineName = "";
-                OnSubmarineInfoReceived?.Invoke(subName, subHash);
-            }
-            else
-            {
-                DebugConsole.Log($"[SubEditor] Don't have submarine {subName}, requesting file...");
-                isRequestingSubmarineFile = true;
-                requestedSubmarineName = subName;
-                // Request the file via existing file transfer system
-                GameMain.Client?.RequestFile(FileTransferType.Submarine, subName, subHash);
-                OnSubmarineInfoReceived?.Invoke(subName, subHash);
-            }
+            // Submarine state is synced via XML packets (SyncSubmarine), not file transfers.
+            // Just notify listeners of the sub name/hash for informational purposes.
+            OnSubmarineInfoReceived?.Invoke(subName, subHash);
         }
 
         /// <summary>
@@ -540,6 +538,31 @@ namespace Barotrauma.Networking
             msg.WriteUInt16(entityId);
             msg.WriteSingle(x);
             msg.WriteSingle(y);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        /// <summary>
+        /// Notify server that multiple entities were moved in a single packet.
+        /// Reduces packet count to avoid DoS rate limit kicks when moving many items.
+        /// </summary>
+        public void NotifyEntitiesMovedBatch(List<(ushort entityId, float dx, float dy)> moves)
+        {
+            if (!IsActive) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+            if (moves.Count == 0) return;
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EntitiesMovedBatch);
+            int count = Math.Min(moves.Count, ushort.MaxValue);
+            msg.WriteUInt16((ushort)count);
+            for (int i = 0; i < count; i++)
+            {
+                var (entityId, dx, dy) = moves[i];
+                msg.WriteUInt16(entityId);
+                msg.WriteSingle(dx);
+                msg.WriteSingle(dy);
+            }
             GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 

@@ -610,8 +610,11 @@ namespace Barotrauma
                 }
                 Vector2 from = new Vector2(WorldPosition.X, -WorldPosition.Y);
                 Vector2 to = new Vector2(e.WorldPosition.X, -e.WorldPosition.Y);
-                GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
-                GUI.DrawLine(spriteBatch, from, to, lineColor, width: 1);
+                // Use minimum screen-space width so links are visible at all zoom levels
+                int bgWidth = Math.Max(3, (int)(5.0f / Screen.Selected.Cam.Zoom));
+                int fgWidth = Math.Max(2, (int)(3.0f / Screen.Selected.Cam.Zoom));
+                GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: bgWidth);
+                GUI.DrawLine(spriteBatch, from, to, lineColor, width: fgWidth);
                 //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
             }
 
@@ -841,7 +844,8 @@ namespace Barotrauma
             var otherEntity = highlightedEntities.FirstOrDefault(e => e != this && e.IsMouseOn(position));
             if (otherEntity != null)
             {
-                if (linkedTo.Contains(otherEntity))
+                bool wasLinked = linkedTo.Contains(otherEntity);
+                if (wasLinked)
                 {
                     linkedTo.Remove(otherEntity);
                     if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this))
@@ -856,6 +860,19 @@ namespace Barotrauma
                     {
                         otherEntity.linkedTo.Add(this);
                     }
+                }
+
+                // Store undo step for link change
+                var linkCmd = new LinkCommand(
+                    wasLinked ? LinkCommand.LinkCommandType.Unlink : LinkCommand.LinkCommandType.Link,
+                    this.ID, otherEntity.ID);
+                SubEditorScreen.StoreCommand(linkCmd);
+
+                // Sync link changes to other collaborative editors
+                GameMain.SubEditorScreen?.SyncLinkedEntityState(this);
+                if (otherEntity is Item || otherEntity is Hull || otherEntity is Gap)
+                {
+                    GameMain.SubEditorScreen?.SyncLinkedEntityState(otherEntity);
                 }
             }
         }

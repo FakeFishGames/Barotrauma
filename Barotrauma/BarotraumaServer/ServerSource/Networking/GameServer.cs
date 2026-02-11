@@ -1068,7 +1068,13 @@ namespace Barotrauma.Networking
                     SendBackupIndices(inc, connectedClient);
                     break;
                 case ClientPacketHeader.SUBEDITOR:
-                    ReadSubEditorMessage(inc, connectedClient);
+                    // Pause DoS protection for SubEditor messages — collaborative editing
+                    // can produce a high volume of small packets (entity moves, property
+                    // changes, wire syncs) when many items are moved at once.
+                    using (dosProtection.Pause(connectedClient))
+                    {
+                        ReadSubEditorMessage(inc, connectedClient);
+                    }
                     break;
                 case ClientPacketHeader.ERROR:
                     HandleClientError(inc, connectedClient);

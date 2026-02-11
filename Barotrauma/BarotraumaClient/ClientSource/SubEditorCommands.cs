@@ -31,6 +31,20 @@ namespace Barotrauma
     internal abstract partial class Command
     {
         public abstract LocalizedString GetDescription();
+
+        /// <summary>
+        /// Identifier of the user who created this command.
+        /// In collaborative mode, this is the session ID. Empty/null for local-only editing.
+        /// </summary>
+        public string AuthorSessionId { get; set; }
+
+        /// <summary>
+        /// Get the entity IDs affected by this command, for dependency checking.
+        /// </summary>
+        public virtual IEnumerable<ushort> GetAffectedEntityIds()
+        {
+            return Enumerable.Empty<ushort>();
+        }
     }
 
     /// <summary>
@@ -107,6 +121,9 @@ namespace Barotrauma
                 ? TextManager.GetWithVariable("Undo.MovedItemsMultiple", "[count]", Receivers.Count.ToString())
                 : TextManager.GetWithVariable("Undo.MovedItem", "[item]", Receivers.FirstOrDefault()?.Name);
         }
+
+        public override IEnumerable<ushort> GetAffectedEntityIds()
+            => Receivers.Select(e => e.ID);
     }
 
     /// <summary>
@@ -380,6 +397,9 @@ namespace Barotrauma
                 ? TextManager.GetWithVariable("Undo.AddedItemsMultiple", "[count]", Receivers.Count.ToString())
                 : TextManager.GetWithVariable("Undo.AddedItem", "[item]", Receivers.FirstOrDefault()?.Name ?? "null");
         }
+
+        public override IEnumerable<ushort> GetAffectedEntityIds()
+            => Receivers.Select(e => e.ID);
     }
 
     /// <summary>
@@ -603,6 +623,15 @@ namespace Barotrauma
                     ("[item]", Receivers.FirstOrDefault()?.Name),
                     ("[value]", sanitizedProperty));
         }
+
+        public override IEnumerable<ushort> GetAffectedEntityIds()
+        {
+            foreach (var receiver in Receivers)
+            {
+                if (receiver is MapEntity me) yield return me.ID;
+                else if (receiver is ItemComponent ic) yield return ic.Item.ID;
+            }
+        }
     }
 
     /// <summary>
@@ -648,6 +677,11 @@ namespace Barotrauma
         public override LocalizedString GetDescription()
         {
             return TextManager.GetWithVariable("Undo.MovedItem", "[item]", targetItem.Name);
+        }
+
+        public override IEnumerable<ushort> GetAffectedEntityIds()
+        {
+            yield return targetItem.ID;
         }
     }
 
@@ -731,5 +765,324 @@ namespace Barotrauma
         public override LocalizedString GetDescription() => originalData.Count > 1
             ? TextManager.GetWithVariable("Undo.ChangedTransformMultiple", "[amount]", originalData.Count.ToString())
             : TextManager.GetWithVariable("Undo.ChangedTransform", "[item]", originalData.First().Key.Name);
+
+        public override IEnumerable<ushort> GetAffectedEntityIds()
+            => originalData.Keys.Select(e => e.ID);
+    }
+
+    /// <summary>
+    /// Tracks the type of wire change for undo purposes.
+    /// </summary>
+    internal enum WireCommandType
+    {
+        /// <summary>A wire was connected between two pins.</summary>
+        Connect,
+        /// <summary>A wire was disconnected from a pin.</summary>
+        Disconnect,
+        /// <summary>A wire node was moved to a new position.</summary>
+        NodeMove,
+        /// <summary>A wire node was added.</summary>
+        NodeAdd,
+        /// <summary>A wire node was removed.</summary>
+        NodeRemove
+    }
+
+    /// <summary>
+    /// Undo command for wire operations in the SubEditor's wiring mode.
+    /// Tracks connections, disconnections, and node edits for individual wires.
+    /// </summary>
+    internal class WireCommand : Command
+    {
+        public readonly WireCommandType Type;
+        /// <summary>ID of the wire item.</summary>
+        public readonly ushort WireId;
+        /// <summary>Prefab identifier of the wire (e.g. "redwire", "bluewire").</summary>
+        public readonly Identifier WirePrefabId;
+        /// <summary>For Connect/Disconnect: the item ID of the connection panel's item.</summary>
+        public readonly ushort TargetItemId;
+        /// <summary>For Connect/Disconnect: the connection (pin) name.</summary>
+        public readonly string ConnectionName;
+        /// <summary>For Connect: the other end's item ID (if both ends connected).</summary>
+        public readonly ushort OtherItemId;
+        /// <summary>For Connect: the other end's connection name.</summary>
+        public readonly string OtherConnectionName;
+        /// <summary>For NodeMove: the node index that was moved.</summary>
+        public readonly int NodeIndex;
+        /// <summary>For NodeMove: the original position before the move.</summary>
+        public readonly Vector2 OldNodePos;
+        /// <summary>For NodeMove: the new position after the move.</summary>
+        public readonly Vector2 NewNodePos;
+        /// <summary>For NodeAdd/NodeRemove: the index where the node was inserted/removed.</summary>
+        public readonly int AddedNodeIndex;
+        /// <summary>For NodeAdd/NodeRemove: the position of the added/removed node.</summary>
+        public readonly Vector2 AddedNodePos;
+        /// <summary>Snapshot of all node positions at the time of the command, for full restore.</summary>
+        public readonly List<Vector2> NodeSnapshot;
+
+        /// <summary>Create a wire connection/disconnection command.</summary>
+        public WireCommand(WireCommandType type, Wire wire, Connection connection, Connection otherConnection = null)
+        {
+            Type = type;
+            WireId = wire.Item.ID;
+            WirePrefabId = wire.Item.Prefab.Identifier;
+            TargetItemId = connection?.Item?.ID ?? 0;
+            ConnectionName = connection?.Name ?? "";
+            OtherItemId = otherConnection?.Item?.ID ?? 0;
+            OtherConnectionName = otherConnection?.Name ?? "";
+            NodeSnapshot = new List<Vector2>(wire.GetNodes());
+        }
+
+        /// <summary>Create a wire node move command.</summary>
+        public WireCommand(Wire wire, int nodeIndex, Vector2 oldPos, Vector2 newPos)
+        {
+            Type = WireCommandType.NodeMove;
+            WireId = wire.Item.ID;
+            WirePrefabId = wire.Item.Prefab.Identifier;
+            NodeIndex = nodeIndex;
+            OldNodePos = oldPos;
+            NewNodePos = newPos;
+            NodeSnapshot = new List<Vector2>(wire.GetNodes());
+        }
+
+        /// <summary>Create a wire node add/remove command.</summary>
+        public WireCommand(WireCommandType type, Wire wire, int nodeIndex, Vector2 nodePos)
+        {
+            Debug.Assert(type == WireCommandType.NodeAdd || type == WireCommandType.NodeRemove);
+            Type = type;
+            WireId = wire.Item.ID;
+            WirePrefabId = wire.Item.Prefab.Identifier;
+            AddedNodeIndex = nodeIndex;
+            AddedNodePos = nodePos;
+            NodeSnapshot = new List<Vector2>(wire.GetNodes());
+        }
+
+        private Wire FindWire()
+        {
+            if (Entity.FindEntityByID(WireId) is Item wireItem)
+            {
+                return wireItem.GetComponent<Wire>();
+            }
+            return null;
+        }
+
+        private Connection FindConnection(ushort itemId, string connName)
+        {
+            if (string.IsNullOrEmpty(connName) || itemId == 0) return null;
+            if (Entity.FindEntityByID(itemId) is Item item)
+            {
+                var panel = item.GetComponent<ConnectionPanel>();
+                return panel?.Connections?.Find(c => c.Name == connName);
+            }
+            return null;
+        }
+
+        public override void Execute()
+        {
+            Wire wire = FindWire();
+            if (wire == null) return;
+
+            switch (Type)
+            {
+                case WireCommandType.Connect:
+                    var conn = FindConnection(TargetItemId, ConnectionName);
+                    if (conn != null)
+                    {
+                        conn.ConnectWire(wire);
+                        wire.TryConnect(conn, false);
+                    }
+                    break;
+                case WireCommandType.Disconnect:
+                    var disconnConn = FindConnection(TargetItemId, ConnectionName);
+                    if (disconnConn != null)
+                    {
+                        disconnConn.DisconnectWire(wire);
+                    }
+                    break;
+                case WireCommandType.NodeMove:
+                    if (NodeIndex >= 0 && NodeIndex < wire.GetNodes().Count)
+                    {
+                        wire.MoveNode(NodeIndex, NewNodePos - wire.GetNodes()[NodeIndex]);
+                    }
+                    break;
+                case WireCommandType.NodeAdd:
+                    wire.SetNodes(NodeSnapshot);
+                    break;
+                case WireCommandType.NodeRemove:
+                    wire.SetNodes(NodeSnapshot);
+                    break;
+            }
+            if (!wire.Item.Removed) { wire.UpdateSections(); }
+        }
+
+        public override void UnExecute()
+        {
+            Wire wire = FindWire();
+            if (wire == null) return;
+
+            switch (Type)
+            {
+                case WireCommandType.Connect:
+                    // Undo connect = disconnect the wire from BOTH ends
+                    var conn = FindConnection(TargetItemId, ConnectionName);
+                    if (conn != null)
+                    {
+                        conn.DisconnectWire(wire);
+                        wire.RemoveConnection(conn);
+                    }
+                    var otherConn = FindConnection(OtherItemId, OtherConnectionName);
+                    if (otherConn != null)
+                    {
+                        otherConn.DisconnectWire(wire);
+                        wire.RemoveConnection(otherConn);
+                    }
+                    // Remove the wire entity entirely since this Connect command created it
+                    wire.Item.Remove();
+                    break;
+                case WireCommandType.Disconnect:
+                    // Undo disconnect = reconnect
+                    var reconnConn = FindConnection(TargetItemId, ConnectionName);
+                    if (reconnConn != null)
+                    {
+                        reconnConn.ConnectWire(wire);
+                        wire.TryConnect(reconnConn, false);
+                    }
+                    break;
+                case WireCommandType.NodeMove:
+                    if (NodeIndex >= 0 && NodeIndex < wire.GetNodes().Count)
+                    {
+                        wire.MoveNode(NodeIndex, OldNodePos - wire.GetNodes()[NodeIndex]);
+                    }
+                    break;
+                case WireCommandType.NodeAdd:
+                    // Undo add = remove the node
+                    if (AddedNodeIndex >= 0 && AddedNodeIndex < wire.GetNodes().Count)
+                    {
+                        var nodes = new List<Vector2>(wire.GetNodes());
+                        nodes.RemoveAt(AddedNodeIndex);
+                        wire.SetNodes(nodes);
+                    }
+                    break;
+                case WireCommandType.NodeRemove:
+                    // Undo remove = re-insert the node
+                    {
+                        var nodes = new List<Vector2>(wire.GetNodes());
+                        if (AddedNodeIndex <= nodes.Count)
+                        {
+                            nodes.Insert(AddedNodeIndex, AddedNodePos);
+                            wire.SetNodes(nodes);
+                        }
+                    }
+                    break;
+            }
+            if (!wire.Item.Removed) { wire.UpdateSections(); }
+        }
+
+        public override void Cleanup() { }
+
+        public override LocalizedString GetDescription()
+        {
+            string wireName = WirePrefabId.Value ?? "wire";
+            Item targetItem = Entity.FindEntityByID(TargetItemId) as Item;
+            string targetName = targetItem?.Name ?? $"Item#{TargetItemId}";
+
+            switch (Type)
+            {
+                case WireCommandType.Connect:
+                    Item otherItem = Entity.FindEntityByID(OtherItemId) as Item;
+                    string otherName = otherItem?.Name ?? $"Item#{OtherItemId}";
+                    return new RawLString($"{targetName} [{ConnectionName}] wired to {otherName} [{OtherConnectionName}] using {wireName}");
+                case WireCommandType.Disconnect:
+                    return new RawLString($"{wireName} disconnected from {targetName} [{ConnectionName}]");
+                case WireCommandType.NodeMove:
+                    return new RawLString($"Node on {wireName} moved");
+                case WireCommandType.NodeAdd:
+                    return new RawLString($"Node added to {wireName}");
+                case WireCommandType.NodeRemove:
+                    return new RawLString($"Node removed from {wireName}");
+                default:
+                    return new RawLString($"Wire change ({wireName})");
+            }
+        }
+
+        public override IEnumerable<ushort> GetAffectedEntityIds()
+        {
+            yield return WireId;
+            if (TargetItemId != 0) yield return TargetItemId;
+            if (OtherItemId != 0) yield return OtherItemId;
+        }
+    }
+
+    /// <summary>
+    /// A command for creating or removing a link between two map entities (Space+Click linking).
+    /// </summary>
+    internal class LinkCommand : Command
+    {
+        public enum LinkCommandType { Link, Unlink }
+
+        public LinkCommandType Type { get; }
+        public ushort EntityId1 { get; }
+        public ushort EntityId2 { get; }
+
+        public LinkCommand(LinkCommandType type, ushort entityId1, ushort entityId2)
+        {
+            Type = type;
+            EntityId1 = entityId1;
+            EntityId2 = entityId2;
+        }
+
+        public override void Execute()
+        {
+            var entity1 = Entity.FindEntityByID(EntityId1) as MapEntity;
+            var entity2 = Entity.FindEntityByID(EntityId2) as MapEntity;
+            if (entity1 == null || entity2 == null) return;
+
+            if (Type == LinkCommandType.Link)
+            {
+                if (!entity1.linkedTo.Contains(entity2)) entity1.linkedTo.Add(entity2);
+                if (!entity2.linkedTo.Contains(entity1)) entity2.linkedTo.Add(entity1);
+            }
+            else
+            {
+                entity1.linkedTo.Remove(entity2);
+                entity2.linkedTo.Remove(entity1);
+            }
+        }
+
+        public override void UnExecute()
+        {
+            var entity1 = Entity.FindEntityByID(EntityId1) as MapEntity;
+            var entity2 = Entity.FindEntityByID(EntityId2) as MapEntity;
+            if (entity1 == null || entity2 == null) return;
+
+            if (Type == LinkCommandType.Link)
+            {
+                // Undo link = unlink
+                entity1.linkedTo.Remove(entity2);
+                entity2.linkedTo.Remove(entity1);
+            }
+            else
+            {
+                // Undo unlink = link
+                if (!entity1.linkedTo.Contains(entity2)) entity1.linkedTo.Add(entity2);
+                if (!entity2.linkedTo.Contains(entity1)) entity2.linkedTo.Add(entity1);
+            }
+        }
+
+        public override void Cleanup() { }
+
+        public override LocalizedString GetDescription()
+        {
+            string name1 = (Entity.FindEntityByID(EntityId1) as MapEntity)?.Name ?? $"#{EntityId1}";
+            string name2 = (Entity.FindEntityByID(EntityId2) as MapEntity)?.Name ?? $"#{EntityId2}";
+            return Type == LinkCommandType.Link
+                ? new RawLString($"Linked {name1} to {name2}")
+                : new RawLString($"Unlinked {name1} from {name2}");
+        }
+
+        public override IEnumerable<ushort> GetAffectedEntityIds()
+        {
+            yield return EntityId1;
+            yield return EntityId2;
+        }
     }
 }
