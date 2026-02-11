@@ -2231,6 +2231,8 @@ namespace Barotrauma
                                 runtimeY - xmlRect.Height / 2.0f);
                             existingItem.body.SetTransformIgnoreContacts(
                                 FarseerPhysics.ConvertUnits.ToSimUnits(newCenter), existingItem.body.Rotation);
+                            // Snap draw position immediately (no interpolation lag)
+                            existingItem.body.UpdateDrawPosition(interpolate: false);
                         }
 
                         // Update tracking to prevent re-broadcast
