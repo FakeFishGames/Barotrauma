@@ -197,6 +197,23 @@ namespace Barotrauma
         /// </summary>
         public float BallastFloraDamage { get; set; }
 
+        private float penetration;
+
+        /// <summary>
+        /// Armor penetration. Normally defined per Affliction/Attack, but that doesn't work on Explosion.
+        /// </summary>
+        public float Penetration 
+        { 
+            get
+            {
+                return penetration;
+            }
+            set
+            {
+                penetration = MathHelper.Clamp(value, 0, 1);
+            }
+        }
+
         public Explosion(float range, float force, float damage, float structureDamage, float itemDamage, float empStrength = 0.0f, float ballastFloraStrength = 0.0f)
         {
             Attack = new Attack(damage, 0.0f, 0.0f, structureDamage, itemDamage, Math.Min(range, 1000000))
@@ -213,6 +230,7 @@ namespace Barotrauma
             flames = true;
             underwaterBubble = true;
             ignoreFireEffectsForTags = Array.Empty<Identifier>();
+            Penetration = 0.0f;
         }
         
         public Explosion(ContentXElement element, string parentDebugName)
@@ -262,6 +280,8 @@ namespace Barotrauma
             screenColorRange = element.GetAttributeFloat("screencolorrange", showEffects ? Attack.Range * 0.1f : 0f);
             screenColor = element.GetAttributeColor("screencolor", Color.Transparent);
             screenColorDuration = element.GetAttributeFloat("screencolorduration", 0.1f);
+
+            Penetration = element.GetAttributeFloat("penetration", 0.0f);
 
         }
 
@@ -589,7 +609,7 @@ namespace Barotrauma
                             //only play the damage sound on the closest limb (playing it on all just sounds like a mess)
                             bool playSound = PlayDamageSounds && limb == closestLimb;
 
-                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, playSound: playSound, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
+                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, playSound: playSound, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier, penetration : Penetration);
                             damages.Add(limb, attackResult.Damage);
                         }
                     }
