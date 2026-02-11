@@ -2058,8 +2058,8 @@ namespace Barotrauma
                         }
                     }
                     
-                    // Track position for movement sync
-                    collaborativeEntityPositions[loadedEntity.ID] = loadedEntity.WorldPosition;
+                    // Track position for movement sync (use Rect.X/Y to match UpdateCollaborativeEntityMoves comparison)
+                    collaborativeEntityPositions[loadedEntity.ID] = new Vector2(loadedEntity.Rect.X, loadedEntity.Rect.Y);
                 }
             }
             catch (Exception ex)
@@ -2542,10 +2542,10 @@ namespace Barotrauma
                     }
                 }
 
-                // Update tracking position
+                // Update tracking position (use Rect.X/Y to match UpdateCollaborativeEntityMoves comparison)
                 if (collaborativeEntityPositions != null)
                 {
-                    collaborativeEntityPositions[entityId] = existingEntity.WorldPosition;
+                    collaborativeEntityPositions[entityId] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
                 }
 
                 DebugConsole.Log($"[SubEditor] Applied full entity update for {entityId} from session {senderSessionId}");
@@ -2745,7 +2745,7 @@ namespace Barotrauma
                 {
                     if (me.Submarine == MainSub)
                     {
-                        collaborativeEntityPositions[me.ID] = me.WorldPosition;
+                        collaborativeEntityPositions[me.ID] = new Vector2(me.Rect.X, me.Rect.Y);
                     }
                 }
                 
@@ -5806,7 +5806,7 @@ namespace Barotrauma
                 {
                     if (me.Submarine == MainSub)
                     {
-                        collaborativeEntityPositions[me.ID] = me.WorldPosition;
+                        collaborativeEntityPositions[me.ID] = new Vector2(me.Rect.X, me.Rect.Y);
                     }
                 }
             }
