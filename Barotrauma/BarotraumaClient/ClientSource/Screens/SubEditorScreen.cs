@@ -2133,8 +2133,38 @@ namespace Barotrauma
                 var propIdentifier = new Identifier(propName);
                 if (target.SerializableProperties.TryGetValue(propIdentifier, out SerializableProperty prop))
                 {
+                    // For items, save rect before property application so we can restore it
+                    // if the property setter (e.g. Scale → UpdateTransform → FindHull) corrupts it
+                    Rectangle savedRect = default;
+                    float savedBodyRotation = 0f;
+                    bool isItemProp = entity is Item;
+                    Item propItem = entity as Item;
+                    if (isItemProp)
+                    {
+                        savedRect = (entity as MapEntity)?.Rect ?? default;
+                        if (propItem?.body != null) { savedBodyRotation = propItem.body.Rotation; }
+                    }
+                    
                     try { prop.TrySetValue(target, propValue); }
                     catch { /* skip invalid values like scale=0 that crash CreateRectBody */ }
+                    
+                    // Restore rect and Submarine if property setter corrupted them
+                    if (isItemProp && propItem != null)
+                    {
+                        var me = entity as MapEntity;
+                        if (me != null) { me.Rect = savedRect; }
+                        if (propItem.body != null)
+                        {
+                            Vector2 center = new Vector2(savedRect.X + savedRect.Width / 2.0f, savedRect.Y - savedRect.Height / 2.0f);
+                            propItem.body.SetTransformIgnoreContacts(FarseerPhysics.ConvertUnits.ToSimUnits(center), savedBodyRotation);
+                            propItem.body.UpdateDrawPosition(interpolate: false);
+                        }
+                        if (propItem.Submarine == null && Submarine.MainSub != null)
+                        {
+                            propItem.Submarine = Submarine.MainSub;
+                            if (propItem.body != null) { propItem.body.Submarine = Submarine.MainSub; }
+                        }
+                    }
                 }
                 else if (entity is Item item)
                 {
@@ -2236,6 +2266,13 @@ namespace Barotrauma
                                 FarseerPhysics.ConvertUnits.ToSimUnits(newCenter), existingItem.body.Rotation);
                             // Snap draw position immediately (no interpolation lag)
                             existingItem.body.UpdateDrawPosition(interpolate: false);
+                        }
+                        
+                        // Ensure Submarine is MainSub (FindHull in Move() can null it)
+                        if (existingItem.Submarine == null && Submarine.MainSub != null)
+                        {
+                            existingItem.Submarine = Submarine.MainSub;
+                            if (existingItem.body != null) { existingItem.body.Submarine = Submarine.MainSub; }
                         }
 
                         // Update tracking to prevent re-broadcast
@@ -2736,8 +2773,20 @@ namespace Barotrauma
                 // This preserves undo history across test mode transitions and sub syncs
                 CreateDummyCharacter();
                 
+                // After sub loading, Item.Move(HSP) → FindHull() sets Submarine=null
+                // for items with physics bodies (no hulls at runtime coords).
+                // Restore Submarine=MainSub so position tracking and sync detection work.
+                foreach (var me in MapEntity.MapEntityList)
+                {
+                    if (me is Item loadedItem && loadedItem.Submarine == null && MainSub != null)
+                    {
+                        loadedItem.Submarine = MainSub;
+                        if (loadedItem.body != null) { loadedItem.body.Submarine = MainSub; }
+                    }
+                }
+                
                 // Initialize position tracking for all loaded entities so that
-                // delta-based movement sync works from the very first move.
+                // movement sync works from the very first move.
                 collaborativeEntityPositions.Clear();
                 collaborativePropertySnapshots.Clear();
                 collaborativeFlipStates.Clear();
@@ -5795,8 +5844,23 @@ namespace Barotrauma
             }
             CreateDummyCharacter();
 
+            // After sub loading, Item.Move(HSP) → FindHull() sets Submarine=null
+            // for items with physics bodies (no hulls at runtime coords).
+            // Restore Submarine=MainSub so position tracking and sync detection work.
+            if (SubEditorNetworkingClient.Instance?.IsActive == true)
+            {
+                foreach (var me in MapEntity.MapEntityList)
+                {
+                    if (me is Item loadedItem && loadedItem.Submarine == null && MainSub != null)
+                    {
+                        loadedItem.Submarine = MainSub;
+                        if (loadedItem.body != null) { loadedItem.body.Submarine = MainSub; }
+                    }
+                }
+            }
+            
             // Initialize position tracking for all loaded entities so that
-            // delta-based movement sync works from the very first move.
+            // movement sync works from the very first move.
             if (SubEditorNetworkingClient.Instance?.IsActive == true)
             {
                 collaborativeEntityPositions.Clear();
@@ -7881,7 +7945,9 @@ namespace Barotrauma
             foreach (var entity in MapEntity.SelectedList)
             {
                 if (entity == null || entity.Removed) continue;
-                if (entity.Submarine != MainSub) continue;
+                // NOTE: Do NOT filter by entity.Submarine here. After Item.Move() → FindHull(),
+                // items with physics bodies can have Submarine set to null, causing them to be
+                // silently skipped (no movement sync sent).
                 
                 // Skip wire items — their position is determined by nodes, not rect.
                 if (entity is Item wireCheck && wireCheck.GetComponent<Items.Components.Wire>() != null) continue;
