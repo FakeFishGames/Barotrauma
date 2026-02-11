@@ -2197,6 +2197,9 @@ namespace Barotrauma
                 var element = doc.Root;
                 if (element == null) return;
 
+                // Check if this is a transform-only sync (position change, no properties)
+                bool isTransformSync = element.GetAttributeBool("transformSync", false);
+
                 // For Items: read the design-time rect from XML and set position directly.
                 // This is the same approach as loading from a .sub file — the XML contains
                 // design-time coordinates (rect - HiddenSubPosition), and we add our own HSP
@@ -2217,7 +2220,7 @@ namespace Barotrauma
                         DebugConsole.NewMessage($"[SYNC-RECV] Item {entityId} xmlRect=({xmlRect.X},{xmlRect.Y},{xmlRect.Width},{xmlRect.Height}) " +
                             $"HSP=({hsp.X},{hsp.Y}) runtime=({runtimeX},{runtimeY}) " +
                             $"currentRect=({existingEntity.Rect.X},{existingEntity.Rect.Y},{existingEntity.Rect.Width},{existingEntity.Rect.Height}) " +
-                            $"sub={existingItem.Submarine?.ID.ToString() ?? "null"}", Color.Yellow);
+                            $"sub={existingItem.Submarine?.ID.ToString() ?? "null"} isTransformSync={isTransformSync}", Color.Yellow);
 
                         // Set rect directly — no Move(), no FindHull()
                         existingEntity.Rect = new Rectangle(runtimeX, runtimeY, xmlRect.Width, xmlRect.Height);
@@ -2237,6 +2240,13 @@ namespace Barotrauma
 
                         // Update tracking to prevent re-broadcast
                         collaborativeEntityPositions[existingEntity.ID] = new Vector2(runtimeX, runtimeY);
+                    }
+
+                    // For transform-only sync, we're done — don't touch properties.
+                    // Properties are synced separately via UpdateCollaborativePropertyChanges.
+                    if (isTransformSync)
+                    {
+                        return;
                     }
 
                     // Apply serializable properties from XML, but SKIP "scale" to avoid
@@ -2260,7 +2270,22 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Non-items: apply serializable properties normally (structures, hulls, gaps work fine)
+                    // Non-items: for transform sync, just update rect from XML
+                    if (isTransformSync)
+                    {
+                        Rectangle xmlRect = element.GetAttributeRect("rect", Rectangle.Empty);
+                        if (xmlRect != Rectangle.Empty)
+                        {
+                            Vector2 hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
+                            existingEntity.Rect = new Rectangle(
+                                (int)(xmlRect.X + hsp.X), (int)(xmlRect.Y + hsp.Y),
+                                xmlRect.Width, xmlRect.Height);
+                            collaborativeEntityPositions[existingEntity.ID] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
+                        }
+                        return;
+                    }
+
+                    // Non-items property sync: apply serializable properties normally (structures, hulls, gaps work fine)
                     if (existingEntity is ISerializableEntity serializableEntity && serializableEntity.SerializableProperties != null)
                     {
                         foreach (var prop in serializableEntity.SerializableProperties)
@@ -7835,6 +7860,7 @@ namespace Barotrauma
                             $"body={debugItem.body?.Position.ToString() ?? "nobody"}", Color.Lime);
                     }
                     var element = SaveEntityForSync(entity);
+                    element.SetAttributeValue("transformSync", "true");
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
                 }
@@ -7881,6 +7907,7 @@ namespace Barotrauma
                             try
                             {
                                 var element = SaveEntityForSync(entity);
+                                element.SetAttributeValue("transformSync", "true");
                                 SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entityId, element.ToString());
                             }
                             catch { }
