@@ -1960,9 +1960,30 @@ namespace Barotrauma
             }
             
             var entity = Entity.FindEntityByID(entityId) as MapEntity;
-            if (entity != null)
+            if (entity == null) return;
+            
+            // The sender sends design-time coordinates (rect minus MainSub.HSP).
+            // Convert back to runtime coordinates by adding our MainSub.HSP.
+            var hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
+            int runtimeX = (int)(x + hsp.X);
+            int runtimeY = (int)(y + hsp.Y);
+            
+            // Compute delta from current rect to target rect
+            var oldRect = entity.Rect;
+            Vector2 delta = new Vector2(runtimeX - oldRect.X, runtimeY - oldRect.Y);
+            
+            // Use Move() to update both rect and physics body position
+            entity.Move(delta);
+            
+            // Fix up Submarine reference: Move() calls FindHull() which can null entity.Submarine
+            // for items with physics bodies (due to HSP mismatch). Restore it to MainSub.
+            if (entity.Submarine == null && Submarine.MainSub != null)
             {
-                entity.Move(new Vector2(x, y) - entity.WorldPosition);
+                entity.Submarine = Submarine.MainSub;
+            }
+            if (entity is Item item && item.body != null)
+            {
+                item.body.Submarine = Submarine.MainSub;
             }
         }
 
@@ -2068,17 +2089,25 @@ namespace Barotrauma
 
                 // Apply position from XML rect attribute (using Barotrauma's GetAttributeRect)
                 // Note: entity.Save() writes rect MINUS Submarine.HiddenSubPosition for file storage.
-                // To apply back to entity.Rect (which is in local coords), we need to ADD HiddenSubPosition back.
+                // To apply back to entity.Rect (which is in runtime coords), we ADD MainSub.HiddenSubPosition back.
+                // ALWAYS use MainSub.HSP, not entity.Submarine.HSP, because entity.Submarine can be null after FindHull.
                 var savedRect = element.GetAttributeRect("rect", Rectangle.Empty);
                 if (savedRect != Rectangle.Empty && savedRect.Width > 0 && savedRect.Height > 0)
                 {
-                    var hiddenPos = existingEntity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
+                    var hiddenPos = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
                     var newRect = new Rectangle(
                         (int)(savedRect.X + hiddenPos.X),
                         (int)(savedRect.Y + hiddenPos.Y),
                         Math.Max(1, savedRect.Width),
                         Math.Max(1, savedRect.Height));
                     existingEntity.Rect = newRect;
+                    
+                    // For Items with physics bodies, also update the body position to match the new rect
+                    if (existingEntity is Item itemForBody && itemForBody.body != null)
+                    {
+                        Vector2 simPos = FarseerPhysics.ConvertUnits.ToSimUnits(new Vector2(newRect.X + newRect.Width / 2f, newRect.Y - newRect.Height / 2f));
+                        itemForBody.body.SetTransformIgnoreContacts(simPos, itemForBody.body.Rotation);
+                    }
                 }
 
                 // For Items, also update ItemComponent properties
@@ -2141,10 +2170,22 @@ namespace Barotrauma
                     }
                 }
 
-                // Update tracking position
+                // Fix up Submarine reference: property application (e.g., Scale setter) can trigger
+                // UpdateTransform → FindHull which nulls entity.Submarine. Restore it to MainSub.
+                if (existingEntity.Submarine == null && Submarine.MainSub != null)
+                {
+                    existingEntity.Submarine = Submarine.MainSub;
+                }
+                if (existingEntity is Item fixItem && fixItem.body != null && fixItem.body.Submarine == null)
+                {
+                    fixItem.body.Submarine = Submarine.MainSub;
+                }
+
+                // Update tracking position in design-time coordinates (consistent with UpdateCollaborativeEntityMoves)
                 if (collaborativeEntityPositions != null)
                 {
-                    collaborativeEntityPositions[entityId] = existingEntity.WorldPosition;
+                    var trackHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
+                    collaborativeEntityPositions[entityId] = new Vector2(existingEntity.Rect.X - trackHSP.X, existingEntity.Rect.Y - trackHSP.Y);
                 }
 
                 DebugConsole.Log($"[SubEditor] Applied full entity update for {entityId} from session {senderSessionId}");
@@ -6924,6 +6965,8 @@ namespace Barotrauma
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (isApplyingRemoteChange) return;
 
+            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
+
             // Collect unique entities affected by this property change
             var processedEntities = new HashSet<ushort>();
             foreach (var receiver in propertyCommand.AffectedEntities)
@@ -6938,6 +6981,22 @@ namespace Barotrauma
                 try
                 {
                     var element = mapEntity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    
+                    // Fix rect if entity.Submarine was nulled by FindHull (same fix as transform sync)
+                    var entitySubHSP = mapEntity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
+                    if (entitySubHSP != mainSubHSP)
+                    {
+                        var rect = mapEntity.Rect;
+                        int width = element.GetAttributeRect("rect", Rectangle.Empty).Width;
+                        int height = element.GetAttributeRect("rect", Rectangle.Empty).Height;
+                        if (width <= 0) width = rect.Width;
+                        if (height <= 0) height = rect.Height;
+                        element.SetAttributeValue("rect",
+                            (int)(rect.X - mainSubHSP.X) + "," +
+                            (int)(rect.Y - mainSubHSP.Y) + "," +
+                            width + "," + height);
+                    }
+                    
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(mapEntity.ID, element.ToString());
                 }
                 catch (Exception ex)
@@ -6949,11 +7008,15 @@ namespace Barotrauma
 
         /// <summary>
         /// Send transform (move/resize) updates to other collaborative editors via full entity state sync.
+        /// Uses the same XML format as .sub files. Always uses MainSub.HiddenSubPosition for coordinate
+        /// conversion to ensure consistent design-time coordinates regardless of entity.Submarine state.
         /// </summary>
         internal void SendCollaborativeTransformUpdate(TransformCommand transformCommand)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (isApplyingRemoteChange) return;
+
+            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
 
             foreach (var entity in transformCommand.AffectedEntities)
             {
@@ -6962,9 +7025,29 @@ namespace Barotrauma
                 try
                 {
                     var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
+                    
+                    // entity.Save() uses entity.Submarine?.HiddenSubPosition for the rect offset.
+                    // If entity.Submarine was nulled by FindHull, Save() uses Vector2.Zero instead of HSP,
+                    // producing incorrect coordinates. Fix: replace the rect attribute with one that
+                    // always uses MainSub.HiddenSubPosition, matching what a .sub file would contain.
+                    var entitySubHSP = entity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
+                    if (entitySubHSP != mainSubHSP)
+                    {
+                        // The saved rect used the wrong HSP. Recalculate using MainSub.HSP.
+                        var rect = entity.Rect;
+                        int width = element.GetAttributeRect("rect", Rectangle.Empty).Width;
+                        int height = element.GetAttributeRect("rect", Rectangle.Empty).Height;
+                        if (width <= 0) width = rect.Width;
+                        if (height <= 0) height = rect.Height;
+                        element.SetAttributeValue("rect",
+                            (int)(rect.X - mainSubHSP.X) + "," +
+                            (int)(rect.Y - mainSubHSP.Y) + "," +
+                            width + "," + height);
+                    }
+                    
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
-                    // Update our tracking position
-                    collaborativeEntityPositions[entity.ID] = entity.WorldPosition;
+                    // Update our tracking position in design-time coordinates (consistent with UpdateCollaborativeEntityMoves)
+                    collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X - mainSubHSP.X, entity.Rect.Y - mainSubHSP.Y);
                 }
                 catch (Exception ex)
                 {
@@ -6978,28 +7061,34 @@ namespace Barotrauma
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (MainSub == null) return;
             
-            // Send real-time EntityMoved updates for any selected entities whose position changed
+            // Send real-time EntityMoved updates for any selected entities whose position changed.
+            // Coordinates are sent as design-time (rect minus MainSub.HSP), matching .sub file format.
             if (MapEntity.SelectedList.Count == 0) return;
+
+            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
             
             foreach (var entity in MapEntity.SelectedList)
             {
                 if (entity == null || entity.Removed) continue;
-                if (entity.Submarine != MainSub) continue;
                 
                 ushort entityId = entity.ID;
-                Vector2 currentPos = entity.WorldPosition;
+                // Use Rect.Location (not WorldPosition) and always subtract MainSub.HSP to get design-time coords.
+                // This is HSP-independent and cannot be corrupted by FindHull nulling entity.Submarine.
+                float designX = entity.Rect.X - mainSubHSP.X;
+                float designY = entity.Rect.Y - mainSubHSP.Y;
+                Vector2 designPos = new Vector2(designX, designY);
                 
                 if (collaborativeEntityPositions.TryGetValue(entityId, out Vector2 lastPos))
                 {
-                    if (Vector2.DistanceSquared(currentPos, lastPos) > 1f)
+                    if (Vector2.DistanceSquared(designPos, lastPos) > 1f)
                     {
-                        SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, currentPos.X, currentPos.Y);
-                        collaborativeEntityPositions[entityId] = currentPos;
+                        SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, designX, designY);
+                        collaborativeEntityPositions[entityId] = designPos;
                     }
                 }
                 else
                 {
-                    collaborativeEntityPositions[entityId] = currentPos;
+                    collaborativeEntityPositions[entityId] = designPos;
                 }
             }
         }
@@ -7027,11 +7116,12 @@ namespace Barotrauma
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (MainSub == null || isApplyingRemoteChange) return;
             if (MapEntity.SelectedList.Count == 0) return;
+
+            var mainSubHSP = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
             
             foreach (var entity in MapEntity.SelectedList)
             {
                 if (entity == null || entity.Removed) continue;
-                if (entity.Submarine != MainSub) continue;
                 
                 ushort entityId = entity.ID;
                 
@@ -7046,6 +7136,22 @@ namespace Barotrauma
                         try
                         {
                             var element = entity.Save(new XElement("EntityRoot"));
+                            
+                            // Fix rect if entity.Submarine was nulled by FindHull
+                            var entitySubHSP = entity.Submarine?.HiddenSubPosition ?? Vector2.Zero;
+                            if (entitySubHSP != mainSubHSP)
+                            {
+                                var rect = entity.Rect;
+                                int width = element.GetAttributeRect("rect", Rectangle.Empty).Width;
+                                int height = element.GetAttributeRect("rect", Rectangle.Empty).Height;
+                                if (width <= 0) width = rect.Width;
+                                if (height <= 0) height = rect.Height;
+                                element.SetAttributeValue("rect",
+                                    (int)(rect.X - mainSubHSP.X) + "," +
+                                    (int)(rect.Y - mainSubHSP.Y) + "," +
+                                    width + "," + height);
+                            }
+                            
                             SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entityId, element.ToString());
                         }
                         catch { }
