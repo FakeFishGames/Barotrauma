@@ -1,5 +1,28 @@
 # Build and Test Guide
 
+## Prerequisites: Copy Game Content
+
+The game's art, sounds, and XML assets are **not** in the Git repo (they're gitignored).
+You need a Steam copy of Barotrauma to get them. **Do this once** before your first build:
+
+```bash
+cp -r ~/.steam/steam/steamapps/common/Barotrauma/Content ~/projects/Barotrauma/Barotrauma/BarotraumaShared/Content
+```
+
+If your Steam library is somewhere else, adjust the source path. The key is that you end up with:
+```
+~/projects/Barotrauma/Barotrauma/BarotraumaShared/Content/
+├── Effects/
+│   ├── waterbump.png
+│   └── ...
+├── Map/
+├── Lights/
+└── ...
+```
+
+Without this, the game will crash on launch with errors like:
+`Could not find file 'Content/Effects/waterbump.png'`
+
 ## Quick Start
 
 ```bash
