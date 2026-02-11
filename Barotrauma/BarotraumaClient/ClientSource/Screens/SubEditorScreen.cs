@@ -2785,16 +2785,32 @@ namespace Barotrauma
                     }
                 }
                 
-                // Initialize position tracking for all loaded entities so that
+                // Initialize position tracking for ALL loaded entities so that
                 // movement sync works from the very first move.
+                // NOTE: Do NOT filter by me.Submarine == MainSub — items with physics
+                // bodies can have Submarine=null from FindHull, and they still need tracking.
                 collaborativeEntityPositions.Clear();
                 collaborativePropertySnapshots.Clear();
                 collaborativeFlipStates.Clear();
+                int trackedCount = 0;
                 foreach (var me in MapEntity.MapEntityList)
                 {
-                    if (me.Submarine == MainSub)
+                    collaborativeEntityPositions[me.ID] = new Vector2(me.Rect.X, me.Rect.Y);
+                    trackedCount++;
+                }
+                
+                // Debug: log a sample of initial positions after loading
+                var hspDebug = MainSub?.HiddenSubPosition ?? Vector2.Zero;
+                DebugConsole.NewMessage($"[SYNC-LOAD] Loaded {trackedCount} entities, HSP=({hspDebug.X},{hspDebug.Y})", Color.Magenta);
+                int logCount = 0;
+                foreach (var me in MapEntity.MapEntityList)
+                {
+                    if (me is Item loadedDebugItem && logCount < 10)
                     {
-                        collaborativeEntityPositions[me.ID] = new Vector2(me.Rect.X, me.Rect.Y);
+                        DebugConsole.NewMessage($"[SYNC-LOAD] Item {me.ID} rect=({me.Rect.X},{me.Rect.Y},{me.Rect.Width},{me.Rect.Height}) " +
+                            $"sub={loadedDebugItem.Submarine?.ID.ToString() ?? "null"} " +
+                            $"body={loadedDebugItem.body?.Position.ToString() ?? "nobody"}", Color.Magenta);
+                        logCount++;
                     }
                 }
                 
@@ -5859,8 +5875,10 @@ namespace Barotrauma
                 }
             }
             
-            // Initialize position tracking for all loaded entities so that
+            // Initialize position tracking for ALL loaded entities so that
             // movement sync works from the very first move.
+            // NOTE: Do NOT filter by me.Submarine == MainSub — items with physics
+            // bodies can have Submarine=null from FindHull, and they still need tracking.
             if (SubEditorNetworkingClient.Instance?.IsActive == true)
             {
                 collaborativeEntityPositions.Clear();
@@ -5868,10 +5886,7 @@ namespace Barotrauma
                 collaborativeFlipStates.Clear();
                 foreach (var me in MapEntity.MapEntityList)
                 {
-                    if (me.Submarine == MainSub)
-                    {
-                        collaborativeEntityPositions[me.ID] = new Vector2(me.Rect.X, me.Rect.Y);
-                    }
+                    collaborativeEntityPositions[me.ID] = new Vector2(me.Rect.X, me.Rect.Y);
                 }
             }
 
