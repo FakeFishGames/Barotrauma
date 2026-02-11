@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="[DebugOnlyTest]ExplosionPenetrationTest" modversion="1.0.0" corepackage="False" gameversion="1.11.5.0">
+  <Item file="%ModDir%/Items.xml" />
+</contentpackage>
