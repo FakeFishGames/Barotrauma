@@ -3,6 +3,8 @@
 # Usage: ./build.sh [clean]
 #   ./build.sh        - Incremental build (fast, but may use cached artifacts)
 #   ./build.sh clean  - Clean build (slower, guarantees fresh compilation)
+#
+# First time: run "chmod +x build.sh" to make this script executable
 
 set -e
 

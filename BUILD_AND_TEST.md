@@ -4,11 +4,14 @@
 
 ```bash
 cd ~/projects/Barotrauma
-git fetch origin copilot/consolidate-copilot-branches
-git checkout copilot/consolidate-copilot-branches
-git pull origin copilot/consolidate-copilot-branches
 
-# Build both server and client
+# Get the latest code
+git fetch origin copilot/fix-item-teleportation-bug
+git checkout copilot/fix-item-teleportation-bug
+git pull origin copilot/fix-item-teleportation-bug
+
+# Clean and build (use ./build.sh clean for a one-liner)
+rm -rf Barotrauma/bin/ReleaseLinux Barotrauma/BarotraumaClient/obj Barotrauma/BarotraumaServer/obj Barotrauma/BarotraumaShared/obj
 dotnet build Barotrauma/BarotraumaServer/LinuxServer.csproj -c Release
 dotnet build Barotrauma/BarotraumaClient/LinuxClient.csproj -c Release
 
@@ -17,10 +20,96 @@ cd Barotrauma/bin/ReleaseLinux/net8.0/
 ./Barotrauma
 ```
 
+Or use the build script (does the same thing):
+```bash
+cd ~/projects/Barotrauma
+git fetch origin copilot/fix-item-teleportation-bug
+git checkout copilot/fix-item-teleportation-bug
+git pull origin copilot/fix-item-teleportation-bug
+./build.sh clean
+cd Barotrauma/bin/ReleaseLinux/net8.0/
+./Barotrauma
+```
+
+## Troubleshooting
+
+### "I built it but I'm still running old code"
+
+After switching branches, `dotnet build` sometimes reuses cached artifacts from the old branch.
+**Always clean first** when switching branches:
+
+```bash
+rm -rf Barotrauma/bin/ReleaseLinux Barotrauma/BarotraumaClient/obj Barotrauma/BarotraumaServer/obj Barotrauma/BarotraumaShared/obj
+```
+
+Or use `./build.sh clean` which does this automatically.
+
+### "I'm in detached HEAD state" / "I checked out an old commit and now I can't get back"
+
+If you previously ran `git checkout <some-commit-hash>`, git put you in "detached HEAD" state.
+To get back to the branch:
+
+```bash
+cd ~/projects/Barotrauma
+git checkout copilot/fix-item-teleportation-bug
+git pull origin copilot/fix-item-teleportation-bug
+```
+
+**Watch for typos in branch names!** The branch is called:
+- ✅ `copilot/fix-item-teleportation-bug` (correct)
+- ❌ `copilot/fix-item-teleportation-bugs` (wrong — extra `s`)
+
+If you get "error: pathspec ... did not match any file(s)", the branch name is wrong.
+Run `git branch -a` to see all available branches.
+
+### "I have uncommitted changes blocking checkout"
+
+```bash
+git stash                # saves your changes temporarily
+git checkout copilot/fix-item-teleportation-bug
+git pull origin copilot/fix-item-teleportation-bug
+git stash pop            # restores your changes (optional)
+```
+
+### "How do I test a specific old commit then come back?"
+
+```bash
+# Save where you are
+git stash                                           # only if you have changes
+
+# Test the old commit
+git checkout 676b10608ab347121c7114deb44ee9ec688b3518
+./build.sh clean
+cd Barotrauma/bin/ReleaseLinux/net8.0/ && ./Barotrauma
+
+# Come back to the branch (note: no trailing 's'!)
+cd ~/projects/Barotrauma
+git checkout copilot/fix-item-teleportation-bug
+git stash pop                                       # only if you stashed
+./build.sh clean
+```
+
+### "Nuclear option — start completely fresh"
+
+If git is in a confusing state and nothing seems to work:
+
+```bash
+cd ~/projects
+rm -rf Barotrauma
+git clone https://github.com/girlyguppy/Barotrauma.git
+cd Barotrauma
+git checkout copilot/fix-item-teleportation-bug
+./build.sh clean
+cd Barotrauma/bin/ReleaseLinux/net8.0/
+./Barotrauma
+```
+
 ## What This Branch Is
 
-`copilot/consolidate-copilot-branches` is the final, cleaned-up version of the collaborative
-submarine editor mod. It's based on `master` (which tracks FakeFishGames/Barotrauma upstream).
+`copilot/fix-item-teleportation-bug` is a fix for the item teleportation bug in the collaborative
+submarine editor. It's based on `copilot/consolidate-copilot-branches-again` which is the
+cleaned-up version of the collaborative editor mod, based on `master` (which tracks
+FakeFishGames/Barotrauma upstream).
 
 When you build this branch, you get: **the normal game + the collaborative editing feature**.
 Everything else is identical to the upstream game.
