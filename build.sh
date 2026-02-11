@@ -24,11 +24,17 @@ echo ""
 
 # Clean if requested
 if [ "$1" = "clean" ]; then
-    echo "=== Cleaning build artifacts ==="
-    rm -rf Barotrauma/bin/ReleaseLinux
+    echo "=== Cleaning build artifacts (preserving Content folder) ==="
+    # Only remove compiled outputs, NOT the Content folder which has game assets
     rm -rf Barotrauma/BarotraumaClient/obj
     rm -rf Barotrauma/BarotraumaServer/obj
     rm -rf Barotrauma/BarotraumaShared/obj
+    # Clean compiled files from output but preserve Content
+    if [ -d "$OUTPUT_DIR" ]; then
+        find "$OUTPUT_DIR" -maxdepth 1 -type f -delete 2>/dev/null || true
+        # Remove non-Content subdirectories (ref, runtimes, etc.) but keep Content
+        find "$OUTPUT_DIR" -maxdepth 1 -mindepth 1 -type d ! -name "Content" -exec rm -rf {} + 2>/dev/null || true
+    fi
     echo "Clean complete."
     echo ""
 fi

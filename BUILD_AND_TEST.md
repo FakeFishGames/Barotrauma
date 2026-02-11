@@ -33,8 +33,8 @@ git fetch origin copilot/fix-item-teleportation-bug
 git checkout copilot/fix-item-teleportation-bug
 git pull origin copilot/fix-item-teleportation-bug
 
-# Clean and build (use ./build.sh clean for a one-liner)
-rm -rf Barotrauma/bin/ReleaseLinux Barotrauma/BarotraumaClient/obj Barotrauma/BarotraumaServer/obj Barotrauma/BarotraumaShared/obj
+# Clean compiled artifacts and build (preserves Content folder)
+rm -rf Barotrauma/BarotraumaClient/obj Barotrauma/BarotraumaServer/obj Barotrauma/BarotraumaShared/obj
 dotnet build Barotrauma/BarotraumaServer/LinuxServer.csproj -c Release
 dotnet build Barotrauma/BarotraumaClient/LinuxClient.csproj -c Release
 
@@ -62,10 +62,12 @@ After switching branches, `dotnet build` sometimes reuses cached artifacts from 
 **Always clean first** when switching branches:
 
 ```bash
-rm -rf Barotrauma/bin/ReleaseLinux Barotrauma/BarotraumaClient/obj Barotrauma/BarotraumaServer/obj Barotrauma/BarotraumaShared/obj
+rm -rf Barotrauma/BarotraumaClient/obj Barotrauma/BarotraumaServer/obj Barotrauma/BarotraumaShared/obj
 ```
 
 Or use `./build.sh clean` which does this automatically.
+
+**Note:** Do NOT `rm -rf Barotrauma/bin/ReleaseLinux` — that would delete your Content folder if you put it there.
 
 ### "I'm in detached HEAD state" / "I checked out an old commit and now I can't get back"
 
@@ -122,6 +124,11 @@ rm -rf Barotrauma
 git clone https://github.com/girlyguppy/Barotrauma.git
 cd Barotrauma
 git checkout copilot/fix-item-teleportation-bug
+
+# Don't forget to copy Content again after a fresh clone!
+cp -r ~/.steam/steam/steamapps/common/Barotrauma/Content Barotrauma/BarotraumaShared/Content
+
+chmod +x build.sh
 ./build.sh clean
 cd Barotrauma/bin/ReleaseLinux/net8.0/
 ./Barotrauma
