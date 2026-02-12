@@ -2246,11 +2246,8 @@ namespace Barotrauma
                         int runtimeX = (int)(xmlRect.X + hsp.X);
                         int runtimeY = (int)(xmlRect.Y + hsp.Y);
 
-                        // Debug: log what we're receiving
-                        DebugConsole.NewMessage($"[SYNC-RECV] Item {entityId} xmlRect=({xmlRect.X},{xmlRect.Y},{xmlRect.Width},{xmlRect.Height}) " +
-                            $"HSP=({hsp.X},{hsp.Y}) runtime=({runtimeX},{runtimeY}) " +
-                            $"currentRect=({existingEntity.Rect.X},{existingEntity.Rect.Y},{existingEntity.Rect.Width},{existingEntity.Rect.Height}) " +
-                            $"sub={existingItem.Submarine?.ID.ToString() ?? "null"} isTransformSync={isTransformSync}", Color.Yellow);
+                        // Compute movement delta before setting new rect (for wire node movement)
+                        Vector2 moveDelta = new Vector2(runtimeX - existingEntity.Rect.X, runtimeY - existingEntity.Rect.Y);
 
                         // Set rect directly — no Move(), no FindHull()
                         existingEntity.Rect = new Rectangle(runtimeX, runtimeY, xmlRect.Width, xmlRect.Height);
@@ -2273,6 +2270,17 @@ namespace Barotrauma
                         {
                             existingItem.Submarine = Submarine.MainSub;
                             if (existingItem.body != null) { existingItem.body.Submarine = Submarine.MainSub; }
+                        }
+
+                        // Move connected wire endpoint nodes by the same delta.
+                        // This mirrors what ConnectionPanel.Move() does locally when the host moves an item.
+                        if (moveDelta != Vector2.Zero)
+                        {
+                            var connPanel = existingItem.GetComponent<Items.Components.ConnectionPanel>();
+                            if (connPanel != null)
+                            {
+                                connPanel.MoveConnectedWires(moveDelta);
+                            }
                         }
 
                         // Update tracking to prevent re-broadcast
@@ -2799,20 +2807,6 @@ namespace Barotrauma
                     trackedCount++;
                 }
                 
-                // Debug: log a sample of initial positions after loading
-                var hspDebug = MainSub?.HiddenSubPosition ?? Vector2.Zero;
-                DebugConsole.NewMessage($"[SYNC-LOAD] Loaded {trackedCount} entities, HSP=({hspDebug.X},{hspDebug.Y})", Color.Magenta);
-                int logCount = 0;
-                foreach (var me in MapEntity.MapEntityList)
-                {
-                    if (me is Item loadedDebugItem && logCount < 10)
-                    {
-                        DebugConsole.NewMessage($"[SYNC-LOAD] Item {me.ID} rect=({me.Rect.X},{me.Rect.Y},{me.Rect.Width},{me.Rect.Height}) " +
-                            $"sub={loadedDebugItem.Submarine?.ID.ToString() ?? "null"} " +
-                            $"body={loadedDebugItem.body?.Position.ToString() ?? "nobody"}", Color.Magenta);
-                        logCount++;
-                    }
-                }
                 
                 string name = MainSub.Info.Name;
                 subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
@@ -7897,14 +7891,6 @@ namespace Barotrauma
             try
             {
                 var element = entity.Save(new System.Xml.Linq.XElement("EntityRoot"));
-                // Debug: log what we're saving
-                if (entity is Item debugItem)
-                {
-                    var hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
-                    DebugConsole.NewMessage($"[SYNC-SAVE] Item {entity.ID} rect=({entity.Rect.X},{entity.Rect.Y},{entity.Rect.Width},{entity.Rect.Height}) " +
-                        $"sub={debugItem.Submarine?.ID.ToString() ?? "null"} fixedUp={fixedUp} HSP=({hsp.X},{hsp.Y}) " +
-                        $"xmlRect={element.Attribute("rect")?.Value ?? "MISSING"}", Color.Cyan);
-                }
                 return element;
             }
             finally
@@ -7932,12 +7918,6 @@ namespace Barotrauma
 
                 try
                 {
-                    if (entity is Item debugItem)
-                    {
-                        DebugConsole.NewMessage($"[SYNC-XFORM] Item {entity.ID} rect=({entity.Rect.X},{entity.Rect.Y}) " +
-                            $"sub={debugItem.Submarine?.ID.ToString() ?? "null"} " +
-                            $"body={debugItem.body?.Position.ToString() ?? "nobody"}", Color.Lime);
-                    }
                     var element = SaveEntityForSync(entity);
                     element.SetAttributeValue("transformSync", "true");
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
@@ -7977,11 +7957,6 @@ namespace Barotrauma
                     float dy = currentY - lastPos.Y;
                     if (dx * dx + dy * dy > 1f)
                     {
-                        if (entity is Item debugItem2)
-                        {
-                            DebugConsole.NewMessage($"[SYNC-MOVE] Item {entityId} cur=({currentX},{currentY}) last=({lastPos.X},{lastPos.Y}) " +
-                                $"delta=({dx},{dy}) sub={debugItem2.Submarine?.ID.ToString() ?? "null"}", Color.Orange);
-                        }
                         if (entity is Item)
                         {
                             // Items: send full XML with design-time rect (immutable sync)
