@@ -285,6 +285,7 @@ namespace Barotrauma
         private GUIListBox undoBufferList;
         private GUILayoutGroup undoTabBar;
         private GUILayoutGroup undoSubTabBar;
+        private GUILayoutGroup undoRightColumn;
         private string undoActiveTab = "all"; // "all", "local", or a session ID
         private string undoActiveSubTab = "edits"; // "edits" or "wires"
         /// <summary>Tracks all users who have ever been in the session, for persistent tabs.</summary>
@@ -910,7 +911,7 @@ namespace Barotrauma
             };
 
             // RIGHT column: subtabs + list + undo button
-            var undoRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.78f, 1.0f), undoPanelLayout.RectTransform), isHorizontal: false)
+            undoRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.78f, 1.0f), undoPanelLayout.RectTransform), isHorizontal: false)
             {
                 Stretch = true,
                 RelativeSpacing = 0.01f
@@ -3189,7 +3190,31 @@ namespace Barotrauma
             try
             {
                 string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
-                if (!File.Exists(historyPath)) return;
+                
+                // Try resolving content package paths (e.g., %ModDir%/sub.sub)
+                if (!File.Exists(historyPath))
+                {
+                    // Try with the full resolved path from ContentPath
+                    try
+                    {
+                        var resolved = ContentPath.FromRaw(null, subFilePath);
+                        if (!resolved.IsNullOrEmpty())
+                        {
+                            string resolvedHistory = System.IO.Path.ChangeExtension(resolved.Value, ".undohistory");
+                            if (File.Exists(resolvedHistory))
+                            {
+                                historyPath = resolvedHistory;
+                            }
+                        }
+                    }
+                    catch { /* fallthrough */ }
+                }
+
+                if (!File.Exists(historyPath))
+                {
+                    DebugConsole.Log($"[SubEditor] No undo history file found at {historyPath}");
+                    return;
+                }
 
                 var lines = File.ReadAllLines(historyPath);
 
@@ -3203,7 +3228,7 @@ namespace Barotrauma
                     {
                         if (string.IsNullOrWhiteSpace(line)) continue;
 
-                        var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
                             line, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft, wrap: true)
                         {
                             TextColor = Color.Gray,
@@ -3211,6 +3236,10 @@ namespace Barotrauma
                             CanBeFocused = false
                         };
                     }
+                }
+                else
+                {
+                    DebugConsole.AddWarning("[SubEditor] serverLogList is null — cannot display undo history");
                 }
 
                 // Also feed into the real server log if available
@@ -3273,15 +3302,15 @@ namespace Barotrauma
                 TextManager.Get("ServerSettingsButton").Fallback("Editor Permissions"),
                 "",
                 new LocalizedString[] { TextManager.Get("Close") },
-                relativeSize: new Vector2(0.35f, 0.5f));
+                relativeSize: new Vector2(0.35f, 0.6f));
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), msgBox.Content.RectTransform, Anchor.TopCenter))
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), msgBox.Content.RectTransform, Anchor.TopCenter))
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.015f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
                 "Default permissions for new clients:", font: GUIStyle.SmallFont);
 
             foreach (SubEditorPermissions perm in Enum.GetValues(typeof(SubEditorPermissions)))
@@ -3289,7 +3318,7 @@ namespace Barotrauma
                 if (perm == SubEditorPermissions.None || perm == SubEditorPermissions.All) continue;
 
                 bool isSet = (SubEditorNetworkingShared.DefaultClientPermissions & perm) != 0;
-                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
                     perm.ToString(), font: GUIStyle.SmallFont)
                 {
                     Selected = isSet,
@@ -3303,6 +3332,26 @@ namespace Barotrauma
                     }
                 };
             }
+
+            // Mass Edit Threshold (numerical input)
+            var thresholdLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), thresholdLayout.RectTransform),
+                "Mass Edit Threshold:", font: GUIStyle.SmallFont);
+            var thresholdInput = new GUINumberInput(new RectTransform(new Vector2(0.35f, 1.0f), thresholdLayout.RectTransform),
+                NumberType.Int)
+            {
+                IntValue = SubEditorNetworkingShared.MassEditThreshold,
+                MinValueInt = 1,
+                MaxValueInt = 9999
+            };
+            thresholdInput.OnValueChanged += (input) =>
+            {
+                SubEditorNetworkingShared.MassEditThreshold = input.IntValue;
+            };
 
             msgBox.Buttons[0].OnClicked = msgBox.Close;
         }
@@ -8796,8 +8845,12 @@ namespace Barotrauma
 
             // Update tab bar visibility and contents
             undoTabBar.Visible = isCollaborativeSession && isHost;
-            // Adjust right column width: full width when tabs hidden, 75% when shown
+            // Adjust widths: when tabs visible, 22%/78%. When hidden, 0.001%/99.9%
             undoTabBar.RectTransform.RelativeSize = new Vector2(isHost ? 0.22f : 0.001f, 1.0f);
+            if (undoRightColumn != null)
+            {
+                undoRightColumn.RectTransform.RelativeSize = new Vector2(isHost && isCollaborativeSession ? 0.76f : 0.999f, 1.0f);
+            }
             if (isCollaborativeSession)
             {
                 // Register all currently connected users in the persistent tab tracker
@@ -9019,7 +9072,7 @@ namespace Barotrauma
                 bool isActive = undoActiveTab == tabId;
                 var btn = new GUIButton(
                     new RectTransform(new Vector2(1.0f, 0.0f), undoTabBar.RectTransform) { MinSize = new Point(0, 28), MaxSize = new Point(int.MaxValue, 28) },
-                    ToolBox.LimitString(label, GUIStyle.SmallFont, undoTabBar.Rect.Width - 10), textAlignment: Alignment.CenterLeft, style: "GUIButtonSmall")
+                    label, textAlignment: Alignment.CenterLeft, style: "GUIButtonSmall")
                 {
                     Font = GUIStyle.SmallFont,
                     TextColor = isActive ? Color.White : Color.LightGray,
@@ -9806,6 +9859,11 @@ namespace Barotrauma
                         if (GUI.IsMouseOn(entityFilterBox))
                         {
                             ClearFilter();
+                        }
+                        else if (collaborativeUsersPanel?.Visible == true && collaborativeUsersPanel.MouseRect.Contains(PlayerInput.MousePosition))
+                        {
+                            // Don't create context menu when right-clicking on the editors panel
+                            // — let the user frame's OnSecondaryClicked handler fire instead
                         }
                         else
                         {

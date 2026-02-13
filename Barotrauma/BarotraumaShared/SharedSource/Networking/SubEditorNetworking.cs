@@ -285,7 +285,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// The mass edit threshold — how many entities must be affected for an action to count as "mass edit."
         /// </summary>
-        public int MassEditThreshold { get; set; } = 20;
+        public static int MassEditThreshold { get; set; } = 20;
 
         /// <summary>
         /// Set entity ownership. Associates an entity ID with a player's account identifier.
