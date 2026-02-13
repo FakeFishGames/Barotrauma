@@ -272,6 +272,11 @@ namespace Barotrauma.Networking
         public Dictionary<UInt16, string> EntityOwnership { get; } = new Dictionary<UInt16, string>();
 
         /// <summary>
+        /// Default permissions applied to new clients when they join.
+        /// </summary>
+        public static SubEditorPermissions DefaultClientPermissions { get; set; } = SubEditorPermissions.None;
+
+        /// <summary>
         /// Maps session IDs to their SubEditor-specific permissions.
         /// Host always has all permissions.
         /// </summary>
